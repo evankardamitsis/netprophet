@@ -1,0 +1,231 @@
+'use client';
+
+import { Card, CardContent, Badge, Button } from '@netprophet/ui';
+import { Match } from '@/types/dashboard';
+
+interface MatchesGridProps {
+    matches?: Match[];
+    onAddToPredictionSlip: (match: Match, prediction: string) => void;
+}
+
+// Mock matches data
+const mockMatches: Match[] = [
+    {
+        id: 1,
+        tournament: 'Roland Garros 2024',
+        player1: { name: 'Rafael Nadal', country: '🇪🇸', ranking: 1, odds: 2.15 },
+        player2: { name: 'Novak Djokovic', country: '🇷🇸', ranking: 2, odds: 1.85 },
+        time: '14:00',
+        court: 'Philippe-Chatrier',
+        status: 'live',
+        points: 250
+    },
+    {
+        id: 2,
+        tournament: 'Roland Garros 2024',
+        player1: { name: 'Carlos Alcaraz', country: '🇪🇸', ranking: 3, odds: 1.65 },
+        player2: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 2.35 },
+        time: '16:30',
+        court: 'Suzanne-Lenglen',
+        status: 'upcoming',
+        points: 200
+    },
+    {
+        id: 3,
+        tournament: 'Wimbledon 2024',
+        player1: { name: 'Jannik Sinner', country: '🇮🇹', ranking: 5, odds: 1.95 },
+        player2: { name: 'Alexander Zverev', country: '🇩🇪', ranking: 6, odds: 1.95 },
+        time: '13:00',
+        court: 'Centre Court',
+        status: 'upcoming',
+        points: 180
+    },
+    {
+        id: 4,
+        tournament: 'Wimbledon 2024',
+        player1: { name: 'Andy Murray', country: '🇬🇧', ranking: 7, odds: 2.50 },
+        player2: { name: 'Stefanos Tsitsipas', country: '🇬🇷', ranking: 8, odds: 1.60 },
+        time: '15:30',
+        court: 'Court 1',
+        status: 'upcoming',
+        points: 150
+    },
+    {
+        id: 5,
+        tournament: 'US Open 2024',
+        player1: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 1.80 },
+        player2: { name: 'Andrey Rublev', country: '🇷🇺', ranking: 9, odds: 2.20 },
+        time: '20:00',
+        court: 'Arthur Ashe',
+        status: 'upcoming',
+        points: 120
+    },
+    {
+        id: 6,
+        tournament: 'Roland Garros 2024',
+        player1: { name: 'Casper Ruud', country: '🇳🇴', ranking: 10, odds: 2.80 },
+        player2: { name: 'Hubert Hurkacz', country: '🇵🇱', ranking: 11, odds: 1.40 },
+        time: '18:00',
+        court: 'Court 2',
+        status: 'upcoming',
+        points: 100
+    }
+];
+
+export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: MatchesGridProps) {
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'live':
+                return 'destructive';
+            case 'upcoming':
+                return 'secondary';
+            case 'finished':
+                return 'outline';
+            default:
+                return 'secondary';
+        }
+    };
+
+    const liveMatches = matches.filter(match => match.status === 'live');
+    const upcomingMatches = matches.filter(match => match.status === 'upcoming');
+
+    return (
+        <div className="space-y-8">
+            {/* Live Matches Section */}
+            {liveMatches.length > 0 && (
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2"></span>
+                        Live Matches ({liveMatches.length})
+                    </h2>
+                    <div className="grid gap-4">
+                        {liveMatches.map((match) => (
+                            <Card key={match.id} className="hover:shadow-md transition-shadow border-red-200">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Badge variant="destructive" className="animate-pulse">
+                                                LIVE
+                                            </Badge>
+                                            <span className="text-sm text-gray-500">{match.tournament}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-gray-500">{match.time}</div>
+                                            <div className="text-xs text-gray-400">{match.court}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                                            <div className="text-lg font-semibold text-gray-900">{match.player1.name}</div>
+                                            <div className="text-sm text-gray-600">{match.player1.country} • #{match.player1.ranking}</div>
+                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player1.odds}</div>
+                                        </div>
+                                        <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
+                                            <div className="text-lg font-semibold text-gray-900">{match.player2.name}</div>
+                                            <div className="text-sm text-gray-600">{match.player2.country} • #{match.player2.ranking}</div>
+                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player2.odds}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <div className="text-sm text-gray-600">
+                                            Points: <span className="font-semibold text-green-600">+{match.points}</span>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => onAddToPredictionSlip(match, match.player1.name)}
+                                                className="bg-blue-600 hover:bg-blue-700"
+                                            >
+                                                Pick {match.player1.name.split(' ')[1]}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => onAddToPredictionSlip(match, match.player2.name)}
+                                            >
+                                                Pick {match.player2.name.split(' ')[1]}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Upcoming Matches Section */}
+            {upcomingMatches.length > 0 && (
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Matches ({upcomingMatches.length})</h2>
+                    <div className="grid gap-4">
+                        {upcomingMatches.map((match) => (
+                            <Card key={match.id} className="hover:shadow-md transition-shadow">
+                                <CardContent className="p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center space-x-2">
+                                            <Badge variant="secondary">
+                                                UPCOMING
+                                            </Badge>
+                                            <span className="text-sm text-gray-500">{match.tournament}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm text-gray-500">{match.time}</div>
+                                            <div className="text-xs text-gray-400">{match.court}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 mb-4">
+                                        <div className="text-center p-4 bg-gray-50 rounded-lg">
+                                            <div className="text-lg font-semibold text-gray-900">{match.player1.name}</div>
+                                            <div className="text-sm text-gray-600">{match.player1.country} • #{match.player1.ranking}</div>
+                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player1.odds}</div>
+                                        </div>
+                                        <div className="text-center p-4 bg-gray-50 rounded-lg">
+                                            <div className="text-lg font-semibold text-gray-900">{match.player2.name}</div>
+                                            <div className="text-sm text-gray-600">{match.player2.country} • #{match.player2.ranking}</div>
+                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player2.odds}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <div className="text-sm text-gray-600">
+                                            Points: <span className="font-semibold text-green-600">+{match.points}</span>
+                                        </div>
+                                        <div className="flex space-x-2">
+                                            <Button
+                                                size="sm"
+                                                onClick={() => onAddToPredictionSlip(match, match.player1.name)}
+                                                className="bg-blue-600 hover:bg-blue-700"
+                                            >
+                                                Pick {match.player1.name.split(' ')[1]}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => onAddToPredictionSlip(match, match.player2.name)}
+                                            >
+                                                Pick {match.player2.name.split(' ')[1]}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* No Matches State */}
+            {matches.length === 0 && (
+                <div className="text-center py-12">
+                    <div className="text-6xl mb-4">🎾</div>
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Matches Available</h2>
+                    <p className="text-gray-600">Check back later for upcoming matches</p>
+                </div>
+            )}
+        </div>
+    );
+} 

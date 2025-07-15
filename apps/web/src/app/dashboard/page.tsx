@@ -3,11 +3,29 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
+import { Sidebar } from '@/components/dashboard/Sidebar';
+import { MatchDetail } from '@/components/dashboard/MatchDetail';
+import { MatchesGrid } from '@/components/dashboard/MatchesGrid';
+import { PredictionSlip } from '@/components/dashboard/PredictionSlip';
+import { StatsCards } from '@/components/dashboard/StatsCards';
+import { TopNavigation } from '@/components/dashboard/TopNavigation';
+import { Match, PredictionItem, UserStats } from '@/types/dashboard';
 
 export default function DashboardPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+    const [predictionSlip, setPredictionSlip] = useState<PredictionItem[]>([]);
+
+    // Mock stats data
+    const userStats: UserStats = {
+        totalPoints: 1250,
+        correctPicks: 23,
+        activeStreak: 7,
+        ranking: 12
+    };
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -53,6 +71,45 @@ export default function DashboardPage() {
         return () => subscription.unsubscribe();
     }, [router]);
 
+    const handleMatchSelect = (match: Match) => {
+        setSelectedMatch(match);
+        // Close sidebar on mobile after selection
+        setSidebarOpen(false);
+    };
+
+    const addToPredictionSlip = (match: Match, prediction: string) => {
+        const existingIndex = predictionSlip.findIndex(item => item.matchId === match.id);
+
+        if (existingIndex >= 0) {
+            // Update existing prediction
+            const updatedSlip = [...predictionSlip];
+            updatedSlip[existingIndex] = { ...updatedSlip[existingIndex], prediction };
+            setPredictionSlip(updatedSlip);
+        } else {
+            // Add new prediction
+            setPredictionSlip([...predictionSlip, {
+                matchId: match.id,
+                match,
+                prediction,
+                points: 200 // Default points, could be dynamic based on match
+            }]);
+        }
+    };
+
+    const removeFromPredictionSlip = (matchId: number) => {
+        setPredictionSlip(predictionSlip.filter(item => item.matchId !== matchId));
+    };
+
+    const handleSubmitPredictions = () => {
+        console.log('Submitting predictions:', predictionSlip);
+        // TODO: Implement prediction submission
+        alert(`Submitted ${predictionSlip.length} predictions!`);
+    };
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -65,37 +122,61 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                <div className="px-4 py-6 sm:px-0">
-                    <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
-                        <div className="text-center">
-                            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                                Welcome to NetProphet Dashboard
-                            </h1>
-                            <p className="text-lg text-gray-600 mb-6">
-                                Hello, {user?.email}! You're successfully authenticated.
-                            </p>
-                            <div className="space-y-4">
-                                <div className="bg-white p-4 rounded-lg shadow">
-                                    <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                                        Your Tennis Prediction Platform
-                                    </h2>
-                                    <p className="text-gray-600">
-                                        This is where you'll manage your tennis predictions, view match analytics, and track your performance.
-                                    </p>
+        <div className="min-h-screen bg-gray-50 flex">
+            {/* Mobile sidebar overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            {/* Left Sidebar */}
+            <Sidebar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+                onMatchSelect={handleMatchSelect}
+                selectedMatchId={selectedMatch?.id}
+            />
+
+            {/* Main Content Area */}
+            <div className="flex-1 lg:ml-0">
+                {/* Top Navigation */}
+                <TopNavigation
+                    userEmail={user?.email}
+                    onMenuClick={() => setSidebarOpen(true)}
+                    onSignOut={handleSignOut}
+                />
+
+                {/* Content Grid */}
+                <div className="flex">
+                    {/* Central Content */}
+                    <div className="flex-1">
+                        {selectedMatch ? (
+                            <MatchDetail
+                                match={selectedMatch}
+                                onAddToPredictionSlip={addToPredictionSlip}
+                                onBack={() => setSelectedMatch(null)}
+                            />
+                        ) : (
+                            <div className="p-6">
+                                <div className="space-y-6">
+                                    {/* Stats Cards */}
+                                    <StatsCards stats={userStats} />
+
+                                    {/* Matches Grid */}
+                                    <MatchesGrid onAddToPredictionSlip={addToPredictionSlip} />
                                 </div>
-                                <button
-                                    onClick={async () => {
-                                        await supabase.auth.signOut();
-                                    }}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-                                >
-                                    Sign Out
-                                </button>
                             </div>
-                        </div>
+                        )}
                     </div>
+
+                    {/* Right Prediction Slip */}
+                    <PredictionSlip
+                        predictions={predictionSlip}
+                        onRemovePrediction={removeFromPredictionSlip}
+                        onSubmitPredictions={handleSubmitPredictions}
+                    />
                 </div>
             </div>
         </div>
