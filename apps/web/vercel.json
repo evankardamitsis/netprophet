@@ -2,10 +2,5 @@
   "buildCommand": "cd ../.. && pnpm --filter=@netprophet/lib build && pnpm --filter=@netprophet/ui build && pnpm --filter=@netprophet/web build",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-  "functions": {
-    "apps/web/src/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
-} 
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+}
