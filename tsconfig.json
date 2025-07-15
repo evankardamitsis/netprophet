@@ -1,0 +1,25 @@
+{
+    "files": [],
+    "references": [
+        {
+            "path": "packages/lib/tsconfig.json"
+        },
+        {
+            "path": "packages/ui/tsconfig.json"
+        },
+        {
+            "path": "packages/config/tsconfig.json"
+        },
+        {
+            "path": "apps/web/tsconfig.json"
+        },
+        {
+            "path": "apps/mobile/tsconfig.json"
+        }
+    ],
+    "exclude": [
+        "**/*.js",
+        "**/*.cjs",
+        "**/*.mjs"
+    ]
+}

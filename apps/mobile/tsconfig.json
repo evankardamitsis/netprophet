@@ -1,0 +1,24 @@
+{
+    "extends": "@netprophet/config/tsconfig.json",
+    "compilerOptions": {
+        "jsx": "react-native",
+        "allowJs": true,
+        "noEmit": true,
+        "strict": true,
+        "types": [
+            "react",
+            "react-native"
+        ],
+        "skipLibCheck": true
+    },
+    "include": [
+        "app/**/*",
+        "src/**/*",
+        "index.ts",
+        "index.tsx"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}
