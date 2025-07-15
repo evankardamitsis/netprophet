@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@netprophet/ui';
-import { useAuth } from '@netprophet/lib';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SignInPage() {
     const [email, setEmail] = useState('');
