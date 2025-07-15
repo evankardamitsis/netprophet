@@ -5,9 +5,6 @@ export type { Database } from './types/database';
 export { supabase } from './supabase/client';
 export type { SupabaseClient } from './supabase/client';
 
-// Hooks
-export { useAuth } from './hooks/useAuth';
-
 // Stores
 export { useAuthStore } from './store/auth';
 

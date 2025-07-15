@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@netprophet/ui';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@netprophet/ui';
 
