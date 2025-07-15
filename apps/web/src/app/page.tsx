@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@netprophet/ui';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@netprophet/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
 
 export default function HomePage() {
     const router = useRouter();
@@ -68,6 +68,7 @@ export default function HomePage() {
                                     variant="outline"
                                     size="lg"
                                     className="text-lg px-8 py-4"
+                                    onClick={() => router.push('/how-it-works')}
                                 >
                                     Δες πώς λειτουργεί
                                 </Button>
@@ -211,6 +212,248 @@ export default function HomePage() {
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* Live Leaderboard Snippet */}
+            <section className="py-20 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-center">
+                        <Card className="max-w-md w-full border-0 shadow-lg">
+                            <CardHeader className="relative">
+                                <div className="flex justify-between items-center">
+                                    <CardTitle>Live Leaderboard</CardTitle>
+                                    <Badge variant="destructive">LIVE</Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium">@nikos</span>
+                                        <span className="text-blue-600 font-bold">215 π</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium">@maria</span>
+                                        <span className="text-blue-600 font-bold">193 π</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-medium">@giorgos</span>
+                                        <span className="text-blue-600 font-bold">180 π</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
+
+            {/* Prediction Challenge Teaser */}
+            <section className="py-20 bg-gray-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center gap-3 bg-muted p-4 rounded-xl max-w-2xl mx-auto">
+                        <div className="flex-1">
+                            <p className="text-lg font-medium">Τρέχει τώρα: Open Glyfada – 12 συμμετοχές</p>
+                        </div>
+                        <Button onClick={() => router.push('/dashboard')}>
+                            Κάνε την πρόβλεψη σου
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            {/* Visual Split Section */}
+            <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-green-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            Δες πώς θα φαίνεται
+                        </h2>
+                        <p className="text-xl text-gray-600">
+                            Εμπειρία που θα σε κάνει να θέλεις να ξεκινήσεις τώρα
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-12">
+                        {/* Predict UI */}
+                        <div className="group">
+                            <div className="relative">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-green-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                                <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div>
+                                            <h3 className="font-bold text-xl text-gray-900">Roland Garros Final</h3>
+                                            <p className="text-sm text-gray-500">French Open 2024</p>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                                            <Badge variant="destructive" className="animate-pulse">LIVE</Badge>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 mb-6">
+                                        <div className="relative group/item">
+                                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-300 cursor-pointer">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">R</div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">Rafael Nadal</div>
+                                                        <div className="text-sm text-gray-600">🇪🇸 Spain • 22 Grand Slams</div>
+                                                    </div>
+                                                </div>
+                                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                    Pick Winner
+                                                </Button>
+                                            </div>
+                                            <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+
+                                        <div className="relative group/item">
+                                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all duration-300 cursor-pointer">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center text-white font-bold text-lg">N</div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">Novak Djokovic</div>
+                                                        <div className="text-sm text-gray-600">🇷🇸 Serbia • 24 Grand Slams</div>
+                                                    </div>
+                                                </div>
+                                                <Button size="sm" variant="outline">
+                                                    Pick Winner
+                                                </Button>
+                                            </div>
+                                            <div className="absolute inset-0 bg-gray-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-between items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="text-2xl">🎯</span>
+                                            <span className="font-semibold text-green-800">High Stakes Match</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-green-600 text-lg">+250 π</div>
+                                            <div className="text-sm text-green-600">Correct Pick</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-center mt-6">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Κάνε την πρόβλεψή σου</h3>
+                                <p className="text-gray-600">Επέλεξε τον νικητή και κέρδισε πόντους</p>
+                            </div>
+                        </div>
+
+                        {/* Leaderboard UI */}
+                        <div className="group">
+                            <div className="relative">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                                <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div>
+                                            <h3 className="font-bold text-xl text-gray-900">Weekly Champions</h3>
+                                            <p className="text-sm text-gray-500">Top performers this week</p>
+                                        </div>
+                                        <Badge variant="secondary" className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+                                            This Week
+                                        </Badge>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div className="relative group/item">
+                                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border-2 border-yellow-200 hover:border-yellow-300 transition-all duration-300">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full flex items-center justify-center text-white font-bold text-lg">1</div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">@tennis_pro</div>
+                                                        <div className="text-sm text-gray-600">🏆 7 correct picks</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold text-yellow-600 text-xl">1,250 π</div>
+                                                    <div className="text-sm text-yellow-600">+180 today</div>
+                                                </div>
+                                            </div>
+                                            <div className="absolute inset-0 bg-yellow-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+
+                                        <div className="relative group/item">
+                                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border-2 border-gray-200 hover:border-gray-300 transition-all duration-300">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-gradient-to-r from-gray-400 to-slate-500 rounded-full flex items-center justify-center text-white font-bold text-lg">2</div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">@maria_ace</div>
+                                                        <div className="text-sm text-gray-600">🥈 6 correct picks</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold text-gray-600 text-xl">1,180 π</div>
+                                                    <div className="text-sm text-gray-600">+120 today</div>
+                                                </div>
+                                            </div>
+                                            <div className="absolute inset-0 bg-gray-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+
+                                        <div className="relative group/item">
+                                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border-2 border-orange-200 hover:border-orange-300 transition-all duration-300">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full flex items-center justify-center text-white font-bold text-lg">3</div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">@greek_tennis</div>
+                                                        <div className="text-sm text-gray-600">🥉 5 correct picks</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold text-orange-600 text-xl">1,120 π</div>
+                                                    <div className="text-sm text-orange-600">+95 today</div>
+                                                </div>
+                                            </div>
+                                            <div className="absolute inset-0 bg-orange-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+
+                                        <div className="relative group/item">
+                                            <div className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 hover:border-blue-300 transition-all duration-300">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">4</div>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">@netprophet</div>
+                                                        <div className="text-sm text-gray-600">4 correct picks</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-bold text-blue-600 text-xl">980 π</div>
+                                                    <div className="text-sm text-blue-600">+75 today</div>
+                                                </div>
+                                            </div>
+                                            <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                                        <div className="flex items-center justify-center space-x-2 text-purple-700">
+                                            <span className="text-xl">🚀</span>
+                                            <span className="font-semibold">You could be here!</span>
+                                            <span className="text-xl">🚀</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-center mt-6">
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Ανέβα στο leaderboard</h3>
+                                <p className="text-gray-600">Δείξε σε όλους ποιος είναι ο καλύτερος</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Quote / Fun-Fact Box */}
+            <section className="py-20 bg-gray-50">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <Alert>
+                        <span className="text-2xl">💡</span>
+                        <AlertDescription className="text-lg">
+                            "Μέσος όρος επιτυχίας προβλέψεων στους τελικούς: 38% — μπορείς καλύτερα;"
+                        </AlertDescription>
+                    </Alert>
                 </div>
             </section>
 
