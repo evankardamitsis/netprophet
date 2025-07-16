@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Button, Badge } from '@netprophet/ui';
 
-import { Match, PredictionItem } from '@/types/dashboard';
+import { PredictionItem } from '@/types/dashboard';
 
 // Icon component
 function XIcon() {

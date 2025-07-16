@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
-import { supabase } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { MatchDetail } from '@/components/dashboard/MatchDetail';
