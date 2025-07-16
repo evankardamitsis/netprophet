@@ -48,7 +48,7 @@ export function MatchesList() {
     if (error) return <div>Error loading matches: {error.message}</div>;
 
     return (
-        <div className="space-y-4">
+        <div className="h-full overflow-y-auto space-y-4">
             {matches?.map((match) => (
                 <div
                     key={match.id}

@@ -5,7 +5,7 @@ import { Match } from '@/types/dashboard';
 
 interface MatchesGridProps {
     matches?: Match[];
-    onAddToPredictionSlip: (match: Match, prediction: string) => void;
+    onSelectMatch: (match: Match) => void;
 }
 
 // Mock matches data
@@ -90,7 +90,7 @@ const mockMatches: Match[] = [
     }
 ];
 
-export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: MatchesGridProps) {
+export function MatchesGrid({ matches = mockMatches, onSelectMatch }: MatchesGridProps) {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'live':
@@ -108,11 +108,11 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 
     return (
-        <div className="h-screen overflow-y-auto space-y-8">
+        <div className="space-y-6">
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center p-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2" />
                         Live Matches ({liveMatches.length})
                     </h2>
@@ -150,22 +150,13 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
                                         <div className="text-sm text-gray-600">
                                             Points: <span className="font-semibold text-green-600">+{match.points}</span>
                                         </div>
-                                        <div className="flex space-x-2">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => onAddToPredictionSlip(match, match.player1.name)}
-                                                className="bg-blue-600 hover:bg-blue-700"
-                                            >
-                                                Pick {match.player1.name.split(' ')[1]}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => onAddToPredictionSlip(match, match.player2.name)}
-                                            >
-                                                Pick {match.player2.name.split(' ')[1]}
-                                            </Button>
-                                        </div>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onSelectMatch(match)}
+                                            className="bg-blue-600 hover:bg-blue-700"
+                                        >
+                                            Make Predictions
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -177,7 +168,7 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
             {/* Upcoming Matches Section */}
             {upcomingMatches.length > 0 && (
                 <div>
-                    <h2 className="text-lg p-4 font-semibold text-gray-900 mb-4">Upcoming Matches ({upcomingMatches.length})</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Matches ({upcomingMatches.length})</h2>
                     <div className="grid gap-4">
                         {upcomingMatches.map((match) => (
                             <Card key={match.id} className="hover:shadow-md transition-shadow">
@@ -212,22 +203,13 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
                                         <div className="text-sm text-gray-600">
                                             Points: <span className="font-semibold text-green-600">+{match.points}</span>
                                         </div>
-                                        <div className="flex space-x-2">
-                                            <Button
-                                                size="sm"
-                                                onClick={() => onAddToPredictionSlip(match, match.player1.name)}
-                                                className="bg-blue-600 hover:bg-blue-700"
-                                            >
-                                                Pick {match.player1.name.split(' ')[1]}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => onAddToPredictionSlip(match, match.player2.name)}
-                                            >
-                                                Pick {match.player2.name.split(' ')[1]}
-                                            </Button>
-                                        </div>
+                                        <Button
+                                            size="sm"
+                                            onClick={() => onSelectMatch(match)}
+                                            className="bg-blue-600 hover:bg-blue-700"
+                                        >
+                                            Make Predictions
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

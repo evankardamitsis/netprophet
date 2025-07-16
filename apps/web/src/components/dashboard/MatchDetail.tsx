@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@netprophet/ui';
 
 import { Match } from '@/types/dashboard';
@@ -80,7 +80,8 @@ const getMatchDetails = (matchId: number) => {
 };
 
 export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetailProps) {
-    const [predictions, setPredictions] = useState<PredictionOptions>({
+    // Helper function to create empty predictions state
+    const createEmptyPredictions = (): PredictionOptions => ({
         winner: '',
         matchResult: '',
         set1Score: '',
@@ -99,6 +100,15 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
         doubleFaults: '',
         breakPoints: ''
     });
+
+    const [predictions, setPredictions] = useState<PredictionOptions>(createEmptyPredictions());
+
+    // Clear predictions when match changes
+    useEffect(() => {
+        if (match) {
+            setPredictions(createEmptyPredictions());
+        }
+    }, [match?.id]); // Only clear when match ID changes
 
     if (!match) {
         return (
@@ -141,7 +151,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
         setPredictions(prev => {
             const newPredictions = { ...prev, [type]: value };
 
-            // If winner changes, clear match result and all set score predictions
+            // If winner changes, clear dependent predictions
             if (type === 'winner') {
                 newPredictions.matchResult = '';
                 newPredictions.set1Score = '';
@@ -156,7 +166,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                 newPredictions.set5Winner = '';
             }
 
-            // If match result changes, clear all set score and winner predictions
+            // If match result changes, clear set-specific predictions
             if (type === 'matchResult') {
                 newPredictions.set1Score = '';
                 newPredictions.set2Score = '';
@@ -175,17 +185,61 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
     };
 
     const handleSubmitPredictions = () => {
-        const predictionText = Object.entries(predictions)
-            .filter(([_, value]) => value !== '')
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
+        // Build a structured prediction object
+        const predictionParts: string[] = [];
+
+        if (predictions.winner) {
+            predictionParts.push(`Winner: ${predictions.winner}`);
+        }
+
+        if (predictions.matchResult) {
+            predictionParts.push(`Result: ${predictions.matchResult}`);
+        }
+
+        // Add set scores if available
+        const setScores = [
+            predictions.set1Score,
+            predictions.set2Score,
+            predictions.set3Score,
+            predictions.set4Score,
+            predictions.set5Score
+        ].filter(score => score !== '');
+
+        if (setScores.length > 0) {
+            predictionParts.push(`Sets: ${setScores.join(', ')}`);
+        }
+
+        // Add other predictions
+        if (predictions.tieBreak) {
+            predictionParts.push(`Tie-break: ${predictions.tieBreak}`);
+        }
+
+        if (predictions.totalGames) {
+            predictionParts.push(`Total Games: ${predictions.totalGames}`);
+        }
+
+        if (predictions.acesLeader) {
+            predictionParts.push(`Most Aces: ${predictions.acesLeader}`);
+        }
+
+        if (predictions.doubleFaults) {
+            predictionParts.push(`Double Faults: ${predictions.doubleFaults}`);
+        }
+
+        if (predictions.breakPoints) {
+            predictionParts.push(`Break Points: ${predictions.breakPoints}`);
+        }
+
+        const predictionText = predictionParts.join(' | ');
 
         if (predictionText) {
             onAddToPredictionSlip(match, predictionText);
+            // Don't clear predictions - keep them in state for potential editing
         }
     };
 
     const hasPredictions = Object.values(predictions).some(value => value !== '');
+    const predictionCount = Object.values(predictions).filter(value => value !== '').length;
 
     // Helper function to render set score dropdowns
     const renderSetScoreDropdown = (setNumber: number, value: string, onChange: (value: string) => void) => (
@@ -300,7 +354,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
     const setWinnersFromResult = getSetWinnersFromResult(predictions.matchResult, predictions.winner);
 
     return (
-        <div className="flex-1 p-6">
+        <div className="space-y-6">
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Back Button */}
                 <div className="flex items-center">
@@ -390,13 +444,13 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                     </div>
 
                     {/* Prediction Options */}
-                    <div className="lg:col-span-2">
-                        <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+                    <div className="lg:col-span-2 flex flex-col h-full">
+                        <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200 flex-1 flex flex-col">
                             <CardHeader>
                                 <CardTitle className="text-xl">Make Your Predictions</CardTitle>
                                 <p className="text-gray-600">Choose from multiple prediction types to maximize your points!</p>
                             </CardHeader>
-                            <CardContent className="space-y-6">
+                            <CardContent className="flex-1 overflow-y-auto space-y-6 pb-20">
                                 {/* Winner Prediction */}
                                 <div className="space-y-3">
                                     <h3 className="font-semibold text-gray-900">Match Winner</h3>
@@ -684,18 +738,18 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                                     </select>
                                 </div>
 
-                                {/* Submit Button */}
-                                <div className="pt-4">
-                                    <Button
-                                        onClick={handleSubmitPredictions}
-                                        disabled={!hasPredictions}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
-                                        size="lg"
-                                    >
-                                        {hasPredictions ? `Add ${Object.values(predictions).filter(v => v !== '').length} Prediction(s) to Slip` : 'Select at least one prediction'}
-                                    </Button>
-                                </div>
                             </CardContent>
+                            {/* Sticky Submit Button - Inside the card */}
+                            <div className="sticky bottom-0 bg-gradient-to-r from-blue-50 to-green-50 border-t border-blue-200 p-6 pt-4">
+                                <Button
+                                    onClick={handleSubmitPredictions}
+                                    disabled={!hasPredictions}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                                    size="lg"
+                                >
+                                    {hasPredictions ? `Add to Prediction Slip (${predictionCount})` : 'Select at least one prediction'}
+                                </Button>
+                            </div>
                         </Card>
                     </div>
                 </div>

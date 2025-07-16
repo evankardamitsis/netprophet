@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence } from 'framer-motion';
 import { supabase } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { MatchDetail } from '@/components/dashboard/MatchDetail';
-import { PredictionSlip } from '@/components/dashboard/PredictionSlip';
+import { PredictionSlip, FloatingPredictionButton } from '@/components/dashboard/PredictionSlip';
 import { StatsCards } from '@/components/dashboard/StatsCards';
 import { TopNavigation } from '@/components/dashboard/TopNavigation';
 import { MatchesGrid } from '@/components/dashboard/MatchesGrid';
@@ -21,6 +22,8 @@ export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [currentPage, setCurrentPage] = useState<'dashboard' | 'leaderboard' | 'rewards'>('dashboard');
     const [predictionSlip, setPredictionSlip] = useState<PredictionItem[]>([]);
+    const [isPredictionSlipCollapsed, setIsPredictionSlipCollapsed] = useState(false);
+    const [showFloatingButton, setShowFloatingButton] = useState(false);
 
     // Mock stats data
     const userStats: UserStats = {
@@ -35,6 +38,11 @@ export default function DashboardPage() {
             router.push('/auth/signin');
         }
     }, [user, loading, router]);
+
+    // Handle floating button visibility
+    useEffect(() => {
+        setShowFloatingButton(isPredictionSlipCollapsed && predictionSlip.length > 0);
+    }, [isPredictionSlipCollapsed, predictionSlip.length]);
 
     const handleSignOut = async () => {
         await signOut();
@@ -64,6 +72,11 @@ export default function DashboardPage() {
                 points: match.points
             }]);
         }
+
+        // Automatically expand the prediction slip when predictions are added
+        if (isPredictionSlipCollapsed) {
+            setIsPredictionSlipCollapsed(false);
+        }
     };
 
     const removeFromPredictionSlip = (matchId: number) => {
@@ -80,23 +93,28 @@ export default function DashboardPage() {
         setSelectedMatch(null);
     };
 
+    const handleExpandPredictionSlip = () => {
+        // Add a small delay to make the animation feel more natural
+        setTimeout(() => {
+            setIsPredictionSlipCollapsed(false);
+        }, 100);
+    };
+
     if (!user) {
         return null;
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative">
-            <div className="relative z-10 flex min-h-screen">
+        <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
+            <div className="relative z-10 flex h-full">
                 {/* Sidebar */}
-                <div className={`fixed lg:static inset-y-0 left-0 z-50 w-80 bg-white/90 backdrop-blur-md border-r border-white/20 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-                    <div className="h-full overflow-y-auto">
-                        <Sidebar
-                            isOpen={sidebarOpen}
-                            onClose={() => setSidebarOpen(false)}
-                            onMatchSelect={handleMatchSelect}
-                            selectedMatchId={selectedMatch?.id}
-                        />
-                    </div>
+                <div className={`fixed lg:static inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                    <Sidebar
+                        isOpen={sidebarOpen}
+                        onClose={() => setSidebarOpen(false)}
+                        onMatchSelect={handleMatchSelect}
+                        selectedMatchId={selectedMatch?.id}
+                    />
                 </div>
 
                 {/* Main Content */}
@@ -111,20 +129,20 @@ export default function DashboardPage() {
                     />
 
                     {/* Content Area */}
-                    <div className="flex-1 flex">
+                    <div className="flex-1 flex min-h-0">
                         {/* Central Content */}
-                        <div className="flex-1 flex flex-col overflow-hidden">
+                        <div className="flex-1 flex flex-col min-h-0">
                             {currentPage === 'dashboard' ? (
                                 <>
                                     {/* Stats Cards */}
-                                    <div className="p-6 pb-4">
+                                    <div className="flex-shrink-0 p-6 pb-4">
                                         <StatsCards stats={userStats} />
                                     </div>
 
                                     {/* Main Content */}
-                                    <div className="flex-1 flex overflow-hidden">
+                                    <div className="flex-1 min-h-0 overflow-hidden">
                                         {selectedMatch ? (
-                                            <div className="flex-1 overflow-y-auto p-6">
+                                            <div className="h-full overflow-y-auto p-6">
                                                 <MatchDetail
                                                     match={selectedMatch}
                                                     onAddToPredictionSlip={addToPredictionSlip}
@@ -132,8 +150,8 @@ export default function DashboardPage() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="flex-1 overflow-y-auto p-6">
-                                                <MatchesGrid onAddToPredictionSlip={addToPredictionSlip} />
+                                            <div className="h-full overflow-y-auto p-6">
+                                                <MatchesGrid onSelectMatch={handleMatchSelect} />
                                             </div>
                                         )}
                                     </div>
@@ -157,12 +175,14 @@ export default function DashboardPage() {
 
                         {/* Right Sidebar - Prediction Slip */}
                         {currentPage === 'dashboard' && (
-                            <div className="w-96 bg-white/90 backdrop-blur-md border-l border-white/20 hidden xl:block">
+                            <div className={`bg-white/90 backdrop-blur-md border-l border-white/20 hidden xl:block transition-all duration-300 ease-in-out ${isPredictionSlipCollapsed ? 'w-0' : 'w-96'}`}>
                                 <div className="h-full overflow-y-auto">
                                     <PredictionSlip
                                         predictions={predictionSlip}
                                         onRemovePrediction={removeFromPredictionSlip}
                                         onSubmitPredictions={handleSubmitPredictions}
+                                        isCollapsed={isPredictionSlipCollapsed}
+                                        onToggleCollapse={() => setIsPredictionSlipCollapsed(!isPredictionSlipCollapsed)}
                                     />
                                 </div>
                             </div>
@@ -178,6 +198,16 @@ export default function DashboardPage() {
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
+
+            {/* Floating Prediction Button - shows when slip is collapsed */}
+            <AnimatePresence>
+                {currentPage === 'dashboard' && showFloatingButton && (
+                    <FloatingPredictionButton
+                        predictions={predictionSlip}
+                        onClick={handleExpandPredictionSlip}
+                    />
+                )}
+            </AnimatePresence>
         </div>
     );
 } 

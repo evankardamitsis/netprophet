@@ -8,19 +8,19 @@ import { Match } from '@/types/dashboard';
 
 // Icon components
 function ChevronDownIcon() {
-  return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    return <svg className="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
 }
 
 function ChevronRightIcon() {
-  return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    return <svg className="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
     </svg>
 }
 
 function XIcon() {
-  return <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    return <svg className="h-5 w-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
 }
@@ -197,16 +197,16 @@ function CountdownTimer({ lockTime }: { lockTime: Date }) {
             return `${hours}h ${minutes}m`;
         } if (minutes > 0) {
             return `${minutes}m ${seconds}s`;
-        } 
-            return `${seconds}s`;
-        
+        }
+        return `${seconds}s`;
+
     };
 
     const isUrgent = timeLeft < 5 * 60 * 1000; // Less than 5 minutes
     const isVeryUrgent = timeLeft < 60 * 1000; // Less than 1 minute
 
     return (
-        <div className={`text-xs font-mono ${isVeryUrgent ? 'text-red-600 animate-pulse' : isUrgent ? 'text-orange-600' : 'text-gray-600'}`}>
+        <div className={`text-xs font-mono ${isVeryUrgent ? 'text-red-400 animate-pulse' : isUrgent ? 'text-orange-400' : 'text-gray-400'}`}>
             {formatTime(timeLeft)}
         </div>
     );
@@ -219,22 +219,22 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
     if (liveMatches.length === 0) return null;
 
     return (
-        <div className="mb-4 p-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
-            <div className="flex items-center space-x-2 mb-2">
+        <div className="mb-4 p-4 bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-dashed border-red-700/50 rounded-xl">
+            <div className="flex items-center space-x-2 mb-3">
                 <span className="text-lg">🔥</span>
-                <span className="font-semibold text-red-800">Live Matches</span>
-                <Badge variant="destructive" className="text-xs">
+                <span className="font-semibold text-red-300 tracking-wide">Live Matches</span>
+                <Badge variant="destructive" className="text-xs bg-red-900/50 text-red-300 border border-red-500">
                     {liveMatches.length}
                 </Badge>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
                 {liveMatches.map((match) => (
-                    <div key={match.id} className="flex items-center justify-between p-2 bg-white rounded border border-red-100">
+                    <div key={match.id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-red-700/40">
                         <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-semibold text-yellow-200">
                                 {match.player1.name.split(' ')[1]} vs {match.player2.name.split(' ')[1]}
                             </div>
-                            <div className="text-xs text-gray-500">{match.court}</div>
+                            <div className="text-xs text-slate-400">{match.court}</div>
                         </div>
                         <div className="text-right">
                             <CountdownTimer lockTime={match.lockTime} />
@@ -299,119 +299,115 @@ export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: Sid
     const allMatches = mockTournaments.flatMap(t => t.matches);
 
     return (
-        <div className={`
-            w-80 bg-white shadow-xl lg:relative lg:flex-shrink-0
-        `}>
-            <div className="flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-                {/* Sidebar Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <h2 className="text-lg font-semibold text-gray-900">Tournaments</h2>
-                    <button
-                        onClick={onClose}
-                        className="lg:hidden p-2 rounded-md hover:bg-gray-100"
-                    >
-                        <XIcon />
-                    </button>
-                </div>
+        <div className="w-80 bg-slate-900 shadow-xl lg:relative lg:flex-shrink-0 h-screen flex flex-col border-r border-slate-800">
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between p-6 border-b border-dashed border-slate-700 bg-slate-800">
+                <h2 className="text-lg font-bold text-yellow-300 tracking-wider uppercase">Tournaments</h2>
+                <button
+                    onClick={onClose}
+                    className="lg:hidden p-2 rounded-md hover:bg-slate-700 text-slate-400 hover:text-yellow-300 transition-colors"
+                >
+                    <XIcon />
+                </button>
+            </div>
 
-                {/* Live Match Banner */}
-                <div className="px-4">
-                    <LiveMatchBanner matches={allMatches} />
-                </div>
+            {/* Live Match Banner */}
+            <div className="px-6">
+                <LiveMatchBanner matches={allMatches} />
+            </div>
 
-                {/* Tournament List */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {mockTournaments.map((tournament) => (
-                        <Card key={tournament.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                            <CardHeader
-                                className="pb-2 cursor-pointer"
-                                onClick={() => toggleTournament(tournament.id)}
-                            >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                        {expandedTournaments.has(tournament.id) ? (
-                                            <ChevronDownIcon />
-                                        ) : (
-                                            <ChevronRightIcon />
-                                        )}
-                                        <CardTitle className="text-sm font-medium">{tournament.name}</CardTitle>
-                                    </div>
-                                    <Badge
-                                        variant={getStatusColor(tournament.status)}
-                                        className="text-xs"
-                                    >
-                                        {tournament.status === 'active' ? 'LIVE' : tournament.status.toUpperCase()}
-                                    </Badge>
+            {/* Tournament List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {mockTournaments.map((tournament) => (
+                    <Card key={tournament.id} className="cursor-pointer hover:shadow-lg transition-shadow bg-slate-800 border border-slate-700 rounded-xl">
+                        <CardHeader
+                            className="pb-3 cursor-pointer"
+                            onClick={() => toggleTournament(tournament.id)}
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    {expandedTournaments.has(tournament.id) ? (
+                                        <ChevronDownIcon />
+                                    ) : (
+                                        <ChevronRightIcon />
+                                    )}
+                                    <CardTitle className="text-sm font-semibold text-yellow-200">{tournament.name}</CardTitle>
                                 </div>
-                            </CardHeader>
+                                <Badge
+                                    variant={getStatusColor(tournament.status)}
+                                    className={`text-xs bg-slate-700 text-yellow-300 border border-yellow-400 ${tournament.status === 'finished' ? 'text-slate-400 border-slate-500' : ''}`}
+                                >
+                                    {tournament.status === 'active' ? 'LIVE' : tournament.status.toUpperCase()}
+                                </Badge>
+                            </div>
+                        </CardHeader>
 
-                            {expandedTournaments.has(tournament.id) && (
-                                <CardContent className="pt-0">
-                                    <div className="space-y-2">
-                                        {tournament.matches.map((match) => {
-                                            const isLocked = match.isLocked || currentTime >= match.lockTime;
-                                            const isStarted = currentTime >= match.startTime;
+                        {expandedTournaments.has(tournament.id) && (
+                            <CardContent className="pt-0">
+                                <div className="space-y-3">
+                                    {tournament.matches.map((match) => {
+                                        const isLocked = match.isLocked || currentTime >= match.lockTime;
+                                        const isStarted = currentTime >= match.startTime;
 
-                                            return (
-                                                <div
-                                                    key={match.id}
-                                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedMatchId === match.id
-                                                        ? 'bg-blue-50 border border-blue-200'
-                                                        : isLocked || isStarted
-                                                            ? 'bg-gray-100 border border-gray-200 opacity-75'
-                                                            : 'bg-gray-50 hover:bg-gray-100'
-                                                        }`}
-                                                    onClick={() => !isLocked && onMatchSelect(match)}
-                                                >
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div className="flex-1">
-                                                            <div className={`text-sm font-medium ${isLocked || isStarted ? 'text-gray-500' : 'text-gray-900'
-                                                                }`}>
-                                                                {match.player1.name} vs {match.player2.name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500 mt-1">{match.court}</div>
+                                        return (
+                                            <div
+                                                key={match.id}
+                                                className={`p-4 rounded-xl cursor-pointer transition-all duration-200 border ${selectedMatchId === match.id
+                                                    ? 'bg-slate-700 border-yellow-400 shadow-lg'
+                                                    : isLocked || isStarted
+                                                        ? 'bg-slate-700 border-slate-600 opacity-75'
+                                                        : 'bg-slate-700 border-slate-600 hover:bg-slate-600 hover:border-slate-500'
+                                                    }`}
+                                                onClick={() => !isLocked && onMatchSelect(match)}
+                                            >
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex-1">
+                                                        <div className={`text-sm font-semibold ${isLocked || isStarted ? 'text-slate-400' : 'text-yellow-200'
+                                                            }`}>
+                                                            {match.player1.name} vs {match.player2.name}
                                                         </div>
-                                                        <div className="flex flex-col items-end space-y-1">
-                                                            <Badge
-                                                                variant={getMatchStatusColor(match.status)}
-                                                                className="text-xs"
-                                                            >
-                                                                {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
-                                                            </Badge>
-                                                            <span className="text-xs text-gray-500">{match.time}</span>
-                                                        </div>
+                                                        <div className="text-xs text-slate-400 mt-1">{match.court}</div>
                                                     </div>
-
-                                                    {/* Countdown and Lock Status */}
-                                                    <div className="flex items-center justify-between mt-2">
-                                                        <div className="text-xs text-gray-500">
-                                                            {isLocked ? (
-                                                                <span className="text-red-600 font-medium">🔒 LOCKED</span>
-                                                            ) : isStarted ? (
-                                                                <span className="text-orange-600 font-medium">⚡ LIVE</span>
-                                                            ) : (
-                                                                <span className="text-blue-600">⏰ Lock in:</span>
-                                                            )}
-                                                        </div>
-                                                        {!isLocked && (
-                                                            <CountdownTimer lockTime={match.lockTime} />
-                                                        )}
+                                                    <div className="flex flex-col items-end space-y-1">
+                                                        <Badge
+                                                            variant={getMatchStatusColor(match.status)}
+                                                            className={`text-xs bg-slate-700 text-yellow-300 border border-yellow-400 ${match.status === 'finished' ? 'text-slate-400 border-slate-500' : ''}`}
+                                                        >
+                                                            {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
+                                                        </Badge>
+                                                        <span className="text-xs text-slate-400">{match.time}</span>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </CardContent>
-                            )}
-                        </Card>
-                    ))}
-                </div>
 
-                {/* Sidebar Footer */}
-                <div className="p-4 border-t border-gray-200">
-                    <div className="text-xs text-gray-500 text-center">
-                        {mockTournaments.filter(t => t.status === 'active').length} active tournaments
-                    </div>
+                                                {/* Countdown and Lock Status */}
+                                                <div className="flex items-center justify-between mt-3">
+                                                    <div className="text-xs text-slate-400">
+                                                        {isLocked ? (
+                                                            <span className="text-red-400 font-medium">🔒 LOCKED</span>
+                                                        ) : isStarted ? (
+                                                            <span className="text-orange-400 font-medium">⚡ LIVE</span>
+                                                        ) : (
+                                                            <span className="text-blue-400">⏰ Lock in:</span>
+                                                        )}
+                                                    </div>
+                                                    {!isLocked && (
+                                                        <CountdownTimer lockTime={match.lockTime} />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </CardContent>
+                        )}
+                    </Card>
+                ))}
+            </div>
+
+            {/* Sidebar Footer */}
+            <div className="p-6 border-t border-dashed border-slate-700 bg-slate-800">
+                <div className="text-xs text-slate-400 text-center">
+                    {mockTournaments.filter(t => t.status === 'active').length} active tournaments
                 </div>
             </div>
         </div>
