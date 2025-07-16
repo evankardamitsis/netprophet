@@ -107,9 +107,8 @@ export default function DashboardPage() {
         <div className="h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
             <div className="relative z-10 flex h-full">
                 {/* Sidebar */}
-                <div className={`fixed lg:static inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                <div className={`fixed lg:static inset-y-0 left-0 z-50 w-72 md:w-80 xl:w-96 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
                     <Sidebar
-                        isOpen={sidebarOpen}
                         onClose={() => setSidebarOpen(false)}
                         onMatchSelect={handleMatchSelect}
                         selectedMatchId={selectedMatch?.id}
@@ -200,7 +199,7 @@ export default function DashboardPage() {
 
             {/* Floating Prediction Button - shows when slip is collapsed */}
             <AnimatePresence>
-                {currentPage === 'dashboard' && showFloatingButton && (
+                {showFloatingButton && (
                     <FloatingPredictionButton
                         predictions={predictionSlip}
                         onClick={handleExpandPredictionSlip}

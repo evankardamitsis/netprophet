@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
-import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
 import { Match } from '@/types/dashboard';
 
@@ -33,7 +32,6 @@ interface Tournament {
 }
 
 interface SidebarProps {
-    isOpen: boolean;
     onClose: () => void;
     onMatchSelect: (match: Match) => void;
     selectedMatchId?: number;
@@ -227,7 +225,7 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
                     {liveMatches.length}
                 </Badge>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-48 overflow-y-auto">
                 {liveMatches.map((match) => (
                     <div key={match.id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-red-700/40">
                         <div className="flex-1">
@@ -246,7 +244,7 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
     );
 }
 
-export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: SidebarProps) {
+export function Sidebar({ onClose, onMatchSelect, selectedMatchId }: SidebarProps) {
     const [expandedTournaments, setExpandedTournaments] = useState<Set<number>>(new Set([1])); // Default expand first tournament
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -299,7 +297,7 @@ export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: Sid
     const allMatches = mockTournaments.flatMap(t => t.matches);
 
     return (
-        <div className="w-80 bg-slate-900 shadow-xl lg:relative lg:flex-shrink-0 h-screen flex flex-col border-r border-slate-800">
+        <div className="w-72 md:w-80 xl:w-96 bg-slate-900 shadow-xl lg:relative lg:flex-shrink-0 h-screen flex flex-col border-r border-slate-800">
             {/* Sidebar Header */}
             <div className="flex items-center justify-between p-6 border-b border-dashed border-slate-700 bg-slate-800">
                 <h2 className="text-lg font-bold text-yellow-300 tracking-wider uppercase">Tournaments</h2>
