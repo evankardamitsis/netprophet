@@ -113,7 +113,7 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
             {liveMatches.length > 0 && (
                 <div>
                     <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center p-4">
-                        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2"></span>
+                        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2" />
                         Live Matches ({liveMatches.length})
                     </h2>
                     <div className="grid gap-4">

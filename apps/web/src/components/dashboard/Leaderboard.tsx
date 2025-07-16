@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@netprophet/ui';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button , Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
 
 interface LeaderboardEntry {
     id: number;

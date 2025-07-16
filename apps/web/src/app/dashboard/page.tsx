@@ -11,6 +11,7 @@ import { StatsCards } from '@/components/dashboard/StatsCards';
 import { TopNavigation } from '@/components/dashboard/TopNavigation';
 import { MatchesGrid } from '@/components/dashboard/MatchesGrid';
 import { Leaderboard } from '@/components/dashboard/Leaderboard';
+import { RewardShop } from '@/components/dashboard/RewardShop';
 import { Match, PredictionItem, UserStats } from '@/types/dashboard';
 
 export default function DashboardPage() {
@@ -18,7 +19,7 @@ export default function DashboardPage() {
     const { user, signOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-    const [currentPage, setCurrentPage] = useState<'dashboard' | 'leaderboard'>('dashboard');
+    const [currentPage, setCurrentPage] = useState<'dashboard' | 'leaderboard' | 'rewards'>('dashboard');
     const [predictionSlip, setPredictionSlip] = useState<PredictionItem[]>([]);
 
     // Mock stats data
@@ -137,6 +138,16 @@ export default function DashboardPage() {
                                         )}
                                     </div>
                                 </>
+                            ) : currentPage === 'rewards' ? (
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    <RewardShop
+                                        userPoints={userStats.totalPoints}
+                                        onRedeem={(reward) => {
+                                            console.log('Redeeming reward:', reward);
+                                            // TODO: Implement reward redemption logic
+                                        }}
+                                    />
+                                </div>
                             ) : (
                                 <div className="flex-1 overflow-y-auto p-6">
                                     <Leaderboard />

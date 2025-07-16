@@ -4,26 +4,26 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
+import { Match } from '@/types/dashboard';
+
 // Icon components
-const ChevronDownIcon = () => (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+function ChevronDownIcon() {
+  return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
-);
+}
 
-const ChevronRightIcon = () => (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+function ChevronRightIcon() {
+  return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
     </svg>
-);
+}
 
-const XIcon = () => (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+function XIcon() {
+  return <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
-);
-
-import { Match } from '@/types/dashboard';
+}
 
 interface Tournament {
     id: number;
@@ -195,11 +195,11 @@ function CountdownTimer({ lockTime }: { lockTime: Date }) {
 
         if (hours > 0) {
             return `${hours}h ${minutes}m`;
-        } else if (minutes > 0) {
+        } if (minutes > 0) {
             return `${minutes}m ${seconds}s`;
-        } else {
+        } 
             return `${seconds}s`;
-        }
+        
     };
 
     const isUrgent = timeLeft < 5 * 60 * 1000; // Less than 5 minutes

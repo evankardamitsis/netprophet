@@ -2,20 +2,20 @@
 
 import { Card, CardContent, Button, Badge } from '@netprophet/ui';
 
+import { Match, PredictionItem } from '@/types/dashboard';
+
 // Icon component
-const XIcon = () => (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+function XIcon() {
+  return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
-);
+}
 
-const TargetIcon = ({ className = "h-8 w-8 text-green-500" }: { className?: string }) => (
-    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+function TargetIcon({ className = "h-8 w-8 text-green-500" }: { className?: string }) {
+  return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
     </svg>
-);
-
-import { Match, PredictionItem } from '@/types/dashboard';
+}
 
 interface PredictionSlipProps {
     predictions: PredictionItem[];
@@ -24,9 +24,7 @@ interface PredictionSlipProps {
 }
 
 export function PredictionSlip({ predictions, onRemovePrediction, onSubmitPredictions }: PredictionSlipProps) {
-    const getTotalPoints = () => {
-        return predictions.reduce((total, item) => total + item.points, 0);
-    };
+    const getTotalPoints = () => predictions.reduce((total, item) => total + item.points, 0);
 
     const getStatusColor = (status: string) => {
         switch (status) {

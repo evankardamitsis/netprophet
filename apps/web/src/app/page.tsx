@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@netprophet/ui';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
+import { Button , Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
 
 export default function HomePage() {
     const router = useRouter();
@@ -35,7 +34,7 @@ export default function HomePage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
                     <p className="text-gray-600">Loading...</p>
                 </div>
             </div>
@@ -277,7 +276,7 @@ export default function HomePage() {
                         {/* Predict UI */}
                         <div className="group">
                             <div className="relative">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-green-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-green-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
                                 <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
                                     <div className="flex justify-between items-center mb-6">
                                         <div>
@@ -285,7 +284,7 @@ export default function HomePage() {
                                             <p className="text-sm text-gray-500">French Open 2024</p>
                                         </div>
                                         <div className="flex items-center space-x-2">
-                                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                                            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
                                             <Badge variant="destructive" className="animate-pulse">LIVE</Badge>
                                         </div>
                                     </div>
@@ -304,7 +303,7 @@ export default function HomePage() {
                                                     Pick Winner
                                                 </Button>
                                             </div>
-                                            <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
                                         </div>
 
                                         <div className="relative group/item">
@@ -320,7 +319,7 @@ export default function HomePage() {
                                                     Pick Winner
                                                 </Button>
                                             </div>
-                                            <div className="absolute inset-0 bg-gray-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 bg-gray-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
                                         </div>
                                     </div>
 
@@ -345,7 +344,7 @@ export default function HomePage() {
                         {/* Leaderboard UI */}
                         <div className="group">
                             <div className="relative">
-                                <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                                <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200" />
                                 <div className="relative bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
                                     <div className="flex justify-between items-center mb-6">
                                         <div>
@@ -372,7 +371,7 @@ export default function HomePage() {
                                                     <div className="text-sm text-yellow-600">+180 today</div>
                                                 </div>
                                             </div>
-                                            <div className="absolute inset-0 bg-yellow-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 bg-yellow-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
                                         </div>
 
                                         <div className="relative group/item">
@@ -389,7 +388,7 @@ export default function HomePage() {
                                                     <div className="text-sm text-gray-600">+120 today</div>
                                                 </div>
                                             </div>
-                                            <div className="absolute inset-0 bg-gray-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 bg-gray-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
                                         </div>
 
                                         <div className="relative group/item">
@@ -406,7 +405,7 @@ export default function HomePage() {
                                                     <div className="text-sm text-orange-600">+95 today</div>
                                                 </div>
                                             </div>
-                                            <div className="absolute inset-0 bg-orange-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 bg-orange-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
                                         </div>
 
                                         <div className="relative group/item">
@@ -423,7 +422,7 @@ export default function HomePage() {
                                                     <div className="text-sm text-blue-600">+75 today</div>
                                                 </div>
                                             </div>
-                                            <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 bg-blue-500/10 rounded-xl opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
                                         </div>
                                     </div>
 
