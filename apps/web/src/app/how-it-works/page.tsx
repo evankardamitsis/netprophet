@@ -1,6 +1,6 @@
 'use client';
 
-import { Button , Card, CardContent, CardDescription, CardHeader, CardTitle , Section , Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Section, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
 
 function MatchCardDemo({ players, ntrp, record }: { players: string[]; ntrp: string[]; record: string }) {
     return (

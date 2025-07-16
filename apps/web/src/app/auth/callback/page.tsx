@@ -18,7 +18,7 @@ export default function AuthCallbackPage() {
 
                 if (error) {
                     console.error('❌ Auth error:', error);
-                    setError(`Authentication failed: ${  error.message}`);
+                    setError(`Authentication failed: ${error.message}`);
                     setLoading(false);
                     return;
                 }

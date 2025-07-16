@@ -220,131 +220,99 @@ interface FloatingPredictionButtonProps {
 
 export function FloatingPredictionButton({ predictions, onClick }: FloatingPredictionButtonProps) {
     return (
-        <div
-            className="fixed bottom-6 right-6 z-50 floating-button-container"
-            style={{
-                background: 'transparent !important',
-                backgroundColor: 'transparent !important',
-                backgroundImage: 'none !important',
-                border: 'none !important',
-                outline: 'none !important',
-                width: '64px',
-                height: '64px',
-                borderRadius: '50%',
-                pointerEvents: 'none'
+        <motion.div
+            className="fixed bottom-6 right-6 z-50"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 25
             }}
         >
-            <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 25
+            <motion.button
+                onClick={onClick}
+                className="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold shadow-lg border-2 border-yellow-300 rounded-full w-16 h-16 p-0 flex items-center justify-center relative cursor-pointer transition-colors duration-200"
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
+                animate={{
+                    scale: [1, 1.08, 1],
+                    boxShadow: [
+                        "0 15px 35px rgba(251, 191, 36, 0.4)",
+                        "0 25px 50px rgba(251, 191, 36, 0.7)",
+                        "0 15px 35px rgba(251, 191, 36, 0.4)"
+                    ]
                 }}
-                style={{
-                    background: 'transparent !important',
-                    backgroundColor: 'transparent !important',
-                    backgroundImage: 'none !important',
-                    border: 'none !important',
-                    outline: 'none !important',
-                    pointerEvents: 'auto'
+                transition={{
+                    scale: {
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    },
+                    boxShadow: {
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }
                 }}
             >
+                {/* Pulsating ring effect */}
                 <motion.div
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.9 }}
+                    className="absolute inset-0 rounded-full border-2 border-yellow-300"
                     animate={{
-                        scale: [1, 1.08, 1],
-                        boxShadow: [
-                            "0 15px 35px rgba(251, 191, 36, 0.4)",
-                            "0 25px 50px rgba(251, 191, 36, 0.7)",
-                            "0 15px 35px rgba(251, 191, 36, 0.4)"
-                        ]
+                        scale: [1, 1.4, 1],
+                        opacity: [0.8, 0, 0.8]
                     }}
                     transition={{
-                        scale: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        },
-                        boxShadow: {
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
                     }}
-                    style={{
-                        background: 'transparent !important',
-                        backgroundColor: 'transparent !important',
-                        backgroundImage: 'none !important',
-                        border: 'none !important',
-                        outline: 'none !important'
+                />
+
+                {/* Second pulsating ring for more prominence */}
+                <motion.div
+                    className="absolute inset-0 rounded-full border border-yellow-400"
+                    animate={{
+                        scale: [1, 1.6, 1],
+                        opacity: [0.6, 0, 0.6]
+                    }}
+                    transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.75
+                    }}
+                />
+
+                <motion.div
+                    className="text-center relative z-10"
+                    animate={{
+                        y: [0, -3, 0],
+                        scale: [1, 1.05, 1]
+                    }}
+                    transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
                     }}
                 >
-                    <motion.button
-                        onClick={onClick}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold shadow-lg border-2 border-yellow-300 rounded-full w-16 h-16 p-0 flex items-center justify-center relative cursor-pointer transition-colors duration-200"
+                    <motion.div
+                        animate={{
+                            rotate: [0, 5, 0, -5, 0]
+                        }}
+                        transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                        }}
                     >
-                        {/* Pulsating ring effect */}
-                        <motion.div
-                            className="absolute inset-0 rounded-full border-2 border-yellow-300"
-                            animate={{
-                                scale: [1, 1.4, 1],
-                                opacity: [0.8, 0, 0.8]
-                            }}
-                            transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                        />
-
-                        {/* Second pulsating ring for more prominence */}
-                        <motion.div
-                            className="absolute inset-0 rounded-full border border-yellow-400"
-                            animate={{
-                                scale: [1, 1.6, 1],
-                                opacity: [0.6, 0, 0.6]
-                            }}
-                            transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: 0.75
-                            }}
-                        />
-
-                        <motion.div
-                            className="text-center relative z-10"
-                            animate={{
-                                y: [0, -3, 0],
-                                scale: [1, 1.05, 1]
-                            }}
-                            transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                            }}
-                        >
-                            <motion.div
-                                animate={{
-                                    rotate: [0, 5, 0, -5, 0]
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            >
-                                <TargetIcon className="h-6 w-6 mx-auto text-slate-900" />
-                            </motion.div>
-                            <span className="text-xs font-bold">{predictions.length}</span>
-                        </motion.div>
-                    </motion.button>
+                        <TargetIcon className="h-6 w-6 mx-auto text-slate-900" />
+                    </motion.div>
+                    <span className="text-xs font-bold">{predictions.length}</span>
                 </motion.div>
-            </motion.div>
-        </div>
+            </motion.button>
+        </motion.div>
     );
 } 
