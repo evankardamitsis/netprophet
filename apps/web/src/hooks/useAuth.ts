@@ -10,6 +10,7 @@ export function useAuth() {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: supabaseSession } }) => {
+      console.log('[useAuth] Initial getSession:', supabaseSession);
       setSession(supabaseSession);
       setUser(supabaseSession?.user ?? null);
       setLoading(false);
@@ -20,7 +21,8 @@ export function useAuth() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, supabaseSession) => {
+    } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
+      console.log(`[useAuth] onAuthStateChange event: ${event}`, supabaseSession);
       setSession(supabaseSession);
       setUser(supabaseSession?.user ?? null);
       setLoading(false);
@@ -30,20 +32,27 @@ export function useAuth() {
   }, []);
 
   const signIn = async (email: string) => {
+    console.log('[useAuth] signIn called with:', email);
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    
     return { error };
   };
 
   const signOut = async () => {
+    console.log('[useAuth] signOut called');
     const { error } = await supabase.auth.signOut();
     return { error };
   };
+
+  useEffect(() => {
+    console.log('[useAuth] user state changed:', user);
+    console.log('[useAuth] session state changed:', session);
+    console.log('[useAuth] loading state:', loading);
+  }, [user, session, loading]);
 
   return {
     user,

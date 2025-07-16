@@ -1,22 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
+import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/dashboard/Sidebar';
 import { MatchDetail } from '@/components/dashboard/MatchDetail';
-import { MatchesGrid } from '@/components/dashboard/MatchesGrid';
 import { PredictionSlip } from '@/components/dashboard/PredictionSlip';
 import { StatsCards } from '@/components/dashboard/StatsCards';
 import { TopNavigation } from '@/components/dashboard/TopNavigation';
+import { MatchesGrid } from '@/components/dashboard/MatchesGrid';
+import { Leaderboard } from '@/components/dashboard/Leaderboard';
 import { Match, PredictionItem, UserStats } from '@/types/dashboard';
 
 export default function DashboardPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
+    const { user, signOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+    const [currentPage, setCurrentPage] = useState<'dashboard' | 'leaderboard'>('dashboard');
     const [predictionSlip, setPredictionSlip] = useState<PredictionItem[]>([]);
 
     // Mock stats data
@@ -28,48 +30,15 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
-        const checkAuth = async () => {
-            console.log('🔍 Checking authentication status...');
+        if (!loading && !user) {
+            router.push('/auth/signin');
+        }
+    }, [user, loading, router]);
 
-            const { data: { session }, error } = await supabase.auth.getSession();
-
-            if (error) {
-                console.error('❌ Auth error:', error);
-                router.push('/auth/signin');
-                return;
-            }
-
-            if (!session) {
-                console.log('❌ No session found, redirecting to signin');
-                router.push('/auth/signin');
-                return;
-            }
-
-            console.log('✅ Authenticated user:', session.user.email);
-            setUser(session.user);
-            setLoading(false);
-        };
-
-        checkAuth();
-
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                console.log('🔄 Auth state changed:', event);
-
-                if (event === 'SIGNED_OUT') {
-                    console.log('👋 User signed out, redirecting to signin');
-                    router.push('/auth/signin');
-                } else if (event === 'SIGNED_IN' && session) {
-                    console.log('✅ User signed in:', session.user.email);
-                    setUser(session.user);
-                    setLoading(false);
-                }
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, [router]);
+    const handleSignOut = async () => {
+        await signOut();
+        router.push('/');
+    };
 
     const handleMatchSelect = (match: Match) => {
         setSelectedMatch(match);
@@ -91,7 +60,7 @@ export default function DashboardPage() {
                 matchId: match.id,
                 match,
                 prediction,
-                points: 200 // Default points, could be dynamic based on match
+                points: match.points
             }]);
         }
     };
@@ -106,79 +75,98 @@ export default function DashboardPage() {
         alert(`Submitted ${predictionSlip.length} predictions!`);
     };
 
-    const handleSignOut = async () => {
-        await supabase.auth.signOut();
+    const handleBackToMatches = () => {
+        setSelectedMatch(null);
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading dashboard...</p>
-                </div>
-            </div>
-        );
+    if (!user) {
+        return null;
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
-            {/* Mobile sidebar overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 relative">
+            <div className="relative z-10 flex min-h-screen">
+                {/* Sidebar */}
+                <div className={`fixed lg:static inset-y-0 left-0 z-50 w-80 bg-white/90 backdrop-blur-md border-r border-white/20 transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                    <div className="h-full overflow-y-auto">
+                        <Sidebar
+                            isOpen={sidebarOpen}
+                            onClose={() => setSidebarOpen(false)}
+                            onMatchSelect={handleMatchSelect}
+                            selectedMatchId={selectedMatch?.id}
+                        />
+                    </div>
+                </div>
 
-            {/* Left Sidebar */}
-            <Sidebar
-                isOpen={sidebarOpen}
-                onClose={() => setSidebarOpen(false)}
-                onMatchSelect={handleMatchSelect}
-                selectedMatchId={selectedMatch?.id}
-            />
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col min-w-0">
+                    {/* Top Navigation */}
+                    <TopNavigation
+                        userEmail={user.email}
+                        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+                        onSignOut={handleSignOut}
+                        currentPage={currentPage}
+                        onPageChange={setCurrentPage}
+                    />
 
-            {/* Main Content Area */}
-            <div className="flex-1 lg:ml-0">
-                {/* Top Navigation */}
-                <TopNavigation
-                    userEmail={user?.email}
-                    onMenuClick={() => setSidebarOpen(true)}
-                    onSignOut={handleSignOut}
-                />
-
-                {/* Content Grid */}
-                <div className="flex">
-                    {/* Central Content */}
-                    <div className="flex-1">
-                        {selectedMatch ? (
-                            <MatchDetail
-                                match={selectedMatch}
-                                onAddToPredictionSlip={addToPredictionSlip}
-                                onBack={() => setSelectedMatch(null)}
-                            />
-                        ) : (
-                            <div className="p-6">
-                                <div className="space-y-6">
+                    {/* Content Area */}
+                    <div className="flex-1 flex">
+                        {/* Central Content */}
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                            {currentPage === 'dashboard' ? (
+                                <>
                                     {/* Stats Cards */}
-                                    <StatsCards stats={userStats} />
+                                    <div className="p-6 pb-4">
+                                        <StatsCards stats={userStats} />
+                                    </div>
 
-                                    {/* Matches Grid */}
-                                    <MatchesGrid onAddToPredictionSlip={addToPredictionSlip} />
+                                    {/* Main Content */}
+                                    <div className="flex-1 flex overflow-hidden">
+                                        {selectedMatch ? (
+                                            <div className="flex-1 overflow-y-auto p-6">
+                                                <MatchDetail
+                                                    match={selectedMatch}
+                                                    onAddToPredictionSlip={addToPredictionSlip}
+                                                    onBack={handleBackToMatches}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="flex-1 overflow-y-auto p-6">
+                                                <MatchesGrid onAddToPredictionSlip={addToPredictionSlip} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto p-6">
+                                    <Leaderboard />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Sidebar - Prediction Slip */}
+                        {currentPage === 'dashboard' && (
+                            <div className="w-96 bg-white/90 backdrop-blur-md border-l border-white/20 hidden xl:block">
+                                <div className="h-full overflow-y-auto">
+                                    <PredictionSlip
+                                        predictions={predictionSlip}
+                                        onRemovePrediction={removeFromPredictionSlip}
+                                        onSubmitPredictions={handleSubmitPredictions}
+                                    />
                                 </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Right Prediction Slip */}
-                    <PredictionSlip
-                        predictions={predictionSlip}
-                        onRemovePrediction={removeFromPredictionSlip}
-                        onSubmitPredictions={handleSubmitPredictions}
-                    />
                 </div>
             </div>
+
+            {/* Mobile Overlay */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
         </div>
     );
 } 

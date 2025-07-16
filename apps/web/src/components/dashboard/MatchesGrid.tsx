@@ -18,7 +18,10 @@ const mockMatches: Match[] = [
         time: '14:00',
         court: 'Philippe-Chatrier',
         status: 'live',
-        points: 250
+        points: 250,
+        startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
+        lockTime: new Date(Date.now() + 5 * 60 * 1000), // Locks in 5 minutes
+        isLocked: false
     },
     {
         id: 2,
@@ -28,7 +31,10 @@ const mockMatches: Match[] = [
         time: '16:30',
         court: 'Suzanne-Lenglen',
         status: 'upcoming',
-        points: 200
+        points: 200,
+        startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
+        lockTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // Locks in 1.5 hours
+        isLocked: false
     },
     {
         id: 3,
@@ -38,7 +44,10 @@ const mockMatches: Match[] = [
         time: '13:00',
         court: 'Centre Court',
         status: 'upcoming',
-        points: 180
+        points: 180,
+        startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
+        lockTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000), // Locks in 3.5 hours
+        isLocked: false
     },
     {
         id: 4,
@@ -48,7 +57,10 @@ const mockMatches: Match[] = [
         time: '15:30',
         court: 'Court 1',
         status: 'upcoming',
-        points: 150
+        points: 150,
+        startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
+        lockTime: new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Locks in 5.5 hours
+        isLocked: false
     },
     {
         id: 5,
@@ -58,7 +70,10 @@ const mockMatches: Match[] = [
         time: '20:00',
         court: 'Arthur Ashe',
         status: 'upcoming',
-        points: 120
+        points: 120,
+        startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
+        lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
+        isLocked: false
     },
     {
         id: 6,
@@ -68,7 +83,10 @@ const mockMatches: Match[] = [
         time: '18:00',
         court: 'Court 2',
         status: 'upcoming',
-        points: 100
+        points: 100,
+        startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
+        lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
+        isLocked: false
     }
 ];
 
@@ -90,11 +108,11 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 
     return (
-        <div className="space-y-8">
+        <div className="h-screen overflow-y-auto space-y-8">
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center p-4">
                         <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse mr-2"></span>
                         Live Matches ({liveMatches.length})
                     </h2>
@@ -159,7 +177,7 @@ export function MatchesGrid({ matches = mockMatches, onAddToPredictionSlip }: Ma
             {/* Upcoming Matches Section */}
             {upcomingMatches.length > 0 && (
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Matches ({upcomingMatches.length})</h2>
+                    <h2 className="text-lg p-4 font-semibold text-gray-900 mb-4">Upcoming Matches ({upcomingMatches.length})</h2>
                     <div className="grid gap-4">
                         {upcomingMatches.map((match) => (
                             <Card key={match.id} className="hover:shadow-md transition-shadow">

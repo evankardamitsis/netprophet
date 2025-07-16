@@ -9,6 +9,9 @@ export interface Match {
     court: string;
     status: 'live' | 'upcoming' | 'finished';
     points: number;
+    startTime: Date;
+    lockTime: Date;
+    isLocked: boolean;
 }
 
 export interface PredictionItem {

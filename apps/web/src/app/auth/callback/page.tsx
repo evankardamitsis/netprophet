@@ -11,107 +11,54 @@ export default function AuthCallbackPage() {
         const handleAuthCallback = async () => {
             console.log('🔐 Client-side auth callback started');
             console.log('📍 Current URL:', window.location.href);
-            console.log('🔍 URL hash:', window.location.hash);
-            console.log('🔍 URL search:', window.location.search);
 
             try {
-                // Parse URL parameters
-                const urlParams = new URLSearchParams(window.location.search);
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                // Let Supabase handle the auth callback automatically
+                const { data, error } = await supabase.auth.getSession();
 
-                const tokenHash = urlParams.get('token_hash') || hashParams.get('token_hash');
-                const type = urlParams.get('type') || hashParams.get('type');
+                if (error) {
+                    console.error('❌ Auth error:', error);
+                    setError('Authentication failed: ' + error.message);
+                    setLoading(false);
+                    return;
+                }
 
-                console.log('🔍 Token hash:', tokenHash);
-                console.log('🔍 Type:', type);
+                console.log('✅ Session data:', data.session ? 'Session found' : 'No session');
 
-                if (tokenHash && type === 'email') {
-                    // Use verifyOtp for PKCE flow as per Supabase docs
-                    console.log('📡 Verifying OTP with token hash...');
-                    const { data, error } = await supabase.auth.verifyOtp({
-                        token_hash: tokenHash,
-                        type: 'email',
-                    });
+                if (data.session) {
+                    console.log('🎉 Authentication successful');
+                    console.log('👤 User:', data.session.user.email);
+                    console.log('🔑 Session expires:', new Date(data.session.expires_at! * 1000).toISOString());
 
-                    if (error) {
-                        console.error('❌ Auth error:', error);
-                        setError('Authentication failed: ' + error.message);
-                        setLoading(false);
-                        return;
-                    }
+                    // Wait a moment for session to be properly set
+                    await new Promise(resolve => setTimeout(resolve, 500));
 
-                    console.log('✅ Session data:', data.session ? 'Session found' : 'No session');
-
-                    if (data.session) {
-                        console.log('🎉 Authentication successful');
-                        console.log('👤 User:', data.session.user.email);
-                        console.log('🔑 Session expires:', new Date(data.session.expires_at! * 1000).toISOString());
-
-                        // Wait a moment for session to be properly set
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-
-                        // Double-check session is still valid
-                        const { data: sessionCheck } = await supabase.auth.getSession();
-                        if (sessionCheck.session) {
-                            console.log('✅ Session confirmed, redirecting to dashboard');
-                            // Use window.location.href to ensure a full page reload
-                            window.location.href = '/dashboard';
-                        } else {
-                            console.error('❌ Session lost after processing');
-                            setError('Session was lost. Please try signing in again.');
-                            setLoading(false);
-                        }
+                    // Double-check session is still valid
+                    const { data: sessionCheck } = await supabase.auth.getSession();
+                    if (sessionCheck.session) {
+                        console.log('✅ Session confirmed, redirecting to dashboard');
+                        window.location.href = '/dashboard';
                     } else {
-                        console.error('❌ No session after verification');
-                        setError('No session found after verification. Please try signing in again.');
+                        console.error('❌ Session lost after processing');
+                        setError('Session was lost. Please try signing in again.');
                         setLoading(false);
                     }
                 } else {
-                    // Fallback to the old method for backward compatibility
-                    console.log('📡 Using fallback session detection...');
-                    const { data, error } = await supabase.auth.getSession();
+                    // Check for error parameters in URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
-                    if (error) {
-                        console.error('❌ Auth error:', error);
-                        setError('Authentication failed: ' + error.message);
-                        setLoading(false);
-                        return;
-                    }
+                    const errorParam = urlParams.get('error') || hashParams.get('error');
+                    const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
 
-                    console.log('✅ Session data:', data.session ? 'Session found' : 'No session');
+                    console.log('🔍 URL error params:', { errorParam, errorDescription });
 
-                    if (data.session) {
-                        console.log('🎉 Authentication successful');
-                        console.log('👤 User:', data.session.user.email);
-                        console.log('🔑 Session expires:', new Date(data.session.expires_at! * 1000).toISOString());
-
-                        // Wait a moment for session to be properly set
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-
-                        // Double-check session is still valid
-                        const { data: sessionCheck } = await supabase.auth.getSession();
-                        if (sessionCheck.session) {
-                            console.log('✅ Session confirmed, redirecting to dashboard');
-                            window.location.href = '/dashboard';
-                        } else {
-                            console.error('❌ Session lost after processing');
-                            setError('Session was lost. Please try signing in again.');
-                            setLoading(false);
-                        }
+                    if (errorParam) {
+                        setError(errorDescription || 'Authentication failed');
                     } else {
-                        // Check for error parameters
-                        const error = urlParams.get('error') || hashParams.get('error');
-                        const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
-
-                        console.log('🔍 URL error params:', { error, errorDescription });
-
-                        if (error) {
-                            setError(errorDescription || 'Authentication failed');
-                        } else {
-                            setError('No session found. Please try signing in again.');
-                        }
-                        setLoading(false);
+                        setError('No session found. Please try signing in again.');
                     }
+                    setLoading(false);
                 }
             } catch (err) {
                 console.error('💥 Unexpected error:', err);

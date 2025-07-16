@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { ChevronDown, ChevronRight, X } from 'lucide-react';
 
@@ -39,7 +39,7 @@ interface SidebarProps {
     selectedMatchId?: number;
 }
 
-// Mock data
+// Enhanced mock data with start times and lock times
 const mockTournaments: Tournament[] = [
     {
         id: 1,
@@ -54,7 +54,10 @@ const mockTournaments: Tournament[] = [
                 time: '14:00',
                 court: 'Philippe-Chatrier',
                 status: 'live',
-                points: 250
+                points: 250,
+                startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
+                lockTime: new Date(Date.now() + 5 * 60 * 1000), // Locks in 5 minutes
+                isLocked: false
             },
             {
                 id: 2,
@@ -64,7 +67,10 @@ const mockTournaments: Tournament[] = [
                 time: '16:30',
                 court: 'Suzanne-Lenglen',
                 status: 'upcoming',
-                points: 200
+                points: 200,
+                startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
+                lockTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // Locks in 1.5 hours
+                isLocked: false
             },
             {
                 id: 3,
@@ -74,7 +80,10 @@ const mockTournaments: Tournament[] = [
                 time: '19:00',
                 court: 'Court 1',
                 status: 'upcoming',
-                points: 180
+                points: 180,
+                startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
+                lockTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000), // Locks in 3.5 hours
+                isLocked: false
             },
         ]
     },
@@ -91,7 +100,10 @@ const mockTournaments: Tournament[] = [
                 time: '13:00',
                 court: 'Centre Court',
                 status: 'upcoming',
-                points: 150
+                points: 150,
+                startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
+                lockTime: new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Locks in 5.5 hours
+                isLocked: false
             },
             {
                 id: 5,
@@ -101,7 +113,10 @@ const mockTournaments: Tournament[] = [
                 time: '15:30',
                 court: 'Court 1',
                 status: 'upcoming',
-                points: 120
+                points: 120,
+                startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
+                lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
+                isLocked: false
             },
         ]
     },
@@ -118,7 +133,10 @@ const mockTournaments: Tournament[] = [
                 time: '20:00',
                 court: 'Arthur Ashe',
                 status: 'upcoming',
-                points: 100
+                points: 100,
+                startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
+                lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
+                isLocked: false
             },
         ]
     },
@@ -135,14 +153,111 @@ const mockTournaments: Tournament[] = [
                 time: '19:30',
                 court: 'Rod Laver Arena',
                 status: 'finished',
-                points: 300
+                points: 300,
+                startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Started 24 hours ago
+                lockTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Already locked
+                isLocked: true
             },
         ]
     }
 ];
 
+// Countdown component
+function CountdownTimer({ lockTime }: { lockTime: Date }) {
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const difference = lockTime.getTime() - Date.now();
+            return Math.max(0, difference);
+        };
+
+        setTimeLeft(calculateTimeLeft());
+
+        const timer = setInterval(() => {
+            const newTimeLeft = calculateTimeLeft();
+            setTimeLeft(newTimeLeft);
+
+            if (newTimeLeft <= 0) {
+                clearInterval(timer);
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [lockTime]);
+
+    const formatTime = (ms: number) => {
+        if (ms <= 0) return 'LOCKED';
+
+        const hours = Math.floor(ms / (1000 * 60 * 60));
+        const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+
+        if (hours > 0) {
+            return `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m ${seconds}s`;
+        } else {
+            return `${seconds}s`;
+        }
+    };
+
+    const isUrgent = timeLeft < 5 * 60 * 1000; // Less than 5 minutes
+    const isVeryUrgent = timeLeft < 60 * 1000; // Less than 1 minute
+
+    return (
+        <div className={`text-xs font-mono ${isVeryUrgent ? 'text-red-600 animate-pulse' : isUrgent ? 'text-orange-600' : 'text-gray-600'}`}>
+            {formatTime(timeLeft)}
+        </div>
+    );
+}
+
+// Live Match Banner component
+function LiveMatchBanner({ matches }: { matches: Match[] }) {
+    const liveMatches = matches.filter(match => match.status === 'live' && !match.isLocked);
+
+    if (liveMatches.length === 0) return null;
+
+    return (
+        <div className="mb-4 p-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+                <span className="text-lg">🔥</span>
+                <span className="font-semibold text-red-800">Live Matches</span>
+                <Badge variant="destructive" className="text-xs">
+                    {liveMatches.length}
+                </Badge>
+            </div>
+            <div className="space-y-2">
+                {liveMatches.map((match) => (
+                    <div key={match.id} className="flex items-center justify-between p-2 bg-white rounded border border-red-100">
+                        <div className="flex-1">
+                            <div className="text-sm font-medium text-gray-900">
+                                {match.player1.name.split(' ')[1]} vs {match.player2.name.split(' ')[1]}
+                            </div>
+                            <div className="text-xs text-gray-500">{match.court}</div>
+                        </div>
+                        <div className="text-right">
+                            <CountdownTimer lockTime={match.lockTime} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: SidebarProps) {
     const [expandedTournaments, setExpandedTournaments] = useState<Set<number>>(new Set([1])); // Default expand first tournament
+    const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+    // Update current time every second
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
 
     const toggleTournament = (tournamentId: number) => {
         const newExpanded = new Set(expandedTournaments);
@@ -180,12 +295,14 @@ export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: Sid
         }
     };
 
+    // Get all matches for the live banner
+    const allMatches = mockTournaments.flatMap(t => t.matches);
+
     return (
         <div className={`
-            fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 lg:top-0 lg:bottom-0 lg:flex-shrink-0
-            ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            w-80 bg-white shadow-xl lg:relative lg:flex-shrink-0
         `}>
-            <div className="flex flex-col h-full">
+            <div className="flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                     <h2 className="text-lg font-semibold text-gray-900">Tournaments</h2>
@@ -195,6 +312,11 @@ export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: Sid
                     >
                         <XIcon />
                     </button>
+                </div>
+
+                {/* Live Match Banner */}
+                <div className="px-4">
+                    <LiveMatchBanner matches={allMatches} />
                 </div>
 
                 {/* Tournament List */}
@@ -226,34 +348,58 @@ export function Sidebar({ isOpen, onClose, onMatchSelect, selectedMatchId }: Sid
                             {expandedTournaments.has(tournament.id) && (
                                 <CardContent className="pt-0">
                                     <div className="space-y-2">
-                                        {tournament.matches.map((match) => (
-                                            <div
-                                                key={match.id}
-                                                className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedMatchId === match.id
-                                                    ? 'bg-blue-50 border border-blue-200'
-                                                    : 'bg-gray-50 hover:bg-gray-100'
-                                                    }`}
-                                                onClick={() => onMatchSelect(match)}
-                                            >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div className="flex-1">
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {match.player1.name} vs {match.player2.name}
+                                        {tournament.matches.map((match) => {
+                                            const isLocked = match.isLocked || currentTime >= match.lockTime;
+                                            const isStarted = currentTime >= match.startTime;
+
+                                            return (
+                                                <div
+                                                    key={match.id}
+                                                    className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedMatchId === match.id
+                                                        ? 'bg-blue-50 border border-blue-200'
+                                                        : isLocked || isStarted
+                                                            ? 'bg-gray-100 border border-gray-200 opacity-75'
+                                                            : 'bg-gray-50 hover:bg-gray-100'
+                                                        }`}
+                                                    onClick={() => !isLocked && onMatchSelect(match)}
+                                                >
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex-1">
+                                                            <div className={`text-sm font-medium ${isLocked || isStarted ? 'text-gray-500' : 'text-gray-900'
+                                                                }`}>
+                                                                {match.player1.name} vs {match.player2.name}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 mt-1">{match.court}</div>
                                                         </div>
-                                                        <div className="text-xs text-gray-500 mt-1">{match.court}</div>
+                                                        <div className="flex flex-col items-end space-y-1">
+                                                            <Badge
+                                                                variant={getMatchStatusColor(match.status)}
+                                                                className="text-xs"
+                                                            >
+                                                                {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
+                                                            </Badge>
+                                                            <span className="text-xs text-gray-500">{match.time}</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex flex-col items-end space-y-1">
-                                                        <Badge
-                                                            variant={getMatchStatusColor(match.status)}
-                                                            className="text-xs"
-                                                        >
-                                                            {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
-                                                        </Badge>
-                                                        <span className="text-xs text-gray-500">{match.time}</span>
+
+                                                    {/* Countdown and Lock Status */}
+                                                    <div className="flex items-center justify-between mt-2">
+                                                        <div className="text-xs text-gray-500">
+                                                            {isLocked ? (
+                                                                <span className="text-red-600 font-medium">🔒 LOCKED</span>
+                                                            ) : isStarted ? (
+                                                                <span className="text-orange-600 font-medium">⚡ LIVE</span>
+                                                            ) : (
+                                                                <span className="text-blue-600">⏰ Lock in:</span>
+                                                            )}
+                                                        </div>
+                                                        {!isLocked && (
+                                                            <CountdownTimer lockTime={match.lockTime} />
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </CardContent>
                             )}
