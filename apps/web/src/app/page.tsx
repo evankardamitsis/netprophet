@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
-import { Button , Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
 
 export default function HomePage() {
     const router = useRouter();
@@ -450,7 +450,7 @@ export default function HomePage() {
                     <Alert>
                         <span className="text-2xl">💡</span>
                         <AlertDescription className="text-lg">
-                            "Μέσος όρος επιτυχίας προβλέψεων στους τελικούς: 38% — μπορείς καλύτερα;"
+                            &quot;Μέσος όρος επιτυχίας προβλέψεων στους τελικούς: 38% — μπορείς καλύτερα;&quot;
                         </AlertDescription>
                     </Alert>
                 </div>
@@ -554,7 +554,7 @@ export default function HomePage() {
                         <CardContent className="p-12 text-center">
                             <div className="text-4xl mb-6">💬</div>
                             <blockquote className="text-2xl md:text-3xl font-medium text-gray-900 mb-6 italic">
-                                "Είχα προβλέψει τελικό Open Vari από τον πρώτο γύρο — τώρα έχω streak 7!"
+                                &quot;Είχα προβλέψει τελικό Open Vari από τον πρώτο γύρο — τώρα έχω streak 7!&quot;
                             </blockquote>
                             <div className="flex items-center justify-center space-x-2">
                                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">

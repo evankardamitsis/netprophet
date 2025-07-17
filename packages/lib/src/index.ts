@@ -9,4 +9,7 @@ export type { SupabaseClient } from './supabase/client';
 export { useAuthStore } from './store/auth';
 
 // Utilities
-export * from './utils/validation'; 
+export * from './utils/validation';
+
+// Odds Calculation
+export * from './odds/calculateOdds'; 

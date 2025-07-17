@@ -108,7 +108,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
         if (match) {
             setPredictions(createEmptyPredictions());
         }
-    }, [match?.id]); // Only clear when match ID changes
+    }, [match]); // Only clear when match changes
 
     if (!match) {
         return (

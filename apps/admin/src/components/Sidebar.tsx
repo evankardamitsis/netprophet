@@ -12,7 +12,8 @@ import {
     Gift,
     FileText,
     Menu,
-    X
+    X,
+    Brain
 } from 'lucide-react';
 import { Button } from '@netprophet/ui';
 
@@ -29,6 +30,7 @@ const menuItems = [
     { href: '/admin/matches', label: 'Matches', icon: Gamepad2 },
     { href: '/admin/rewards', label: 'Rewards', icon: Gift },
     { href: '/admin/logs', label: 'Logs', icon: FileText },
+    { href: '/admin/odds-demo', label: 'Odds Demo', icon: Brain },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {

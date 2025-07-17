@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+
 // Player type definition
 interface Player {
     id: string;
@@ -495,23 +496,42 @@ export default function PlayerProfilePage() {
                 </Card>
             </div>
 
-            {/* Future CTA */}
+            {/* Odds Algorithm Status */}
             <Card className="transition-all duration-200 hover:shadow-lg">
                 <CardContent className="pt-6">
                     <div className="text-center">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            🎯 Επόμενα Βήματα
+                            🧠 Αλγόριθμος Αποδόσεων
                         </h3>
                         <p className="text-gray-600 mb-4">
-                            Χρησιμοποίησε αυτές τις πληροφορίες για να δημιουργήσεις προβλέψεις και odds
+                            Το σύστημα υπολογισμού αποδόσεων είναι διαθέσιμο στο shared lib
                         </p>
-                        <Button
-                            variant="outline"
-                            className="transition-all duration-200 hover:scale-105 hover:shadow-lg"
-                            disabled
-                        >
-                            🔮 Generate Odds Preview (Coming Soon)
-                        </Button>
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-200 mb-4">
+                            <div className="flex items-center justify-center space-x-2 mb-2">
+                                <span className="text-green-600">✅</span>
+                                <span className="font-semibold text-green-800">Algorithm Ready</span>
+                            </div>
+                            <p className="text-sm text-green-700">
+                                <strong>calculateOdds()</strong> function available in @netprophet/lib
+                            </p>
+                            <p className="text-xs text-green-600 mt-1">
+                                Takes player data + match context → returns win probabilities & odds
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                                <div className="font-semibold text-blue-800 mb-1">📊 Factors</div>
+                                <div className="text-blue-600">NTRP, Form, Surface, Experience, Momentum</div>
+                            </div>
+                            <div className="bg-purple-50 p-3 rounded-lg">
+                                <div className="font-semibold text-purple-800 mb-1">🎯 Output</div>
+                                <div className="text-purple-600">Win Probability, Decimal Odds, Confidence</div>
+                            </div>
+                            <div className="bg-orange-50 p-3 rounded-lg">
+                                <div className="font-semibold text-orange-800 mb-1">💡 Features</div>
+                                <div className="text-orange-600">Type-safe, Tested, Reusable</div>
+                            </div>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

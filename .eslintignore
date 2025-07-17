@@ -1,0 +1,26 @@
+# ESLint config files
+**/.eslintrc.js
+**/.eslintrc.cjs
+**/.eslintrc.json
+**/.eslintrc.yaml
+**/.eslintrc.yml
+
+# Build outputs
+**/dist
+**/build
+**/.next
+
+# Dependencies
+**/node_modules
+
+# Test files (if not already handled)
+**/*.test.ts
+**/*.spec.ts
+**/__tests__
+
+# Config files
+**/vitest.config.ts
+**/jest.config.js
+**/next.config.js
+**/tailwind.config.js
+**/postcss.config.js 

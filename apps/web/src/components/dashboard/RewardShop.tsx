@@ -386,7 +386,7 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
                                     </CardHeader>
                                     <CardContent className="pt-0">
                                         <p className="text-gray-600 text-sm mb-4">
-                                            {reward.description}
+                                            {reward.description.replace(/'/g, "&#39;")}
                                         </p>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-2">
@@ -449,7 +449,7 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
 
                             <CardContent className="pt-0">
                                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                                    {reward.description}
+                                    {reward.description.replace(/'/g, "&#39;")}
                                 </p>
 
                                 <div className="flex items-center justify-between">
@@ -524,7 +524,7 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
                             </div>
                             <div>
                                 <h5 className="font-semibold mb-1">🔥 Limited Time</h5>
-                                <p>Some items are featured or discounted for a limited time. Don't miss out on great deals!</p>
+                                <p>Some items are featured or discounted for a limited time. Don&apos;t miss out on great deals!</p>
                             </div>
                         </div>
                     </div>
