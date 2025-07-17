@@ -24,7 +24,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@netprophet/config": "workspace:*",
+    "@netprophet/config": "file:../config",
     "@types/node": "^20.10.0",
     "@types/react": "18.2.14",
     "eslint": "^8.57.1",
