@@ -2,10 +2,5 @@
   "buildCommand": "cd ../.. && pnpm --filter=@netprophet/lib build && pnpm --filter=@netprophet/ui build && pnpm --filter=@netprophet/web build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "functions": {
-    ".next/server/**/*.js": {
-      "maxDuration": 30
-    }
-  }
+  "framework": "nextjs"
 }
