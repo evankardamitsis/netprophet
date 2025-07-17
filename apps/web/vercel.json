@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm --filter=@netprophet/lib build && pnpm --filter=@netprophet/ui build && pnpm --filter=@netprophet/web build",
+  "buildCommand": "cd ../.. && cd packages/lib && npm run build && cd ../ui && npm run build && cd ../../apps/web && npm run build",
   "outputDirectory": "apps/web/.next",
   "installCommand": "npm install",
   "framework": "nextjs"
