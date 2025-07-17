@@ -1,6 +1,11 @@
 {
   "buildCommand": "cd ../.. && pnpm --filter=@netprophet/lib build && pnpm --filter=@netprophet/ui build && pnpm --filter=@netprophet/web build",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "pnpm install",
   "framework": "nextjs",
-  "installCommand": "cd ../.. && pnpm install --frozen-lockfile"
+  "functions": {
+    "apps/web/.next/server/**/*.js": {
+      "maxDuration": 30
+    }
+  }
 }
