@@ -4,7 +4,7 @@
   "installCommand": "pnpm install",
   "framework": "nextjs",
   "functions": {
-    "apps/web/.next/server/**/*.js": {
+    ".next/server/**/*.js": {
       "maxDuration": 30
     }
   }
