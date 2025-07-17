@@ -6,67 +6,125 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { WarningModal } from '@/components/ui/warning-modal';
+import { Player } from '@/types/player';
 
-// Player type definition
-interface Player {
-    id: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    ntrpRating: number;
-    club: string;
-    wins: number;
-    losses: number;
-    last5: string[];
-}
-
-
-
-// Mock data
+// Mock data with complete player information
 const initialPlayers: Player[] = [
     {
         id: '1',
         firstName: 'Γιώργος',
         lastName: 'Παπαδόπουλος',
-        username: 'george_pap',
         ntrpRating: 4.5,
-        club: 'Ολυμπιακός',
         wins: 15,
         losses: 8,
-        last5: ['W', 'W', 'L', 'W', 'L']
+        last5: ['W', 'W', 'L', 'W', 'L'],
+        currentStreak: 2,
+        streakType: 'W',
+        surfacePreference: 'Hard Court',
+        surfaceWinRates: {
+            hardCourt: 0.75,
+            clayCourt: 0.45,
+            grassCourt: 0.60,
+            indoor: 0.70
+        },
+        aggressiveness: 7,
+        stamina: 8,
+        consistency: 6,
+        age: 28,
+        hand: 'right',
+        club: 'Ολυμπιακός',
+        notes: 'Strong baseline player',
+        lastMatchDate: '2024-01-15',
+        fatigueLevel: 2,
+        injuryStatus: 'healthy',
+        seasonalForm: 0.68
     },
     {
         id: '2',
         firstName: 'Μαρία',
         lastName: 'Κωνσταντίνου',
-        username: 'maria_kon',
         ntrpRating: 3.5,
-        club: 'Παναθηναϊκός',
         wins: 12,
         losses: 10,
-        last5: ['L', 'W', 'W', 'L', 'W']
+        last5: ['L', 'W', 'W', 'L', 'W'],
+        currentStreak: 1,
+        streakType: 'W',
+        surfacePreference: 'Clay Court',
+        surfaceWinRates: {
+            hardCourt: 0.40,
+            clayCourt: 0.80,
+            grassCourt: 0.35,
+            indoor: 0.45
+        },
+        aggressiveness: 5,
+        stamina: 7,
+        consistency: 8,
+        age: 25,
+        hand: 'right',
+        club: 'Παναθηναϊκός',
+        notes: 'Consistent player',
+        lastMatchDate: '2024-01-12',
+        fatigueLevel: 4,
+        injuryStatus: 'healthy',
+        seasonalForm: 0.55
     },
     {
         id: '3',
         firstName: 'Νίκος',
         lastName: 'Αλεξίου',
-        username: 'nikos_alex',
         ntrpRating: 5.0,
-        club: 'ΑΕΚ',
         wins: 20,
         losses: 5,
-        last5: ['W', 'W', 'W', 'W', 'W']
+        last5: ['W', 'W', 'W', 'W', 'W'],
+        currentStreak: 5,
+        streakType: 'W',
+        surfacePreference: 'Grass Court',
+        surfaceWinRates: {
+            hardCourt: 0.85,
+            clayCourt: 0.70,
+            grassCourt: 0.90,
+            indoor: 0.80
+        },
+        aggressiveness: 9,
+        stamina: 9,
+        consistency: 7,
+        age: 30,
+        hand: 'left',
+        club: 'ΑΕΚ',
+        notes: 'Top player',
+        lastMatchDate: '2024-01-14',
+        fatigueLevel: 1,
+        injuryStatus: 'healthy',
+        seasonalForm: 0.82
     },
     {
         id: '4',
         firstName: 'Ελένη',
         lastName: 'Δημητρίου',
-        username: 'eleni_dem',
         ntrpRating: 4.0,
-        club: 'ΠΑΟΚ',
         wins: 8,
         losses: 12,
-        last5: ['L', 'L', 'W', 'L', 'L']
+        last5: ['L', 'L', 'W', 'L', 'L'],
+        currentStreak: 1,
+        streakType: 'L',
+        surfacePreference: 'Hard Court',
+        surfaceWinRates: {
+            hardCourt: 0.55,
+            clayCourt: 0.30,
+            grassCourt: 0.40,
+            indoor: 0.50
+        },
+        aggressiveness: 6,
+        stamina: 5,
+        consistency: 7,
+        age: 22,
+        hand: 'right',
+        club: 'ΠΑΟΚ',
+        notes: 'Developing player',
+        lastMatchDate: '2024-01-10',
+        fatigueLevel: 6,
+        injuryStatus: 'minor',
+        seasonalForm: 0.40
     }
 ];
 
@@ -156,13 +214,13 @@ export default function PlayersPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Ονοματεπώνυμο</TableHead>
-                                <TableHead>Username</TableHead>
-                                <TableHead>Σύλλογος</TableHead>
                                 <TableHead>NTRP</TableHead>
                                 <TableHead>Νίκες</TableHead>
                                 <TableHead>Ήττες</TableHead>
                                 <TableHead>Win Rate</TableHead>
                                 <TableHead>Τελευταία 5</TableHead>
+                                <TableHead>Streak</TableHead>
+                                <TableHead>Ηλικία</TableHead>
                                 <TableHead className="text-right">Ενέργειες</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -183,14 +241,6 @@ export default function PlayersPage() {
                                         >
                                             {player.firstName} {player.lastName}
                                         </Button>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary" className="transition-all duration-200 hover:scale-105 hover:shadow-sm">
-                                            {player.username}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="font-medium">
-                                        {player.club}
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className="transition-all duration-200 hover:scale-105 hover:shadow-sm">
@@ -214,6 +264,17 @@ export default function PlayersPage() {
                                     </TableCell>
                                     <TableCell>
                                         {getLast5Display(player.last5)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={player.streakType === 'W' ? "default" : "secondary"}
+                                            className="transition-all duration-200 hover:scale-105 hover:shadow-sm"
+                                        >
+                                            {player.currentStreak} {player.streakType}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="font-medium">{player.age}</span>
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end space-x-2">

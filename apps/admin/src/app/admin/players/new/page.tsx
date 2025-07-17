@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,89 +10,44 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@/types/player';
 
-// Mock data for demo
-const mockPlayer: Player = {
-    id: '1',
-    firstName: 'Γιώργος',
-    lastName: 'Παπαδόπουλος',
-    ntrpRating: 4.5,
-    wins: 15,
-    losses: 8,
-    last5: ['W', 'W', 'L', 'W', 'L'],
-    currentStreak: 2,
-    streakType: 'W',
-    surfacePreference: 'Hard Court',
-    surfaceWinRates: {
-        hardCourt: 0.75,
-        clayCourt: 0.45,
-        grassCourt: 0.60,
-        indoor: 0.70
-    },
-    aggressiveness: 7,
-    stamina: 8,
-    consistency: 6,
-    age: 28,
-    hand: 'right',
-    club: 'Ολυμπιακός',
-    notes: 'Strong baseline player',
-    lastMatchDate: '2024-01-15',
-    fatigueLevel: 2,
-    injuryStatus: 'healthy',
-    seasonalForm: 0.68
-};
-
-export default function PlayerEditPage() {
+export default function NewPlayerPage() {
     const router = useRouter();
-    const params = useParams();
-    const playerId = params.id as string;
-    const isNew = playerId === 'new';
-
-    const [player, setPlayer] = useState<Player>(mockPlayer);
+    const [player, setPlayer] = useState<Player>({
+        id: '',
+        firstName: '',
+        lastName: '',
+        ntrpRating: 3.0,
+        wins: 0,
+        losses: 0,
+        last5: ['L', 'L', 'L', 'L', 'L'],
+        currentStreak: 0,
+        streakType: 'L',
+        surfacePreference: 'Hard Court',
+        surfaceWinRates: {
+            hardCourt: 0.5,
+            clayCourt: 0.5,
+            grassCourt: 0.5,
+            indoor: 0.5
+        },
+        aggressiveness: 5,
+        stamina: 5,
+        consistency: 5,
+        age: 25,
+        hand: 'right',
+        club: '',
+        notes: '',
+        lastMatchDate: '',
+        fatigueLevel: 0,
+        injuryStatus: 'healthy',
+        seasonalForm: 0.5
+    });
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        if (!isNew) {
-            // In a real app, fetch player data here
-            setPlayer(mockPlayer);
-        } else {
-            // Initialize new player with defaults
-            setPlayer({
-                id: '',
-                firstName: '',
-                lastName: '',
-                ntrpRating: 3.0,
-                wins: 0,
-                losses: 0,
-                last5: ['L', 'L', 'L', 'L', 'L'],
-                currentStreak: 0,
-                streakType: 'L',
-                surfacePreference: 'Hard Court',
-                surfaceWinRates: {
-                    hardCourt: 0.5,
-                    clayCourt: 0.5,
-                    grassCourt: 0.5,
-                    indoor: 0.5
-                },
-                aggressiveness: 5,
-                stamina: 5,
-                consistency: 5,
-                age: 25,
-                hand: 'right',
-                club: '',
-                notes: '',
-                lastMatchDate: '',
-                fatigueLevel: 0,
-                injuryStatus: 'healthy',
-                seasonalForm: 0.5
-            });
-        }
-    }, [isNew, playerId]);
 
     const handleSave = async () => {
         setLoading(true);
         try {
             // In a real app, save to database here
-            console.log('Saving player:', player);
+            console.log('Saving new player:', player);
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
             router.push('/admin/players');
         } catch (error) {
@@ -133,10 +88,10 @@ export default function PlayerEditPage() {
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900">
-                        {isNew ? 'Προσθήκη Παίκτη' : 'Επεξεργασία Παίκτη'}
+                        Προσθήκη Παίκτη
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        {isNew ? 'Δημιούργησε έναν νέο παίκτη' : 'Επεξεργάσου τις πληροφορίες του παίκτη'}
+                        Δημιούργησε έναν νέο παίκτη
                     </p>
                 </div>
                 <div className="flex space-x-2">
