@@ -21,7 +21,6 @@ export interface Player {
     consistency: number; // 1-10
     age: number; // 16-80
     hand: 'left' | 'right';
-    club: string;
     notes?: string;
     lastMatchDate?: string; // ISO date string
     fatigueLevel?: number; // 0-10, 0 = fresh, 10 = exhausted

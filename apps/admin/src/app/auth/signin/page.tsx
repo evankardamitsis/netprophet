@@ -26,6 +26,8 @@ export default function SignInPage() {
             if (error) {
                 setError(error.message);
             } else if (data.user) {
+                // Log the user ID for debugging
+                console.log('Just logged in as user ID:', data.user.id);
                 // Check if user is admin
                 const { data: profile } = await supabase
                     .from('profiles')

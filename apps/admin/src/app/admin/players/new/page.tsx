@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Player } from '@/types/player';
+import { Player } from '@netprophet/lib/types/player';
+import { insertPlayer } from '@netprophet/lib/supabase/players';
 
 export default function NewPlayerPage() {
     const router = useRouter();
@@ -34,7 +35,6 @@ export default function NewPlayerPage() {
         consistency: 5,
         age: 25,
         hand: 'right',
-        club: '',
         notes: '',
         lastMatchDate: '',
         fatigueLevel: 0,
@@ -46,9 +46,7 @@ export default function NewPlayerPage() {
     const handleSave = async () => {
         setLoading(true);
         try {
-            // In a real app, save to database here
-            console.log('Saving new player:', player);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+            await insertPlayer(player);
             router.push('/admin/players');
         } catch (error) {
             console.error('Error saving player:', error);

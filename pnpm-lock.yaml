@@ -26,9 +26,6 @@ importers:
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
-      husky:
-        specifier: ^8.0.3
-        version: 8.0.3
       lint-staged:
         specifier: ^15.2.0
         version: 15.5.2
@@ -48,11 +45,11 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.60.0)
       '@netprophet/lib':
-        specifier: workspace:*
-        version: link:../../packages/lib
+        specifier: file:../../packages/lib
+        version: file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@netprophet/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
+        specifier: file:../../packages/ui
+        version: file:packages/ui(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@18.3.7)(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
@@ -80,6 +77,9 @@ importers:
       next:
         specifier: 15.4.1
         version: 15.4.1(react-dom@18.3.1)(react@18.3.1)
+      papaparse:
+        specifier: ^5.5.3
+        version: 5.5.3
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -105,6 +105,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.8
+      '@types/papaparse':
+        specifier: ^5.3.16
+        version: 5.3.16
       '@types/react':
         specifier: 18.2.14
         version: 18.2.14
@@ -133,11 +136,11 @@ importers:
   apps/mobile:
     dependencies:
       '@netprophet/lib':
-        specifier: workspace:*
-        version: link:../../packages/lib
+        specifier: file:../../packages/lib
+        version: file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@netprophet/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
+        specifier: file:../../packages/ui
+        version: file:packages/ui(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@supabase/supabase-js':
         specifier: ^2.38.0
         version: 2.51.0
@@ -185,8 +188,8 @@ importers:
         specifier: ^7.20.0
         version: 7.28.0
       '@netprophet/config':
-        specifier: workspace:*
-        version: link:../../packages/config
+        specifier: file:../../packages/config
+        version: file:packages/config(eslint@8.57.1)(prettier@3.6.2)(typescript@5.1.3)
       '@types/react':
         specifier: 18.2.14
         version: 18.2.14
@@ -206,11 +209,11 @@ importers:
   apps/web:
     dependencies:
       '@netprophet/lib':
-        specifier: workspace:*
-        version: link:../../packages/lib
+        specifier: file:../../packages/lib
+        version: file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@netprophet/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
+        specifier: file:../../packages/ui
+        version: file:packages/ui(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       '@supabase/ssr':
         specifier: ^0.6.1
         version: 0.6.1(@supabase/supabase-js@2.51.0)
@@ -246,8 +249,8 @@ importers:
         version: 4.5.7(@types/react@18.2.14)(react@18.3.1)
     devDependencies:
       '@netprophet/config':
-        specifier: workspace:*
-        version: link:../../packages/config
+        specifier: file:../../packages/config
+        version: file:packages/config(eslint@8.57.1)(prettier@3.6.2)(typescript@5.8.3)
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.8
@@ -340,8 +343,8 @@ importers:
         version: 4.5.7(@types/react@18.2.14)(react@18.3.1)
     devDependencies:
       '@netprophet/config':
-        specifier: workspace:*
-        version: link:../config
+        specifier: file:../config
+        version: file:packages/config(eslint@8.57.1)(prettier@3.6.2)(typescript@5.8.3)
       '@types/node':
         specifier: ^20.10.0
         version: 20.19.8
@@ -364,8 +367,8 @@ importers:
   packages/ui:
     dependencies:
       '@netprophet/lib':
-        specifier: workspace:*
-        version: link:../lib
+        specifier: file:../lib
+        version: file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -377,8 +380,8 @@ importers:
         version: 2.6.0
     devDependencies:
       '@netprophet/config':
-        specifier: workspace:*
-        version: link:../config
+        specifier: file:../config
+        version: file:packages/config(eslint@8.57.1)(prettier@3.6.2)(typescript@5.8.3)
       '@storybook/addon-essentials':
         specifier: ^7.6.0
         version: 7.6.20(@types/react-dom@18.3.7)(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
@@ -2725,7 +2728,7 @@ packages:
 
   /@expo/bunyan@4.0.1:
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {node: '>=0.10.0'}
+    engines: {'0': node >=0.10.0}
     dependencies:
       uuid: 8.3.2
     dev: false
@@ -6806,6 +6809,12 @@ packages:
 
   /@types/normalize-package-data@2.4.4:
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
+    dev: true
+
+  /@types/papaparse@5.3.16:
+    resolution: {integrity: sha512-T3VuKMC2H0lgsjI9buTB3uuKj3EMD2eap1MOuEQuBQ44EnDx/IkGhU6EwiTf9zG3za4SKlmwKAImdDKdNnCsXg==}
+    dependencies:
+      '@types/node': 20.19.8
     dev: true
 
   /@types/phoenix@1.6.6:
@@ -11429,12 +11438,6 @@ packages:
     engines: {node: '>=16.17.0'}
     dev: true
 
-  /husky@8.0.3:
-    resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dev: true
-
   /iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
     engines: {node: '>=0.10.0'}
@@ -14245,6 +14248,10 @@ packages:
   /pako@0.2.9:
     resolution: {integrity: sha512-NUcwaKxUxWrZLpDG+z/xZaCgQITkA/Dv4V/T6bw7VON6l1Xz/VnrBqrYjZQ12TamKHzITTfOEIYUj48y2KXImA==}
     dev: true
+
+  /papaparse@5.5.3:
+    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
+    dev: false
 
   /parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -17761,4 +17768,74 @@ packages:
       '@types/react': 18.2.14
       react: 18.3.1
       use-sync-external-store: 1.5.0(react@18.3.1)
+    dev: false
+
+  file:packages/config(eslint@8.57.1)(prettier@3.6.2)(typescript@5.1.3):
+    resolution: {directory: packages/config, type: directory}
+    id: file:packages/config
+    name: '@netprophet/config'
+    peerDependencies:
+      eslint: ^8.0.0
+      prettier: ^3.0.0
+      typescript: ^5.0.0
+    dependencies:
+      eslint: 8.57.1
+      prettier: 3.6.2
+      typescript: 5.1.3
+    dev: true
+
+  file:packages/config(eslint@8.57.1)(prettier@3.6.2)(typescript@5.8.3):
+    resolution: {directory: packages/config, type: directory}
+    id: file:packages/config
+    name: '@netprophet/config'
+    peerDependencies:
+      eslint: ^8.0.0
+      prettier: ^3.0.0
+      typescript: ^5.0.0
+    dependencies:
+      eslint: 8.57.1
+      prettier: 3.6.2
+      typescript: 5.8.3
+    dev: true
+
+  file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {directory: packages/lib, type: directory}
+    id: file:packages/lib
+    name: '@netprophet/lib'
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      '@supabase/supabase-js': 2.51.0
+      '@tanstack/react-query': 5.83.0(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      zod: 3.25.76
+      zustand: 4.5.7(@types/react@18.2.14)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - immer
+      - utf-8-validate
+    dev: false
+
+  file:packages/ui(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {directory: packages/ui, type: directory}
+    id: file:packages/ui
+    name: '@netprophet/ui'
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
+    dependencies:
+      '@netprophet/lib': file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      tailwind-merge: 2.6.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - immer
+      - utf-8-validate
     dev: false

@@ -1,140 +1,112 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { WarningModal } from '@/components/ui/warning-modal';
-import { Player } from '@/types/player';
-
-// Mock data with complete player information
-const initialPlayers: Player[] = [
-    {
-        id: '1',
-        firstName: 'Γιώργος',
-        lastName: 'Παπαδόπουλος',
-        ntrpRating: 4.5,
-        wins: 15,
-        losses: 8,
-        last5: ['W', 'W', 'L', 'W', 'L'],
-        currentStreak: 2,
-        streakType: 'W',
-        surfacePreference: 'Hard Court',
-        surfaceWinRates: {
-            hardCourt: 0.75,
-            clayCourt: 0.45,
-            grassCourt: 0.60,
-            indoor: 0.70
-        },
-        aggressiveness: 7,
-        stamina: 8,
-        consistency: 6,
-        age: 28,
-        hand: 'right',
-        club: 'Ολυμπιακός',
-        notes: 'Strong baseline player',
-        lastMatchDate: '2024-01-15',
-        fatigueLevel: 2,
-        injuryStatus: 'healthy',
-        seasonalForm: 0.68
-    },
-    {
-        id: '2',
-        firstName: 'Μαρία',
-        lastName: 'Κωνσταντίνου',
-        ntrpRating: 3.5,
-        wins: 12,
-        losses: 10,
-        last5: ['L', 'W', 'W', 'L', 'W'],
-        currentStreak: 1,
-        streakType: 'W',
-        surfacePreference: 'Clay Court',
-        surfaceWinRates: {
-            hardCourt: 0.40,
-            clayCourt: 0.80,
-            grassCourt: 0.35,
-            indoor: 0.45
-        },
-        aggressiveness: 5,
-        stamina: 7,
-        consistency: 8,
-        age: 25,
-        hand: 'right',
-        club: 'Παναθηναϊκός',
-        notes: 'Consistent player',
-        lastMatchDate: '2024-01-12',
-        fatigueLevel: 4,
-        injuryStatus: 'healthy',
-        seasonalForm: 0.55
-    },
-    {
-        id: '3',
-        firstName: 'Νίκος',
-        lastName: 'Αλεξίου',
-        ntrpRating: 5.0,
-        wins: 20,
-        losses: 5,
-        last5: ['W', 'W', 'W', 'W', 'W'],
-        currentStreak: 5,
-        streakType: 'W',
-        surfacePreference: 'Grass Court',
-        surfaceWinRates: {
-            hardCourt: 0.85,
-            clayCourt: 0.70,
-            grassCourt: 0.90,
-            indoor: 0.80
-        },
-        aggressiveness: 9,
-        stamina: 9,
-        consistency: 7,
-        age: 30,
-        hand: 'left',
-        club: 'ΑΕΚ',
-        notes: 'Top player',
-        lastMatchDate: '2024-01-14',
-        fatigueLevel: 1,
-        injuryStatus: 'healthy',
-        seasonalForm: 0.82
-    },
-    {
-        id: '4',
-        firstName: 'Ελένη',
-        lastName: 'Δημητρίου',
-        ntrpRating: 4.0,
-        wins: 8,
-        losses: 12,
-        last5: ['L', 'L', 'W', 'L', 'L'],
-        currentStreak: 1,
-        streakType: 'L',
-        surfacePreference: 'Hard Court',
-        surfaceWinRates: {
-            hardCourt: 0.55,
-            clayCourt: 0.30,
-            grassCourt: 0.40,
-            indoor: 0.50
-        },
-        aggressiveness: 6,
-        stamina: 5,
-        consistency: 7,
-        age: 22,
-        hand: 'right',
-        club: 'ΠΑΟΚ',
-        notes: 'Developing player',
-        lastMatchDate: '2024-01-10',
-        fatigueLevel: 6,
-        injuryStatus: 'minor',
-        seasonalForm: 0.40
-    }
-];
+import Papa, { ParseError, ParseResult } from 'papaparse';
+import { Player } from '@netprophet/lib/types/player';
+import { bulkInsertPlayers, fetchPlayers, deletePlayer } from '@netprophet/lib/supabase/players';
+import { supabase } from '@netprophet/lib';
 
 export default function PlayersPage() {
+    supabase.auth.getUser().then((user) => {
+        console.log('Current Supabase user ID:', user.data?.user?.id);
+    });
     const router = useRouter();
-    const [players, setPlayers] = useState<Player[]>(initialPlayers);
+    const [players, setPlayers] = useState<Player[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingPlayer, setDeletingPlayer] = useState<Player | null>(null);
 
+    // Bulk upload state
+    const [importModalOpen, setImportModalOpen] = useState(false);
+    const [importedPlayers, setImportedPlayers] = useState<Player[]>([]);
+    const [importError, setImportError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Fetch players from Supabase on mount
+    useEffect(() => {
+        setLoading(true);
+        // Log the current user
+        supabase.auth.getUser().then((user) => {
+            console.log('Current Supabase user:', user);
+        });
+        fetchPlayers()
+            .then((players) => {
+                console.log('Fetched players:', players);
+                setPlayers(players);
+            })
+            .catch((err) => {
+                console.error('Error fetching players:', err);
+                setFetchError('Σφάλμα κατά τη φόρτωση των παικτών: ' + (err?.message || err));
+            })
+            .finally(() => setLoading(false));
+    }, []);
+
+    function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        setImportError(null);
+        const file = e.target.files?.[0];
+        if (!file) return;
+        Papa.parse<File>(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results: ParseResult<any>) => {
+                const rows = results.data as any[];
+                try {
+                    const parsed: Player[] = rows.map((row) => ({
+                        id: row.id || '',
+                        firstName: row.firstName || '',
+                        lastName: row.lastName || '',
+                        ntrpRating: parseFloat(row.ntrpRating) || 0,
+                        wins: parseInt(row.wins) || 0,
+                        losses: parseInt(row.losses) || 0,
+                        last5: (row.last5 || '').split(',').map((v: string) => v.trim()),
+                        currentStreak: parseInt(row.currentStreak) || 0,
+                        streakType: row.streakType === 'W' ? 'W' : 'L',
+                        surfacePreference: row.surfacePreference || 'Hard Court',
+                        surfaceWinRates: {
+                            hardCourt: parseFloat(row.hardCourtWinRate) || 0,
+                            clayCourt: parseFloat(row.clayCourtWinRate) || 0,
+                            grassCourt: parseFloat(row.grassCourtWinRate) || 0,
+                            indoor: parseFloat(row.indoorWinRate) || 0,
+                        },
+                        aggressiveness: parseInt(row.aggressiveness) || 5,
+                        stamina: parseInt(row.stamina) || 5,
+                        consistency: parseInt(row.consistency) || 5,
+                        age: parseInt(row.age) || 25,
+                        hand: row.hand === 'left' ? 'left' : 'right',
+                        notes: row.notes || '',
+                        lastMatchDate: row.lastMatchDate || '',
+                        fatigueLevel: row.fatigueLevel ? parseInt(row.fatigueLevel) : undefined,
+                        injuryStatus: row.injuryStatus || 'healthy',
+                        seasonalForm: undefined, // auto-calculated
+                    }));
+                    setImportedPlayers(parsed);
+                } catch (err) {
+                    setImportError('Error parsing CSV. Please check your file format.');
+                }
+            },
+            error: (error: Error, file: File) => setImportError(error.message),
+        });
+    }
+
+    async function handleImportConfirm() {
+        try {
+            await bulkInsertPlayers(importedPlayers);
+            setImportModalOpen(false);
+            setImportedPlayers([]);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            // Refetch players from Supabase
+            const freshPlayers = await fetchPlayers();
+            setPlayers(freshPlayers);
+        } catch (err: any) {
+            setImportError(err.message || 'Import failed');
+        }
+    }
 
     const handleEdit = (player: Player) => {
         console.log('Edit button clicked for player:', player.id);
@@ -146,9 +118,11 @@ export default function PlayersPage() {
         setIsDeleteModalOpen(true);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deletingPlayer) {
-            setPlayers(prev => prev.filter(player => player.id !== deletingPlayer.id));
+            await deletePlayer(deletingPlayer.id);
+            const freshPlayers = await fetchPlayers();
+            setPlayers(freshPlayers);
             setDeletingPlayer(null);
         }
         setIsDeleteModalOpen(false);
@@ -158,8 +132,6 @@ export default function PlayersPage() {
         setIsDeleteModalOpen(false);
         setDeletingPlayer(null);
     };
-
-
 
     const getWinRate = (wins: number, losses: number) => {
         const total = wins + losses;
@@ -181,6 +153,26 @@ export default function PlayersPage() {
         ));
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Φόρτωση...</p>
+                </div>
+            </div>
+        );
+    }
+    if (fetchError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-red-600 font-bold">{fetchError}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -198,6 +190,96 @@ export default function PlayersPage() {
                     + Προσθήκη Παίκτη
                 </Button>
             </div>
+
+            {/* Bulk Upload Button and Modal */}
+            <button
+                className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setImportModalOpen(true)}
+            >
+                Bulk Upload Players
+            </button>
+            {importModalOpen && (
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded shadow-lg w-full max-w-3xl relative">
+                        {/* Close button */}
+                        <button
+                            className="absolute top-3 right-3 text-2xl text-gray-400 hover:text-gray-700"
+                            onClick={() => setImportModalOpen(false)}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
+                        <h2 className="text-xl font-bold mb-2">Import Players from CSV</h2>
+                        <a
+                            href="/players_bulk_template.csv"
+                            download
+                            className="text-blue-600 underline text-sm mb-4 inline-block"
+                        >
+                            Download CSV Template
+                        </a>
+                        <input
+                            type="file"
+                            accept=".csv"
+                            ref={fileInputRef}
+                            onChange={handleFileUpload}
+                            className="mb-4 block"
+                        />
+                        {importError && (
+                            <div className="text-red-600 mb-2 font-semibold">{importError}</div>
+                        )}
+                        {importedPlayers.length > 0 && (
+                            <>
+                                <div className="max-h-64 overflow-x-auto border mb-4 rounded">
+                                    <table className="min-w-full text-xs">
+                                        <thead>
+                                            <tr>
+                                                <th>First Name</th>
+                                                <th>Last Name</th>
+                                                <th>NTRP</th>
+                                                <th>Wins</th>
+                                                <th>Losses</th>
+                                                <th>Surface</th>
+                                                <th>Streak</th>
+                                                <th>Age</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {importedPlayers.map((p, i) => (
+                                                <tr key={i}>
+                                                    <td>{p.firstName}</td>
+                                                    <td>{p.lastName}</td>
+                                                    <td>{p.ntrpRating}</td>
+                                                    <td>{p.wins}</td>
+                                                    <td>{p.losses}</td>
+                                                    <td>{p.surfacePreference}</td>
+                                                    <td>{p.currentStreak} {p.streakType}</td>
+                                                    <td>{p.age}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button
+                                    className="px-4 py-2 bg-green-600 text-white rounded mr-2 disabled:opacity-60"
+                                    onClick={handleImportConfirm}
+                                    disabled={importedPlayers.length === 0}
+                                >
+                                    Import {importedPlayers.length} Players
+                                </button>
+                                <button
+                                    className="px-4 py-2 bg-gray-300 rounded"
+                                    onClick={() => setImportModalOpen(false)}
+                                >
+                                    Cancel
+                                </button>
+                            </>
+                        )}
+                        {!importedPlayers.length && (
+                            <p className="text-gray-500">Upload a CSV file using the template.</p>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Players Table */}
             <Card className="transition-all duration-200 hover:shadow-lg">

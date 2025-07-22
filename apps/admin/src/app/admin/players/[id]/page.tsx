@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Player } from '@/types/player';
+import { Player } from '@netprophet/lib/types/player';
+import { insertPlayer, updatePlayer, fetchPlayers } from '@netprophet/lib/supabase/players';
 
 // Mock data for demo
 const mockPlayer: Player = {
@@ -33,7 +34,6 @@ const mockPlayer: Player = {
     consistency: 6,
     age: 28,
     hand: 'right',
-    club: 'Ολυμπιακός',
     notes: 'Strong baseline player',
     lastMatchDate: '2024-01-15',
     fatigueLevel: 2,
@@ -44,7 +44,7 @@ const mockPlayer: Player = {
 export default function PlayerEditPage() {
     const router = useRouter();
     const params = useParams();
-    const playerId = params.id as string;
+    const playerId = (params as any).id as string;
     const isNew = playerId === 'new';
 
     const [player, setPlayer] = useState<Player>(mockPlayer);
@@ -52,8 +52,11 @@ export default function PlayerEditPage() {
 
     useEffect(() => {
         if (!isNew) {
-            // In a real app, fetch player data here
-            setPlayer(mockPlayer);
+            // Fetch player data from Supabase
+            fetchPlayers().then((players: Player[]) => {
+                const found = players.find((p: Player) => p.id === playerId);
+                if (found) setPlayer(found);
+            });
         } else {
             // Initialize new player with defaults
             setPlayer({
@@ -78,7 +81,6 @@ export default function PlayerEditPage() {
                 consistency: 5,
                 age: 25,
                 hand: 'right',
-                club: '',
                 notes: '',
                 lastMatchDate: '',
                 fatigueLevel: 0,
@@ -91,9 +93,11 @@ export default function PlayerEditPage() {
     const handleSave = async () => {
         setLoading(true);
         try {
-            // In a real app, save to database here
-            console.log('Saving player:', player);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+            if (isNew) {
+                await insertPlayer(player);
+            } else {
+                await updatePlayer(player.id, player);
+            }
             router.push('/admin/players');
         } catch (error) {
             console.error('Error saving player:', error);
@@ -102,7 +106,7 @@ export default function PlayerEditPage() {
         }
     };
 
-    const updatePlayer = (field: keyof Player, value: any) => {
+    const updatePlayerField = (field: keyof Player, value: any) => {
         setPlayer(prev => ({ ...prev, [field]: value }));
     };
 
@@ -168,7 +172,7 @@ export default function PlayerEditPage() {
                                 <Input
                                     id="firstName"
                                     value={player.firstName}
-                                    onChange={(e) => updatePlayer('firstName', e.target.value)}
+                                    onChange={(e) => updatePlayerField('firstName', e.target.value)}
                                     placeholder="Όνομα"
                                 />
                             </div>
@@ -177,7 +181,7 @@ export default function PlayerEditPage() {
                                 <Input
                                     id="lastName"
                                     value={player.lastName}
-                                    onChange={(e) => updatePlayer('lastName', e.target.value)}
+                                    onChange={(e) => updatePlayerField('lastName', e.target.value)}
                                     placeholder="Επώνυμο"
                                 />
                             </div>
@@ -192,14 +196,14 @@ export default function PlayerEditPage() {
                                     min="16"
                                     max="80"
                                     value={player.age}
-                                    onChange={(e) => updatePlayer('age', parseInt(e.target.value) || 25)}
+                                    onChange={(e) => updatePlayerField('age', parseInt(e.target.value) || 25)}
                                 />
                             </div>
                             <div>
                                 <Label htmlFor="hand">Χέρι</Label>
                                 <Select
                                     value={player.hand}
-                                    onValueChange={(value: 'left' | 'right') => updatePlayer('hand', value)}
+                                    onValueChange={(value: 'left' | 'right') => updatePlayerField('hand', value)}
                                 >
                                     <SelectTrigger className="bg-white">
                                         <SelectValue />
@@ -217,7 +221,7 @@ export default function PlayerEditPage() {
                             <Textarea
                                 id="notes"
                                 value={player.notes || ''}
-                                onChange={(e) => updatePlayer('notes', e.target.value)}
+                                onChange={(e) => updatePlayerField('notes', e.target.value)}
                                 placeholder="Σημειώσεις για τον παίκτη"
                                 rows={3}
                             />
@@ -241,7 +245,7 @@ export default function PlayerEditPage() {
                                     min="1.0"
                                     max="7.0"
                                     value={player.ntrpRating}
-                                    onChange={(e) => updatePlayer('ntrpRating', parseFloat(e.target.value) || 3.0)}
+                                    onChange={(e) => updatePlayerField('ntrpRating', parseFloat(e.target.value) || 3.0)}
                                 />
                             </div>
                             <div>
@@ -260,7 +264,7 @@ export default function PlayerEditPage() {
                                     type="number"
                                     min="0"
                                     value={player.wins}
-                                    onChange={(e) => updatePlayer('wins', parseInt(e.target.value) || 0)}
+                                    onChange={(e) => updatePlayerField('wins', parseInt(e.target.value) || 0)}
                                 />
                             </div>
                             <div>
@@ -270,7 +274,7 @@ export default function PlayerEditPage() {
                                     type="number"
                                     min="0"
                                     value={player.losses}
-                                    onChange={(e) => updatePlayer('losses', parseInt(e.target.value) || 0)}
+                                    onChange={(e) => updatePlayerField('losses', parseInt(e.target.value) || 0)}
                                 />
                             </div>
                         </div>
@@ -298,14 +302,14 @@ export default function PlayerEditPage() {
                                     type="number"
                                     min="0"
                                     value={player.currentStreak}
-                                    onChange={(e) => updatePlayer('currentStreak', parseInt(e.target.value) || 0)}
+                                    onChange={(e) => updatePlayerField('currentStreak', parseInt(e.target.value) || 0)}
                                 />
                             </div>
                             <div>
                                 <Label htmlFor="streakType">Τύπος Streak</Label>
                                 <Select
                                     value={player.streakType}
-                                    onValueChange={(value: 'W' | 'L') => updatePlayer('streakType', value)}
+                                    onValueChange={(value: 'W' | 'L') => updatePlayerField('streakType', value)}
                                 >
                                     <SelectTrigger className="bg-white">
                                         <SelectValue />
@@ -341,7 +345,7 @@ export default function PlayerEditPage() {
                                 id="lastMatchDate"
                                 type="date"
                                 value={player.lastMatchDate || ''}
-                                onChange={(e) => updatePlayer('lastMatchDate', e.target.value)}
+                                onChange={(e) => updatePlayerField('lastMatchDate', e.target.value)}
                             />
                         </div>
                     </CardContent>
@@ -361,7 +365,7 @@ export default function PlayerEditPage() {
                                 min="1"
                                 max="10"
                                 value={player.aggressiveness}
-                                onChange={(e) => updatePlayer('aggressiveness', parseInt(e.target.value) || 5)}
+                                onChange={(e) => updatePlayerField('aggressiveness', parseInt(e.target.value) || 5)}
                             />
                         </div>
 
@@ -373,7 +377,7 @@ export default function PlayerEditPage() {
                                 min="1"
                                 max="10"
                                 value={player.stamina}
-                                onChange={(e) => updatePlayer('stamina', parseInt(e.target.value) || 5)}
+                                onChange={(e) => updatePlayerField('stamina', parseInt(e.target.value) || 5)}
                             />
                         </div>
 
@@ -385,7 +389,7 @@ export default function PlayerEditPage() {
                                 min="1"
                                 max="10"
                                 value={player.consistency}
-                                onChange={(e) => updatePlayer('consistency', parseInt(e.target.value) || 5)}
+                                onChange={(e) => updatePlayerField('consistency', parseInt(e.target.value) || 5)}
                             />
                         </div>
 
@@ -397,7 +401,7 @@ export default function PlayerEditPage() {
                                 min="0"
                                 max="10"
                                 value={player.fatigueLevel || 0}
-                                onChange={(e) => updatePlayer('fatigueLevel', parseInt(e.target.value) || 0)}
+                                onChange={(e) => updatePlayerField('fatigueLevel', parseInt(e.target.value) || 0)}
                             />
                         </div>
 
@@ -405,7 +409,7 @@ export default function PlayerEditPage() {
                             <Label htmlFor="injuryStatus">Κατάσταση Τραυματισμού</Label>
                             <Select
                                 value={player.injuryStatus || 'healthy'}
-                                onValueChange={(value: 'healthy' | 'minor' | 'major') => updatePlayer('injuryStatus', value)}
+                                onValueChange={(value: 'healthy' | 'minor' | 'major') => updatePlayerField('injuryStatus', value)}
                             >
                                 <SelectTrigger className="bg-white">
                                     <SelectValue />
@@ -430,7 +434,7 @@ export default function PlayerEditPage() {
                             <Label htmlFor="surfacePreference">Προτιμώμενη Επιφάνεια</Label>
                             <Select
                                 value={player.surfacePreference}
-                                onValueChange={(value) => updatePlayer('surfacePreference', value)}
+                                onValueChange={(value) => updatePlayerField('surfacePreference', value)}
                             >
                                 <SelectTrigger className="bg-white">
                                     <SelectValue />
