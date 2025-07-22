@@ -29,32 +29,61 @@ function mapPlayer(row: any): Player {
   };
 }
 
+// Map Player object from camelCase to snake_case for DB writes
+function toDbPlayer(player: Partial<Player>): any {
+  return {
+    id: player.id,
+    first_name: player.firstName,
+    last_name: player.lastName,
+    ntrp_rating: player.ntrpRating,
+    wins: player.wins,
+    losses: player.losses,
+    last5: player.last5,
+    current_streak: player.currentStreak,
+    streak_type: player.streakType,
+    surface_preference: player.surfacePreference,
+    surface_win_rates: player.surfaceWinRates,
+    aggressiveness: player.aggressiveness,
+    stamina: player.stamina,
+    consistency: player.consistency,
+    age: player.age,
+    hand: player.hand,
+    notes: player.notes,
+    last_match_date: player.lastMatchDate,
+    fatigue_level: player.fatigueLevel,
+    injury_status: player.injuryStatus,
+    seasonal_form: player.seasonalForm,
+  };
+}
+
 export async function fetchPlayers() {
   const { data, error } = await supabase.from(TABLE).select('*');
-  console.log('[fetchPlayers] Raw data from Supabase:', data);
   if (error) {
     console.error('[fetchPlayers] Supabase error:', error);
     throw error;
   }
   const mapped = (data ?? []).map(mapPlayer);
-  console.log('[fetchPlayers] Mapped players:', mapped);
   return mapped;
 }
 
 export async function insertPlayer(player: Player) {
-  const { data, error } = await supabase.from(TABLE).insert([player]).select();
+  const dbPlayer = toDbPlayer(player);
+  const { data, error } = await supabase.from(TABLE).insert([dbPlayer]).select();
   if (error) throw error;
   return data?.[0] as Player;
 }
 
 export async function bulkInsertPlayers(players: Player[]) {
-  const { data, error } = await supabase.from(TABLE).insert(players).select();
+  const dbPlayers = players.map(toDbPlayer);
+  const { data, error } = await supabase.from(TABLE).insert(dbPlayers).select();
   if (error) throw error;
   return data as Player[];
 }
 
 export async function updatePlayer(id: string, updates: Partial<Player>) {
-  const { data, error } = await supabase.from(TABLE).update(updates).eq('id', id).select();
+  const dbUpdates = toDbPlayer(updates);
+  console.log('Updating player in DB:', dbUpdates);
+  const { data, error } = await supabase.from(TABLE).update(dbUpdates).eq('id', id).select();
   if (error) throw error;
   return data?.[0] as Player;
 }

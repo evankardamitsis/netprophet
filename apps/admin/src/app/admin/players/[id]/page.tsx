@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@netprophet/lib/types/player';
 import { insertPlayer, updatePlayer, fetchPlayers } from '@netprophet/lib/supabase/players';
+import toast from 'react-hot-toast';
 
 // Mock data for demo
 const mockPlayer: Player = {
@@ -91,16 +92,45 @@ export default function PlayerEditPage() {
     }, [isNew, playerId]);
 
     const handleSave = async () => {
+        console.log('Save clicked', player);
         setLoading(true);
         try {
+            // Map camelCase to snake_case for DB
+            const playerDb = {
+                id: player.id,
+                first_name: player.firstName,
+                last_name: player.lastName,
+                ntrp_rating: player.ntrpRating,
+                wins: player.wins,
+                losses: player.losses,
+                last5: player.last5,
+                current_streak: player.currentStreak,
+                streak_type: player.streakType,
+                surface_preference: player.surfacePreference,
+                surface_win_rates: player.surfaceWinRates,
+                aggressiveness: player.aggressiveness,
+                stamina: player.stamina,
+                consistency: player.consistency,
+                age: player.age,
+                hand: player.hand,
+                notes: player.notes,
+                last_match_date: player.lastMatchDate,
+                fatigue_level: player.fatigueLevel,
+                injury_status: player.injuryStatus,
+                seasonal_form: player.seasonalForm,
+            };
+
             if (isNew) {
-                await insertPlayer(player);
+                await insertPlayer(playerDb as any);
+                toast.success('Player created!');
             } else {
-                await updatePlayer(player.id, player);
+                await updatePlayer(player.id, playerDb as any);
+                toast.success('Player updated!');
             }
             router.push('/admin/players');
         } catch (error) {
             console.error('Error saving player:', error);
+            toast.error('Failed to save player');
         } finally {
             setLoading(false);
         }
@@ -208,7 +238,7 @@ export default function PlayerEditPage() {
                                     <SelectTrigger className="bg-white">
                                         <SelectValue />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="bg-white">
                                         <SelectItem value="right">Δεξί</SelectItem>
                                         <SelectItem value="left">Αριστερό</SelectItem>
                                     </SelectContent>
@@ -414,7 +444,7 @@ export default function PlayerEditPage() {
                                 <SelectTrigger className="bg-white">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-white">
                                     <SelectItem value="healthy">Υγιής</SelectItem>
                                     <SelectItem value="minor">Μικρός Τραυματισμός</SelectItem>
                                     <SelectItem value="major">Σοβαρός Τραυματισμός</SelectItem>
@@ -439,7 +469,7 @@ export default function PlayerEditPage() {
                                 <SelectTrigger className="bg-white">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-white">
                                     <SelectItem value="Hard Court">Hard Court</SelectItem>
                                     <SelectItem value="Clay Court">Clay Court</SelectItem>
                                     <SelectItem value="Grass Court">Grass Court</SelectItem>

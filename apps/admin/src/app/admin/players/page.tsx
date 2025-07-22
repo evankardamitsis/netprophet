@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { Badge } from '@/components/ui/badge';
@@ -10,11 +10,21 @@ import Papa, { ParseError, ParseResult } from 'papaparse';
 import { Player } from '@netprophet/lib/types/player';
 import { bulkInsertPlayers, fetchPlayers, deletePlayer } from '@netprophet/lib/supabase/players';
 import { supabase } from '@netprophet/lib';
+import {
+    useReactTable,
+    getCoreRowModel,
+    getSortedRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    flexRender,
+    ColumnDef,
+    SortingState,
+    ColumnFiltersState,
+} from '@tanstack/react-table';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function PlayersPage() {
-    supabase.auth.getUser().then((user) => {
-        console.log('Current Supabase user ID:', user.data?.user?.id);
-    });
     const router = useRouter();
     const [players, setPlayers] = useState<Player[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -26,18 +36,19 @@ export default function PlayersPage() {
     const [importError, setImportError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
+    const [globalFilter, setGlobalFilter] = useState('');
+    const [sorting, setSorting] = useState<SortingState>([
+        { id: 'lastName', desc: false }
+    ]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [rowSelection, setRowSelection] = useState({});
 
     // Fetch players from Supabase on mount
     useEffect(() => {
         setLoading(true);
-        // Log the current user
-        supabase.auth.getUser().then((user) => {
-            console.log('Current Supabase user:', user);
-        });
         fetchPlayers()
             .then((players) => {
-                console.log('Fetched players:', players);
                 setPlayers(players);
             })
             .catch((err) => {
@@ -46,6 +57,160 @@ export default function PlayersPage() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    const columns = useMemo<ColumnDef<Player, any>[]>(
+        () => [
+            {
+                id: 'select',
+                header: ({ table }) => (
+                    <Checkbox
+                        checked={table.getIsAllPageRowsSelected()}
+                        indeterminate={table.getIsSomePageRowsSelected()}
+                        onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
+                        aria-label="Select all"
+                    />
+                ),
+                cell: ({ row }) => (
+                    <Checkbox
+                        checked={row.getIsSelected()}
+                        indeterminate={row.getIsSomeSelected()}
+                        onCheckedChange={value => row.toggleSelected(!!value)}
+                        aria-label="Select row"
+                    />
+                ),
+                enableSorting: false,
+                enableColumnFilter: false,
+                size: 32,
+            },
+            {
+                accessorKey: 'firstName',
+                header: 'Όνομα',
+                cell: info => info.getValue(),
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'lastName',
+                header: 'Επώνυμο',
+                cell: info => info.getValue(),
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'ntrpRating',
+                header: 'NTRP',
+                cell: info => info.getValue(),
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'wins',
+                header: 'Νίκες',
+                cell: info => info.getValue(),
+                enableSorting: true,
+            },
+            {
+                accessorKey: 'losses',
+                header: 'Ήττες',
+                cell: info => info.getValue(),
+                enableSorting: true,
+            },
+            {
+                id: 'winRate',
+                header: 'Win Rate',
+                cell: ({ row }) => {
+                    const wins = row.original.wins;
+                    const losses = row.original.losses;
+                    const total = wins + losses;
+                    return total > 0 ? Math.round((wins / total) * 100) + '%' : '0%';
+                },
+                enableSorting: false,
+            },
+            {
+                id: 'last5',
+                header: 'Τελευταία 5',
+                cell: ({ row }) => (
+                    <div className="flex">{row.original.last5.map((result, idx) => (
+                        <span
+                            key={idx}
+                            className={`w-6 h-6 rounded-full text-xs font-bold inline-flex items-center justify-center mr-1 transition-all duration-200 hover:scale-110 hover:shadow-md ${result === 'W'
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                }`}
+                            title={`Match ${idx + 1}: ${result === 'W' ? 'Win' : 'Loss'}`}
+                        >
+                            {result}
+                        </span>
+                    ))}</div>
+                ),
+                enableSorting: false,
+            },
+            {
+                accessorKey: 'currentStreak',
+                header: 'Streak',
+                cell: ({ row }) => `${row.original.currentStreak} ${row.original.streakType}`,
+                enableSorting: true,
+            },
+            {
+                accessorKey: 'age',
+                header: 'Ηλικία',
+                cell: info => info.getValue(),
+                enableSorting: true,
+            },
+            {
+                id: 'actions',
+                header: 'Ενέργειες',
+                cell: ({ row }) => (
+                    <div className="flex justify-end space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(row.original)}
+                            className="transition-all duration-200 hover:scale-110 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 cursor-pointer"
+                            title="Edit player"
+                        >
+                            ✏️
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(row.original)}
+                            className="transition-all duration-200 hover:scale-110 hover:bg-red-50 hover:border-red-300 hover:text-red-700 cursor-pointer"
+                            title="Delete player"
+                        >
+                            🗑️
+                        </Button>
+                    </div>
+                ),
+                enableSorting: false,
+            },
+        ],
+        []
+    );
+
+    const table = useReactTable({
+        data: players,
+        columns,
+        state: {
+            sorting,
+            globalFilter,
+            columnFilters,
+            rowSelection,
+        },
+        onSortingChange: setSorting,
+        onGlobalFilterChange: setGlobalFilter,
+        onColumnFiltersChange: setColumnFilters,
+        onRowSelectionChange: setRowSelection,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const value = row.getValue<string>('firstName') + ' ' + row.getValue<string>('lastName');
+            return value.toLowerCase().includes(filterValue.toLowerCase());
+        },
+        enableRowSelection: true,
+    });
 
     function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
         setImportError(null);
@@ -109,7 +274,6 @@ export default function PlayersPage() {
     }
 
     const handleEdit = (player: Player) => {
-        console.log('Edit button clicked for player:', player.id);
         router.push(`/admin/players/${player.id}`);
     };
 
@@ -281,7 +445,7 @@ export default function PlayersPage() {
                 </div>
             )}
 
-            {/* Players Table */}
+            {/* Players Table (TanStack Table) */}
             <Card className="transition-all duration-200 hover:shadow-lg">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -292,104 +456,105 @@ export default function PlayersPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Ονοματεπώνυμο</TableHead>
-                                <TableHead>NTRP</TableHead>
-                                <TableHead>Νίκες</TableHead>
-                                <TableHead>Ήττες</TableHead>
-                                <TableHead>Win Rate</TableHead>
-                                <TableHead>Τελευταία 5</TableHead>
-                                <TableHead>Streak</TableHead>
-                                <TableHead>Ηλικία</TableHead>
-                                <TableHead className="text-right">Ενέργειες</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {players.map((player) => (
-                                <TableRow
-                                    key={player.id}
-                                    className="transition-all duration-200 hover:bg-gray-50 hover:shadow-sm"
-                                >
-                                    <TableCell className="font-medium">
-                                        <Button
-                                            variant="link"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                router.push(`/admin/players/${player.id}`);
-                                            }}
-                                            className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200 cursor-pointer"
-                                        >
-                                            {player.firstName} {player.lastName}
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="transition-all duration-200 hover:scale-105 hover:shadow-sm">
-                                            {player.ntrpRating}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-green-600 font-semibold">
-                                        {player.wins}
-                                    </TableCell>
-                                    <TableCell className="text-red-600 font-semibold">
-                                        {player.losses}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={getWinRate(player.wins, player.losses) >= 50 ? "default" : "secondary"}
-                                            className="transition-all duration-200 hover:scale-105 hover:shadow-sm"
-                                            title={`${player.wins} wins, ${player.losses} losses`}
-                                        >
-                                            {getWinRate(player.wins, player.losses)}%
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {getLast5Display(player.last5)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={player.streakType === 'W' ? "default" : "secondary"}
-                                            className="transition-all duration-200 hover:scale-105 hover:shadow-sm"
-                                        >
-                                            {player.currentStreak} {player.streakType}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <span className="font-medium">{player.age}</span>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end space-x-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleEdit(player);
-                                                }}
-                                                className="transition-all duration-200 hover:scale-110 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 cursor-pointer"
-                                                title="Edit player"
+                    <div className="mb-4 flex items-center gap-4">
+                        <Input
+                            placeholder="Search by name..."
+                            value={globalFilter}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
+                            className="max-w-xs"
+                        />
+                        <div className="ml-auto flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.setPageIndex(0)}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<<'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<'}
+                            </Button>
+                            <span className="px-2 text-sm">
+                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                            </span>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>>'}
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm border">
+                            <thead>
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <tr key={headerGroup.id}>
+                                        {headerGroup.headers.map(header => (
+                                            <th
+                                                key={header.id}
+                                                className={
+                                                    'px-4 py-2 border-b ' +
+                                                    (header.column.getCanSort() ? 'cursor-pointer select-none ' : '') +
+                                                    (header.column.columnDef.header === 'Win Rate' || header.column.columnDef.header === 'Τελευταία 5' || header.column.columnDef.header === 'Streak' || header.column.columnDef.header === 'Ενέργειες'
+                                                        ? 'text-center'
+                                                        : 'text-left')
+                                                }
+                                                onClick={header.column.getToggleSortingHandler()}
                                             >
-                                                ✏️
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleDelete(player);
-                                                }}
-                                                className="transition-all duration-200 hover:scale-110 hover:bg-red-50 hover:border-red-300 hover:text-red-700 cursor-pointer"
-                                                title="Delete player"
+                                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                                {header.column.getIsSorted() === 'asc' && ' ▲'}
+                                                {header.column.getIsSorted() === 'desc' && ' ▼'}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </thead>
+                            <tbody>
+                                {table.getRowModel().rows.map(row => (
+                                    <tr
+                                        key={row.id}
+                                        className="border-b hover:bg-gray-50 align-middle cursor-pointer"
+                                        onClick={e => {
+                                            // Prevent navigation if clicking on a button or input
+                                            if ((e.target as HTMLElement).closest('button,input')) return;
+                                            router.push(`/admin/players/${row.original.id}`);
+                                        }}
+                                    >
+                                        {row.getVisibleCells().map(cell => (
+                                            <td
+                                                key={cell.id}
+                                                className={
+                                                    'px-4 py-2 align-middle ' +
+                                                    (cell.column.columnDef.header === 'Win Rate' || cell.column.columnDef.header === 'Τελευταία 5' || cell.column.columnDef.header === 'Streak' || cell.column.columnDef.header === 'Ενέργειες'
+                                                        ? 'text-center'
+                                                        : 'text-left')
+                                                }
                                             >
-                                                🗑️
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
             <WarningModal

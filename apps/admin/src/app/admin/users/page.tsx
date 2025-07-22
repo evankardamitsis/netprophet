@@ -1,11 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@netprophet/ui';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@netprophet/lib';
 import { Switch } from '@/components/ui/switch';
 import toast from 'react-hot-toast';
+import {
+    useReactTable,
+    getCoreRowModel,
+    getSortedRowModel,
+    getFilteredRowModel,
+    getPaginationRowModel,
+    flexRender,
+    ColumnDef,
+    SortingState,
+    ColumnFiltersState,
+} from '@tanstack/react-table';
 
 interface Profile {
     id: string;
@@ -25,6 +36,9 @@ export default function UsersPage() {
     const [editLoading, setEditLoading] = useState(false);
     const [editError, setEditError] = useState<string | null>(null);
     const [editSuccess, setEditSuccess] = useState(false);
+    const [globalFilter, setGlobalFilter] = useState('');
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -42,6 +56,79 @@ export default function UsersPage() {
         };
         fetchUsers();
     }, []);
+
+    const columns = useMemo<ColumnDef<Profile, any>[]>(
+        () => [
+            {
+                accessorKey: 'email',
+                header: 'Email',
+                cell: info => info.getValue(),
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'username',
+                header: 'Username',
+                cell: info => info.getValue() || '-',
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'is_admin',
+                header: 'Admin',
+                cell: info => info.getValue() ? '✅' : '',
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'suspended',
+                header: 'Suspended',
+                cell: info => info.getValue() ? '🚫' : '',
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
+                accessorKey: 'created_at',
+                header: 'Created At',
+                cell: info => new Date(info.getValue()).toLocaleString(),
+                enableSorting: true,
+            },
+            {
+                id: 'actions',
+                header: 'Actions',
+                cell: ({ row }) => (
+                    <Button size="sm" variant="outline" onClick={() => handleEditClick(row.original)}>
+                        Edit
+                    </Button>
+                ),
+                enableSorting: false,
+                enableColumnFilter: false,
+            },
+        ],
+        []
+    );
+
+    const table = useReactTable({
+        data: users,
+        columns,
+        state: {
+            sorting,
+            globalFilter,
+            columnFilters,
+        },
+        onSortingChange: setSorting,
+        onGlobalFilterChange: setGlobalFilter,
+        onColumnFiltersChange: setColumnFilters,
+        getCoreRowModel: getCoreRowModel(),
+        getSortedRowModel: getSortedRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            // Filter by email or username
+            const value = row.getValue<string>('email') + ' ' + (row.getValue<string>('username') || '');
+            return value.toLowerCase().includes(filterValue.toLowerCase());
+        },
+    });
 
     const handleEditClick = (user: Profile) => {
         setEditUser(user);
@@ -107,40 +194,97 @@ export default function UsersPage() {
                     <CardTitle>Users Management</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {loading ? (
-                        <div className="text-gray-500">Loading users...</div>
-                    ) : error ? (
-                        <div className="text-red-600 font-semibold">{error}</div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full text-sm border">
-                                <thead>
-                                    <tr>
-                                        <th className="px-4 py-2 border-b text-left">Email</th>
-                                        <th className="px-4 py-2 border-b text-left">Username</th>
-                                        <th className="px-4 py-2 border-b text-center">Admin</th>
-                                        <th className="px-4 py-2 border-b text-left">Created At</th>
-                                        <th className="px-4 py-2 border-b text-center">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {users.map((user) => (
-                                        <tr key={user.id} className="border-b hover:bg-gray-50 align-middle">
-                                            <td className="px-4 py-2 align-middle text-left">{user.email}</td>
-                                            <td className="px-4 py-2 align-middle text-left">{user.username || '-'}</td>
-                                            <td className="px-4 py-2 align-middle text-center">{user.is_admin ? '✅' : ''}</td>
-                                            <td className="px-4 py-2 align-middle text-left">{new Date(user.created_at).toLocaleString()}</td>
-                                            <td className="px-4 py-2 align-middle text-center">
-                                                <Button size="sm" variant="outline" onClick={() => handleEditClick(user)}>
-                                                    Edit
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                    <div className="mb-4 flex items-center gap-4">
+                        <Input
+                            placeholder="Search by email or username..."
+                            value={globalFilter}
+                            onChange={e => setGlobalFilter(e.target.value)}
+                            className="max-w-xs"
+                        />
+                        <div className="ml-auto flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.setPageIndex(0)}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<<'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<'}
+                            </Button>
+                            <span className="px-2 text-sm">
+                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                            </span>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>>'}
+                            </Button>
                         </div>
-                    )}
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm border">
+                            <thead>
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <tr key={headerGroup.id}>
+                                        {headerGroup.headers.map(header => (
+                                            <th
+                                                key={header.id}
+                                                className={
+                                                    'px-4 py-2 border-b ' +
+                                                    (header.column.getCanSort() ? 'cursor-pointer select-none ' : '') +
+                                                    (header.column.columnDef.header === 'Admin' || header.column.columnDef.header === 'Suspended' || header.column.columnDef.header === 'Actions'
+                                                        ? 'text-center'
+                                                        : 'text-left')
+                                                }
+                                                onClick={header.column.getToggleSortingHandler()}
+                                            >
+                                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                                {header.column.getIsSorted() === 'asc' && ' ▲'}
+                                                {header.column.getIsSorted() === 'desc' && ' ▼'}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </thead>
+                            <tbody>
+                                {table.getRowModel().rows.map(row => (
+                                    <tr key={row.id} className="border-b hover:bg-gray-50 align-middle">
+                                        {row.getVisibleCells().map(cell => (
+                                            <td
+                                                key={cell.id}
+                                                className={
+                                                    'px-4 py-2 align-middle ' +
+                                                    (cell.column.columnDef.header === 'Admin' || cell.column.columnDef.header === 'Suspended' || cell.column.columnDef.header === 'Actions'
+                                                        ? 'text-center'
+                                                        : 'text-left')
+                                                }
+                                            >
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 
