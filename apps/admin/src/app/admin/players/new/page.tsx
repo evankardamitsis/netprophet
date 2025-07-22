@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -383,7 +384,7 @@ export default function NewPlayerPage() {
                             <Label htmlFor="surfacePreference">Προτιμώμενη Επιφάνεια</Label>
                             <Select
                                 value={player.surfacePreference}
-                                onValueChange={(value) => updatePlayer('surfacePreference', value)}
+                                onValueChange={(value: any) => updatePlayer('surfacePreference', value)}
                             >
                                 <SelectTrigger className="bg-white">
                                     <SelectValue />

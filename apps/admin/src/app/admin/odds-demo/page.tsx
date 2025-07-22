@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -210,7 +211,7 @@ export default function OddsDemoPage() {
                                 <Label>Player</Label>
                                 <Select
                                     value={player1.id}
-                                    onValueChange={(value) => {
+                                    onValueChange={(value: string) => {
                                         const selected = demoPlayers.find(p => p.id === value);
                                         if (selected) setPlayer1(selected);
                                     }}
@@ -263,7 +264,7 @@ export default function OddsDemoPage() {
                             <Label>Surface Preference</Label>
                             <Select
                                 value={player1.surfacePreference}
-                                onValueChange={(value) => updatePlayerField('1', 'surfacePreference', value)}
+                                onValueChange={(value: any) => updatePlayerField('1', 'surfacePreference', value)}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -333,7 +334,7 @@ export default function OddsDemoPage() {
                                 <Label>Player</Label>
                                 <Select
                                     value={player2.id}
-                                    onValueChange={(value) => {
+                                    onValueChange={(value: string) => {
                                         const selected = demoPlayers.find(p => p.id === value);
                                         if (selected) setPlayer2(selected);
                                     }}
@@ -386,7 +387,7 @@ export default function OddsDemoPage() {
                             <Label>Surface Preference</Label>
                             <Select
                                 value={player2.surfacePreference}
-                                onValueChange={(value) => updatePlayerField('2', 'surfacePreference', value)}
+                                onValueChange={(value: any) => updatePlayerField('2', 'surfacePreference', value)}
                             >
                                 <SelectTrigger>
                                     <SelectValue />
@@ -497,7 +498,7 @@ export default function OddsDemoPage() {
                             <span className="font-semibold">Last Match Result:</span>
                             <Select
                                 value={lastMatchResult || ''}
-                                onValueChange={val => {
+                                onValueChange={(val: string) => {
                                     setH2hRecords(prev => ({
                                         ...prev,
                                         [h2hKey]: {
@@ -550,7 +551,9 @@ export default function OddsDemoPage() {
                             <Label>Surface</Label>
                             <Select
                                 value={matchContext.surface}
-                                onValueChange={(value: any) => setMatchContext({ ...matchContext, surface: value })}
+                                onValueChange={(value: "Hard Court" | "Clay Court" | "Grass Court" | "Indoor") =>
+                                    setMatchContext({ ...matchContext, surface: value })
+                                }
                             >
                                 <SelectTrigger>
                                     <SelectValue />

@@ -1,7 +1,7 @@
 'use client';
 
 import { Menu, LogOut, User } from 'lucide-react';
-import { Button } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
 
 interface TopBarProps {
     userEmail?: string;

@@ -15,7 +15,7 @@ import {
     X,
     Brain
 } from 'lucide-react';
-import { Button } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
     isOpen: boolean;

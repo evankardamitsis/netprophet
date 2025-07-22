@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { WarningModal } from '@/components/ui/warning-modal';
@@ -64,16 +65,26 @@ export default function PlayersPage() {
                 id: 'select',
                 header: ({ table }) => (
                     <Checkbox
-                        checked={table.getIsAllPageRowsSelected()}
-                        indeterminate={table.getIsSomePageRowsSelected()}
+                        checked={
+                            table.getIsAllPageRowsSelected()
+                                ? true
+                                : table.getIsSomePageRowsSelected()
+                                    ? "indeterminate"
+                                    : false
+                        }
                         onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
                         aria-label="Select all"
                     />
                 ),
                 cell: ({ row }) => (
                     <Checkbox
-                        checked={row.getIsSelected()}
-                        indeterminate={row.getIsSomeSelected()}
+                        checked={
+                            row.getIsSelected()
+                                ? true
+                                : row.getIsSomeSelected()
+                                    ? "indeterminate"
+                                    : false
+                        }
                         onCheckedChange={value => row.toggleSelected(!!value)}
                         aria-label="Select row"
                     />

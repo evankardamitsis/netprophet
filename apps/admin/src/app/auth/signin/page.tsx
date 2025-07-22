@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@netprophet/lib';
 
 export default function SignInPage() {

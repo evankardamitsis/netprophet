@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Button } from '@netprophet/ui';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@netprophet/lib';
 import { Switch } from '@/components/ui/switch';
+import { supabase } from '@netprophet/lib';
 import toast from 'react-hot-toast';
 import {
     useReactTable,
