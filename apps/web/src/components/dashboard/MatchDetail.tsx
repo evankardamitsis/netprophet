@@ -369,6 +369,12 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
 
     return (
         <div className="flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6">
+            {/* Back to Matches button at the top, small and not full width */}
+            <div className="mb-2">
+                <Button onClick={onBack} variant="outline" size="sm" className="w-auto px-4">
+                    ← Back to Matches
+                </Button>
+            </div>
             <Card className="p-6">
                 <CardTitle>{details.tournament}</CardTitle>
                 <CardContent>
@@ -380,7 +386,27 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                     </div>
                 </CardContent>
             </Card>
-            <Button onClick={onBack} variant="outline">Back to Matches</Button>
+            {/* Move stats cards here, right after tournament info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <Card>
+                    <CardContent className="p-4 text-center">
+                        <div className="text-sm text-gray-600 mb-1">Head to Head</div>
+                        <div className="font-semibold text-gray-900">{details.headToHead}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-4 text-center">
+                        <div className="text-sm text-gray-600 mb-1">Surface</div>
+                        <div className="font-semibold text-gray-900">{details.surface}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-4 text-center">
+                        <div className="text-sm text-gray-600 mb-1">Points Available</div>
+                        <div className="font-semibold text-green-600">+{details.points}</div>
+                    </CardContent>
+                </Card>
+            </div>
             <div className="space-y-6">
                 <div className="max-w-6xl mx-auto space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -435,12 +461,12 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                             </div>
                         </div>
                         <div className="lg:col-span-2 flex flex-col h-full">
-                            <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200 flex-1 flex flex-col">
+                            <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200 flex-1 flex flex-col h-full">
                                 <CardHeader>
                                     <CardTitle className="text-xl">Make Your Predictions</CardTitle>
                                     <p className="text-gray-600">Choose from multiple prediction types to maximize your points!</p>
                                 </CardHeader>
-                                <CardContent className="flex-1 overflow-y-auto space-y-6 pb-20">
+                                <CardContent className="flex-1 overflow-y-auto space-y-6 pb-32">
                                     <div className="space-y-3">
                                         <h3 className="font-semibold text-gray-900">Match Winner</h3>
                                         <div className="grid grid-cols-2 gap-3">
@@ -705,7 +731,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                                         </select>
                                     </div>
                                 </CardContent>
-                                <div className="sticky bottom-0 bg-gradient-to-r from-blue-50 to-green-50 border-t border-blue-200 p-6 pt-4">
+                                <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-r from-blue-50 to-green-50 border-t border-blue-200 p-6 pt-4 z-10">
                                     <Button
                                         onClick={handleSubmitPredictions}
                                         disabled={!hasPredictions}
@@ -718,37 +744,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                             </Card>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card>
-                            <CardContent className="p-4 text-center">
-                                <div className="text-sm text-gray-600 mb-1">Head to Head</div>
-                                <div className="font-semibold text-gray-900">{details.headToHead}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4 text-center">
-                                <div className="text-sm text-gray-600 mb-1">Surface</div>
-                                <div className="font-semibold text-gray-900">{details.surface}</div>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardContent className="p-4 text-center">
-                                <div className="text-sm text-gray-600 mb-1">Points Available</div>
-                                <div className="font-semibold text-green-600">+{details.points}</div>
-                            </CardContent>
-                        </Card>
-                    </div>
                 </div>
             </div>
-            {predictions.some(p => p.matchId === match.id) && (
-                <Button
-                    variant="outline"
-                    className="mt-4 w-full border-red-400 text-red-600 hover:bg-red-50"
-                    onClick={() => removePrediction(match.id)}
-                >
-                    Remove Prediction
-                </Button>
-            )}
         </div>
     );
 } 
