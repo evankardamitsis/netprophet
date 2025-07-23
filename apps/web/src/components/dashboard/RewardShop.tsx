@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@netprophet/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@netprophet/ui';
 
 interface RewardItem {
     id: number;
@@ -396,7 +398,6 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
                                                 </span>
                                             </div>
                                             <Button
-                                                size="sm"
                                                 onClick={() => handleRedeem(reward)}
                                                 disabled={!canAfford}
                                                 className={`font-bold ${canAfford
@@ -422,7 +423,7 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
                     const discountedPoints = reward.discount ? Math.floor(reward.points * (1 - reward.discount / 100)) : reward.points;
 
                     return (
-                        <Card key={reward.id} className={`group relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 hover:shadow-xl ${getRarityColor(reward.rarity)}`}>
+                        <Card key={reward.id} className={`group relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 hover:shadow-accent/30 cursor-pointer`}>
                             {reward.discount && (
                                 <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded-bl-lg z-10">
                                     -{reward.discount}%
@@ -468,7 +469,6 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
                                     </div>
 
                                     <Button
-                                        size="sm"
                                         onClick={() => handleRedeem(reward)}
                                         disabled={!canAfford || !reward.available}
                                         className={`font-medium ${canAfford

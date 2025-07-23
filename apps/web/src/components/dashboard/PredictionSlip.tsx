@@ -1,9 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, Button, Badge } from '@netprophet/ui';
-
-import { PredictionItem } from '@/types/dashboard';
+import { Card, CardContent, Badge, Button } from '@netprophet/ui';
+import { usePredictionSlip } from '@/context/PredictionSlipContext';
 
 // Icon component
 function XIcon() {
@@ -25,7 +24,6 @@ function ChevronUpIcon() {
 }
 
 interface PredictionSlipProps {
-    predictions: PredictionItem[];
     onRemovePrediction: (matchId: number) => void;
     onSubmitPredictions: () => void;
     isCollapsed?: boolean;
@@ -33,12 +31,12 @@ interface PredictionSlipProps {
 }
 
 export function PredictionSlip({
-    predictions,
     onRemovePrediction,
     onSubmitPredictions,
     isCollapsed = false,
     onToggleCollapse
 }: PredictionSlipProps) {
+    const { predictions, clearPredictions, removePrediction } = usePredictionSlip();
     const getTotalPoints = () => predictions.reduce((total, item) => total + item.points, 0);
 
     const getStatusColor = (status: string) => {
@@ -53,6 +51,23 @@ export function PredictionSlip({
                 return 'secondary';
         }
     };
+
+    const handleSubmit = () => {
+        onSubmitPredictions();
+        clearPredictions();
+    };
+
+    function formatPrediction(prediction: any) {
+        const parts = [];
+        if (prediction.winner) parts.push(`Winner: ${prediction.winner}`);
+        if (prediction.matchResult) parts.push(`Result: ${prediction.matchResult}`);
+        if (prediction.tieBreak) parts.push(`Tie-break: ${prediction.tieBreak}`);
+        if (prediction.totalGames) parts.push(`Games: ${prediction.totalGames}`);
+        if (prediction.acesLeader) parts.push(`Aces: ${prediction.acesLeader}`);
+        if (prediction.doubleFaults) parts.push(`DF: ${prediction.doubleFaults}`);
+        if (prediction.breakPoints) parts.push(`BP: ${prediction.breakPoints}`);
+        return parts.join(' | ');
+    }
 
     return (
         <motion.div
@@ -118,7 +133,7 @@ export function PredictionSlip({
                                                     <div className="text-xs text-slate-400 mt-1">{item.match.tournament || 'Tournament'}</div>
                                                 </div>
                                                 <motion.button
-                                                    onClick={() => onRemovePrediction(item.matchId)}
+                                                    onClick={() => removePrediction(item.matchId)}
                                                     className="text-slate-500 hover:text-red-400 ml-2"
                                                     whileHover={{ scale: 1.2 }}
                                                     whileTap={{ scale: 0.8 }}
@@ -137,7 +152,7 @@ export function PredictionSlip({
                                             <div className="flex justify-between items-center">
                                                 <div className="text-sm">
                                                     <span className="text-slate-300">Pick: </span>
-                                                    <span className="font-semibold text-yellow-200">{item.prediction}</span>
+                                                    <span className="font-semibold text-yellow-200">{formatPrediction(item.prediction)}</span>
                                                 </div>
                                                 <div className="text-sm font-bold text-green-400">
                                                     +{item.points}
@@ -200,7 +215,7 @@ export function PredictionSlip({
                         >
                             <Button
                                 className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold shadow-md border-2 border-yellow-300"
-                                onClick={onSubmitPredictions}
+                                onClick={handleSubmit}
                             >
                                 Submit Predictions ({predictions.length})
                             </Button>
@@ -214,7 +229,7 @@ export function PredictionSlip({
 
 // Floating button component for when slip is collapsed
 interface FloatingPredictionButtonProps {
-    predictions: PredictionItem[];
+    predictions: any[]; // Changed from PredictionItem[] to any[]
     onClick: () => void;
 }
 

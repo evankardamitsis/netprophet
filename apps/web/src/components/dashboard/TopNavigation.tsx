@@ -42,12 +42,15 @@ function ChevronDownIcon() {
     </svg>
 }
 
+function WalletIcon() {
+    return <span className="text-2xl">💰</span>;
+}
+
 interface TopNavigationProps {
     userEmail?: string;
     onMenuClick: () => void;
     onSignOut: () => void;
-    currentPage?: 'dashboard' | 'leaderboard' | 'rewards';
-    onPageChange?: (page: 'dashboard' | 'leaderboard' | 'rewards') => void;
+    // Removed currentPage and onPageChange, not needed for direct routing
     showNavigationTabs?: boolean;
 }
 
@@ -55,118 +58,33 @@ export function TopNavigation({
     userEmail,
     onMenuClick,
     onSignOut,
-    currentPage = 'dashboard',
-    onPageChange,
     showNavigationTabs = true
 }: TopNavigationProps) {
     const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
     const router = useRouter();
 
     return (
-        <div className="bg-white/80 backdrop-blur-md border-b border-white/20">
-            <div className="flex items-center justify-between px-4 py-3">
-                <div className="flex items-center space-x-4">
-                    <button
-                        onClick={onMenuClick}
-                        className="lg:hidden p-2 rounded-md hover:bg-gray-100"
-                    >
-                        <MenuIcon />
-                    </button>
-
-                    {/* Navigation Tabs */}
-                    {showNavigationTabs && (
-                        <div className="hidden md:flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-                            <Button
-                                variant={currentPage === 'dashboard' ? 'default' : 'ghost'}
-                                size="sm"
-                                onClick={() => onPageChange?.('dashboard')}
-                                className="flex items-center space-x-2 text-xs"
-                            >
-                                <DashboardIcon />
-                                <span>Dashboard</span>
-                            </Button>
-                            <Button
-                                variant={currentPage === 'leaderboard' ? 'default' : 'ghost'}
-                                size="sm"
-                                onClick={() => onPageChange?.('leaderboard')}
-                                className="flex items-center space-x-2 text-xs"
-                            >
-                                <LeaderboardIcon />
-                                <span>Leaderboard</span>
-                            </Button>
-                            <Button
-                                variant={currentPage === 'rewards' ? 'default' : 'ghost'}
-                                size="sm"
-                                onClick={() => onPageChange?.('rewards')}
-                                className="flex items-center space-x-2 text-xs"
-                            >
-                                <RewardsIcon />
-                                <span>Rewards</span>
-                            </Button>
-                        </div>
-                    )}
-
-                    {/* Mobile Page Title */}
-                    <h1 className="md:hidden text-xl font-semibold text-gray-900">
-                        {currentPage === 'dashboard' ? 'Dashboard' :
-                            currentPage === 'leaderboard' ? 'Leaderboard' : 'Rewards'}
-                    </h1>
-                </div>
-
-                <div className="flex items-center space-x-4">
-                    <div className="text-sm text-gray-600 hidden sm:block">
-                        Welcome, {userEmail}
-                    </div>
-
-                    {/* Account Dropdown */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-                            className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100 transition-colors"
-                        >
-                            <UserIcon />
-                            <span className="text-sm font-medium text-gray-700">Account</span>
-                            <ChevronDownIcon />
-                        </button>
-
-                        {/* Dropdown Menu */}
-                        {accountDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                                <div className="py-1">
-                                    <button
-                                        onClick={() => {
-                                            setAccountDropdownOpen(false);
-                                            router.push('/my-picks');
-                                        }}
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        My Picks
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setAccountDropdownOpen(false);
-                                            router.push('/my-profile');
-                                        }}
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        My Profile
-                                    </button>
-                                    <div className="border-t border-gray-200 my-1"></div>
-                                    <button
-                                        onClick={() => {
-                                            setAccountDropdownOpen(false);
-                                            onSignOut();
-                                        }}
-                                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                                    >
-                                        Sign Out
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+        <header className="w-full flex items-center justify-between px-4 py-3 border-b border-[#23262F] bg-[#181A20] sticky top-0 z-10">
+            <div className="flex items-center gap-2">
+                <button onClick={onMenuClick} className="text-accent text-2xl font-bold focus:outline-none md:hidden">☰</button>
+                <span className="text-xl font-extrabold tracking-tight text-accent">NetProphet</span>
             </div>
-        </div>
+            {showNavigationTabs && (
+                <nav className="flex-1 flex justify-center gap-4">
+                    <button onClick={() => router.push('/dashboard')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white`}>Dashboard</button>
+                    <button onClick={() => router.push('/leaderboard')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white`}>Leaderboard</button>
+                    <button onClick={() => router.push('/rewards')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white`}>Rewards</button>
+                </nav>
+            )}
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-[#23262F] px-3 py-1 rounded-full">
+                    <WalletIcon />
+                    <span className="font-bold text-yellow-300">1,250 π</span>
+                </div>
+                <span className="hidden md:block text-sm text-gray-300">{userEmail}</span>
+                <button onClick={onSignOut} className="rounded-full bg-accent text-black px-3 py-1 font-bold hover:bg-yellow-400 transition">Sign Out</button>
+                <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-lg">U</div>
+            </div>
+        </header>
     );
 } 

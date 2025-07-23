@@ -112,11 +112,9 @@ export default function MyPicksPage() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
             {/* Top Navigation */}
             <TopNavigation
-                userEmail={user.email}
+                userEmail={user?.email}
                 onMenuClick={() => { }} // No sidebar in this view
                 onSignOut={handleSignOut}
-                currentPage={undefined}
-                onPageChange={() => { }}
                 showNavigationTabs={false}
             />
 
