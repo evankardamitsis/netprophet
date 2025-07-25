@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@netprophet/lib';
 import { Button } from '@netprophet/ui';
+import { useTheme } from './Providers';
 
 interface Match {
     id: string;
@@ -152,6 +153,7 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
     const matches = mockMatches;
     const isLoading = false;
     const error = null;
+    const { theme } = useTheme();
 
     if (isLoading) return <div>Loading matches...</div>;
     if (error) return <div>Error loading matches.</div>;
@@ -163,30 +165,30 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
         <div className="h-full overflow-y-auto space-y-8">
             {liveMatches.length > 0 && (
                 <div>
-                    <div className="font-bold text-red-600 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" /> Live Matches
+                    <div className={`font-bold mb-2 flex items-center gap-2 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${theme === 'dark' ? 'bg-red-400' : 'bg-red-500'}`} /> Live Matches
                     </div>
                     <div className="space-y-3">
                         {liveMatches.map(match => (
                             <div
                                 key={match.id}
-                                className="border-l-4 border-red-500 bg-white rounded-lg p-4 shadow cursor-pointer hover:bg-red-50 transition"
+                                className={`border-l-4 rounded-lg p-4 shadow cursor-pointer transition ${theme === 'dark' ? 'border-red-400 bg-[#23262F] hover:bg-red-900/20' : 'border-red-500 bg-white hover:bg-red-50'}`}
                                 onClick={() => onSelectMatch?.(match)}
                             >
                                 <div className="flex justify-between items-center mb-1">
-                                    <div className="font-semibold text-lg">
+                                    <div className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                         {match.player1.name} vs {match.player2.name}
                                     </div>
-                                    <span className="text-xs text-red-600 font-bold">LIVE</span>
+                                    <span className={`text-xs font-bold ${theme === 'dark' ? 'text-red-300' : 'text-red-600'}`}>LIVE</span>
                                 </div>
-                                <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                                <div className={`flex justify-between items-center text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                                     <span>{match.tournament} • {match.court}</span>
                                     <span>{match.time}</span>
                                 </div>
                                 <Countdown targetTime={match.lockTime} label="Lock in" />
                                 <div className="flex justify-between items-center mt-2">
-                                    <span className="text-sm font-bold text-blue-600">{match.points} pts</span>
-                                    <span className="text-xs text-gray-400">Started {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} min ago</span>
+                                    <span className={`text-sm font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>{match.points} pts</span>
+                                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>Started {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} min ago</span>
                                 </div>
                             </div>
                         ))}
@@ -195,28 +197,28 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
             )}
             {upcomingMatches.length > 0 && (
                 <div>
-                    <div className="font-bold text-gray-700 mb-2">Upcoming Matches</div>
+                    <div className={`font-bold mb-2 ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>Upcoming Matches</div>
                     <div className="space-y-3">
                         {upcomingMatches.map(match => (
                             <div
                                 key={match.id}
-                                className="border-l-4 border-blue-500 bg-white rounded-lg p-4 shadow cursor-pointer hover:bg-blue-50 transition"
+                                className={`border-l-4 rounded-lg p-4 shadow cursor-pointer transition ${theme === 'dark' ? 'border-blue-400 bg-[#23262F] hover:bg-blue-900/20' : 'border-blue-500 bg-white hover:bg-blue-50'}`}
                                 onClick={() => onSelectMatch?.(match)}
                             >
                                 <div className="flex justify-between items-center mb-1">
-                                    <div className="font-semibold text-lg">
+                                    <div className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                         {match.player1.name} vs {match.player2.name}
                                     </div>
-                                    <span className="text-xs text-blue-600 font-bold">UPCOMING</span>
+                                    <span className={`text-xs font-bold ${theme === 'dark' ? 'text-blue-300' : 'text-blue-600'}`}>UPCOMING</span>
                                 </div>
-                                <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                                <div className={`flex justify-between items-center text-xs mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                                     <span>{match.tournament} • {match.court}</span>
                                     <span>{match.time}</span>
                                 </div>
                                 <Countdown targetTime={match.startTime} label="Starts in" />
                                 <div className="flex justify-between items-center mt-2">
-                                    <span className="text-sm font-bold text-blue-600">{match.points} pts</span>
-                                    <span className="text-xs text-gray-400">{new Date(match.startTime).toLocaleDateString()}</span>
+                                    <span className={`text-sm font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>{match.points} pts</span>
+                                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(match.startTime).toLocaleDateString()}</span>
                                 </div>
                             </div>
                         ))}
@@ -224,7 +226,7 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                 </div>
             )}
             {matches.length === 0 && (
-                <div className="text-center py-12 text-gray-400">No matches available</div>
+                <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No matches available</div>
             )}
         </div>
     );

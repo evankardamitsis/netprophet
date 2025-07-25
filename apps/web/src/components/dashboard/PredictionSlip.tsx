@@ -74,17 +74,12 @@ export function PredictionSlip({
             className="h-full bg-slate-900 border-l border-slate-800 flex flex-col shadow-xl rounded-l-2xl relative overflow-hidden"
             initial={false}
             animate={{
-                width: isCollapsed ? 0 : "100%",
                 opacity: isCollapsed ? 0 : 1,
-                scale: isCollapsed ? 0.75 : 1,
-                x: isCollapsed ? 32 : 0,
                 y: isCollapsed ? 32 : 0,
             }}
             transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-                duration: 0.5
+                type: "tween",
+                duration: 0.3
             }}
             style={{
                 transformOrigin: "bottom right"

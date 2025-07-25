@@ -110,25 +110,16 @@ export default function MyPicksPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-            {/* Top Navigation */}
-            <TopNavigation
-                userEmail={user?.email}
-                onMenuClick={() => { }} // No sidebar in this view
-                onSignOut={handleSignOut}
-                showNavigationTabs={false}
-            />
-
             {/* Back to Dashboard Button */}
             <div className="max-w-4xl mx-auto px-6 pt-6">
                 <Button
                     variant="outline"
                     onClick={() => router.push('/dashboard')}
-                    className="mb-6"
+                    className="mb-6 bg-yellow-500 text-white"
                 >
                     ← Back to Dashboard
                 </Button>
             </div>
-
             {/* Content Area */}
             <div className="max-w-4xl mx-auto px-6 pb-6">
                 {/* Page Header */}

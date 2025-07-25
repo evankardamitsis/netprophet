@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@netprophet/ui';
+import { useTheme } from '../Providers';
 
 // Icon components
 function MenuIcon() {
@@ -46,6 +47,13 @@ function WalletIcon() {
     return <span className="text-2xl">💰</span>;
 }
 
+function SunIcon() {
+    return <svg className="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" /><path stroke="currentColor" strokeWidth="2" d="M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 6.95l-1.414-1.414M6.464 6.464L5.05 5.05m12.02 0l-1.414 1.414M6.464 17.536l-1.414 1.414" /></svg>;
+}
+function MoonIcon() {
+    return <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" /></svg>;
+}
+
 interface TopNavigationProps {
     userEmail?: string;
     onMenuClick: () => void;
@@ -62,28 +70,86 @@ export function TopNavigation({
 }: TopNavigationProps) {
     const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
     const router = useRouter();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const { theme, toggleTheme } = useTheme();
+
+    useEffect(() => {
+        if (!accountDropdownOpen) return;
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
+                setAccountDropdownOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [accountDropdownOpen]);
 
     return (
-        <header className="w-full flex items-center justify-between px-4 py-3 border-b border-[#23262F] bg-[#181A20] sticky top-0 z-10">
+        <header className={`w-full flex items-center justify-between px-4 py-3 sticky top-0 z-10 ${theme === 'dark' ? 'border-b border-[#23262F] bg-[#181A20] text-white' : 'border-b border-gray-200 bg-white text-black'}`}>
             <div className="flex items-center gap-2">
                 <button onClick={onMenuClick} className="text-accent text-2xl font-bold focus:outline-none md:hidden">☰</button>
                 <span className="text-xl font-extrabold tracking-tight text-accent">NetProphet</span>
             </div>
             {showNavigationTabs && (
                 <nav className="flex-1 flex justify-center gap-4">
-                    <button onClick={() => router.push('/dashboard')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white`}>Dashboard</button>
-                    <button onClick={() => router.push('/leaderboard')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white`}>Leaderboard</button>
-                    <button onClick={() => router.push('/rewards')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white`}>Rewards</button>
+                    <button onClick={() => router.push('/dashboard')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Dashboard</button>
+                    <button onClick={() => router.push('/dashboard/leaderboard')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Leaderboard</button>
+                    <button onClick={() => router.push('/dashboard/rewards')} className={`px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Rewards</button>
                 </nav>
             )}
             <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-[#23262F] px-3 py-1 rounded-full">
+                {/* Theme switch */}
+                <button
+                    onClick={toggleTheme}
+                    className={`rounded-full p-2 transition ${theme === 'dark' ? 'bg-[#23262F] hover:bg-accent/20' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
+                    aria-label="Toggle dark/light mode"
+                >
+                    {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
+                </button>
+                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white border border-gray-300'}`}>
                     <WalletIcon />
-                    <span className="font-bold text-yellow-300">1,250 π</span>
+                    <span className={`font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>1,250 π</span>
                 </div>
-                <span className="hidden md:block text-sm text-gray-300">{userEmail}</span>
-                <button onClick={onSignOut} className="rounded-full bg-accent text-black px-3 py-1 font-bold hover:bg-yellow-400 transition">Sign Out</button>
-                <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-lg">U</div>
+                <span className={`hidden md:block text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{userEmail}</span>
+                {/* Account dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                    <button
+                        onClick={() => setAccountDropdownOpen((open) => !open)}
+                        className={`w-9 h-9 rounded-full bg-accent flex items-center justify-center font-bold text-lg focus:outline-none ${theme === 'dark' ? '' : 'text-black'}`}
+                        aria-label="Account menu"
+                    >
+                        U
+                        <ChevronDownIcon />
+                    </button>
+                    {accountDropdownOpen && (
+                        <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-2 ${theme === 'dark' ? 'bg-[#23262F] text-white' : 'bg-white text-black'}`}>
+                            <button
+                                className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-gray-100 ${theme === 'dark' ? 'hover:bg-[#23262F]/80' : ''}`}
+                                onClick={() => { setAccountDropdownOpen(false); router.push('/dashboard/my-profile'); }}
+                            >
+                                <UserIcon /> My Profile
+                            </button>
+                            <button
+                                className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-gray-100 ${theme === 'dark' ? 'hover:bg-[#23262F]/80' : ''}`}
+                                onClick={() => { setAccountDropdownOpen(false); router.push('/dashboard/my-picks'); }}
+                            >
+                                <LeaderboardIcon /> My Picks
+                            </button>
+                            <div className={`border-t my-2 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
+                            <button
+                                className={`w-full text-left px-4 py-2 flex items-center gap-2 text-red-600 hover:bg-gray-100 ${theme === 'dark' ? 'hover:bg-[#23262F]/80' : ''}`}
+                                onClick={() => { setAccountDropdownOpen(false); onSignOut(); }}
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </header>
     );

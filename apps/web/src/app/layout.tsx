@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ReactNode } from 'react';
-import ClientLayout from './ClientLayout';
 import { Providers } from '../components/Providers';
 import { PredictionSlipProvider } from '../context/PredictionSlipContext';
+import { useTheme } from '../components/Providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,12 +18,15 @@ export default function RootLayout({
 }: {
     children: ReactNode;
 }) {
+    // Use theme from context
+    // Note: This is a client component, so we need to mark it as 'use client' if using hooks here.
+    // Instead, we can set the class on <html> via the ThemeProvider effect, so just remove hardcoded classes here.
     return (
         <html lang="en">
-            <body className="bg-[#181A20] text-white font-sans min-h-screen">
+            <body className="font-sans min-h-screen">
                 <Providers>
                     <PredictionSlipProvider>
-                        <ClientLayout>{children}</ClientLayout>
+                        {children}
                     </PredictionSlipProvider>
                 </Providers>
             </body>

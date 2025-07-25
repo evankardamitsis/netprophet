@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '@netpro
 
 import { Match } from '@/types/dashboard';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+import { usePredictionSlipCollapse } from '../../app/ClientLayout';
+import { useTheme } from '../Providers';
 
 interface MatchDetailProps {
     match: Match | null;
@@ -104,6 +106,8 @@ function createEmptyPredictions(): PredictionOptions {
 
 export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetailProps) {
     const { predictions, addPrediction, removePrediction } = usePredictionSlip();
+    const { theme } = useTheme();
+    const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     // Local state for the form fields
     const [formPredictions, setFormPredictions] = useState<PredictionOptions>(createEmptyPredictions());
 
@@ -248,7 +252,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                 prediction: formPredictions,
                 points: match.points,
             });
-            // Optionally, call onAddToPredictionSlip as well if needed
+            setIsPredictionSlipCollapsed(false); // Open slip if closed
         }
     };
 
@@ -260,7 +264,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
         <select
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
         >
             <option value="">Select set {setNumber} score</option>
             <option value="6-0">6-0</option>
@@ -368,41 +372,39 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
     const setWinnersFromResult = getSetWinnersFromResult(formPredictions.matchResult, formPredictions.winner);
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6">
+        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'}`}>
             {/* Back to Matches button at the top, small and not full width */}
             <div className="mb-2">
-                <Button onClick={onBack} variant="outline" size="sm" className="w-auto px-4">
-                    ← Back to Matches
-                </Button>
+                <Button onClick={onBack} variant="outline" size="sm" className={`w-auto px-4 ${theme === 'dark' ? 'border-gray-700 text-gray-200' : 'border-gray-300 text-gray-700'}`}>← Back to Matches</Button>
             </div>
-            <Card className="p-6">
+            <Card className={`p-6 ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
                 <CardTitle>{details.tournament}</CardTitle>
                 <CardContent>
                     <div className="flex items-center justify-between mt-2">
-                        <span className="text-sm text-gray-400">{details.round} • {details.surface} • {match.court}</span>
+                        <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{details.round} • {details.surface} • {match.court}</span>
                         <Badge variant={getStatusColor(match.status)}>
                             {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
                         </Badge>
                     </div>
                 </CardContent>
             </Card>
-            {/* Move stats cards here, right after tournament info */}
+            {/* Stats cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Card>
+                <Card className={theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}>
                     <CardContent className="p-4 text-center">
-                        <div className="text-sm text-gray-600 mb-1">Head to Head</div>
-                        <div className="font-semibold text-gray-900">{details.headToHead}</div>
+                        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Head to Head</div>
+                        <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{details.headToHead}</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className={theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}>
                     <CardContent className="p-4 text-center">
-                        <div className="text-sm text-gray-600 mb-1">Surface</div>
-                        <div className="font-semibold text-gray-900">{details.surface}</div>
+                        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Surface</div>
+                        <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{details.surface}</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className={theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}>
                     <CardContent className="p-4 text-center">
-                        <div className="text-sm text-gray-600 mb-1">Points Available</div>
+                        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Points Available</div>
                         <div className="font-semibold text-green-600">+{details.points}</div>
                     </CardContent>
                 </Card>
@@ -412,46 +414,47 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1">
                             <div className="space-y-4">
-                                <Card className="hover:shadow-lg transition-shadow">
+                                {/* Player cards */}
+                                <Card className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
                                     <CardHeader>
                                         <CardTitle className="text-center">{details.player1.name}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="text-center space-y-4">
                                         <div className="text-4xl">{details.player1.country}</div>
                                         <div className="space-y-2">
-                                            <div className="text-sm text-gray-600">World Ranking</div>
+                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>World Ranking</div>
                                             <div className="text-2xl font-bold text-blue-600">#{details.player1.ranking}</div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
-                                                <div className="text-gray-600">Wins</div>
+                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Wins</div>
                                                 <div className="font-semibold text-green-600">{details.player1.wins}</div>
                                             </div>
                                             <div>
-                                                <div className="text-gray-600">Losses</div>
+                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Losses</div>
                                                 <div className="font-semibold text-red-600">{details.player1.losses}</div>
                                             </div>
                                         </div>
                                         <div className="text-3xl font-bold text-blue-600">{details.player1.odds}</div>
                                     </CardContent>
                                 </Card>
-                                <Card className="hover:shadow-lg transition-shadow">
+                                <Card className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
                                     <CardHeader>
                                         <CardTitle className="text-center">{details.player2.name}</CardTitle>
                                     </CardHeader>
                                     <CardContent className="text-center space-y-4">
                                         <div className="text-4xl">{details.player2.country}</div>
                                         <div className="space-y-2">
-                                            <div className="text-sm text-gray-600">World Ranking</div>
+                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>World Ranking</div>
                                             <div className="text-2xl font-bold text-blue-600">#{details.player2.ranking}</div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                             <div>
-                                                <div className="text-gray-600">Wins</div>
+                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Wins</div>
                                                 <div className="font-semibold text-green-600">{details.player2.wins}</div>
                                             </div>
                                             <div>
-                                                <div className="text-gray-600">Losses</div>
+                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Losses</div>
                                                 <div className="font-semibold text-red-600">{details.player2.losses}</div>
                                             </div>
                                         </div>
@@ -461,26 +464,27 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                             </div>
                         </div>
                         <div className="lg:col-span-2 flex flex-col h-full">
-                            <Card className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200 flex-1 flex flex-col h-full">
+                            <Card className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-900/20 to-green-900/20 border-blue-900' : 'bg-gradient-to-r from-blue-50 to-green-50 border-blue-200'} flex-1 flex flex-col h-full`}>
                                 <CardHeader>
                                     <CardTitle className="text-xl">Make Your Predictions</CardTitle>
-                                    <p className="text-gray-600">Choose from multiple prediction types to maximize your points!</p>
+                                    <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Choose from multiple prediction types to maximize your points!</p>
                                 </CardHeader>
                                 <CardContent className="flex-1 overflow-y-auto space-y-6 pb-32">
+                                    {/* Prediction form sections */}
                                     <div className="space-y-3">
-                                        <h3 className="font-semibold text-gray-900">Match Winner</h3>
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Match Winner</h3>
                                         <div className="grid grid-cols-2 gap-3">
                                             <Button
                                                 variant={formPredictions.winner === details.player1.name ? "default" : "outline"}
                                                 onClick={() => handlePredictionChange('winner', details.player1.name)}
-                                                className="h-12"
+                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                             >
                                                 {details.player1.name.split(' ')[1]}
                                             </Button>
                                             <Button
                                                 variant={formPredictions.winner === details.player2.name ? "default" : "outline"}
                                                 onClick={() => handlePredictionChange('winner', details.player2.name)}
-                                                className="h-12"
+                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                             >
                                                 {details.player2.name.split(' ')[1]}
                                             </Button>
@@ -489,14 +493,12 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                                     {formPredictions.winner && (
                                         <div className="space-y-3">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="font-semibold text-gray-900">Match Result</h3>
+                                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Match Result</h3>
                                                 <Badge variant="secondary" className="text-xs">
                                                     {isBestOf5 ? 'Best of 5' : 'Best of 3'}
                                                 </Badge>
                                             </div>
-                                            <p className="text-sm text-gray-600">
-                                                How will {formPredictions.winner.split(' ')[1]} win the match?
-                                            </p>
+                                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>How will {formPredictions.winner.split(' ')[1]} win the match?</p>
                                             <div className="grid grid-cols-2 gap-3">
                                                 {isBestOf5 ? (
                                                     <>
@@ -654,28 +656,36 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                                         </div>
                                     )}
                                     <div className="space-y-3">
-                                        <h3 className="font-semibold text-gray-900">Will there be a tie-break?</h3>
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Will there be a tie-break?</h3>
+                                        <p className="text-sm text-gray-600">
+                                            Will there be a tie-break in the match?
+                                        </p>
                                         <div className="grid grid-cols-2 gap-3">
                                             <Button
                                                 variant={formPredictions.tieBreak === 'Yes' ? "default" : "outline"}
                                                 onClick={() => handlePredictionChange('tieBreak', 'Yes')}
+                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                             >
                                                 Yes
                                             </Button>
                                             <Button
                                                 variant={formPredictions.tieBreak === 'No' ? "default" : "outline"}
                                                 onClick={() => handlePredictionChange('tieBreak', 'No')}
+                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                             >
                                                 No
                                             </Button>
                                         </div>
                                     </div>
                                     <div className="space-y-3">
-                                        <h3 className="font-semibold text-gray-900">Total Games in Match</h3>
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Games in Match</h3>
+                                        <p className="text-sm text-gray-600">
+                                            What is the total number of games played in the match?
+                                        </p>
                                         <select
                                             value={formPredictions.totalGames}
                                             onChange={(e) => handlePredictionChange('totalGames', e.target.value)}
-                                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
                                         >
                                             <option value="">Select total games</option>
                                             <option value="Under 18">Under 18</option>
@@ -686,28 +696,36 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                                         </select>
                                     </div>
                                     <div className="space-y-3">
-                                        <h3 className="font-semibold text-gray-900">Most Aces</h3>
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Most Aces</h3>
+                                        <p className="text-sm text-gray-600">
+                                            Who leads in aces during the match?
+                                        </p>
                                         <div className="grid grid-cols-2 gap-3">
                                             <Button
                                                 variant={formPredictions.acesLeader === details.player1.name ? "default" : "outline"}
                                                 onClick={() => handlePredictionChange('acesLeader', details.player1.name)}
+                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                             >
                                                 {details.player1.name.split(' ')[1]}
                                             </Button>
                                             <Button
                                                 variant={formPredictions.acesLeader === details.player2.name ? "default" : "outline"}
                                                 onClick={() => handlePredictionChange('acesLeader', details.player2.name)}
+                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                             >
                                                 {details.player2.name.split(' ')[1]}
                                             </Button>
                                         </div>
                                     </div>
                                     <div className="space-y-3">
-                                        <h3 className="font-semibold text-gray-900">Total Double Faults</h3>
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Double Faults</h3>
+                                        <p className="text-sm text-gray-600">
+                                            What is the total number of double faults in the match?
+                                        </p>
                                         <select
                                             value={formPredictions.doubleFaults}
                                             onChange={(e) => handlePredictionChange('doubleFaults', e.target.value)}
-                                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
                                         >
                                             <option value="">Select double faults</option>
                                             <option value="Under 5">Under 5</option>
@@ -717,11 +735,14 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
                                         </select>
                                     </div>
                                     <div className="space-y-3">
-                                        <h3 className="font-semibold text-gray-900">Total Break Points</h3>
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Break Points</h3>
+                                        <p className="text-sm text-gray-600">
+                                            What is the total number of break points faced in the match?
+                                        </p>
                                         <select
                                             value={formPredictions.breakPoints}
                                             onChange={(e) => handlePredictionChange('breakPoints', e.target.value)}
-                                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
                                         >
                                             <option value="">Select break points</option>
                                             <option value="Under 8">Under 8</option>

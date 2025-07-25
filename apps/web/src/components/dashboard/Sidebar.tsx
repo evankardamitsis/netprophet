@@ -7,6 +7,7 @@ import { MatchesList } from '@/components/MatchesList';
 
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
+import { useTheme } from '../Providers';
 
 // Icon components
 function ChevronDownIcon() {
@@ -251,6 +252,7 @@ export function Sidebar({ onClose }: { onClose: () => void }) {
     const onMatchSelect = useMatchSelect();
     const [expandedTournaments, setExpandedTournaments] = useState<Set<number>>(new Set([1])); // Default expand first tournament
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
+    const { theme } = useTheme();
 
     // Update current time every second
     useEffect(() => {
@@ -301,8 +303,8 @@ export function Sidebar({ onClose }: { onClose: () => void }) {
     const allMatches = mockTournaments.flatMap(t => t.matches);
 
     return (
-        <aside className="h-full flex flex-col gap-6 bg-[#1F222A] border-r border-[#23262F] p-4">
-            <Card className="mt-4 p-2 bg-[#23262F] flex-1 overflow-y-auto">
+        <aside className={`h-full flex flex-col gap-6 p-4 ${theme === 'dark' ? 'bg-[#1F222A] border-r border-[#23262F]' : 'bg-gray-100 border-r border-gray-200'}`}>
+            <Card className={`mt-4 p-2 flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white'}`}>
                 <MatchesList onSelectMatch={onMatchSelect} />
             </Card>
             {/* Add match list or other sidebar content here, styled with Card if needed */}

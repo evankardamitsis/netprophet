@@ -34,6 +34,8 @@ interface PredictionSlipContextType {
     addPrediction: (item: StructuredPredictionItem) => void;
     removePrediction: (matchId: number) => void;
     clearPredictions: () => void;
+    setSlipCollapsed?: (collapsed: boolean) => void;
+    slipCollapsed?: boolean;
 }
 
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
@@ -64,6 +66,7 @@ function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
 
 export function PredictionSlipProvider({ children }: { children: React.ReactNode }) {
     const [predictions, setPredictions] = useState<StructuredPredictionItem[]>(() => migratePredictions([]));
+    const [slipCollapsed, setSlipCollapsed] = useState(false);
 
     const addPrediction = (item: StructuredPredictionItem) => {
         setPredictions(prev => {
@@ -74,6 +77,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
             }
             return [...prev, item];
         });
+        setSlipCollapsed(false); // Open slip if closed
     };
 
     const removePrediction = (matchId: number) => {
@@ -83,7 +87,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
     const clearPredictions = () => setPredictions([]);
 
     return (
-        <PredictionSlipContext.Provider value={{ predictions, addPrediction, removePrediction, clearPredictions }}>
+        <PredictionSlipContext.Provider value={{ predictions, addPrediction, removePrediction, clearPredictions, setSlipCollapsed, slipCollapsed }}>
             {children}
         </PredictionSlipContext.Provider>
     );

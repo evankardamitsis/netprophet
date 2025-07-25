@@ -13,7 +13,7 @@ export default function MatchDetailPage() {
     if (!match) return <div className="p-8 text-center text-gray-500">Match not found</div>;
 
     return (
-        <div className="h-full overflow-y-auto p-6">
+        <div className="flex-1 flex flex-col min-h-0 h-full p-6">
             <MatchDetail
                 match={match}
                 onAddToPredictionSlip={() => { }}
