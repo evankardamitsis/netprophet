@@ -12,6 +12,7 @@ interface MatchDetailProps {
     match: Match | null;
     onAddToPredictionSlip: (match: Match, prediction: string) => void;
     onBack: () => void;
+    sidebarOpen?: boolean;
 }
 
 // Enhanced prediction types
@@ -104,7 +105,7 @@ function createEmptyPredictions(): PredictionOptions {
     };
 }
 
-export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetailProps) {
+export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen = true }: MatchDetailProps) {
     const { predictions, addPrediction, removePrediction } = usePredictionSlip();
     const { theme } = useTheme();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
@@ -372,7 +373,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
     const setWinnersFromResult = getSetWinnersFromResult(formPredictions.matchResult, formPredictions.winner);
 
     return (
-        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'}`}>
+        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'} ${!sidebarOpen ? 'w-full' : ''}`}>
             {/* Back to Matches button at the top, small and not full width */}
             <div className="mb-2">
                 <Button onClick={onBack} variant="outline" size="sm" className={`w-auto px-4 ${theme === 'dark' ? 'border-gray-700 text-gray-200' : 'border-gray-300 text-gray-700'}`}>← Back to Matches</Button>
@@ -380,391 +381,382 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack }: MatchDetai
             <Card className={`p-6 ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
                 <CardTitle>{details.tournament}</CardTitle>
                 <CardContent>
-                    <div className="flex items-center justify-between mt-2">
+                    <div className="flex items-center justify-between mt-2 mb-6">
                         <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{details.round} • {details.surface} • {match.court}</span>
                         <Badge variant={getStatusColor(match.status)}>
                             {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
                         </Badge>
                     </div>
+                    {/* Stats cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className={`p-4 text-center rounded-lg ${theme === 'dark' ? 'bg-[#1F222A]' : 'bg-gray-50'}`}>
+                            <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Head to Head</div>
+                            <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{details.headToHead}</div>
+                        </div>
+                        <div className={`p-4 text-center rounded-lg ${theme === 'dark' ? 'bg-[#1F222A]' : 'bg-gray-50'}`}>
+                            <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Surface</div>
+                            <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{details.surface}</div>
+                        </div>
+                        <div className={`p-4 text-center rounded-lg ${theme === 'dark' ? 'bg-[#1F222A]' : 'bg-gray-50'}`}>
+                            <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Match Format</div>
+                            <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{isBestOf5 ? 'Best of 5' : 'Best of 3'}</div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
-            {/* Stats cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <Card className={theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}>
-                    <CardContent className="p-4 text-center">
-                        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Head to Head</div>
-                        <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{details.headToHead}</div>
-                    </CardContent>
-                </Card>
-                <Card className={theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}>
-                    <CardContent className="p-4 text-center">
-                        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Surface</div>
-                        <div className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>{details.surface}</div>
-                    </CardContent>
-                </Card>
-                <Card className={theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}>
-                    <CardContent className="p-4 text-center">
-                        <div className={`text-sm mb-1 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Points Available</div>
-                        <div className="font-semibold text-green-600">+{details.points}</div>
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="space-y-6">
-                <div className="max-w-6xl mx-auto space-y-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-1">
-                            <div className="space-y-4">
-                                {/* Player cards */}
-                                <Card className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
-                                    <CardHeader>
-                                        <CardTitle className="text-center">{details.player1.name}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="text-center space-y-4">
-                                        <div className="text-4xl">{details.player1.country}</div>
-                                        <div className="space-y-2">
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>World Ranking</div>
-                                            <div className="text-2xl font-bold text-blue-600">#{details.player1.ranking}</div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Wins</div>
-                                                <div className="font-semibold text-green-600">{details.player1.wins}</div>
-                                            </div>
-                                            <div>
-                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Losses</div>
-                                                <div className="font-semibold text-red-600">{details.player1.losses}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-3xl font-bold text-blue-600">{details.player1.odds}</div>
-                                    </CardContent>
-                                </Card>
-                                <Card className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
-                                    <CardHeader>
-                                        <CardTitle className="text-center">{details.player2.name}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="text-center space-y-4">
-                                        <div className="text-4xl">{details.player2.country}</div>
-                                        <div className="space-y-2">
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>World Ranking</div>
-                                            <div className="text-2xl font-bold text-blue-600">#{details.player2.ranking}</div>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Wins</div>
-                                                <div className="font-semibold text-green-600">{details.player2.wins}</div>
-                                            </div>
-                                            <div>
-                                                <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Losses</div>
-                                                <div className="font-semibold text-red-600">{details.player2.losses}</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-3xl font-bold text-blue-600">{details.player2.odds}</div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </div>
-                        <div className="lg:col-span-2 flex flex-col h-full">
-                            <Card className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-900/20 to-green-900/20 border-blue-900' : 'bg-gradient-to-r from-blue-50 to-green-50 border-blue-200'} flex-1 flex flex-col h-full`}>
-                                <CardHeader>
-                                    <CardTitle className="text-xl">Make Your Predictions</CardTitle>
-                                    <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Choose from multiple prediction types to maximize your points!</p>
-                                </CardHeader>
-                                <CardContent className="flex-1 overflow-y-auto space-y-6 pb-32">
-                                    {/* Prediction form sections */}
-                                    <div className="space-y-3">
-                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Match Winner</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                variant={formPredictions.winner === details.player1.name ? "default" : "outline"}
-                                                onClick={() => handlePredictionChange('winner', details.player1.name)}
-                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
-                                            >
-                                                {details.player1.name.split(' ')[1]}
-                                            </Button>
-                                            <Button
-                                                variant={formPredictions.winner === details.player2.name ? "default" : "outline"}
-                                                onClick={() => handlePredictionChange('winner', details.player2.name)}
-                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
-                                            >
-                                                {details.player2.name.split(' ')[1]}
-                                            </Button>
-                                        </div>
+            {/* Player cards */}
+            <div className="w-full space-y-6">
+                <div className="w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Player cards */}
+                        <Card className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
+                            <CardHeader>
+                                <CardTitle className="text-center">{details.player1.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-center space-y-4">
+                                <div className="text-4xl">{details.player1.country}</div>
+                                <div className="space-y-2">
+                                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>World Ranking</div>
+                                    <div className="text-2xl font-bold text-blue-600">#{details.player1.ranking}</div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Wins</div>
+                                        <div className="font-semibold text-green-600">{details.player1.wins}</div>
                                     </div>
-                                    {formPredictions.winner && (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Match Result</h3>
-                                                <Badge variant="secondary" className="text-xs">
-                                                    {isBestOf5 ? 'Best of 5' : 'Best of 3'}
-                                                </Badge>
-                                            </div>
-                                            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>How will {formPredictions.winner.split(' ')[1]} win the match?</p>
-                                            <div className="grid grid-cols-2 gap-3">
-                                                {isBestOf5 ? (
+                                    <div>
+                                        <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Losses</div>
+                                        <div className="font-semibold text-red-600">{details.player1.losses}</div>
+                                    </div>
+                                </div>
+                                <div className="text-3xl font-bold text-blue-600">{details.player1.odds}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className={`hover:shadow-lg transition-shadow ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'}`}>
+                            <CardHeader>
+                                <CardTitle className="text-center">{details.player2.name}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="text-center space-y-4">
+                                <div className="text-4xl">{details.player2.country}</div>
+                                <div className="space-y-2">
+                                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>World Ranking</div>
+                                    <div className="text-2xl font-bold text-blue-600">#{details.player2.ranking}</div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Wins</div>
+                                        <div className="font-semibold text-green-600">{details.player2.wins}</div>
+                                    </div>
+                                    <div>
+                                        <div className={`text-gray-400 ${theme === 'dark' ? '' : 'text-gray-600'}`}>Losses</div>
+                                        <div className="font-semibold text-red-600">{details.player2.losses}</div>
+                                    </div>
+                                </div>
+                                <div className="text-3xl font-bold text-blue-600">{details.player2.odds}</div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+                <div className="w-full">
+                    <Card className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-900/20 to-green-900/20 border-blue-900' : 'bg-gradient-to-r from-blue-50 to-green-50 border-blue-200'} flex-1 flex flex-col h-full`}>
+                        <CardHeader>
+                            <CardTitle className="text-xl">Make Your Predictions</CardTitle>
+                            <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Choose from multiple prediction types to maximize your points!</p>
+                        </CardHeader>
+                        <CardContent className="flex-1 overflow-y-auto space-y-6 pb-32">
+                            {/* Prediction form sections */}
+                            <div className="space-y-3">
+                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Match Winner</h3>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        variant={formPredictions.winner === details.player1.name ? "default" : "outline"}
+                                        onClick={() => handlePredictionChange('winner', details.player1.name)}
+                                        className={`h-12 ${theme === 'dark' ? '' : ''}`}
+                                    >
+                                        {details.player1.name.split(' ')[1]}
+                                    </Button>
+                                    <Button
+                                        variant={formPredictions.winner === details.player2.name ? "default" : "outline"}
+                                        onClick={() => handlePredictionChange('winner', details.player2.name)}
+                                        className={`h-12 ${theme === 'dark' ? '' : ''}`}
+                                    >
+                                        {details.player2.name.split(' ')[1]}
+                                    </Button>
+                                </div>
+                            </div>
+                            {formPredictions.winner && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Match Result</h3>
+                                        <Badge variant="secondary" className="text-xs">
+                                            {isBestOf5 ? 'Best of 5' : 'Best of 3'}
+                                        </Badge>
+                                    </div>
+                                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>How will {formPredictions.winner.split(' ')[1]} win the match?</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {isBestOf5 ? (
+                                            <>
+                                                {formPredictions.winner === details.player1.name ? (
                                                     <>
-                                                        {formPredictions.winner === details.player1.name ? (
-                                                            <>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '3-0' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '3-0')}
-                                                                    className="h-12"
-                                                                >
-                                                                    3-0
-                                                                </Button>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '3-1' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '3-1')}
-                                                                    className="h-12"
-                                                                >
-                                                                    3-1
-                                                                </Button>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '3-2' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '3-2')}
-                                                                    className="h-12"
-                                                                >
-                                                                    3-2
-                                                                </Button>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '0-3' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '0-3')}
-                                                                    className="h-12"
-                                                                >
-                                                                    0-3
-                                                                </Button>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '1-3' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '1-3')}
-                                                                    className="h-12"
-                                                                >
-                                                                    1-3
-                                                                </Button>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '2-3' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '2-3')}
-                                                                    className="h-12"
-                                                                >
-                                                                    2-3
-                                                                </Button>
-                                                            </>
-                                                        )}
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '3-0' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '3-0')}
+                                                            className="h-12"
+                                                        >
+                                                            3-0
+                                                        </Button>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '3-1' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '3-1')}
+                                                            className="h-12"
+                                                        >
+                                                            3-1
+                                                        </Button>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '3-2' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '3-2')}
+                                                            className="h-12"
+                                                        >
+                                                            3-2
+                                                        </Button>
                                                     </>
                                                 ) : (
                                                     <>
-                                                        {formPredictions.winner === details.player1.name ? (
-                                                            <>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '2-0' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '2-0')}
-                                                                    className="h-12"
-                                                                >
-                                                                    2-0
-                                                                </Button>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '2-1' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '2-1')}
-                                                                    className="h-12"
-                                                                >
-                                                                    2-1
-                                                                </Button>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '0-2' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '0-2')}
-                                                                    className="h-12"
-                                                                >
-                                                                    0-2
-                                                                </Button>
-                                                                <Button
-                                                                    variant={formPredictions.matchResult === '1-2' ? "default" : "outline"}
-                                                                    onClick={() => handlePredictionChange('matchResult', '1-2')}
-                                                                    className="h-12"
-                                                                >
-                                                                    1-2
-                                                                </Button>
-                                                            </>
-                                                        )}
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '0-3' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '0-3')}
+                                                            className="h-12"
+                                                        >
+                                                            0-3
+                                                        </Button>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '1-3' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '1-3')}
+                                                            className="h-12"
+                                                        >
+                                                            1-3
+                                                        </Button>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '2-3' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '2-3')}
+                                                            className="h-12"
+                                                        >
+                                                            2-3
+                                                        </Button>
                                                     </>
                                                 )}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {formPredictions.matchResult && (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="font-semibold text-gray-900">Detailed Set Scores</h3>
-                                                <Badge variant="secondary" className="text-xs">
-                                                    {isBestOf5 ? 'Best of 5' : 'Best of 3'}
-                                                </Badge>
-                                            </div>
-                                            <p className="text-sm text-gray-600">
-                                                Now predict the exact score for each set based on your {formPredictions.matchResult} prediction
-                                                {setsToShowFromResult > 0 && (
-                                                    <span className="font-semibold text-blue-600">
-                                                        {' '}({setsToShowFromResult} set{setsToShowFromResult > 1 ? 's' : ''} to predict)
-                                                    </span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                {formPredictions.winner === details.player1.name ? (
+                                                    <>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '2-0' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '2-0')}
+                                                            className="h-12"
+                                                        >
+                                                            2-0
+                                                        </Button>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '2-1' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '2-1')}
+                                                            className="h-12"
+                                                        >
+                                                            2-1
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '0-2' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '0-2')}
+                                                            className="h-12"
+                                                        >
+                                                            0-2
+                                                        </Button>
+                                                        <Button
+                                                            variant={formPredictions.matchResult === '1-2' ? "default" : "outline"}
+                                                            onClick={() => handlePredictionChange('matchResult', '1-2')}
+                                                            className="h-12"
+                                                        >
+                                                            1-2
+                                                        </Button>
+                                                    </>
                                                 )}
-                                            </p>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {Array.from({ length: setsToShowFromResult }, (_, i) => (
-                                                    <div key={i} className="space-y-2">
-                                                        <h4 className="font-semibold text-gray-900">Set {i + 1}</h4>
-                                                        {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
-                                                    </div>
-                                                ))}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            {formPredictions.matchResult && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-semibold text-gray-900">Detailed Set Scores</h3>
+                                        <Badge variant="secondary" className="text-xs">
+                                            {isBestOf5 ? 'Best of 5' : 'Best of 3'}
+                                        </Badge>
+                                    </div>
+                                    <p className="text-sm text-gray-600">
+                                        Now predict the exact score for each set based on your {formPredictions.matchResult} prediction
+                                        {setsToShowFromResult > 0 && (
+                                            <span className="font-semibold text-blue-600">
+                                                {' '}({setsToShowFromResult} set{setsToShowFromResult > 1 ? 's' : ''} to predict)
+                                            </span>
+                                        )}
+                                    </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {Array.from({ length: setsToShowFromResult }, (_, i) => (
+                                            <div key={i} className="space-y-2">
+                                                <h4 className="font-semibold text-gray-900">Set {i + 1}</h4>
+                                                {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                                             </div>
-                                        </div>
-                                    )}
-                                    {formPredictions.matchResult && !['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) && (
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className="font-semibold text-gray-900">Set Winners</h3>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {formPredictions.matchResult && !['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-semibold text-gray-900">Set Winners</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-600">
+                                        Who wins each set based on your {formPredictions.matchResult} prediction?
+                                    </p>
+                                    {Array.from({ length: setsToShowFromResult }, (_, i) => {
+                                        const expectedWinner = setWinnersFromResult[i];
+                                        const currentWinner = getSetWinner(i + 1);
+                                        return (
+                                            <div key={i} className="space-y-2">
+                                                <h4 className="font-semibold text-gray-900">Set {i + 1} Winner</h4>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <Button
+                                                        variant={currentWinner === details.player1.name ? "default" : "outline"}
+                                                        onClick={() => setSetWinner(i + 1, details.player1.name)}
+                                                        className="h-12"
+                                                    >
+                                                        {details.player1.name.split(' ')[1]}
+                                                    </Button>
+                                                    <Button
+                                                        variant={currentWinner === details.player2.name ? "default" : "outline"}
+                                                        onClick={() => setSetWinner(i + 1, details.player2.name)}
+                                                        className="h-12"
+                                                    >
+                                                        {details.player2.name.split(' ')[1]}
+                                                    </Button>
+                                                </div>
                                             </div>
-                                            <p className="text-sm text-gray-600">
-                                                Who wins each set based on your {formPredictions.matchResult} prediction?
-                                            </p>
-                                            {Array.from({ length: setsToShowFromResult }, (_, i) => {
-                                                const expectedWinner = setWinnersFromResult[i];
-                                                const currentWinner = getSetWinner(i + 1);
-                                                return (
-                                                    <div key={i} className="space-y-2">
-                                                        <h4 className="font-semibold text-gray-900">Set {i + 1} Winner</h4>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <Button
-                                                                variant={currentWinner === details.player1.name ? "default" : "outline"}
-                                                                onClick={() => setSetWinner(i + 1, details.player1.name)}
-                                                                className="h-12"
-                                                            >
-                                                                {details.player1.name.split(' ')[1]}
-                                                            </Button>
-                                                            <Button
-                                                                variant={currentWinner === details.player2.name ? "default" : "outline"}
-                                                                onClick={() => setSetWinner(i + 1, details.player2.name)}
-                                                                className="h-12"
-                                                            >
-                                                                {details.player2.name.split(' ')[1]}
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                    <div className="space-y-3">
-                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Will there be a tie-break?</h3>
-                                        <p className="text-sm text-gray-600">
-                                            Will there be a tie-break in the match?
-                                        </p>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                variant={formPredictions.tieBreak === 'Yes' ? "default" : "outline"}
-                                                onClick={() => handlePredictionChange('tieBreak', 'Yes')}
-                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
-                                            >
-                                                Yes
-                                            </Button>
-                                            <Button
-                                                variant={formPredictions.tieBreak === 'No' ? "default" : "outline"}
-                                                onClick={() => handlePredictionChange('tieBreak', 'No')}
-                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
-                                            >
-                                                No
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Games in Match</h3>
-                                        <p className="text-sm text-gray-600">
-                                            What is the total number of games played in the match?
-                                        </p>
-                                        <select
-                                            value={formPredictions.totalGames}
-                                            onChange={(e) => handlePredictionChange('totalGames', e.target.value)}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
-                                        >
-                                            <option value="">Select total games</option>
-                                            <option value="Under 18">Under 18</option>
-                                            <option value="18-22">18-22</option>
-                                            <option value="23-27">23-27</option>
-                                            <option value="28-32">28-32</option>
-                                            <option value="Over 32">Over 32</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Most Aces</h3>
-                                        <p className="text-sm text-gray-600">
-                                            Who leads in aces during the match?
-                                        </p>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <Button
-                                                variant={formPredictions.acesLeader === details.player1.name ? "default" : "outline"}
-                                                onClick={() => handlePredictionChange('acesLeader', details.player1.name)}
-                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
-                                            >
-                                                {details.player1.name.split(' ')[1]}
-                                            </Button>
-                                            <Button
-                                                variant={formPredictions.acesLeader === details.player2.name ? "default" : "outline"}
-                                                onClick={() => handlePredictionChange('acesLeader', details.player2.name)}
-                                                className={`h-12 ${theme === 'dark' ? '' : ''}`}
-                                            >
-                                                {details.player2.name.split(' ')[1]}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Double Faults</h3>
-                                        <p className="text-sm text-gray-600">
-                                            What is the total number of double faults in the match?
-                                        </p>
-                                        <select
-                                            value={formPredictions.doubleFaults}
-                                            onChange={(e) => handlePredictionChange('doubleFaults', e.target.value)}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
-                                        >
-                                            <option value="">Select double faults</option>
-                                            <option value="Under 5">Under 5</option>
-                                            <option value="5-8">5-8</option>
-                                            <option value="9-12">9-12</option>
-                                            <option value="Over 12">Over 12</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Break Points</h3>
-                                        <p className="text-sm text-gray-600">
-                                            What is the total number of break points faced in the match?
-                                        </p>
-                                        <select
-                                            value={formPredictions.breakPoints}
-                                            onChange={(e) => handlePredictionChange('breakPoints', e.target.value)}
-                                            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
-                                        >
-                                            <option value="">Select break points</option>
-                                            <option value="Under 8">Under 8</option>
-                                            <option value="8-12">8-12</option>
-                                            <option value="13-17">13-17</option>
-                                            <option value="Over 17">Over 17</option>
-                                        </select>
-                                    </div>
-                                </CardContent>
-                                <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-r from-blue-50 to-green-50 border-t border-blue-200 p-6 pt-4 z-10">
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            <div className="space-y-3">
+                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Will there be a tie-break?</h3>
+                                <p className="text-sm text-gray-600">
+                                    Will there be a tie-break in the match?
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
                                     <Button
-                                        onClick={handleSubmitPredictions}
-                                        disabled={!hasPredictions}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
-                                        size="lg"
+                                        variant={formPredictions.tieBreak === 'Yes' ? "default" : "outline"}
+                                        onClick={() => handlePredictionChange('tieBreak', 'Yes')}
+                                        className={`h-12 ${theme === 'dark' ? '' : ''}`}
                                     >
-                                        {hasPredictions ? `Add to Prediction Slip (${predictionCount})` : 'Select at least one prediction'}
+                                        Yes
+                                    </Button>
+                                    <Button
+                                        variant={formPredictions.tieBreak === 'No' ? "default" : "outline"}
+                                        onClick={() => handlePredictionChange('tieBreak', 'No')}
+                                        className={`h-12 ${theme === 'dark' ? '' : ''}`}
+                                    >
+                                        No
                                     </Button>
                                 </div>
-                            </Card>
+                            </div>
+                            <div className="space-y-3">
+                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Games in Match</h3>
+                                <p className="text-sm text-gray-600">
+                                    What is the total number of games played in the match?
+                                </p>
+                                <select
+                                    value={formPredictions.totalGames}
+                                    onChange={(e) => handlePredictionChange('totalGames', e.target.value)}
+                                    className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                                >
+                                    <option value="">Select total games</option>
+                                    <option value="Under 18">Under 18</option>
+                                    <option value="18-22">18-22</option>
+                                    <option value="23-27">23-27</option>
+                                    <option value="28-32">28-32</option>
+                                    <option value="Over 32">Over 32</option>
+                                </select>
+                            </div>
+                            <div className="space-y-3">
+                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Most Aces</h3>
+                                <p className="text-sm text-gray-600">
+                                    Who leads in aces during the match?
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        variant={formPredictions.acesLeader === details.player1.name ? "default" : "outline"}
+                                        onClick={() => handlePredictionChange('acesLeader', details.player1.name)}
+                                        className={`h-12 ${theme === 'dark' ? '' : ''}`}
+                                    >
+                                        {details.player1.name.split(' ')[1]}
+                                    </Button>
+                                    <Button
+                                        variant={formPredictions.acesLeader === details.player2.name ? "default" : "outline"}
+                                        onClick={() => handlePredictionChange('acesLeader', details.player2.name)}
+                                        className={`h-12 ${theme === 'dark' ? '' : ''}`}
+                                    >
+                                        {details.player2.name.split(' ')[1]}
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Double Faults</h3>
+                                <p className="text-sm text-gray-600">
+                                    What is the total number of double faults in the match?
+                                </p>
+                                <select
+                                    value={formPredictions.doubleFaults}
+                                    onChange={(e) => handlePredictionChange('doubleFaults', e.target.value)}
+                                    className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                                >
+                                    <option value="">Select double faults</option>
+                                    <option value="Under 5">Under 5</option>
+                                    <option value="5-8">5-8</option>
+                                    <option value="9-12">9-12</option>
+                                    <option value="Over 12">Over 12</option>
+                                </select>
+                            </div>
+                            <div className="space-y-3">
+                                <h3 className={`font-semibold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>Total Break Points</h3>
+                                <p className="text-sm text-gray-600">
+                                    What is the total number of break points faced in the match?
+                                </p>
+                                <select
+                                    value={formPredictions.breakPoints}
+                                    onChange={(e) => handlePredictionChange('breakPoints', e.target.value)}
+                                    className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                                >
+                                    <option value="">Select break points</option>
+                                    <option value="Under 8">Under 8</option>
+                                    <option value="8-12">8-12</option>
+                                    <option value="13-17">13-17</option>
+                                    <option value="Over 17">Over 17</option>
+                                </select>
+                            </div>
+                        </CardContent>
+                        <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-r from-blue-50 to-green-50 border-t border-blue-200 p-6 pt-4 z-10">
+                            <Button
+                                onClick={handleSubmitPredictions}
+                                disabled={!hasPredictions}
+                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                                size="lg"
+                            >
+                                {hasPredictions ? `Add to Prediction Slip (${predictionCount})` : 'Select at least one prediction'}
+                            </Button>
                         </div>
-                    </div>
+                    </Card>
                 </div>
             </div>
         </div>

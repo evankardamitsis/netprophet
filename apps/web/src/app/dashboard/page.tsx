@@ -43,26 +43,26 @@ export default function DashboardPage({ onMatchSelect }: any) {
     }
 
     return (
-        <div className="h-full bg-[#181A20] relative overflow-hidden flex flex-col">
-            <div className="flex-1 flex min-h-0">
+        <div className={`h-full bg-[#181A20] relative overflow-hidden flex flex-col ${sidebarOpen ? '' : 'w-full'}`}>
+            <div className={`flex-1 flex min-h-0 ${sidebarOpen ? '' : 'w-full'}`}>
                 {/* Central Content */}
-                <div className="flex-1 flex flex-col min-h-0">
+                <div className={`flex-1 flex flex-col min-h-0 ${sidebarOpen ? '' : 'w-full'}`}>
                     {currentPage === 'dashboard' ? (
                         <>
                             {/* Stats Cards */}
-                            <div className="flex-shrink-0 p-6 pb-4">
+                            <div className={`flex-shrink-0 p-6 pb-4 ${sidebarOpen ? '' : 'w-full'}`}>
                                 <StatsCards stats={userStats} />
                             </div>
 
                             {/* Main Content */}
-                            <div className="flex-1 min-h-0 overflow-hidden">
-                                <div className="h-full overflow-y-auto p-6">
-                                    <MatchesGrid onSelectMatch={onMatchSelect} />
+                            <div className={`flex-1 min-h-0 overflow-hidden ${sidebarOpen ? '' : 'w-full'}`}>
+                                <div className={`h-full overflow-y-auto p-6 ${sidebarOpen ? '' : 'w-full'}`}>
+                                    <MatchesGrid onSelectMatch={onMatchSelect} sidebarOpen={sidebarOpen} />
                                 </div>
                             </div>
                         </>
                     ) : currentPage === 'rewards' ? (
-                        <div className="flex-1 overflow-y-auto p-6">
+                        <div className={`flex-1 overflow-y-auto p-6 ${sidebarOpen ? '' : 'w-full'}`}>
                             <RewardShop
                                 userPoints={userStats.totalPoints}
                                 onRedeem={(reward) => {
@@ -72,7 +72,7 @@ export default function DashboardPage({ onMatchSelect }: any) {
                             />
                         </div>
                     ) : (
-                        <div className="flex-1 overflow-y-auto p-6">
+                        <div className={`flex-1 overflow-y-auto p-6 ${sidebarOpen ? '' : 'w-full'}`}>
                             <Leaderboard />
                         </div>
                     )}

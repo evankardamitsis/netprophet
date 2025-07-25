@@ -8,6 +8,7 @@ import { MatchesList } from '@/components/MatchesList';
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { useTheme } from '../Providers';
+import style from 'styled-jsx/style';
 
 // Icon components
 function ChevronDownIcon() {
@@ -37,8 +38,10 @@ interface Tournament {
 
 interface SidebarProps {
     onClose: () => void;
-    onMatchSelect: (match: Match) => void;
+    onMatchSelect?: (match: Match) => void;
     selectedMatchId?: number;
+    sidebarOpen: boolean;
+    setSidebarOpen: (open: boolean) => void;
 }
 
 // Enhanced mock data with start times and lock times
@@ -248,8 +251,9 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
     );
 }
 
-export function Sidebar({ onClose }: { onClose: () => void }) {
-    const onMatchSelect = useMatchSelect();
+export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: onMatchSelectProp }: SidebarProps) {
+    const matchSelectFromContext = useMatchSelect();
+    const onMatchSelect = onMatchSelectProp || matchSelectFromContext;
     const [expandedTournaments, setExpandedTournaments] = useState<Set<number>>(new Set([1])); // Default expand first tournament
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
     const { theme } = useTheme();
@@ -303,8 +307,16 @@ export function Sidebar({ onClose }: { onClose: () => void }) {
     const allMatches = mockTournaments.flatMap(t => t.matches);
 
     return (
-        <aside className={`h-full flex flex-col gap-6 p-4 ${theme === 'dark' ? 'bg-[#1F222A] border-r border-[#23262F]' : 'bg-gray-100 border-r border-gray-200'}`}>
-            <Card className={`mt-4 p-2 flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white'}`}>
+        <aside
+            className={`relative h-full flex flex-col gap-6 p-4 transition-transform duration-300 ease-in-out
+                ${theme === 'dark' ? 'bg-[#1F222A] border-r border-[#23262F]' : 'bg-gray-100 border-r border-gray-200'}
+                min-w-full sm:min-w-[320px] md:min-w-[380px] lg:min-w-[420px] xl:min-w-[450px] max-w-full w-full
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                fixed top-0 left-0 z-40 xl:relative
+            `}
+            style={{ boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.04)' : 'none' }}
+        >
+            <Card className={`mt-4 p-2 flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white'} min-w-0 sm:min-w-[280px] md:min-w-[340px] lg:min-w-[400px]`}>
                 <MatchesList onSelectMatch={onMatchSelect} />
             </Card>
             {/* Add match list or other sidebar content here, styled with Card if needed */}

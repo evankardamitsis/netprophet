@@ -115,7 +115,6 @@ export function TopNavigation({
                     <WalletIcon />
                     <span className={`font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>1,250 π</span>
                 </div>
-                <span className={`hidden md:block text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{userEmail}</span>
                 {/* Account dropdown */}
                 <div className="relative" ref={dropdownRef}>
                     <button

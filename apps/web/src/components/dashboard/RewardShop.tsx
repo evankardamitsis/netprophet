@@ -192,9 +192,10 @@ const mockRewards: RewardItem[] = [
 interface RewardShopProps {
     userPoints?: number;
     onRedeem?: (reward: RewardItem) => void;
+    sidebarOpen?: boolean;
 }
 
-export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
+export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: RewardShopProps) {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'points' | 'rarity' | 'name'>('points');
 
@@ -297,7 +298,7 @@ export function RewardShop({ userPoints = 1250, onRedeem }: RewardShopProps) {
     ];
 
     return (
-        <div className="space-y-8">
+        <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
             {/* Header with Points Display */}
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 text-white">
                 <div className="absolute inset-0 bg-black/10"></div>

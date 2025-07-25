@@ -11,9 +11,10 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 interface MatchesGridProps {
     matches?: Match[];
     onSelectMatch?: (match: Match) => void;
+    sidebarOpen?: boolean;
 }
 
-export function MatchesGrid({ matches = mockMatches }: MatchesGridProps) {
+export function MatchesGrid({ matches = mockMatches, sidebarOpen = true }: MatchesGridProps) {
     const onSelectMatch = useMatchSelect();
     const { theme } = useTheme();
     const { slipCollapsed } = usePredictionSlip();
@@ -35,7 +36,7 @@ export function MatchesGrid({ matches = mockMatches }: MatchesGridProps) {
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 
     return (
-        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${slipCollapsed === false ? 'xl:pr-96' : ''}`}>
+        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${sidebarOpen ? 'xl:pr-96' : 'w-full'}`}>
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
                 <div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, Badge, Button , Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
 
 interface LeaderboardEntry {
     id: number;
@@ -15,6 +15,7 @@ interface LeaderboardEntry {
 
 interface LeaderboardProps {
     className?: string;
+    sidebarOpen?: boolean;
 }
 
 // Mock leaderboard data
@@ -204,7 +205,7 @@ const allTimeLeaderboard: LeaderboardEntry[] = [
     }
 ];
 
-export function Leaderboard({ className }: LeaderboardProps) {
+export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps) {
     const [timeFrame, setTimeFrame] = useState<'weekly' | 'allTime'>('weekly');
 
     const currentLeaderboard = timeFrame === 'weekly' ? weeklyLeaderboard : allTimeLeaderboard;
@@ -244,7 +245,7 @@ export function Leaderboard({ className }: LeaderboardProps) {
     };
 
     return (
-        <div className={`space-y-6 ${className}`}>
+        <div className={`space-y-6 ${className} ${!sidebarOpen ? 'w-full' : ''}`}>
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
