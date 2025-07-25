@@ -1,7 +1,13 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { PredictionItem } from '@/types/dashboard';
+import {
+    SESSION_KEYS,
+    loadFromSessionStorage,
+    saveToSessionStorage,
+    removeFromSessionStorage
+} from '@/lib/sessionStorage';
 
 // Add PredictionOptions type
 export interface PredictionOptions {
@@ -65,8 +71,25 @@ function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
 }
 
 export function PredictionSlipProvider({ children }: { children: React.ReactNode }) {
-    const [predictions, setPredictions] = useState<StructuredPredictionItem[]>(() => migratePredictions([]));
-    const [slipCollapsed, setSlipCollapsed] = useState(false);
+    // Initialize state from session storage
+    const [predictions, setPredictions] = useState<StructuredPredictionItem[]>(() => {
+        const stored = loadFromSessionStorage(SESSION_KEYS.PREDICTIONS, []);
+        return migratePredictions(stored);
+    });
+
+    const [slipCollapsed, setSlipCollapsed] = useState<boolean>(() => {
+        return loadFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, false);
+    });
+
+    // Save predictions to session storage whenever they change
+    useEffect(() => {
+        saveToSessionStorage(SESSION_KEYS.PREDICTIONS, predictions);
+    }, [predictions]);
+
+    // Save slip collapsed state to session storage whenever it changes
+    useEffect(() => {
+        saveToSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, slipCollapsed);
+    }, [slipCollapsed]);
 
     const addPrediction = (item: StructuredPredictionItem) => {
         setPredictions(prev => {
@@ -84,10 +107,21 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         setPredictions(prev => prev.filter(p => p.matchId !== matchId));
     };
 
-    const clearPredictions = () => setPredictions([]);
+    const clearPredictions = () => {
+        setPredictions([]);
+        // Clear all form predictions from session storage
+        removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
+    };
 
     return (
-        <PredictionSlipContext.Provider value={{ predictions, addPrediction, removePrediction, clearPredictions, setSlipCollapsed, slipCollapsed }}>
+        <PredictionSlipContext.Provider value={{
+            predictions,
+            addPrediction,
+            removePrediction,
+            clearPredictions,
+            setSlipCollapsed,
+            slipCollapsed
+        }}>
             {children}
         </PredictionSlipContext.Provider>
     );

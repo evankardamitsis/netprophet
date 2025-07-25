@@ -10,7 +10,23 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useTheme } from '../components/Providers';
 import React from 'react';
 import type { ReactElement } from 'react';
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+
+// Inline SVG components to replace react-icons/fi
+function ChevronLeftIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+    return (
+        <svg width={size} height={size} fill="none" stroke={color} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+    );
+}
+
+function ChevronRightIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
+    return (
+        <svg width={size} height={size} fill="none" stroke={color} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+    );
+}
 
 // Add context for controlling slip collapse
 const PredictionSlipCollapseContext = createContext<{ setIsPredictionSlipCollapsed: (collapsed: boolean) => void } | undefined>(undefined);
@@ -24,9 +40,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
     const { user, signOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentPage, setCurrentPage] = useState<'dashboard' | 'leaderboard' | 'rewards'>('dashboard');
-    const [isPredictionSlipCollapsed, setIsPredictionSlipCollapsed] = useState(false);
     const router = useRouter();
-    const { predictions, removePrediction } = usePredictionSlip();
+    const { predictions, removePrediction, slipCollapsed, setSlipCollapsed } = usePredictionSlip();
     const { theme } = useTheme();
 
     const handleSignOut = async () => {
@@ -42,14 +57,14 @@ export default function ClientLayout({ children }: { children: ReactNode | React
     // Handler to expand slip from floating button
     const handleExpandPredictionSlip = () => {
         setTimeout(() => {
-            setIsPredictionSlipCollapsed(false);
+            setSlipCollapsed?.(false);
         }, 100);
     };
 
     if (loading) return null;
 
     return (
-        <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed }}>
+        <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
             <MatchSelectContext.Provider value={handleMatchSelect}>
                 <div className={`relative h-screen ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'}`}>
                     <TopNavigation
@@ -70,8 +85,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                             aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
                         >
                             {sidebarOpen
-                                ? <FiChevronLeft size={20} color={theme === 'dark' ? 'black' : 'white'} />
-                                : <FiChevronRight size={20} color={theme === 'dark' ? 'black' : 'white'} />
+                                ? <ChevronLeftIcon size={20} color={theme === 'dark' ? 'black' : 'white'} />
+                                : <ChevronRightIcon size={20} color={theme === 'dark' ? 'black' : 'white'} />
                             }
                         </button>
 
@@ -110,7 +125,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                             `${theme === 'dark' ? 'bg-[#23262F] border-l border-[#2A2D38]' : 'bg-gray-100 border-l border-gray-200'}
                             xl:flex hidden
                             transition-all duration-300
-                            ${isPredictionSlipCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-96 opacity-100 pointer-events-auto'}
+                            ${slipCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-96 opacity-100 pointer-events-auto'}
                             mb-16
                             flex-shrink-0
                             overflow-hidden`
@@ -119,23 +134,23 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                                 <PredictionSlip
                                     onRemovePrediction={removePrediction}
                                     onSubmitPredictions={() => { }}
-                                    isCollapsed={isPredictionSlipCollapsed}
-                                    onToggleCollapse={() => setIsPredictionSlipCollapsed(!isPredictionSlipCollapsed)}
+                                    isCollapsed={slipCollapsed}
+                                    onToggleCollapse={() => setSlipCollapsed?.(!slipCollapsed)}
                                 />
                             </div>
                         </div>
 
                         {/* Prediction Slip overlay for smaller screens - positioned on the right */}
-                        {!isPredictionSlipCollapsed && (
+                        {!slipCollapsed && (
                             <div className="fixed inset-0 z-40 flex xl:hidden">
-                                <div className="fixed inset-0 bg-black/40" onClick={() => setIsPredictionSlipCollapsed(true)} />
+                                <div className="fixed inset-0 bg-black/40" onClick={() => setSlipCollapsed?.(true)} />
                                 <div className={`relative w-full max-w-[320px] h-full ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-gray-100'} z-50 pt-[64px] ml-auto`}>
                                     <div className="overflow-y-auto min-h-[100px] w-full h-full">
                                         <PredictionSlip
                                             onRemovePrediction={removePrediction}
                                             onSubmitPredictions={() => { }}
-                                            isCollapsed={isPredictionSlipCollapsed}
-                                            onToggleCollapse={() => setIsPredictionSlipCollapsed(!isPredictionSlipCollapsed)}
+                                            isCollapsed={slipCollapsed}
+                                            onToggleCollapse={() => setSlipCollapsed?.(!slipCollapsed)}
                                         />
                                     </div>
                                 </div>
@@ -143,7 +158,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         )}
 
                         {/* Floating Prediction Button */}
-                        {isPredictionSlipCollapsed && predictions.length > 0 && (
+                        {slipCollapsed && predictions.length > 0 && (
                             <FloatingPredictionButton
                                 predictions={predictions}
                                 onClick={handleExpandPredictionSlip}

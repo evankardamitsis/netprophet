@@ -3,6 +3,11 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Badge, Button } from '@netprophet/ui';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+import {
+    SESSION_KEYS,
+    removeFromSessionStorage,
+    clearFormPredictionsForMatch
+} from '@/lib/sessionStorage';
 
 // Icon component
 function XIcon() {
@@ -55,6 +60,14 @@ export function PredictionSlip({
     const handleSubmit = () => {
         onSubmitPredictions();
         clearPredictions();
+        // Clear all form predictions from session storage when submitting
+        removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
+    };
+
+    const handleRemovePrediction = (matchId: number) => {
+        removePrediction(matchId);
+        // Clear form predictions for this match from session storage
+        clearFormPredictionsForMatch(matchId);
     };
 
     function formatPrediction(prediction: any) {
@@ -128,7 +141,7 @@ export function PredictionSlip({
                                                     <div className="text-xs text-slate-400 mt-1">{item.match.tournament || 'Tournament'}</div>
                                                 </div>
                                                 <motion.button
-                                                    onClick={() => removePrediction(item.matchId)}
+                                                    onClick={() => handleRemovePrediction(item.matchId)}
                                                     className="text-slate-500 hover:text-red-400 ml-2"
                                                     whileHover={{ scale: 1.2 }}
                                                     whileTap={{ scale: 0.8 }}
@@ -198,23 +211,24 @@ export function PredictionSlip({
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 50 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        transition={{ delay: 0.2 }}
                     >
                         <div className="flex justify-between items-center mb-4">
-                            <span className="font-bold text-yellow-300 tracking-wide">Total Points:</span>
-                            <span className="text-lg font-extrabold text-green-400">+{getTotalPoints()}</span>
+                            <div className="text-sm text-slate-300">
+                                <span>Total Points: </span>
+                                <span className="font-bold text-yellow-300 text-lg">{getTotalPoints()}</span>
+                            </div>
+                            <div className="text-sm text-slate-400">
+                                {predictions.length} match{predictions.length !== 1 ? 'es' : ''}
+                            </div>
                         </div>
-                        <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                        <Button
+                            onClick={handleSubmit}
+                            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
+                            size="lg"
                         >
-                            <Button
-                                className="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold shadow-md border-2 border-yellow-300"
-                                onClick={handleSubmit}
-                            >
-                                Submit Predictions ({predictions.length})
-                            </Button>
-                        </motion.div>
+                            Submit Predictions
+                        </Button>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -229,100 +243,23 @@ interface FloatingPredictionButtonProps {
 }
 
 export function FloatingPredictionButton({ predictions, onClick }: FloatingPredictionButtonProps) {
+    const getTotalPoints = () => predictions.reduce((total, item) => total + item.points, 0);
+
     return (
-        <motion.div
-            className="fixed bottom-6 right-6 z-50"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{
-                type: "spring",
-                stiffness: 400,
-                damping: 25
-            }}
+        <motion.button
+            onClick={onClick}
+            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-6 rounded-full shadow-2xl transform transition-all duration-200 hover:scale-110 active:scale-95 flex items-center space-x-3"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
         >
-            <motion.button
-                onClick={onClick}
-                className="bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold shadow-lg border-2 border-yellow-300 rounded-full w-16 h-16 p-0 flex items-center justify-center relative cursor-pointer transition-colors duration-200"
-                whileHover={{ scale: 1.15 }}
-                whileTap={{ scale: 0.9 }}
-                animate={{
-                    scale: [1, 1.08, 1],
-                    boxShadow: [
-                        "0 15px 35px rgba(251, 191, 36, 0.4)",
-                        "0 25px 50px rgba(251, 191, 36, 0.7)",
-                        "0 15px 35px rgba(251, 191, 36, 0.4)"
-                    ]
-                }}
-                transition={{
-                    scale: {
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    },
-                    boxShadow: {
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }
-                }}
-            >
-                {/* Pulsating ring effect */}
-                <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-yellow-300"
-                    animate={{
-                        scale: [1, 1.4, 1],
-                        opacity: [0.8, 0, 0.8]
-                    }}
-                    transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                />
-
-                {/* Second pulsating ring for more prominence */}
-                <motion.div
-                    className="absolute inset-0 rounded-full border border-yellow-400"
-                    animate={{
-                        scale: [1, 1.6, 1],
-                        opacity: [0.6, 0, 0.6]
-                    }}
-                    transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: 0.75
-                    }}
-                />
-
-                <motion.div
-                    className="text-center relative z-10"
-                    animate={{
-                        y: [0, -3, 0],
-                        scale: [1, 1.05, 1]
-                    }}
-                    transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                    }}
-                >
-                    <motion.div
-                        animate={{
-                            rotate: [0, 5, 0, -5, 0]
-                        }}
-                        transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                        }}
-                    >
-                        <TargetIcon className="h-6 w-6 mx-auto text-slate-900" />
-                    </motion.div>
-                    <span className="text-xs font-bold">{predictions.length}</span>
-                </motion.div>
-            </motion.button>
-        </motion.div>
+            <TargetIcon className="h-6 w-6" />
+            <div className="text-left">
+                <div className="text-sm font-semibold">Prediction Slip</div>
+                <div className="text-xs opacity-80">{predictions.length} match{predictions.length !== 1 ? 'es' : ''} • {getTotalPoints()} pts</div>
+            </div>
+        </motion.button>
     );
 } 

@@ -7,6 +7,12 @@ import { Match } from '@/types/dashboard';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { usePredictionSlipCollapse } from '../../app/ClientLayout';
 import { useTheme } from '../Providers';
+import {
+    SESSION_KEYS,
+    loadFromSessionStorage,
+    saveToSessionStorage,
+    clearFormPredictionsForMatch
+} from '@/lib/sessionStorage';
 
 interface MatchDetailProps {
     match: Match | null;
@@ -34,6 +40,17 @@ interface PredictionOptions {
     acesLeader: string;
     doubleFaults: string;
     breakPoints: string;
+}
+
+function loadFormPredictionsFromSession(matchId: number): PredictionOptions {
+    const stored = loadFromSessionStorage<Record<number, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
+    return stored[matchId] || createEmptyPredictions();
+}
+
+function saveFormPredictionsToSession(matchId: number, predictions: PredictionOptions): void {
+    const stored = loadFromSessionStorage<Record<number, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
+    stored[matchId] = predictions;
+    saveToSessionStorage(SESSION_KEYS.FORM_PREDICTIONS, stored);
 }
 
 // Mock match data with additional details
@@ -112,17 +129,26 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     // Local state for the form fields
     const [formPredictions, setFormPredictions] = useState<PredictionOptions>(createEmptyPredictions());
 
-    // Clear predictions when match changes
+    // Load form predictions from session storage when match changes
     useEffect(() => {
         if (match) {
             const existing = predictions.find(p => p.matchId === match.id);
             if (existing && typeof existing.prediction === 'object' && existing.prediction !== null && 'winner' in existing.prediction) {
                 setFormPredictions(existing.prediction);
             } else {
-                setFormPredictions(createEmptyPredictions());
+                // Load from session storage if no existing prediction
+                const sessionPredictions = loadFormPredictionsFromSession(match.id);
+                setFormPredictions(sessionPredictions);
             }
         }
     }, [match, predictions]);
+
+    // Save form predictions to session storage whenever they change
+    useEffect(() => {
+        if (match) {
+            saveFormPredictionsToSession(match.id, formPredictions);
+        }
+    }, [formPredictions, match]);
 
     if (!match) {
         return (
@@ -254,6 +280,9 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 points: match.points,
             });
             setIsPredictionSlipCollapsed(false); // Open slip if closed
+
+            // Clear form predictions from session storage after successful submission
+            clearFormPredictionsForMatch(match.id);
         }
     };
 
