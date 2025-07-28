@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Badge, Button } from '@netprophet/ui';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+import { useWallet } from '@/context/WalletContext';
 import {
     SESSION_KEYS,
     removeFromSessionStorage,
@@ -42,7 +43,10 @@ export function PredictionSlip({
     onToggleCollapse
 }: PredictionSlipProps) {
     const { predictions, clearPredictions, removePrediction } = usePredictionSlip();
-    const getTotalPoints = () => predictions.reduce((total, item) => total + item.points, 0);
+    const { wallet, placeBet } = useWallet();
+
+    const getTotalBetAmount = () => predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
+    const getTotalPotentialWinnings = () => predictions.reduce((total, item) => total + (item.potentialWinnings || 0), 0);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -57,11 +61,36 @@ export function PredictionSlip({
         }
     };
 
-    const handleSubmit = () => {
-        onSubmitPredictions();
-        clearPredictions();
-        // Clear all form predictions from session storage when submitting
-        removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
+    const handleSubmit = async () => {
+        try {
+            // Place all bets in the slip
+            for (const prediction of predictions) {
+                if (prediction.betAmount && prediction.betAmount > 0) {
+                    await placeBet(
+                        prediction.betAmount,
+                        prediction.matchId,
+                        `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${prediction.multiplier?.toFixed(2)}x multiplier`
+                    );
+                }
+            }
+
+            // Call the original submit handler
+            onSubmitPredictions();
+
+            // Clear the slip after successful placement
+            clearPredictions();
+
+            // Clear all form predictions from session storage when submitting
+            removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
+
+        } catch (error) {
+            // Handle insufficient balance or other errors
+            if (error instanceof Error) {
+                alert(`Error placing bets: ${error.message}`);
+            } else {
+                alert('Error placing bets. Please check your balance and try again.');
+            }
+        }
     };
 
     const handleRemovePrediction = (matchId: number) => {
@@ -99,7 +128,7 @@ export function PredictionSlip({
             }}
         >
             <div className="flex-shrink-0 p-6 border-b border-dashed border-slate-700 bg-slate-800 flex justify-between items-center">
-                <h3 className="text-lg font-bold text-yellow-300 tracking-wider uppercase">Predictions Slip</h3>
+                <h3 className="text-lg font-bold text-yellow-300 tracking-wider uppercase">Betting Slip</h3>
                 {onToggleCollapse && (
                     <motion.button
                         onClick={onToggleCollapse}
@@ -117,7 +146,7 @@ export function PredictionSlip({
                 {predictions.length === 0 ? (
                     <div className="text-center py-8 text-slate-400">
                         <TargetIcon className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-                        <p>No predictions yet</p>
+                        <p>No bets yet</p>
                         <p className="text-sm">Select matches to add to your slip</p>
                     </div>
                 ) : (
@@ -157,13 +186,23 @@ export function PredictionSlip({
                                                     <span className="text-xs text-slate-400">{item.match.time}</span>
                                                 </div>
                                             </div>
-                                            <div className="flex justify-between items-center">
+                                            <div className="flex justify-between items-center mb-2">
                                                 <div className="text-sm">
                                                     <span className="text-slate-300">Pick: </span>
                                                     <span className="font-semibold text-yellow-200">{formatPrediction(item.prediction)}</span>
                                                 </div>
-                                                <div className="text-sm font-bold text-green-400">
-                                                    +{item.points}
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <div className="text-sm">
+                                                    <span className="text-slate-300">Bet: </span>
+                                                    <span className="font-semibold text-blue-400">{item.betAmount || 0} 🌕</span>
+                                                </div>
+                                                <div className="text-sm">
+                                                    <span className="text-slate-300">Multiplier: </span>
+                                                    <span className="font-semibold text-green-400">{item.multiplier ? item.multiplier.toFixed(2) : '1.00'}x</span>
+                                                </div>
+                                                <div className="text-sm font-bold text-yellow-400">
+                                                    Win: {item.potentialWinnings || 0} 🌕
                                                 </div>
                                             </div>
                                         </CardContent>
@@ -190,8 +229,8 @@ export function PredictionSlip({
                                     <span className="font-bold ml-1 text-yellow-200">{predictions.filter(p => p.match.status === 'live').length}</span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400">Avg Points:</span>
-                                    <span className="font-bold ml-1 text-yellow-200">{predictions.length > 0 ? Math.round(getTotalPoints() / predictions.length) : 0}</span>
+                                    <span className="text-slate-400">Total Bet:</span>
+                                    <span className="font-bold ml-1 text-yellow-200">{getTotalBetAmount()} 🌕</span>
                                 </div>
                                 <div>
                                     <span className="text-slate-400">Tournaments:</span>
@@ -215,11 +254,20 @@ export function PredictionSlip({
                     >
                         <div className="flex justify-between items-center mb-4">
                             <div className="text-sm text-slate-300">
-                                <span>Total Points: </span>
-                                <span className="font-bold text-yellow-300 text-lg">{getTotalPoints()}</span>
+                                <span>Total Bet: </span>
+                                <span className="font-bold text-blue-400 text-lg">{getTotalBetAmount()} 🌕</span>
                             </div>
                             <div className="text-sm text-slate-400">
                                 {predictions.length} match{predictions.length !== 1 ? 'es' : ''}
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="text-sm text-slate-300">
+                                <span>Potential Win: </span>
+                                <span className="font-bold text-yellow-300 text-lg">{getTotalPotentialWinnings()} 🌕</span>
+                            </div>
+                            <div className="text-sm text-slate-400">
+                                Balance: {wallet.balance} 🌕
                             </div>
                         </div>
                         <Button
@@ -227,7 +275,7 @@ export function PredictionSlip({
                             className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
                             size="lg"
                         >
-                            Submit Predictions
+                            Place All Bets
                         </Button>
                     </motion.div>
                 )}
@@ -243,7 +291,8 @@ interface FloatingPredictionButtonProps {
 }
 
 export function FloatingPredictionButton({ predictions, onClick }: FloatingPredictionButtonProps) {
-    const getTotalPoints = () => predictions.reduce((total, item) => total + item.points, 0);
+    const getTotalBetAmount = () => predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
+    const getTotalPotentialWinnings = () => predictions.reduce((total, item) => total + (item.potentialWinnings || 0), 0);
 
     return (
         <motion.button
@@ -257,8 +306,8 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
         >
             <TargetIcon className="h-6 w-6" />
             <div className="text-left">
-                <div className="text-sm font-semibold">Prediction Slip</div>
-                <div className="text-xs opacity-80">{predictions.length} match{predictions.length !== 1 ? 'es' : ''} • {getTotalPoints()} pts</div>
+                <div className="text-sm font-semibold">Betting Slip</div>
+                <div className="text-xs opacity-80">{predictions.length} match{predictions.length !== 1 ? 'es' : ''} • {getTotalBetAmount()} 🌕 bet • {getTotalPotentialWinnings()} 🌕 win</div>
             </div>
         </motion.button>
     );

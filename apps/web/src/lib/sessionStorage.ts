@@ -4,7 +4,8 @@
 export const SESSION_KEYS = {
     PREDICTIONS: 'netprophet_predictions',
     SLIP_COLLAPSED: 'netprophet_slip_collapsed',
-    FORM_PREDICTIONS: 'netprophet_form_predictions'
+    FORM_PREDICTIONS: 'netprophet_form_predictions',
+    WALLET: 'netprophet_wallet'
 } as const;
 
 // Helper to load from session storage

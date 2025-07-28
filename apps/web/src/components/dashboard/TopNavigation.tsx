@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@netprophet/ui';
 import { useTheme } from '../Providers';
+import { Wallet } from './Wallet';
 
 // Icon components
 function MenuIcon() {
@@ -41,10 +42,6 @@ function ChevronDownIcon() {
     return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
     </svg>
-}
-
-function WalletIcon() {
-    return <span className="text-2xl">💰</span>;
 }
 
 function SunIcon() {
@@ -103,18 +100,10 @@ export function TopNavigation({
                 </nav>
             )}
             <div className="flex items-center gap-3">
-                {/* Theme switch */}
-                <button
-                    onClick={toggleTheme}
-                    className={`rounded-full p-2 transition ${theme === 'dark' ? 'bg-[#23262F] hover:bg-accent/20' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
-                    aria-label="Toggle dark/light mode"
-                >
-                    {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
-                </button>
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white border border-gray-300'}`}>
-                    <WalletIcon />
-                    <span className={`font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>1,250 π</span>
-                </div>
+
+                {/* Wallet Component */}
+                <Wallet />
+
                 {/* Account dropdown */}
                 <div className="relative" ref={dropdownRef}>
                     <button
@@ -149,6 +138,14 @@ export function TopNavigation({
                         </div>
                     )}
                 </div>
+                {/* Theme switch */}
+                <button
+                    onClick={toggleTheme}
+                    className={`rounded-full p-2 transition ${theme === 'dark' ? 'bg-[#23262F] hover:bg-accent/20' : 'bg-white border border-gray-300 hover:bg-gray-100'}`}
+                    aria-label="Toggle dark/light mode"
+                >
+                    {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
+                </button>
             </div>
         </header>
     );

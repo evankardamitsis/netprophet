@@ -33,6 +33,9 @@ export interface PredictionOptions {
 // Extend PredictionItem to include structured prediction
 export interface StructuredPredictionItem extends Omit<PredictionItem, 'prediction'> {
     prediction: PredictionOptions;
+    betAmount?: number;
+    multiplier?: number;
+    potentialWinnings?: number;
 }
 
 interface PredictionSlipContextType {

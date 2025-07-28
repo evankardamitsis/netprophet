@@ -36,7 +36,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true }: Match
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 
     return (
-        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${sidebarOpen ? 'xl:pr-96' : 'w-full'}`}>
+        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'}`}>
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
                 <div>
@@ -72,10 +72,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true }: Match
                                             <div className="text-lg font-bold text-blue-600 mt-2">{match.player2.odds}</div>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                            Points: <span className="font-semibold text-green-600">+{match.points}</span>
-                                        </div>
+                                    <div className="flex justify-end">
                                         <Button
                                             className="bg-blue-600 hover:bg-blue-700"
                                             onClick={(e) => {
@@ -124,10 +121,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true }: Match
                                             <div className="text-lg font-bold text-blue-600 mt-2">{match.player2.odds}</div>
                                         </div>
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                            Points: <span className="font-semibold text-green-600">+{match.points}</span>
-                                        </div>
+                                    <div className="flex justify-end">
                                         <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => onSelectMatch(match)}>
                                             Make Predictions
                                         </Button>

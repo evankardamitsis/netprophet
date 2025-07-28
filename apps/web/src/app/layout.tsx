@@ -4,6 +4,7 @@ import './globals.css';
 import { ReactNode } from 'react';
 import { Providers } from '../components/Providers';
 import { PredictionSlipProvider } from '../context/PredictionSlipContext';
+import { WalletProvider } from '../context/WalletContext';
 import { useTheme } from '../components/Providers';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -25,9 +26,11 @@ export default function RootLayout({
         <html lang="en">
             <body className="font-sans min-h-screen">
                 <Providers>
-                    <PredictionSlipProvider>
-                        {children}
-                    </PredictionSlipProvider>
+                    <WalletProvider>
+                        <PredictionSlipProvider>
+                            {children}
+                        </PredictionSlipProvider>
+                    </WalletProvider>
                 </Providers>
             </body>
         </html>

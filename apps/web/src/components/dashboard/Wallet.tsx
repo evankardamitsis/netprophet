@@ -1,0 +1,317 @@
+'use client';
+
+import { useState, useRef, useEffect } from 'react';
+import { Card, CardContent, Badge, Button } from '@netprophet/ui';
+import { useTheme } from '../Providers';
+import { useWallet } from '@/context/WalletContext';
+import { usePredictionSlip } from '@/context/PredictionSlipContext';
+
+// Icon components
+
+function ChevronDownIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+}
+
+function ChevronUpIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+    </svg>
+}
+
+function TrendingUpIcon({ className = "h-3 w-3" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+}
+
+function TrendingDownIcon({ className = "h-3 w-3" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
+    </svg>
+}
+
+function BetIcon({ className = "h-3 w-3" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+    </svg>
+}
+
+function HistoryIcon({ className = "h-3 w-3" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+}
+
+function ClockIcon({ className = "h-3 w-3" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+}
+
+
+export function Wallet({ }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const { theme } = useTheme();
+    const { wallet } = useWallet();
+    const { predictions } = usePredictionSlip();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Calculate pending bets from prediction slip
+    const pendingBetAmount = predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
+    const availableBalance = wallet.balance - pendingBetAmount;
+
+    useEffect(() => {
+        if (!isOpen) return;
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    const formatCurrency = (amount: number) => {
+        return `${amount >= 0 ? '+' : ''}${amount} 🌕`;
+    };
+
+    const formatPercentage = (value: number) => {
+        return `${value}%`;
+    };
+
+    const getTransactionIcon = (type: 'bet' | 'win' | 'loss' | 'welcome_bonus' | 'daily_login' | 'referral' | 'leaderboard' | 'purchase' | 'tournament_entry' | 'insight_unlock') => {
+        switch (type) {
+            case 'win':
+                return <TrendingUpIcon className="text-green-500 h-6 w-6" />;
+            case 'loss':
+                return <TrendingDownIcon className="text-red-500 h-6 w-6" />;
+            case 'bet':
+                return <BetIcon className="text-blue-500 h-12 w-12" />;
+            case 'welcome_bonus':
+            case 'daily_login':
+            case 'referral':
+            case 'leaderboard':
+                return <TrendingUpIcon className="text-yellow-500 h-6 w-6" />;
+            case 'purchase':
+            case 'tournament_entry':
+            case 'insight_unlock':
+                return <BetIcon className="text-purple-500 h-12 w-12" />;
+            default:
+                return <BetIcon className="text-gray-500 h-12 w-12" />;
+        }
+    };
+
+    const getTransactionColor = (type: 'bet' | 'win' | 'loss' | 'welcome_bonus' | 'daily_login' | 'referral' | 'leaderboard' | 'purchase' | 'tournament_entry' | 'insight_unlock') => {
+        switch (type) {
+            case 'win':
+            case 'welcome_bonus':
+            case 'daily_login':
+            case 'referral':
+            case 'leaderboard':
+                return 'text-green-600';
+            case 'loss':
+                return 'text-red-600';
+            case 'bet':
+                return 'text-blue-600';
+            case 'purchase':
+            case 'tournament_entry':
+            case 'insight_unlock':
+                return 'text-purple-600';
+            default:
+                return 'text-gray-600';
+        }
+    };
+
+    const formatTimeAgo = (timestamp: Date) => {
+        // Safety check for invalid timestamps
+        if (!timestamp || !(timestamp instanceof Date) || isNaN(timestamp.getTime())) {
+            return 'Unknown time';
+        }
+
+        const now = new Date();
+        const diffInHours = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60 * 60));
+
+        if (diffInHours < 1) return 'Just now';
+        if (diffInHours < 24) return `${diffInHours}h ago`;
+        const diffInDays = Math.floor(diffInHours / 24);
+        return `${diffInDays}d ago`;
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-full transition shadow-lg hover:shadow-xl ${theme === 'dark' ? 'bg-[#23262F] hover:bg-[#2A2D38] shadow-gray-900/50' : 'bg-white border border-gray-300 hover:bg-gray-50 shadow-gray-400/50'}`}
+                aria-label="Wallet"
+            >
+                <span className={`font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                    {availableBalance} 🌕
+                </span>
+                {pendingBetAmount > 0 && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>
+                        -{pendingBetAmount}
+                    </span>
+                )}
+                {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+            </button>
+
+            {isOpen && (
+                <div className={`absolute right-0 mt-2 w-80 rounded-lg z-[9999] ${theme === 'dark' ? 'bg-[#23262F] border border-[#2A2D38]' : 'bg-white border border-gray-200'}`} style={{
+                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                    transform: 'translateZ(0)',
+                    filter: 'drop-shadow(0 10px 8px rgb(0 0 0 / 0.4))'
+                }}>
+                    {/* Header */}
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>My Wallet</h3>
+                            <Badge variant="secondary" className="text-xs">
+                                Active
+                            </Badge>
+                        </div>
+                        <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                            {availableBalance} 🌕
+                        </div>
+                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                            Available Coins
+                        </div>
+
+                        {/* Pending Bets Indicator */}
+                        {pendingBetAmount > 0 && (
+                            <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                                <div className="flex items-center gap-2">
+                                    <ClockIcon className="text-blue-500 h-4 w-4" />
+                                    <div className="flex-1">
+                                        <div className={`text-sm font-medium ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+                                            Pending Bets: {pendingBetAmount} 🌕
+                                        </div>
+                                        <div className={`text-xs ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
+                                            {predictions.length} match{predictions.length !== 1 ? 'es' : ''} in slip
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Daily Login Streak */}
+                        {wallet.dailyLoginStreak > 0 && (
+                            <div className="mt-2 flex items-center gap-2">
+                                <span className="text-xs text-blue-500">🔥</span>
+                                <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    {wallet.dailyLoginStreak} day streak
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="text-center">
+                                <div className={`text-lg font-bold ${wallet.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {formatCurrency(wallet.netProfit)}
+                                </div>
+                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Net Profit
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className={`text-lg font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
+                                    {formatPercentage(wallet.winRate)}
+                                </div>
+                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Win Rate
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className={`text-lg font-bold text-green-600`}>
+                                    {formatCurrency(wallet.totalWinnings)}
+                                </div>
+                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Total Winnings
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <div className={`text-lg font-bold text-red-600`}>
+                                    {formatCurrency(-wallet.totalLosses)}
+                                </div>
+                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    Total Losses
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Additional Coin Stats */}
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                                <div className="text-center">
+                                    <div className={`font-semibold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                                        {formatCurrency(wallet.totalCoinsEarned)}
+                                    </div>
+                                    <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Total Earned
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                    <div className={`font-semibold ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                                        {formatCurrency(-wallet.totalCoinsSpent)}
+                                    </div>
+                                    <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        Total Spent
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Recent Transactions */}
+                    <div className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Recent Activity</h4>
+                            <Button variant="outline" size="sm" className="text-xs">
+                                <HistoryIcon className="mr-1" />
+                                View All
+                            </Button>
+                        </div>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                            {wallet.recentTransactions.length === 0 ? (
+                                <div className={`text-center py-4 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                    No transactions yet
+                                </div>
+                            ) : (
+                                wallet.recentTransactions.slice(0, 4).map((transaction) => (
+                                    <div
+                                        key={transaction.id}
+                                        className={`flex items-center justify-between p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-[#2A2D38]' : 'hover:bg-gray-50'}`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {getTransactionIcon(transaction.type)}
+                                            <div>
+                                                <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                    {transaction.description}
+                                                </div>
+                                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                    {formatTimeAgo(transaction.timestamp)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className={`font-semibold ${getTransactionColor(transaction.type)}`}>
+                                            {formatCurrency(transaction.amount)}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+} 
