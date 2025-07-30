@@ -19,125 +19,200 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true }: Match
     const { theme } = useTheme();
     const { slipCollapsed } = usePredictionSlip();
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'live':
-                return 'destructive';
-            case 'upcoming':
-                return 'secondary';
-            case 'finished':
-                return 'outline';
-            default:
-                return 'secondary';
-        }
-    };
-
     const liveMatches = matches.filter(match => match.status === 'live');
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 
     return (
-        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'}`}>
+        <div className="flex flex-col flex-1 min-h-0 w-full overflow-auto bg-[#0F0F0F] text-white">
+            {/* Header Section */}
+            <div className="p-6 pb-4">
+                <h1 className="text-2xl font-bold text-white mb-2">Tennis Matches</h1>
+                <p className="text-gray-400 text-sm">Monitor live tennis events and place your predictions</p>
+            </div>
+
             {/* Live Matches Section */}
             {liveMatches.length > 0 && (
-                <div>
-                    <h2 className={`text-lg font-semibold mb-4 flex items-center ${theme === 'dark' ? 'text-accent' : 'text-yellow-600'}`}>
-                        <span className={`w-3 h-3 rounded-full animate-pulse mr-2 ${theme === 'dark' ? 'bg-red-500' : 'bg-red-400'}`} />
-                        Live Matches ({liveMatches.length})
-                    </h2>
-                    <div className="grid gap-4">
+                <div className="px-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-white flex items-center">
+                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-3"></span>
+                            Live Matches
+                        </h2>
+                        <span className="text-sm text-gray-400">({liveMatches.length})</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {liveMatches.map((match) => (
-                            <Card key={match.id} className={`hover:shadow-md transition-shadow border-red-200 cursor-pointer ${theme === 'dark' ? '' : 'border-red-100'}`} onClick={() => onSelectMatch(match)}>
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center space-x-2">
-                                            <Badge variant="destructive" className="animate-pulse">
-                                                LIVE
-                                            </Badge>
-                                            <span className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-700'}`}>{match.tournament}</span>
+                            <div
+                                key={match.id}
+                                className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A] hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
+                                onClick={() => onSelectMatch(match)}
+                            >
+                                {/* Match Header */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full border border-red-500/30">
+                                            LIVE
                                         </div>
+                                        <span className="text-gray-400 text-sm">{match.tournament}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-white text-sm font-medium">{match.time}</div>
+                                        <div className="text-gray-500 text-xs">{match.court}</div>
+                                    </div>
+                                </div>
+
+                                {/* Teams and Score */}
+                                <div className="flex items-center justify-between mb-4">
+                                    {/* Team 1 */}
+                                    <div className="flex items-center space-x-3 flex-1">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                            {match.player1.name.split(' ')[0][0]}
+                                        </div>
+                                        <div>
+                                            <div className="text-white font-semibold">{match.player1.name}</div>
+                                            <div className="text-gray-400 text-sm">{match.player1.country}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Score */}
+                                    <div className="text-center mx-4">
+                                        <div className="text-2xl font-bold text-white">6-4, 3-6</div>
+                                        <div className="text-xs text-gray-400 mt-1">2ND SET</div>
+                                    </div>
+
+                                    {/* Team 2 */}
+                                    <div className="flex items-center space-x-3 flex-1 justify-end">
                                         <div className="text-right">
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-700'}`}>{match.time}</div>
-                                            <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{match.court}</div>
+                                            <div className="text-white font-semibold">{match.player2.name}</div>
+                                            <div className="text-gray-400 text-sm">{match.player2.country}</div>
+                                        </div>
+                                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                            {match.player2.name.split(' ')[0][0]}
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className={`text-center p-4 rounded-lg border ${theme === 'dark' ? 'bg-red-50/10 border-red-200/30 text-white' : 'bg-red-50 border-red-200 text-gray-900'}`}>
-                                            <div className="text-lg font-semibold">{match.player1.name}</div>
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{match.player1.country} • #{match.player1.ranking}</div>
-                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player1.odds}</div>
-                                        </div>
-                                        <div className={`text-center p-4 rounded-lg border ${theme === 'dark' ? 'bg-red-50/10 border-red-200/30 text-white' : 'bg-red-50 border-red-200 text-gray-900'}`}>
-                                            <div className="text-lg font-semibold">{match.player2.name}</div>
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{match.player2.country} • #{match.player2.ranking}</div>
-                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player2.odds}</div>
-                                        </div>
+                                </div>
+
+                                {/* Betting Odds */}
+                                <div className="flex justify-between items-center mb-4 px-2">
+                                    <div className="text-center">
+                                        <div className="text-xs text-gray-400 mb-1">{match.player1.name.split(' ')[1]}</div>
+                                        <div className="text-2xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                     </div>
-                                    <div className="flex justify-end">
-                                        <Button
-                                            className="bg-blue-600 hover:bg-blue-700"
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Prevents card click if needed, but still routes
-                                                onSelectMatch(match);
-                                            }}
-                                        >
-                                            Make Predictions
-                                        </Button>
+                                    <div className="text-center">
+                                        <div className="text-xs text-gray-400 mb-1">{match.player2.name.split(' ')[1]}</div>
+                                        <div className="text-2xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+
+                                {/* Action Button */}
+                                <button
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSelectMatch(match);
+                                    }}
+                                >
+                                    Make your prediction
+                                </button>
+                            </div>
                         ))}
                     </div>
                 </div>
             )}
+
             {/* Upcoming Matches Section */}
             {upcomingMatches.length > 0 && (
-                <div>
-                    <h2 className={`text-lg font-semibold mb-4 ${theme === 'dark' ? 'text-accent' : 'text-yellow-600'}`}>Upcoming Matches ({upcomingMatches.length})</h2>
-                    <div className="grid gap-4">
+                <div className="px-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-white">Upcoming Matches</h2>
+                        <span className="text-sm text-gray-400">({upcomingMatches.length})</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {upcomingMatches.map((match) => (
-                            <Card key={match.id} className={`hover:shadow-md transition-shadow cursor-pointer ${theme === 'dark' ? '' : 'border border-gray-200'}`} onClick={() => onSelectMatch(match)}>
-                                <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="flex items-center space-x-2">
-                                            <Badge variant="secondary">
-                                                UPCOMING
-                                            </Badge>
-                                            <span className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-700'}`}>{match.tournament}</span>
+                            <div
+                                key={match.id}
+                                className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A] hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
+                                onClick={() => onSelectMatch(match)}
+                            >
+                                {/* Match Header */}
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full border border-blue-500/30">
+                                            UPCOMING
                                         </div>
+                                        <span className="text-gray-400 text-sm">{match.tournament}</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-white text-sm font-medium">{match.time}</div>
+                                        <div className="text-gray-500 text-xs">{match.court}</div>
+                                    </div>
+                                </div>
+
+                                {/* Teams and Score */}
+                                <div className="flex items-center justify-between mb-4">
+                                    {/* Team 1 */}
+                                    <div className="flex items-center space-x-3 flex-1">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                            {match.player1.name.split(' ')[0][0]}
+                                        </div>
+                                        <div>
+                                            <div className="text-white font-semibold">{match.player1.name}</div>
+                                            <div className="text-gray-400 text-sm">{match.player1.country}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* VS */}
+                                    <div className="text-center mx-4">
+                                        <div className="text-lg font-bold text-gray-400">VS</div>
+                                        <div className="text-xs text-gray-500 mt-1">{match.time}</div>
+                                    </div>
+
+                                    {/* Team 2 */}
+                                    <div className="flex items-center space-x-3 flex-1 justify-end">
                                         <div className="text-right">
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-700'}`}>{match.time}</div>
-                                            <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{match.court}</div>
+                                            <div className="text-white font-semibold">{match.player2.name}</div>
+                                            <div className="text-gray-400 text-sm">{match.player2.country}</div>
+                                        </div>
+                                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                            {match.player2.name.split(' ')[0][0]}
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div className={`text-center p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}>
-                                            <div className="text-lg font-semibold">{match.player1.name}</div>
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{match.player1.country} • #{match.player1.ranking}</div>
-                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player1.odds}</div>
-                                        </div>
-                                        <div className={`text-center p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'}`}>
-                                            <div className="text-lg font-semibold">{match.player2.name}</div>
-                                            <div className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{match.player2.country} • #{match.player2.ranking}</div>
-                                            <div className="text-lg font-bold text-blue-600 mt-2">{match.player2.odds}</div>
-                                        </div>
+                                </div>
+
+                                {/* Betting Odds */}
+                                <div className="flex justify-between items-center mb-4 px-2">
+                                    <div className="text-center">
+                                        <div className="text-xs text-gray-400 mb-1">{match.player1.name.split(' ')[1]}</div>
+                                        <div className="text-2xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                     </div>
-                                    <div className="flex justify-end">
-                                        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => onSelectMatch(match)}>
-                                            Make Predictions
-                                        </Button>
+                                    <div className="text-center">
+                                        <div className="text-xs text-gray-400 mb-1">{match.player2.name.split(' ')[1]}</div>
+                                        <div className="text-2xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+
+                                {/* Action Button */}
+                                <button
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onSelectMatch(match);
+                                    }}
+                                >
+                                    Make your prediction
+                                </button>
+                            </div>
                         ))}
                     </div>
                 </div>
             )}
+
             {/* No Matches State */}
             {matches.length === 0 && (
-                <div className="text-center py-12">
+                <div className="text-center py-12 px-6">
                     <div className="text-6xl mb-4">🎾</div>
-                    <h2 className={`text-2xl font-semibold mb-2 ${theme === 'dark' ? 'text-gray-100' : 'text-gray-900'}`}>No Matches Available</h2>
-                    <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Check back later for upcoming matches</p>
+                    <h2 className="text-2xl font-semibold mb-2 text-white">No Tennis Matches Available</h2>
+                    <p className="text-gray-400">Check back later for upcoming tennis matches</p>
                 </div>
             )}
         </div>

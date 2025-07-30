@@ -126,11 +126,11 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
     if (!match) {
         return (
-            <div className="flex-1 p-6">
-                <div className="text-center py-12">
+            <div className="flex-1 bg-[#0F0F0F] text-white">
+                <div className="text-center py-12 px-6">
                     <div className="text-6xl mb-4">🎾</div>
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">Select a Match</h2>
-                    <p className="text-gray-600">Choose a match from the sidebar to view details and make predictions</p>
+                    <h2 className="text-2xl font-semibold text-white mb-2">Select a Match</h2>
+                    <p className="text-gray-400">Choose a match from the sidebar to view details and make predictions</p>
                 </div>
             </div>
         );
@@ -139,10 +139,10 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const details = getMatchDetails(match.id);
     if (!details) {
         return (
-            <div className="flex-1 p-6">
-                <div className="text-center py-12">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">Match Not Found</h2>
-                    <p className="text-gray-600">Details for this match are not available</p>
+            <div className="flex-1 bg-[#0F0F0F] text-white">
+                <div className="text-center py-12 px-6">
+                    <h2 className="text-2xl font-semibold text-white mb-2">Match Not Found</h2>
+                    <p className="text-gray-400">Details for this match are not available</p>
                 </div>
             </div>
         );
@@ -298,23 +298,37 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
 
     return (
-        <div className={`flex flex-col flex-1 min-h-0 w-full overflow-auto gap-6 ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'} ${!sidebarOpen ? 'w-full' : ''}`}>
-            {/* Back to Matches button at the top, small and not full width */}
-            <div className="mb-2">
-                <Button onClick={onBack} variant="outline" size="sm" className={`w-auto px-4 ${theme === 'dark' ? 'border-gray-700 text-gray-200' : 'border-gray-300 text-gray-700'}`}>← Back to Matches</Button>
+        <div className="flex flex-col flex-1 min-h-0 w-full overflow-auto bg-[#0F0F0F] text-white">
+            {/* Header Section */}
+            <div className="p-6 pb-4">
+                <button
+                    onClick={onBack}
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors mb-4"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Back to Matches</span>
+                </button>
+
+                <h1 className="text-2xl font-bold text-white mb-2">Match Details</h1>
+                <p className="text-gray-400 text-sm">Monitor live tennis events and place your predictions</p>
             </div>
 
             {/* Match Header with tournament info and player cards */}
-            <MatchHeader match={match} details={details} />
+            <div className="px-6 mb-6">
+                <MatchHeader match={match} details={details} />
+            </div>
 
             {/* Prediction Form Card */}
-            <div className="w-full">
-                <Card className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-900/20 to-green-900/20 border-blue-900' : 'bg-gradient-to-r from-blue-50 to-green-50 border-blue-200'} flex-1 flex flex-col h-full`}>
-                    <CardHeader>
-                        <CardTitle className="text-xl">Make Your Predictions</CardTitle>
-                        <p className={`text-gray-600 ${theme === 'dark' ? 'text-gray-400' : ''}`}>Choose from multiple prediction types to maximize your points!</p>
-                    </CardHeader>
-                    <CardContent className="flex-1 overflow-y-auto space-y-6 pb-32">
+            <div className="px-6 flex-1">
+                <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] overflow-hidden">
+                    <div className="p-6 border-b border-[#2A2A2A]">
+                        <h2 className="text-xl font-bold text-white mb-2">Make your predictions</h2>
+                        <p className="text-gray-400 text-sm">Choose from multiple prediction types to maximize your points!</p>
+                    </div>
+
+                    <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
                         {/* Betting Section */}
                         <BettingSection
                             predictionCount={predictionCount}
@@ -341,18 +355,21 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             getSetWinner={getSetWinner}
                             setSetWinner={setSetWinner}
                         />
-                    </CardContent>
-                    <div className="sticky bottom-0 left-0 right-0 bg-gradient-to-r from-blue-50 to-green-50 border-t border-blue-200 p-6 pt-4 z-10">
-                        <Button
+                    </div>
+
+                    <div className="p-6 border-t border-[#2A2A2A] bg-[#1A1A1A]">
+                        <button
                             onClick={handleSubmitPredictions}
                             disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
-                            size="lg"
+                            className={`w-full py-4 px-6 rounded-lg font-semibold transition-colors ${hasAnyPredictions && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                }`}
                         >
-                            {hasAnyPredictions ? `Place Bet: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : 'Select at least one prediction'}
-                        </Button>
+                            {hasAnyPredictions ? `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : 'Select at least one prediction'}
+                        </button>
                     </div>
-                </Card>
+                </div>
             </div>
         </div>
     );

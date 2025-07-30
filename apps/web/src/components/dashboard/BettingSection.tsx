@@ -26,8 +26,9 @@ export function BettingSection({
     player1,
     player2
 }: BettingSectionProps) {
-    const { wallet } = useWallet();
+
     const { theme } = useTheme();
+    const { wallet } = useWallet();
 
     // Calculate potential winnings based on bet amount and multiplier
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
@@ -41,12 +42,12 @@ export function BettingSection({
     }, [selectedWinner, predictionCount, player1, player2, onMultiplierChange]);
 
     return (
-        <div className="space-y-4 p-4 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50/50">
-            <h3 className={`font-semibold text-lg ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>💰 Place Your Bet</h3>
+        <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
+            <h3 className="text-lg font-bold text-white mb-4">💰 Place Your Bet</h3>
 
             {/* Bet Amount Input */}
-            <div className="space-y-2">
-                <label className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+            <div className="space-y-3 mb-6">
+                <label className="text-sm font-medium text-gray-300">
                     Bet Amount (🌕)
                 </label>
                 <div className="flex gap-2">
@@ -56,7 +57,7 @@ export function BettingSection({
                         max={Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
                         value={betAmount}
                         onChange={(e) => onBetAmountChange(Number(e.target.value))}
-                        className={`flex-1 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                        className="flex-1 p-3 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="Enter bet amount"
                     />
                     <div className="flex gap-1">
@@ -65,50 +66,56 @@ export function BettingSection({
                                 key={amount}
                                 type="button"
                                 onClick={() => onBetAmountChange(amount)}
-                                className={`px-3 py-2 text-sm rounded-md border transition ${theme === 'dark' ? 'border-gray-600 hover:bg-gray-700' : 'border-gray-300 hover:bg-gray-100'} ${betAmount === amount ? 'bg-blue-500 text-white border-blue-500' : ''}`}
+                                className={`px-3 py-2 text-sm rounded-lg border transition-colors ${betAmount === amount
+                                    ? 'bg-purple-600 text-white border-purple-600'
+                                    : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
+                                    }`}
                             >
                                 {amount}
                             </button>
                         ))}
                     </div>
                 </div>
-                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                <div className="text-xs text-gray-400">
                     Min: {COIN_CONSTANTS.MIN_BET} 🌕 | Max: {Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)} 🌕 | Balance: {wallet.balance} 🌕
                 </div>
             </div>
 
             {/* Multiplier Display */}
-            <div className="grid grid-cols-2 gap-4">
-                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} border border-gray-200`}>
-                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Multiplier</div>
-                    <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-[#2A2A2A] p-4 rounded-lg border border-[#3A3A3A]">
+                    <div className="text-sm text-gray-400 mb-1">Multiplier</div>
+                    <div className="text-2xl font-bold text-purple-400">
                         {selectedMultiplier.toFixed(2)}x
                     </div>
-                    <div className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <div className="text-xs text-gray-500">
                         {selectedWinner ? `${selectedWinner.split(' ')[1]} odds + complexity bonus` : 'Select winner first'}
                     </div>
                 </div>
-                <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} border border-gray-200`}>
-                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Potential Win</div>
-                    <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`}>
+                <div className="bg-[#2A2A2A] p-4 rounded-lg border border-[#3A3A3A]">
+                    <div className="text-sm text-gray-400 mb-1">Potential Win</div>
+                    <div className="text-2xl font-bold text-green-400">
                         {potentialWinnings} 🌕
                     </div>
-                    <div className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                    <div className="text-xs text-gray-500">
                         +{potentialWinnings - betAmount} profit
                     </div>
                 </div>
             </div>
 
             {/* Multiplier Progress */}
-            <div className="space-y-2">
-                <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <div className="space-y-3">
+                <div className="text-sm text-gray-300">
                     Multiplier increases with more predictions:
                 </div>
                 <div className="flex gap-2 text-xs">
                     {getMultiplierOptions(player1, player2).map((option, index) => (
                         <div
                             key={index}
-                            className={`px-2 py-1 rounded ${selectedMultiplier >= option.value ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-gray-100 text-gray-600 border border-gray-300'}`}
+                            className={`px-3 py-2 rounded-lg border ${selectedMultiplier >= option.value
+                                ? 'bg-purple-600/20 text-purple-300 border-purple-500/50'
+                                : 'bg-[#2A2A2A] text-gray-400 border-[#3A3A3A]'
+                                }`}
                         >
                             {option.label}
                         </div>
