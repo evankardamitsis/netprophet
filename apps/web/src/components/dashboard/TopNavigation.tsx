@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@netprophet/ui';
 import { useTheme } from '../Providers';
 import { Wallet } from './Wallet';
@@ -90,7 +91,12 @@ export function TopNavigation({
         <header className={`w-full flex items-center justify-between px-4 py-3 sticky top-0 z-10 ${theme === 'dark' ? 'border-b border-[#23262F] bg-[#181A20] text-white' : 'border-b border-gray-200 bg-white text-black'}`}>
             <div className="flex items-center gap-2">
                 <button onClick={onMenuClick} className="text-accent text-2xl font-bold focus:outline-none md:hidden">☰</button>
-                <span className="text-xl font-extrabold tracking-tight text-accent">NetProphet</span>
+                <Link
+                    href="/"
+                    className="text-xl font-extrabold tracking-tight text-accent hover:text-accent/80 transition-colors cursor-pointer px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-accent/50"
+                >
+                    NetProphet
+                </Link>
             </div>
             {showNavigationTabs && (
                 <nav className="flex-1 flex justify-center gap-4">

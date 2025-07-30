@@ -78,7 +78,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                             className={`fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-lg border border-gray-300 transition-colors duration-300
                                 ${theme === 'dark' ? 'bg-white hover:bg-gray-200' : 'bg-black hover:bg-gray-800'}`}
                             style={{
-                                left: window.innerWidth >= 1280 ? (sidebarOpen ? '450px' : '0px') : '0px',
+                                left: window.innerWidth >= 1280 ? (sidebarOpen ? '450px' : '192px') : '0px',
                                 transition: 'left 0.3s'
                             }}
                             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -91,7 +91,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         </button>
 
                         {/* Sidebar - only visible as drawer on xl+ */}
-                        <div className={`hidden xl:block h-full transition-all duration-300 flex-shrink-0 ${sidebarOpen ? 'w-[450px]' : 'w-0 overflow-hidden'}`}>
+                        <div className={`hidden xl:block h-full transition-all duration-300 flex-shrink-0 ${sidebarOpen ? 'w-[450px]' : 'w-48'}`}>
                             <Sidebar
                                 onClose={() => setSidebarOpen(false)}
                                 sidebarOpen={sidebarOpen}

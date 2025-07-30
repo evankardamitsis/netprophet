@@ -5,6 +5,10 @@ export type { Database } from './types/database';
 export { supabase } from './supabase/client';
 export type { SupabaseClient } from './supabase/client';
 
+// Services
+export { BetsService } from './supabase/bets';
+export type { CreateBetData } from './supabase/bets';
+
 // Stores
 export { useAuthStore } from './store/auth';
 

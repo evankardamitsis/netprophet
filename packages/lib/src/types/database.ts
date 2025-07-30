@@ -108,6 +108,56 @@ export interface Database {
           submitted_at?: string;
         };
       };
+      bets: {
+        Row: {
+          id: string;
+          user_id: string;
+          match_id: string;
+          bet_amount: number;
+          multiplier: number;
+          potential_winnings: number;
+          prediction: any; // JSONB
+          status: 'active' | 'won' | 'lost' | 'cancelled';
+          outcome: string | null;
+          winnings_paid: number;
+          created_at: string;
+          updated_at: string;
+          resolved_at: string | null;
+          description: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          match_id: string;
+          bet_amount: number;
+          multiplier: number;
+          potential_winnings: number;
+          prediction: any; // JSONB
+          status?: 'active' | 'won' | 'lost' | 'cancelled';
+          outcome?: string | null;
+          winnings_paid?: number;
+          created_at?: string;
+          updated_at?: string;
+          resolved_at?: string | null;
+          description?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          match_id?: string;
+          bet_amount?: number;
+          multiplier?: number;
+          potential_winnings?: number;
+          prediction?: any; // JSONB
+          status?: 'active' | 'won' | 'lost' | 'cancelled';
+          outcome?: string | null;
+          winnings_paid?: number;
+          created_at?: string;
+          updated_at?: string;
+          resolved_at?: string | null;
+          description?: string | null;
+        };
+      };
     };
     Views: {
       app_users: {
@@ -128,6 +178,41 @@ export interface Database {
           username?: string | null;
           avatar_url?: string | null;
           created_at?: string;
+        };
+      };
+      bet_stats: {
+        Row: {
+          user_id: string;
+          total_bets: number;
+          won_bets: number;
+          lost_bets: number;
+          active_bets: number;
+          total_bet_amount: number;
+          total_winnings: number;
+          total_losses: number;
+          win_rate: number;
+        };
+        Insert: {
+          user_id?: string;
+          total_bets?: number;
+          won_bets?: number;
+          lost_bets?: number;
+          active_bets?: number;
+          total_bet_amount?: number;
+          total_winnings?: number;
+          total_losses?: number;
+          win_rate?: number;
+        };
+        Update: {
+          user_id?: string;
+          total_bets?: number;
+          won_bets?: number;
+          lost_bets?: number;
+          active_bets?: number;
+          total_bet_amount?: number;
+          total_winnings?: number;
+          total_losses?: number;
+          win_rate?: number;
         };
       };
     };

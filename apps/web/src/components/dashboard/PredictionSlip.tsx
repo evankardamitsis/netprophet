@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Badge, Button } from '@netprophet/ui';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useWallet } from '@/context/WalletContext';
+// BetsService will be imported dynamically in handleSubmit
 import {
     SESSION_KEYS,
     removeFromSessionStorage,
@@ -63,9 +64,26 @@ export function PredictionSlip({
 
     const handleSubmit = async () => {
         try {
-            // Place all bets in the slip
+            // Dynamic import to work around module resolution issue
+            const { BetsService: BetsServiceModule } = await import('@netprophet/lib');
+
+            // Place all bets in the slip using BetsService
             for (const prediction of predictions) {
                 if (prediction.betAmount && prediction.betAmount > 0) {
+                    // Create bet in Supabase
+                    // For now, use a placeholder match ID since we don't have real matches in the database
+                    const placeholderMatchId = '00000000-0000-0000-0000-000000000001';
+
+                    await BetsServiceModule.createBet({
+                        matchId: placeholderMatchId,
+                        betAmount: prediction.betAmount,
+                        multiplier: prediction.multiplier || 1,
+                        potentialWinnings: prediction.potentialWinnings || 0,
+                        prediction: prediction.prediction,
+                        description: `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${prediction.multiplier?.toFixed(2)}x multiplier`
+                    });
+
+                    // Update wallet balance
                     await placeBet(
                         prediction.betAmount,
                         prediction.matchId,

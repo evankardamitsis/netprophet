@@ -3,6 +3,8 @@
 
 DROP POLICY
 IF EXISTS "Allow select for authenticated" ON players;
+DROP POLICY
+IF EXISTS "Allow select for admins only" ON players;
 
 CREATE POLICY "Allow select for admins only"
   ON players

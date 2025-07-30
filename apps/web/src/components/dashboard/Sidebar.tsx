@@ -308,18 +308,77 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
 
     return (
         <aside
-            className={`relative h-full flex flex-col gap-6 p-4 transition-transform duration-300 ease-in-out
+            className={`relative h-full flex flex-col gap-6 transition-all duration-300 ease-in-out
                 ${theme === 'dark' ? 'bg-[#1F222A] border-r border-[#23262F]' : 'bg-gray-100 border-r border-gray-200'}
-                min-w-full sm:min-w-[320px] md:min-w-[380px] lg:min-w-[420px] xl:min-w-[450px] max-w-full w-full
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                ${sidebarOpen
+                    ? 'w-full sm:w-[320px] md:w-[380px] lg:w-[420px] xl:w-[450px] p-4'
+                    : 'w-48 p-3'
+                }
                 fixed top-0 left-0 z-40 xl:relative
             `}
             style={{ boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.04)' : 'none' }}
         >
-            <Card className={`mt-4 p-2 flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white'} min-w-0 sm:min-w-[280px] md:min-w-[340px] lg:min-w-[400px]`}>
-                <MatchesList onSelectMatch={onMatchSelect} />
-            </Card>
-            {/* Add match list or other sidebar content here, styled with Card if needed */}
+            {sidebarOpen ? (
+                // Expanded view
+                <Card className={`mt-4 p-2 flex-1 overflow-y-auto ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-white'} min-w-0`}>
+                    <MatchesList onSelectMatch={onMatchSelect} />
+                </Card>
+            ) : (
+                // Compact view
+                <div className="flex flex-col gap-2 mt-4 w-full">
+                    {/* Live matches */}
+                    {allMatches.filter(m => m.status === 'live' && !m.isLocked).length > 0 && (
+                        <div className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1">
+                            Live
+                        </div>
+                    )}
+                    {allMatches.filter(m => m.status === 'live' && !m.isLocked).map((match) => (
+                        <button
+                            key={match.id}
+                            onClick={() => onMatchSelect && onMatchSelect(match)}
+                            className={`w-full p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-red-500 ${theme === 'dark' ? 'bg-red-900/20 hover:bg-red-900/30' : 'bg-red-50 hover:bg-red-100'}`}
+                            title={`${match.player1.name} vs ${match.player2.name} - ${match.court}`}
+                        >
+                            <div className="text-sm font-semibold text-left">
+                                {match.player1.name} vs {match.player2.name}
+                            </div>
+                            <div className="text-xs text-gray-500">{match.court}</div>
+                        </button>
+                    ))}
+
+                    {/* Upcoming matches */}
+                    {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).length > 0 && (
+                        <div className="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1 mt-3">
+                            Upcoming
+                        </div>
+                    )}
+                    {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).map((match) => (
+                        <button
+                            key={match.id}
+                            onClick={() => onMatchSelect && onMatchSelect(match)}
+                            className={`w-full p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-blue-500 ${theme === 'dark' ? 'bg-blue-900/20 hover:bg-blue-900/30' : 'bg-blue-50 hover:bg-blue-100'}`}
+                            title={`${match.player1.name} vs ${match.player2.name} - ${match.court} - ${match.time}`}
+                        >
+                            <div className="text-sm font-semibold text-left">
+                                {match.player1.name} vs {match.player2.name}
+                            </div>
+                            <div className="text-xs text-gray-500">{match.time} • {match.court}</div>
+                        </button>
+                    ))}
+
+                    {/* Expand button */}
+                    <button
+                        onClick={() => setSidebarOpen(true)}
+                        className={`w-full mt-2 p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer ${theme === 'dark'
+                            ? 'bg-[#23262F] hover:bg-accent/20 text-gray-300'
+                            : 'bg-white hover:bg-accent/10 text-gray-600'
+                            }`}
+                        title="Expand sidebar"
+                    >
+                        <ChevronRightIcon />
+                    </button>
+                </div>
+            )}
         </aside>
     );
 } 

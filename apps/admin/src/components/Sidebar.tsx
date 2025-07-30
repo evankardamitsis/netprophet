@@ -13,7 +13,8 @@ import {
     FileText,
     Menu,
     X,
-    Brain
+    Brain,
+    DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -28,6 +29,7 @@ const menuItems = [
     { href: '/admin/players', label: 'Players', icon: UserCheck },
     { href: '/admin/tournaments', label: 'Tournaments', icon: Trophy },
     { href: '/admin/matches', label: 'Matches', icon: Gamepad2 },
+    { href: '/admin/bets', label: 'Bets', icon: DollarSign },
     { href: '/admin/rewards', label: 'Rewards', icon: Gift },
     { href: '/admin/logs', label: 'Logs', icon: FileText },
     { href: '/admin/odds-demo', label: 'Odds Demo', icon: Brain },

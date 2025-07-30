@@ -1,32 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
-import {
-    SESSION_KEYS,
-    loadFromSessionStorage,
-    saveToSessionStorage
-} from '@/lib/sessionStorage';
-
-// User wallet data interface
-export interface UserWallet {
-    balance: number; // Coins balance
-    totalBet: number;
-    totalWinnings: number;
-    totalLosses: number;
-    netProfit: number;
-    winRate: number;
-    totalPredictions: number;
-    successfulPredictions: number;
-    recentTransactions: Transaction[];
-    // New coin system fields
-    dailyLoginStreak: number;
-    lastLoginDate: string | null;
-    hasReceivedWelcomeBonus: boolean;
-    totalCoinsEarned: number;
-    totalCoinsSpent: number;
-    referralBonusEarned: number;
-    leaderboardPrizesEarned: number;
-}
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
+import { BetsService } from '@netprophet/lib';
 
 export interface Transaction {
     id: string;
@@ -34,70 +10,82 @@ export interface Transaction {
     amount: number;
     description: string;
     timestamp: Date;
-    matchId?: number;
-    odds?: number; // For win calculations
+}
+
+export interface UserWallet {
+    balance: number;
+    totalWinnings: number;
+    totalLosses: number;
+    netProfit: number;
+    winRate: number;
+    totalBets: number;
+    wonBets: number;
+    lostBets: number;
+    recentTransactions: Transaction[];
+    // Coin system specific fields
+    dailyLoginStreak: number;
+    totalCoinsEarned: number;
+    totalCoinsSpent: number;
+    referralBonusEarned: number;
+    leaderboardPrizesEarned: number;
+    hasReceivedWelcomeBonus: boolean;
 }
 
 interface WalletContextType {
     wallet: UserWallet;
-    addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
-    updateBalance: (amount: number) => void;
-    placeBet: (amount: number, matchId: number, description: string) => void;
-    recordWin: (amount: number, matchId: number, description: string, odds?: number) => void;
-    recordLoss: (amount: number, matchId: number, description: string) => void;
-    calculateStats: () => void;
-    resetWallet: () => void;
-    // New coin system functions
-    checkDailyLogin: () => number; // Returns coins earned
-    claimWelcomeBonus: () => number; // Returns coins earned
-    addReferralBonus: (referrerId: string) => number; // Returns coins earned
-    addLeaderboardPrize: (amount: number, description: string) => void;
-    purchaseItem: (amount: number, itemName: string) => void;
-    enterTournament: (amount: number, tournamentName: string) => void;
-    unlockInsight: (amount: number, insightType: string) => void;
-    getDailyLoginReward: () => number; // Calculate daily login reward based on streak
+    placeBet: (amount: number, matchId: number, description: string) => Promise<void>;
+    recordWin: (stake: number, odds: number, description: string) => void;
+    recordLoss: (stake: number, description: string) => void;
+    updateBalance: (amount: number, type: Transaction['type'], description: string) => void;
+    // Coin system functions
+    checkDailyLogin: () => Promise<number>;
+    claimWelcomeBonus: () => Promise<number>;
+    addReferralBonus: (amount: number) => void;
+    addLeaderboardPrize: (amount: number) => void;
+    purchaseItem: (cost: number, itemName: string) => void;
+    enterTournament: (cost: number, tournamentName: string) => void;
+    unlockInsight: (cost: number, insightName: string) => void;
+    loadBetStats: () => Promise<void>;
 }
 
-const WalletContext = createContext<WalletContextType | undefined>(undefined);
-
-export function useWallet() {
-    const ctx = useContext(WalletContext);
-    if (!ctx) throw new Error('useWallet must be used within WalletProvider');
-    return ctx;
-}
-
-// Coin system constants
-export const COIN_CONSTANTS = {
-    WELCOME_BONUS: 250,
-    DAILY_LOGIN_BASE: 25,
-    DAILY_LOGIN_MAX: 50,
-    DAILY_LOGIN_STREAK_BONUS: 5, // +5 coins per day in streak
-    REFERRAL_BONUS: 250,
-    MIN_BET: 10,
-    MAX_BET: 500,
-    TOURNAMENT_ENTRY_MIN: 500,
-    INSIGHT_UNLOCK_MIN: 100,
-} as const;
-
-// Default wallet state
 const defaultWallet: UserWallet = {
-    balance: 0, // Start with 0, user gets welcome bonus on first login
-    totalBet: 0,
+    balance: 1000, // Starting balance
     totalWinnings: 0,
     totalLosses: 0,
     netProfit: 0,
     winRate: 0,
-    totalPredictions: 0,
-    successfulPredictions: 0,
+    totalBets: 0,
+    wonBets: 0,
+    lostBets: 0,
     recentTransactions: [],
     dailyLoginStreak: 0,
-    lastLoginDate: null,
-    hasReceivedWelcomeBonus: false,
     totalCoinsEarned: 0,
     totalCoinsSpent: 0,
     referralBonusEarned: 0,
     leaderboardPrizesEarned: 0,
+    hasReceivedWelcomeBonus: false,
 };
+
+export const COIN_CONSTANTS = {
+    WELCOME_BONUS: 250,
+    DAILY_LOGIN_BASE: 25,
+    DAILY_LOGIN_STREAK_BONUS: 5,
+    MIN_BET: 10,
+    MAX_BET: 1000,
+    REFERRAL_BONUS: 250,
+    LEADERBOARD_PRIZE_MIN: 300,
+    LEADERBOARD_PRIZE_MAX: 1000,
+} as const;
+
+const WalletContext = createContext<WalletContextType | undefined>(undefined);
+
+export function useWallet() {
+    const context = useContext(WalletContext);
+    if (!context) {
+        throw new Error('useWallet must be used within a WalletProvider');
+    }
+    return context;
+}
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
     const [wallet, setWallet] = useState<UserWallet>(() => {
@@ -127,264 +115,191 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         return walletWithDefaults;
     });
 
-    // Save wallet to session storage whenever it changes
+    // Load bet statistics from database on mount
     useEffect(() => {
-        saveToSessionStorage(SESSION_KEYS.WALLET, wallet);
-    }, [wallet]);
+        loadBetStats();
+    }, []);
 
-    const calculateStats = () => {
+    const loadBetStats = async () => {
+        try {
+            const betStats = await BetsService.getUserBetStats();
+            if (betStats) {
+                setWallet(prev => ({
+                    ...prev,
+                    totalBets: betStats.total_bets,
+                    wonBets: betStats.won_bets,
+                    lostBets: betStats.lost_bets,
+                    totalWinnings: betStats.total_winnings,
+                    totalLosses: betStats.total_losses,
+                    netProfit: betStats.total_winnings - betStats.total_losses,
+                    winRate: betStats.win_rate,
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to load bet stats:', error);
+        }
+    };
+
+    const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {
-            const netProfit = prev.totalWinnings - prev.totalLosses;
-            const winRate = prev.totalPredictions > 0
-                ? Math.round((prev.successfulPredictions / prev.totalPredictions) * 100)
-                : 0;
+            const newBalance = prev.balance + amount;
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type,
+                amount,
+                description,
+                timestamp: new Date(),
+            };
+
+            const updatedTransactions = [newTransaction, ...prev.recentTransactions.slice(0, 9)]; // Keep last 10
+
+            let newTotalCoinsEarned = prev.totalCoinsEarned;
+            let newTotalCoinsSpent = prev.totalCoinsSpent;
+
+            // Track coin flows
+            if (amount > 0) {
+                newTotalCoinsEarned += amount;
+            } else {
+                newTotalCoinsSpent += Math.abs(amount);
+            }
 
             return {
                 ...prev,
-                netProfit,
-                winRate
+                balance: newBalance,
+                recentTransactions: updatedTransactions,
+                totalCoinsEarned: newTotalCoinsEarned,
+                totalCoinsSpent: newTotalCoinsSpent,
             };
         });
     };
 
-    const addTransaction = (transaction: Omit<Transaction, 'id' | 'timestamp'>) => {
-        const newTransaction: Transaction = {
-            ...transaction,
-            id: Date.now().toString(),
-            timestamp: new Date()
-        };
-
-        setWallet(prev => ({
-            ...prev,
-            recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)] // Keep only 10 most recent
-        }));
-
-        // Recalculate stats after adding transaction
-        setTimeout(calculateStats, 0);
-    };
-
-    const updateBalance = (amount: number) => {
-        setWallet(prev => ({
-            ...prev,
-            balance: Math.max(0, prev.balance + amount), // Prevent negative balance
-            totalCoinsEarned: amount > 0 ? prev.totalCoinsEarned + amount : prev.totalCoinsEarned,
-            totalCoinsSpent: amount < 0 ? prev.totalCoinsSpent + Math.abs(amount) : prev.totalCoinsSpent,
-        }));
-    };
-
-    const placeBet = (amount: number, matchId: number, description: string) => {
-        if (wallet.balance < amount) {
-            throw new Error('Insufficient balance');
+    const placeBet = async (amount: number, matchId: number, description: string) => {
+        if (amount > wallet.balance) {
+            throw new Error(`Insufficient balance. You have ${wallet.balance} 🌕 but trying to bet ${amount} 🌕`);
         }
 
-        if (amount < COIN_CONSTANTS.MIN_BET || amount > COIN_CONSTANTS.MAX_BET) {
-            throw new Error(`Bet amount must be between ${COIN_CONSTANTS.MIN_BET} and ${COIN_CONSTANTS.MAX_BET} coins`);
+        if (amount < COIN_CONSTANTS.MIN_BET) {
+            throw new Error(`Minimum bet amount is ${COIN_CONSTANTS.MIN_BET} 🌕`);
         }
 
-        updateBalance(-amount);
-        addTransaction({
-            type: 'bet',
-            amount: -amount,
-            description,
-            matchId
-        });
+        if (amount > COIN_CONSTANTS.MAX_BET) {
+            throw new Error(`Maximum bet amount is ${COIN_CONSTANTS.MAX_BET} 🌕`);
+        }
 
-        setWallet(prev => ({
-            ...prev,
-            totalBet: prev.totalBet + amount,
-            totalPredictions: prev.totalPredictions + 1
-        }));
+        // Deduct from balance
+        updateBalance(-amount, 'bet', description);
     };
 
-    const recordWin = (amount: number, matchId: number, description: string, odds: number = 1.5) => {
-        // Calculate winnings based on stake and odds
-        const winnings = Math.round(amount * odds);
-
-        updateBalance(winnings);
-        addTransaction({
-            type: 'win',
-            amount: winnings,
-            description,
-            matchId,
-            odds
-        });
+    const recordWin = (stake: number, odds: number, description: string) => {
+        const winnings = Math.round(stake * odds);
+        updateBalance(winnings, 'win', description);
 
         setWallet(prev => ({
             ...prev,
             totalWinnings: prev.totalWinnings + winnings,
-            successfulPredictions: prev.successfulPredictions + 1
+            wonBets: prev.wonBets + 1,
+            netProfit: prev.netProfit + winnings,
         }));
     };
 
-    const recordLoss = (amount: number, matchId: number, description: string) => {
-        addTransaction({
-            type: 'loss',
-            amount: -amount,
-            description,
-            matchId
-        });
+    const recordLoss = (stake: number, description: string) => {
+        updateBalance(-stake, 'loss', description);
 
         setWallet(prev => ({
             ...prev,
-            totalLosses: prev.totalLosses + amount
+            totalLosses: prev.totalLosses + stake,
+            lostBets: prev.lostBets + 1,
+            netProfit: prev.netProfit - stake,
         }));
     };
 
-    const checkDailyLogin = (): number => {
+    const checkDailyLogin = async (): Promise<number> => {
         const today = new Date().toDateString();
-        const lastLogin = wallet.lastLoginDate;
+        const lastLoginKey = 'last_daily_login';
+        const lastLogin = localStorage.getItem(lastLoginKey);
 
         if (lastLogin === today) {
             return 0; // Already claimed today
         }
 
-        const isConsecutive = lastLogin === new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-        const newStreak = isConsecutive ? wallet.dailyLoginStreak + 1 : 1;
-        const reward = getDailyLoginReward(newStreak);
+        const bonus = COIN_CONSTANTS.DAILY_LOGIN_BASE + (wallet.dailyLoginStreak * COIN_CONSTANTS.DAILY_LOGIN_STREAK_BONUS);
 
         setWallet(prev => ({
             ...prev,
-            dailyLoginStreak: newStreak,
-            lastLoginDate: today
+            dailyLoginStreak: prev.dailyLoginStreak + 1,
         }));
 
-        updateBalance(reward);
-        addTransaction({
-            type: 'daily_login',
-            amount: reward,
-            description: `Daily login reward (${newStreak} day streak)`
-        });
+        updateBalance(bonus, 'daily_login', `Daily login bonus (${wallet.dailyLoginStreak + 1} day streak)`);
+        localStorage.setItem(lastLoginKey, today);
 
-        return reward;
+        return bonus;
     };
 
-    const getDailyLoginReward = (streak?: number): number => {
-        const currentStreak = streak || wallet.dailyLoginStreak;
-        const baseReward = COIN_CONSTANTS.DAILY_LOGIN_BASE;
-        const streakBonus = currentStreak * COIN_CONSTANTS.DAILY_LOGIN_STREAK_BONUS;
-        return Math.min(COIN_CONSTANTS.DAILY_LOGIN_MAX, baseReward + streakBonus);
-    };
-
-    const claimWelcomeBonus = (): number => {
+    const claimWelcomeBonus = async (): Promise<number> => {
         if (wallet.hasReceivedWelcomeBonus) {
             return 0; // Already claimed
         }
 
         setWallet(prev => ({
             ...prev,
-            hasReceivedWelcomeBonus: true
+            hasReceivedWelcomeBonus: true,
         }));
 
-        updateBalance(COIN_CONSTANTS.WELCOME_BONUS);
-        addTransaction({
-            type: 'welcome_bonus',
-            amount: COIN_CONSTANTS.WELCOME_BONUS,
-            description: 'Welcome bonus - Welcome to NetProphet!'
-        });
-
+        updateBalance(COIN_CONSTANTS.WELCOME_BONUS, 'welcome_bonus', 'Welcome bonus');
         return COIN_CONSTANTS.WELCOME_BONUS;
     };
 
-    const addReferralBonus = (referrerId: string): number => {
-        updateBalance(COIN_CONSTANTS.REFERRAL_BONUS);
-        addTransaction({
-            type: 'referral',
-            amount: COIN_CONSTANTS.REFERRAL_BONUS,
-            description: `Referral bonus - Invited by ${referrerId}`
-        });
-
+    const addReferralBonus = (amount: number) => {
+        updateBalance(amount, 'referral', 'Referral bonus');
         setWallet(prev => ({
             ...prev,
-            referralBonusEarned: prev.referralBonusEarned + COIN_CONSTANTS.REFERRAL_BONUS
-        }));
-
-        return COIN_CONSTANTS.REFERRAL_BONUS;
-    };
-
-    const addLeaderboardPrize = (amount: number, description: string) => {
-        updateBalance(amount);
-        addTransaction({
-            type: 'leaderboard',
-            amount,
-            description
-        });
-
-        setWallet(prev => ({
-            ...prev,
-            leaderboardPrizesEarned: prev.leaderboardPrizesEarned + amount
+            referralBonusEarned: prev.referralBonusEarned + amount,
         }));
     };
 
-    const purchaseItem = (amount: number, itemName: string) => {
-        if (wallet.balance < amount) {
-            throw new Error('Insufficient balance');
-        }
-
-        updateBalance(-amount);
-        addTransaction({
-            type: 'purchase',
-            amount: -amount,
-            description: `Purchased ${itemName}`
-        });
+    const addLeaderboardPrize = (amount: number) => {
+        updateBalance(amount, 'leaderboard', 'Leaderboard prize');
+        setWallet(prev => ({
+            ...prev,
+            leaderboardPrizesEarned: prev.leaderboardPrizesEarned + amount,
+        }));
     };
 
-    const enterTournament = (amount: number, tournamentName: string) => {
-        if (amount < COIN_CONSTANTS.TOURNAMENT_ENTRY_MIN) {
-            throw new Error(`Tournament entry must be at least ${COIN_CONSTANTS.TOURNAMENT_ENTRY_MIN} coins`);
-        }
-
-        if (wallet.balance < amount) {
-            throw new Error('Insufficient balance');
-        }
-
-        updateBalance(-amount);
-        addTransaction({
-            type: 'tournament_entry',
-            amount: -amount,
-            description: `Tournament entry: ${tournamentName}`
-        });
+    const purchaseItem = (cost: number, itemName: string) => {
+        updateBalance(-cost, 'purchase', `Purchased ${itemName}`);
     };
 
-    const unlockInsight = (amount: number, insightType: string) => {
-        if (amount < COIN_CONSTANTS.INSIGHT_UNLOCK_MIN) {
-            throw new Error(`Insight unlock must be at least ${COIN_CONSTANTS.INSIGHT_UNLOCK_MIN} coins`);
-        }
-
-        if (wallet.balance < amount) {
-            throw new Error('Insufficient balance');
-        }
-
-        updateBalance(-amount);
-        addTransaction({
-            type: 'insight_unlock',
-            amount: -amount,
-            description: `Unlocked ${insightType} insight`
-        });
+    const enterTournament = (cost: number, tournamentName: string) => {
+        updateBalance(-cost, 'tournament_entry', `Tournament entry: ${tournamentName}`);
     };
 
-    const resetWallet = () => {
-        setWallet(defaultWallet);
+    const unlockInsight = (cost: number, insightName: string) => {
+        updateBalance(-cost, 'insight_unlock', `Unlocked insight: ${insightName}`);
+    };
+
+    // Save wallet to session storage whenever it changes
+    useEffect(() => {
+        saveToSessionStorage(SESSION_KEYS.WALLET, wallet);
+    }, [wallet]);
+
+    const value: WalletContextType = {
+        wallet,
+        placeBet,
+        recordWin,
+        recordLoss,
+        updateBalance,
+        checkDailyLogin,
+        claimWelcomeBonus,
+        addReferralBonus,
+        addLeaderboardPrize,
+        purchaseItem,
+        enterTournament,
+        unlockInsight,
+        loadBetStats,
     };
 
     return (
-        <WalletContext.Provider value={{
-            wallet,
-            addTransaction,
-            updateBalance,
-            placeBet,
-            recordWin,
-            recordLoss,
-            calculateStats,
-            resetWallet,
-            checkDailyLogin,
-            claimWelcomeBonus,
-            addReferralBonus,
-            addLeaderboardPrize,
-            purchaseItem,
-            enterTournament,
-            unlockInsight,
-            getDailyLoginReward
-        }}>
+        <WalletContext.Provider value={value}>
             {children}
         </WalletContext.Provider>
     );

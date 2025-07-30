@@ -30,7 +30,7 @@ interface WelcomeBonusProps {
 }
 
 export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
-    const { wallet, claimWelcomeBonus, checkDailyLogin, getDailyLoginReward } = useWallet();
+    const { wallet, claimWelcomeBonus, checkDailyLogin } = useWallet();
     const { theme } = useTheme();
     const [showWelcomeBonus, setShowWelcomeBonus] = useState(!wallet.hasReceivedWelcomeBonus);
     const [showDailyLogin, setShowDailyLogin] = useState(false);
@@ -38,15 +38,18 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
 
     useEffect(() => {
         // Check for daily login reward on component mount
-        const reward = checkDailyLogin();
-        if (reward > 0) {
-            setDailyReward(reward);
-            setShowDailyLogin(true);
-        }
-    }, []);
+        const checkDailyReward = async () => {
+            const reward = await checkDailyLogin();
+            if (reward > 0) {
+                setDailyReward(reward);
+                setShowDailyLogin(true);
+            }
+        };
+        checkDailyReward();
+    }, [checkDailyLogin]);
 
-    const handleClaimWelcomeBonus = () => {
-        const bonus = claimWelcomeBonus();
+    const handleClaimWelcomeBonus = async () => {
+        const bonus = await claimWelcomeBonus();
         setShowWelcomeBonus(false);
         if (onClose) onClose();
     };
