@@ -72,7 +72,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         onMenuClick={() => setSidebarOpen(true)}
                         onSignOut={handleSignOut}
                     />
-                    <div className="flex h-full min-h-0">
+                    <div className="flex h-[calc(100vh-64px)] min-h-0">
                         {/* Toggle button - always visible */}
                         <button
                             className={`fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-lg border border-gray-300 transition-colors duration-300
@@ -91,7 +91,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         </button>
 
                         {/* Sidebar - only visible as drawer on xl+ */}
-                        <div className={`hidden xl:block h-full transition-all duration-300 flex-shrink-0 ${sidebarOpen ? 'w-[450px]' : 'w-48'}`}>
+                        <div className={`hidden xl:block h-full transition-all duration-300 flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[450px]' : 'w-48'}`}>
                             <Sidebar
                                 onClose={() => setSidebarOpen(false)}
                                 sidebarOpen={sidebarOpen}
@@ -102,7 +102,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         {/* Sidebar overlay for smaller screens */}
                         <div className={`fixed inset-0 z-40 flex xl:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                             <div className="fixed inset-0 bg-black/40 transition-opacity duration-300" onClick={() => setSidebarOpen(false)} />
-                            <div className={`relative w-full max-w-[320px] h-full z-50 pt-[64px] transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                            <div className={`relative w-full max-w-[320px] h-full z-50 pt-[64px] transform transition-transform duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                                 <Sidebar
                                     sidebarOpen={sidebarOpen}
                                     setSidebarOpen={setSidebarOpen}
@@ -113,7 +113,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
 
                         {/* Main content */}
                         <div className="flex-1 flex flex-col min-w-0 h-full">
-                            <div className={`flex-1 overflow-y-auto p-4 md:p-8 ${theme === 'dark' ? 'bg-[#181A20]' : 'bg-white'}`}>
+                            <div className={`flex-1 p-4 md:p-8 ${theme === 'dark' ? 'bg-[#181A20]' : 'bg-white'}`}>
                                 {React.isValidElement(children) && 'props' in children
                                     ? React.cloneElement(children as ReactElement<any>, { sidebarOpen })
                                     : children}
@@ -126,11 +126,10 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                             xl:flex hidden
                             transition-all duration-300
                             ${slipCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-96 opacity-100 pointer-events-auto'}
-                            mb-16
                             flex-shrink-0
                             overflow-hidden`
                         }>
-                            <div className="overflow-y-auto min-h-[100px] w-full">
+                            <div className="overflow-y-auto h-full w-full">
                                 <PredictionSlip
                                     onRemovePrediction={removePrediction}
                                     onSubmitPredictions={() => { }}
@@ -144,8 +143,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         {!slipCollapsed && (
                             <div className="fixed inset-0 z-40 flex xl:hidden">
                                 <div className="fixed inset-0 bg-black/40" onClick={() => setSlipCollapsed?.(true)} />
-                                <div className={`relative w-full max-w-[320px] h-full ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-gray-100'} z-50 pt-[64px] ml-auto`}>
-                                    <div className="overflow-y-auto min-h-[100px] w-full h-full">
+                                <div className={`relative w-full max-w-[320px] h-full ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-gray-100'} z-50 pt-[64px] ml-auto overflow-hidden`}>
+                                    <div className="overflow-y-auto h-full w-full">
                                         <PredictionSlip
                                             onRemovePrediction={removePrediction}
                                             onSubmitPredictions={() => { }}

@@ -10,6 +10,8 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Function called with method:', req.method, 'and URL:', req.url)
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -40,14 +42,30 @@ serve(async (req) => {
     const url = new URL(req.url)
     const action = url.searchParams.get('action')
 
+    console.log('Processing request:', { method, action, userId: user.id })
+
     if (method === 'POST') {
-      const body = await req.json()
+      let body = null;
+      // Only parse body for actions that need it
+      if (
+        action === 'place_bet' ||
+        action === 'add_referral_bonus' ||
+        action === 'add_leaderboard_prize' ||
+        action === 'purchase_item' ||
+        action === 'enter_tournament' ||
+        action === 'unlock_insight' ||
+        action === 'record_win' ||
+        action === 'record_loss'
+      ) {
+        body = await req.json();
+      }
 
       switch (action) {
         case 'place_bet':
           return await handlePlaceBet(supabase, user, body)
         
         case 'claim_welcome_bonus':
+          console.log('Handling claim_welcome_bonus for user:', user.id)
           return await handleClaimWelcomeBonus(supabase, user)
         
         case 'add_referral_bonus':
@@ -79,6 +97,7 @@ serve(async (req) => {
     throw new Error('Invalid method')
 
   } catch (error) {
+    console.log('Error in main function:', error)
     return new Response(
       JSON.stringify({
         success: false,
@@ -95,29 +114,77 @@ serve(async (req) => {
 async function handlePlaceBet(supabase: any, user: any, body: any) {
   const { amount, matchId, description } = body
 
+  console.log('Place bet request:', { user: user.id, amount, matchId, description })
+
   // Validate bet amount
   if (amount < 10 || amount > 1000) {
     throw new Error('Invalid bet amount')
   }
 
   // Check user balance
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('balance')
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.balance < amount) {
-    throw new Error('Insufficient balance')
+  console.log('Profile query result:', { profile, error: profileError })
+
+  if (profileError) {
+    console.error('Profile query error:', profileError)
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  if (!profile) {
+    console.log('No profile found, creating one with default balance')
+    // Create profile with default balance
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        balance: 1000,
+        daily_login_streak: 0,
+        has_received_welcome_bonus: false,
+        total_winnings: 0,
+        total_losses: 0,
+        won_bets: 0,
+        lost_bets: 0,
+        total_bets: 0,
+        referral_bonus_earned: 0,
+        leaderboard_prizes_earned: 0
+      })
+      .select('balance')
+      .single()
+
+    if (createError) {
+      console.error('Failed to create profile:', createError)
+      throw new Error(`Failed to create profile: ${createError.message}`)
+    }
+
+    console.log('Created new profile:', newProfile)
+    
+    if (newProfile.balance < amount) {
+      throw new Error(`Insufficient balance: ${newProfile.balance} < ${amount}`)
+    }
+  } else {
+    console.log('Existing profile balance:', profile.balance)
+    
+    if (profile.balance < amount) {
+      throw new Error(`Insufficient balance: ${profile.balance} < ${amount}`)
+    }
   }
 
   // Update balance and create transaction
+  const currentBalance = profile ? profile.balance : 1000
+  const newBalance = currentBalance - amount
+  
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ balance: supabase.sql`balance - ${amount}` })
+    .update({ balance: newBalance })
     .eq('id', user.id)
 
   if (updateError) {
+    console.error('Balance update error:', updateError)
     throw updateError
   }
 
@@ -135,10 +202,17 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
     console.error('Failed to record transaction:', transactionError)
   }
 
+  // Get updated balance
+  const { data: updatedProfile } = await supabase
+    .from('profiles')
+    .select('balance')
+    .eq('id', user.id)
+    .single()
+
   return new Response(
     JSON.stringify({
       success: true,
-      data: { newBalance: profile.balance - amount }
+      data: { newBalance: updatedProfile?.balance || 0 }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -148,68 +222,109 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 }
 
 async function handleClaimWelcomeBonus(supabase: any, user: any) {
+  console.log('handleClaimWelcomeBonus called for user:', user.id)
   const bonus = 250 // Welcome bonus amount
 
-  // Check if already claimed
-  const { data: existing } = await supabase
-    .from('transactions')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('type', 'welcome_bonus')
-    .single()
+  try {
+    // Get current profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('balance, has_received_welcome_bonus')
+      .eq('id', user.id)
+      .single()
 
-  if (existing) {
-    throw new Error('Welcome bonus already claimed')
-  }
+    console.log('Profile query result:', { profile, error: profileError })
 
-  // Update balance and create transaction
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ 
-      balance: supabase.sql`balance + ${bonus}`,
-      has_received_welcome_bonus: true
-    })
-    .eq('id', user.id)
-
-  if (updateError) {
-    throw updateError
-  }
-
-  // Record transaction
-  const { error: transactionError } = await supabase
-    .from('transactions')
-    .insert({
-      user_id: user.id,
-      type: 'welcome_bonus',
-      amount: bonus,
-      description: 'Welcome bonus'
-    })
-
-  if (transactionError) {
-    console.error('Failed to record transaction:', transactionError)
-  }
-
-  return new Response(
-    JSON.stringify({
-      success: true,
-      data: { bonus }
-    }),
-    {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+    if (profileError) {
+      console.log('Profile error:', profileError)
+      throw new Error(`Failed to load profile: ${profileError.message}`)
     }
-  )
+
+    if (!profile) {
+      console.log('Profile not found')
+      throw new Error('Profile not found')
+    }
+
+    if (profile.has_received_welcome_bonus) {
+      console.log('Welcome bonus already claimed via profile flag')
+      throw new Error('Welcome bonus already claimed')
+    }
+
+    const currentBalance = profile.balance || 1000
+    const newBalance = currentBalance + bonus
+
+    console.log('Updating balance:', { currentBalance, newBalance })
+
+    // Update balance and create transaction
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        balance: newBalance,
+        has_received_welcome_bonus: true
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.log('Update error:', updateError)
+      throw updateError
+    }
+
+    // Record transaction
+    const { error: transactionError } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: user.id,
+        type: 'welcome_bonus',
+        amount: bonus,
+        description: 'Welcome bonus'
+      })
+
+    if (transactionError) {
+      console.error('Failed to record transaction:', transactionError)
+    }
+
+    console.log('Welcome bonus claimed successfully, returning response')
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: { newBalance }
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
+  } catch (error) {
+    console.log('Error in handleClaimWelcomeBonus:', error)
+    throw error
+  }
 }
 
 async function handleAddReferralBonus(supabase: any, user: any, body: any) {
   const { amount } = body
 
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('balance, referral_bonus_earned')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentBalance = profile?.balance || 1000
+  const currentReferralBonus = profile?.referral_bonus_earned || 0
+  const newBalance = currentBalance + amount
+  const newReferralBonus = currentReferralBonus + amount
+
   // Update balance and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ 
-      balance: supabase.sql`balance + ${amount}`,
-      referral_bonus_earned: supabase.sql`referral_bonus_earned + ${amount}`
+      balance: newBalance,
+      referral_bonus_earned: newReferralBonus
     })
     .eq('id', user.id)
 
@@ -222,7 +337,7 @@ async function handleAddReferralBonus(supabase: any, user: any, body: any) {
     .from('transactions')
     .insert({
       user_id: user.id,
-      type: 'referral',
+      type: 'referral_bonus',
       amount: amount,
       description: 'Referral bonus'
     })
@@ -234,7 +349,7 @@ async function handleAddReferralBonus(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { amount }
+      data: { newBalance }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -246,12 +361,28 @@ async function handleAddReferralBonus(supabase: any, user: any, body: any) {
 async function handleAddLeaderboardPrize(supabase: any, user: any, body: any) {
   const { amount } = body
 
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('balance, leaderboard_prizes_earned')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentBalance = profile?.balance || 1000
+  const currentLeaderboardPrizes = profile?.leaderboard_prizes_earned || 0
+  const newBalance = currentBalance + amount
+  const newLeaderboardPrizes = currentLeaderboardPrizes + amount
+
   // Update balance and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ 
-      balance: supabase.sql`balance + ${amount}`,
-      leaderboard_prizes_earned: supabase.sql`leaderboard_prizes_earned + ${amount}`
+      balance: newBalance,
+      leaderboard_prizes_earned: newLeaderboardPrizes
     })
     .eq('id', user.id)
 
@@ -264,7 +395,7 @@ async function handleAddLeaderboardPrize(supabase: any, user: any, body: any) {
     .from('transactions')
     .insert({
       user_id: user.id,
-      type: 'leaderboard',
+      type: 'leaderboard_prize',
       amount: amount,
       description: 'Leaderboard prize'
     })
@@ -276,7 +407,7 @@ async function handleAddLeaderboardPrize(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { amount }
+      data: { newBalance }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -288,21 +419,29 @@ async function handleAddLeaderboardPrize(supabase: any, user: any, body: any) {
 async function handlePurchaseItem(supabase: any, user: any, body: any) {
   const { cost, itemName } = body
 
-  // Check user balance
-  const { data: profile } = await supabase
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('balance')
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.balance < cost) {
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentBalance = profile?.balance || 1000
+
+  if (currentBalance < cost) {
     throw new Error('Insufficient balance')
   }
+
+  const newBalance = currentBalance - cost
 
   // Update balance and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ balance: supabase.sql`balance - ${cost}` })
+    .update({ balance: newBalance })
     .eq('id', user.id)
 
   if (updateError) {
@@ -316,7 +455,7 @@ async function handlePurchaseItem(supabase: any, user: any, body: any) {
       user_id: user.id,
       type: 'purchase',
       amount: -cost,
-      description: `Purchased ${itemName}`
+      description: `Purchase: ${itemName}`
     })
 
   if (transactionError) {
@@ -326,7 +465,7 @@ async function handlePurchaseItem(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { newBalance: profile.balance - cost }
+      data: { newBalance }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -338,21 +477,29 @@ async function handlePurchaseItem(supabase: any, user: any, body: any) {
 async function handleEnterTournament(supabase: any, user: any, body: any) {
   const { cost, tournamentName } = body
 
-  // Check user balance
-  const { data: profile } = await supabase
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('balance')
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.balance < cost) {
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentBalance = profile?.balance || 1000
+
+  if (currentBalance < cost) {
     throw new Error('Insufficient balance')
   }
+
+  const newBalance = currentBalance - cost
 
   // Update balance and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ balance: supabase.sql`balance - ${cost}` })
+    .update({ balance: newBalance })
     .eq('id', user.id)
 
   if (updateError) {
@@ -376,7 +523,7 @@ async function handleEnterTournament(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { newBalance: profile.balance - cost }
+      data: { newBalance }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -388,21 +535,29 @@ async function handleEnterTournament(supabase: any, user: any, body: any) {
 async function handleUnlockInsight(supabase: any, user: any, body: any) {
   const { cost, insightName } = body
 
-  // Check user balance
-  const { data: profile } = await supabase
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('balance')
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.balance < cost) {
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentBalance = profile?.balance || 1000
+
+  if (currentBalance < cost) {
     throw new Error('Insufficient balance')
   }
+
+  const newBalance = currentBalance - cost
 
   // Update balance and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
-    .update({ balance: supabase.sql`balance - ${cost}` })
+    .update({ balance: newBalance })
     .eq('id', user.id)
 
   if (updateError) {
@@ -416,7 +571,7 @@ async function handleUnlockInsight(supabase: any, user: any, body: any) {
       user_id: user.id,
       type: 'insight_unlock',
       amount: -cost,
-      description: `Unlocked insight: ${insightName}`
+      description: `Insight unlock: ${insightName}`
     })
 
   if (transactionError) {
@@ -426,7 +581,7 @@ async function handleUnlockInsight(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { newBalance: profile.balance - cost }
+      data: { newBalance }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -437,15 +592,33 @@ async function handleUnlockInsight(supabase: any, user: any, body: any) {
 
 async function handleRecordWin(supabase: any, user: any, body: any) {
   const { stake, odds, description } = body
-  const winnings = Math.round(stake * odds)
+  const winnings = Math.floor(stake * odds)
+
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('balance, total_winnings, won_bets')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentBalance = profile?.balance || 1000
+  const currentTotalWinnings = profile?.total_winnings || 0
+  const currentWonBets = profile?.won_bets || 0
+  const newBalance = currentBalance + winnings
+  const newTotalWinnings = currentTotalWinnings + winnings
+  const newWonBets = currentWonBets + 1
 
   // Update balance and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ 
-      balance: supabase.sql`balance + ${winnings}`,
-      total_winnings: supabase.sql`total_winnings + ${winnings}`,
-      won_bets: supabase.sql`won_bets + 1`
+      balance: newBalance,
+      total_winnings: newTotalWinnings,
+      won_bets: newWonBets
     })
     .eq('id', user.id)
 
@@ -470,7 +643,7 @@ async function handleRecordWin(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { winnings }
+      data: { newBalance, winnings }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -482,12 +655,28 @@ async function handleRecordWin(supabase: any, user: any, body: any) {
 async function handleRecordLoss(supabase: any, user: any, body: any) {
   const { stake, description } = body
 
-  // Update balance and create transaction
+  // Get current profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('total_losses, lost_bets')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError) {
+    throw new Error(`Failed to load profile: ${profileError.message}`)
+  }
+
+  const currentTotalLosses = profile?.total_losses || 0
+  const currentLostBets = profile?.lost_bets || 0
+  const newTotalLosses = currentTotalLosses + stake
+  const newLostBets = currentLostBets + 1
+
+  // Update statistics and create transaction
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ 
-      total_losses: supabase.sql`total_losses + ${stake}`,
-      lost_bets: supabase.sql`lost_bets + 1`
+      total_losses: newTotalLosses,
+      lost_bets: newLostBets
     })
     .eq('id', user.id)
 
@@ -512,7 +701,7 @@ async function handleRecordLoss(supabase: any, user: any, body: any) {
   return new Response(
     JSON.stringify({
       success: true,
-      data: { stake }
+      data: { loss: stake }
     }),
     {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

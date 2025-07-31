@@ -58,12 +58,42 @@ export class WalletOperationsService {
       }
     );
 
+    console.log('Welcome bonus response status:', response.status);
+    console.log('Welcome bonus response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      const error = await response.json() as { error: string };
-      throw new Error(error.error || 'Failed to claim welcome bonus');
+      try {
+        const errorText = await response.text();
+        console.error('Welcome bonus error response:', errorText);
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || 'Failed to claim welcome bonus' };
+        }
+        throw new Error(errorData.error || 'Failed to claim welcome bonus');
+      } catch (parseError) {
+        console.error('Welcome bonus parse error:', parseError);
+        throw new Error('Failed to claim welcome bonus');
+      }
     }
 
-    return await response.json() as WalletOperationResult;
+    try {
+      const responseText = await response.text();
+      console.log('Welcome bonus response text:', responseText);
+      
+      if (!responseText) {
+        console.error('Empty response from welcome bonus function');
+        throw new Error('Empty response from server');
+      }
+      
+      const result = JSON.parse(responseText) as WalletOperationResult;
+      console.log('Welcome bonus parsed result:', result);
+      return result;
+    } catch (parseError) {
+      console.error('Failed to parse welcome bonus response:', parseError);
+      throw new Error('Invalid response from server');
+    }
   }
 
   /**

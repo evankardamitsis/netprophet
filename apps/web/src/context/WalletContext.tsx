@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { BetsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
-import { DailyRewardsService } from '@netprophet/lib';
-import { WalletOperationsService } from '@netprophet/lib';
+import { DailyRewardsService, WalletOperationsService, supabase } from '@netprophet/lib';
+import toast from 'react-hot-toast';
 
 export interface Transaction {
     id: string;
@@ -49,6 +49,7 @@ interface WalletContextType {
     enterTournament: (cost: number, tournamentName: string) => void;
     unlockInsight: (cost: number, insightName: string) => void;
     loadBetStats: () => Promise<void>;
+    syncWalletWithDatabase: () => Promise<void>;
 }
 
 const defaultWallet: UserWallet = {
@@ -118,9 +119,82 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         return walletWithDefaults;
     });
 
+    const syncWalletWithDatabase = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Get user profile from database
+            const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('balance, daily_login_streak, has_received_welcome_bonus')
+                .eq('id', user.id)
+                .single();
+
+            if (error && error.code === 'PGRST116') {
+                // Profile doesn't exist, create one with default values
+                const { data: newProfile, error: createError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: user.id,
+                        balance: 1000,
+                        daily_login_streak: 0,
+                        has_received_welcome_bonus: false,
+                        total_winnings: 0,
+                        total_losses: 0,
+                        won_bets: 0,
+                        lost_bets: 0,
+                        total_bets: 0,
+                        referral_bonus_earned: 0,
+                        leaderboard_prizes_earned: 0
+                    })
+                    .select()
+                    .single();
+
+                if (createError) {
+                    console.error('Failed to create profile:', createError);
+                    return;
+                }
+
+                // Update local wallet state with new profile
+                setWallet(prevWallet => {
+                    const updatedWallet = {
+                        ...prevWallet,
+                        balance: newProfile.balance,
+                        dailyLoginStreak: newProfile.daily_login_streak,
+                        hasReceivedWelcomeBonus: newProfile.has_received_welcome_bonus,
+                    };
+                    saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
+                    return updatedWallet;
+                });
+
+                toast.success('Wallet initialized with $1000 starting balance!');
+            } else if (error) {
+                console.error('Failed to load profile:', error);
+                return;
+            } else if (profile) {
+                // Update local wallet state with database values
+                setWallet(prevWallet => {
+                    const updatedWallet = {
+                        ...prevWallet,
+                        balance: profile.balance || 1000, // Default to 1000 if null
+                        dailyLoginStreak: profile.daily_login_streak || 0,
+                        hasReceivedWelcomeBonus: profile.has_received_welcome_bonus || false,
+                    };
+                    saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
+                    return updatedWallet;
+                });
+            }
+        } catch (error) {
+            console.error('Failed to sync wallet with database:', error);
+            toast.error('Failed to sync wallet with database');
+        }
+    }, []);
+
     // Load bet statistics from database on mount
     useEffect(() => {
         loadBetStats();
+        syncWalletWithDatabase();
     }, []);
 
     const loadBetStats = async () => {
@@ -177,104 +251,79 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
 
     const placeBet = async (amount: number, matchId: number, description: string) => {
-        if (amount > wallet.balance) {
-            throw new Error(`Insufficient balance. You have ${wallet.balance} 🌕 but trying to bet ${amount} 🌕`);
-        }
+        try {
+            const loadingToast = toast.loading('Placing your bet...');
 
-        if (amount < COIN_CONSTANTS.MIN_BET) {
-            throw new Error(`Minimum bet amount is ${COIN_CONSTANTS.MIN_BET} 🌕`);
-        }
+            const result = await WalletOperationsService.placeBet(amount, matchId.toString(), description);
 
-        if (amount > COIN_CONSTANTS.MAX_BET) {
-            throw new Error(`Maximum bet amount is ${COIN_CONSTANTS.MAX_BET} 🌕`);
-        }
+            if (result.success) {
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                }));
 
-        // Call server-side bet placement
-        const result = await WalletOperationsService.placeBet(amount, matchId.toString(), description);
-
-        if (result.success) {
-            // Update local wallet state with server response
-            setWallet(prev => ({
-                ...prev,
-                balance: result.data.newBalance,
-            }));
-
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'bet',
-                amount: -amount,
-                description,
-                timestamp: new Date(),
-            };
-
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsSpent: prev.totalCoinsSpent + amount,
-            }));
+                toast.success(`Bet placed successfully! New balance: $${result.data.newBalance}`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to place bet: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error placing bet:', error);
+            toast.error('Failed to place bet. Please try again.');
         }
     };
 
     const recordWin = async (stake: number, odds: number, description: string) => {
-        const winnings = Math.round(stake * odds);
+        try {
+            const loadingToast = toast.loading('Recording win...');
 
-        // Call server-side win recording
-        const result = await WalletOperationsService.recordWin(stake, odds, description);
+            const result = await WalletOperationsService.recordWin(stake, odds, description);
 
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                totalWinnings: prev.totalWinnings + winnings,
-                wonBets: prev.wonBets + 1,
-                netProfit: prev.netProfit + winnings,
-            }));
+            if (result.success) {
+                const winnings = result.data.winnings;
 
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'win',
-                amount: winnings,
-                description,
-                timestamp: new Date(),
-            };
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                }));
 
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsEarned: prev.totalCoinsEarned + winnings,
-            }));
+                toast.success(`Congratulations! You won $${winnings}!`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to record win: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error recording win:', error);
+            toast.error('Failed to record win. Please try again.');
         }
     };
 
     const recordLoss = async (stake: number, description: string) => {
-        // Call server-side loss recording
-        const result = await WalletOperationsService.recordLoss(stake, description);
+        try {
+            const loadingToast = toast.loading('Recording loss...');
 
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                totalLosses: prev.totalLosses + stake,
-                lostBets: prev.lostBets + 1,
-                netProfit: prev.netProfit - stake,
-            }));
+            const result = await WalletOperationsService.recordLoss(stake, description);
 
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'loss',
-                amount: -stake,
-                description,
-                timestamp: new Date(),
-            };
-
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsSpent: prev.totalCoinsSpent + stake,
-            }));
+            if (result.success) {
+                toast.success(`Loss recorded. Better luck next time!`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to record loss: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error recording loss:', error);
+            toast.error('Failed to record loss. Please try again.');
         }
     };
 
@@ -290,217 +339,215 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const claimDailyLogin = async (): Promise<number> => {
         try {
+            const loadingToast = toast.loading('Claiming daily reward...');
+
             const result = await DailyRewardsService.claimDailyReward();
+
+            if (result.success) {
+                const rewardAmount = result.reward_amount;
+
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: prev.balance + rewardAmount,
+                    dailyLoginStreak: result.new_streak,
+                }));
+
+                toast.success(`Daily reward claimed! +$${rewardAmount} (${result.new_streak} day streak)`, {
+                    id: loadingToast,
+                });
+
+                return rewardAmount;
+            } else {
+                toast.error(`Failed to claim daily reward: ${result.message}`, {
+                    id: loadingToast,
+                });
+                return 0;
+            }
+        } catch (error) {
+            console.error('Error claiming daily reward:', error);
+            toast.error('Failed to claim daily reward. Please try again.');
+            return 0;
+        }
+    };
+
+    const claimWelcomeBonus = async (): Promise<number> => {
+        let loadingToast: string | undefined;
+        try {
+            loadingToast = toast.loading('Claiming welcome bonus...');
+
+            const result = await WalletOperationsService.claimWelcomeBonus();
+
+            if (result.success) {
+                const bonusAmount = 250; // Welcome bonus amount
+
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                    hasReceivedWelcomeBonus: true,
+                }));
+
+                toast.success(`Welcome bonus claimed! +$${bonusAmount}`, {
+                    id: loadingToast,
+                });
+
+                return bonusAmount;
+            } else {
+                toast.error(`Failed to claim welcome bonus: ${result.error}`, {
+                    id: loadingToast,
+                });
+                return 0;
+            }
+        } catch (error) {
+            console.error('Error claiming welcome bonus:', error);
+
+            // Handle specific JSON parsing errors
+            if (error instanceof Error && error.message.includes('Unexpected end of JSON input')) {
+                toast.error('Server returned an empty response. Please try again.', {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to claim welcome bonus: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+                    id: loadingToast,
+                });
+            }
+            return 0;
+        }
+    };
+
+    const addReferralBonus = async (amount: number) => {
+        try {
+            const loadingToast = toast.loading('Adding referral bonus...');
+
+            const result = await WalletOperationsService.addReferralBonus(amount);
 
             if (result.success) {
                 // Update local wallet state
                 setWallet(prev => ({
                     ...prev,
-                    balance: prev.balance + result.reward_amount,
-                    dailyLoginStreak: result.new_streak,
+                    balance: result.data.newBalance,
                 }));
 
-                // Add transaction to local state
-                const newTransaction: Transaction = {
-                    id: Date.now().toString(),
-                    type: 'daily_login',
-                    amount: result.reward_amount,
-                    description: `Daily login bonus (${result.new_streak} day streak)`,
-                    timestamp: new Date(),
-                };
-
-                setWallet(prev => ({
-                    ...prev,
-                    recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                    totalCoinsEarned: prev.totalCoinsEarned + result.reward_amount,
-                }));
-
-                return result.reward_amount;
+                toast.success(`Referral bonus added! +$${amount}`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to add referral bonus: ${result.error}`, {
+                    id: loadingToast,
+                });
             }
-
-            return 0;
         } catch (error) {
-            console.error('Failed to claim daily reward:', error);
-            throw error;
-        }
-    };
-
-    const claimWelcomeBonus = async (): Promise<number> => {
-        if (wallet.hasReceivedWelcomeBonus) {
-            return 0; // Already claimed
-        }
-
-        // Call server-side welcome bonus claim
-        const result = await WalletOperationsService.claimWelcomeBonus();
-
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                hasReceivedWelcomeBonus: true,
-                balance: prev.balance + result.data.bonus,
-            }));
-
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'welcome_bonus',
-                amount: result.data.bonus,
-                description: 'Welcome bonus',
-                timestamp: new Date(),
-            };
-
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsEarned: prev.totalCoinsEarned + result.data.bonus,
-            }));
-
-            return result.data.bonus;
-        }
-
-        return 0;
-    };
-
-    const addReferralBonus = async (amount: number) => {
-        // Call server-side referral bonus
-        const result = await WalletOperationsService.addReferralBonus(amount);
-
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                balance: prev.balance + amount,
-                referralBonusEarned: prev.referralBonusEarned + amount,
-            }));
-
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'referral',
-                amount: amount,
-                description: 'Referral bonus',
-                timestamp: new Date(),
-            };
-
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsEarned: prev.totalCoinsEarned + amount,
-            }));
+            console.error('Error adding referral bonus:', error);
+            toast.error('Failed to add referral bonus. Please try again.');
         }
     };
 
     const addLeaderboardPrize = async (amount: number) => {
-        // Call server-side leaderboard prize
-        const result = await WalletOperationsService.addLeaderboardPrize(amount);
+        try {
+            const loadingToast = toast.loading('Adding leaderboard prize...');
 
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                balance: prev.balance + amount,
-                leaderboardPrizesEarned: prev.leaderboardPrizesEarned + amount,
-            }));
+            const result = await WalletOperationsService.addLeaderboardPrize(amount);
 
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'leaderboard',
-                amount: amount,
-                description: 'Leaderboard prize',
-                timestamp: new Date(),
-            };
+            if (result.success) {
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                }));
 
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsEarned: prev.totalCoinsEarned + amount,
-            }));
+                toast.success(`Leaderboard prize added! +$${amount}`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to add leaderboard prize: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error adding leaderboard prize:', error);
+            toast.error('Failed to add leaderboard prize. Please try again.');
         }
     };
 
     const purchaseItem = async (cost: number, itemName: string) => {
-        // Call server-side purchase
-        const result = await WalletOperationsService.purchaseItem(cost, itemName);
+        try {
+            const loadingToast = toast.loading(`Purchasing ${itemName}...`);
 
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                balance: result.data.newBalance,
-            }));
+            const result = await WalletOperationsService.purchaseItem(cost, itemName);
 
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'purchase',
-                amount: -cost,
-                description: `Purchased ${itemName}`,
-                timestamp: new Date(),
-            };
+            if (result.success) {
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                }));
 
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsSpent: prev.totalCoinsSpent + cost,
-            }));
+                toast.success(`${itemName} purchased successfully!`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to purchase ${itemName}: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error purchasing item:', error);
+            toast.error(`Failed to purchase ${itemName}. Please try again.`);
         }
     };
 
     const enterTournament = async (cost: number, tournamentName: string) => {
-        // Call server-side tournament entry
-        const result = await WalletOperationsService.enterTournament(cost, tournamentName);
+        try {
+            const loadingToast = toast.loading(`Entering ${tournamentName}...`);
 
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                balance: result.data.newBalance,
-            }));
+            const result = await WalletOperationsService.enterTournament(cost, tournamentName);
 
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'tournament_entry',
-                amount: -cost,
-                description: `Tournament entry: ${tournamentName}`,
-                timestamp: new Date(),
-            };
+            if (result.success) {
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                }));
 
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsSpent: prev.totalCoinsSpent + cost,
-            }));
+                toast.success(`Successfully entered ${tournamentName}!`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to enter ${tournamentName}: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error entering tournament:', error);
+            toast.error(`Failed to enter ${tournamentName}. Please try again.`);
         }
     };
 
     const unlockInsight = async (cost: number, insightName: string) => {
-        // Call server-side insight unlock
-        const result = await WalletOperationsService.unlockInsight(cost, insightName);
+        try {
+            const loadingToast = toast.loading(`Unlocking ${insightName}...`);
 
-        if (result.success) {
-            // Update local wallet state
-            setWallet(prev => ({
-                ...prev,
-                balance: result.data.newBalance,
-            }));
+            const result = await WalletOperationsService.unlockInsight(cost, insightName);
 
-            // Add transaction to local state
-            const newTransaction: Transaction = {
-                id: Date.now().toString(),
-                type: 'insight_unlock',
-                amount: -cost,
-                description: `Unlocked insight: ${insightName}`,
-                timestamp: new Date(),
-            };
+            if (result.success) {
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: result.data.newBalance,
+                }));
 
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
-                totalCoinsSpent: prev.totalCoinsSpent + cost,
-            }));
+                toast.success(`${insightName} unlocked successfully!`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.error(`Failed to unlock ${insightName}: ${result.error}`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error('Error unlocking insight:', error);
+            toast.error(`Failed to unlock ${insightName}. Please try again.`);
         }
     };
 
@@ -524,6 +571,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         enterTournament,
         unlockInsight,
         loadBetStats,
+        syncWalletWithDatabase,
     };
 
     return (

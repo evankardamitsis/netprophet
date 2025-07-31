@@ -298,38 +298,33 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 w-full overflow-auto bg-[#0F0F0F] text-white">
-            {/* Header Section */}
-            <div className="p-6 pb-4">
+        <div className="flex flex-col flex-1 min-h-0 w-full bg-[#0F0F0F] text-white">
+            {/* Compact Header Section */}
+            <div className="p-4 pb-2 flex-shrink-0">
                 <button
                     onClick={onBack}
-                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors mb-4"
+                    className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors mb-2"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    <span>Back to Matches</span>
+                    <span className="text-sm">Back to Matches</span>
                 </button>
 
-                <h1 className="text-2xl font-bold text-white mb-2">Match Details</h1>
-                <p className="text-gray-400 text-sm">Monitor live tennis events and place your predictions</p>
+                <h1 className="text-xl font-bold text-white mb-1">Match Details</h1>
+                <p className="text-gray-400 text-xs">Monitor live tennis events and place your predictions</p>
             </div>
 
-            {/* Match Header with tournament info and player cards */}
-            <div className="px-6 mb-6">
+            {/* Compact Match Header */}
+            <div className="px-4 mb-4 flex-shrink-0">
                 <MatchHeader match={match} details={details} />
             </div>
 
-            {/* Prediction Form Card */}
-            <div className="px-6 flex-1">
-                <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] overflow-hidden">
-                    <div className="p-6 border-b border-[#2A2A2A]">
-                        <h2 className="text-xl font-bold text-white mb-2">Make your predictions</h2>
-                        <p className="text-gray-400 text-sm">Choose from multiple prediction types to maximize your points!</p>
-                    </div>
-
-                    <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
-                        {/* Betting Section */}
+            {/* Two-Column Layout: Betting Section + Prediction Form */}
+            <div className="px-4 flex-1 flex gap-4 min-h-0">
+                {/* Left Column: Betting Section */}
+                <div className="w-1/3 flex-shrink-0">
+                    <div className="sticky top-4">
                         <BettingSection
                             predictionCount={predictionCount}
                             onBetAmountChange={setBetAmount}
@@ -340,34 +335,47 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             player1={{ name: details.player1.name, odds: details.player1.odds }}
                             player2={{ name: details.player2.name, odds: details.player2.odds }}
                         />
-
-                        {/* Prediction Form */}
-                        <PredictionForm
-                            formPredictions={formPredictions}
-                            onPredictionChange={handlePredictionChange}
-                            details={details}
-                            isBestOf5={isBestOf5}
-                            setsToShowFromResult={setsToShowFromResult}
-                            setWinnersFromResult={setWinnersFromResult}
-                            renderSetScoreDropdown={renderSetScoreDropdown}
-                            getSetScore={getSetScore}
-                            setSetScore={setSetScore}
-                            getSetWinner={getSetWinner}
-                            setSetWinner={setSetWinner}
-                        />
                     </div>
+                </div>
 
-                    <div className="p-6 border-t border-[#2A2A2A] bg-[#1A1A1A]">
-                        <button
-                            onClick={handleSubmitPredictions}
-                            disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                            className={`w-full py-4 px-6 rounded-lg font-semibold transition-colors ${hasAnyPredictions && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
-                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                }`}
-                        >
-                            {hasAnyPredictions ? `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : 'Select at least one prediction'}
-                        </button>
+                {/* Right Column: Prediction Form */}
+                <div className="w-2/3 flex-1 min-h-0 flex flex-col">
+                    <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] overflow-hidden flex flex-col h-full relative">
+                        <div className="p-4 border-b border-[#2A2A2A] flex-shrink-0">
+                            <h2 className="text-lg font-bold text-white mb-1">Make your predictions</h2>
+                            <p className="text-gray-400 text-xs">Choose from multiple prediction types to maximize your points!</p>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto min-h-0 pb-24">
+                            <div className="p-4 pb-0">
+                                <PredictionForm
+                                    formPredictions={formPredictions}
+                                    onPredictionChange={handlePredictionChange}
+                                    details={details}
+                                    isBestOf5={isBestOf5}
+                                    setsToShowFromResult={setsToShowFromResult}
+                                    setWinnersFromResult={setWinnersFromResult}
+                                    renderSetScoreDropdown={renderSetScoreDropdown}
+                                    getSetScore={getSetScore}
+                                    setSetScore={setSetScore}
+                                    getSetWinner={getSetWinner}
+                                    setSetWinner={setSetWinner}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#2A2A2A] bg-[#1A1A1A] z-10">
+                            <button
+                                onClick={handleSubmitPredictions}
+                                disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
+                                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                {hasAnyPredictions ? `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : 'Select at least one prediction'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

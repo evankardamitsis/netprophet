@@ -30,35 +30,76 @@ interface WelcomeBonusProps {
 }
 
 export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
-    const { wallet, claimWelcomeBonus, checkDailyLogin, claimDailyLogin } = useWallet();
+    const { wallet, claimWelcomeBonus, checkDailyLogin, claimDailyLogin, syncWalletWithDatabase } = useWallet();
     const { theme } = useTheme();
-    const [showWelcomeBonus, setShowWelcomeBonus] = useState(!wallet.hasReceivedWelcomeBonus);
+    const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
     const [showDailyLogin, setShowDailyLogin] = useState(false);
     const [dailyReward, setDailyReward] = useState(0);
+    const [hasCheckedWelcomeBonus, setHasCheckedWelcomeBonus] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // Sync wallet with database first, then check welcome bonus
+        const initializeWallet = async () => {
+            try {
+                await syncWalletWithDatabase();
+                // Wait a bit for the wallet state to update
+                setTimeout(() => {
+                    setShowWelcomeBonus(!wallet.hasReceivedWelcomeBonus);
+                    setHasCheckedWelcomeBonus(true);
+                    setIsLoading(false);
+                }, 100);
+            } catch (error) {
+                console.error('Error syncing wallet:', error);
+                setIsLoading(false);
+            }
+        };
+
+        if (!hasCheckedWelcomeBonus) {
+            initializeWallet();
+        }
+    }, [syncWalletWithDatabase, wallet.hasReceivedWelcomeBonus, hasCheckedWelcomeBonus]);
 
     useEffect(() => {
         // Check for daily login reward on component mount
         const checkDailyReward = async () => {
-            const reward = await checkDailyLogin();
-            if (reward > 0) {
-                setDailyReward(reward);
-                setShowDailyLogin(true);
+            try {
+                const reward = await checkDailyLogin();
+                if (reward > 0) {
+                    setDailyReward(reward);
+                    setShowDailyLogin(true);
+                }
+            } catch (error) {
+                console.error('Error checking daily login:', error);
             }
         };
         checkDailyReward();
-    }, [checkDailyLogin]);
+    }, []); // Remove checkDailyLogin dependency to prevent multiple calls
 
     const handleClaimWelcomeBonus = async () => {
-        const bonus = await claimWelcomeBonus();
-        setShowWelcomeBonus(false);
-        if (onClose) onClose();
+        try {
+            const bonus = await claimWelcomeBonus();
+            setShowWelcomeBonus(false);
+            if (onClose) onClose();
+        } catch (error) {
+            console.error('Error claiming welcome bonus:', error);
+        }
     };
 
     const handleClaimDailyLogin = async () => {
-        const bonus = await claimDailyLogin();
-        setShowDailyLogin(false);
-        if (onClose) onClose();
+        try {
+            const bonus = await claimDailyLogin();
+            setShowDailyLogin(false);
+            if (onClose) onClose();
+        } catch (error) {
+            console.error('Error claiming daily login:', error);
+        }
     };
+
+    // Don't render anything while loading
+    if (isLoading) {
+        return null;
+    }
 
     if (!showWelcomeBonus && !showDailyLogin) {
         return null;

@@ -60,111 +60,111 @@ export function PredictionForm({
     const { theme } = useTheme();
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-4 pb-4">
             {/* Match Winner */}
-            <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                <h3 className="text-lg font-bold text-white mb-4">Match Winner</h3>
-                <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                <h3 className="text-base font-bold text-white mb-3">Match Winner</h3>
+                <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={() => onPredictionChange('winner', details.player1.name)}
-                        className={`p-4 rounded-lg border transition-colors ${formPredictions.winner === details.player1.name
+                        className={`p-3 rounded-lg border transition-colors ${formPredictions.winner === details.player1.name
                             ? 'bg-purple-600 border-purple-600 text-white'
                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                             }`}
                     >
-                        <div className="text-lg font-semibold">{details.player1.name.split(' ')[1]}</div>
-                        <div className="text-sm text-gray-400">{details.player1.odds.toFixed(2)}x</div>
+                        <div className="text-base font-semibold">{details.player1.name.split(' ')[1]}</div>
+                        <div className="text-xs text-gray-400">{details.player1.odds.toFixed(2)}x</div>
                     </button>
                     <button
                         onClick={() => onPredictionChange('winner', details.player2.name)}
-                        className={`p-4 rounded-lg border transition-colors ${formPredictions.winner === details.player2.name
+                        className={`p-3 rounded-lg border transition-colors ${formPredictions.winner === details.player2.name
                             ? 'bg-purple-600 border-purple-600 text-white'
                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                             }`}
                     >
-                        <div className="text-lg font-semibold">{details.player2.name.split(' ')[1]}</div>
-                        <div className="text-sm text-gray-400">{details.player2.odds.toFixed(2)}x</div>
+                        <div className="text-base font-semibold">{details.player2.name.split(' ')[1]}</div>
+                        <div className="text-xs text-gray-400">{details.player2.odds.toFixed(2)}x</div>
                     </button>
                 </div>
             </div>
 
             {/* Match Result */}
             {formPredictions.winner && (
-                <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Match Result</h3>
-                        <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30">
+                <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base font-bold text-white">Match Result</h3>
+                        <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
                             {isBestOf5 ? 'Best of 5' : 'Best of 3'}
                         </div>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">How will {formPredictions.winner.split(' ')[1]} win the match?</p>
-                    <div className="grid grid-cols-2 gap-4">
+                    <p className="text-xs text-gray-400 mb-3">How will {formPredictions.winner.split(' ')[1]} win the match?</p>
+                    <div className="grid grid-cols-2 gap-3">
                         {isBestOf5 ? (
                             <>
                                 {formPredictions.winner === details.player1.name ? (
                                     <>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '3-0')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '3-0'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-0'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">3-0</div>
-                                            <div className="text-sm text-gray-400">Straight sets</div>
+                                            <div className="text-base font-semibold">3-0</div>
+                                            <div className="text-xs text-gray-400">Straight sets</div>
                                         </button>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '3-1')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '3-1'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-1'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">3-1</div>
-                                            <div className="text-sm text-gray-400">Four sets</div>
+                                            <div className="text-base font-semibold">3-1</div>
+                                            <div className="text-xs text-gray-400">Four sets</div>
                                         </button>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '3-2')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '3-2'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-2'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">3-2</div>
-                                            <div className="text-sm text-gray-400">Five sets</div>
+                                            <div className="text-base font-semibold">3-2</div>
+                                            <div className="text-xs text-gray-400">Five sets</div>
                                         </button>
                                     </>
                                 ) : (
                                     <>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '0-3')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '0-3'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-3'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">0-3</div>
-                                            <div className="text-sm text-gray-400">Straight sets</div>
+                                            <div className="text-base font-semibold">0-3</div>
+                                            <div className="text-xs text-gray-400">Straight sets</div>
                                         </button>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '1-3')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '1-3'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-3'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">1-3</div>
-                                            <div className="text-sm text-gray-400">Four sets</div>
+                                            <div className="text-base font-semibold">1-3</div>
+                                            <div className="text-xs text-gray-400">Four sets</div>
                                         </button>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '2-3')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '2-3'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-3'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">2-3</div>
-                                            <div className="text-sm text-gray-400">Five sets</div>
+                                            <div className="text-base font-semibold">2-3</div>
+                                            <div className="text-xs text-gray-400">Five sets</div>
                                         </button>
                                     </>
                                 )}
@@ -175,46 +175,46 @@ export function PredictionForm({
                                     <>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '2-0')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '2-0'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-0'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">2-0</div>
-                                            <div className="text-sm text-gray-400">Straight sets</div>
+                                            <div className="text-base font-semibold">2-0</div>
+                                            <div className="text-xs text-gray-400">Straight sets</div>
                                         </button>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '2-1')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '2-1'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-1'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">2-1</div>
-                                            <div className="text-sm text-gray-400">Three sets</div>
+                                            <div className="text-base font-semibold">2-1</div>
+                                            <div className="text-xs text-gray-400">Three sets</div>
                                         </button>
                                     </>
                                 ) : (
                                     <>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '0-2')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '0-2'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-2'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">0-2</div>
-                                            <div className="text-sm text-gray-400">Straight sets</div>
+                                            <div className="text-base font-semibold">0-2</div>
+                                            <div className="text-xs text-gray-400">Straight sets</div>
                                         </button>
                                         <button
                                             onClick={() => onPredictionChange('matchResult', '1-2')}
-                                            className={`p-4 rounded-lg border transition-colors ${formPredictions.matchResult === '1-2'
+                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-2'
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                                 }`}
                                         >
-                                            <div className="text-lg font-semibold">1-2</div>
-                                            <div className="text-sm text-gray-400">Three sets</div>
+                                            <div className="text-base font-semibold">1-2</div>
+                                            <div className="text-xs text-gray-400">Three sets</div>
                                         </button>
                                     </>
                                 )}
@@ -226,14 +226,14 @@ export function PredictionForm({
 
             {/* Detailed Set Scores */}
             {formPredictions.matchResult && (
-                <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Detailed Set Scores</h3>
-                        <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30">
+                <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base font-bold text-white">Detailed Set Scores</h3>
+                        <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
                             {isBestOf5 ? 'Best of 5' : 'Best of 3'}
                         </div>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">
+                    <p className="text-xs text-gray-400 mb-3">
                         Now predict the exact score for each set based on your {formPredictions.matchResult} prediction
                         {setsToShowFromResult > 0 && (
                             <span className="font-semibold text-purple-400">
@@ -241,10 +241,10 @@ export function PredictionForm({
                             </span>
                         )}
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {Array.from({ length: setsToShowFromResult }, (_, i) => (
                             <div key={i} className="space-y-2">
-                                <h4 className="font-semibold text-white">Set {i + 1}</h4>
+                                <h4 className="font-semibold text-white text-sm">Set {i + 1}</h4>
                                 {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                             </div>
                         ))}
@@ -254,23 +254,23 @@ export function PredictionForm({
 
             {/* Set Winners */}
             {formPredictions.matchResult && (
-                <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-white">Set Winners</h3>
+                <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-base font-bold text-white">Set Winners</h3>
                     </div>
-                    <p className="text-sm text-gray-400 mb-4">
+                    <p className="text-xs text-gray-400 mb-3">
                         Who wins each set based on your {formPredictions.matchResult} prediction?
                     </p>
                     {Array.from({ length: setsToShowFromResult }, (_, i) => {
                         const expectedWinner = setWinnersFromResult[i];
                         const currentWinner = getSetWinner(i + 1);
                         return (
-                            <div key={i} className="space-y-3 mb-4">
-                                <h4 className="font-semibold text-white">Set {i + 1} Winner</h4>
-                                <div className="grid grid-cols-2 gap-4">
+                            <div key={i} className="space-y-2 mb-3">
+                                <h4 className="font-semibold text-white text-sm">Set {i + 1} Winner</h4>
+                                <div className="grid grid-cols-2 gap-3">
                                     <button
                                         onClick={() => setSetWinner(i + 1, details.player1.name)}
-                                        className={`p-4 rounded-lg border transition-colors ${currentWinner === details.player1.name
+                                        className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player1.name
                                             ? 'bg-purple-600 border-purple-600 text-white'
                                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                             }`}
@@ -279,7 +279,7 @@ export function PredictionForm({
                                     </button>
                                     <button
                                         onClick={() => setSetWinner(i + 1, details.player2.name)}
-                                        className={`p-4 rounded-lg border transition-colors ${currentWinner === details.player2.name
+                                        className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player2.name
                                             ? 'bg-purple-600 border-purple-600 text-white'
                                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                                             }`}
@@ -294,15 +294,15 @@ export function PredictionForm({
             )}
 
             {/* Most Aces */}
-            <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                <h3 className="text-lg font-bold text-white mb-4">Most Aces</h3>
-                <p className="text-sm text-gray-400 mb-4">
+            <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                <h3 className="text-base font-bold text-white mb-3">Most Aces</h3>
+                <p className="text-xs text-gray-400 mb-3">
                     Who leads in aces during the match?
                 </p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={() => onPredictionChange('acesLeader', details.player1.name)}
-                        className={`p-4 rounded-lg border transition-colors ${formPredictions.acesLeader === details.player1.name
+                        className={`p-3 rounded-lg border transition-colors ${formPredictions.acesLeader === details.player1.name
                             ? 'bg-purple-600 border-purple-600 text-white'
                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                             }`}
@@ -311,7 +311,7 @@ export function PredictionForm({
                     </button>
                     <button
                         onClick={() => onPredictionChange('acesLeader', details.player2.name)}
-                        className={`p-4 rounded-lg border transition-colors ${formPredictions.acesLeader === details.player2.name
+                        className={`p-3 rounded-lg border transition-colors ${formPredictions.acesLeader === details.player2.name
                             ? 'bg-purple-600 border-purple-600 text-white'
                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                             }`}
@@ -322,15 +322,15 @@ export function PredictionForm({
             </div>
 
             {/* Total Double Faults */}
-            <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                <h3 className="text-lg font-bold text-white mb-4">Total Double Faults</h3>
-                <p className="text-sm text-gray-400 mb-4">
+            <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                <h3 className="text-base font-bold text-white mb-3">Total Double Faults</h3>
+                <p className="text-xs text-gray-400 mb-3">
                     What is the total number of double faults in the match?
                 </p>
                 <select
                     value={formPredictions.doubleFaults}
                     onChange={(e) => onPredictionChange('doubleFaults', e.target.value)}
-                    className="w-full p-4 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full p-3 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                 >
                     <option value="">Select double faults</option>
                     <option value="Under 5">Under 5</option>
@@ -341,15 +341,15 @@ export function PredictionForm({
             </div>
 
             {/* Total Break Points */}
-            <div className="bg-[#1A1A1A] rounded-xl p-6 border border-[#2A2A2A]">
-                <h3 className="text-lg font-bold text-white mb-4">Total Break Points</h3>
-                <p className="text-sm text-gray-400 mb-4">
+            <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+                <h3 className="text-base font-bold text-white mb-3">Total Break Points</h3>
+                <p className="text-xs text-gray-400 mb-3">
                     What is the total number of break points faced in the match?
                 </p>
                 <select
                     value={formPredictions.breakPoints}
                     onChange={(e) => onPredictionChange('breakPoints', e.target.value)}
-                    className="w-full p-4 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full p-3 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                 >
                     <option value="">Select break points</option>
                     <option value="Under 8">Under 8</option>
