@@ -162,74 +162,92 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
     const upcomingMatches = matches.filter(m => m.status === 'upcoming');
 
     return (
-        <div className="h-full overflow-y-auto space-y-6 px-2">
-            {liveMatches.length > 0 && (
-                <div>
-                    <div className={`text-sm font-bold mb-3 flex items-center gap-2 tracking-wide uppercase ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
-                        <span className={`w-2 h-2 rounded-full animate-pulse ${theme === 'dark' ? 'bg-red-400' : 'bg-red-500'}`} /> Live Matches
-                    </div>
-                    <div className="space-y-3">
-                        {liveMatches.map(match => (
-                            <div
-                                key={match.id}
-                                className={`border rounded-xl p-4 shadow-sm flex flex-col gap-2 cursor-pointer transition-all duration-150 ${theme === 'dark' ? 'border-red-400 bg-[#23262F] hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
-                                onClick={() => onSelectMatch?.(match)}
-                            >
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="flex flex-row flex-wrap items-center gap-2 flex-1 min-w-0">
-                                        <span className={`font-semibold text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{match.player1.name} <span className="text-xs font-normal text-gray-500">({match.player1.odds})</span></span>
-                                        <span className="text-xs font-bold text-gray-400">vs</span>
-                                        <span className={`font-semibold text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{match.player2.name} <span className="text-xs font-normal text-gray-500">({match.player2.odds})</span></span>
+        <div className="h-full flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-2 sm:px-4 pb-16">
+                {liveMatches.length > 0 && (
+                    <div>
+                        <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 flex items-center gap-2 tracking-wide uppercase ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                            <span className={`w-2 h-2 rounded-full animate-pulse ${theme === 'dark' ? 'bg-red-400' : 'bg-red-500'}`} /> Live Matches
+                        </div>
+                        <div className="space-y-2 sm:space-y-3">
+                            {liveMatches.map(match => (
+                                <div
+                                    key={match.id}
+                                    className={`border rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm flex flex-col gap-2 cursor-pointer transition-all duration-150 ${theme === 'dark' ? 'border-red-400 bg-[#23262F] hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
+                                    onClick={() => onSelectMatch?.(match)}
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
+                                            <div className="flex items-center gap-1 sm:gap-2">
+                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                    {match.player1.name.split(' ')[1]}
+                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
+                                                </span>
+                                                <span className="text-xs font-bold text-gray-400">vs</span>
+                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                    {match.player2.name.split(' ')[1]}
+                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded self-start sm:self-auto ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>LIVE</span>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>LIVE</span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm text-gray-500 gap-3">
-                                    <span className="truncate">{match.tournament} • {match.court}</span>
-                                    <span>{match.time}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs gap-3 mt-1">
-                                    <Countdown targetTime={match.lockTime} label="Lock in" />
-                                    <span className={`text-gray-400`}>Started {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} min ago</span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-            {upcomingMatches.length > 0 && (
-                <div>
-                    <div className={`text-sm font-bold mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>Upcoming Matches</div>
-                    <div className="space-y-3">
-                        {upcomingMatches.map(match => (
-                            <div
-                                key={match.id}
-                                className={`border rounded-xl p-4 shadow-sm flex flex-col gap-2 cursor-pointer transition-all duration-150 ${theme === 'dark' ? 'border-blue-400 bg-[#23262F] hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
-                                onClick={() => onSelectMatch?.(match)}
-                            >
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="flex flex-row flex-wrap items-center gap-2 flex-1 min-w-0">
-                                        <span className={`font-semibold text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{match.player1.name} <span className="text-xs font-normal text-gray-500">({match.player1.odds})</span></span>
-                                        <span className="text-xs font-bold text-gray-400">vs</span>
-                                        <span className={`font-semibold text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{match.player2.name} <span className="text-xs font-normal text-gray-500">({match.player2.odds})</span></span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-3">
+                                        <span className="truncate">{match.tournament} • {match.court}</span>
+                                        <span>{match.time}</span>
                                     </div>
-                                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>UPCOMING</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3 mt-1">
+                                        <Countdown targetTime={match.lockTime} label="Lock in" />
+                                        <span className={`text-gray-400`}>Started {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} min ago</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center justify-between text-sm text-gray-500 gap-3">
-                                    <span className="truncate">{match.tournament} • {match.court}</span>
-                                    <span>{match.time}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs gap-3 mt-1">
-                                    <Countdown targetTime={match.startTime} label="Starts in" />
-                                    <span className={`text-gray-400`}>{new Date(match.startTime).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-            {matches.length === 0 && (
-                <div className={`text-center py-12 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No matches available</div>
-            )}
+                )}
+                {upcomingMatches.length > 0 && (
+                    <div>
+                        <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>Upcoming Matches</div>
+                        <div className="space-y-2 sm:space-y-3">
+                            {upcomingMatches.map(match => (
+                                <div
+                                    key={match.id}
+                                    className={`border rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm flex flex-col gap-2 cursor-pointer transition-all duration-150 ${theme === 'dark' ? 'border-blue-400 bg-[#23262F] hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
+                                    onClick={() => onSelectMatch?.(match)}
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+                                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
+                                            <div className="flex items-center gap-1 sm:gap-2">
+                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                    {match.player1.name.split(' ')[1]}
+                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
+                                                </span>
+                                                <span className="text-xs font-bold text-gray-400">vs</span>
+                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                    {match.player2.name.split(' ')[1]}
+                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded self-start sm:self-auto ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>UPCOMING</span>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-3">
+                                        <span className="truncate">{match.tournament} • {match.court}</span>
+                                        <span>{match.time}</span>
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3 mt-1">
+                                        <Countdown targetTime={match.startTime} label="Starts in" />
+                                        <span className={`text-gray-400`}>{new Date(match.startTime).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {matches.length === 0 && (
+                    <div className={`text-center py-8 sm:py-12 text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No matches available</div>
+                )}
+            </div>
         </div>
     );
 } 

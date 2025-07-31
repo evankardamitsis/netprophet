@@ -195,7 +195,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         loadBetStats();
         syncWalletWithDatabase();
-    }, []);
+    });
 
     const loadBetStats = async () => {
         try {

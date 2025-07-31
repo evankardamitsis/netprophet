@@ -74,7 +74,7 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
             }
         };
         checkDailyReward();
-    }, []); // Remove checkDailyLogin dependency to prevent multiple calls
+    }); // Remove checkDailyLogin dependency to prevent multiple calls
 
     const handleClaimWelcomeBonus = async () => {
         try {

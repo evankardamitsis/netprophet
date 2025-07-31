@@ -72,13 +72,13 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         onMenuClick={() => setSidebarOpen(true)}
                         onSignOut={handleSignOut}
                     />
-                    <div className="flex h-[calc(100vh-64px)] min-h-0">
+                    <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
                         {/* Toggle button - always visible */}
                         <button
                             className={`fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-lg border border-gray-300 transition-colors duration-300
                                 ${theme === 'dark' ? 'bg-white hover:bg-gray-200' : 'bg-black hover:bg-gray-800'}`}
                             style={{
-                                left: window.innerWidth >= 1280 ? (sidebarOpen ? '450px' : '192px') : '0px',
+                                left: window.innerWidth >= 1280 ? (sidebarOpen ? '480px' : '192px') : '0px',
                                 transition: 'left 0.3s'
                             }}
                             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -91,7 +91,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         </button>
 
                         {/* Sidebar - only visible as drawer on xl+ */}
-                        <div className={`hidden xl:block h-full transition-all duration-300 flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[450px]' : 'w-48'}`}>
+                        <div className={`hidden xl:block fixed top-16 left-0 bottom-0 transition-all duration-300 flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[480px]' : 'w-48'}`}>
                             <Sidebar
                                 onClose={() => setSidebarOpen(false)}
                                 sidebarOpen={sidebarOpen}
@@ -112,8 +112,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         </div>
 
                         {/* Main content */}
-                        <div className="flex-1 flex flex-col min-w-0 h-full">
-                            <div className={`flex-1 p-4 md:p-8 ${theme === 'dark' ? 'bg-[#181A20]' : 'bg-white'}`}>
+                        <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[450px]' : 'xl:ml-48'} transition-all duration-300`}>
+                            <div className={`flex-1 p-4 md:p-8 overflow-y-auto ${theme === 'dark' ? 'bg-[#181A20]' : 'bg-white'}`}>
                                 {React.isValidElement(children) && 'props' in children
                                     ? React.cloneElement(children as ReactElement<any>, { sidebarOpen })
                                     : children}

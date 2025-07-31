@@ -19,7 +19,7 @@ export default function DashboardPage() {
     };
 
     return (
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="h-full flex flex-col overflow-hidden">
             <WelcomeBonus />
             {selectedMatch ? (
                 <MatchDetail
@@ -29,7 +29,7 @@ export default function DashboardPage() {
                     sidebarOpen={sidebarOpen}
                 />
             ) : (
-                <div className="flex-1">
+                <div className="flex-1 overflow-hidden">
                     <MatchesGrid
                         onSelectMatch={handleSelectMatch}
                         sidebarOpen={sidebarOpen}

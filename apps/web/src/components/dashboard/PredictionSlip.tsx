@@ -18,9 +18,9 @@ function XIcon() {
     </svg>
 }
 
-function TargetIcon({ className = "h-8 w-8 text-green-500" }: { className?: string }) {
+function BettingSlipIcon({ className = "h-8 w-8 text-green-500" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
     </svg>
 }
 
@@ -163,7 +163,7 @@ export function PredictionSlip({
             <div className="flex-1 overflow-y-auto p-6">
                 {predictions.length === 0 ? (
                     <div className="text-center py-8 text-slate-400">
-                        <TargetIcon className="h-12 w-12 mx-auto mb-4 text-slate-600" />
+                        <BettingSlipIcon className="h-12 w-12 mx-auto mb-4 text-slate-600" />
                         <p>No bets yet</p>
                         <p className="text-sm">Select matches to add to your slip</p>
                     </div>
@@ -309,24 +309,18 @@ interface FloatingPredictionButtonProps {
 }
 
 export function FloatingPredictionButton({ predictions, onClick }: FloatingPredictionButtonProps) {
-    const getTotalBetAmount = () => predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
-    const getTotalPotentialWinnings = () => predictions.reduce((total, item) => total + (item.potentialWinnings || 0), 0);
-
     return (
         <motion.button
             onClick={onClick}
-            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-4 px-6 rounded-full shadow-2xl transform transition-all duration-200 hover:scale-110 active:scale-95 flex items-center space-x-3"
+            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-4 rounded-full shadow-2xl transform transition-all duration-200 hover:scale-110 active:scale-95 flex items-center space-x-2"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
         >
-            <TargetIcon className="h-6 w-6" />
-            <div className="text-left">
-                <div className="text-sm font-semibold">Betting Slip</div>
-                <div className="text-xs opacity-80">{predictions.length} match{predictions.length !== 1 ? 'es' : ''} • {getTotalBetAmount()} 🌕 bet • {getTotalPotentialWinnings()} 🌕 win</div>
-            </div>
+            <BettingSlipIcon className="h-5 w-5" />
+            <div className="text-sm font-semibold">{predictions.length} match{predictions.length !== 1 ? 'es' : ''}</div>
         </motion.button>
     );
 } 

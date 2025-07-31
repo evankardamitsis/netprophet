@@ -308,15 +308,17 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
 
     return (
         <aside
-            className={`relative h-screen flex flex-col transition-all duration-300 ease-in-out
+            className={`h-full flex flex-col transition-all duration-300 ease-in-out
                 ${theme === 'dark' ? 'bg-[#1F222A] border-r border-[#23262F]' : 'bg-gray-100 border-r border-gray-200'}
                 ${sidebarOpen
-                    ? 'w-full sm:w-[320px] md:w-[380px] lg:w-[420px] xl:w-[450px]'
+                    ? 'w-full sm:w-[360px] md:w-[420px] lg:w-[460px] xl:w-[480px]'
                     : 'w-48'
                 }
-                fixed top-0 left-0 z-40 xl:relative xl:h-full
             `}
-            style={{ boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.04)' : 'none' }}
+            style={{
+                boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.04)' : 'none',
+                minHeight: '100vh'
+            }}
         >
             {sidebarOpen ? (
                 // Expanded view

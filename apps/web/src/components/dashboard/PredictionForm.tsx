@@ -60,7 +60,7 @@ export function PredictionForm({
     const { theme } = useTheme();
 
     return (
-        <div className="space-y-4 pb-4">
+        <div className="space-y-4 pb-4 h-full flex flex-col">
             {/* Match Winner */}
             <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
                 <h3 className="text-base font-bold text-white mb-3">Match Winner</h3>
