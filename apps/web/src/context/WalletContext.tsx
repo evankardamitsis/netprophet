@@ -1,8 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { BetsService } from '@netprophet/lib';
+import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
+import { DailyRewardsService } from '@netprophet/lib';
+import { WalletOperationsService } from '@netprophet/lib';
 
 export interface Transaction {
     id: string;
@@ -39,6 +41,7 @@ interface WalletContextType {
     updateBalance: (amount: number, type: Transaction['type'], description: string) => void;
     // Coin system functions
     checkDailyLogin: () => Promise<number>;
+    claimDailyLogin: () => Promise<number>;
     claimWelcomeBonus: () => Promise<number>;
     addReferralBonus: (amount: number) => void;
     addLeaderboardPrize: (amount: number) => void;
@@ -186,53 +189,140 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             throw new Error(`Maximum bet amount is ${COIN_CONSTANTS.MAX_BET} 🌕`);
         }
 
-        // Deduct from balance
-        updateBalance(-amount, 'bet', description);
+        // Call server-side bet placement
+        const result = await WalletOperationsService.placeBet(amount, matchId.toString(), description);
+
+        if (result.success) {
+            // Update local wallet state with server response
+            setWallet(prev => ({
+                ...prev,
+                balance: result.data.newBalance,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'bet',
+                amount: -amount,
+                description,
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsSpent: prev.totalCoinsSpent + amount,
+            }));
+        }
     };
 
-    const recordWin = (stake: number, odds: number, description: string) => {
+    const recordWin = async (stake: number, odds: number, description: string) => {
         const winnings = Math.round(stake * odds);
-        updateBalance(winnings, 'win', description);
 
-        setWallet(prev => ({
-            ...prev,
-            totalWinnings: prev.totalWinnings + winnings,
-            wonBets: prev.wonBets + 1,
-            netProfit: prev.netProfit + winnings,
-        }));
+        // Call server-side win recording
+        const result = await WalletOperationsService.recordWin(stake, odds, description);
+
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                totalWinnings: prev.totalWinnings + winnings,
+                wonBets: prev.wonBets + 1,
+                netProfit: prev.netProfit + winnings,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'win',
+                amount: winnings,
+                description,
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsEarned: prev.totalCoinsEarned + winnings,
+            }));
+        }
     };
 
-    const recordLoss = (stake: number, description: string) => {
-        updateBalance(-stake, 'loss', description);
+    const recordLoss = async (stake: number, description: string) => {
+        // Call server-side loss recording
+        const result = await WalletOperationsService.recordLoss(stake, description);
 
-        setWallet(prev => ({
-            ...prev,
-            totalLosses: prev.totalLosses + stake,
-            lostBets: prev.lostBets + 1,
-            netProfit: prev.netProfit - stake,
-        }));
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                totalLosses: prev.totalLosses + stake,
+                lostBets: prev.lostBets + 1,
+                netProfit: prev.netProfit - stake,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'loss',
+                amount: -stake,
+                description,
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsSpent: prev.totalCoinsSpent + stake,
+            }));
+        }
     };
 
     const checkDailyLogin = async (): Promise<number> => {
-        const today = new Date().toDateString();
-        const lastLoginKey = 'last_daily_login';
-        const lastLogin = localStorage.getItem(lastLoginKey);
-
-        if (lastLogin === today) {
-            return 0; // Already claimed today
+        try {
+            const status = await DailyRewardsService.checkDailyReward();
+            return status.can_claim ? status.next_reward_amount : 0;
+        } catch (error) {
+            console.error('Failed to check daily reward:', error);
+            return 0;
         }
+    };
 
-        const bonus = COIN_CONSTANTS.DAILY_LOGIN_BASE + (wallet.dailyLoginStreak * COIN_CONSTANTS.DAILY_LOGIN_STREAK_BONUS);
+    const claimDailyLogin = async (): Promise<number> => {
+        try {
+            const result = await DailyRewardsService.claimDailyReward();
 
-        setWallet(prev => ({
-            ...prev,
-            dailyLoginStreak: prev.dailyLoginStreak + 1,
-        }));
+            if (result.success) {
+                // Update local wallet state
+                setWallet(prev => ({
+                    ...prev,
+                    balance: prev.balance + result.reward_amount,
+                    dailyLoginStreak: result.new_streak,
+                }));
 
-        updateBalance(bonus, 'daily_login', `Daily login bonus (${wallet.dailyLoginStreak + 1} day streak)`);
-        localStorage.setItem(lastLoginKey, today);
+                // Add transaction to local state
+                const newTransaction: Transaction = {
+                    id: Date.now().toString(),
+                    type: 'daily_login',
+                    amount: result.reward_amount,
+                    description: `Daily login bonus (${result.new_streak} day streak)`,
+                    timestamp: new Date(),
+                };
 
-        return bonus;
+                setWallet(prev => ({
+                    ...prev,
+                    recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                    totalCoinsEarned: prev.totalCoinsEarned + result.reward_amount,
+                }));
+
+                return result.reward_amount;
+            }
+
+            return 0;
+        } catch (error) {
+            console.error('Failed to claim daily reward:', error);
+            throw error;
+        }
     };
 
     const claimWelcomeBonus = async (): Promise<number> => {
@@ -240,41 +330,178 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             return 0; // Already claimed
         }
 
-        setWallet(prev => ({
-            ...prev,
-            hasReceivedWelcomeBonus: true,
-        }));
+        // Call server-side welcome bonus claim
+        const result = await WalletOperationsService.claimWelcomeBonus();
 
-        updateBalance(COIN_CONSTANTS.WELCOME_BONUS, 'welcome_bonus', 'Welcome bonus');
-        return COIN_CONSTANTS.WELCOME_BONUS;
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                hasReceivedWelcomeBonus: true,
+                balance: prev.balance + result.data.bonus,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'welcome_bonus',
+                amount: result.data.bonus,
+                description: 'Welcome bonus',
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsEarned: prev.totalCoinsEarned + result.data.bonus,
+            }));
+
+            return result.data.bonus;
+        }
+
+        return 0;
     };
 
-    const addReferralBonus = (amount: number) => {
-        updateBalance(amount, 'referral', 'Referral bonus');
-        setWallet(prev => ({
-            ...prev,
-            referralBonusEarned: prev.referralBonusEarned + amount,
-        }));
+    const addReferralBonus = async (amount: number) => {
+        // Call server-side referral bonus
+        const result = await WalletOperationsService.addReferralBonus(amount);
+
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                balance: prev.balance + amount,
+                referralBonusEarned: prev.referralBonusEarned + amount,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'referral',
+                amount: amount,
+                description: 'Referral bonus',
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsEarned: prev.totalCoinsEarned + amount,
+            }));
+        }
     };
 
-    const addLeaderboardPrize = (amount: number) => {
-        updateBalance(amount, 'leaderboard', 'Leaderboard prize');
-        setWallet(prev => ({
-            ...prev,
-            leaderboardPrizesEarned: prev.leaderboardPrizesEarned + amount,
-        }));
+    const addLeaderboardPrize = async (amount: number) => {
+        // Call server-side leaderboard prize
+        const result = await WalletOperationsService.addLeaderboardPrize(amount);
+
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                balance: prev.balance + amount,
+                leaderboardPrizesEarned: prev.leaderboardPrizesEarned + amount,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'leaderboard',
+                amount: amount,
+                description: 'Leaderboard prize',
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsEarned: prev.totalCoinsEarned + amount,
+            }));
+        }
     };
 
-    const purchaseItem = (cost: number, itemName: string) => {
-        updateBalance(-cost, 'purchase', `Purchased ${itemName}`);
+    const purchaseItem = async (cost: number, itemName: string) => {
+        // Call server-side purchase
+        const result = await WalletOperationsService.purchaseItem(cost, itemName);
+
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                balance: result.data.newBalance,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'purchase',
+                amount: -cost,
+                description: `Purchased ${itemName}`,
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsSpent: prev.totalCoinsSpent + cost,
+            }));
+        }
     };
 
-    const enterTournament = (cost: number, tournamentName: string) => {
-        updateBalance(-cost, 'tournament_entry', `Tournament entry: ${tournamentName}`);
+    const enterTournament = async (cost: number, tournamentName: string) => {
+        // Call server-side tournament entry
+        const result = await WalletOperationsService.enterTournament(cost, tournamentName);
+
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                balance: result.data.newBalance,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'tournament_entry',
+                amount: -cost,
+                description: `Tournament entry: ${tournamentName}`,
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsSpent: prev.totalCoinsSpent + cost,
+            }));
+        }
     };
 
-    const unlockInsight = (cost: number, insightName: string) => {
-        updateBalance(-cost, 'insight_unlock', `Unlocked insight: ${insightName}`);
+    const unlockInsight = async (cost: number, insightName: string) => {
+        // Call server-side insight unlock
+        const result = await WalletOperationsService.unlockInsight(cost, insightName);
+
+        if (result.success) {
+            // Update local wallet state
+            setWallet(prev => ({
+                ...prev,
+                balance: result.data.newBalance,
+            }));
+
+            // Add transaction to local state
+            const newTransaction: Transaction = {
+                id: Date.now().toString(),
+                type: 'insight_unlock',
+                amount: -cost,
+                description: `Unlocked insight: ${insightName}`,
+                timestamp: new Date(),
+            };
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: [newTransaction, ...prev.recentTransactions.slice(0, 9)],
+                totalCoinsSpent: prev.totalCoinsSpent + cost,
+            }));
+        }
     };
 
     // Save wallet to session storage whenever it changes
@@ -289,6 +516,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         recordLoss,
         updateBalance,
         checkDailyLogin,
+        claimDailyLogin,
         claimWelcomeBonus,
         addReferralBonus,
         addLeaderboardPrize,
