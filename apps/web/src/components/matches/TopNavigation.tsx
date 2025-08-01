@@ -4,8 +4,8 @@ import { useRef, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@netprophet/ui';
-import { Wallet } from './Wallet';
-import { useTheme } from '../Providers';
+import { Wallet } from '@/components/matches/Wallet';
+
 
 // Icon components
 function MenuIcon() {
