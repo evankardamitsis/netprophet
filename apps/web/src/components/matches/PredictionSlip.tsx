@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, Badge, Button } from '@netprophet/ui';
+import { Card, CardContent, Button } from '@netprophet/ui';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useWallet } from '@/context/WalletContext';
 // BetsService will be imported dynamically in handleSubmit
@@ -198,9 +198,9 @@ export function PredictionSlip({
                                             </div>
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="flex items-center space-x-2">
-                                                    <Badge variant={getStatusColor(item.match.status)} className="text-xs bg-slate-700 text-yellow-300 border border-yellow-400">
+                                                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(item.match.status) === 'destructive' ? 'bg-red-600 text-white' : getStatusColor(item.match.status) === 'secondary' ? 'bg-blue-600 text-white' : 'bg-gray-600 text-white'}`}>
                                                         {item.match.status === 'live' ? 'LIVE' : item.match.status.toUpperCase()}
-                                                    </Badge>
+                                                    </span>
                                                     <span className="text-xs text-slate-400">{item.match.time}</span>
                                                 </div>
                                             </div>
@@ -291,7 +291,6 @@ export function PredictionSlip({
                         <Button
                             onClick={handleSubmit}
                             className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
-                            size="lg"
                         >
                             Place All Bets
                         </Button>

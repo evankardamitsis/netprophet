@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, Badge, Button } from '@netprophet/ui';
+import { Card, CardContent, Button } from '@netprophet/ui';
 import { useWallet } from '@/context/WalletContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 
@@ -170,9 +170,9 @@ export function Wallet({ }) {
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center justify-between mb-2">
                             <h3 className="font-semibold text-white">My Wallet</h3>
-                            <Badge variant="secondary" className="text-xs">
+                            <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
                                 Active
-                            </Badge>
+                            </span>
                         </div>
                         <div className="text-2xl font-bold text-yellow-300">
                             {availableBalance} 🌕
@@ -273,7 +273,7 @@ export function Wallet({ }) {
                     <div className="p-4">
                         <div className="flex items-center justify-between mb-3">
                             <h4 className="font-semibold text-white">Recent Activity</h4>
-                            <Button variant="outline" size="sm" className="text-xs">
+                            <Button className="text-xs border border-gray-600 bg-transparent hover:bg-gray-700">
                                 <HistoryIcon className="mr-1" />
                                 View All
                             </Button>
