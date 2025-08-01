@@ -5,8 +5,8 @@ import { Match } from '@/types/dashboard';
 import { CardTitle } from '@/components/ui/card';
 import { mockMatches } from '@/components/MatchesList';
 import { useMatchSelect } from '@/context/MatchSelectContext';
-import { useTheme } from '../Providers';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+
 
 interface MatchesGridProps {
     matches?: Match[];
@@ -16,7 +16,6 @@ interface MatchesGridProps {
 
 export function MatchesGrid({ matches = mockMatches, sidebarOpen = true }: MatchesGridProps) {
     const onSelectMatch = useMatchSelect();
-    const { theme } = useTheme();
     const { slipCollapsed } = usePredictionSlip();
 
     const liveMatches = matches.filter(match => match.status === 'live');
