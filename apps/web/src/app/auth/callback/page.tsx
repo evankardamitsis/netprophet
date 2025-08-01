@@ -36,8 +36,8 @@ export default function AuthCallbackPage() {
                     // Double-check session is still valid
                     const { data: sessionCheck } = await supabase.auth.getSession();
                     if (sessionCheck.session) {
-                        console.log('✅ Session confirmed, redirecting to dashboard');
-                        window.location.href = '/dashboard';
+                        console.log('✅ Session confirmed, redirecting to matches');
+                        window.location.href = '/matches';
                     } else {
                         console.error('❌ Session lost after processing');
                         setError('Session was lost. Please try signing in again.');

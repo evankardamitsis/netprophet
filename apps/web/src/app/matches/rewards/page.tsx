@@ -1,6 +1,6 @@
 'use client';
 
-import { RewardShop } from "@/components/dashboard/RewardShop";
+import { RewardShop } from "@/components/matches/RewardShop";
 
 
 export default function RewardsPage() {

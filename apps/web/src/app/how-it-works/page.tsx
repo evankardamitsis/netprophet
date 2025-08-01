@@ -232,7 +232,7 @@ export default function HowItWorksPage() {
                         size="lg"
                         variant="secondary"
                         className="text-lg px-8 py-4"
-                        onClick={() => window.location.href = '/dashboard'}
+                        onClick={() => window.location.href = '/matches'}
                     >
                         Δοκίμασε τώρα έναν αγώνα
                     </Button>

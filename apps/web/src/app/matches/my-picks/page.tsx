@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { PredictionHistory } from '@/components/dashboard/PredictionHistory';
-import { TopNavigation } from '@/components/dashboard/TopNavigation';
+import { PredictionHistory } from '@/components/matches/PredictionHistory';
+import { TopNavigation } from '@/components/matches/TopNavigation';
 
 // Mock data for prediction history
 const mockPredictions = [
@@ -114,7 +114,7 @@ export default function MyPicksPage() {
             <div className="max-w-4xl mx-auto px-6 pt-6">
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => router.push('/matches')}
                     className="mb-6 bg-yellow-500 text-white"
                 >
                     ← Back to Dashboard

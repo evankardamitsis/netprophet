@@ -74,10 +74,24 @@ serve(async (req) => {
       
       if (result.success) {
         // Update user's wallet balance in the profiles table
+        // First get current balance
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('balance')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError) {
+          throw profileError
+        }
+
+        const currentBalance = profileData.balance || 0
+        const newBalance = currentBalance + result.reward_amount
+
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
-            balance: supabase.sql`balance + ${result.reward_amount}`,
+            balance: newBalance,
             daily_login_streak: result.new_streak
           })
           .eq('id', user.id)

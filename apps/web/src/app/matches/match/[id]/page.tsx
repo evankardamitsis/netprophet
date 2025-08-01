@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { MatchDetail } from '@/components/dashboard/MatchDetail';
+import { MatchDetail } from '@/components/matches/MatchDetail';
 import { mockMatches } from '@/components/MatchesList';
 
 export default function MatchDetailPage() {
@@ -17,7 +17,7 @@ export default function MatchDetailPage() {
             <MatchDetail
                 match={match}
                 onAddToPredictionSlip={() => { }}
-                onBack={() => router.push('/dashboard')}
+                onBack={() => router.push('/matches')}
             />
         </div>
     );

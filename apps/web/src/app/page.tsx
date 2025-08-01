@@ -16,8 +16,8 @@ export default function HomePage() {
             const { data: { session } } = await supabase.auth.getSession();
 
             if (session) {
-                console.log('✅ User is authenticated, redirecting to dashboard');
-                router.push('/dashboard');
+                console.log('✅ User is authenticated, redirecting to matches');
+                router.push('/matches');
                 return;
             }
 
@@ -252,7 +252,7 @@ export default function HomePage() {
                         <div className="flex-1">
                             <p className="text-lg font-medium">Τρέχει τώρα: Open Glyfada – 12 συμμετοχές</p>
                         </div>
-                        <Button onClick={() => router.push('/dashboard')}>
+                        <Button onClick={() => router.push('/matches')}>
                             Κάνε την πρόβλεψη σου
                         </Button>
                     </div>
