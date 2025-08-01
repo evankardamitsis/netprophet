@@ -3,35 +3,25 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, createContext, useContext, useEffect } from 'react';
 
-// Theme context
+// Theme context - Always dark theme
 const ThemeContext = createContext({
-    theme: 'dark',
-    setTheme: (theme: 'dark' | 'light') => { },
+    theme: 'dark' as const,
+    setTheme: (theme: 'dark') => { },
     toggleTheme: () => { },
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-    const [theme, setThemeState] = useState<'dark' | 'light'>(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('theme');
-            if (stored === 'dark' || stored === 'light') return stored;
-            // System preference
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        return 'dark';
-    });
-
     useEffect(() => {
-        document.documentElement.classList.remove('dark', 'light');
-        document.documentElement.classList.add(theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
+        document.documentElement.classList.remove('light');
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    }, []);
 
-    const setTheme = (t: 'dark' | 'light') => setThemeState(t);
-    const toggleTheme = () => setThemeState(t => (t === 'dark' ? 'light' : 'dark'));
+    const setTheme = (t: 'dark') => { }; // No-op since we only support dark
+    const toggleTheme = () => { }; // No-op since we only support dark
 
     return (
-        <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme: 'dark', setTheme, toggleTheme }}>
             {children}
         </ThemeContext.Provider>
     );

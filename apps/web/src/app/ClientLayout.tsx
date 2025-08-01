@@ -1,15 +1,16 @@
 'use client';
 import { ReactNode, useState, cloneElement, createContext, useContext, useEffect } from 'react';
-import { Sidebar } from '@/components/dashboard/Sidebar';
-import { TopNavigation } from '@/components/dashboard/TopNavigation';
+import { Sidebar } from '@/components/matches/Sidebar';
+import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { MatchSelectContext } from '@/context/MatchSelectContext';
-import { PredictionSlip, FloatingPredictionButton } from '@/components/dashboard/PredictionSlip';
+import { PredictionSlip, FloatingPredictionButton } from '@/components/matches/PredictionSlip';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
-import { useTheme } from '../components/Providers';
+
 import React from 'react';
 import type { ReactElement } from 'react';
+
 
 // Inline SVG components to replace react-icons/fi
 function ChevronLeftIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
@@ -39,10 +40,10 @@ export function usePredictionSlipCollapse() {
 export default function ClientLayout({ children }: { children: ReactNode | ReactElement }) {
     const { user, signOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [currentPage, setCurrentPage] = useState<'dashboard' | 'leaderboard' | 'rewards'>('dashboard');
+    const [currentPage, setCurrentPage] = useState<'matches' | 'leaderboard' | 'rewards'>('matches');
     const router = useRouter();
     const { predictions, removePrediction, slipCollapsed, setSlipCollapsed } = usePredictionSlip();
-    const { theme } = useTheme();
+
 
     const handleSignOut = async () => {
         await signOut();
@@ -51,7 +52,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
 
     // New: handle match selection by routing
     const handleMatchSelect = (match: any) => {
-        router.push(`/dashboard/match/${match.id}`);
+        router.push(`/matches/match/${match.id}`);
     };
 
     // Handler to expand slip from floating button
@@ -66,7 +67,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
     return (
         <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
             <MatchSelectContext.Provider value={handleMatchSelect}>
-                <div className={`relative h-screen ${theme === 'dark' ? 'bg-[#181A20] text-white' : 'bg-white text-black'}`}>
+                <div className="relative h-screen bg-[#181A20] text-white">
                     <TopNavigation
                         userEmail={user?.email}
                         onMenuClick={() => setSidebarOpen(true)}
@@ -75,8 +76,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                     <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
                         {/* Toggle button - always visible */}
                         <button
-                            className={`fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-lg border border-gray-300 transition-colors duration-300
-                                ${theme === 'dark' ? 'bg-white hover:bg-gray-200' : 'bg-black hover:bg-gray-800'}`}
+                            className="fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-lg border border-gray-300 transition-colors duration-300 bg-white hover:bg-gray-200"
                             style={{
                                 left: window.innerWidth >= 1280 ? (sidebarOpen ? '480px' : '192px') : '0px',
                                 transition: 'left 0.3s'
@@ -85,8 +85,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                             aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
                         >
                             {sidebarOpen
-                                ? <ChevronLeftIcon size={20} color={theme === 'dark' ? 'black' : 'white'} />
-                                : <ChevronRightIcon size={20} color={theme === 'dark' ? 'black' : 'white'} />
+                                ? <ChevronLeftIcon size={20} color="black" />
+                                : <ChevronRightIcon size={20} color="black" />
                             }
                         </button>
 
@@ -113,7 +113,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
 
                         {/* Main content */}
                         <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[450px]' : 'xl:ml-48'} transition-all duration-300`}>
-                            <div className={`flex-1 p-4 md:p-8 overflow-y-auto ${theme === 'dark' ? 'bg-[#181A20]' : 'bg-white'}`}>
+                            <div className="flex-1 p-4 md:p-8 overflow-y-auto bg-[#181A20]">
                                 {React.isValidElement(children) && 'props' in children
                                     ? React.cloneElement(children as ReactElement<any>, { sidebarOpen })
                                     : children}
@@ -122,7 +122,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
 
                         {/* Global Prediction Slip - overlay on smaller screens, drawer on xl+ */}
                         <div className={
-                            `${theme === 'dark' ? 'bg-[#23262F] border-l border-[#2A2D38]' : 'bg-gray-100 border-l border-gray-200'}
+                            `bg-[#23262F] border-l border-[#2A2D38]
                             xl:flex hidden
                             transition-all duration-300
                             ${slipCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-96 opacity-100 pointer-events-auto'}
@@ -143,7 +143,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         {!slipCollapsed && (
                             <div className="fixed inset-0 z-40 flex xl:hidden">
                                 <div className="fixed inset-0 bg-black/40" onClick={() => setSlipCollapsed?.(true)} />
-                                <div className={`relative w-full max-w-[320px] h-full ${theme === 'dark' ? 'bg-[#23262F]' : 'bg-gray-100'} z-50 pt-[64px] ml-auto overflow-hidden`}>
+                                <div className="relative w-full max-w-[320px] h-full bg-[#23262F] z-50 pt-[64px] ml-auto overflow-hidden">
                                     <div className="overflow-y-auto h-full w-full">
                                         <PredictionSlip
                                             onRemovePrediction={removePrediction}
