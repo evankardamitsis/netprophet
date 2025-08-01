@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, Badge, Button } from '@netprophet/ui';
-import { useTheme } from '../Providers';
 import { useWallet } from '@/context/WalletContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 
@@ -53,7 +52,6 @@ function ClockIcon({ className = "h-3 w-3" }: { className?: string }) {
 
 export function Wallet({ }) {
     const [isOpen, setIsOpen] = useState(false);
-    const { theme } = useTheme();
     const { wallet } = useWallet();
     const { predictions } = usePredictionSlip();
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -148,14 +146,14 @@ export function Wallet({ }) {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-full transition shadow-lg hover:shadow-xl ${theme === 'dark' ? 'bg-[#23262F] hover:bg-[#2A2D38] shadow-gray-900/50' : 'bg-white border border-gray-300 hover:bg-gray-50 shadow-gray-400/50'}`}
+                className="flex items-center gap-2 px-3 py-2 rounded-full transition shadow-lg hover:shadow-xl bg-[#23262F] hover:bg-[#2A2D38] shadow-gray-900/50"
                 aria-label="Wallet"
             >
-                <span className={`font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                <span className="font-bold text-yellow-300">
                     {availableBalance} 🌕
                 </span>
                 {pendingBetAmount > 0 && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-700'}`}>
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-900 text-blue-300">
                         -{pendingBetAmount}
                     </span>
                 )}
@@ -163,36 +161,36 @@ export function Wallet({ }) {
             </button>
 
             {isOpen && (
-                <div className={`absolute right-0 mt-2 w-80 rounded-lg z-[9999] ${theme === 'dark' ? 'bg-[#23262F] border border-[#2A2D38]' : 'bg-white border border-gray-200'}`} style={{
+                <div className="absolute right-0 mt-2 w-80 rounded-lg z-[9999] bg-[#23262F] border border-[#2A2D38]" style={{
                     boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset',
                     transform: 'translateZ(0)',
                     filter: 'drop-shadow(0 10px 8px rgb(0 0 0 / 0.4))'
                 }}>
                     {/* Header */}
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>My Wallet</h3>
+                            <h3 className="font-semibold text-white">My Wallet</h3>
                             <Badge variant="secondary" className="text-xs">
                                 Active
                             </Badge>
                         </div>
-                        <div className={`text-2xl font-bold ${theme === 'dark' ? 'text-yellow-300' : 'text-yellow-600'}`}>
+                        <div className="text-2xl font-bold text-yellow-300">
                             {availableBalance} 🌕
                         </div>
-                        <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                        <div className="text-sm text-gray-400">
                             Available Coins
                         </div>
 
                         {/* Pending Bets Indicator */}
                         {pendingBetAmount > 0 && (
-                            <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                            <div className="mt-2 p-2 rounded-lg bg-blue-900/20 border border-blue-800">
                                 <div className="flex items-center gap-2">
                                     <ClockIcon className="text-blue-500 h-4 w-4" />
                                     <div className="flex-1">
-                                        <div className={`text-sm font-medium ${theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}`}>
+                                        <div className="text-sm font-medium text-blue-300">
                                             Pending Bets: {pendingBetAmount} 🌕
                                         </div>
-                                        <div className={`text-xs ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
+                                        <div className="text-xs text-blue-400">
                                             {predictions.length} match{predictions.length !== 1 ? 'es' : ''} in slip
                                         </div>
                                     </div>
@@ -204,7 +202,7 @@ export function Wallet({ }) {
                         {wallet.dailyLoginStreak > 0 && (
                             <div className="mt-2 flex items-center gap-2">
                                 <span className="text-xs text-blue-500">🔥</span>
-                                <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <span className="text-xs text-gray-400">
                                     {wallet.dailyLoginStreak} day streak
                                 </span>
                             </div>
@@ -212,58 +210,58 @@ export function Wallet({ }) {
                     </div>
 
                     {/* Stats Grid */}
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="p-4 border-b border-gray-700">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="text-center">
                                 <div className={`text-lg font-bold ${wallet.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     {formatCurrency(wallet.netProfit)}
                                 </div>
-                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <div className="text-xs text-gray-400">
                                     Net Profit
                                 </div>
                             </div>
                             <div className="text-center">
-                                <div className={`text-lg font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
+                                <div className="text-lg font-bold text-blue-400">
                                     {formatPercentage(wallet.winRate)}
                                 </div>
-                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <div className="text-xs text-gray-400">
                                     Win Rate
                                 </div>
                             </div>
                             <div className="text-center">
-                                <div className={`text-lg font-bold text-green-600`}>
+                                <div className="text-lg font-bold text-green-600">
                                     {formatCurrency(wallet.totalWinnings)}
                                 </div>
-                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <div className="text-xs text-gray-400">
                                     Total Winnings
                                 </div>
                             </div>
                             <div className="text-center">
-                                <div className={`text-lg font-bold text-red-600`}>
+                                <div className="text-lg font-bold text-red-600">
                                     {formatCurrency(-wallet.totalLosses)}
                                 </div>
-                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                <div className="text-xs text-gray-400">
                                     Total Losses
                                 </div>
                             </div>
                         </div>
 
                         {/* Additional Coin Stats */}
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div className="mt-4 pt-4 border-t border-gray-700">
                             <div className="grid grid-cols-2 gap-4 text-xs">
                                 <div className="text-center">
-                                    <div className={`font-semibold ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>
+                                    <div className="font-semibold text-green-400">
                                         {formatCurrency(wallet.totalCoinsEarned)}
                                     </div>
-                                    <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <div className="text-gray-400">
                                         Total Earned
                                     </div>
                                 </div>
                                 <div className="text-center">
-                                    <div className={`font-semibold ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                                    <div className="font-semibold text-red-400">
                                         {formatCurrency(-wallet.totalCoinsSpent)}
                                     </div>
-                                    <div className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <div className="text-gray-400">
                                         Total Spent
                                     </div>
                                 </div>
@@ -274,7 +272,7 @@ export function Wallet({ }) {
                     {/* Recent Transactions */}
                     <div className="p-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h4 className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Recent Activity</h4>
+                            <h4 className="font-semibold text-white">Recent Activity</h4>
                             <Button variant="outline" size="sm" className="text-xs">
                                 <HistoryIcon className="mr-1" />
                                 View All
@@ -282,22 +280,22 @@ export function Wallet({ }) {
                         </div>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {wallet.recentTransactions.length === 0 ? (
-                                <div className={`text-center py-4 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <div className="text-center py-4 text-sm text-gray-400">
                                     No transactions yet
                                 </div>
                             ) : (
                                 wallet.recentTransactions.slice(0, 4).map((transaction) => (
                                     <div
                                         key={transaction.id}
-                                        className={`flex items-center justify-between p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-[#2A2D38]' : 'hover:bg-gray-50'}`}
+                                        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#2A2D38]"
                                     >
                                         <div className="flex items-center gap-2">
                                             {getTransactionIcon(transaction.type)}
                                             <div>
-                                                <div className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                <div className="text-sm font-medium text-white">
                                                     {transaction.description}
                                                 </div>
-                                                <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                <div className="text-xs text-gray-400">
                                                     {formatTimeAgo(transaction.timestamp)}
                                                 </div>
                                             </div>
