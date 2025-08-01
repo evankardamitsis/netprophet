@@ -5,7 +5,7 @@ import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { MatchSelectContext } from '@/context/MatchSelectContext';
-import { PredictionSlip, FloatingPredictionButton } from '@/components/matches/PredictionSlip';
+import { PredictionSlip, FloatingPredictionButton } from '../components/matches/PredictionSlip';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 
 import React from 'react';
