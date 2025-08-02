@@ -218,29 +218,45 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     };
 
     // Helper function to render set score dropdowns
-    const renderSetScoreDropdown = (setNumber: number, value: string, onChange: (value: string) => void) => (
-        <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
-        >
-            <option value="">Select set {setNumber} score</option>
-            <option value="6-0">6-0</option>
-            <option value="6-1">6-1</option>
-            <option value="6-2">6-2</option>
-            <option value="6-3">6-3</option>
-            <option value="6-4">6-4</option>
-            <option value="7-5">7-5</option>
-            <option value="7-6">7-6</option>
-            <option value="6-7">6-7</option>
-            <option value="5-7">5-7</option>
-            <option value="4-6">4-6</option>
-            <option value="3-6">3-6</option>
-            <option value="2-6">2-6</option>
-            <option value="1-6">1-6</option>
-            <option value="0-6">0-6</option>
-        </select>
-    );
+    const renderSetScoreDropdown = (setNumber: number, value: string, onChange: (value: string) => void) => {
+        const setWinner = getSetWinner(setNumber);
+
+        // All possible set scores
+        const allSetScores = [
+            "6-0", "6-1", "6-2", "6-3", "6-4", "7-5", "7-6",
+            "6-7", "5-7", "4-6", "3-6", "2-6", "1-6", "0-6"
+        ];
+
+        // Filter scores based on set winner
+        let availableScores = allSetScores;
+        if (setWinner === details.player1.name) {
+            // Player 1 wins - show scores where first number > second number
+            availableScores = allSetScores.filter(score => {
+                const [first, second] = score.split('-').map(Number);
+                return first > second;
+            });
+        } else if (setWinner === details.player2.name) {
+            // Player 2 wins - show scores where second number > first number
+            availableScores = allSetScores.filter(score => {
+                const [first, second] = score.split('-').map(Number);
+                return second > first;
+            });
+        }
+        // If no set winner selected, show all scores
+
+        return (
+            <select
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+            >
+                <option value="">Select set {setNumber} score</option>
+                {availableScores.map(score => (
+                    <option key={score} value={score}>{score}</option>
+                ))}
+            </select>
+        );
+    };
 
     // Determine which sets to show based on tournament format
     const isBestOf5 = details.format === 'best-of-5';
