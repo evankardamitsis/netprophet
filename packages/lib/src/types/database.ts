@@ -37,6 +37,7 @@ export interface Database {
           points_fav: number | null;
           points_dog: number | null;
           processed: boolean;
+          format: string;
         };
         Insert: {
           id?: string;
@@ -50,6 +51,7 @@ export interface Database {
           points_fav?: number | null;
           points_dog?: number | null;
           processed?: boolean;
+          format?: string;
         };
         Update: {
           id?: string;
@@ -63,6 +65,7 @@ export interface Database {
           points_fav?: number | null;
           points_dog?: number | null;
           processed?: boolean;
+          format?: string;
         };
       };
       clubs: {

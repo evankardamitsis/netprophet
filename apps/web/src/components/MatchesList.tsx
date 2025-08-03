@@ -53,7 +53,8 @@ export const mockMatches = [
         points: 250,
         startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
         lockTime: new Date(Date.now() + 5 * 60 * 1000), // Locks in 5 minutes
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-5'
     },
     {
         id: 2,
@@ -66,7 +67,8 @@ export const mockMatches = [
         points: 200,
         startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
         lockTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // Locks in 1.5 hours
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-5'
     },
     {
         id: 3,
@@ -79,7 +81,8 @@ export const mockMatches = [
         points: 180,
         startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
         lockTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000), // Locks in 3.5 hours
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-5'
     },
     {
         id: 4,
@@ -92,7 +95,8 @@ export const mockMatches = [
         points: 150,
         startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
         lockTime: new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Locks in 5.5 hours
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-5'
     },
     {
         id: 6,
@@ -105,7 +109,8 @@ export const mockMatches = [
         points: 50,
         startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
         lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-3-super-tiebreak'
     },
     {
         id: 5,
@@ -118,10 +123,11 @@ export const mockMatches = [
         points: 120,
         startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
         lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-5'
     },
     {
-        id: 6,
+        id: 7,
         tournament: 'Roland Garros 2024',
         player1: { name: 'Casper Ruud', country: '🇳🇴', ranking: 10, odds: 2.80 },
         player2: { name: 'Hubert Hurkacz', country: '🇵🇱', ranking: 11, odds: 1.40 },
@@ -131,7 +137,8 @@ export const mockMatches = [
         points: 100,
         startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
         lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
-        isLocked: false
+        isLocked: false,
+        format: 'best-of-5'
     }
 ];
 
