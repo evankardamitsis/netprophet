@@ -101,17 +101,23 @@ serve(async (req) => {
         }
 
         // Add transaction record
-        const { error: transactionError } = await supabase
-          .from('transactions')
-          .insert({
-            user_id: user.id,
-            type: 'daily_login',
-            amount: result.reward_amount,
-            description: `Daily login bonus (${result.new_streak} day streak)`
-          })
+        try {
+          const { error: transactionError } = await supabase
+            .from('transactions')
+            .insert({
+              user_id: user.id,
+              type: 'daily_login',
+              amount: result.reward_amount,
+              description: `Daily login bonus (${result.new_streak} day streak)`
+            })
 
-        if (transactionError) {
+          if (transactionError) {
+            console.error('Failed to record transaction:', transactionError)
+            // Don't throw error - transaction recording is optional
+          }
+        } catch (transactionError) {
           console.error('Failed to record transaction:', transactionError)
+          // Don't throw error - transaction recording is optional
         }
       }
 
