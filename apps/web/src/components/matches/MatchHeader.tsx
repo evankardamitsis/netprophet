@@ -45,7 +45,7 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
     return (
         <div className="space-y-3">
             {/* Compact Match Info */}
-            <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#2A2A2A]">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50">
                 <div className="flex items-center justify-between mb-2">
                     <div>
                         <h3 className="text-sm font-bold text-white">{details.tournament}</h3>
@@ -76,7 +76,7 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
             {/* Compact Player Cards */}
             <div className="grid grid-cols-2 gap-3">
                 {/* Player 1 */}
-                <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#2A2A2A]">
+                <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50">
                     <div className="text-center">
                         <div className="text-sm font-bold text-white mb-1">{details.player1.name.split(' ')[1]}</div>
                         <div className="text-lg mb-2">{details.player1.country}</div>
@@ -93,7 +93,7 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                 </div>
 
                 {/* Player 2 */}
-                <div className="bg-[#1A1A1A] rounded-xl p-3 border border-[#2A2A2A]">
+                <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50">
                     <div className="text-center">
                         <div className="text-sm font-bold text-white mb-1">{details.player2.name.split(' ')[1]}</div>
                         <div className="text-lg mb-2">{details.player2.country}</div>

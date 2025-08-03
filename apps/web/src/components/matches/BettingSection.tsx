@@ -42,7 +42,7 @@ export function BettingSection({
     }, [selectedWinner, predictionCount, player1, player2, onMultiplierChange]);
 
     return (
-        <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
+        <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-4 border-2 border-slate-500 shadow-2xl ring-1 ring-slate-400/20">
             <h3 className="text-base font-bold text-white mb-3">💰 Place Your Bet</h3>
 
             {/* Bet Amount Input */}
@@ -57,7 +57,7 @@ export function BettingSection({
                         max={Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
                         value={betAmount}
                         onChange={(e) => onBetAmountChange(Number(e.target.value))}
-                        className="flex-1 p-2 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                        className="flex-1 p-2 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                         placeholder="Enter bet amount"
                     />
                     <div className="flex gap-1">
@@ -68,7 +68,7 @@ export function BettingSection({
                                 onClick={() => onBetAmountChange(amount)}
                                 className={`px-2 py-2 text-xs rounded-lg border transition-colors ${betAmount === amount
                                     ? 'bg-purple-600 text-white border-purple-600'
-                                    : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
+                                    : 'bg-slate-600 border-slate-500 text-gray-300 hover:bg-slate-500'
                                     }`}
                             >
                                 {amount}
@@ -83,7 +83,7 @@ export function BettingSection({
 
             {/* Multiplier Display */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-[#2A2A2A] p-3 rounded-lg border border-[#3A3A3A]">
+                <div className="bg-slate-600 p-3 rounded-lg border border-slate-500">
                     <div className="text-xs text-gray-400 mb-1">Multiplier</div>
                     <div className="text-xl font-bold text-purple-400">
                         {selectedMultiplier.toFixed(2)}x
@@ -92,13 +92,13 @@ export function BettingSection({
                         {selectedWinner ? `${selectedWinner.split(' ')[1]} odds + bonus` : 'Select winner first'}
                     </div>
                 </div>
-                <div className="bg-[#2A2A2A] p-3 rounded-lg border border-[#3A3A3A]">
+                <div className="bg-slate-600 p-3 rounded-lg border border-slate-500">
                     <div className="text-xs text-gray-400 mb-1">Potential Win</div>
                     <div className="text-xl font-bold text-green-400">
                         {potentialWinnings} 🌕
                     </div>
                     <div className="text-xs text-gray-500">
-                        +{potentialWinnings - betAmount} profit
+                        {betAmount > 0 ? `Bet ${betAmount} × ${selectedMultiplier.toFixed(2)}x` : 'Enter bet amount'}
                     </div>
                 </div>
             </div>
@@ -114,7 +114,7 @@ export function BettingSection({
                             key={index}
                             className={`px-2 py-1 rounded-lg border ${selectedMultiplier >= option.value
                                 ? 'bg-purple-600/20 text-purple-300 border-purple-500/50'
-                                : 'bg-[#2A2A2A] text-gray-400 border-[#3A3A3A]'
+                                : 'bg-slate-600 text-gray-400 border-slate-500'
                                 }`}
                         >
                             {option.label}

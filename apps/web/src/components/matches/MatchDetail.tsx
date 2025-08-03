@@ -270,7 +270,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className={`w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${theme === 'dark' ? 'bg-gray-800 border-gray-700 text-white' : ''}`}
+                className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
             >
                 <option value="">Select set {setNumber} score</option>
                 {availableScores.map(score => (
@@ -337,7 +337,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 w-full bg-[#0F0F0F] text-white">
+        <div className="flex flex-col flex-1 min-h-0 w-full text-white">
             {/* Compact Header Section */}
             <div className="p-4 pb-2 flex-shrink-0">
                 <button
@@ -380,8 +380,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
                 {/* Right Column: Prediction Form - Full Height */}
                 <div className="w-2/3 flex-1 min-h-0 flex flex-col h-full ">
-                    <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] overflow-hidden flex flex-col h-full relative">
-                        <div className="p-4 border-b border-[#2A2A2A] flex-shrink-0">
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
+                        <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
                             <h2 className="text-lg font-bold text-white mb-1">Make your predictions</h2>
                             <p className="text-gray-400 text-xs">Choose from multiple prediction types to maximize your points!</p>
                         </div>
@@ -405,7 +405,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             </div>
                         </div>
 
-                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#2A2A2A] bg-[#1A1A1A] z-10">
+                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
                             <button
                                 onClick={handleSubmitPredictions}
                                 disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
