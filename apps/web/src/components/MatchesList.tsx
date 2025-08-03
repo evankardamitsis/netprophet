@@ -162,30 +162,30 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
     const upcomingMatches = matches.filter(m => m.status === 'upcoming');
 
     return (
-        <div className="h-full flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-2 sm:px-4 pb-16">
+        <div className="h-full flex flex-col overflow-hidden min-w-0">
+            <div className="flex-1 overflow-y-auto space-y-2 sm:space-y-3 md:space-y-4 px-1 sm:px-2 md:px-3 lg:px-4 pb-16 min-w-0">
                 {liveMatches.length > 0 && (
                     <div>
                         <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 flex items-center gap-2 tracking-wide uppercase ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
                             <span className={`w-2 h-2 rounded-full animate-pulse ${theme === 'dark' ? 'bg-red-400' : 'bg-red-500'}`} /> Live Matches
                         </div>
-                        <div className="space-y-2 sm:space-y-3">
+                        <div className="space-y-2 sm:space-y-3 min-w-0">
                             {liveMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm flex flex-col gap-2 cursor-pointer transition-all duration-150 ${theme === 'dark' ? 'border-red-400 bg-[#23262F] hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col gap-2 cursor-pointer transition-all duration-150 min-w-0 ${theme === 'dark' ? 'border-red-400 bg-[#23262F] hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
                                             <div className="flex items-center gap-1 sm:gap-2">
                                                 <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                                    {match.player1.name.split(' ')[1]}
+                                                    {match.player1.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400">vs</span>
                                                 <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                                    {match.player2.name.split(' ')[1]}
+                                                    {match.player2.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
@@ -208,23 +208,23 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                 {upcomingMatches.length > 0 && (
                     <div>
                         <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>Upcoming Matches</div>
-                        <div className="space-y-2 sm:space-y-3">
+                        <div className="space-y-2 sm:space-y-3 min-w-0">
                             {upcomingMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm flex flex-col gap-2 cursor-pointer transition-all duration-150 ${theme === 'dark' ? 'border-blue-400 bg-[#23262F] hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col gap-2 cursor-pointer transition-all duration-150 min-w-0 ${theme === 'dark' ? 'border-blue-400 bg-[#23262F] hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
                                             <div className="flex items-center gap-1 sm:gap-2">
                                                 <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                                    {match.player1.name.split(' ')[1]}
+                                                    {match.player1.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400">vs</span>
                                                 <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                                    {match.player2.name.split(' ')[1]}
+                                                    {match.player2.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>

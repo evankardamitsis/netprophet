@@ -308,34 +308,33 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     return (
         <aside
             className={`h-full flex flex-col transition-all duration-300 ease-in-out
-                bg-[#1F222A] border-r border-[#23262F]
+                bg-[#181A20]
                 ${sidebarOpen
-                    ? 'w-full sm:w-[360px] md:w-[420px] lg:w-[460px] xl:w-[480px]'
+                    ? 'w-full max-w-[320px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:w-[400px]'
                     : 'w-48'
                 }
             `}
             style={{
-                boxShadow: sidebarOpen ? '2px 0 8px rgba(0,0,0,0.04)' : 'none',
                 minHeight: '100vh'
             }}
         >
             {sidebarOpen ? (
                 // Expanded view
-                <div className="flex flex-col h-full p-4">
-                    <Card className="flex-1 overflow-hidden bg-[#23262F] min-w-0">
-                        <div className="h-full overflow-y-auto">
+                <div className="flex flex-col h-full pt-4 p-1.5 sm:p-2 md:p-3 lg:p-4 min-w-0">
+                    <Card className="flex-1 overflow-hidden bg-[#181A20] min-w-0 shadow-none border-0">
+                        <div className="h-full overflow-y-auto min-w-0">
                             <MatchesList onSelectMatch={onMatchSelect} />
                         </div>
                     </Card>
                 </div>
             ) : (
                 // Compact view
-                <div className="flex flex-col h-full p-3">
-                    <div className="flex-1 overflow-y-auto">
-                        <div className="flex flex-col gap-2">
+                <div className="flex flex-col h-full p-2 sm:p-3 min-w-0">
+                    <div className="flex-1 overflow-y-auto min-w-0">
+                        <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
                             {/* Live matches */}
                             {allMatches.filter(m => m.status === 'live' && !m.isLocked).length > 0 && (
-                                <div className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1">
+                                <div className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1 px-1">
                                     Live
                                 </div>
                             )}
@@ -343,19 +342,19 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                 <button
                                     key={match.id}
                                     onClick={() => onMatchSelect && onMatchSelect(match)}
-                                    className="w-full p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-red-500 bg-red-900/20 "
+                                    className="w-full p-1.5 sm:p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-red-500 bg-red-900/20 min-w-0"
                                     title={`${match.player1.name} vs ${match.player2.name} - ${match.court}`}
                                 >
-                                    <div className="text-sm font-semibold text-left">
-                                        {match.player1.name} vs {match.player2.name}
+                                    <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
+                                        {match.player1.name.split(' ')[1]} v {match.player2.name.split(' ')[1]}
                                     </div>
-                                    <div className="text-xs text-gray-500">{match.court}</div>
+                                    <div className="text-xs text-gray-500 truncate">{match.court}</div>
                                 </button>
                             ))}
 
                             {/* Upcoming matches */}
                             {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).length > 0 && (
-                                <div className="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1 mt-3">
+                                <div className="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1 mt-2 sm:mt-3 px-1">
                                     Upcoming
                                 </div>
                             )}
@@ -363,13 +362,13 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                 <button
                                     key={match.id}
                                     onClick={() => onMatchSelect && onMatchSelect(match)}
-                                    className="w-full p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-blue-500 bg-blue-900/20 "
+                                    className="w-full p-1.5 sm:p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-blue-500 bg-blue-900/20 min-w-0"
                                     title={`${match.player1.name} vs ${match.player2.name} - ${match.court} - ${match.time}`}
                                 >
-                                    <div className="text-sm font-semibold text-left">
-                                        {match.player1.name} vs {match.player2.name}
+                                    <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
+                                        {match.player1.name.split(' ')[1]} v {match.player2.name.split(' ')[1]}
                                     </div>
-                                    <div className="text-xs text-gray-500">{match.time} • {match.court}</div>
+                                    <div className="text-xs text-gray-500 truncate">{match.time} • {match.court}</div>
                                 </button>
                             ))}
                         </div>
@@ -379,7 +378,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                     <div className="flex-shrink-0 pt-2">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="w-full p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-[#23262F] hover:bg-accent/20 text-gray-300"
+                            className="w-full p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-[#181A20] hover:bg-accent/20 text-gray-300"
                             title="Expand sidebar"
                         >
                             <ChevronRightIcon />

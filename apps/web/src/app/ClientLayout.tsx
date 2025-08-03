@@ -76,10 +76,10 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                     <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
                         {/* Toggle button - always visible */}
                         <button
-                            className="fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full shadow-lg border border-gray-300 transition-colors duration-300 bg-white hover:bg-gray-200"
+                            className="fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 transition-all duration-300 bg-white hover:bg-gray-200"
                             style={{
-                                left: window.innerWidth >= 1280 ? (sidebarOpen ? '480px' : '192px') : '0px',
-                                transition: 'left 0.3s'
+                                left: window.innerWidth >= 1280 ? (sidebarOpen ? '380px' : '192px') : '0px',
+                                transition: 'left 0.3s ease-in-out'
                             }}
                             onClick={() => setSidebarOpen(!sidebarOpen)}
                             aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
@@ -91,7 +91,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         </button>
 
                         {/* Sidebar - only visible as drawer on xl+ */}
-                        <div className={`hidden xl:block fixed top-16 left-0 bottom-0 transition-all duration-300 flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[480px]' : 'w-48'}`}>
+                        <div className={`hidden xl:block fixed top-16 left-0 bottom-0 transition-all duration-300 ease-in-out flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[400px]' : 'w-48'}`}>
                             <Sidebar
                                 onClose={() => setSidebarOpen(false)}
                                 sidebarOpen={sidebarOpen}
@@ -112,8 +112,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         </div>
 
                         {/* Main content */}
-                        <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[450px]' : 'xl:ml-48'} transition-all duration-300`}>
-                            <div className="flex-1 p-4 md:p-8 overflow-y-auto bg-[#181A20]">
+                        <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out`}>
+                            <div className="flex-1 p-2 sm:p-3 md:p-4 lg:p-5 overflow-y-auto bg-[#181A20]">
                                 {React.isValidElement(children) && 'props' in children
                                     ? React.cloneElement(children as ReactElement<any>, { sidebarOpen })
                                     : children}

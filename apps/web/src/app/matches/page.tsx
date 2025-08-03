@@ -5,10 +5,12 @@ import { MatchesGrid } from '@/components/matches/MatchesGrid';
 import { MatchDetail } from '@/components/matches/MatchDetail';
 import { Match } from '@/types/dashboard';
 import { WelcomeBonus } from '@/components/matches/WelcomeBonus';
+import { usePredictionSlip } from '@/context/PredictionSlipContext';
 
 export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const { slipCollapsed } = usePredictionSlip();
 
     const handleSelectMatch = (match: Match) => {
         setSelectedMatch(match);
@@ -33,6 +35,7 @@ export default function DashboardPage() {
                     <MatchesGrid
                         onSelectMatch={handleSelectMatch}
                         sidebarOpen={sidebarOpen}
+                        slipCollapsed={slipCollapsed}
                     />
                 </div>
             )}
