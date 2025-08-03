@@ -87,6 +87,26 @@ const getMatchDetails = (matchId: number) => {
             surface: 'Grass',
             round: 'Third Round',
             format: 'best-of-3' // Early rounds
+        },
+        5: {
+            tournament: 'Local Amateur Tournament',
+            player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80, wins: 12, losses: 8 },
+            player2: { name: 'Mike Johnson', country: '🇺🇸', ranking: 180, odds: 2.20, wins: 10, losses: 10 },
+            points: 50,
+            headToHead: 'Smith leads 3-2',
+            surface: 'Hard',
+            round: 'Final',
+            format: 'best-of-3-super-tiebreak' // Amateur format with super tiebreak
+        },
+        6: {
+            tournament: 'Local Amateur Tournament',
+            player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80, wins: 12, losses: 8 },
+            player2: { name: 'Mike Johnson', country: '🇺🇸', ranking: 180, odds: 2.20, wins: 10, losses: 10 },
+            points: 50,
+            headToHead: 'Smith leads 3-2',
+            surface: 'Hard',
+            round: 'Final',
+            format: 'best-of-3-super-tiebreak' // Amateur format with super tiebreak
         }
     };
     return matchDetails[matchId as keyof typeof matchDetails];
@@ -108,7 +128,9 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         if (match) {
             const existing = predictions.find(p => p.matchId === match.id);
             if (existing && typeof existing.prediction === 'object' && existing.prediction !== null && 'winner' in existing.prediction) {
-                setFormPredictions(existing.prediction);
+                // Merge existing prediction with new fields to ensure compatibility
+                const mergedPredictions = { ...createEmptyPredictions(), ...existing.prediction };
+                setFormPredictions(mergedPredictions);
             } else {
                 // Load from session storage if no existing prediction
                 const sessionPredictions = loadFormPredictionsFromSession(match.id);
@@ -260,7 +282,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
     // Determine which sets to show based on tournament format
     const isBestOf5 = details.format === 'best-of-5';
-    const setsToShowFromResult = getSetsToShowFromResult(formPredictions.matchResult);
+    const isAmateurFormat = details.format === 'best-of-3-super-tiebreak';
+    const setsToShowFromResult = getSetsToShowFromResult(formPredictions.matchResult, isAmateurFormat);
 
     // Helper function to get set score value
     const getSetScore = (setNumber: number): string => {
@@ -356,7 +379,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 </div>
 
                 {/* Right Column: Prediction Form - Full Height */}
-                <div className="w-2/3 flex-1 min-h-0 flex flex-col h-full">
+                <div className="w-2/3 flex-1 min-h-0 flex flex-col h-full ">
                     <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] overflow-hidden flex flex-col h-full relative">
                         <div className="p-4 border-b border-[#2A2A2A] flex-shrink-0">
                             <h2 className="text-lg font-bold text-white mb-1">Make your predictions</h2>
@@ -370,6 +393,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                     onPredictionChange={handlePredictionChange}
                                     details={details}
                                     isBestOf5={isBestOf5}
+                                    isAmateurFormat={isAmateurFormat}
                                     setsToShowFromResult={setsToShowFromResult}
                                     setWinnersFromResult={setWinnersFromResult}
                                     renderSetScoreDropdown={renderSetScoreDropdown}

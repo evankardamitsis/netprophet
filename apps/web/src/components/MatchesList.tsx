@@ -95,6 +95,19 @@ export const mockMatches = [
         isLocked: false
     },
     {
+        id: 6,
+        tournament: 'Local Amateur Tournament',
+        player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80 },
+        player2: { name: 'Mike Johnson', country: '🇺🇸', ranking: 180, odds: 2.20 },
+        time: '19:00',
+        court: 'Community Center',
+        status: 'upcoming' as 'upcoming',
+        points: 50,
+        startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
+        lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
+        isLocked: false
+    },
+    {
         id: 5,
         tournament: 'US Open 2024',
         player1: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 1.80 },

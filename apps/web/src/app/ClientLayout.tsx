@@ -113,7 +113,7 @@ export default function ClientLayout({ children }: { children: ReactNode | React
 
                         {/* Main content */}
                         <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out`}>
-                            <div className="flex-1 p-2 sm:p-3 md:p-4 lg:p-5 overflow-y-auto bg-[#181A20]">
+                            <div className="flex-1 p-0.5 sm:p-1 md:p-2 lg:p-3 overflow-y-auto bg-[#181A20]">
                                 {React.isValidElement(children) && 'props' in children
                                     ? React.cloneElement(children as ReactElement<any>, { sidebarOpen })
                                     : children}

@@ -17,6 +17,14 @@ export interface PredictionOptions {
     acesLeader: string;
     doubleFaults: string;
     breakPoints: string;
+    // New fields for tiebreak predictions
+    set1TieBreak: string; // "yes" or "no"
+    set2TieBreak: string; // "yes" or "no"
+    set1TieBreakScore: string; // e.g., "7-5", "7-6"
+    set2TieBreakScore: string; // e.g., "7-5", "7-6"
+    superTieBreak: string; // "yes" or "no" - for amateur format
+    superTieBreakScore: string; // e.g., "10-8", "10-6"
+    superTieBreakWinner: string; // player name
 }
 
 export interface PlayerOdds {
@@ -42,14 +50,28 @@ export function createEmptyPredictions(): PredictionOptions {
         totalGames: '',
         acesLeader: '',
         doubleFaults: '',
-        breakPoints: ''
+        breakPoints: '',
+        // New tiebreak fields
+        set1TieBreak: '',
+        set2TieBreak: '',
+        set1TieBreakScore: '',
+        set2TieBreakScore: '',
+        superTieBreak: '',
+        superTieBreakScore: '',
+        superTieBreakWinner: ''
     };
 }
 
-export function getSetsToShowFromResult(matchResult: string): number {
+export function getSetsToShowFromResult(matchResult: string, isAmateurFormat: boolean = false): number {
     if (!matchResult) return 0;
 
     const [sets1, sets2] = matchResult.split('-').map(Number);
+    
+    // For amateur format with 2-1/1-2, only show 2 sets (3rd is super tiebreak)
+    if (isAmateurFormat && ['2-1', '1-2'].includes(matchResult)) {
+        return 2;
+    }
+    
     // Total sets played = winner's sets + loser's sets
     return sets1 + sets2;
 }
@@ -99,6 +121,29 @@ export function buildPredictionText(formPredictions: PredictionOptions): string 
 
     if (setScores.length > 0) {
         predictionParts.push(`Sets: ${setScores.join(', ')}`);
+    }
+
+    // Add tiebreak predictions
+    if (formPredictions.set1TieBreak) {
+        predictionParts.push(`Set 1 TB: ${formPredictions.set1TieBreak}`);
+        if (formPredictions.set1TieBreak === 'yes' && formPredictions.set1TieBreakScore) {
+            predictionParts.push(`Set 1 TB Score: ${formPredictions.set1TieBreakScore}`);
+        }
+    }
+
+    if (formPredictions.set2TieBreak) {
+        predictionParts.push(`Set 2 TB: ${formPredictions.set2TieBreak}`);
+        if (formPredictions.set2TieBreak === 'yes' && formPredictions.set2TieBreakScore) {
+            predictionParts.push(`Set 2 TB Score: ${formPredictions.set2TieBreakScore}`);
+        }
+    }
+
+    // Add super tiebreak predictions
+    if (formPredictions.superTieBreakWinner) {
+        predictionParts.push(`Super TB Winner: ${formPredictions.superTieBreakWinner}`);
+        if (formPredictions.superTieBreakScore) {
+            predictionParts.push(`Super TB Score: ${formPredictions.superTieBreakScore}`);
+        }
     }
 
     // Add other predictions

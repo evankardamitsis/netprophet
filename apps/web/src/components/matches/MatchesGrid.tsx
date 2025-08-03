@@ -26,13 +26,13 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
     return (
         <div className="flex flex-col h-full w-full bg-[#0F0F0F] text-white">
             {/* Header Section */}
-            <div className="p-2 xs:p-3 sm:p-4 md:p-5 pb-1 xs:pb-2 sm:pb-3 flex-shrink-0">
+            <div className="p-1 xs:p-2 sm:p-3 md:p-4 pb-1 xs:pb-2 sm:pb-3 flex-shrink-0">
                 <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 xs:mb-2">Tennis Matches</h1>
                 <p className="text-gray-400 text-xs xs:text-sm">Monitor live tennis events and place your predictions</p>
             </div>
 
             {/* Content Section - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-1 xs:px-2 sm:px-3 md:px-4">
+            <div className="flex-1 overflow-y-auto px-0.5 xs:px-1 sm:px-2 md:px-3">
                 {/* Live Matches Section */}
                 {liveMatches.length > 0 && (
                     <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6">
@@ -49,12 +49,12 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                 ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
                                 : // When only sidebar is open
                                 sidebarOpen && isSlipCollapsed
-                                    ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
+                                    ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'
                                     : // When only prediction slip is open
                                     !sidebarOpen && !isSlipCollapsed
-                                        ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4'
+                                        ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
                                         : // When both are closed
-                                        'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                                        'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
                             }`}>
                             {liveMatches.map((match) => (
                                 <div
@@ -62,8 +62,8 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                     className={`bg-[#1A1A1A] rounded-lg xs:rounded-xl border border-[#2A2A2A] hover:border-purple-500/50 transition-all duration-200 cursor-pointer ${
                                         // Adjust padding and height based on available space
                                         sidebarOpen && !isSlipCollapsed
-                                            ? 'p-2 xs:p-2.5 sm:p-3 md:p-4 min-h-[180px] xs:min-h-[200px] sm:min-h-[220px] md:min-h-[240px]'
-                                            : 'p-2.5 xs:p-3 sm:p-4 md:p-5 min-h-[200px] xs:min-h-[220px] sm:min-h-[240px] md:min-h-[260px]'
+                                            ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 min-h-[160px] xs:min-h-[180px] sm:min-h-[200px] md:min-h-[220px]'
+                                            : 'p-2 xs:p-2.5 sm:p-3 md:p-4 min-h-[180px] xs:min-h-[200px] sm:min-h-[220px] md:min-h-[240px]'
                                         }`}
                                     onClick={() => onSelectMatch(match)}
                                 >
@@ -141,12 +141,12 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                 ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
                                 : // When only sidebar is open
                                 sidebarOpen && isSlipCollapsed
-                                    ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
+                                    ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'
                                     : // When only prediction slip is open
                                     !sidebarOpen && !isSlipCollapsed
-                                        ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4'
+                                        ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
                                         : // When both are closed
-                                        'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+                                        'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
                             }`}>
                             {upcomingMatches.map((match) => (
                                 <div
@@ -154,8 +154,8 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                     className={`bg-[#1A1A1A] rounded-lg xs:rounded-xl border border-[#2A2A2A] hover:border-purple-500/50 transition-all duration-200 cursor-pointer ${
                                         // Adjust padding and height based on available space
                                         sidebarOpen && !isSlipCollapsed
-                                            ? 'p-2 xs:p-2.5 sm:p-3 md:p-4 min-h-[180px] xs:min-h-[200px] sm:min-h-[220px] md:min-h-[240px]'
-                                            : 'p-2.5 xs:p-3 sm:p-4 md:p-5 min-h-[200px] xs:min-h-[220px] sm:min-h-[240px] md:min-h-[260px]'
+                                            ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 min-h-[160px] xs:min-h-[180px] sm:min-h-[200px] md:min-h-[220px]'
+                                            : 'p-2 xs:p-2.5 sm:p-3 md:p-4 min-h-[180px] xs:min-h-[200px] sm:min-h-[220px] md:min-h-[240px]'
                                         }`}
                                     onClick={() => onSelectMatch(match)}
                                 >
