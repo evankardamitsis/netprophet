@@ -308,7 +308,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     return (
         <aside
             className={`h-full flex flex-col transition-all duration-300 ease-in-out
-                bg-[#181A20]
+                bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950
                 ${sidebarOpen
                     ? 'w-full max-w-[320px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:w-[400px]'
                     : 'w-48'
@@ -321,7 +321,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
             {sidebarOpen ? (
                 // Expanded view
                 <div className="flex flex-col h-full pt-4 p-1.5 sm:p-2 md:p-3 lg:p-4 min-w-0">
-                    <Card className="flex-1 overflow-hidden bg-[#181A20] min-w-0 shadow-none border-0">
+                    <Card className="flex-1 overflow-hidden bg-gradient-to-br from-slate-950/50 via-slate-900/30 to-slate-950/50 min-w-0 shadow-none border-0">
                         <div className="h-full overflow-y-auto min-w-0">
                             <MatchesList onSelectMatch={onMatchSelect} />
                         </div>
@@ -378,7 +378,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                     <div className="flex-shrink-0 pt-2">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="w-full p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-[#181A20] hover:bg-accent/20 text-gray-300"
+                            className="w-full p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-gradient-to-r from-slate-950 to-slate-900 hover:from-slate-900 hover:to-slate-800 text-gray-300"
                             title="Expand sidebar"
                         >
                             <ChevronRightIcon />

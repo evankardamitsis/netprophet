@@ -24,7 +24,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 
     return (
-        <div className="flex flex-col h-full w-full bg-[#0F0F0F] text-white">
+        <div className="flex flex-col h-full w-full text-white">
             {/* Header Section */}
             <div className="p-1 xs:p-2 sm:p-3 md:p-4 pb-1 xs:pb-2 sm:pb-3 flex-shrink-0">
                 <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 xs:mb-2">Tennis Matches</h1>
@@ -53,7 +53,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                             {liveMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-[#1A1A1A] rounded-lg xs:rounded-xl border border-[#2A2A2A] hover:border-purple-500/50 transition-all duration-200 cursor-pointer flex flex-col ${
+                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border border-slate-600 hover:border-purple-500/50 transition-all duration-200 cursor-pointer flex flex-col ${
                                         // Adjust padding and height based on available space
                                         sidebarOpen && !isSlipCollapsed
                                             ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
@@ -142,7 +142,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                             {upcomingMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-[#1A1A1A] rounded-lg xs:rounded-xl border border-[#2A2A2A] hover:border-purple-500/50 transition-all duration-200 cursor-pointer flex flex-col ${
+                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border border-slate-600 hover:border-purple-500/50 transition-all duration-200 cursor-pointer flex flex-col ${
                                         // Adjust padding and height based on available space
                                         sidebarOpen && !isSlipCollapsed
                                             ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'

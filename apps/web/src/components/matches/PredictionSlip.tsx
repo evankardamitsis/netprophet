@@ -4,6 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Button } from '@netprophet/ui';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useWallet } from '@/context/WalletContext';
+import { useState, useEffect } from 'react';
+import {
+    calculateParlayOdds,
+    calculateSafeBetCost,
+    formatParlayOdds,
+    formatWinnings,
+    getBonusDescription,
+    validateParlayBet,
+    PARLAY_CONSTANTS
+} from '@netprophet/lib';
+import { PredictionItem } from '@/types/dashboard';
 // BetsService will be imported dynamically in handleSubmit
 import {
     SESSION_KEYS,
@@ -30,6 +41,18 @@ function ChevronUpIcon() {
     </svg>
 }
 
+function ShieldIcon() {
+    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+}
+
+function ParlayIcon() {
+    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+}
+
 interface PredictionSlipProps {
     onRemovePrediction: (matchId: number) => void;
     onSubmitPredictions: () => void;
@@ -46,8 +69,48 @@ export function PredictionSlip({
     const { predictions, clearPredictions, removePrediction } = usePredictionSlip();
     const { wallet, placeBet } = useWallet();
 
-    const getTotalBetAmount = () => predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
-    const getTotalPotentialWinnings = () => predictions.reduce((total, item) => total + (item.potentialWinnings || 0), 0);
+    // Parlay state
+    const [isParlayMode, setIsParlayMode] = useState<boolean>(false);
+    const [isSafeBet, setIsSafeBet] = useState<boolean>(false);
+    const [userStreak, setUserStreak] = useState<number>(5); // Mock user streak - in real app this would come from user stats
+    const [safeBetTokens, setSafeBetTokens] = useState<number>(3); // Mock safe bet tokens
+
+    // Reset parlay mode if less than 2 predictions
+    useEffect(() => {
+        if (predictions.length < 2 && isParlayMode) {
+            setIsParlayMode(false);
+        }
+    }, [predictions.length, isParlayMode]);
+
+    // Convert StructuredPredictionItem to PredictionItem for parlay calculations
+    const predictionItems: PredictionItem[] = predictions.map(p => ({
+        matchId: p.matchId,
+        match: p.match,
+        prediction: formatPrediction(p.prediction),
+        points: p.points || 0
+    }));
+
+    // Calculate individual bet totals using existing betAmount from predictions
+    const getTotalIndividualStake = () => {
+        return predictions.reduce((total, prediction) => {
+            return total + (prediction.betAmount || 0);
+        }, 0);
+    };
+
+    const getTotalIndividualWinnings = () => {
+        return predictions.reduce((total, prediction) => {
+            return total + (prediction.potentialWinnings || 0);
+        }, 0);
+    };
+
+    // Use total individual stake as parlay stake
+    const parlayStake = getTotalIndividualStake();
+
+    // Calculate parlay odds and winnings (only when in parlay mode)
+    const parlayCalculation = isParlayMode ? calculateParlayOdds(predictionItems, parlayStake, userStreak, isSafeBet) : null;
+    const bonusDescriptions = isParlayMode ? getBonusDescription(predictionItems, userStreak) : [];
+    const safeBetCost = isParlayMode ? calculateSafeBetCost(predictions.length) : 0;
+    const parlayValidation = isParlayMode ? validateParlayBet(predictionItems, parlayStake, wallet.balance) : null;
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -67,28 +130,69 @@ export function PredictionSlip({
             // Dynamic import to work around module resolution issue
             const { BetsService: BetsServiceModule } = await import('@netprophet/lib');
 
-            // Place all bets in the slip using BetsService
-            for (const prediction of predictions) {
-                if (prediction.betAmount && prediction.betAmount > 0) {
-                    // Create bet in Supabase
-                    // For now, use a placeholder match ID since we don't have real matches in the database
-                    const placeholderMatchId = '00000000-0000-0000-0000-000000000001';
+            if (isParlayMode) {
+                // Parlay mode - place single parlay bet
+                if (!parlayValidation?.isValid) {
+                    alert(parlayValidation?.error || 'Invalid parlay bet');
+                    return;
+                }
 
-                    await BetsServiceModule.createBet({
-                        matchId: placeholderMatchId,
-                        betAmount: prediction.betAmount,
-                        multiplier: prediction.multiplier || 1,
-                        potentialWinnings: prediction.potentialWinnings || 0,
-                        prediction: prediction.prediction,
-                        description: `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${prediction.multiplier?.toFixed(2)}x multiplier`
-                    });
+                // Create parlay bet using the new parlay method
+                const parlayPredictions = predictionItems.map((item, index) => ({
+                    matchId: item.matchId.toString(),
+                    betAmount: item.points || 0,
+                    multiplier: (item.match.player1.odds + item.match.player2.odds) / 2,
+                    prediction: formatPrediction(item.prediction),
+                    description: `${item.match.player1.name} vs ${item.match.player2.name}`
+                }));
 
-                    // Update wallet balance
-                    await placeBet(
-                        prediction.betAmount,
-                        prediction.matchId,
-                        `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${prediction.multiplier?.toFixed(2)}x multiplier`
-                    );
+                await BetsServiceModule.createParlayBet({
+                    predictions: parlayPredictions,
+                    totalStake: parlayStake,
+                    baseOdds: parlayCalculation!.baseOdds,
+                    finalOdds: parlayCalculation!.finalOdds,
+                    bonusMultiplier: parlayCalculation!.bonusMultiplier,
+                    streakBooster: parlayCalculation!.streakBooster,
+                    isSafeBet: isSafeBet,
+                    safeBetCost: safeBetCost
+                });
+
+                // Update wallet balance
+                await placeBet(
+                    parlayStake,
+                    1, // Using a simple number for matchId
+                    `Parlay bet - ${predictionItems.length} predictions - ${formatParlayOdds(parlayCalculation!.finalOdds)}x odds`
+                );
+
+                // Use safe bet token if enabled
+                if (isSafeBet) {
+                    setSafeBetTokens(prev => prev - 1);
+                }
+            } else {
+                // Individual mode - place separate bets for each prediction using existing betAmount
+                for (const prediction of predictions) {
+                    const betAmount = prediction.betAmount || 0;
+                    if (betAmount > 0) {
+                        const placeholderMatchId = '00000000-0000-0000-0000-000000000001';
+                        const multiplier = prediction.multiplier || 1;
+                        const potentialWinnings = prediction.potentialWinnings || 0;
+
+                        await BetsServiceModule.createBet({
+                            matchId: placeholderMatchId,
+                            betAmount: betAmount,
+                            multiplier: multiplier,
+                            potentialWinnings: potentialWinnings,
+                            prediction: formatPrediction(prediction.prediction),
+                            description: `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`
+                        });
+
+                        // Update wallet balance
+                        await placeBet(
+                            betAmount,
+                            1, // Using a simple number for matchId
+                            `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`
+                        );
+                    }
                 }
             }
 
@@ -104,9 +208,9 @@ export function PredictionSlip({
         } catch (error) {
             // Handle insufficient balance or other errors
             if (error instanceof Error) {
-                alert(`Error placing bets: ${error.message}`);
+                alert(`Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s): ${error.message}`);
             } else {
-                alert('Error placing bets. Please check your balance and try again.');
+                alert(`Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s). Please check your balance and try again.`);
             }
         }
     };
@@ -128,6 +232,19 @@ export function PredictionSlip({
         if (prediction.breakPoints) parts.push(`BP: ${prediction.breakPoints}`);
         return parts.join(' | ');
     }
+
+    const handleSafeBetToggle = () => {
+        if (!isSafeBet && safeBetTokens < safeBetCost) {
+            alert(`You need ${safeBetCost} safe bet tokens to use this feature. You have ${safeBetTokens}.`);
+            return;
+        }
+        setIsSafeBet(!isSafeBet);
+    };
+
+    const isIndividualModeValid = () => {
+        const totalStake = getTotalIndividualStake();
+        return totalStake > 0 && totalStake <= wallet.balance;
+    };
 
     return (
         <motion.div
@@ -164,11 +281,141 @@ export function PredictionSlip({
                 {predictions.length === 0 ? (
                     <div className="text-center py-8 text-slate-400">
                         <BettingSlipIcon className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-                        <p>No bets yet</p>
+                        <p>No predictions yet</p>
                         <p className="text-sm">Select matches to add to your slip</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
+                        {/* Mode Toggle - Only show when 2+ predictions */}
+                        {predictions.length >= 2 && (
+                            <motion.div
+                                className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 rounded-lg p-4 border-2 border-purple-400 shadow-lg"
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="bg-white/20 p-2 rounded-full">
+                                            <ParlayIcon />
+                                        </div>
+                                        <div>
+                                            <span className="text-white font-bold text-lg">🎯 Parlay Mode</span>
+                                            <div className="text-white/80 text-sm font-medium">
+                                                {predictions.length} predictions ready for parlay!
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsParlayMode(!isParlayMode)}
+                                        className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 shadow-lg ${isParlayMode
+                                            ? 'bg-white shadow-white/50'
+                                            : 'bg-white/30 shadow-white/20'
+                                            } cursor-pointer hover:scale-105 active:scale-95`}
+                                    >
+                                        <span
+                                            className={`inline-block h-6 w-6 transform rounded-full transition-all duration-300 ${isParlayMode
+                                                ? 'translate-x-7 bg-gradient-to-r from-purple-600 to-pink-500 shadow-lg'
+                                                : 'translate-x-1 bg-white shadow-md'
+                                                }`}
+                                        />
+                                    </button>
+                                </div>
+                                <div className="text-white/90 text-sm font-medium">
+                                    {isParlayMode
+                                        ? '🔥 Combine all predictions for massive rewards with bonus multipliers!'
+                                        : '⚡ Place individual bets for each prediction'
+                                    }
+                                </div>
+                                {isParlayMode && (
+                                    <div className="mt-3 p-2 bg-white/10 rounded-lg border border-white/20">
+                                        <div className="text-white/90 text-xs font-medium">
+                                            💎 <span className="font-bold">Parlay Benefits:</span> Higher rewards, bonus multipliers, and streak boosters!
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {/* Encouragement message for single prediction */}
+                        {predictions.length === 1 && (
+                            <motion.div
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-3 border border-blue-400/50"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-2xl">🎯</span>
+                                    <div className="text-white text-sm">
+                                        <span className="font-semibold">Add one more prediction</span> to unlock exciting parlay mode with bonus rewards!
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Parlay Summary - Only show when in parlay mode */}
+                        {isParlayMode && predictions.length >= 2 && (
+                            <motion.div
+                                className="bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg p-4 border border-purple-500"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <div className="text-center mb-3">
+                                    <h4 className="text-lg font-bold text-yellow-200 mb-1">
+                                        🎯 Parlay Bet ({predictions.length} picks)
+                                    </h4>
+                                    <div className="text-2xl font-bold text-green-400">
+                                        {formatParlayOdds(parlayCalculation!.finalOdds)}x
+                                    </div>
+                                    <div className="text-sm text-slate-300">
+                                        Base: {formatParlayOdds(parlayCalculation!.baseOdds)}x
+                                    </div>
+                                    <div className="text-sm text-blue-300 mt-1">
+                                        Stake: {parlayStake} 🌕 (auto-calculated)
+                                    </div>
+                                </div>
+
+                                {/* Bonus Descriptions */}
+                                {bonusDescriptions.length > 0 && (
+                                    <div className="space-y-1 mb-3">
+                                        {bonusDescriptions.map((desc: string, index: number) => (
+                                            <div key={index} className="text-xs text-yellow-300 flex items-center">
+                                                <span className="mr-2">✨</span>
+                                                {desc}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Safe Bet Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-2">
+                                        <ShieldIcon />
+                                        <span className="text-sm text-slate-300">Safe Bet</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-xs text-slate-400">
+                                            {safeBetTokens} tokens
+                                        </span>
+                                        <button
+                                            onClick={handleSafeBetToggle}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isSafeBet ? 'bg-green-600' : 'bg-slate-600'
+                                                } ${safeBetTokens < safeBetCost ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                            disabled={safeBetTokens < safeBetCost}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isSafeBet ? 'translate-x-6' : 'translate-x-1'
+                                                    }`}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Individual Predictions */}
                         <AnimatePresence>
                             {predictions.map((item, index) => (
                                 <motion.div
@@ -212,16 +459,19 @@ export function PredictionSlip({
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <div className="text-sm">
-                                                    <span className="text-slate-300">Bet: </span>
-                                                    <span className="font-semibold text-blue-400">{item.betAmount || 0} 🌕</span>
+                                                    <span className="text-slate-300">Odds: </span>
+                                                    <span className="font-semibold text-blue-400">
+                                                        {formatParlayOdds((item.match.player1.odds + item.match.player2.odds) / 2)}x
+                                                    </span>
                                                 </div>
-                                                <div className="text-sm">
-                                                    <span className="text-slate-300">Multiplier: </span>
-                                                    <span className="font-semibold text-green-400">{item.multiplier ? item.multiplier.toFixed(2) : '1.00'}x</span>
-                                                </div>
-                                                <div className="text-sm font-bold text-yellow-400">
-                                                    Win: {item.potentialWinnings || 0} 🌕
-                                                </div>
+                                                {!isParlayMode && (
+                                                    <div className="text-sm">
+                                                        <span className="text-slate-300">Stake: </span>
+                                                        <span className="font-semibold text-green-400">
+                                                            {item.betAmount || 0} 🌕
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -236,24 +486,41 @@ export function PredictionSlip({
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.3 }}
                         >
-                            <div className="text-xs text-yellow-300 mb-2 font-semibold">Quick Stats</div>
+                            <div className="text-xs text-yellow-300 mb-2 font-semibold">
+                                {isParlayMode ? 'Parlay Stats' : 'Individual Stats'}
+                            </div>
                             <div className="grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                    <span className="text-slate-400">Matches:</span>
+                                    <span className="text-slate-400">Picks:</span>
                                     <span className="font-bold ml-1 text-yellow-200">{predictions.length}</span>
                                 </div>
                                 <div>
                                     <span className="text-slate-400">Live:</span>
                                     <span className="font-bold ml-1 text-yellow-200">{predictions.filter(p => p.match.status === 'live').length}</span>
                                 </div>
-                                <div>
-                                    <span className="text-slate-400">Total Bet:</span>
-                                    <span className="font-bold ml-1 text-yellow-200">{getTotalBetAmount()} 🌕</span>
-                                </div>
-                                <div>
-                                    <span className="text-slate-400">Tournaments:</span>
-                                    <span className="font-bold ml-1 text-yellow-200">{new Set(predictions.map(p => p.match.tournament)).size}</span>
-                                </div>
+                                {isParlayMode ? (
+                                    <>
+                                        <div>
+                                            <span className="text-slate-400">Base Odds:</span>
+                                            <span className="font-bold ml-1 text-yellow-200">{formatParlayOdds(parlayCalculation!.baseOdds)}x</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-400">Final Odds:</span>
+                                            <span className="font-bold ml-1 text-yellow-200">{formatParlayOdds(parlayCalculation!.finalOdds)}x</span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <span className="text-slate-400">Total Stake:</span>
+                                            <span className="font-bold ml-1 text-yellow-200">{getTotalIndividualStake()} 🌕</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-slate-400">Potential Win:</span>
+                                            <span className="font-bold ml-1 text-yellow-200">{formatWinnings(getTotalIndividualWinnings())} 🌕</span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     </div>
@@ -270,30 +537,90 @@ export function PredictionSlip({
                         exit={{ opacity: 0, y: 50 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="text-sm text-slate-300">
-                                <span>Total Bet: </span>
-                                <span className="font-bold text-blue-400 text-lg">{getTotalBetAmount()} 🌕</span>
-                            </div>
-                            <div className="text-sm text-slate-400">
-                                {predictions.length} match{predictions.length !== 1 ? 'es' : ''}
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="text-sm text-slate-300">
-                                <span>Potential Win: </span>
-                                <span className="font-bold text-yellow-300 text-lg">{getTotalPotentialWinnings()} 🌕</span>
-                            </div>
-                            <div className="text-sm text-slate-400">
-                                Balance: {wallet.balance} 🌕
-                            </div>
-                        </div>
-                        <Button
-                            onClick={handleSubmit}
-                            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95"
-                        >
-                            Place All Bets
-                        </Button>
+                        {isParlayMode ? (
+                            // Parlay Mode Submit Section
+                            <>
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-sm text-slate-300">
+                                        <span>Parlay Stake: </span>
+                                        <span className="font-bold text-blue-400 text-lg">{parlayStake} 🌕</span>
+                                    </div>
+                                    <div className="text-sm text-slate-400">
+                                        Balance: {wallet.balance} 🌕
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-sm text-slate-300">
+                                        <span>Potential Win: </span>
+                                        <span className="font-bold text-yellow-300 text-lg">
+                                            {formatWinnings(parlayCalculation!.potentialWinnings)} 🌕
+                                        </span>
+                                    </div>
+                                    <div className="text-sm text-slate-400">
+                                        {formatParlayOdds(parlayCalculation!.finalOdds)}x odds
+                                    </div>
+                                </div>
+
+                                {!parlayValidation?.isValid && (
+                                    <div className="text-red-400 text-sm mb-3 text-center">
+                                        {parlayValidation?.error}
+                                    </div>
+                                )}
+
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={!parlayValidation?.isValid}
+                                    className={`w-full font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 ${parlayValidation?.isValid
+                                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black'
+                                        : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    Place Parlay Bet
+                                </Button>
+                            </>
+                        ) : (
+                            // Individual Mode Submit Section
+                            <>
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-sm text-slate-300">
+                                        <span>Total Stake: </span>
+                                        <span className="font-bold text-blue-400 text-lg">{getTotalIndividualStake()} 🌕</span>
+                                    </div>
+                                    <div className="text-sm text-slate-400">
+                                        Balance: {wallet.balance} 🌕
+                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <div className="text-sm text-slate-300">
+                                        <span>Potential Win: </span>
+                                        <span className="font-bold text-yellow-300 text-lg">
+                                            {formatWinnings(getTotalIndividualWinnings())} 🌕
+                                        </span>
+                                    </div>
+                                    <div className="text-sm text-slate-400">
+                                        {predictions.length} match{predictions.length !== 1 ? 'es' : ''}
+                                    </div>
+                                </div>
+
+                                {!isIndividualModeValid() && (
+                                    <div className="text-red-400 text-sm mb-3 text-center">
+                                        {getTotalIndividualStake() === 0 ? 'Please set stakes for your predictions' : 'Insufficient balance'}
+                                    </div>
+                                )}
+
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={!isIndividualModeValid()}
+                                    className={`w-full font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 ${isIndividualModeValid()
+                                        ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black'
+                                        : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    Place Individual Bets
+                                </Button>
+                            </>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -319,7 +646,9 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
             exit={{ opacity: 0, y: 100 }}
         >
             <BettingSlipIcon className="h-5 w-5" />
-            <div className="text-sm font-semibold">{predictions.length} match{predictions.length !== 1 ? 'es' : ''}</div>
+            <div className="text-sm font-semibold">
+                {predictions.length} pick{predictions.length !== 1 ? 's' : ''}
+            </div>
         </motion.button>
     );
 } 

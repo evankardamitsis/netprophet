@@ -193,7 +193,7 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                             {liveMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col gap-2 cursor-pointer transition-all duration-150 min-w-0 ${theme === 'dark' ? 'border-red-400 bg-[#23262F] hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 ${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
@@ -216,7 +216,7 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                                         <span className="truncate">{match.tournament} • {match.court}</span>
                                         <span>{match.time}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3 mt-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3">
                                         <Countdown targetTime={match.lockTime} label="Lock in" />
                                         <span className={`text-gray-400`}>Started {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} min ago</span>
                                     </div>
@@ -232,7 +232,7 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                             {upcomingMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col gap-2 cursor-pointer transition-all duration-150 min-w-0 ${theme === 'dark' ? 'border-blue-400 bg-[#23262F] hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 ${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
@@ -255,7 +255,7 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                                         <span className="truncate">{match.tournament} • {match.court}</span>
                                         <span>{match.time}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3 mt-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3">
                                         <Countdown targetTime={match.startTime} label="Starts in" />
                                         <span className={`text-gray-400`}>{new Date(match.startTime).toLocaleDateString()}</span>
                                     </div>

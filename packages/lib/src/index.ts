@@ -7,7 +7,7 @@ export type { SupabaseClient } from './supabase/client';
 
 // Services
 export { BetsService } from './supabase/bets';
-export type { CreateBetData } from './supabase/bets';
+export type { CreateBetData, CreateParlayBetData } from './supabase/bets';
 export { DailyRewardsService } from './supabase/dailyRewards';
 export type { DailyRewardStatus, DailyRewardClaim } from './supabase/dailyRewards';
 export { WalletOperationsService } from './supabase/walletOperations';
@@ -20,4 +20,5 @@ export { useAuthStore } from './store/auth';
 export * from './utils/validation';
 
 // Odds Calculation
-export * from './odds/calculateOdds'; 
+export * from './odds/calculateOdds';
+export * from './odds/parlayCalculations'; 

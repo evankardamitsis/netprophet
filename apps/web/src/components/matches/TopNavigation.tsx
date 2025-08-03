@@ -82,7 +82,7 @@ export function TopNavigation({
     }, [accountDropdownOpen]);
 
     return (
-        <header className="w-full flex items-center justify-between px-4 py-3 sticky top-0 z-10 border-b border-[#23262F] bg-[#181A20] text-white">
+        <header className="w-full flex items-center justify-between px-4 py-3 sticky top-0 z-10 border-b border-slate-700/50 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white shadow-lg">
             <div className="flex items-center gap-2">
                 <button onClick={onMenuClick} className="text-accent text-2xl font-bold focus:outline-none md:hidden">☰</button>
                 <Link
@@ -115,7 +115,7 @@ export function TopNavigation({
                         <ChevronDownIcon />
                     </button>
                     {accountDropdownOpen && (
-                        <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-2 bg-[#23262F] text-white">
+                        <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                             <button
                                 className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80"
                                 onClick={() => { setAccountDropdownOpen(false); router.push('/matches/my-profile'); }}

@@ -45,6 +45,9 @@ interface PredictionSlipContextType {
     clearPredictions: () => void;
     setSlipCollapsed?: (collapsed: boolean) => void;
     slipCollapsed?: boolean;
+    // New parlay-specific methods
+    getParlayEligibility: () => { isEligible: boolean; minRequired: number; current: number };
+    getParlayStats: () => { totalPicks: number; liveMatches: number; tournaments: number };
 }
 
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
@@ -52,6 +55,8 @@ const PredictionSlipContext = createContext<PredictionSlipContextType>({
     addPrediction: () => { },
     removePrediction: () => { },
     clearPredictions: () => { },
+    getParlayEligibility: () => ({ isEligible: false, minRequired: 2, current: 0 }),
+    getParlayStats: () => ({ totalPicks: 0, liveMatches: 0, tournaments: 0 }),
 });
 
 export function usePredictionSlip() {
@@ -116,6 +121,25 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
     };
 
+    // New parlay-specific methods
+    const getParlayEligibility = () => {
+        const current = predictions.length;
+        const minRequired = 2;
+        return {
+            isEligible: current >= minRequired,
+            minRequired,
+            current
+        };
+    };
+
+    const getParlayStats = () => {
+        return {
+            totalPicks: predictions.length,
+            liveMatches: predictions.filter(p => p.match.status === 'live').length,
+            tournaments: new Set(predictions.map(p => p.match.tournament)).size
+        };
+    };
+
     return (
         <PredictionSlipContext.Provider value={{
             predictions,
@@ -123,7 +147,9 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
             removePrediction,
             clearPredictions,
             setSlipCollapsed,
-            slipCollapsed
+            slipCollapsed,
+            getParlayEligibility,
+            getParlayStats
         }}>
             {children}
         </PredictionSlipContext.Provider>
