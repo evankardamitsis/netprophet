@@ -46,10 +46,9 @@ export const mockMatches = [
     {
         id: 1,
         tournament: 'Roland Garros 2024',
-        player1: { name: 'Rafael Nadal', country: '🇪🇸', ranking: 1, odds: 2.15 },
-        player2: { name: 'Novak Djokovic', country: '🇷🇸', ranking: 2, odds: 1.85 },
+        player1: { name: 'Rafael Nadal', odds: 2.15 },
+        player2: { name: 'Novak Djokovic', odds: 1.85 },
         time: '14:00',
-        court: 'Philippe-Chatrier',
         status: 'live' as 'live',
         points: 250,
         startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
@@ -60,10 +59,9 @@ export const mockMatches = [
     {
         id: 2,
         tournament: 'Roland Garros 2024',
-        player1: { name: 'Carlos Alcaraz', country: '🇪🇸', ranking: 3, odds: 1.65 },
-        player2: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 2.35 },
+        player1: { name: 'Carlos Alcaraz', odds: 1.65 },
+        player2: { name: 'Daniil Medvedev', odds: 2.35 },
         time: '16:30',
-        court: 'Suzanne-Lenglen',
         status: 'upcoming' as 'upcoming',
         points: 200,
         startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
@@ -74,10 +72,9 @@ export const mockMatches = [
     {
         id: 3,
         tournament: 'Wimbledon 2024',
-        player1: { name: 'Jannik Sinner', country: '🇮🇹', ranking: 5, odds: 1.95 },
-        player2: { name: 'Alexander Zverev', country: '🇩🇪', ranking: 6, odds: 1.95 },
+        player1: { name: 'Jannik Sinner', odds: 1.95 },
+        player2: { name: 'Alexander Zverev', odds: 1.95 },
         time: '13:00',
-        court: 'Centre Court',
         status: 'upcoming' as 'upcoming',
         points: 180,
         startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
@@ -88,10 +85,9 @@ export const mockMatches = [
     {
         id: 4,
         tournament: 'Wimbledon 2024',
-        player1: { name: 'Andy Murray', country: '🇬🇧', ranking: 7, odds: 2.50 },
-        player2: { name: 'Stefanos Tsitsipas', country: '🇬🇷', ranking: 8, odds: 1.60 },
+        player1: { name: 'Andy Murray', odds: 2.50 },
+        player2: { name: 'Stefanos Tsitsipas', odds: 1.60 },
         time: '15:30',
-        court: 'Court 1',
         status: 'upcoming' as 'upcoming',
         points: 150,
         startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
@@ -102,10 +98,9 @@ export const mockMatches = [
     {
         id: 5,
         tournament: 'US Open 2024',
-        player1: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 1.80 },
-        player2: { name: 'Andrey Rublev', country: '🇷🇺', ranking: 11, odds: 2.20 },
+        player1: { name: 'Daniil Medvedev', odds: 1.80 },
+        player2: { name: 'Andrey Rublev', odds: 2.20 },
         time: '20:00',
-        court: 'Arthur Ashe',
         status: 'upcoming' as 'upcoming',
         points: 100,
         startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
@@ -116,10 +111,9 @@ export const mockMatches = [
     {
         id: 6,
         tournament: 'Local Amateur Tournament',
-        player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80 },
-        player2: { name: 'Mike Johnson', country: '🇺🇸', ranking: 180, odds: 2.20 },
+        player1: { name: 'John Smith', odds: 1.80 },
+        player2: { name: 'Mike Johnson', odds: 2.20 },
         time: '19:00',
-        court: 'Community Center',
         status: 'upcoming' as 'upcoming',
         points: 50,
         startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
@@ -130,10 +124,9 @@ export const mockMatches = [
     {
         id: 7,
         tournament: 'Roland Garros 2024',
-        player1: { name: 'Casper Ruud', country: '🇳🇴', ranking: 10, odds: 2.80 },
-        player2: { name: 'Hubert Hurkacz', country: '🇵🇱', ranking: 11, odds: 1.40 },
+        player1: { name: 'Casper Ruud', odds: 2.80 },
+        player2: { name: 'Hubert Hurkacz', odds: 1.40 },
         time: '18:00',
-        court: 'Court 2',
         status: 'upcoming' as 'upcoming',
         points: 120,
         startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
@@ -197,30 +190,30 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                             {liveMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 relative ${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl pt-5 pb-1 px-1 sm:pt-5 sm:pb-1.5 sm:px-1.5 md:pt-5 md:pb-2 md:px-2 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-24 sm:h-28 md:h-32 relative ${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
-                                    <span className={`absolute top-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>{dict?.sidebar?.live || 'LIVE'}</span>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-                                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
-                                            <div className="flex items-center gap-1 sm:gap-2">
-                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                    <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>{dict?.sidebar?.live || 'LIVE'}</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-0.5">
+                                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0 sm:gap-0.5 flex-1 min-w-0">
+                                            <div className="flex items-center gap-0 sm:gap-0.5">
+                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player1.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
-                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-3">
-                                        <span className="truncate">{match.tournament} • {match.court}</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
+                                        <span className="truncate">{match.tournament}</span>
                                         <span>{match.time}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
                                         <Countdown targetTime={match.lockTime} label={dict?.sidebar?.lockIn || 'Lock in'} dict={dict} />
                                         <span className={`text-gray-400`}>{dict?.sidebar?.startedAgo || 'Started'} {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} {dict?.sidebar?.minutes || 'min'} {dict?.common?.ago || 'ago'}</span>
                                     </div>
@@ -239,30 +232,30 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                             {upcomingMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 relative ${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl pt-5 pb-1 px-1 sm:pt-5 sm:pb-1.5 sm:px-1.5 md:pt-5 md:pb-2 md:px-2 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-24 sm:h-28 md:h-32 relative ${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
-                                    <span className={`absolute top-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>{dict?.sidebar?.upcoming || 'UPCOMING'}</span>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-                                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
-                                            <div className="flex items-center gap-1 sm:gap-2">
-                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                    <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>{dict?.sidebar?.upcoming || 'UPCOMING'}</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-0.5">
+                                        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0 sm:gap-0.5 flex-1 min-w-0">
+                                            <div className="flex items-center gap-0 sm:gap-0.5">
+                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player1.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
-                                                <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-3">
-                                        <span className="truncate">{match.tournament} • {match.court}</span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
+                                        <span className="truncate">{match.tournament}</span>
                                         <span>{match.time}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
                                         <Countdown targetTime={match.startTime} label={dict?.sidebar?.startsIn || 'Starts in'} dict={dict} />
                                         <span className={`text-gray-400`}>{new Date(match.startTime).toLocaleDateString()}</span>
                                     </div>
