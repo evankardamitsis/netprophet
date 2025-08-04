@@ -111,17 +111,31 @@ export function BettingSection({
                     {dict?.matches?.multiplierIncreases || 'Multiplier increases with more predictions:'}
                 </div>
                 <div className="flex flex-wrap gap-1 text-xs">
-                    {getMultiplierOptions(player1, player2).map((option, index) => (
-                        <div
-                            key={index}
-                            className={`px-2 py-1 rounded-lg border ${selectedMultiplier >= option.value
-                                ? 'bg-purple-600/20 text-purple-300 border-purple-500/50'
-                                : 'bg-slate-600 text-gray-400 border-slate-500'
-                                }`}
-                        >
-                            {option.label}
-                        </div>
-                    ))}
+                    {(() => {
+                        const baseOdds = selectedWinner
+                            ? (selectedWinner === player1.name ? player1.odds : player2.odds)
+                            : Math.min(player1.odds, player2.odds);
+
+                        const options = [
+                            { value: baseOdds, label: `${baseOdds.toFixed(2)}x`, description: '1 prediction' },
+                            { value: baseOdds + 0.2, label: `${(baseOdds + 0.2).toFixed(2)}x`, description: '2+ predictions' },
+                            { value: baseOdds + 0.4, label: `${(baseOdds + 0.4).toFixed(2)}x`, description: '4+ predictions' },
+                            { value: baseOdds + 0.6, label: `${(baseOdds + 0.6).toFixed(2)}x`, description: '6+ predictions' },
+                            { value: baseOdds + 0.8, label: `${(baseOdds + 0.8).toFixed(2)}x`, description: '8+ predictions' }
+                        ];
+
+                        return options.map((option, index) => (
+                            <div
+                                key={index}
+                                className={`px-2 py-1 rounded-lg border ${selectedMultiplier >= option.value
+                                    ? 'bg-purple-600/20 text-purple-300 border-purple-500/50'
+                                    : 'bg-slate-600 text-gray-400 border-slate-500'
+                                    }`}
+                            >
+                                {option.label}
+                            </div>
+                        ));
+                    })()}
                 </div>
             </div>
         </div>

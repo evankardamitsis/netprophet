@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Button } from '@netprophet/ui';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useWallet } from '@/context/WalletContext';
+import { useDictionary } from '@/context/DictionaryContext';
 import { useState, useEffect } from 'react';
 import {
     calculateParlayOdds,
@@ -68,6 +69,7 @@ export function PredictionSlip({
 }: PredictionSlipProps) {
     const { predictions, clearPredictions, removePrediction } = usePredictionSlip();
     const { wallet, placeBet } = useWallet();
+    const { dict, lang } = useDictionary();
 
     // Parlay state
     const [isParlayMode, setIsParlayMode] = useState<boolean>(false);
@@ -161,7 +163,7 @@ export function PredictionSlip({
                 await placeBet(
                     parlayStake,
                     1, // Using a simple number for matchId
-                    `Parlay bet - ${predictionItems.length} predictions - ${formatParlayOdds(parlayCalculation!.finalOdds)}x odds`
+                    `${dict?.matches?.parlayBetDescription?.replace('{count}', predictionItems.length.toString()).replace('{odds}', formatParlayOdds(parlayCalculation!.finalOdds)) || `Parlay bet - ${predictionItems.length} predictions - ${formatParlayOdds(parlayCalculation!.finalOdds)}x odds`}`
                 );
 
                 // Use safe bet token if enabled
@@ -190,7 +192,7 @@ export function PredictionSlip({
                         await placeBet(
                             betAmount,
                             1, // Using a simple number for matchId
-                            `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`
+                            `${dict?.matches?.individualBetDescription?.replace('{name}', `${prediction.match.player1.name} vs ${prediction.match.player2.name}`).replace('{multiplier}', multiplier.toFixed(2)) || `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`}`
                         );
                     }
                 }
@@ -263,12 +265,12 @@ export function PredictionSlip({
             }}
         >
             <div className="flex-shrink-0 p-6 border-b border-dashed border-slate-700 bg-slate-800 flex justify-between items-center">
-                <h3 className="text-lg font-bold text-yellow-300 tracking-wider uppercase">Betting Slip</h3>
+                <h3 className="text-lg font-bold text-yellow-300 tracking-wider uppercase">{dict?.matches?.bettingSlip || 'Betting Slip'}</h3>
                 {onToggleCollapse && (
                     <motion.button
                         onClick={onToggleCollapse}
                         className="text-slate-400 hover:text-yellow-300 transition-colors duration-200 p-1 rounded-full hover:bg-slate-700"
-                        title="Minimize slip"
+                        title={dict?.matches?.minimizeSlip || 'Minimize slip'}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                     >
@@ -281,8 +283,8 @@ export function PredictionSlip({
                 {predictions.length === 0 ? (
                     <div className="text-center py-8 text-slate-400">
                         <BettingSlipIcon className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-                        <p>No predictions yet</p>
-                        <p className="text-sm">Select matches to add to your slip</p>
+                        <p>{dict?.matches?.noPredictionsYet || 'No predictions yet'}</p>
+                        <p className="text-sm">{dict?.matches?.selectMatchesToAdd || 'Select matches to add to your slip'}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -300,9 +302,9 @@ export function PredictionSlip({
                                             <ParlayIcon />
                                         </div>
                                         <div>
-                                            <span className="text-white font-bold text-lg">🎯 Parlay Mode</span>
+                                            <span className="text-white font-bold text-lg">{dict?.matches?.parlayMode || '🎯 Parlay Mode'}</span>
                                             <div className="text-white/80 text-sm font-medium">
-                                                {predictions.length} predictions ready for parlay!
+                                                {dict?.matches?.predictionsReadyForParlay?.replace('{count}', predictions.length.toString()) || `${predictions.length} predictions ready for parlay!`}
                                             </div>
                                         </div>
                                     </div>
@@ -323,17 +325,10 @@ export function PredictionSlip({
                                 </div>
                                 <div className="text-white/90 text-sm font-medium">
                                     {isParlayMode
-                                        ? '🔥 Combine all predictions for massive rewards with bonus multipliers!'
-                                        : '⚡ Place individual bets for each prediction'
+                                        ? dict?.matches?.parlayBenefits || '💎 Parlay Benefits: Higher rewards, bonus multipliers, and streak boosters!'
+                                        : dict?.matches?.combineAllPredictions || '🔥 Combine all predictions for massive rewards with bonus multipliers!'
                                     }
                                 </div>
-                                {isParlayMode && (
-                                    <div className="mt-3 p-2 bg-white/10 rounded-lg border border-white/20">
-                                        <div className="text-white/90 text-xs font-medium">
-                                            💎 <span className="font-bold">Parlay Benefits:</span> Higher rewards, bonus multipliers, and streak boosters!
-                                        </div>
-                                    </div>
-                                )}
                             </motion.div>
                         )}
 
@@ -348,7 +343,7 @@ export function PredictionSlip({
                                 <div className="flex items-center space-x-2">
                                     <span className="text-2xl">🎯</span>
                                     <div className="text-white text-sm">
-                                        <span className="font-semibold">Add one more prediction</span> to unlock exciting parlay mode with bonus rewards!
+                                        <span className="font-semibold">{dict?.matches?.addOneMorePrediction || 'Add one more prediction'}</span> {dict?.matches?.unlockParlayMode || 'to unlock exciting parlay mode with bonus rewards!'}
                                     </div>
                                 </div>
                             </motion.div>
@@ -364,16 +359,16 @@ export function PredictionSlip({
                             >
                                 <div className="text-center mb-3">
                                     <h4 className="text-lg font-bold text-yellow-200 mb-1">
-                                        🎯 Parlay Bet ({predictions.length} picks)
+                                        {dict?.matches?.parlayBet?.replace('{count}', predictions.length.toString()) || `🎯 Parlay Bet (${predictions.length} picks)`}
                                     </h4>
                                     <div className="text-2xl font-bold text-green-400">
                                         {formatParlayOdds(parlayCalculation!.finalOdds)}x
                                     </div>
                                     <div className="text-sm text-slate-300">
-                                        Base: {formatParlayOdds(parlayCalculation!.baseOdds)}x
+                                        {dict?.matches?.base || 'Base'}: {formatParlayOdds(parlayCalculation!.baseOdds)}x
                                     </div>
                                     <div className="text-sm text-blue-300 mt-1">
-                                        Stake: {parlayStake} 🌕 (auto-calculated)
+                                        {dict?.matches?.stakeAutoCalculated?.replace('{stake}', parlayStake.toString()) || `Stake: ${parlayStake} 🌕 (auto-calculated)`}
                                     </div>
                                 </div>
 
@@ -393,11 +388,11 @@ export function PredictionSlip({
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-2">
                                         <ShieldIcon />
-                                        <span className="text-sm text-slate-300">Safe Bet</span>
+                                        <span className="text-sm text-slate-300">{dict?.matches?.safeBet || 'Safe Bet'}</span>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                         <span className="text-xs text-slate-400">
-                                            {safeBetTokens} tokens
+                                            {safeBetTokens} {dict?.matches?.tokens || 'tokens'}
                                         </span>
                                         <button
                                             onClick={handleSafeBetToggle}
@@ -432,7 +427,7 @@ export function PredictionSlip({
                                                     <div className="text-sm font-semibold text-yellow-200">
                                                         {item.match.player1.name} vs {item.match.player2.name}
                                                     </div>
-                                                    <div className="text-xs text-slate-400 mt-1">{item.match.tournament || 'Tournament'}</div>
+                                                    <div className="text-xs text-slate-400 mt-1">{item.match.tournament || (dict?.matches?.tournament || 'Tournament')}</div>
                                                 </div>
                                                 <motion.button
                                                     onClick={() => handleRemovePrediction(item.matchId)}
@@ -453,20 +448,20 @@ export function PredictionSlip({
                                             </div>
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="text-sm">
-                                                    <span className="text-slate-300">Pick: </span>
+                                                    <span className="text-slate-300">{dict?.matches?.pick || 'Pick'}: </span>
                                                     <span className="font-semibold text-yellow-200">{formatPrediction(item.prediction)}</span>
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-center">
                                                 <div className="text-sm">
-                                                    <span className="text-slate-300">Odds: </span>
+                                                    <span className="text-slate-300">{dict?.matches?.odds || 'Odds'}: </span>
                                                     <span className="font-semibold text-blue-400">
                                                         {formatParlayOdds((item.match.player1.odds + item.match.player2.odds) / 2)}x
                                                     </span>
                                                 </div>
                                                 {!isParlayMode && (
                                                     <div className="text-sm">
-                                                        <span className="text-slate-300">Stake: </span>
+                                                        <span className="text-slate-300">{dict?.matches?.stake || 'Stake'}: </span>
                                                         <span className="font-semibold text-green-400">
                                                             {item.betAmount || 0} 🌕
                                                         </span>
@@ -487,36 +482,36 @@ export function PredictionSlip({
                             transition={{ delay: 0.3 }}
                         >
                             <div className="text-xs text-yellow-300 mb-2 font-semibold">
-                                {isParlayMode ? 'Parlay Stats' : 'Individual Stats'}
+                                {isParlayMode ? (dict?.matches?.parlayStats || 'Parlay Stats') : (dict?.matches?.individualStats || 'Individual Stats')}
                             </div>
                             <div className="grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                    <span className="text-slate-400">Picks:</span>
+                                    <span className="text-slate-400">{dict?.matches?.picks || 'Picks'}:</span>
                                     <span className="font-bold ml-1 text-yellow-200">{predictions.length}</span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400">Live:</span>
+                                    <span className="text-slate-400">{dict?.matches?.live || 'Live'}:</span>
                                     <span className="font-bold ml-1 text-yellow-200">{predictions.filter(p => p.match.status === 'live').length}</span>
                                 </div>
                                 {isParlayMode ? (
                                     <>
                                         <div>
-                                            <span className="text-slate-400">Base Odds:</span>
+                                            <span className="text-slate-400">{dict?.matches?.baseOdds || 'Base Odds'}:</span>
                                             <span className="font-bold ml-1 text-yellow-200">{formatParlayOdds(parlayCalculation!.baseOdds)}x</span>
                                         </div>
                                         <div>
-                                            <span className="text-slate-400">Final Odds:</span>
+                                            <span className="text-slate-400">{dict?.matches?.finalOdds || 'Final Odds'}:</span>
                                             <span className="font-bold ml-1 text-yellow-200">{formatParlayOdds(parlayCalculation!.finalOdds)}x</span>
                                         </div>
                                     </>
                                 ) : (
                                     <>
                                         <div>
-                                            <span className="text-slate-400">Total Stake:</span>
+                                            <span className="text-slate-400">{dict?.matches?.totalStake || 'Total Stake'}:</span>
                                             <span className="font-bold ml-1 text-yellow-200">{getTotalIndividualStake()} 🌕</span>
                                         </div>
                                         <div>
-                                            <span className="text-slate-400">Potential Win:</span>
+                                            <span className="text-slate-400">{dict?.matches?.potentialWin || 'Potential Win'}:</span>
                                             <span className="font-bold ml-1 text-yellow-200">{formatWinnings(getTotalIndividualWinnings())} 🌕</span>
                                         </div>
                                     </>
@@ -542,23 +537,23 @@ export function PredictionSlip({
                             <>
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="text-sm text-slate-300">
-                                        <span>Parlay Stake: </span>
+                                        <span>{dict?.matches?.parlayStake || 'Parlay Stake'}: </span>
                                         <span className="font-bold text-blue-400 text-lg">{parlayStake} 🌕</span>
                                     </div>
                                     <div className="text-sm text-slate-400">
-                                        Balance: {wallet.balance} 🌕
+                                        {dict?.matches?.balance || 'Balance'}: {wallet.balance} 🌕
                                     </div>
                                 </div>
 
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="text-sm text-slate-300">
-                                        <span>Potential Win: </span>
+                                        <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
                                         <span className="font-bold text-yellow-300 text-lg">
                                             {formatWinnings(parlayCalculation!.potentialWinnings)} 🌕
                                         </span>
                                     </div>
                                     <div className="text-sm text-slate-400">
-                                        {formatParlayOdds(parlayCalculation!.finalOdds)}x odds
+                                        {formatParlayOdds(parlayCalculation!.finalOdds)}x {dict?.matches?.odds || 'odds'}
                                     </div>
                                 </div>
 
@@ -576,7 +571,7 @@ export function PredictionSlip({
                                         : 'bg-slate-600 text-slate-400 cursor-not-allowed'
                                         }`}
                                 >
-                                    Place Parlay Bet
+                                    {dict?.matches?.placeParlayBet || 'Place Parlay Bet'}
                                 </Button>
                             </>
                         ) : (
@@ -584,28 +579,28 @@ export function PredictionSlip({
                             <>
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="text-sm text-slate-300">
-                                        <span>Total Stake: </span>
+                                        <span>{dict?.matches?.totalStake || 'Total Stake'}: </span>
                                         <span className="font-bold text-blue-400 text-lg">{getTotalIndividualStake()} 🌕</span>
                                     </div>
                                     <div className="text-sm text-slate-400">
-                                        Balance: {wallet.balance} 🌕
+                                        {dict?.matches?.balance || 'Balance'}: {wallet.balance} 🌕
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center mb-4">
                                     <div className="text-sm text-slate-300">
-                                        <span>Potential Win: </span>
+                                        <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
                                         <span className="font-bold text-yellow-300 text-lg">
                                             {formatWinnings(getTotalIndividualWinnings())} 🌕
                                         </span>
                                     </div>
                                     <div className="text-sm text-slate-400">
-                                        {predictions.length} match{predictions.length !== 1 ? 'es' : ''}
+                                        {predictions.length} {predictions.length !== 1 ? (dict?.matches?.matches || 'matches') : (dict?.matches?.match || 'match')}
                                     </div>
                                 </div>
 
                                 {!isIndividualModeValid() && (
                                     <div className="text-red-400 text-sm mb-3 text-center">
-                                        {getTotalIndividualStake() === 0 ? 'Please set stakes for your predictions' : 'Insufficient balance'}
+                                        {getTotalIndividualStake() === 0 ? (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions') : (dict?.matches?.insufficientBalance || 'Insufficient balance')}
                                     </div>
                                 )}
 
@@ -617,7 +612,7 @@ export function PredictionSlip({
                                         : 'bg-slate-600 text-slate-400 cursor-not-allowed'
                                         }`}
                                 >
-                                    Place Individual Bets
+                                    {dict?.matches?.placeIndividualBets || 'Place Individual Bets'}
                                 </Button>
                             </>
                         )}
@@ -635,6 +630,7 @@ interface FloatingPredictionButtonProps {
 }
 
 export function FloatingPredictionButton({ predictions, onClick }: FloatingPredictionButtonProps) {
+    const { dict, lang } = useDictionary();
     return (
         <motion.button
             onClick={onClick}
@@ -647,7 +643,7 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
         >
             <BettingSlipIcon className="h-5 w-5" />
             <div className="text-sm font-semibold">
-                {predictions.length} pick{predictions.length !== 1 ? 's' : ''}
+                {predictions.length} {predictions.length !== 1 ? (dict?.matches?.picks || 'picks') : (dict?.matches?.pick || 'pick')}
             </div>
         </motion.button>
     );

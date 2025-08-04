@@ -198,15 +198,15 @@ export function calculateMultiplier(
     // Base multiplier is the betting odds
     let multiplier = winnerOdds;
     
-    // Add small bonuses for prediction complexity
+    // Add significant bonuses for prediction complexity
     if (predictionCount >= 8) {
-        multiplier += 0.3; // +0.3x for 8+ predictions
+        multiplier += 0.8; // +0.8x for 8+ predictions
     } else if (predictionCount >= 6) {
-        multiplier += 0.2; // +0.2x for 6+ predictions
+        multiplier += 0.6; // +0.6x for 6+ predictions
     } else if (predictionCount >= 4) {
-        multiplier += 0.15; // +0.15x for 4+ predictions
+        multiplier += 0.4; // +0.4x for 4+ predictions
     } else if (predictionCount >= 2) {
-        multiplier += 0.1; // +0.1x for 2+ predictions
+        multiplier += 0.2; // +0.2x for 2+ predictions
     }
     
     return Math.round(multiplier * 100) / 100; // Round to 2 decimal places
@@ -216,36 +216,39 @@ export function calculateMultiplier(
  * Get multiplier options for display
  * @param player1 - Player 1 odds
  * @param player2 - Player 2 odds
+ * @param selectedWinner - The predicted winner (optional)
  * @returns Array of multiplier options with descriptions
  */
-export function getMultiplierOptions(player1: PlayerOdds, player2: PlayerOdds) {
-    const baseOdds1 = player1.odds;
-    const baseOdds2 = player2.odds;
+export function getMultiplierOptions(player1: PlayerOdds, player2: PlayerOdds, selectedWinner?: string) {
+    // Use selected winner's odds as base, or minimum odds if no winner selected
+    const baseOdds = selectedWinner 
+        ? (selectedWinner === player1.name ? player1.odds : player2.odds)
+        : Math.min(player1.odds, player2.odds);
     
     return [
         { 
-            value: Math.min(baseOdds1, baseOdds2), 
-            label: `${Math.min(baseOdds1, baseOdds2).toFixed(2)}x`, 
+            value: baseOdds, 
+            label: `${baseOdds.toFixed(2)}x`, 
             description: 'Base odds (1 prediction)' 
         },
         { 
-            value: Math.min(baseOdds1, baseOdds2) + 0.1, 
-            label: `${(Math.min(baseOdds1, baseOdds2) + 0.1).toFixed(2)}x`, 
+            value: baseOdds + 0.2, 
+            label: `${(baseOdds + 0.2).toFixed(2)}x`, 
             description: '2+ predictions' 
         },
         { 
-            value: Math.min(baseOdds1, baseOdds2) + 0.15, 
-            label: `${(Math.min(baseOdds1, baseOdds2) + 0.15).toFixed(2)}x`, 
+            value: baseOdds + 0.4, 
+            label: `${(baseOdds + 0.4).toFixed(2)}x`, 
             description: '4+ predictions' 
         },
         { 
-            value: Math.min(baseOdds1, baseOdds2) + 0.2, 
-            label: `${(Math.min(baseOdds1, baseOdds2) + 0.2).toFixed(2)}x`, 
+            value: baseOdds + 0.6, 
+            label: `${(baseOdds + 0.6).toFixed(2)}x`, 
             description: '6+ predictions' 
         },
         { 
-            value: Math.min(baseOdds1, baseOdds2) + 0.3, 
-            label: `${(Math.min(baseOdds1, baseOdds2) + 0.3).toFixed(2)}x`, 
+            value: baseOdds + 0.8, 
+            label: `${(baseOdds + 0.8).toFixed(2)}x`, 
             description: '8+ predictions' 
         },
     ];
