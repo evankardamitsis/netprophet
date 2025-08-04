@@ -7,6 +7,7 @@ import { Match } from '@/types/dashboard';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { usePredictionSlipCollapse } from '../../app/ClientLayout';
 import { useTheme } from '../Providers';
+import { useDictionary } from '@/context/DictionaryContext';
 import {
     SESSION_KEYS,
     loadFromSessionStorage,
@@ -117,6 +118,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const { theme } = useTheme();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     const { placeBet, wallet } = useWallet();
+    const { dict, lang } = useDictionary();
 
     // Local state for the form fields
     const [formPredictions, setFormPredictions] = useState<PredictionOptions>(createEmptyPredictions());
@@ -151,8 +153,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
             <div className="flex-1 bg-[#0F0F0F] text-white">
                 <div className="text-center py-12 px-6">
                     <div className="text-6xl mb-4">🎾</div>
-                    <h2 className="text-2xl font-semibold text-white mb-2">Select a Match</h2>
-                    <p className="text-gray-400">Choose a match from the sidebar to view details and make predictions</p>
+                    <h2 className="text-2xl font-semibold text-white mb-2">{dict?.matches?.selectMatch || 'Select a Match'}</h2>
+                    <p className="text-gray-400">{dict?.matches?.selectMatchDescription || 'Choose a match from the sidebar to view details and make predictions'}</p>
                 </div>
             </div>
         );
@@ -163,8 +165,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         return (
             <div className="flex-1 bg-[#0F0F0F] text-white">
                 <div className="text-center py-12 px-6">
-                    <h2 className="text-2xl font-semibold text-white mb-2">Match Not Found</h2>
-                    <p className="text-gray-400">Details for this match are not available</p>
+                    <h2 className="text-2xl font-semibold text-white mb-2">{dict?.matches?.matchNotFound || 'Match Not Found'}</h2>
+                    <p className="text-gray-400">{dict?.matches?.matchNotFoundDescription || 'Details for this match are not available'}</p>
                 </div>
             </div>
         );
@@ -272,7 +274,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 onChange={(e) => onChange(e.target.value)}
                 className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
             >
-                <option value="">Select set {setNumber} score</option>
+                <option value="">{dict?.matches?.selectSetScore?.replace('{setNumber}', setNumber.toString()) || `Select set ${setNumber} score`}</option>
                 {availableScores.map(score => (
                     <option key={score} value={score}>{score}</option>
                 ))}
@@ -347,11 +349,11 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    <span className="text-sm">Back to Matches</span>
+                    <span className="text-sm">{dict?.matches?.backToMatches || 'Back to Matches'}</span>
                 </button>
 
-                <h1 className="text-xl font-bold text-white mb-1">Match Details</h1>
-                <p className="text-gray-400 text-xs">Monitor live tennis events and place your predictions</p>
+                <h1 className="text-xl font-bold text-white mb-1">{dict?.matches?.matchDetails || 'Match Details'}</h1>
+                <p className="text-gray-400 text-xs">{dict?.matches?.loading || 'Monitor live tennis events and place your predictions'}</p>
             </div>
 
             {/* Two-Column Layout: Left Column (MatchHeader + BettingSection) + Right Column (PredictionForm) */}
@@ -382,8 +384,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 <div className="w-2/3 flex-1 min-h-0 flex flex-col h-full ">
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
                         <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
-                            <h2 className="text-lg font-bold text-white mb-1">Make your predictions</h2>
-                            <p className="text-gray-400 text-xs">Choose from multiple prediction types to maximize your points!</p>
+                            <h2 className="text-lg font-bold text-white mb-1">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
+                            <p className="text-gray-400 text-xs">{dict?.matches?.makePredictionsDescription || 'Choose from multiple prediction types to maximize your points!'}</p>
                         </div>
 
                         <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
@@ -414,7 +416,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                     : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
-                                {hasAnyPredictions ? `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : 'Select at least one prediction'}
+                                {hasAnyPredictions ? dict?.matches?.makePredictionButton?.replace('{betAmount}', betAmount.toString()).replace('{multiplier}', selectedMultiplier.toFixed(1)).replace('{potentialWinnings}', potentialWinnings.toString()) || `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : dict?.matches?.selectAtLeastOne || 'Select at least one prediction'}
                             </button>
                         </div>
                     </div>

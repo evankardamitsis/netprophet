@@ -21,11 +21,6 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
     const { dict, lang } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
 
-    // Debug logging
-    console.log('🔍 MatchesGrid received dict:', dict);
-    console.log('🔍 MatchesGrid received lang:', lang);
-    console.log('🔍 dict?.matches?.title:', dict?.matches?.title);
-
     const liveMatches = matches.filter(match => match.status === 'live');
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
 

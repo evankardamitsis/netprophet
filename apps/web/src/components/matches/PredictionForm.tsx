@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Badge } from '@netprophet/ui';
+import { useDictionary } from '@/context/DictionaryContext';
 
 interface PredictionOptions {
     winner: string;
@@ -68,6 +69,8 @@ export function PredictionForm({
     setSetWinner
 }: PredictionFormProps) {
 
+    const { dict, lang } = useDictionary();
+
     // Determine if this is amateur format (best-of-3 with super tiebreak)
 
 
@@ -123,13 +126,13 @@ export function PredictionForm({
             <button
                 onClick={handleClearAll}
                 className="absolute top-0 right-0 text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 z-10"
-                title="Clear all selections"
+                title={dict?.matches?.clearAllSelections || "Clear all selections"}
             >
-                Clear All
+                {dict?.matches?.clearAll || 'Clear All'}
             </button>
             {/* Match Winner */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-                <h3 className="text-base font-bold text-white mb-3">Match Winner</h3>
+                <h3 className="text-base font-bold text-white mb-3">{dict?.matches?.matchWinner || 'Match Winner'}</h3>
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name)}
@@ -155,191 +158,276 @@ export function PredictionForm({
             </div>
 
             {/* Match Result */}
-            {formPredictions.winner && (
-                <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-base font-bold text-white">Match Result</h3>
-                        <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
-                            {isBestOf5 ? 'Best of 5' : isAmateurFormat ? 'Best of 3 (Super TB)' : 'Best of 3'}
-                        </div>
-                    </div>
-                    <p className="text-xs text-gray-400 mb-3">How will {formPredictions.winner.split(' ')[1]} win the match?</p>
-                    <div className="grid grid-cols-2 gap-3">
-                        {isBestOf5 ? (
-                            <>
-                                {formPredictions.winner === details.player1.name ? (
-                                    <>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-0' ? '' : '3-0')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-0'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">3-0</div>
-                                            <div className="text-xs text-gray-400">Straight sets</div>
-                                        </button>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-1' ? '' : '3-1')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-1'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">3-1</div>
-                                            <div className="text-xs text-gray-400">Four sets</div>
-                                        </button>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-2' ? '' : '3-2')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-2'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">3-2</div>
-                                            <div className="text-xs text-gray-400">Five sets</div>
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-3' ? '' : '0-3')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-3'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">0-3</div>
-                                            <div className="text-xs text-gray-400">Straight sets</div>
-                                        </button>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-3' ? '' : '1-3')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-3'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">1-3</div>
-                                            <div className="text-xs text-gray-400">Four sets</div>
-                                        </button>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-3' ? '' : '2-3')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-3'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">2-3</div>
-                                            <div className="text-xs text-gray-400">Five sets</div>
-                                        </button>
-                                    </>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                {formPredictions.winner === details.player1.name ? (
-                                    <>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-0' ? '' : '2-0')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-0'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">2-0</div>
-                                            <div className="text-xs text-gray-400">Straight sets</div>
-                                        </button>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-1' ? '' : '2-1')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-1'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">2-1</div>
-                                            <div className="text-xs text-gray-400">{isAmateurFormat ? 'Super tiebreak' : 'Three sets'}</div>
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-2' ? '' : '0-2')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-2'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">0-2</div>
-                                            <div className="text-xs text-gray-400">Straight sets</div>
-                                        </button>
-                                        <button
-                                            onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-2' ? '' : '1-2')}
-                                            className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-2'
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                }`}
-                                        >
-                                            <div className="text-base font-semibold">1-2</div>
-                                            <div className="text-xs text-gray-400">{isAmateurFormat ? 'Super tiebreak' : 'Three sets'}</div>
-                                        </button>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Set Winners - 3rd Step */}
-            {formPredictions.matchResult && (
-                // For straight-set results, show set scores directly
-                ['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) ? (
+            {
+                formPredictions.winner && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">Set Scores</h3>
+                            <h3 className="text-base font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
                             <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
-                                {isBestOf5 ? 'Best of 5' : isAmateurFormat ? 'Best of 3 (Super TB)' : 'Best of 3'}
+                                {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">
-                            Predict the exact score for each set. {formPredictions.winner.split(' ')[1]} wins all sets.
-                        </p>
-                        {Array.from({
-                            length: (() => {
-                                // Determine how many sets to show for detailed scores
-                                const getSetsToShowForScores = () => {
-                                    if (isAmateurFormat && ['2-1', '1-2'].includes(formPredictions.matchResult)) {
-                                        return 2; // Only 2 sets for amateur format with 2-1/1-2
-                                    }
-                                    // For other formats, show the actual number of sets played
-                                    const [sets1, sets2] = formPredictions.matchResult.split('-').map(Number);
-                                    return sets1 + sets2;
-                                };
-
-                                return getSetsToShowForScores();
-                            })()
-                        }, (_, i) => {
-                            const setWinner = formPredictions.winner;
-
-                            return (
-                                <div key={i} className="space-y-2 mb-3">
-                                    <h4 className="font-semibold text-white text-sm">Set {i + 1} Score - {setWinner.split(' ')[1]} wins</h4>
-                                    {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
-                                </div>
-                            );
-                        })}
+                        <p className="text-xs text-gray-400 mb-3">{dict?.matches?.howWillWin?.replace('{player}', formPredictions.winner.split(' ')[1]) || `How will ${formPredictions.winner.split(' ')[1]} win the match?`}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            {isBestOf5 ? (
+                                <>
+                                    {formPredictions.winner === details.player1.name ? (
+                                        <>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-0' ? '' : '3-0')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-0'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">3-0</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.straightSets || 'Straight sets'}</div>
+                                            </button>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-1' ? '' : '3-1')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-1'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">3-1</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.fourSets || 'Four sets'}</div>
+                                            </button>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-2' ? '' : '3-2')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-2'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">3-2</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.fiveSets || 'Five sets'}</div>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-3' ? '' : '0-3')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-3'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">0-3</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.straightSets || 'Straight sets'}</div>
+                                            </button>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-3' ? '' : '1-3')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-3'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">1-3</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.fourSets || 'Four sets'}</div>
+                                            </button>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-3' ? '' : '2-3')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-3'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">2-3</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.fiveSets || 'Five sets'}</div>
+                                            </button>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {formPredictions.winner === details.player1.name ? (
+                                        <>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-0' ? '' : '2-0')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-0'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">2-0</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.straightSets || 'Straight sets'}</div>
+                                            </button>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-1' ? '' : '2-1')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-1'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">2-1</div>
+                                                <div className="text-xs text-gray-400">{isAmateurFormat ? dict?.matches?.superTiebreak || 'Super tiebreak' : dict?.matches?.threeSets || 'Three sets'}</div>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-2' ? '' : '0-2')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-2'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">0-2</div>
+                                                <div className="text-xs text-gray-400">{dict?.matches?.straightSets || 'Straight sets'}</div>
+                                            </button>
+                                            <button
+                                                onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-2' ? '' : '1-2')}
+                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-2'
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                    }`}
+                                            >
+                                                <div className="text-base font-semibold">1-2</div>
+                                                <div className="text-xs text-gray-400">{isAmateurFormat ? dict?.matches?.superTiebreak || 'Super tiebreak' : dict?.matches?.threeSets || 'Three sets'}</div>
+                                            </button>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
-                ) : (
-                    // For non-straight-set results, show set winners with inline scores
+                )
+            }
+
+            {/* Set Winners - 3rd Step */}
+            {
+                formPredictions.matchResult && (
+                    // For straight-set results, show set scores directly
+                    ['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) ? (
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-base font-bold text-white">{dict?.matches?.setScores || 'Set Scores'}</h3>
+                                <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
+                                    {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-400 mb-3">
+                                {dict?.matches?.predictExactScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Predict the exact score for each set. ${formPredictions.winner.split(' ')[1]} wins all sets.`}
+                            </p>
+                            {Array.from({
+                                length: (() => {
+                                    // Determine how many sets to show for detailed scores
+                                    const getSetsToShowForScores = () => {
+                                        if (isAmateurFormat && ['2-1', '1-2'].includes(formPredictions.matchResult)) {
+                                            return 2; // Only 2 sets for amateur format with 2-1/1-2
+                                        }
+                                        // For other formats, show the actual number of sets played
+                                        const [sets1, sets2] = formPredictions.matchResult.split('-').map(Number);
+                                        return sets1 + sets2;
+                                    };
+
+                                    return getSetsToShowForScores();
+                                })()
+                            }, (_, i) => {
+                                const setWinner = formPredictions.winner;
+
+                                return (
+                                    <div key={i} className="space-y-2 mb-3">
+                                        <h4 className="font-semibold text-white text-sm">Set {i + 1} Score - {setWinner.split(' ')[1]} wins</h4>
+                                        {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        // For non-straight-set results, show set winners with inline scores
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
+                            </div>
+                            <p className="text-xs text-gray-400 mb-3">
+                                {dict?.matches?.whoWinsEachSet?.replace('{result}', formPredictions.matchResult) || `Who wins each set based on your ${formPredictions.matchResult} prediction?`}
+                                {formPredictions.winner === details.player1.name ?
+                                    ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', details.player1.name.split(' ')[1]).replace('{sets1}', formPredictions.matchResult.split('-')[0]).replace('{player2}', details.player2.name.split(' ')[1]).replace('{sets2}', formPredictions.matchResult.split('-')[1]) || `${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets, ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets`}` :
+                                    ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', details.player2.name.split(' ')[1]).replace('{sets1}', formPredictions.matchResult.split('-')[1]).replace('{player2}', details.player1.name.split(' ')[1]).replace('{sets2}', formPredictions.matchResult.split('-')[0]) || `${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets, ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets`}`
+                                }
+                            </p>
+                            {Array.from({ length: setsToShowFromResult }, (_, i) => {
+                                const currentWinner = getSetWinner(i + 1);
+
+                                // Count how many sets each player has already won (excluding current set)
+                                const player1Wins = Array.from({ length: setsToShowFromResult }, (_, j) => getSetWinner(j + 1)).filter((winner, index) => winner === details.player1.name && index !== i).length;
+                                const player2Wins = Array.from({ length: setsToShowFromResult }, (_, j) => getSetWinner(j + 1)).filter((winner, index) => winner === details.player2.name && index !== i).length;
+
+                                // Get expected wins from match result
+                                const expectedPlayer1Wins = formPredictions.winner === details.player1.name ? parseInt(formPredictions.matchResult.split('-')[0]) : parseInt(formPredictions.matchResult.split('-')[1]);
+                                const expectedPlayer2Wins = formPredictions.winner === details.player2.name ? parseInt(formPredictions.matchResult.split('-')[0]) : parseInt(formPredictions.matchResult.split('-')[1]);
+
+                                // Special logic for amateur format (best-of-3 with super tiebreak)
+                                let canPlayer1Win = player1Wins < expectedPlayer1Wins || currentWinner === details.player1.name;
+                                let canPlayer2Win = player2Wins < expectedPlayer2Wins || currentWinner === details.player2.name;
+
+                                // For amateur format with 2-1/1-2, ensure players can't win both sets
+                                if (isAmateurFormat && ['2-1', '1-2'].includes(formPredictions.matchResult)) {
+                                    // If this is set 2 and set 1 winner is already selected
+                                    if (i === 1 && getSetWinner(1)) {
+                                        const set1Winner = getSetWinner(1);
+                                        // Only allow the opposite player to win set 2
+                                        canPlayer1Win = set1Winner !== details.player1.name;
+                                        canPlayer2Win = set1Winner !== details.player2.name;
+                                    }
+                                }
+
+                                return (
+                                    <div key={i} className="space-y-3 mb-4">
+                                        <h4 className="font-semibold text-white text-sm">{dict?.matches?.setWinner?.replace('{setNumber}', (i + 1).toString()) || `Set ${i + 1} Winner`}</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                onClick={() => setSetWinner(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
+                                                disabled={!canPlayer1Win}
+                                                className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player1.name
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : canPlayer1Win
+                                                        ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                        : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                {details.player1.name.split(' ')[1]}
+                                                {!canPlayer1Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
+                                            </button>
+                                            <button
+                                                onClick={() => setSetWinner(i + 1, currentWinner === details.player2.name ? '' : details.player2.name)}
+                                                disabled={!canPlayer2Win}
+                                                className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player2.name
+                                                    ? 'bg-purple-600 border-purple-600 text-white'
+                                                    : canPlayer2Win
+                                                        ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                        : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                {details.player2.name.split(' ')[1]}
+                                                {!canPlayer2Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
+                                            </button>
+                                        </div>
+
+                                        {/* Detailed Set Score - Show when set winner is selected */}
+                                        {currentWinner && (
+                                            <div className="space-y-2">
+                                                <h5 className="font-medium text-white text-sm">Set {i + 1} Score - {currentWinner.split(' ')[1]} wins</h5>
+                                                {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )
+                ) && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">Set Winners</h3>
+                            <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
                         </div>
                         <p className="text-xs text-gray-400 mb-3">
-                            Who wins each set based on your {formPredictions.matchResult} prediction?
+                            {dict?.matches?.whoWinsEachSet?.replace('{result}', formPredictions.matchResult) || `Who wins each set based on your ${formPredictions.matchResult} prediction?`}
                             {formPredictions.winner === details.player1.name ?
-                                ` ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets, ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets` :
-                                ` ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets, ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets`
+                                ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', details.player1.name.split(' ')[1]).replace('{sets1}', formPredictions.matchResult.split('-')[0]).replace('{player2}', details.player2.name.split(' ')[1]).replace('{sets2}', formPredictions.matchResult.split('-')[1]) || `${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets, ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets`}` :
+                                ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', details.player2.name.split(' ')[1]).replace('{sets1}', formPredictions.matchResult.split('-')[1]).replace('{player2}', details.player1.name.split(' ')[1]).replace('{sets2}', formPredictions.matchResult.split('-')[0]) || `${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets, ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets`}`
                             }
                         </p>
                         {Array.from({ length: setsToShowFromResult }, (_, i) => {
@@ -370,7 +458,7 @@ export function PredictionForm({
 
                             return (
                                 <div key={i} className="space-y-3 mb-4">
-                                    <h4 className="font-semibold text-white text-sm">Set {i + 1} Winner</h4>
+                                    <h4 className="font-semibold text-white text-sm">{dict?.matches?.setWinner?.replace('{setNumber}', (i + 1).toString()) || `Set ${i + 1} Winner`}</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <button
                                             onClick={() => setSetWinner(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
@@ -378,12 +466,12 @@ export function PredictionForm({
                                             className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player1.name
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : canPlayer1Win
-                                                    ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                    : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'
+                                                    ? 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
+                                                    : 'bg-[#1A1A1A] border-[#2A2A2A] text-gray-600 cursor-not-allowed'
                                                 }`}
                                         >
                                             {details.player1.name.split(' ')[1]}
-                                            {!canPlayer1Win && <span className="text-xs block text-gray-500">(max reached)</span>}
+                                            {!canPlayer1Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
                                         </button>
                                         <button
                                             onClick={() => setSetWinner(i + 1, currentWinner === details.player2.name ? '' : details.player2.name)}
@@ -391,19 +479,19 @@ export function PredictionForm({
                                             className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player2.name
                                                 ? 'bg-purple-600 border-purple-600 text-white'
                                                 : canPlayer2Win
-                                                    ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                    : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'
+                                                    ? 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
+                                                    : 'bg-[#1A1A1A] border-[#2A2A2A] text-gray-600 cursor-not-allowed'
                                                 }`}
                                         >
                                             {details.player2.name.split(' ')[1]}
-                                            {!canPlayer2Win && <span className="text-xs block text-gray-500">(max reached)</span>}
+                                            {!canPlayer2Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
                                         </button>
                                     </div>
 
                                     {/* Detailed Set Score - Show when set winner is selected */}
                                     {currentWinner && (
                                         <div className="space-y-2">
-                                            <h5 className="font-medium text-white text-sm">Set {i + 1} Score - {currentWinner.split(' ')[1]} wins</h5>
+                                            <h5 className="font-medium text-white text-sm">{dict?.matches?.setScore?.replace('{setNumber}', (i + 1).toString()).replace('{player}', currentWinner.split(' ')[1]) || `Set ${i + 1} Score - ${currentWinner.split(' ')[1]} wins`}</h5>
                                             {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                                         </div>
                                     )}
@@ -412,119 +500,39 @@ export function PredictionForm({
                         })}
                     </div>
                 )
-            ) && (
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-                        <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">Set Winners</h3>
-                        </div>
-                        <p className="text-xs text-gray-400 mb-3">
-                            Who wins each set based on your {formPredictions.matchResult} prediction?
-                            {formPredictions.winner === details.player1.name ?
-                                ` ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets, ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets` :
-                                ` ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets, ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets`
-                            }
-                        </p>
-                        {Array.from({ length: setsToShowFromResult }, (_, i) => {
-                            const currentWinner = getSetWinner(i + 1);
-
-                            // Count how many sets each player has already won (excluding current set)
-                            const player1Wins = Array.from({ length: setsToShowFromResult }, (_, j) => getSetWinner(j + 1)).filter((winner, index) => winner === details.player1.name && index !== i).length;
-                            const player2Wins = Array.from({ length: setsToShowFromResult }, (_, j) => getSetWinner(j + 1)).filter((winner, index) => winner === details.player2.name && index !== i).length;
-
-                            // Get expected wins from match result
-                            const expectedPlayer1Wins = formPredictions.winner === details.player1.name ? parseInt(formPredictions.matchResult.split('-')[0]) : parseInt(formPredictions.matchResult.split('-')[1]);
-                            const expectedPlayer2Wins = formPredictions.winner === details.player2.name ? parseInt(formPredictions.matchResult.split('-')[0]) : parseInt(formPredictions.matchResult.split('-')[1]);
-
-                            // Special logic for amateur format (best-of-3 with super tiebreak)
-                            let canPlayer1Win = player1Wins < expectedPlayer1Wins || currentWinner === details.player1.name;
-                            let canPlayer2Win = player2Wins < expectedPlayer2Wins || currentWinner === details.player2.name;
-
-                            // For amateur format with 2-1/1-2, ensure players can't win both sets
-                            if (isAmateurFormat && ['2-1', '1-2'].includes(formPredictions.matchResult)) {
-                                // If this is set 2 and set 1 winner is already selected
-                                if (i === 1 && getSetWinner(1)) {
-                                    const set1Winner = getSetWinner(1);
-                                    // Only allow the opposite player to win set 2
-                                    canPlayer1Win = set1Winner !== details.player1.name;
-                                    canPlayer2Win = set1Winner !== details.player2.name;
-                                }
-                            }
-
-                            return (
-                                <div key={i} className="space-y-3 mb-4">
-                                    <h4 className="font-semibold text-white text-sm">Set {i + 1} Winner</h4>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            onClick={() => setSetWinner(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
-                                            disabled={!canPlayer1Win}
-                                            className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player1.name
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : canPlayer1Win
-                                                    ? 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
-                                                    : 'bg-[#1A1A1A] border-[#2A2A2A] text-gray-600 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            {details.player1.name.split(' ')[1]}
-                                            {!canPlayer1Win && <span className="text-xs block text-gray-500">(max reached)</span>}
-                                        </button>
-                                        <button
-                                            onClick={() => setSetWinner(i + 1, currentWinner === details.player2.name ? '' : details.player2.name)}
-                                            disabled={!canPlayer2Win}
-                                            className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player2.name
-                                                ? 'bg-purple-600 border-purple-600 text-white'
-                                                : canPlayer2Win
-                                                    ? 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
-                                                    : 'bg-[#1A1A1A] border-[#2A2A2A] text-gray-600 cursor-not-allowed'
-                                                }`}
-                                        >
-                                            {details.player2.name.split(' ')[1]}
-                                            {!canPlayer2Win && <span className="text-xs block text-gray-500">(max reached)</span>}
-                                        </button>
-                                    </div>
-
-                                    {/* Detailed Set Score - Show when set winner is selected */}
-                                    {currentWinner && (
-                                        <div className="space-y-2">
-                                            <h5 className="font-medium text-white text-sm">Set {i + 1} Score - {currentWinner.split(' ')[1]} wins</h5>
-                                            {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+            }
 
 
 
             {/* Set Tiebreaks - Show only when tiebreak scores are selected */}
-            {formPredictions.matchResult && (() => {
-                // Check if any set has a tiebreak score (7-6 or 6-7)
-                const hasTiebreakScore = () => {
-                    const set1Score = getSetScore(1);
-                    const set2Score = getSetScore(2);
-                    const set3Score = getSetScore(3);
-                    const set4Score = getSetScore(4);
-                    const set5Score = getSetScore(5);
+            {
+                formPredictions.matchResult && (() => {
+                    // Check if any set has a tiebreak score (7-6 or 6-7)
+                    const hasTiebreakScore = () => {
+                        const set1Score = getSetScore(1);
+                        const set2Score = getSetScore(2);
+                        const set3Score = getSetScore(3);
+                        const set4Score = getSetScore(4);
+                        const set5Score = getSetScore(5);
 
-                    return set1Score === '7-6' || set1Score === '6-7' ||
-                        set2Score === '7-6' || set2Score === '6-7' ||
-                        set3Score === '7-6' || set3Score === '6-7' ||
-                        set4Score === '7-6' || set4Score === '6-7' ||
-                        set5Score === '7-6' || set5Score === '6-7';
-                };
+                        return set1Score === '7-6' || set1Score === '6-7' ||
+                            set2Score === '7-6' || set2Score === '6-7' ||
+                            set3Score === '7-6' || set3Score === '6-7' ||
+                            set4Score === '7-6' || set4Score === '6-7' ||
+                            set5Score === '7-6' || set5Score === '6-7';
+                    };
 
-                return hasTiebreakScore();
-            })() && (
+                    return hasTiebreakScore();
+                })() && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">Set Tiebreaks</h3>
+                            <h3 className="text-base font-bold text-white">{dict?.matches?.setTiebreaks || 'Set Tiebreaks'}</h3>
                             <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
-                                Optional
+                                {dict?.matches?.optional || 'Optional'}
                             </div>
                         </div>
                         <p className="text-xs text-gray-400 mb-3">
-                            You&apos;ve selected tiebreak scores for some sets. Here you can predict the detailed tiebreak scores within those sets.
+                            {dict?.matches?.tiebreakScoresSelected || "You've selected tiebreak scores for some sets. Here you can predict the detailed tiebreak scores within those sets."}
                         </p>
 
                         {/* Set 1 Tiebreak */}
@@ -534,18 +542,18 @@ export function PredictionForm({
                             return set1Score === '7-6' || set1Score === '6-7';
                         })() && (
                                 <div className="space-y-3 mb-4">
-                                    <h4 className="font-semibold text-white text-sm">Set 1 Tiebreak Details</h4>
+                                    <h4 className="font-semibold text-white text-sm">{dict?.matches?.setTiebreakDetails?.replace('{setNumber}', '1') || 'Set 1 Tiebreak Details'}</h4>
                                     <p className="text-xs text-gray-400 mb-2">
-                                        Set 1 ended in a tiebreak. Predict the detailed tiebreak score:
+                                        {dict?.matches?.setEndedInTiebreak?.replace('{setNumber}', '1') || 'Set 1 ended in a tiebreak. Predict the detailed tiebreak score:'}
                                     </p>
                                     <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Tiebreak Score</label>
+                                        <label className="text-xs text-gray-400">{dict?.matches?.tiebreakScore || 'Tiebreak Score'}</label>
                                         <select
                                             value={formPredictions.set1TieBreakScore}
                                             onChange={(e) => onPredictionChange('set1TieBreakScore', e.target.value)}
                                             className="w-full p-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                                         >
-                                            <option value="">Select tiebreak score</option>
+                                            <option value="">{dict?.matches?.selectTiebreakScore || 'Select tiebreak score'}</option>
                                             {(() => {
                                                 const set1Winner = getSetWinner(1);
                                                 const set1Score = getSetScore(1);
@@ -591,18 +599,18 @@ export function PredictionForm({
                             return set2Score === '7-6' || set2Score === '6-7';
                         })() && (
                                 <div className="space-y-3">
-                                    <h4 className="font-semibold text-white text-sm">Set 2 Tiebreak Details</h4>
+                                    <h4 className="font-semibold text-white text-sm">{dict?.matches?.setTiebreakDetails?.replace('{setNumber}', '2') || 'Set 2 Tiebreak Details'}</h4>
                                     <p className="text-xs text-gray-400 mb-2">
-                                        Set 2 ended in a tiebreak. Predict the detailed tiebreak score:
+                                        {dict?.matches?.setEndedInTiebreak?.replace('{setNumber}', '2') || 'Set 2 ended in a tiebreak. Predict the detailed tiebreak score:'}
                                     </p>
                                     <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Tiebreak Score</label>
+                                        <label className="text-xs text-gray-400">{dict?.matches?.tiebreakScore || 'Tiebreak Score'}</label>
                                         <select
                                             value={formPredictions.set2TieBreakScore}
                                             onChange={(e) => onPredictionChange('set2TieBreakScore', e.target.value)}
                                             className="w-full p-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                                         >
-                                            <option value="">Select tiebreak score</option>
+                                            <option value="">{dict?.matches?.selectTiebreakScore || 'Select tiebreak score'}</option>
                                             {(() => {
                                                 const set2Winner = getSetWinner(2);
                                                 const set2Score = getSetScore(2);
@@ -641,85 +649,88 @@ export function PredictionForm({
                                 </div>
                             )}
                     </div>
-                )}
+                )
+            }
 
             {/* Super Tiebreak - Only for amateur format when 2-1/1-2 is selected */}
-            {isAmateurFormat && formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) && (
-                <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-base font-bold text-white">Super Tiebreak</h3>
-                        <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
-                            Amateur Format
+            {
+                isAmateurFormat && formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) && (
+                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-base font-bold text-white">{dict?.matches?.superTiebreak || 'Super Tiebreak'}</h3>
+                            <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
+                                {dict?.matches?.amateurFormat || 'Amateur Format'}
+                            </div>
                         </div>
-                    </div>
-                    <p className="text-xs text-gray-400 mb-3">
-                        Since this is a 2-1 match in amateur format, there will be a 10-point super tiebreak instead of a 3rd set.
-                    </p>
-
-                    {/* Super Tiebreak Winner */}
-                    <div className="space-y-3 mb-4">
-                        <h4 className="font-semibold text-white text-sm">Super Tiebreak Winner</h4>
                         <p className="text-xs text-gray-400 mb-3">
-                            The super tiebreak winner must be {formPredictions.winner.split(' ')[1]} to match your overall prediction.
+                            {dict?.matches?.superTiebreakDescription || 'Since this is a 2-1 match in amateur format, there will be a 10-point super tiebreak instead of a 3rd set.'}
                         </p>
-                        <div className="grid grid-cols-1 gap-3">
-                            <button
-                                onClick={() => onPredictionChange('superTieBreakWinner', formPredictions.superTieBreakWinner === formPredictions.winner ? '' : formPredictions.winner)}
-                                className={`p-3 rounded-lg border transition-colors ${formPredictions.superTieBreakWinner === formPredictions.winner
-                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                    }`}
-                            >
-                                <div className="text-sm font-semibold">{formPredictions.winner.split(' ')[1]}</div>
-                                <div className="text-xs text-gray-400">Wins super tiebreak (required for match win)</div>
-                            </button>
-                        </div>
-                    </div>
 
-                    {/* Super Tiebreak Score */}
-                    {formPredictions.superTieBreakWinner && (
-                        <div className="space-y-2">
-                            <h4 className="font-semibold text-white text-sm">Super Tiebreak Score - {formPredictions.winner.split(' ')[1]} wins</h4>
-                            <select
-                                value={formPredictions.superTieBreakScore}
-                                onChange={(e) => onPredictionChange('superTieBreakScore', e.target.value)}
-                                className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                            >
-                                <option value="">Select super tiebreak score</option>
-                                {formPredictions.winner === details.player1.name ? (
-                                    // Player 1 wins - show scores where first number > second number
-                                    <>
-                                        <option value="10-0">10-0</option>
-                                        <option value="10-1">10-1</option>
-                                        <option value="10-2">10-2</option>
-                                        <option value="10-3">10-3</option>
-                                        <option value="10-4">10-4</option>
-                                        <option value="10-5">10-5</option>
-                                        <option value="10-6">10-6</option>
-                                        <option value="10-7">10-7</option>
-                                        <option value="10-8">10-8</option>
-                                        <option value="10-9">10-9</option>
-                                    </>
-                                ) : (
-                                    // Player 2 wins - show scores where second number > first number
-                                    <>
-                                        <option value="0-10">0-10</option>
-                                        <option value="1-10">1-10</option>
-                                        <option value="2-10">2-10</option>
-                                        <option value="3-10">3-10</option>
-                                        <option value="4-10">4-10</option>
-                                        <option value="5-10">5-10</option>
-                                        <option value="6-10">6-10</option>
-                                        <option value="7-10">7-10</option>
-                                        <option value="8-10">8-10</option>
-                                        <option value="9-10">9-10</option>
-                                    </>
-                                )}
-                            </select>
+                        {/* Super Tiebreak Winner */}
+                        <div className="space-y-3 mb-4">
+                            <h4 className="font-semibold text-white text-sm">{dict?.matches?.superTiebreakWinner || 'Super Tiebreak Winner'}</h4>
+                            <p className="text-xs text-gray-400 mb-3">
+                                {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', formPredictions.winner.split(' ')[1]) || `The super tiebreak winner must be ${formPredictions.winner.split(' ')[1]} to match your overall prediction.`}
+                            </p>
+                            <div className="grid grid-cols-1 gap-3">
+                                <button
+                                    onClick={() => onPredictionChange('superTieBreakWinner', formPredictions.superTieBreakWinner === formPredictions.winner ? '' : formPredictions.winner)}
+                                    className={`p-3 rounded-lg border transition-colors ${formPredictions.superTieBreakWinner === formPredictions.winner
+                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                        }`}
+                                >
+                                    <div className="text-sm font-semibold">{formPredictions.winner.split(' ')[1]}</div>
+                                    <div className="text-xs text-gray-400">{dict?.matches?.winsSuperTiebreak || 'Wins super tiebreak (required for match win)'}</div>
+                                </button>
+                            </div>
                         </div>
-                    )}
-                </div>
-            )}
+
+                        {/* Super Tiebreak Score */}
+                        {formPredictions.superTieBreakWinner && (
+                            <div className="space-y-2">
+                                <h4 className="font-semibold text-white text-sm">{dict?.matches?.superTiebreakScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Super Tiebreak Score - ${formPredictions.winner.split(' ')[1]} wins`}</h4>
+                                <select
+                                    value={formPredictions.superTieBreakScore}
+                                    onChange={(e) => onPredictionChange('superTieBreakScore', e.target.value)}
+                                    className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                >
+                                    <option value="">{dict?.matches?.selectSuperTiebreakScore || 'Select super tiebreak score'}</option>
+                                    {formPredictions.winner === details.player1.name ? (
+                                        // Player 1 wins - show scores where first number > second number
+                                        <>
+                                            <option value="10-0">10-0</option>
+                                            <option value="10-1">10-1</option>
+                                            <option value="10-2">10-2</option>
+                                            <option value="10-3">10-3</option>
+                                            <option value="10-4">10-4</option>
+                                            <option value="10-5">10-5</option>
+                                            <option value="10-6">10-6</option>
+                                            <option value="10-7">10-7</option>
+                                            <option value="10-8">10-8</option>
+                                            <option value="10-9">10-9</option>
+                                        </>
+                                    ) : (
+                                        // Player 2 wins - show scores where second number > first number
+                                        <>
+                                            <option value="0-10">0-10</option>
+                                            <option value="1-10">1-10</option>
+                                            <option value="2-10">2-10</option>
+                                            <option value="3-10">3-10</option>
+                                            <option value="4-10">4-10</option>
+                                            <option value="5-10">5-10</option>
+                                            <option value="6-10">6-10</option>
+                                            <option value="7-10">7-10</option>
+                                            <option value="8-10">8-10</option>
+                                            <option value="9-10">9-10</option>
+                                        </>
+                                    )}
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                )
+            }
 
             {/* Most Aces - COMMENTED OUT FOR FUTURE CHANGES */}
             {/* <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
@@ -786,6 +797,6 @@ export function PredictionForm({
                     <option value="Over 17">Over 17</option>
                 </select>
             </div> */}
-        </div>
+        </div >
     );
 } 

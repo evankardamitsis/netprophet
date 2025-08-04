@@ -53,11 +53,6 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
     const router = useRouter();
     const { predictions, removePrediction, slipCollapsed, setSlipCollapsed } = usePredictionSlip();
 
-    // Debug logging
-    console.log('🔍 ClientLayout received dict:', dict);
-    console.log('🔍 ClientLayout received lang:', lang);
-    console.log('🔍 ClientLayout dict?.matches?.title:', dict?.matches?.title);
-
     const handleSignOut = async () => {
         await signOut();
         window.location.href = '/';

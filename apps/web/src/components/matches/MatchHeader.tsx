@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useTheme } from '../Providers';
+import { useDictionary } from '@/context/DictionaryContext';
 
 interface MatchDetails {
     tournament: string;
@@ -26,6 +27,7 @@ interface MatchHeaderProps {
 
 export function MatchHeader({ match, details }: MatchHeaderProps) {
     const { theme } = useTheme();
+    const { dict, lang } = useDictionary();
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -63,12 +65,12 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                         <div className="text-white font-medium">{details.headToHead}</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-gray-400">Surface</div>
+                        <div className="text-gray-400">{dict?.matches?.surface || 'Surface'}</div>
                         <div className="text-white font-medium">{details.surface}</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-gray-400">Format</div>
-                        <div className="text-white font-medium">{isBestOf5 ? 'Best of 5' : 'Best of 3'}</div>
+                        <div className="text-gray-400">{dict?.matches?.format || 'Format'}</div>
+                        <div className="text-white font-medium">{isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}</div>
                     </div>
                 </div>
             </div>
@@ -81,11 +83,11 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                         <div className="text-sm font-bold text-white mb-1">{details.player1.name.split(' ')[1]}</div>
                         <div className="text-lg mb-2">{details.player1.country}</div>
                         <div className="flex justify-between items-center text-xs mb-2">
-                            <span className="text-gray-400">Rank</span>
+                            <span className="text-gray-400">{dict?.matches?.rank || 'Rank'}</span>
                             <span className="text-blue-400 font-bold">#{details.player1.ranking}</span>
                         </div>
                         <div className="flex justify-between items-center text-xs mb-2">
-                            <span className="text-gray-400">Record</span>
+                            <span className="text-gray-400">{dict?.matches?.record || 'Record'}</span>
                             <span className="text-white">{details.player1.wins}-{details.player1.losses}</span>
                         </div>
                         <div className="text-lg font-bold text-purple-400">{details.player1.odds.toFixed(2)}x</div>
@@ -98,11 +100,11 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                         <div className="text-sm font-bold text-white mb-1">{details.player2.name.split(' ')[1]}</div>
                         <div className="text-lg mb-2">{details.player2.country}</div>
                         <div className="flex justify-between items-center text-xs mb-2">
-                            <span className="text-gray-400">Rank</span>
+                            <span className="text-gray-400">{dict?.matches?.rank || 'Rank'}</span>
                             <span className="text-blue-400 font-bold">#{details.player2.ranking}</span>
                         </div>
                         <div className="flex justify-between items-center text-xs mb-2">
-                            <span className="text-gray-400">Record</span>
+                            <span className="text-gray-400">{dict?.matches?.record || 'Record'}</span>
                             <span className="text-white">{details.player2.wins}-{details.player2.losses}</span>
                         </div>
                         <div className="text-lg font-bold text-purple-400">{details.player2.odds.toFixed(2)}x</div>
