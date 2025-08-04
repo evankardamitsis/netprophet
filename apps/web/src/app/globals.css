@@ -37,4 +37,111 @@
   }
 }
 
+/* Custom Scrollbar Styles */
+@layer utilities {
+  /* Base scrollbar styles */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  /* WebKit scrollbar styles with high specificity */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px !important;
+    background: transparent !important;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent !important;
+    border-radius: 3px !important;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(71, 85, 105) !important;
+    border-radius: 3px !important;
+    transition: background-color 0.2s ease !important;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(100, 116, 139) !important;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent !important;
+  }
+  
+  /* Specific color classes */
+  .scrollbar-thumb-slate-600::-webkit-scrollbar-thumb {
+    background: rgb(71, 85, 105) !important;
+  }
+  
+  .scrollbar-thumb-slate-500::-webkit-scrollbar-thumb {
+    background: rgb(100, 116, 139) !important;
+  }
+  
+  .hover\:scrollbar-thumb-slate-500:hover::-webkit-scrollbar-thumb {
+    background: rgb(100, 116, 139) !important;
+  }
+}
+
+/* Custom scrollbar class with maximum specificity */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px !important;
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  border-radius: 3px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(71, 85, 105) !important;
+  border-radius: 3px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(100, 116, 139) !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Force scrollbar background to be transparent for sidebar with maximum specificity */
+aside .scrollbar-thin::-webkit-scrollbar-track,
+aside .scrollbar-thin::-webkit-scrollbar,
+aside .scrollbar-thin::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Additional specificity for sidebar elements */
+aside .overflow-y-auto::-webkit-scrollbar-track,
+aside .overflow-y-auto::-webkit-scrollbar,
+aside .overflow-y-auto::-webkit-scrollbar-corner {
+  background: transparent !important;
+}
+
+/* Global scrollbar override for the entire app */
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgb(71, 85, 105);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(100, 116, 139);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
  

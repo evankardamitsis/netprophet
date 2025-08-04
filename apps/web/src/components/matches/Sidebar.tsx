@@ -322,7 +322,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                 // Expanded view
                 <div className="flex flex-col h-full pt-4 p-1.5 sm:p-2 md:p-3 lg:p-4 min-w-0">
                     <Card className="flex-1 overflow-hidden bg-gradient-to-br from-slate-950/50 via-slate-900/30 to-slate-950/50 min-w-0 shadow-none border-0">
-                        <div className="h-full overflow-y-auto min-w-0">
+                        <div className="h-full overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
                             <MatchesList onSelectMatch={onMatchSelect} />
                         </div>
                     </Card>
@@ -330,7 +330,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
             ) : (
                 // Compact view
                 <div className="flex flex-col h-full p-2 sm:p-3 min-w-0">
-                    <div className="flex-1 overflow-y-auto min-w-0">
+                    <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
                         <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
                             {/* Live matches */}
                             {allMatches.filter(m => m.status === 'live' && !m.isLocked).length > 0 && (

@@ -122,7 +122,7 @@ export function PredictionForm({
             {/* Clear All Button */}
             <button
                 onClick={handleClearAll}
-                className="absolute top-0 right-0 text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50"
+                className="absolute top-0 right-0 text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 z-10"
                 title="Clear all selections"
             >
                 Clear All
