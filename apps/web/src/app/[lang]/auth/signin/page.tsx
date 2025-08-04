@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@netprophet/lib';
 import { Button } from '@netprophet/ui';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 export default function AuthPage() {
     const [mode, setMode] = useState<'signin' | 'register'>('signin');
@@ -12,6 +12,8 @@ export default function AuthPage() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const router = useRouter();
+    const params = useParams();
+    const lang = params?.lang;
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,7 +23,7 @@ export default function AuthPage() {
             if (mode === 'signin') {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) setMessage(error.message);
-                else router.push('/matches');
+                else router.push(`/${lang}/matches`);
             } else {
                 const { error } = await supabase.auth.signUp({ email, password });
                 if (error) setMessage(error.message);

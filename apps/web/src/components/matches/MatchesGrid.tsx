@@ -6,7 +6,7 @@ import { CardTitle } from '@/components/ui/card';
 import { mockMatches } from '@/components/MatchesList';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
-
+import { useDictionary } from '@/context/DictionaryContext';
 
 interface MatchesGridProps {
     matches?: Match[];
@@ -18,7 +18,13 @@ interface MatchesGridProps {
 export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCollapsed }: MatchesGridProps) {
     const onSelectMatch = useMatchSelect();
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
+    const { dict, lang } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
+
+    // Debug logging
+    console.log('🔍 MatchesGrid received dict:', dict);
+    console.log('🔍 MatchesGrid received lang:', lang);
+    console.log('🔍 dict?.matches?.title:', dict?.matches?.title);
 
     const liveMatches = matches.filter(match => match.status === 'live');
     const upcomingMatches = matches.filter(match => match.status === 'upcoming');
@@ -27,8 +33,8 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
         <div className="flex flex-col h-full w-full text-white">
             {/* Header Section */}
             <div className="p-1 xs:p-2 sm:p-3 md:p-4 pb-1 xs:pb-2 sm:pb-3 flex-shrink-0">
-                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 xs:mb-2">Tennis Matches</h1>
-                <p className="text-gray-400 text-xs xs:text-sm">Monitor live tennis events and place your predictions</p>
+                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 xs:mb-2">{dict?.matches?.title || 'Tennis Matches'}</h1>
+                <p className="text-gray-400 text-xs xs:text-sm">{dict?.matches?.loading || 'Monitor live tennis events and place your predictions'}</p>
             </div>
 
             {/* Content Section - Scrollable */}
@@ -39,7 +45,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                             <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white flex items-center">
                                 <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
-                                Live Matches
+                                {dict?.sidebar?.liveMatches || 'Live Matches'}
                             </h2>
                             <span className="text-xs xs:text-sm text-gray-400">({liveMatches.length})</span>
                         </div>
@@ -67,7 +73,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                             <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
                                                 <div className="bg-red-500/20 text-red-400 text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-red-500/30">
-                                                    LIVE
+                                                    {dict?.sidebar?.live || 'LIVE'}
                                                 </div>
                                                 <span className="text-gray-400 text-xs xs:text-sm truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
                                             </div>
@@ -117,7 +123,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                             onSelectMatch(match);
                                         }}
                                     >
-                                        Make your prediction
+                                        {dict?.sidebar?.makePrediction || 'Make your prediction'}
                                     </button>
                                 </div>
                             ))}
@@ -129,7 +135,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                 {upcomingMatches.length > 0 && (
                     <div className="pb-3 xs:pb-4 sm:pb-5 md:pb-6">
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                            <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white">Upcoming Matches</h2>
+                            <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white">{dict?.sidebar?.upcoming || 'Upcoming Matches'}</h2>
                             <span className="text-xs xs:text-sm text-gray-400">({upcomingMatches.length})</span>
                         </div>
                         <div className={`grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ${
@@ -156,7 +162,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                             <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
                                                 <div className="bg-blue-500/20 text-blue-400 text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-blue-500/30">
-                                                    UPCOMING
+                                                    {dict?.sidebar?.upcoming || 'UPCOMING'}
                                                 </div>
                                                 <span className="text-gray-400 text-xs xs:text-sm truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
                                             </div>
@@ -175,7 +181,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
 
                                             {/* VS */}
                                             <div className="text-center mx-1 xs:mx-2 sm:mx-3 md:mx-4 flex-shrink-0">
-                                                <div className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-400">VS</div>
+                                                <div className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-400">{dict?.sidebar?.versus || 'VS'}</div>
                                                 <div className="text-xs text-gray-500 mt-0.5 xs:mt-1">{match.time}</div>
                                             </div>
 
@@ -206,7 +212,7 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                             onSelectMatch(match);
                                         }}
                                     >
-                                        Make your prediction
+                                        {dict?.sidebar?.makePrediction || 'Make your prediction'}
                                     </button>
                                 </div>
                             ))}
@@ -218,8 +224,8 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                 {matches.length === 0 && (
                     <div className="text-center py-6 xs:py-8 sm:py-10 md:py-12">
                         <div className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl mb-2 xs:mb-3 sm:mb-4">🎾</div>
-                        <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-semibold mb-1 xs:mb-2 text-white">No Tennis Matches Available</h2>
-                        <p className="text-gray-400 text-xs xs:text-sm sm:text-base">Check back later for upcoming tennis matches</p>
+                        <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-semibold mb-1 xs:mb-2 text-white">{dict?.matches?.noMatches || 'No Tennis Matches Available'}</h2>
+                        <p className="text-gray-400 text-xs xs:text-sm sm:text-base">{dict?.matches?.loading || 'Check back later for upcoming tennis matches'}</p>
                     </div>
                 )}
             </div>

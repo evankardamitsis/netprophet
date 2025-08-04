@@ -13,27 +13,27 @@
     "welcome": "Καλώς ήρθατε"
   },
   "matches": {
-    "title": "Αγώνες",
-    "noMatches": "Δεν υπάρχουν διαθέσιμοι αγώνες",
-    "loading": "Φόρτωση αγώνων...",
-    "bettingSection": "Τοποθετήστε το Σταίχυμά Σας",
-    "stake": "Σταίχυμα",
+    "title": "Αγώνες Τένις",
+    "noMatches": "Δεν υπάρχουν διαθέσιμοι αγώνες τένις",
+    "loading": "Παρακολούθησε ζωντανούς αγώνες τένις και κάνε τις προβλέψεις σου",
+    "bettingSection": "Τοποθέτησε το στοίχημά σου",
+    "stake": "Ποσό",
     "multiplier": "Πολλαπλασιαστής",
-    "potentialWin": "Πιθανή Νίκη",
-    "placeBet": "Τοποθέτηση Σταίχυματος",
-    "clearAll": "Καθαρισμός Όλων",
-    "matchResult": "Αποτέλεσμα Αγώνα",
-    "setWinners": "Νικητές Σετ",
-    "setScores": "Σκορ Σετ",
-    "tiebreakScores": "Σκορ Τάιμπρεϊκ",
+    "potentialWin": "Πιθανή νίκη",
+    "placeBet": "Τοποθέτησε στοίχημα",
+    "clearAll": "Καθάρισε όλα",
+    "matchResult": "Αποτέλεσμα αγώνα",
+    "setWinners": "Νικητές σετ",
+    "setScores": "Σκορ σετ",
+    "tiebreakScores": "Σκορ tiebreak",
     "player1": "Παίκτης 1",
     "player2": "Παίκτης 2",
     "vs": "vs",
     "format": "Μορφή",
     "bestOf3": "Καλύτερος από 3",
     "bestOf5": "Καλύτερος από 5",
-    "withSuperTiebreak": "με Σούπερ Τάιμπρεϊκ",
-    "amateurFormat": "Ερασιτεχνική Μορφή"
+    "withSuperTiebreak": "με Super Tiebreak",
+    "amateurFormat": "Μορφή ερασιτέχνη"
   },
   "sidebar": {
     "live": "Ζωντανά",
@@ -47,7 +47,8 @@
     "versus": "vs",
     "lockIn": "Κλείδωμα σε",
     "startedAgo": "Ξεκίνησε",
-    "startsIn": "Ξεκινάει σε"
+    "startsIn": "Ξεκινάει σε",
+    "makePrediction": "Κάνε την πρόβλεψή σου"
   },
   "leaderboard": {
     "title": "Κατάταξη",

@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 
 export default function MyProfilePage() {
     const router = useRouter();
+    const params = useParams();
+    const lang = params?.lang;
     const { user, signOut, loading } = useAuth();
     useEffect(() => {
         if (!loading && !user) {
@@ -37,7 +39,7 @@ export default function MyProfilePage() {
             <div className="max-w-4xl mx-auto px-6 pt-6">
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/matches')}
+                    onClick={() => router.push(`/${lang}/matches`)}
                     className="mb-6 bg-yellow-500 text-white"
                 >
                     ← Back to Dashboard

@@ -25,6 +25,7 @@ export interface Dictionary {
         lockIn: string;
         startedAgo: string;
         startsIn: string;
+        makePrediction: string;
     };
     matches: {
         title: string;

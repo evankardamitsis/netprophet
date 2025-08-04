@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { PredictionHistory } from '@/components/matches/PredictionHistory';
@@ -83,6 +83,8 @@ const mockPredictions = [
 
 export default function MyPicksPage() {
     const router = useRouter();
+    const params = useParams();
+    const lang = params?.lang;
     const { user, signOut, loading } = useAuth();
 
 
@@ -114,7 +116,7 @@ export default function MyPicksPage() {
             <div className="max-w-4xl mx-auto px-6 pt-6">
                 <Button
                     variant="outline"
-                    onClick={() => router.push('/matches')}
+                    onClick={() => router.push(`/${lang}/matches`)}
                     className="mb-6 bg-yellow-500 text-white"
                 >
                     ← Back to Dashboard

@@ -13,9 +13,9 @@
     "welcome": "Welcome"
   },
   "matches": {
-    "title": "Matches",
-    "noMatches": "No matches available",
-    "loading": "Loading matches...",
+    "title": "Tennis Matches",
+    "noMatches": "No Tennis Matches Available",
+    "loading": "Monitor live tennis events and place your predictions",
     "bettingSection": "Place Your Bet",
     "stake": "Stake",
     "multiplier": "Multiplier",
@@ -47,7 +47,8 @@
     "versus": "vs",
     "lockIn": "Lock in",
     "startedAgo": "Started",
-    "startsIn": "Starts in"
+    "startsIn": "Starts in",
+    "makePrediction": "Make your prediction"
   },
   "leaderboard": {
     "title": "Leaderboard",
