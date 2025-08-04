@@ -7,7 +7,7 @@ import { MatchesList } from '@/components/MatchesList';
 
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
-
+import { Dictionary } from '@/types/dictionary';
 
 // Icon components
 function ChevronDownIcon() {
@@ -41,6 +41,8 @@ interface SidebarProps {
     selectedMatchId?: number;
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
+    dict?: Dictionary;
+    lang?: 'en' | 'el';
 }
 
 // Enhanced mock data with start times and lock times
@@ -167,7 +169,7 @@ const mockTournaments: Tournament[] = [
 ];
 
 // Countdown component
-function CountdownTimer({ lockTime }: { lockTime: Date }) {
+function CountdownTimer({ lockTime, dict }: { lockTime: Date; dict?: Dictionary }) {
     const [timeLeft, setTimeLeft] = useState<number>(0);
 
     useEffect(() => {
@@ -191,18 +193,18 @@ function CountdownTimer({ lockTime }: { lockTime: Date }) {
     }, [lockTime]);
 
     const formatTime = (ms: number) => {
-        if (ms <= 0) return 'LOCKED';
+        if (ms <= 0) return dict?.sidebar?.locked || 'LOCKED';
 
         const hours = Math.floor(ms / (1000 * 60 * 60));
         const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((ms % (1000 * 60)) / 1000);
 
         if (hours > 0) {
-            return `${hours}h ${minutes}m`;
+            return `${hours}${dict?.sidebar?.hours || 'h'} ${minutes}${dict?.sidebar?.minutes || 'm'}`;
         } if (minutes > 0) {
-            return `${minutes}m ${seconds}s`;
+            return `${minutes}${dict?.sidebar?.minutes || 'm'} ${seconds}${dict?.sidebar?.seconds || 's'}`;
         }
-        return `${seconds}s`;
+        return `${seconds}${dict?.sidebar?.seconds || 's'}`;
 
     };
 
@@ -217,7 +219,7 @@ function CountdownTimer({ lockTime }: { lockTime: Date }) {
 }
 
 // Live Match Banner component
-function LiveMatchBanner({ matches }: { matches: Match[] }) {
+function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionary }) {
     const liveMatches = matches.filter(match => match.status === 'live' && !match.isLocked);
 
     if (liveMatches.length === 0) return null;
@@ -226,7 +228,7 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
         <div className="mb-4 p-4 bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-dashed border-red-700/50 rounded-xl">
             <div className="flex items-center space-x-2 mb-3">
                 <span className="text-lg">🔥</span>
-                <span className="font-semibold text-red-300 tracking-wide">Live Matches</span>
+                <span className="font-semibold text-red-300 tracking-wide">{dict?.sidebar?.liveMatches || 'Live Matches'}</span>
                 <Badge variant="destructive" className="text-xs bg-red-900/50 text-red-300 border border-red-500">
                     {liveMatches.length}
                 </Badge>
@@ -236,12 +238,12 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
                     <div key={match.id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-red-700/40">
                         <div className="flex-1">
                             <div className="text-sm font-semibold text-yellow-200">
-                                {match.player1.name.split(' ')[1]} vs {match.player2.name.split(' ')[1]}
+                                {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
                             </div>
                             <div className="text-xs text-slate-400">{match.court}</div>
                         </div>
                         <div className="text-right">
-                            <CountdownTimer lockTime={match.lockTime} />
+                            <CountdownTimer lockTime={match.lockTime} dict={dict} />
                         </div>
                     </div>
                 ))}
@@ -250,7 +252,7 @@ function LiveMatchBanner({ matches }: { matches: Match[] }) {
     );
 }
 
-export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: onMatchSelectProp }: SidebarProps) {
+export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: onMatchSelectProp, dict, lang = 'en' }: SidebarProps) {
     const matchSelectFromContext = useMatchSelect();
     const onMatchSelect = onMatchSelectProp || matchSelectFromContext;
     const [expandedTournaments, setExpandedTournaments] = useState<Set<number>>(new Set([1])); // Default expand first tournament
@@ -323,7 +325,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                 <div className="flex flex-col h-full pt-4 p-1.5 sm:p-2 md:p-3 lg:p-4 min-w-0">
                     <Card className="flex-1 overflow-hidden bg-gradient-to-br from-slate-950/50 via-slate-900/30 to-slate-950/50 min-w-0 shadow-none border-0">
                         <div className="h-full overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
-                            <MatchesList onSelectMatch={onMatchSelect} />
+                            <MatchesList onSelectMatch={onMatchSelect} dict={dict} lang={lang} />
                         </div>
                     </Card>
                 </div>
@@ -335,7 +337,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                             {/* Live matches */}
                             {allMatches.filter(m => m.status === 'live' && !m.isLocked).length > 0 && (
                                 <div className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1 px-1">
-                                    Live
+                                    {dict?.sidebar?.live || 'Live'}
                                 </div>
                             )}
                             {allMatches.filter(m => m.status === 'live' && !m.isLocked).map((match) => (
@@ -346,7 +348,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     title={`${match.player1.name} vs ${match.player2.name} - ${match.court}`}
                                 >
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
-                                        {match.player1.name.split(' ')[1]} v {match.player2.name.split(' ')[1]}
+                                        {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
                                     </div>
                                     <div className="text-xs text-gray-500 truncate">{match.court}</div>
                                 </button>
@@ -355,7 +357,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                             {/* Upcoming matches */}
                             {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).length > 0 && (
                                 <div className="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1 mt-2 sm:mt-3 px-1">
-                                    Upcoming
+                                    {dict?.sidebar?.upcoming || 'Upcoming'}
                                 </div>
                             )}
                             {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).map((match) => (
@@ -366,7 +368,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     title={`${match.player1.name} vs ${match.player2.name} - ${match.court} - ${match.time}`}
                                 >
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
-                                        {match.player1.name.split(' ')[1]} v {match.player2.name.split(' ')[1]}
+                                        {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
                                     </div>
                                     <div className="text-xs text-gray-500 truncate">{match.time} • {match.court}</div>
                                 </button>
@@ -379,7 +381,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="w-full p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-gradient-to-r from-slate-950 to-slate-900 hover:from-slate-900 hover:to-slate-800 text-gray-300"
-                            title="Expand sidebar"
+                            title={dict?.sidebar?.expandSidebar || 'Expand sidebar'}
                         >
                             <ChevronRightIcon />
                         </button>

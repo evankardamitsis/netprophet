@@ -7,10 +7,10 @@ import { useRouter } from 'next/navigation';
 import { MatchSelectContext } from '@/context/MatchSelectContext';
 import { PredictionSlip, FloatingPredictionButton } from '../components/matches/PredictionSlip';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+import { Dictionary } from '@/types/dictionary';
 
 import React from 'react';
 import type { ReactElement } from 'react';
-
 
 // Inline SVG components to replace react-icons/fi
 function ChevronLeftIcon({ size = 20, color = 'currentColor' }: { size?: number; color?: string }) {
@@ -29,21 +29,28 @@ function ChevronRightIcon({ size = 20, color = 'currentColor' }: { size?: number
     );
 }
 
-// Add context for controlling slip collapse
-const PredictionSlipCollapseContext = createContext<{ setIsPredictionSlipCollapsed: (collapsed: boolean) => void } | undefined>(undefined);
+const PredictionSlipCollapseContext = createContext<{ setIsPredictionSlipCollapsed: (collapsed: boolean) => void }>({
+    setIsPredictionSlipCollapsed: () => { }
+});
+
 export function usePredictionSlipCollapse() {
     const ctx = useContext(PredictionSlipCollapseContext);
-    if (!ctx) throw new Error('usePredictionSlipCollapse must be used within PredictionSlipCollapseContext');
+    if (!ctx) throw new Error('usePredictionSlipCollapse must be used within PredictionSlipCollapseContext.Provider');
     return ctx;
 }
 
-export default function ClientLayout({ children }: { children: ReactNode | ReactElement }) {
+interface ClientLayoutProps {
+    children: ReactNode | ReactElement;
+    dict?: Dictionary;
+    lang?: 'en' | 'el';
+}
+
+export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayoutProps) {
     const { user, signOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [currentPage, setCurrentPage] = useState<'matches' | 'leaderboard' | 'rewards'>('matches');
     const router = useRouter();
     const { predictions, removePrediction, slipCollapsed, setSlipCollapsed } = usePredictionSlip();
-
 
     const handleSignOut = async () => {
         await signOut();
@@ -72,6 +79,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                         userEmail={user?.email}
                         onMenuClick={() => setSidebarOpen(true)}
                         onSignOut={handleSignOut}
+                        dict={dict}
+                        lang={lang}
                     />
                     <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
                         {/* Toggle button - always visible */}
@@ -96,6 +105,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                                 onClose={() => setSidebarOpen(false)}
                                 sidebarOpen={sidebarOpen}
                                 setSidebarOpen={setSidebarOpen}
+                                dict={dict}
+                                lang={lang}
                             />
                         </div>
 
@@ -107,6 +118,8 @@ export default function ClientLayout({ children }: { children: ReactNode | React
                                     sidebarOpen={sidebarOpen}
                                     setSidebarOpen={setSidebarOpen}
                                     onClose={() => setSidebarOpen(false)}
+                                    dict={dict}
+                                    lang={lang}
                                 />
                             </div>
                         </div>

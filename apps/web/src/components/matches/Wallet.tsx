@@ -4,8 +4,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, Button } from '@netprophet/ui';
 import { useWallet } from '@/context/WalletContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+import { Dictionary } from '@/types/dictionary';
 
 // Icon components
+function ChevronUpIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+    </svg>
+}
 
 function ChevronDownIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,44 +19,48 @@ function ChevronDownIcon({ className = "h-4 w-4" }: { className?: string }) {
     </svg>
 }
 
-function ChevronUpIcon({ className = "h-4 w-4" }: { className?: string }) {
+function ClockIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 }
 
-function TrendingUpIcon({ className = "h-3 w-3" }: { className?: string }) {
+function HistoryIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+}
+
+function TrendingUpIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
     </svg>
 }
 
-function TrendingDownIcon({ className = "h-3 w-3" }: { className?: string }) {
+function TrendingDownIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" />
     </svg>
 }
 
-function BetIcon({ className = "h-3 w-3" }: { className?: string }) {
+function PlusIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
     </svg>
 }
 
-function HistoryIcon({ className = "h-3 w-3" }: { className?: string }) {
+function MinusIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
     </svg>
 }
 
-function ClockIcon({ className = "h-3 w-3" }: { className?: string }) {
-    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+interface WalletProps {
+    dict?: Dictionary;
+    lang?: 'en' | 'el';
 }
 
-
-export function Wallet({ }) {
+export function Wallet({ dict, lang = 'en' }: WalletProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { wallet } = useWallet();
     const { predictions } = usePredictionSlip();
@@ -91,7 +101,7 @@ export function Wallet({ }) {
             case 'loss':
                 return <TrendingDownIcon className="text-red-500 h-6 w-6" />;
             case 'bet':
-                return <BetIcon className="text-blue-500 h-12 w-12" />;
+                return <PlusIcon className="text-blue-500 h-12 w-12" />;
             case 'welcome_bonus':
             case 'daily_login':
             case 'referral':
@@ -100,9 +110,9 @@ export function Wallet({ }) {
             case 'purchase':
             case 'tournament_entry':
             case 'insight_unlock':
-                return <BetIcon className="text-purple-500 h-12 w-12" />;
+                return <PlusIcon className="text-purple-500 h-12 w-12" />;
             default:
-                return <BetIcon className="text-gray-500 h-12 w-12" />;
+                return <PlusIcon className="text-gray-500 h-12 w-12" />;
         }
     };
 
@@ -169,16 +179,16 @@ export function Wallet({ }) {
                     {/* Header */}
                     <div className="p-4 border-b border-gray-700">
                         <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-white">My Wallet</h3>
+                            <h3 className="font-semibold text-white">{dict?.wallet?.balance || 'My Wallet'}</h3>
                             <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
-                                Active
+                                {dict?.wallet?.active || 'Active'}
                             </span>
                         </div>
                         <div className="text-2xl font-bold text-yellow-300">
                             {availableBalance} 🌕
                         </div>
                         <div className="text-sm text-gray-400">
-                            Available Coins
+                            {dict?.wallet?.availableCoins || 'Available Coins'}
                         </div>
 
                         {/* Pending Bets Indicator */}
@@ -188,10 +198,10 @@ export function Wallet({ }) {
                                     <ClockIcon className="text-blue-500 h-4 w-4" />
                                     <div className="flex-1">
                                         <div className="text-sm font-medium text-blue-300">
-                                            Pending Bets: {pendingBetAmount} 🌕
+                                            {dict?.wallet?.pendingBets || 'Pending Bets'}: {pendingBetAmount} 🌕
                                         </div>
                                         <div className="text-xs text-blue-400">
-                                            {predictions.length} match{predictions.length !== 1 ? 'es' : ''} in slip
+                                            {predictions.length} {dict?.wallet?.matchesInSlip || 'matches in slip'}
                                         </div>
                                     </div>
                                 </div>
@@ -203,7 +213,7 @@ export function Wallet({ }) {
                             <div className="mt-2 flex items-center gap-2">
                                 <span className="text-xs text-blue-500">🔥</span>
                                 <span className="text-xs text-gray-400">
-                                    {wallet.dailyLoginStreak} day streak
+                                    {wallet.dailyLoginStreak} {dict?.wallet?.dayStreak || 'day streak'}
                                 </span>
                             </div>
                         )}
@@ -217,7 +227,7 @@ export function Wallet({ }) {
                                     {formatCurrency(wallet.netProfit)}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                    Net Profit
+                                    {dict?.wallet?.netProfit || 'Net Profit'}
                                 </div>
                             </div>
                             <div className="text-center">
@@ -225,7 +235,7 @@ export function Wallet({ }) {
                                     {formatPercentage(wallet.winRate)}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                    Win Rate
+                                    {dict?.wallet?.winRate || 'Win Rate'}
                                 </div>
                             </div>
                             <div className="text-center">
@@ -233,7 +243,7 @@ export function Wallet({ }) {
                                     {formatCurrency(wallet.totalWinnings)}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                    Total Winnings
+                                    {dict?.wallet?.totalWinnings || 'Total Winnings'}
                                 </div>
                             </div>
                             <div className="text-center">
@@ -241,7 +251,7 @@ export function Wallet({ }) {
                                     {formatCurrency(-wallet.totalLosses)}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                    Total Losses
+                                    {dict?.wallet?.totalLosses || 'Total Losses'}
                                 </div>
                             </div>
                         </div>
@@ -254,7 +264,7 @@ export function Wallet({ }) {
                                         {formatCurrency(wallet.totalCoinsEarned)}
                                     </div>
                                     <div className="text-gray-400">
-                                        Total Earned
+                                        {dict?.wallet?.totalEarned || 'Total Earned'}
                                     </div>
                                 </div>
                                 <div className="text-center">
@@ -262,7 +272,7 @@ export function Wallet({ }) {
                                         {formatCurrency(-wallet.totalCoinsSpent)}
                                     </div>
                                     <div className="text-gray-400">
-                                        Total Spent
+                                        {dict?.wallet?.totalSpent || 'Total Spent'}
                                     </div>
                                 </div>
                             </div>
@@ -272,16 +282,16 @@ export function Wallet({ }) {
                     {/* Recent Transactions */}
                     <div className="p-4">
                         <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-white">Recent Activity</h4>
+                            <h4 className="font-semibold text-white">{dict?.wallet?.recentActivity || 'Recent Activity'}</h4>
                             <Button className="text-xs border border-gray-600 bg-transparent hover:bg-gray-700">
                                 <HistoryIcon className="mr-1" />
-                                View All
+                                {dict?.wallet?.viewAll || 'View All'}
                             </Button>
                         </div>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {wallet.recentTransactions.length === 0 ? (
                                 <div className="text-center py-4 text-sm text-gray-400">
-                                    No transactions yet
+                                    {dict?.wallet?.noTransactions || 'No transactions yet'}
                                 </div>
                             ) : (
                                 wallet.recentTransactions.slice(0, 4).map((transaction) => (

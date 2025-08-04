@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@netprophet/lib';
 import { Button } from '@netprophet/ui';
 import { useTheme } from './Providers';
+import { Dictionary } from '@/types/dictionary';
 
 interface Match {
     id: string;
@@ -99,6 +100,20 @@ export const mockMatches = [
         format: 'best-of-5'
     },
     {
+        id: 5,
+        tournament: 'US Open 2024',
+        player1: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 1.80 },
+        player2: { name: 'Andrey Rublev', country: '🇷🇺', ranking: 11, odds: 2.20 },
+        time: '20:00',
+        court: 'Arthur Ashe',
+        status: 'upcoming' as 'upcoming',
+        points: 100,
+        startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
+        lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
+        isLocked: false,
+        format: 'best-of-5'
+    },
+    {
         id: 6,
         tournament: 'Local Amateur Tournament',
         player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80 },
@@ -113,20 +128,6 @@ export const mockMatches = [
         format: 'best-of-3-super-tiebreak'
     },
     {
-        id: 5,
-        tournament: 'US Open 2024',
-        player1: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 1.80 },
-        player2: { name: 'Andrey Rublev', country: '🇷🇺', ranking: 9, odds: 2.20 },
-        time: '20:00',
-        court: 'Arthur Ashe',
-        status: 'upcoming' as 'upcoming',
-        points: 120,
-        startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
-        lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
-        isLocked: false,
-        format: 'best-of-5'
-    },
-    {
         id: 7,
         tournament: 'Roland Garros 2024',
         player1: { name: 'Casper Ruud', country: '🇳🇴', ranking: 10, odds: 2.80 },
@@ -134,9 +135,9 @@ export const mockMatches = [
         time: '18:00',
         court: 'Court 2',
         status: 'upcoming' as 'upcoming',
-        points: 100,
-        startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
-        lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
+        points: 120,
+        startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
+        lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
         isLocked: false,
         format: 'best-of-5'
     }
@@ -144,19 +145,22 @@ export const mockMatches = [
 
 interface MatchesListProps {
     onSelectMatch?: (match: any) => void;
+    dict?: Dictionary;
+    lang?: 'en' | 'el';
 }
 
-function Countdown({ targetTime, label }: { targetTime: Date; label: string }) {
+function Countdown({ targetTime, label, dict }: { targetTime: Date; label: string; dict?: Dictionary }) {
     const [timeLeft, setTimeLeft] = useState<number>(targetTime.getTime() - Date.now());
 
     useEffect(() => {
         const timer = setInterval(() => {
             setTimeLeft(targetTime.getTime() - Date.now());
         }, 1000);
+
         return () => clearInterval(timer);
     }, [targetTime]);
 
-    if (timeLeft <= 0) return <span className="text-xs text-red-500 font-bold">LOCKED</span>;
+    if (timeLeft <= 0) return <span className="text-xs text-red-500 font-bold">{dict?.sidebar?.locked || 'LOCKED'}</span>;
 
     const hours = Math.floor(timeLeft / (1000 * 60 * 60));
     const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
@@ -164,19 +168,19 @@ function Countdown({ targetTime, label }: { targetTime: Date; label: string }) {
 
     return (
         <span className="text-xs text-gray-500">
-            {label}: {hours > 0 ? `${hours}h ` : ''}{minutes}m {seconds}s
+            {label}: {hours > 0 ? `${hours}${dict?.sidebar?.hours || 'h'} ` : ''}{minutes}${dict?.sidebar?.minutes || 'm'} {seconds}${dict?.sidebar?.seconds || 's'}
         </span>
     );
 }
 
-export function MatchesList({ onSelectMatch }: MatchesListProps) {
+export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListProps) {
     const matches = mockMatches;
     const isLoading = false;
     const error = null;
     const { theme } = useTheme();
 
-    if (isLoading) return <div>Loading matches...</div>;
-    if (error) return <div>Error loading matches.</div>;
+    if (isLoading) return <div>{dict?.common?.loading || 'Loading matches...'}</div>;
+    if (error) return <div>{dict?.common?.error || 'Error loading matches.'}</div>;
 
     const liveMatches = matches.filter(m => m.status === 'live');
     const upcomingMatches = matches.filter(m => m.status === 'upcoming');
@@ -186,16 +190,17 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
             <div className="flex-1 overflow-y-auto space-y-2 sm:space-y-3 md:space-y-4 px-1 sm:px-2 md:px-3 lg:px-4 pb-16 min-w-0">
                 {liveMatches.length > 0 && (
                     <div>
-                        <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 flex items-center gap-2 tracking-wide uppercase ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
-                            <span className={`w-2 h-2 rounded-full animate-pulse ${theme === 'dark' ? 'bg-red-400' : 'bg-red-500'}`} /> Live Matches
+                        <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                            {dict?.sidebar?.liveMatches || 'Live Matches'}
                         </div>
                         <div className="space-y-2 sm:space-y-3 min-w-0">
                             {liveMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 ${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 relative ${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
+                                    <span className={`absolute top-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>{dict?.sidebar?.live || 'LIVE'}</span>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
                                             <div className="flex items-center gap-1 sm:gap-2">
@@ -203,38 +208,41 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                                                     {match.player1.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
-                                                <span className="text-xs font-bold text-gray-400">vs</span>
+                                                <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
                                                 <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
                                         </div>
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded self-start sm:self-auto ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>LIVE</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-3">
                                         <span className="truncate">{match.tournament} • {match.court}</span>
                                         <span>{match.time}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3">
-                                        <Countdown targetTime={match.lockTime} label="Lock in" />
-                                        <span className={`text-gray-400`}>Started {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} min ago</span>
+                                        <Countdown targetTime={match.lockTime} label={dict?.sidebar?.lockIn || 'Lock in'} dict={dict} />
+                                        <span className={`text-gray-400`}>{dict?.sidebar?.startedAgo || 'Started'} {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} {dict?.sidebar?.minutes || 'min'} {dict?.common?.ago || 'ago'}</span>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
+
                 {upcomingMatches.length > 0 && (
                     <div>
-                        <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>Upcoming Matches</div>
+                        <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>
+                            {dict?.sidebar?.upcoming || 'Upcoming Matches'}
+                        </div>
                         <div className="space-y-2 sm:space-y-3 min-w-0">
                             {upcomingMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 ${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
+                                    className={`border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-32 sm:h-36 md:h-40 relative ${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
                                     onClick={() => onSelectMatch?.(match)}
                                 >
+                                    <span className={`absolute top-1 right-1 text-[10px] font-bold px-1.5 py-0.5 rounded ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>{dict?.sidebar?.upcoming || 'UPCOMING'}</span>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-2 flex-1 min-w-0">
                                             <div className="flex items-center gap-1 sm:gap-2">
@@ -242,21 +250,20 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                                                     {match.player1.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
-                                                <span className="text-xs font-bold text-gray-400">vs</span>
+                                                <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
                                                 <span className={`font-semibold text-sm sm:text-base whitespace-normal ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
                                                     <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
                                         </div>
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded self-start sm:self-auto ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>UPCOMING</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-1 sm:gap-3">
                                         <span className="truncate">{match.tournament} • {match.court}</span>
                                         <span>{match.time}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-1 sm:gap-3">
-                                        <Countdown targetTime={match.startTime} label="Starts in" />
+                                        <Countdown targetTime={match.startTime} label={dict?.sidebar?.startsIn || 'Starts in'} dict={dict} />
                                         <span className={`text-gray-400`}>{new Date(match.startTime).toLocaleDateString()}</span>
                                     </div>
                                 </div>
@@ -265,7 +272,9 @@ export function MatchesList({ onSelectMatch }: MatchesListProps) {
                     </div>
                 )}
                 {matches.length === 0 && (
-                    <div className={`text-center py-8 sm:py-12 text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>No matches available</div>
+                    <div className={`text-center py-8 sm:py-12 text-xs sm:text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {dict?.matches?.noMatches || 'No matches available'}
+                    </div>
                 )}
             </div>
         </div>

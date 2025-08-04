@@ -1,0 +1,112 @@
+{
+  "navigation": {
+    "matches": "Αγώνες",
+    "leaderboard": "Κατάταξη",
+    "myPicks": "Οι Επιλογές Μου",
+    "rewards": "Ανταμοιβές",
+    "myProfile": "Το Προφίλ Μου",
+    "howItWorks": "Πώς Λειτουργεί"
+  },
+  "auth": {
+    "signIn": "Σύνδεση",
+    "signOut": "Αποσύνδεση",
+    "welcome": "Καλώς ήρθατε"
+  },
+  "matches": {
+    "title": "Αγώνες",
+    "noMatches": "Δεν υπάρχουν διαθέσιμοι αγώνες",
+    "loading": "Φόρτωση αγώνων...",
+    "bettingSection": "Τοποθετήστε το Σταίχυμά Σας",
+    "stake": "Σταίχυμα",
+    "multiplier": "Πολλαπλασιαστής",
+    "potentialWin": "Πιθανή Νίκη",
+    "placeBet": "Τοποθέτηση Σταίχυματος",
+    "clearAll": "Καθαρισμός Όλων",
+    "matchResult": "Αποτέλεσμα Αγώνα",
+    "setWinners": "Νικητές Σετ",
+    "setScores": "Σκορ Σετ",
+    "tiebreakScores": "Σκορ Τάιμπρεϊκ",
+    "player1": "Παίκτης 1",
+    "player2": "Παίκτης 2",
+    "vs": "vs",
+    "format": "Μορφή",
+    "bestOf3": "Καλύτερος από 3",
+    "bestOf5": "Καλύτερος από 5",
+    "withSuperTiebreak": "με Σούπερ Τάιμπρεϊκ",
+    "amateurFormat": "Ερασιτεχνική Μορφή"
+  },
+  "sidebar": {
+    "live": "Ζωντανά",
+    "upcoming": "Επερχόμενοι",
+    "liveMatches": "Ζωντανοί Αγώνες",
+    "expandSidebar": "Επέκταση πλαϊνής μπάρας",
+    "locked": "ΚΛΕΙΔΩΜΕΝΟ",
+    "hours": "ώ",
+    "minutes": "λ",
+    "seconds": "δ",
+    "versus": "vs",
+    "lockIn": "Κλείδωμα σε",
+    "startedAgo": "Ξεκίνησε",
+    "startsIn": "Ξεκινάει σε"
+  },
+  "leaderboard": {
+    "title": "Κατάταξη",
+    "rank": "Θέση",
+    "player": "Παίκτης",
+    "points": "Πόντοι",
+    "wins": "Νίκες",
+    "losses": "Ήττες"
+  },
+  "rewards": {
+    "title": "Ανταμοιβές",
+    "availableRewards": "Διαθέσιμες Ανταμοιβές",
+    "redeem": "Εξαργύρωση",
+    "points": "Πόντοι"
+  },
+  "profile": {
+    "title": "Το Προφίλ Μου",
+    "balance": "Υπόλοιπο",
+    "totalWins": "Συνολικές Νίκες",
+    "totalLosses": "Συνολικές Ήττες",
+    "winRate": "Ποσοστό Νίκης",
+    "dailyStreak": "Ημερήσιο Σερί"
+  },
+  "wallet": {
+    "balance": "Το πορτοφόλι μου",
+    "deposit": "Κατάθεση",
+    "withdraw": "Ανάληψη",
+    "transactions": "Συναλλαγές",
+    "availableCoins": "Διαθέσιμα Νομίσματα",
+    "pendingBets": "Εκκρεμή Στοιχήματα",
+    "matchesInSlip": "αγώνες στο δελτίο",
+    "dayStreak": "ημέρες σερί",
+    "netProfit": "Καθαρό Κέρδος",
+    "winRate": "Ποσοστό Νίκης",
+    "totalWinnings": "Συνολικές Νίκες",
+    "totalLosses": "Συνολικές Ήττες",
+    "totalEarned": "Συνολικά Κέρδη",
+    "totalSpent": "Συνολικά Έξοδα",
+    "recentActivity": "Πρόσφατη Δραστηριότητα",
+    "viewAll": "Προβολή Όλων",
+    "noTransactions": "Δεν υπάρχουν συναλλαγές ακόμα",
+    "active": "Ενεργό"
+  },
+  "common": {
+    "loading": "Φόρτωση...",
+    "error": "Σφάλμα",
+    "success": "Επιτυχία",
+    "cancel": "Ακύρωση",
+    "save": "Αποθήκευση",
+    "delete": "Διαγραφή",
+    "edit": "Επεξεργασία",
+    "close": "Κλείσιμο",
+    "back": "Πίσω",
+    "next": "Επόμενο",
+    "previous": "Προηγούμενο",
+    "submit": "Υποβολή",
+    "confirm": "Επιβεβαίωση",
+    "yes": "Ναι",
+    "no": "Όχι",
+    "ago": "πριν"
+  }
+}

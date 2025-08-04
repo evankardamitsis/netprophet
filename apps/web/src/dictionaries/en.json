@@ -1,0 +1,112 @@
+{
+  "navigation": {
+    "matches": "Matches",
+    "leaderboard": "Leaderboard",
+    "myPicks": "My Picks",
+    "rewards": "Rewards",
+    "myProfile": "My Profile",
+    "howItWorks": "How It Works"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "welcome": "Welcome"
+  },
+  "matches": {
+    "title": "Matches",
+    "noMatches": "No matches available",
+    "loading": "Loading matches...",
+    "bettingSection": "Place Your Bet",
+    "stake": "Stake",
+    "multiplier": "Multiplier",
+    "potentialWin": "Potential Win",
+    "placeBet": "Place Bet",
+    "clearAll": "Clear All",
+    "matchResult": "Match Result",
+    "setWinners": "Set Winners",
+    "setScores": "Set Scores",
+    "tiebreakScores": "Tiebreak Scores",
+    "player1": "Player 1",
+    "player2": "Player 2",
+    "vs": "vs",
+    "format": "Format",
+    "bestOf3": "Best of 3",
+    "bestOf5": "Best of 5",
+    "withSuperTiebreak": "with Super Tiebreak",
+    "amateurFormat": "Amateur Format"
+  },
+  "sidebar": {
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "liveMatches": "Live Matches",
+    "expandSidebar": "Expand sidebar",
+    "locked": "LOCKED",
+    "hours": "h",
+    "minutes": "m",
+    "seconds": "s",
+    "versus": "vs",
+    "lockIn": "Lock in",
+    "startedAgo": "Started",
+    "startsIn": "Starts in"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "rank": "Rank",
+    "player": "Player",
+    "points": "Points",
+    "wins": "Wins",
+    "losses": "Losses"
+  },
+  "rewards": {
+    "title": "Rewards",
+    "availableRewards": "Available Rewards",
+    "redeem": "Redeem",
+    "points": "Points"
+  },
+  "profile": {
+    "title": "My Profile",
+    "balance": "Balance",
+    "totalWins": "Total Wins",
+    "totalLosses": "Total Losses",
+    "winRate": "Win Rate",
+    "dailyStreak": "Daily Streak"
+  },
+  "wallet": {
+    "balance": "My Wallet",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "transactions": "Transactions",
+    "availableCoins": "Available Coins",
+    "pendingBets": "Pending Bets",
+    "matchesInSlip": "matches in slip",
+    "dayStreak": "day streak",
+    "netProfit": "Net Profit",
+    "winRate": "Win Rate",
+    "totalWinnings": "Total Winnings",
+    "totalLosses": "Total Losses",
+    "totalEarned": "Total Earned",
+    "totalSpent": "Total Spent",
+    "recentActivity": "Recent Activity",
+    "viewAll": "View All",
+    "noTransactions": "No transactions yet",
+    "active": "Active"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ago": "ago"
+  }
+}
