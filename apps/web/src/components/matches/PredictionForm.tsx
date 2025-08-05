@@ -2,6 +2,9 @@
 
 import { Button, Badge } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useMemo, useEffect } from 'react';
+import { calculateMultiplier, getPredictionCount } from '@/lib/predictionHelpers';
+import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
 
 interface PredictionOptions {
     winner: string;
@@ -40,6 +43,7 @@ interface MatchDetails {
 }
 
 interface PredictionFormProps {
+    matchId: number;
     formPredictions: PredictionOptions;
     onPredictionChange: (type: keyof PredictionOptions, value: string) => void;
     details: MatchDetails;
@@ -55,6 +59,7 @@ interface PredictionFormProps {
 }
 
 export function PredictionForm({
+    matchId,
     formPredictions,
     onPredictionChange,
     details,
@@ -70,6 +75,45 @@ export function PredictionForm({
 }: PredictionFormProps) {
 
     const { dict, lang } = useDictionary();
+
+    // Save form predictions to session storage whenever they change
+    useEffect(() => {
+        const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
+        saveToSessionStorage(storageKey, formPredictions);
+    }, [formPredictions, matchId]);
+
+    // Calculate dynamic multiplier and bonus
+    const predictionCount = useMemo(() => getPredictionCount(formPredictions), [formPredictions]);
+    const currentMultiplier = useMemo(() => {
+        if (!formPredictions.winner) return 0;
+        return calculateMultiplier(
+            formPredictions.winner,
+            details.player1,
+            details.player2,
+            predictionCount
+        );
+    }, [formPredictions.winner, predictionCount, details]);
+
+    const baseOdds = useMemo(() => {
+        if (!formPredictions.winner) return 0;
+        return formPredictions.winner === details.player1.name ? details.player1.odds : details.player2.odds;
+    }, [formPredictions.winner, details]);
+
+    const bonusMultiplier = currentMultiplier - baseOdds;
+
+    // Helper function to get bonus for specific prediction count
+    const getBonusForCount = (count: number) => {
+        if (count >= 8) return 0.8;
+        if (count >= 6) return 0.6;
+        if (count >= 4) return 0.4;
+        if (count >= 2) return 0.2;
+        return 0;
+    };
+
+    // Helper function to get tiebreak bonus (each tiebreak prediction adds +0.2x)
+    const getTiebreakBonus = (count: number) => {
+        return count * 0.2;
+    };
 
     // Determine if this is amateur format (best-of-3 with super tiebreak)
 
@@ -118,6 +162,10 @@ export function PredictionForm({
         onPredictionChange('superTieBreak', '');
         onPredictionChange('superTieBreakScore', '');
         onPredictionChange('superTieBreakWinner', '');
+
+        // Clear session storage for this match
+        const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
+        removeFromSessionStorage(storageKey);
     };
 
     return (
@@ -130,6 +178,34 @@ export function PredictionForm({
             >
                 {dict?.matches?.clearAll || 'Clear All'}
             </button>
+
+            {/* Multiplier Bonus Display */}
+            {bonusMultiplier > 0 && (
+                <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 backdrop-blur-sm rounded-xl p-3 border border-green-500/30 mb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-semibold text-green-300">
+                                {dict?.matches?.multiplierBonus || 'Multiplier Bonus'}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <span className="text-xs text-green-400">
+                                {dict?.matches?.baseOdds || 'Base'}: {baseOdds.toFixed(2)}x
+                            </span>
+                            <span className="text-lg font-bold text-green-300">
+                                +{bonusMultiplier.toFixed(2)}x
+                            </span>
+                            <span className="text-sm font-bold text-green-200">
+                                = {currentMultiplier.toFixed(2)}x
+                            </span>
+                        </div>
+                    </div>
+                    <div className="text-xs text-green-400 mt-1">
+                        {dict?.matches?.predictionCount?.replace('{count}', predictionCount.toString()) || `${predictionCount} predictions selected`}
+                    </div>
+                </div>
+            )}
             {/* Match Winner */}
             <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                 <h3 className="text-base font-bold text-white mb-3">{dict?.matches?.matchWinner || 'Match Winner'}</h3>
@@ -162,7 +238,14 @@ export function PredictionForm({
                 formPredictions.winner && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-base font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
+                                {formPredictions.matchResult && (
+                                    <div className="bg-green-600/20 text-green-300 text-xs font-bold px-2 py-1 rounded-full border border-green-500/30 flex items-center space-x-1">
+                                        <span>+0.2x</span>
+                                    </div>
+                                )}
+                            </div>
                             <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
                                 {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
                             </div>
@@ -339,7 +422,17 @@ export function PredictionForm({
                         // For non-straight-set results, show set winners with inline scores
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                             <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
+                                <div className="flex items-center space-x-2">
+                                    <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
+                                    {(() => {
+                                        const setWinnersCount = Array.from({ length: setsToShowFromResult }, (_, i) => getSetWinner(i + 1)).filter(winner => winner).length;
+                                        return setWinnersCount > 0 && (
+                                            <div className="bg-green-600/20 text-green-300 text-xs font-bold px-2 py-1 rounded-full border border-green-500/30 flex items-center space-x-1">
+                                                <span>+{getBonusForCount(setWinnersCount).toFixed(1)}x</span>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                             <p className="text-xs text-gray-400 mb-3">
                                 {dict?.matches?.whoWinsEachSet?.replace('{result}', formPredictions.matchResult) || `Who wins each set based on your ${formPredictions.matchResult} prediction?`}
@@ -421,7 +514,17 @@ export function PredictionForm({
                 ) && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
+                                {(() => {
+                                    const setWinnersCount = Array.from({ length: setsToShowFromResult }, (_, i) => getSetWinner(i + 1)).filter(winner => winner).length;
+                                    return setWinnersCount > 0 && (
+                                        <div className="bg-green-600/20 text-green-300 text-xs font-bold px-2 py-1 rounded-full border border-green-500/30 flex items-center space-x-1">
+                                            <span>+{getBonusForCount(setWinnersCount).toFixed(1)}x</span>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
                         <p className="text-xs text-gray-400 mb-3">
                             {dict?.matches?.whoWinsEachSet?.replace('{result}', formPredictions.matchResult) || `Who wins each set based on your ${formPredictions.matchResult} prediction?`}
@@ -526,10 +629,21 @@ export function PredictionForm({
                 })() && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">{dict?.matches?.setTiebreaks || 'Set Tiebreaks'}</h3>
-                            <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
-                                {dict?.matches?.optional || 'Optional'}
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-base font-bold text-white">{dict?.matches?.setTiebreaks || 'Set Tiebreaks'}</h3>
+                                {(() => {
+                                    const tiebreakPredictionsCount = [
+                                        formPredictions.set1TieBreakScore,
+                                        formPredictions.set2TieBreakScore
+                                    ].filter(score => score).length;
+                                    return tiebreakPredictionsCount > 0 && (
+                                        <div className="bg-green-600/20 text-green-300 text-xs font-bold px-2 py-1 rounded-full border border-green-500/30 flex items-center space-x-1">
+                                            <span>+{getTiebreakBonus(tiebreakPredictionsCount).toFixed(1)}x</span>
+                                        </div>
+                                    );
+                                })()}
                             </div>
+
                         </div>
                         <p className="text-xs text-gray-400 mb-3">
                             {dict?.matches?.tiebreakScoresSelected || "You've selected tiebreak scores for some sets. Here you can predict the detailed tiebreak scores within those sets."}
@@ -657,10 +771,21 @@ export function PredictionForm({
                 isAmateurFormat && formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) && (
                     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
                         <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-bold text-white">{dict?.matches?.superTiebreak || 'Super Tiebreak'}</h3>
-                            <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
-                                {dict?.matches?.amateurFormat || 'Amateur Format'}
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-base font-bold text-white">{dict?.matches?.superTiebreak || 'Super Tiebreak'}</h3>
+                                {(() => {
+                                    const superTiebreakPredictionsCount = [
+                                        formPredictions.superTieBreakWinner,
+                                        formPredictions.superTieBreakScore
+                                    ].filter(prediction => prediction).length;
+                                    return superTiebreakPredictionsCount > 0 && (
+                                        <div className="bg-green-600/20 text-green-300 text-xs font-bold px-2 py-1 rounded-full border border-green-500/30 flex items-center space-x-1">
+                                            <span>+{getTiebreakBonus(superTiebreakPredictionsCount).toFixed(1)}x</span>
+                                        </div>
+                                    );
+                                })()}
                             </div>
+
                         </div>
                         <p className="text-xs text-gray-400 mb-3">
                             {dict?.matches?.superTiebreakDescription || 'Since this is a 2-1 match in amateur format, there will be a 10-point super tiebreak instead of a 3rd set.'}

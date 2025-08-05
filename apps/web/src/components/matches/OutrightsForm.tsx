@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDictionary } from '@/context/DictionaryContext';
+import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
 
 interface OutrightsFormProps {
+    matchId: number;
     selectedTournamentWinner: string;
     selectedFinalsPair: string;
     onTournamentWinnerChange: (winner: string) => void;
@@ -319,6 +321,7 @@ const getTournamentOutrights = (tournament: string): TournamentOutrights => {
 };
 
 export function OutrightsForm({
+    matchId,
     selectedTournamentWinner,
     selectedFinalsPair,
     onTournamentWinnerChange,
@@ -330,10 +333,45 @@ export function OutrightsForm({
     const outrights = getTournamentOutrights(tournament);
     const categories = Object.keys(outrights.categories);
 
+    // Load saved selections from session storage on component mount
+    useEffect(() => {
+        const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_outrights_${matchId}`;
+        const savedData = loadFromSessionStorage(storageKey, {
+            selectedCategory: '',
+            selectedTournamentWinner: '',
+            selectedFinalsPair: ''
+        });
+
+        if (savedData.selectedCategory) {
+            setSelectedCategory(savedData.selectedCategory);
+        }
+        if (savedData.selectedTournamentWinner) {
+            onTournamentWinnerChange(savedData.selectedTournamentWinner);
+        }
+        if (savedData.selectedFinalsPair) {
+            onFinalsPairChange(savedData.selectedFinalsPair);
+        }
+    }, [matchId, onTournamentWinnerChange, onFinalsPairChange]);
+
+    // Save selections to session storage whenever they change
+    useEffect(() => {
+        const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_outrights_${matchId}`;
+        const dataToSave = {
+            selectedCategory,
+            selectedTournamentWinner,
+            selectedFinalsPair
+        };
+        saveToSessionStorage(storageKey, dataToSave);
+    }, [selectedCategory, selectedTournamentWinner, selectedFinalsPair, matchId]);
+
     const handleClearAll = () => {
         setSelectedCategory('');
         onTournamentWinnerChange('');
         onFinalsPairChange('');
+
+        // Clear session storage for this match
+        const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_outrights_${matchId}`;
+        removeFromSessionStorage(storageKey);
     };
 
     const handleCategoryChange = (category: string) => {

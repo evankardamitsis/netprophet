@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@netprophet/ui';
 
 import { Match } from '@/types/dashboard';
@@ -25,7 +25,8 @@ import {
     getSetWinnersFromResult,
     buildPredictionText,
     getPredictionCount,
-    hasPredictions
+    hasPredictions,
+    calculateMultiplier
 } from '@/lib/predictionHelpers';
 import { BettingSection } from './BettingSection';
 
@@ -115,7 +116,7 @@ const getMatchDetails = (matchId: number) => {
 };
 
 export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen = true }: MatchDetailProps) {
-    const { predictions, outrightsPredictions, addPrediction, addOutrightsPrediction, removePrediction } = usePredictionSlip();
+    const { predictions, outrightsPredictions, addPrediction, addOutrightsPrediction, removePrediction, hasPrediction, hasOutrightsPrediction } = usePredictionSlip();
     const { theme } = useTheme();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     const { placeBet, wallet } = useWallet();
@@ -123,17 +124,32 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
     // Local state for the form fields
     const [formPredictions, setFormPredictions] = useState<PredictionOptions>(createEmptyPredictions());
-    const [betAmount, setBetAmount] = useState<number>(10); // Default bet amount
-    const [selectedMultiplier, setSelectedMultiplier] = useState<number>(1.5); // Default multiplier
 
     // Tab state
     const [activeTab, setActiveTab] = useState<'match' | 'outrights'>('match');
+
+
 
     // Outrights state
     const [outrightsBetAmount, setOutrightsBetAmount] = useState<number>(10);
     const [outrightsMultiplier, setOutrightsMultiplier] = useState<number>(1.2);
     const [selectedTournamentWinner, setSelectedTournamentWinner] = useState<string>('');
     const [selectedFinalsPair, setSelectedFinalsPair] = useState<string>('');
+
+    // Track form changes to enable/disable CTA
+    const [hasFormChanged, setHasFormChanged] = useState<boolean>(false);
+    const [hasOutrightsFormChanged, setHasOutrightsFormChanged] = useState<boolean>(false);
+
+    // Wrapper functions for outrights state setters that track changes
+    const handleTournamentWinnerChange = (winner: string) => {
+        setSelectedTournamentWinner(winner);
+        setHasOutrightsFormChanged(true);
+    };
+
+    const handleFinalsPairChange = (pair: string) => {
+        setSelectedFinalsPair(pair);
+        setHasOutrightsFormChanged(true);
+    };
 
     // Load form predictions from session storage when match changes
     useEffect(() => {
@@ -143,13 +159,55 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 // Merge existing prediction with new fields to ensure compatibility
                 const mergedPredictions = { ...createEmptyPredictions(), ...existing.prediction };
                 setFormPredictions(mergedPredictions);
+                // Don't set form change flag since this is loading existing data
             } else {
                 // Load from session storage if no existing prediction
                 const sessionPredictions = loadFormPredictionsFromSession(match.id);
                 setFormPredictions(sessionPredictions);
+                // Don't set form change flag since this is loading existing data
             }
+
+            // Load saved outrights selections
+            const outrightsStorageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_outrights_${match.id}`;
+            const savedOutrights = loadFromSessionStorage(outrightsStorageKey, {
+                selectedCategory: '',
+                selectedTournamentWinner: '',
+                selectedFinalsPair: ''
+            });
+
+            if (savedOutrights.selectedTournamentWinner) {
+                setSelectedTournamentWinner(savedOutrights.selectedTournamentWinner);
+            }
+            if (savedOutrights.selectedFinalsPair) {
+                setSelectedFinalsPair(savedOutrights.selectedFinalsPair);
+            }
+
+            // Reset form change flags when match changes
+            setHasFormChanged(false);
+            setHasOutrightsFormChanged(false);
         }
     }, [match, predictions]);
+
+    // Dynamic calculations based on form predictions (must be before conditional returns)
+    const details = match ? getMatchDetails(match.id) : null;
+    const predictionCount = useMemo(() => getPredictionCount(formPredictions), [formPredictions]);
+    const hasAnyPredictions = useMemo(() => hasPredictions(formPredictions), [formPredictions]);
+
+    // Calculate dynamic multiplier based on selections
+    const selectedMultiplier = useMemo(() => {
+        if (!formPredictions.winner || !details) return 1.0;
+
+        return calculateMultiplier(
+            formPredictions.winner,
+            details.player1,
+            details.player2,
+            predictionCount
+        );
+    }, [formPredictions.winner, predictionCount, details]);
+
+    // Default bet amount (will be set in slip)
+    const betAmount = 10;
+    const potentialWinnings = Math.round(betAmount * selectedMultiplier);
 
     // Save form predictions to session storage whenever they change
     useEffect(() => {
@@ -170,7 +228,6 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         );
     }
 
-    const details = getMatchDetails(match.id);
     if (!details) {
         return (
             <div className="flex-1 bg-[#0F0F0F] text-white">
@@ -217,6 +274,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
             return newPredictions;
         });
+        setHasFormChanged(true);
     };
 
     const handleSubmitPredictions = () => {
@@ -248,6 +306,9 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
             // Clear form predictions from session storage after successful submission
             clearFormPredictionsForMatch(match.id);
+
+            // Reset form change flag after successful submission
+            setHasFormChanged(false);
         }
     };
 
@@ -344,9 +405,6 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     };
 
     const setWinnersFromResult = getSetWinnersFromResult(formPredictions.matchResult, formPredictions.winner, details.player1.name, details.player2.name);
-    const predictionCount = getPredictionCount(formPredictions);
-    const hasAnyPredictions = hasPredictions(formPredictions);
-    const potentialWinnings = Math.round(betAmount * selectedMultiplier);
 
     return (
         <div className="flex flex-col flex-1 min-h-0 w-full text-white">
@@ -410,6 +468,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
                                 <div className="p-4 pb-0 flex-1">
                                     <PredictionForm
+                                        matchId={match.id}
                                         formPredictions={formPredictions}
                                         onPredictionChange={handlePredictionChange}
                                         details={details}
@@ -429,13 +488,13 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
                                 <button
                                     onClick={handleSubmitPredictions}
-                                    disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                    disabled={!hasAnyPredictions || !hasFormChanged || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
+                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && hasFormChanged && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
                                         ? 'bg-purple-600 hover:bg-purple-700 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}
                                 >
-                                    {hasAnyPredictions ? dict?.matches?.makePredictionButton?.replace('{betAmount}', betAmount.toString()).replace('{multiplier}', selectedMultiplier.toFixed(1)).replace('{potentialWinnings}', potentialWinnings.toString()) || `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : dict?.matches?.selectAtLeastOne || 'Select at least one prediction'}
+                                    {hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction'}
                                 </button>
                             </div>
                         </div>
@@ -455,10 +514,11 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
                                 <div className="p-4 pb-0 flex-1">
                                     <OutrightsForm
+                                        matchId={match.id}
                                         selectedTournamentWinner={selectedTournamentWinner}
                                         selectedFinalsPair={selectedFinalsPair}
-                                        onTournamentWinnerChange={setSelectedTournamentWinner}
-                                        onFinalsPairChange={setSelectedFinalsPair}
+                                        onTournamentWinnerChange={handleTournamentWinnerChange}
+                                        onFinalsPairChange={handleFinalsPairChange}
                                         tournament={details.tournament}
                                     />
                                 </div>
@@ -485,15 +545,18 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                                 isOutrights: true
                                             });
                                             setIsPredictionSlipCollapsed(false);
+
+                                            // Reset form change flag after successful submission
+                                            setHasOutrightsFormChanged(false);
                                         }
                                     }}
-                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || outrightsBetAmount < COIN_CONSTANTS.MIN_BET || outrightsBetAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${(selectedTournamentWinner || selectedFinalsPair) && outrightsBetAmount >= COIN_CONSTANTS.MIN_BET && outrightsBetAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged || outrightsBetAmount < COIN_CONSTANTS.MIN_BET || outrightsBetAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
+                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${(selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged && outrightsBetAmount >= COIN_CONSTANTS.MIN_BET && outrightsBetAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
                                         ? 'bg-purple-600 hover:bg-purple-700 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}
                                 >
-                                    {(selectedTournamentWinner || selectedFinalsPair) ? `Add to slip: ${outrightsBetAmount} 🌕 (${outrightsMultiplier.toFixed(1)}x) - Win ${Math.round(outrightsBetAmount * outrightsMultiplier)} 🌕` : 'Select at least one outright prediction'}
+                                    {(selectedTournamentWinner || selectedFinalsPair) ? (hasOutrightsPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : 'Select at least one outright prediction'}
                                 </button>
                             </div>
                         </div>

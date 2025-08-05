@@ -62,11 +62,16 @@ interface PredictionSlipContextType {
     removeOutrightsPrediction: (matchId: number) => void;
     clearPredictions: () => void;
     clearOutrightsPredictions: () => void;
+    updatePredictionBetAmount: (matchId: number, betAmount: number) => void;
+    updateOutrightsBetAmount: (matchId: number, betAmount: number) => void;
     setSlipCollapsed?: (collapsed: boolean) => void;
     slipCollapsed?: boolean;
     // New parlay-specific methods
     getParlayEligibility: () => { isEligible: boolean; minRequired: number; current: number };
     getParlayStats: () => { totalPicks: number; liveMatches: number; tournaments: number };
+    // Helper methods
+    hasPrediction: (matchId: number) => boolean;
+    hasOutrightsPrediction: (matchId: number) => boolean;
 }
 
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
@@ -78,8 +83,12 @@ const PredictionSlipContext = createContext<PredictionSlipContextType>({
     removeOutrightsPrediction: () => { },
     clearPredictions: () => { },
     clearOutrightsPredictions: () => { },
+    updatePredictionBetAmount: () => { },
+    updateOutrightsBetAmount: () => { },
     getParlayEligibility: () => ({ isEligible: false, minRequired: 2, current: 0 }),
     getParlayStats: () => ({ totalPicks: 0, liveMatches: 0, tournaments: 0 }),
+    hasPrediction: () => false,
+    hasOutrightsPrediction: () => false,
 });
 
 export function usePredictionSlip() {
@@ -193,6 +202,31 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         };
     };
 
+    const updatePredictionBetAmount = (matchId: number, betAmount: number) => {
+        setPredictions(prev => prev.map(p =>
+            p.matchId === matchId
+                ? { ...p, betAmount, potentialWinnings: betAmount * (p.multiplier || 1) }
+                : p
+        ));
+    };
+
+    const updateOutrightsBetAmount = (matchId: number, betAmount: number) => {
+        setOutrightsPredictions(prev => prev.map(p =>
+            p.matchId === matchId
+                ? { ...p, betAmount, potentialWinnings: betAmount * (p.multiplier || 1) }
+                : p
+        ));
+    };
+
+    // Helper methods to check if predictions exist
+    const hasPrediction = (matchId: number) => {
+        return predictions.some(p => p.matchId === matchId);
+    };
+
+    const hasOutrightsPrediction = (matchId: number) => {
+        return outrightsPredictions.some(p => p.matchId === matchId);
+    };
+
     return (
         <PredictionSlipContext.Provider value={{
             predictions,
@@ -203,10 +237,14 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
             removeOutrightsPrediction,
             clearPredictions,
             clearOutrightsPredictions,
+            updatePredictionBetAmount,
+            updateOutrightsBetAmount,
             setSlipCollapsed,
             slipCollapsed,
             getParlayEligibility,
-            getParlayStats
+            getParlayStats,
+            hasPrediction,
+            hasOutrightsPrediction
         }}>
             {children}
         </PredictionSlipContext.Provider>

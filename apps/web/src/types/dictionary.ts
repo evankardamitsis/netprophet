@@ -165,6 +165,10 @@ export interface Dictionary {
         higherRiskHigherRewards?: string;
         differentPlayersAndOdds?: string;
         placeOutrightsBet?: string;
+        addToSlip?: string;
+        updateSlip?: string;
+        multiplierBonus?: string;
+        predictionCount?: string;
     };
     leaderboard: {
         title: string;
