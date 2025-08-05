@@ -3,10 +3,9 @@
 export interface Match {
     id: number;
     tournament: string;
-    player1: { name: string; country: string; ranking: number; odds: number };
-    player2: { name: string; country: string; ranking: number; odds: number };
+    player1: { name: string; odds: number };
+    player2: { name: string; odds: number };
     time: string;
-    court: string;
     status: 'live' | 'upcoming' | 'finished';
     points: number;
     startTime: Date;

@@ -74,7 +74,6 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
-                                                <div className="text-gray-500 text-xs truncate max-w-[60px] xs:max-w-[80px] sm:max-w-[100px]">{match.court}</div>
                                             </div>
                                         </div>
 
@@ -163,7 +162,6 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
-                                                <div className="text-gray-500 text-xs truncate max-w-[60px] xs:max-w-[80px] sm:max-w-[100px]">{match.court}</div>
                                             </div>
                                         </div>
 

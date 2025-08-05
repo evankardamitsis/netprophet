@@ -8,8 +8,8 @@ interface MatchDetails {
     tournament: string;
     round: string;
     surface: string;
-    player1: { name: string; country: string; ranking: number; odds: number; wins: number; losses: number };
-    player2: { name: string; country: string; ranking: number; odds: number; wins: number; losses: number };
+    player1: { name: string; odds: number; wins: number; losses: number };
+    player2: { name: string; odds: number; wins: number; losses: number };
     headToHead: string;
     format: string;
 }
@@ -17,7 +17,6 @@ interface MatchDetails {
 interface Match {
     id: number;
     status: string;
-    court: string;
 }
 
 interface MatchHeaderProps {
@@ -51,7 +50,7 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                 <div className="flex items-center justify-between mb-2">
                     <div>
                         <h3 className="text-sm font-bold text-white">{details.tournament}</h3>
-                        <p className="text-xs text-gray-400">{details.round} • {details.surface} • {match.court}</p>
+                        <p className="text-xs text-gray-400">{details.round} • {details.surface}</p>
                     </div>
                     <Badge variant={getStatusColor(match.status)} className="text-xs">
                         {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
@@ -59,14 +58,10 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                 </div>
 
                 {/* Compact Stats Row */}
-                <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="text-center">
                         <div className="text-gray-400">H2H</div>
                         <div className="text-white font-medium">{details.headToHead}</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="text-gray-400">{dict?.matches?.surface || 'Surface'}</div>
-                        <div className="text-white font-medium">{details.surface}</div>
                     </div>
                     <div className="text-center">
                         <div className="text-gray-400">{dict?.matches?.format || 'Format'}</div>
@@ -81,11 +76,6 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                 <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50">
                     <div className="text-center">
                         <div className="text-sm font-bold text-white mb-1">{details.player1.name.split(' ')[1]}</div>
-                        <div className="text-lg mb-2">{details.player1.country}</div>
-                        <div className="flex justify-between items-center text-xs mb-2">
-                            <span className="text-gray-400">{dict?.matches?.rank || 'Rank'}</span>
-                            <span className="text-blue-400 font-bold">#{details.player1.ranking}</span>
-                        </div>
                         <div className="flex justify-between items-center text-xs mb-2">
                             <span className="text-gray-400">{dict?.matches?.record || 'Record'}</span>
                             <span className="text-white">{details.player1.wins}-{details.player1.losses}</span>
@@ -98,11 +88,6 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                 <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 border border-slate-700/50">
                     <div className="text-center">
                         <div className="text-sm font-bold text-white mb-1">{details.player2.name.split(' ')[1]}</div>
-                        <div className="text-lg mb-2">{details.player2.country}</div>
-                        <div className="flex justify-between items-center text-xs mb-2">
-                            <span className="text-gray-400">{dict?.matches?.rank || 'Rank'}</span>
-                            <span className="text-blue-400 font-bold">#{details.player2.ranking}</span>
-                        </div>
                         <div className="flex justify-between items-center text-xs mb-2">
                             <span className="text-gray-400">{dict?.matches?.record || 'Record'}</span>
                             <span className="text-white">{details.player2.wins}-{details.player2.losses}</span>

@@ -41,7 +41,7 @@ async function fetchMatches(): Promise<Match[]> {
     return data || [];
 }
 
-// Demo mock data (copied from MatchesGrid.tsx, correct structure)
+// Demo mock data matching the Match interface from @/types/dashboard
 export const mockMatches = [
     {
         id: 1,
@@ -53,8 +53,7 @@ export const mockMatches = [
         points: 250,
         startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
         lockTime: new Date(Date.now() + 5 * 60 * 1000), // Locks in 5 minutes
-        isLocked: false,
-        format: 'best-of-5'
+        isLocked: false
     },
     {
         id: 2,
@@ -66,8 +65,7 @@ export const mockMatches = [
         points: 200,
         startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
         lockTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // Locks in 1.5 hours
-        isLocked: false,
-        format: 'best-of-5'
+        isLocked: false
     },
     {
         id: 3,
@@ -79,8 +77,7 @@ export const mockMatches = [
         points: 180,
         startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
         lockTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000), // Locks in 3.5 hours
-        isLocked: false,
-        format: 'best-of-5'
+        isLocked: false
     },
     {
         id: 4,
@@ -92,8 +89,7 @@ export const mockMatches = [
         points: 150,
         startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
         lockTime: new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Locks in 5.5 hours
-        isLocked: false,
-        format: 'best-of-5'
+        isLocked: false
     },
     {
         id: 5,
@@ -105,8 +101,7 @@ export const mockMatches = [
         points: 100,
         startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
         lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
-        isLocked: false,
-        format: 'best-of-5'
+        isLocked: false
     },
     {
         id: 6,
@@ -118,8 +113,7 @@ export const mockMatches = [
         points: 50,
         startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
         lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
-        isLocked: false,
-        format: 'best-of-3-super-tiebreak'
+        isLocked: false
     },
     {
         id: 7,
@@ -131,8 +125,7 @@ export const mockMatches = [
         points: 120,
         startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
         lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
-        isLocked: false,
-        format: 'best-of-5'
+        isLocked: false
     }
 ];
 

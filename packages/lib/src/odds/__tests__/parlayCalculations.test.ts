@@ -5,10 +5,9 @@ import { calculateParlayOdds, calculateStreakBooster, calculateSafeBetCost, vali
 interface Match {
     id: number;
     tournament: string;
-    player1: { name: string; country: string; ranking: number; odds: number };
-    player2: { name: string; country: string; ranking: number; odds: number };
+    player1: { name: string; odds: number };
+    player2: { name: string; odds: number };
     time: string;
-    court: string;
     status: 'upcoming';
     points: number;
     startTime: Date;
@@ -20,10 +19,9 @@ interface Match {
 const createMockMatch = (id: number, player1Odds: number, player2Odds: number): Match => ({
     id,
     tournament: 'Test Tournament',
-    player1: { name: 'Player One', country: 'USA', ranking: 1, odds: player1Odds },
-    player2: { name: 'Player Two', country: 'UK', ranking: 2, odds: player2Odds },
+    player1: { name: 'Player One', odds: player1Odds },
+    player2: { name: 'Player Two', odds: player2Odds },
     time: '14:00',
-    court: 'Center Court',
     status: 'upcoming' as const,
     points: 100,
     startTime: new Date(),

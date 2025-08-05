@@ -17,7 +17,6 @@ export interface PredictionItem {
         player1: { name: string; odds: number };
         player2: { name: string; odds: number };
         time: string;
-        court: string;
         status: string;
         isLocked: boolean;
     };

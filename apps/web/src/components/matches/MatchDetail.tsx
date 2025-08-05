@@ -51,8 +51,8 @@ const getMatchDetails = (matchId: number) => {
     const matchDetails = {
         1: {
             tournament: 'Roland Garros 2024',
-            player1: { name: 'Rafael Nadal', country: '🇪🇸', ranking: 1, odds: 2.15, wins: 22, losses: 8 },
-            player2: { name: 'Novak Djokovic', country: '🇷🇸', ranking: 2, odds: 1.85, wins: 24, losses: 6 },
+            player1: { name: 'Rafael Nadal', odds: 2.15, wins: 22, losses: 8 },
+            player2: { name: 'Novak Djokovic', odds: 1.85, wins: 24, losses: 6 },
             points: 250,
             headToHead: 'Nadal leads 30-29',
             surface: 'Clay',
@@ -61,8 +61,8 @@ const getMatchDetails = (matchId: number) => {
         },
         2: {
             tournament: 'Roland Garros 2024',
-            player1: { name: 'Carlos Alcaraz', country: '🇪🇸', ranking: 3, odds: 1.65, wins: 20, losses: 10 },
-            player2: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 2.35, wins: 18, losses: 12 },
+            player1: { name: 'Carlos Alcaraz', odds: 1.65, wins: 20, losses: 10 },
+            player2: { name: 'Daniil Medvedev', odds: 2.35, wins: 18, losses: 12 },
             points: 200,
             headToHead: 'Alcaraz leads 3-2',
             surface: 'Clay',
@@ -71,8 +71,8 @@ const getMatchDetails = (matchId: number) => {
         },
         3: {
             tournament: 'Roland Garros 2024',
-            player1: { name: 'Jannik Sinner', country: '🇮🇹', ranking: 5, odds: 1.95, wins: 19, losses: 11 },
-            player2: { name: 'Alexander Zverev', country: '🇩🇪', ranking: 6, odds: 1.95, wins: 17, losses: 13 },
+            player1: { name: 'Jannik Sinner', odds: 1.95, wins: 19, losses: 11 },
+            player2: { name: 'Alexander Zverev', odds: 1.95, wins: 17, losses: 13 },
             points: 180,
             headToHead: 'Sinner leads 4-3',
             surface: 'Clay',
@@ -81,8 +81,8 @@ const getMatchDetails = (matchId: number) => {
         },
         4: {
             tournament: 'Wimbledon 2024',
-            player1: { name: 'Andy Murray', country: '🇬🇧', ranking: 7, odds: 2.50, wins: 15, losses: 15 },
-            player2: { name: 'Stefanos Tsitsipas', country: '🇬🇷', ranking: 8, odds: 1.60, wins: 21, losses: 9 },
+            player1: { name: 'Andy Murray', odds: 2.50, wins: 15, losses: 15 },
+            player2: { name: 'Stefanos Tsitsipas', odds: 1.60, wins: 21, losses: 9 },
             points: 150,
             headToHead: 'Tsitsipas leads 2-1',
             surface: 'Grass',
@@ -91,8 +91,8 @@ const getMatchDetails = (matchId: number) => {
         },
         5: {
             tournament: 'Local Amateur Tournament',
-            player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80, wins: 12, losses: 8 },
-            player2: { name: 'Mike Johnson', country: '🇺🇸', ranking: 180, odds: 2.20, wins: 10, losses: 10 },
+            player1: { name: 'John Smith', odds: 1.80, wins: 12, losses: 8 },
+            player2: { name: 'Mike Johnson', odds: 2.20, wins: 10, losses: 10 },
             points: 50,
             headToHead: 'Smith leads 3-2',
             surface: 'Hard',
@@ -101,8 +101,8 @@ const getMatchDetails = (matchId: number) => {
         },
         6: {
             tournament: 'Local Amateur Tournament',
-            player1: { name: 'John Smith', country: '🇺🇸', ranking: 150, odds: 1.80, wins: 12, losses: 8 },
-            player2: { name: 'Mike Johnson', country: '🇺🇸', ranking: 180, odds: 2.20, wins: 10, losses: 10 },
+            player1: { name: 'John Smith', odds: 1.80, wins: 12, losses: 8 },
+            player2: { name: 'Mike Johnson', odds: 2.20, wins: 10, losses: 10 },
             points: 50,
             headToHead: 'Smith leads 3-2',
             surface: 'Hard',

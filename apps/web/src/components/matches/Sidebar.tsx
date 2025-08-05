@@ -55,10 +55,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 1,
                 tournament: 'Roland Garros 2024',
-                player1: { name: 'Rafael Nadal', country: '🇪🇸', ranking: 1, odds: 2.15 },
-                player2: { name: 'Novak Djokovic', country: '🇷🇸', ranking: 2, odds: 1.85 },
+                player1: { name: 'Rafael Nadal', odds: 2.15 },
+                player2: { name: 'Novak Djokovic', odds: 1.85 },
                 time: '14:00',
-                court: 'Philippe-Chatrier',
                 status: 'live',
                 points: 250,
                 startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
@@ -68,10 +67,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 2,
                 tournament: 'Roland Garros 2024',
-                player1: { name: 'Carlos Alcaraz', country: '🇪🇸', ranking: 3, odds: 1.65 },
-                player2: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 2.35 },
+                player1: { name: 'Carlos Alcaraz', odds: 1.65 },
+                player2: { name: 'Daniil Medvedev', odds: 2.35 },
                 time: '16:30',
-                court: 'Suzanne-Lenglen',
                 status: 'upcoming',
                 points: 200,
                 startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
@@ -81,10 +79,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 3,
                 tournament: 'Roland Garros 2024',
-                player1: { name: 'Jannik Sinner', country: '🇮🇹', ranking: 5, odds: 1.95 },
-                player2: { name: 'Alexander Zverev', country: '🇩🇪', ranking: 6, odds: 1.95 },
+                player1: { name: 'Jannik Sinner', odds: 1.95 },
+                player2: { name: 'Alexander Zverev', odds: 1.95 },
                 time: '19:00',
-                court: 'Court 1',
                 status: 'upcoming',
                 points: 180,
                 startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
@@ -101,10 +98,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 4,
                 tournament: 'Wimbledon 2024',
-                player1: { name: 'Andy Murray', country: '🇬🇧', ranking: 7, odds: 2.50 },
-                player2: { name: 'Stefanos Tsitsipas', country: '🇬🇷', ranking: 8, odds: 1.60 },
+                player1: { name: 'Andy Murray', odds: 2.50 },
+                player2: { name: 'Stefanos Tsitsipas', odds: 1.60 },
                 time: '13:00',
-                court: 'Centre Court',
                 status: 'upcoming',
                 points: 150,
                 startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
@@ -114,10 +110,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 5,
                 tournament: 'Wimbledon 2024',
-                player1: { name: 'Roger Federer', country: '🇨🇭', ranking: 9, odds: 3.00 },
-                player2: { name: 'Nick Kyrgios', country: '🇦🇺', ranking: 10, odds: 1.40 },
+                player1: { name: 'Roger Federer', odds: 3.00 },
+                player2: { name: 'Nick Kyrgios', odds: 1.40 },
                 time: '15:30',
-                court: 'Court 1',
                 status: 'upcoming',
                 points: 120,
                 startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
@@ -134,10 +129,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 6,
                 tournament: 'US Open 2024',
-                player1: { name: 'Daniil Medvedev', country: '🇷🇺', ranking: 4, odds: 1.80 },
-                player2: { name: 'Andrey Rublev', country: '🇷🇺', ranking: 11, odds: 2.20 },
+                player1: { name: 'Daniil Medvedev', odds: 1.80 },
+                player2: { name: 'Andrey Rublev', odds: 2.20 },
                 time: '20:00',
-                court: 'Arthur Ashe',
                 status: 'upcoming',
                 points: 100,
                 startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
@@ -154,10 +148,9 @@ const mockTournaments: Tournament[] = [
             {
                 id: 7,
                 tournament: 'Australian Open 2024',
-                player1: { name: 'Novak Djokovic', country: '🇷🇸', ranking: 2, odds: 1.50 },
-                player2: { name: 'Stefanos Tsitsipas', country: '🇬🇷', ranking: 8, odds: 2.80 },
+                player1: { name: 'Novak Djokovic', odds: 1.50 },
+                player2: { name: 'Stefanos Tsitsipas', odds: 2.80 },
                 time: '19:30',
-                court: 'Rod Laver Arena',
                 status: 'finished',
                 points: 300,
                 startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Started 24 hours ago
@@ -240,7 +233,7 @@ function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionar
                             <div className="text-sm font-semibold text-yellow-200">
                                 {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
                             </div>
-                            <div className="text-xs text-slate-400">{match.court}</div>
+
                         </div>
                         <div className="text-right">
                             <CountdownTimer lockTime={match.lockTime} dict={dict} />
@@ -345,12 +338,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     key={match.id}
                                     onClick={() => onMatchSelect && onMatchSelect(match)}
                                     className="w-full p-1.5 sm:p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-red-500 bg-red-900/20 min-w-0"
-                                    title={`${match.player1.name} vs ${match.player2.name} - ${match.court}`}
+                                    title={`${match.player1.name} vs ${match.player2.name}`}
                                 >
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
                                         {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
                                     </div>
-                                    <div className="text-xs text-gray-500 truncate">{match.court}</div>
+
                                 </button>
                             ))}
 
@@ -365,12 +358,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     key={match.id}
                                     onClick={() => onMatchSelect && onMatchSelect(match)}
                                     className="w-full p-1.5 sm:p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-blue-500 bg-blue-900/20 min-w-0"
-                                    title={`${match.player1.name} vs ${match.player2.name} - ${match.court} - ${match.time}`}
+                                    title={`${match.player1.name} vs ${match.player2.name} - ${match.time}`}
                                 >
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
                                         {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
                                     </div>
-                                    <div className="text-xs text-gray-500 truncate">{match.time} • {match.court}</div>
+                                    <div className="text-xs text-gray-500 truncate">{match.time}</div>
                                 </button>
                             ))}
                         </div>

@@ -326,7 +326,7 @@ export function PredictionSlip({
                                 <div className="text-white/90 text-sm font-medium">
                                     {isParlayMode
                                         ? dict?.matches?.parlayBenefits || '💎 Parlay Benefits: Higher rewards, bonus multipliers, and streak boosters!'
-                                        : dict?.matches?.combineAllPredictions || '🔥 Combine all predictions for massive rewards with bonus multipliers!'
+                                        : dict?.matches?.combineAllPredictions || 'Combine all predictions for massive rewards with bonus multipliers!'
                                     }
                                 </div>
                             </motion.div>

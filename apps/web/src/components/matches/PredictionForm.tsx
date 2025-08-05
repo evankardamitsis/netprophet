@@ -32,8 +32,8 @@ interface PredictionOptions {
 }
 
 interface MatchDetails {
-    player1: { name: string; country: string; ranking: number; odds: number; wins: number; losses: number };
-    player2: { name: string; country: string; ranking: number; odds: number; wins: number; losses: number };
+    player1: { name: string; odds: number; wins: number; losses: number };
+    player2: { name: string; odds: number; wins: number; losses: number };
     round: string;
     surface: string;
     format: string; // Add format field
