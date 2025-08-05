@@ -118,10 +118,10 @@ export function BettingSection({
 
                         const options = [
                             { value: baseOdds, label: `${baseOdds.toFixed(2)}x`, description: '1 prediction' },
-                            { value: baseOdds + 0.2, label: `${(baseOdds + 0.2).toFixed(2)}x`, description: '2+ predictions' },
-                            { value: baseOdds + 0.4, label: `${(baseOdds + 0.4).toFixed(2)}x`, description: '4+ predictions' },
-                            { value: baseOdds + 0.6, label: `${(baseOdds + 0.6).toFixed(2)}x`, description: '6+ predictions' },
-                            { value: baseOdds + 0.8, label: `${(baseOdds + 0.8).toFixed(2)}x`, description: '8+ predictions' }
+                            { value: baseOdds + 0.1, label: `${(baseOdds + 0.05).toFixed(2)}x`, description: '2+ predictions' },
+                            { value: baseOdds + 0.2, label: `${(baseOdds + 0.1).toFixed(2)}x`, description: '4+ predictions' },
+                            { value: baseOdds + 0.25, label: `${(baseOdds + 0.15).toFixed(2)}x`, description: '6+ predictions' },
+                            { value: baseOdds + 0.3, label: `${(baseOdds + 0.2).toFixed(2)}x`, description: '8+ predictions' }
                         ];
 
                         return options.map((option, index) => (

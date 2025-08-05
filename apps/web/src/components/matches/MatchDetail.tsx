@@ -15,7 +15,7 @@ import {
     clearFormPredictionsForMatch
 } from '@/lib/sessionStorage';
 import { useWallet, COIN_CONSTANTS } from '@/context/WalletContext';
-import { BettingSection } from './BettingSection';
+import { OutrightsForm } from './OutrightsForm';
 import { PredictionForm } from './PredictionForm';
 import { MatchHeader } from './MatchHeader';
 import {
@@ -27,6 +27,7 @@ import {
     getPredictionCount,
     hasPredictions
 } from '@/lib/predictionHelpers';
+import { BettingSection } from './BettingSection';
 
 interface MatchDetailProps {
     match: Match | null;
@@ -114,7 +115,7 @@ const getMatchDetails = (matchId: number) => {
 };
 
 export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen = true }: MatchDetailProps) {
-    const { predictions, addPrediction, removePrediction } = usePredictionSlip();
+    const { predictions, outrightsPredictions, addPrediction, addOutrightsPrediction, removePrediction } = usePredictionSlip();
     const { theme } = useTheme();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     const { placeBet, wallet } = useWallet();
@@ -124,6 +125,15 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const [formPredictions, setFormPredictions] = useState<PredictionOptions>(createEmptyPredictions());
     const [betAmount, setBetAmount] = useState<number>(10); // Default bet amount
     const [selectedMultiplier, setSelectedMultiplier] = useState<number>(1.5); // Default multiplier
+
+    // Tab state
+    const [activeTab, setActiveTab] = useState<'match' | 'outrights'>('match');
+
+    // Outrights state
+    const [outrightsBetAmount, setOutrightsBetAmount] = useState<number>(10);
+    const [outrightsMultiplier, setOutrightsMultiplier] = useState<number>(1.2);
+    const [selectedTournamentWinner, setSelectedTournamentWinner] = useState<string>('');
+    const [selectedFinalsPair, setSelectedFinalsPair] = useState<string>('');
 
     // Load form predictions from session storage when match changes
     useEffect(() => {
@@ -356,72 +366,140 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 <p className="text-gray-400 text-xs">{dict?.matches?.loading || 'Monitor live tennis events and place your predictions'}</p>
             </div>
 
-            {/* Two-Column Layout: Left Column (MatchHeader + BettingSection) + Right Column (PredictionForm) */}
-            <div className="px-4 flex-1 flex gap-4 min-h-0">
-                {/* Left Column: MatchHeader + BettingSection */}
-                <div className="w-1/3 flex-shrink-0 flex flex-col gap-4 h-full">
-                    {/* MatchHeader at the top */}
-                    <div className="flex-shrink-0">
+            {/* Tab Navigation */}
+            <div className="px-4 pb-2">
+                <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
+                    <button
+                        onClick={() => setActiveTab('match')}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'match'
+                            ? 'bg-purple-600 text-white'
+                            : 'text-gray-400 hover:text-white'
+                            }`}
+                    >
+                        {dict?.matches?.matchTab || 'Match'}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('outrights')}
+                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'outrights'
+                            ? 'bg-purple-600 text-white'
+                            : 'text-gray-400 hover:text-white'
+                            }`}
+                    >
+                        {dict?.matches?.outrightsTab || 'Outrights'}
+                    </button>
+                </div>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'match' ? (
+                /* Match Tab Content */
+                <div className="px-4 flex-1 flex gap-4 min-h-0">
+                    {/* Left Column: MatchHeader - 20% */}
+                    <div className="w-1/5 flex-shrink-0">
                         <MatchHeader match={match} details={details} />
                     </div>
 
-                    {/* BettingSection below MatchHeader */}
-                    <div className="flex-1">
-                        <BettingSection
-                            predictionCount={predictionCount}
-                            onBetAmountChange={setBetAmount}
-                            onMultiplierChange={setSelectedMultiplier}
-                            betAmount={betAmount}
-                            selectedMultiplier={selectedMultiplier}
-                            selectedWinner={formPredictions.winner}
-                            player1={{ name: details.player1.name, odds: details.player1.odds }}
-                            player2={{ name: details.player2.name, odds: details.player2.odds }}
-                        />
-                    </div>
-                </div>
+                    {/* Right Column: Prediction Form - 80% */}
+                    <div className="w-4/5 flex-1 min-h-0 flex flex-col">
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
+                            <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
+                                <h2 className="text-lg font-bold text-white mb-1">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
+                                <p className="text-gray-400 text-xs">{dict?.matches?.makePredictionsDescription || 'Choose from multiple prediction types to maximize your points!'}</p>
+                            </div>
 
-                {/* Right Column: Prediction Form - Full Height */}
-                <div className="w-2/3 flex-1 min-h-0 flex flex-col h-full ">
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
-                        <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
-                            <h2 className="text-lg font-bold text-white mb-1">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
-                            <p className="text-gray-400 text-xs">{dict?.matches?.makePredictionsDescription || 'Choose from multiple prediction types to maximize your points!'}</p>
-                        </div>
+                            <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
+                                <div className="p-4 pb-0 flex-1">
+                                    <PredictionForm
+                                        formPredictions={formPredictions}
+                                        onPredictionChange={handlePredictionChange}
+                                        details={details}
+                                        isBestOf5={isBestOf5}
+                                        isAmateurFormat={isAmateurFormat}
+                                        setsToShowFromResult={setsToShowFromResult}
+                                        setWinnersFromResult={setWinnersFromResult}
+                                        renderSetScoreDropdown={renderSetScoreDropdown}
+                                        getSetScore={getSetScore}
+                                        setSetScore={setSetScore}
+                                        getSetWinner={getSetWinner}
+                                        setSetWinner={setSetWinner}
+                                    />
+                                </div>
+                            </div>
 
-                        <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
-                            <div className="p-4 pb-0 flex-1">
-                                <PredictionForm
-                                    formPredictions={formPredictions}
-                                    onPredictionChange={handlePredictionChange}
-                                    details={details}
-                                    isBestOf5={isBestOf5}
-                                    isAmateurFormat={isAmateurFormat}
-                                    setsToShowFromResult={setsToShowFromResult}
-                                    setWinnersFromResult={setWinnersFromResult}
-                                    renderSetScoreDropdown={renderSetScoreDropdown}
-                                    getSetScore={getSetScore}
-                                    setSetScore={setSetScore}
-                                    getSetWinner={getSetWinner}
-                                    setSetWinner={setSetWinner}
-                                />
+                            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
+                                <button
+                                    onClick={handleSubmitPredictions}
+                                    disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
+                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {hasAnyPredictions ? dict?.matches?.makePredictionButton?.replace('{betAmount}', betAmount.toString()).replace('{multiplier}', selectedMultiplier.toFixed(1)).replace('{potentialWinnings}', potentialWinnings.toString()) || `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : dict?.matches?.selectAtLeastOne || 'Select at least one prediction'}
+                                </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            ) : (
+                /* Outrights Tab Content */
+                <div className="px-4 flex-1 flex flex-col gap-4 min-h-0">
+                    {/* OutrightsForm - Full Width */}
+                    <div className="flex-1 min-h-0 flex flex-col">
+                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
+                            <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
+                                <h2 className="text-lg font-bold text-white mb-1">{dict?.matches?.outrights || 'Outrights'}</h2>
+                                <p className="text-gray-400 text-xs">{dict?.matches?.outrightsDescription || 'Predict the tournament winner and finals pair for big wins!'}</p>
+                            </div>
 
-                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
-                            <button
-                                onClick={handleSubmitPredictions}
-                                disabled={!hasAnyPredictions || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                    }`}
-                            >
-                                {hasAnyPredictions ? dict?.matches?.makePredictionButton?.replace('{betAmount}', betAmount.toString()).replace('{multiplier}', selectedMultiplier.toFixed(1)).replace('{potentialWinnings}', potentialWinnings.toString()) || `Make your prediction: ${betAmount} 🌕 (${selectedMultiplier.toFixed(1)}x) - Win ${potentialWinnings} 🌕` : dict?.matches?.selectAtLeastOne || 'Select at least one prediction'}
-                            </button>
+                            <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
+                                <div className="p-4 pb-0 flex-1">
+                                    <OutrightsForm
+                                        selectedTournamentWinner={selectedTournamentWinner}
+                                        selectedFinalsPair={selectedFinalsPair}
+                                        onTournamentWinnerChange={setSelectedTournamentWinner}
+                                        onFinalsPairChange={setSelectedFinalsPair}
+                                        tournament={details.tournament}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
+                                <button
+                                    onClick={() => {
+                                        // Handle outrights submission
+                                        const hasOutrightsPredictions = selectedTournamentWinner || selectedFinalsPair;
+                                        if (hasOutrightsPredictions) {
+                                            // Add to outrights predictions (separate from regular predictions)
+                                            addOutrightsPrediction({
+                                                matchId: match.id,
+                                                match,
+                                                prediction: {
+                                                    tournamentWinner: selectedTournamentWinner,
+                                                    finalsPair: selectedFinalsPair
+                                                },
+                                                points: match.points * 2, // Higher points for outrights
+                                                betAmount: outrightsBetAmount,
+                                                multiplier: outrightsMultiplier,
+                                                potentialWinnings: Math.round(outrightsBetAmount * outrightsMultiplier),
+                                                isOutrights: true
+                                            });
+                                            setIsPredictionSlipCollapsed(false);
+                                        }
+                                    }}
+                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || outrightsBetAmount < COIN_CONSTANTS.MIN_BET || outrightsBetAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
+                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${(selectedTournamentWinner || selectedFinalsPair) && outrightsBetAmount >= COIN_CONSTANTS.MIN_BET && outrightsBetAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {(selectedTournamentWinner || selectedFinalsPair) ? `Add to slip: ${outrightsBetAmount} 🌕 (${outrightsMultiplier.toFixed(1)}x) - Win ${Math.round(outrightsBetAmount * outrightsMultiplier)} 🌕` : 'Select at least one outright prediction'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

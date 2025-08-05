@@ -3,6 +3,7 @@
 // Session storage keys
 export const SESSION_KEYS = {
     PREDICTIONS: 'netprophet_predictions',
+    OUTRIGHTS_PREDICTIONS: 'netprophet_outrights_predictions',
     SLIP_COLLAPSED: 'netprophet_slip_collapsed',
     FORM_PREDICTIONS: 'netprophet_form_predictions',
     WALLET: 'netprophet_wallet'

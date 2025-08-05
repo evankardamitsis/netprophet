@@ -143,6 +143,28 @@ export interface Dictionary {
         needSafeBetTokens?: string;
         parlayBetDescription?: string;
         individualBetDescription?: string;
+        outrights?: string;
+        tournamentWinner?: string;
+        finalsPair?: string;
+        selectTournamentWinner?: string;
+        selectFinalsPair?: string;
+        outrightsDescription?: string;
+        outrightsTab?: string;
+        matchTab?: string;
+        selectCategory?: string;
+        chooseAgeCategory?: string;
+        allAges?: string;
+        years?: string;
+        predictCategoryWinner?: string;
+        predictCategoryFinalists?: string;
+        bettingInformation?: string;
+        outrightsHigherMultipliers?: string;
+        tournamentWinnerSettled?: string;
+        finalsPairSettled?: string;
+        betOnBothPredictions?: string;
+        higherRiskHigherRewards?: string;
+        differentPlayersAndOdds?: string;
+        placeOutrightsBet?: string;
     };
     leaderboard: {
         title: string;

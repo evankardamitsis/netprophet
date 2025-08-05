@@ -30,6 +30,12 @@ export interface PredictionOptions {
     breakPoints: string;
 }
 
+// Add OutrightsOptions type
+export interface OutrightsOptions {
+    tournamentWinner: string;
+    finalsPair: string;
+}
+
 // Extend PredictionItem to include structured prediction
 export interface StructuredPredictionItem extends Omit<PredictionItem, 'prediction'> {
     prediction: PredictionOptions;
@@ -38,11 +44,24 @@ export interface StructuredPredictionItem extends Omit<PredictionItem, 'predicti
     potentialWinnings?: number;
 }
 
+// Add OutrightsPredictionItem type
+export interface OutrightsPredictionItem extends Omit<PredictionItem, 'prediction'> {
+    prediction: OutrightsOptions;
+    betAmount?: number;
+    multiplier?: number;
+    potentialWinnings?: number;
+    isOutrights: true;
+}
+
 interface PredictionSlipContextType {
     predictions: StructuredPredictionItem[];
+    outrightsPredictions: OutrightsPredictionItem[];
     addPrediction: (item: StructuredPredictionItem) => void;
+    addOutrightsPrediction: (item: OutrightsPredictionItem) => void;
     removePrediction: (matchId: number) => void;
+    removeOutrightsPrediction: (matchId: number) => void;
     clearPredictions: () => void;
+    clearOutrightsPredictions: () => void;
     setSlipCollapsed?: (collapsed: boolean) => void;
     slipCollapsed?: boolean;
     // New parlay-specific methods
@@ -52,9 +71,13 @@ interface PredictionSlipContextType {
 
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
     predictions: [],
+    outrightsPredictions: [],
     addPrediction: () => { },
+    addOutrightsPrediction: () => { },
     removePrediction: () => { },
+    removeOutrightsPrediction: () => { },
     clearPredictions: () => { },
+    clearOutrightsPredictions: () => { },
     getParlayEligibility: () => ({ isEligible: false, minRequired: 2, current: 0 }),
     getParlayStats: () => ({ totalPicks: 0, liveMatches: 0, tournaments: 0 }),
 });
@@ -85,6 +108,11 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         return migratePredictions(stored);
     });
 
+    const [outrightsPredictions, setOutrightsPredictions] = useState<OutrightsPredictionItem[]>(() => {
+        const stored = loadFromSessionStorage(SESSION_KEYS.OUTRIGHTS_PREDICTIONS, []);
+        return stored;
+    });
+
     const [slipCollapsed, setSlipCollapsed] = useState<boolean>(() => {
         return loadFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, false);
     });
@@ -93,6 +121,11 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
     useEffect(() => {
         saveToSessionStorage(SESSION_KEYS.PREDICTIONS, predictions);
     }, [predictions]);
+
+    // Save outrights predictions to session storage whenever they change
+    useEffect(() => {
+        saveToSessionStorage(SESSION_KEYS.OUTRIGHTS_PREDICTIONS, outrightsPredictions);
+    }, [outrightsPredictions]);
 
     // Save slip collapsed state to session storage whenever it changes
     useEffect(() => {
@@ -115,6 +148,26 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         setPredictions(prev => prev.filter(p => p.matchId !== matchId));
     };
 
+    const addOutrightsPrediction = (item: OutrightsPredictionItem) => {
+        setOutrightsPredictions(prev => {
+            const exists = prev.find(p => p.matchId === item.matchId);
+            if (exists) {
+                // Replace the existing prediction
+                return prev.map(p => p.matchId === item.matchId ? item : p);
+            }
+            return [...prev, item];
+        });
+        setSlipCollapsed(false); // Open slip if closed
+    };
+
+    const removeOutrightsPrediction = (matchId: number) => {
+        setOutrightsPredictions(prev => prev.filter(p => p.matchId !== matchId));
+    };
+
+    const clearOutrightsPredictions = () => {
+        setOutrightsPredictions([]);
+    };
+
     const clearPredictions = () => {
         setPredictions([]);
         // Clear all form predictions from session storage
@@ -123,7 +176,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
 
     // New parlay-specific methods
     const getParlayEligibility = () => {
-        const current = predictions.length;
+        const current = predictions.length; // Only regular predictions count for parlay
         const minRequired = 2;
         return {
             isEligible: current >= minRequired,
@@ -134,7 +187,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
 
     const getParlayStats = () => {
         return {
-            totalPicks: predictions.length,
+            totalPicks: predictions.length, // Only regular predictions count for parlay
             liveMatches: predictions.filter(p => p.match.status === 'live').length,
             tournaments: new Set(predictions.map(p => p.match.tournament)).size
         };
@@ -143,9 +196,13 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
     return (
         <PredictionSlipContext.Provider value={{
             predictions,
+            outrightsPredictions,
             addPrediction,
+            addOutrightsPrediction,
             removePrediction,
+            removeOutrightsPrediction,
             clearPredictions,
+            clearOutrightsPredictions,
             setSlipCollapsed,
             slipCollapsed,
             getParlayEligibility,

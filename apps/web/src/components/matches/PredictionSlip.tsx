@@ -67,7 +67,7 @@ export function PredictionSlip({
     isCollapsed = false,
     onToggleCollapse
 }: PredictionSlipProps) {
-    const { predictions, clearPredictions, removePrediction } = usePredictionSlip();
+    const { predictions, outrightsPredictions, clearPredictions, clearOutrightsPredictions, removePrediction, removeOutrightsPrediction } = usePredictionSlip();
     const { wallet, placeBet } = useWallet();
     const { dict, lang } = useDictionary();
 
@@ -453,12 +453,6 @@ export function PredictionSlip({
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-center">
-                                                <div className="text-sm">
-                                                    <span className="text-slate-300">{dict?.matches?.odds || 'Odds'}: </span>
-                                                    <span className="font-semibold text-blue-400">
-                                                        {formatParlayOdds((item.match.player1.odds + item.match.player2.odds) / 2)}x
-                                                    </span>
-                                                </div>
                                                 {!isParlayMode && (
                                                     <div className="text-sm">
                                                         <span className="text-slate-300">{dict?.matches?.stake || 'Stake'}: </span>
@@ -517,6 +511,129 @@ export function PredictionSlip({
                                     </>
                                 )}
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {/* Outrights Predictions Section */}
+                {outrightsPredictions.length > 0 && (
+                    <div className="space-y-4 mt-6">
+                        <div className="border-t border-slate-700 pt-4">
+                            <h4 className="text-lg font-bold text-purple-300 mb-4 flex items-center">
+                                <span className="mr-2">🏆</span>
+                                {dict?.matches?.outrights || 'Outrights'} ({outrightsPredictions.length})
+                            </h4>
+                        </div>
+
+                        <AnimatePresence>
+                            {outrightsPredictions.map((item, index) => (
+                                <motion.div
+                                    key={item.matchId}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, x: -100 }}
+                                    transition={{ delay: index * 0.1 }}
+                                >
+                                    <Card className="bg-purple-900/20 border border-purple-700/50 rounded-xl shadow-md">
+                                        <CardContent className="p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="flex-1">
+                                                    <div className="text-sm font-semibold text-purple-200">
+                                                        {item.match.tournament}
+                                                    </div>
+                                                    <div className="text-xs text-purple-400 mt-1">
+                                                        {dict?.matches?.outrights || 'Outrights'} - {dict?.matches?.match || 'Match'}
+                                                    </div>
+                                                </div>
+                                                <motion.button
+                                                    onClick={() => removeOutrightsPrediction(item.matchId)}
+                                                    className="text-purple-500 hover:text-red-400 ml-2"
+                                                    whileHover={{ scale: 1.2 }}
+                                                    whileTap={{ scale: 0.8 }}
+                                                >
+                                                    <XIcon />
+                                                </motion.button>
+                                            </div>
+
+                                            <div className="space-y-2 mb-3">
+                                                {item.prediction.tournamentWinner && (
+                                                    <div className="bg-purple-800/30 rounded-lg p-2">
+                                                        <div className="text-xs text-purple-300 font-medium">
+                                                            {dict?.matches?.tournamentWinner || 'Tournament Winner'}:
+                                                        </div>
+                                                        <div className="text-sm text-purple-100 font-semibold">
+                                                            {item.prediction.tournamentWinner}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {item.prediction.finalsPair && (
+                                                    <div className="bg-purple-800/30 rounded-lg p-2">
+                                                        <div className="text-xs text-purple-300 font-medium">
+                                                            {dict?.matches?.finalsPair || 'Finals Pair'}:
+                                                        </div>
+                                                        <div className="text-sm text-purple-100 font-semibold">
+                                                            {item.prediction.finalsPair}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="flex justify-between items-center text-sm">
+                                                <div>
+                                                    <span className="text-purple-400">{dict?.matches?.stake || 'Stake'}:</span>
+                                                    <span className="font-bold ml-1 text-purple-200">{item.betAmount || 0} 🌕</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-purple-400">{dict?.matches?.potentialWin || 'Potential Win'}:</span>
+                                                    <span className="font-bold ml-1 text-purple-200">{item.potentialWinnings || 0} 🌕</span>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+
+                        {/* Outrights Submit Section */}
+                        <motion.div
+                            className="bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg p-4 border border-purple-500"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 }}
+                        >
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="text-sm text-purple-300">
+                                    <span>{dict?.matches?.totalStake || 'Total Stake'}: </span>
+                                    <span className="font-bold text-purple-200 text-lg">
+                                        {outrightsPredictions.reduce((total, item) => total + (item.betAmount || 0), 0)} 🌕
+                                    </span>
+                                </div>
+                                <div className="text-sm text-purple-400">
+                                    {dict?.matches?.balance || 'Balance'}: {wallet.balance} 🌕
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="text-sm text-purple-300">
+                                    <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
+                                    <span className="font-bold text-purple-200 text-lg">
+                                        {outrightsPredictions.reduce((total, item) => total + (item.potentialWinnings || 0), 0)} 🌕
+                                    </span>
+                                </div>
+                                <div className="text-sm text-purple-400">
+                                    {outrightsPredictions.length} {dict?.matches?.outrights || 'outrights'}
+                                </div>
+                            </div>
+
+                            <Button
+                                onClick={() => {
+                                    // Handle outrights submission separately
+                                    console.log('Submitting outrights predictions:', outrightsPredictions);
+                                    // TODO: Implement outrights submission logic
+                                }}
+                                className="w-full font-bold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+                            >
+                                {dict?.matches?.placeOutrightsBet || 'Place Outrights Bet'}
+                            </Button>
                         </motion.div>
                     </div>
                 )}
