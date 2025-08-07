@@ -312,6 +312,98 @@ const getTournamentOutrights = (tournament: string): TournamentOutrights => {
                     ]
                 }
             }
+        },
+        'Local Amateur Tournament': {
+            categories: {
+                'Open': {
+                    tournamentWinners: [
+                        { name: 'John Smith', odds: 2.80 },
+                        { name: 'Mike Johnson', odds: 3.20 },
+                        { name: 'David Wilson', odds: 4.50 },
+                        { name: 'Chris Brown', odds: 5.20 },
+                        { name: 'Alex Davis', odds: 6.80 },
+                        { name: 'Tom Miller', odds: 8.50 },
+                        { name: 'James Taylor', odds: 10.00 },
+                        { name: 'Robert Anderson', odds: 12.00 }
+                    ],
+                    finalsPairs: [
+                        { pair: 'Smith vs Johnson', odds: 4.50 },
+                        { pair: 'Wilson vs Brown', odds: 6.80 },
+                        { pair: 'Smith vs Wilson', odds: 5.20 },
+                        { pair: 'Johnson vs Davis', odds: 7.50 },
+                        { pair: 'Brown vs Miller', odds: 12.00 },
+                        { pair: 'Smith vs Davis', odds: 8.20 },
+                        { pair: 'Johnson vs Wilson', odds: 6.50 },
+                        { pair: 'Brown vs Taylor', odds: 15.00 }
+                    ]
+                },
+                '14-39': {
+                    tournamentWinners: [
+                        { name: 'John Smith', odds: 2.50 },
+                        { name: 'Mike Johnson', odds: 3.00 },
+                        { name: 'David Wilson', odds: 4.20 },
+                        { name: 'Chris Brown', odds: 4.80 },
+                        { name: 'Alex Davis', odds: 6.20 },
+                        { name: 'Tom Miller', odds: 7.80 },
+                        { name: 'James Taylor', odds: 9.20 },
+                        { name: 'Robert Anderson', odds: 11.00 }
+                    ],
+                    finalsPairs: [
+                        { pair: 'Smith vs Johnson', odds: 4.00 },
+                        { pair: 'Wilson vs Brown', odds: 6.20 },
+                        { pair: 'Smith vs Wilson', odds: 4.80 },
+                        { pair: 'Johnson vs Davis', odds: 6.80 },
+                        { pair: 'Brown vs Miller', odds: 10.50 },
+                        { pair: 'Smith vs Davis', odds: 7.20 },
+                        { pair: 'Johnson vs Wilson', odds: 5.80 },
+                        { pair: 'Brown vs Taylor', odds: 12.50 }
+                    ]
+                },
+                '40-49': {
+                    tournamentWinners: [
+                        { name: 'Mike Johnson', odds: 2.80 },
+                        { name: 'David Wilson', odds: 3.50 },
+                        { name: 'Chris Brown', odds: 4.20 },
+                        { name: 'Alex Davis', odds: 5.00 },
+                        { name: 'Tom Miller', odds: 6.50 },
+                        { name: 'James Taylor', odds: 8.20 },
+                        { name: 'Robert Anderson', odds: 9.80 },
+                        { name: 'William Thomas', odds: 12.00 }
+                    ],
+                    finalsPairs: [
+                        { pair: 'Johnson vs Wilson', odds: 4.80 },
+                        { pair: 'Brown vs Davis', odds: 6.50 },
+                        { pair: 'Johnson vs Brown', odds: 5.20 },
+                        { pair: 'Wilson vs Miller', odds: 7.20 },
+                        { pair: 'Davis vs Taylor', odds: 11.50 },
+                        { pair: 'Johnson vs Miller', odds: 8.00 },
+                        { pair: 'Wilson vs Brown', odds: 6.20 },
+                        { pair: 'Davis vs Anderson', odds: 13.00 }
+                    ]
+                },
+                '50+': {
+                    tournamentWinners: [
+                        { name: 'David Wilson', odds: 3.20 },
+                        { name: 'Chris Brown', odds: 3.80 },
+                        { name: 'Alex Davis', odds: 4.50 },
+                        { name: 'Tom Miller', odds: 5.50 },
+                        { name: 'James Taylor', odds: 7.20 },
+                        { name: 'Robert Anderson', odds: 8.80 },
+                        { name: 'William Thomas', odds: 10.50 },
+                        { name: 'Richard Jackson', odds: 12.50 }
+                    ],
+                    finalsPairs: [
+                        { pair: 'Wilson vs Brown', odds: 5.20 },
+                        { pair: 'Davis vs Miller', odds: 7.50 },
+                        { pair: 'Wilson vs Davis', odds: 5.80 },
+                        { pair: 'Brown vs Taylor', odds: 8.20 },
+                        { pair: 'Miller vs Anderson', odds: 12.80 },
+                        { pair: 'Wilson vs Taylor', odds: 9.00 },
+                        { pair: 'Brown vs Davis', odds: 6.80 },
+                        { pair: 'Miller vs Thomas', odds: 14.50 }
+                    ]
+                }
+            }
         }
     };
 

@@ -9,7 +9,7 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 
 export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const { slipCollapsed } = usePredictionSlip();
 
     const handleSelectMatch = (match: Match) => {

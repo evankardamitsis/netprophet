@@ -5,6 +5,7 @@ import { useWallet, COIN_CONSTANTS } from '@/context/WalletContext';
 import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
 import { calculateMultiplier, getMultiplierOptions, PlayerOdds } from '@/lib/predictionHelpers';
+import { Badge } from '@netprophet/ui';
 
 interface BettingSectionProps {
     predictionCount: number;
@@ -15,6 +16,7 @@ interface BettingSectionProps {
     selectedWinner: string;
     player1: PlayerOdds;
     player2: PlayerOdds;
+    matchStatus?: string;
 }
 
 export function BettingSection({
@@ -25,7 +27,8 @@ export function BettingSection({
     selectedMultiplier,
     selectedWinner,
     player1,
-    player2
+    player2,
+    matchStatus
 }: BettingSectionProps) {
 
     const { theme } = useTheme();
@@ -34,6 +37,19 @@ export function BettingSection({
 
     // Calculate potential winnings based on bet amount and multiplier
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'live':
+                return 'destructive';
+            case 'upcoming':
+                return 'secondary';
+            case 'finished':
+                return 'outline';
+            default:
+                return 'secondary';
+        }
+    };
 
     // Update multiplier based on selected winner and prediction count
     useEffect(() => {
@@ -45,7 +61,12 @@ export function BettingSection({
 
     return (
         <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl p-4 border-2 border-slate-500 shadow-2xl ring-1 ring-slate-400/20">
-            <h3 className="text-base font-bold text-white mb-3">💰 {dict?.matches?.bettingSection || 'Place Your Bet'}</h3>
+            <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-bold text-white">💰 {dict?.matches?.bettingSection || 'Place Your Bet'}</h3>
+                <Badge variant="destructive" className="text-xs px-2 py-1">
+                    TEST
+                </Badge>
+            </div>
 
             {/* Bet Amount Input */}
             <div className="space-y-2 mb-4">

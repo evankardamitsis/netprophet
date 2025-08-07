@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useState, useEffect } from 'react';
 
 interface MatchDetails {
     tournament: string;
@@ -27,6 +28,25 @@ interface MatchHeaderProps {
 export function MatchHeader({ match, details }: MatchHeaderProps) {
     const { theme } = useTheme();
     const { dict, lang } = useDictionary();
+    const [isExpanded, setIsExpanded] = useState(true); // Default expanded on large screens
+
+    // Auto-expand on large screens, collapse on small screens
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) { // lg breakpoint
+                setIsExpanded(true);
+            } else {
+                setIsExpanded(false);
+            }
+        };
+
+        // Set initial state
+        handleResize();
+
+        // Add event listener
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -44,42 +64,119 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
     const isBestOf5 = details.format === 'best-of-5';
 
     return (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50 h-full flex flex-col">
-            {/* Tournament Info */}
-            <div className="mb-3">
-                <h3 className="text-sm font-semibold text-white mb-1">{details.tournament}</h3>
-                <p className="text-xs text-gray-400 mb-1">{details.round} • {details.surface}</p>
-                <div className="text-xs text-gray-400">
-                    {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden">
+            {/* Compact View - Always visible */}
+            <div className="p-3 sm:p-4 lg:p-5 min-h-[70px] lg:min-h-[80px]">
+                {/* Small screens: Stacked layout */}
+                <div className="lg:hidden">
+                    {/* Top row - Tournament info and controls */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-semibold text-white truncate mb-1">{details.tournament}</h3>
+                            <p className="text-xs text-gray-400 truncate">{details.round} • {details.surface}</p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-3">
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50"
+                                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                            >
+                                <svg
+                                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Bottom row - Players and odds */}
+                    <div className="flex items-center justify-center gap-3">
+                        <div className="text-center min-w-0">
+                            <div className="text-sm font-medium text-white truncate mb-1">{details.player1.name.split(' ')[1]}</div>
+                            <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
+                        </div>
+
+                        <div className="text-sm text-gray-400 font-bold px-2">VS</div>
+
+                        <div className="text-center min-w-0">
+                            <div className="text-sm font-medium text-white truncate mb-1">{details.player2.name.split(' ')[1]}</div>
+                            <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Large screens: Vertical layout */}
+                <div className="hidden lg:flex lg:flex-col lg:gap-4">
+                    {/* Top section - Tournament info and controls */}
+                    <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-semibold text-white mb-1 leading-tight">{details.tournament}</h3>
+                            <p className="text-sm text-gray-400 leading-tight">{details.round} • {details.surface}</p>
+                        </div>
+                        <div className="flex items-center gap-2 ml-4">
+                            <button
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50"
+                                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                            >
+                                <svg
+                                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Bottom section - Players and odds */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                            <div className="text-left">
+                                <div className="text-sm font-medium text-white leading-tight">{details.player1.name}</div>
+                                <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
+                            </div>
+                            <div className="text-sm text-gray-400 font-bold">VS</div>
+                            <div className="text-right">
+                                <div className="text-sm font-medium text-white leading-tight">{details.player2.name}</div>
+                                <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Status Badge */}
-            <div className="mb-4">
-                <Badge variant={getStatusColor(match.status)} className="text-xs px-2 py-1">
-                    {match.status === 'live' ? 'LIVE' : match.status.toUpperCase()}
-                </Badge>
-            </div>
-
-            {/* Players */}
-            <div className="flex-1 flex flex-col justify-center">
-                <div className="text-center mb-3">
-                    <div className="text-sm font-medium text-white mb-1">{details.player1.name.split(' ')[1]}</div>
-                    <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
+            {/* Expanded Details - Hidden by default */}
+            {isExpanded && (
+                <div className="border-t border-slate-700/50 p-2 sm:p-3 lg:p-4 bg-slate-700/20">
+                    <div className="space-y-2 lg:space-y-3">
+                        <div className="text-xs sm:text-sm text-gray-400">
+                            {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-400">
+                            H2H: {details.headToHead}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 lg:gap-6 text-xs sm:text-sm">
+                            <div>
+                                <div className="text-gray-400 mb-1">Player 1</div>
+                                <div className="text-white font-medium">{details.player1.name}</div>
+                                <div className="text-gray-400">W: {details.player1.wins} L: {details.player1.losses}</div>
+                            </div>
+                            <div>
+                                <div className="text-gray-400 mb-1">Player 2</div>
+                                <div className="text-white font-medium">{details.player2.name}</div>
+                                <div className="text-gray-400">W: {details.player2.wins} L: {details.player2.losses}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div className="text-xs text-gray-400 font-bold text-center mb-3">VS</div>
-
-                <div className="text-center mb-3">
-                    <div className="text-sm font-medium text-white mb-1">{details.player2.name.split(' ')[1]}</div>
-                    <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
-                </div>
-            </div>
-
-            {/* Head to Head */}
-            <div className="text-xs text-gray-400 text-center">
-                H2H: {details.headToHead}
-            </div>
+            )}
         </div>
     );
 } 

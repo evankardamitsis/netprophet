@@ -323,8 +323,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                     </Card>
                 </div>
             ) : (
-                // Compact view
-                <div className="flex flex-col h-full p-2 sm:p-3 min-w-0">
+                // Compact view - clickable to expand
+                <div
+                    className="flex flex-col h-full p-2 sm:p-3 min-w-0 cursor-pointer hover:bg-slate-800/20 transition-colors"
+                    onClick={() => setSidebarOpen(true)}
+                    title={dict?.sidebar?.expandSidebar || 'Click to expand sidebar'}
+                >
                     <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
                         <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
                             {/* Live matches */}
@@ -336,7 +340,10 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                             {allMatches.filter(m => m.status === 'live' && !m.isLocked).map((match) => (
                                 <button
                                     key={match.id}
-                                    onClick={() => onMatchSelect && onMatchSelect(match)}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent sidebar expansion
+                                        onMatchSelect && onMatchSelect(match);
+                                    }}
                                     className="w-full p-1.5 sm:p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-red-500 bg-red-900/20 min-w-0"
                                     title={`${match.player1.name} vs ${match.player2.name}`}
                                 >
@@ -356,7 +363,10 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                             {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).map((match) => (
                                 <button
                                     key={match.id}
-                                    onClick={() => onMatchSelect && onMatchSelect(match)}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent sidebar expansion
+                                        onMatchSelect && onMatchSelect(match);
+                                    }}
                                     className="w-full p-1.5 sm:p-2 rounded-lg transition-colors cursor-pointer hover:bg-accent/10 border-l-2 border-blue-500 bg-blue-900/20 min-w-0"
                                     title={`${match.player1.name} vs ${match.player2.name} - ${match.time}`}
                                 >
@@ -369,15 +379,11 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                         </div>
                     </div>
 
-                    {/* Expand button - fixed at bottom */}
+                    {/* Expand indicator - fixed at bottom */}
                     <div className="flex-shrink-0 pt-2">
-                        <button
-                            onClick={() => setSidebarOpen(true)}
-                            className="w-full p-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer bg-gradient-to-r from-slate-950 to-slate-900 hover:from-slate-900 hover:to-slate-800 text-gray-300"
-                            title={dict?.sidebar?.expandSidebar || 'Expand sidebar'}
-                        >
+                        <div className="w-full p-2 rounded-lg flex items-center justify-center transition-colors bg-gradient-to-r from-slate-950 to-slate-900 text-gray-300">
                             <ChevronRightIcon />
-                        </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Button } from '@netprophet/ui';
 import { useWallet } from '@/context/WalletContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
@@ -27,7 +29,7 @@ function ClockIcon({ className = "h-4 w-4" }: { className?: string }) {
 
 function HistoryIcon({ className = "h-4 w-4" }: { className?: string }) {
     return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
     </svg>
 }
 
@@ -65,6 +67,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
     const { wallet } = useWallet();
     const { predictions } = usePredictionSlip();
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     // Calculate pending bets from prediction slip
     const pendingBetAmount = predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
@@ -97,22 +100,22 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
     const getTransactionIcon = (type: 'bet' | 'win' | 'loss' | 'welcome_bonus' | 'daily_login' | 'referral' | 'leaderboard' | 'purchase' | 'tournament_entry' | 'insight_unlock') => {
         switch (type) {
             case 'win':
-                return <TrendingUpIcon className="text-green-500 h-6 w-6" />;
+                return <TrendingUpIcon className="text-green-500 h-4 w-4" />;
             case 'loss':
-                return <TrendingDownIcon className="text-red-500 h-6 w-6" />;
+                return <TrendingDownIcon className="text-red-500 h-4 w-4" />;
             case 'bet':
-                return <PlusIcon className="text-blue-500 h-12 w-12" />;
+                return <PlusIcon className="text-blue-500 h-4 w-4" />;
             case 'welcome_bonus':
             case 'daily_login':
             case 'referral':
             case 'leaderboard':
-                return <TrendingUpIcon className="text-yellow-500 h-6 w-6" />;
+                return <TrendingUpIcon className="text-yellow-500 h-4 w-4" />;
             case 'purchase':
             case 'tournament_entry':
             case 'insight_unlock':
-                return <PlusIcon className="text-purple-500 h-12 w-12" />;
+                return <PlusIcon className="text-purple-500 h-4 w-4" />;
             default:
-                return <PlusIcon className="text-gray-500 h-12 w-12" />;
+                return <PlusIcon className="text-gray-500 h-4 w-4" />;
         }
     };
 
@@ -170,156 +173,129 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                 {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </button>
 
-            {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-lg z-[9999] bg-[#23262F] border border-[#2A2D38]" style={{
-                    boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset',
-                    transform: 'translateZ(0)',
-                    filter: 'drop-shadow(0 10px 8px rgb(0 0 0 / 0.4))'
-                }}>
-                    {/* Header */}
-                    <div className="p-4 border-b border-gray-700">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-white">{dict?.wallet?.balance || 'My Wallet'}</h3>
-                            <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
-                                {dict?.wallet?.active || 'Active'}
-                            </span>
-                        </div>
-                        <div className="text-2xl font-bold text-yellow-300">
-                            {availableBalance} 🌕
-                        </div>
-                        <div className="text-sm text-gray-400">
-                            {dict?.wallet?.availableCoins || 'Available Coins'}
-                        </div>
-
-                        {/* Pending Bets Indicator */}
-                        {pendingBetAmount > 0 && (
-                            <div className="mt-2 p-2 rounded-lg bg-blue-900/20 border border-blue-800">
-                                <div className="flex items-center gap-2">
-                                    <ClockIcon className="text-blue-500 h-4 w-4" />
-                                    <div className="flex-1">
-                                        <div className="text-sm font-medium text-blue-300">
-                                            {dict?.wallet?.pendingBets || 'Pending Bets'}: {pendingBetAmount} 🌕
-                                        </div>
-                                        <div className="text-xs text-blue-400">
-                                            {predictions.length} {dict?.wallet?.matchesInSlip || 'matches in slip'}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Daily Login Streak */}
-                        {wallet.dailyLoginStreak > 0 && (
-                            <div className="mt-2 flex items-center gap-2">
-                                <span className="text-xs text-blue-500">🔥</span>
-                                <span className="text-xs text-gray-400">
-                                    {wallet.dailyLoginStreak} {dict?.wallet?.dayStreak || 'day streak'}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="absolute right-0 mt-2 w-80 rounded-lg z-[9999] bg-[#23262F] border border-[#2A2D38] overflow-hidden"
+                        style={{
+                            boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset',
+                            transform: 'translateZ(0)',
+                            filter: 'drop-shadow(0 10px 8px rgb(0 0 0 / 0.4))'
+                        }}
+                    >
+                        {/* Header */}
+                        <div className="p-4 border-b border-gray-700">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-semibold text-white">{dict?.wallet?.balance || 'My Wallet'}</h3>
+                                <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
+                                    {dict?.wallet?.active || 'Active'}
                                 </span>
                             </div>
-                        )}
-                    </div>
+                            <div className="flex items-center justify-between">
+                                <div className="text-lg font-bold text-yellow-300">
+                                    {availableBalance} 🌕
+                                </div>
+                                {wallet.dailyLoginStreak > 0 && (
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-xs text-blue-500">🔥</span>
+                                        <span className="text-xs text-gray-400">
+                                            {wallet.dailyLoginStreak}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="text-xs text-gray-400">
+                                {dict?.wallet?.availableCoins || 'Available Coins'}
+                            </div>
 
-                    {/* Stats Grid */}
-                    <div className="p-4 border-b border-gray-700">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="text-center">
-                                <div className={`text-lg font-bold ${wallet.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    {formatCurrency(wallet.netProfit)}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                    {dict?.wallet?.netProfit || 'Net Profit'}
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-blue-400">
-                                    {formatPercentage(wallet.winRate)}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                    {dict?.wallet?.winRate || 'Win Rate'}
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-green-600">
-                                    {formatCurrency(wallet.totalWinnings)}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                    {dict?.wallet?.totalWinnings || 'Total Winnings'}
-                                </div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-red-600">
-                                    {formatCurrency(-wallet.totalLosses)}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                    {dict?.wallet?.totalLosses || 'Total Losses'}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Additional Coin Stats */}
-                        <div className="mt-4 pt-4 border-t border-gray-700">
-                            <div className="grid grid-cols-2 gap-4 text-xs">
-                                <div className="text-center">
-                                    <div className="font-semibold text-green-400">
-                                        {formatCurrency(wallet.totalCoinsEarned)}
-                                    </div>
-                                    <div className="text-gray-400">
-                                        {dict?.wallet?.totalEarned || 'Total Earned'}
-                                    </div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="font-semibold text-red-400">
-                                        {formatCurrency(-wallet.totalCoinsSpent)}
-                                    </div>
-                                    <div className="text-gray-400">
-                                        {dict?.wallet?.totalSpent || 'Total Spent'}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Recent Transactions */}
-                    <div className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-semibold text-white">{dict?.wallet?.recentActivity || 'Recent Activity'}</h4>
-                            <Button className="text-xs border border-gray-600 bg-transparent hover:bg-gray-700">
-                                <HistoryIcon className="mr-1" />
-                                {dict?.wallet?.viewAll || 'View All'}
-                            </Button>
-                        </div>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {wallet.recentTransactions.length === 0 ? (
-                                <div className="text-center py-4 text-sm text-gray-400">
-                                    {dict?.wallet?.noTransactions || 'No transactions yet'}
-                                </div>
-                            ) : (
-                                wallet.recentTransactions.slice(0, 4).map((transaction) => (
-                                    <div
-                                        key={transaction.id}
-                                        className="flex items-center justify-between p-2 rounded-lg hover:bg-[#2A2D38]"
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            {getTransactionIcon(transaction.type)}
-                                            <div>
-                                                <div className="text-sm font-medium text-white">
-                                                    {transaction.description}
-                                                </div>
-                                                <div className="text-xs text-gray-400">
-                                                    {formatTimeAgo(transaction.timestamp)}
-                                                </div>
+                            {/* Pending Bets Indicator */}
+                            {pendingBetAmount > 0 && (
+                                <div className="mt-2 p-2 rounded-lg bg-blue-900/20 border border-blue-800">
+                                    <div className="flex items-center gap-2">
+                                        <ClockIcon className="text-blue-500 h-4 w-4" />
+                                        <div className="flex-1">
+                                            <div className="text-sm font-medium text-blue-300">
+                                                {dict?.wallet?.pendingBets || 'Pending Bets'}: {pendingBetAmount} 🌕
+                                            </div>
+                                            <div className="text-xs text-blue-400">
+                                                {predictions.length} {dict?.wallet?.matchesInSlip || 'matches in slip'}
                                             </div>
                                         </div>
-                                        <div className={`font-semibold ${getTransactionColor(transaction.type)}`}>
-                                            {formatCurrency(transaction.amount)}
-                                        </div>
                                     </div>
-                                ))
+                                </div>
                             )}
                         </div>
-                    </div>
-                </div>
-            )}
+
+                        {/* Stats Grid */}
+                        <div className="p-4 border-b border-gray-700">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-green-600">
+                                        {formatCurrency(wallet.totalWinnings)}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                        {dict?.wallet?.totalWinnings || 'Total Winnings'}
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-blue-400">
+                                        {formatPercentage(wallet.winRate)}
+                                    </div>
+                                    <div className="text-xs text-gray-400">
+                                        {dict?.wallet?.winRate || 'Win Rate'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Transactions */}
+                        <div className="p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-white">{dict?.wallet?.recentActivity || 'Recent Activity'}</h4>
+                                <Button
+                                    className="p-0 h-6 bg-transparent hover:bg-gray-700"
+                                    onClick={() => router.push(`/${lang}/matches/my-picks`)}
+                                >
+                                    <HistoryIcon className="h-3 w-3 text-white" />
+                                </Button>
+                            </div>
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                                {wallet.recentTransactions.length === 0 ? (
+                                    <div className="text-center py-2 text-xs text-gray-400">
+                                        {dict?.wallet?.noTransactions || 'No transactions yet'}
+                                    </div>
+                                ) : (
+                                    wallet.recentTransactions.slice(0, 3).map((transaction) => (
+                                        <div
+                                            key={transaction.id}
+                                            className="flex items-center justify-between p-1 rounded-lg hover:bg-[#2A2D38]"
+                                        >
+                                            <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                                                {getTransactionIcon(transaction.type)}
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-xs font-medium text-white break-words">
+                                                        {transaction.description}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400">
+                                                        {formatTimeAgo(transaction.timestamp)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={`text-xs font-semibold ${getTransactionColor(transaction.type)}`}>
+                                                {formatCurrency(transaction.amount)}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 } 

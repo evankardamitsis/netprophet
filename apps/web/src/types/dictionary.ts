@@ -67,6 +67,7 @@ export interface Dictionary {
         whoWinsEachSet: string;
         setWinner: string;
         setScore: string;
+        wins?: string;
         maxReached: string;
         setTiebreaks: string;
         optional: string;
@@ -169,6 +170,9 @@ export interface Dictionary {
         updateSlip?: string;
         multiplierBonus?: string;
         predictionCount?: string;
+        oneSetPreSelected?: string;
+        selectOneSetWinner?: string;
+        predictExactScoreForEachSet?: string;
     };
     leaderboard: {
         title: string;

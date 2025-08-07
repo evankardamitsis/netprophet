@@ -30,6 +30,7 @@ import {
 } from '@/lib/predictionHelpers';
 import { BettingSection } from './BettingSection';
 
+
 interface MatchDetailProps {
     match: Match | null;
     onAddToPredictionSlip: (match: Match, prediction: string) => void;
@@ -131,7 +132,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
 
     // Outrights state
-    const [outrightsBetAmount, setOutrightsBetAmount] = useState<number>(10);
+    const [outrightsBetAmount, setOutrightsBetAmount] = useState<number>(0);
     const [outrightsMultiplier, setOutrightsMultiplier] = useState<number>(1.2);
     const [selectedTournamentWinner, setSelectedTournamentWinner] = useState<string>('');
     const [selectedFinalsPair, setSelectedFinalsPair] = useState<string>('');
@@ -206,7 +207,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     }, [formPredictions.winner, predictionCount, details]);
 
     // Default bet amount (will be set in slip)
-    const betAmount = 10;
+    const betAmount = 0;
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
 
     // Save form predictions to session storage whenever they change
@@ -281,26 +282,15 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         const predictionText = buildPredictionText(formPredictions);
 
         if (predictionText) {
-            // Validate bet amount
-            if (betAmount < COIN_CONSTANTS.MIN_BET) {
-                alert(`Minimum bet amount is ${COIN_CONSTANTS.MIN_BET} 🌕`);
-                return;
-            }
-
-            if (betAmount > wallet.balance) {
-                alert(`Insufficient balance. You have ${wallet.balance} 🌕 but trying to bet ${betAmount} 🌕`);
-                return;
-            }
-
-            // Add prediction to slip with betting information (don't place bet yet)
+            // Add prediction to slip (bet amount will be set in the slip)
             addPrediction({
                 matchId: match.id,
                 match,
                 prediction: formPredictions,
                 points: match.points,
-                betAmount: betAmount,
+                betAmount: 0, // Start with 0, user will set in slip
                 multiplier: selectedMultiplier,
-                potentialWinnings: potentialWinnings,
+                potentialWinnings: 0, // Will be calculated in slip based on bet amount
             });
             setIsPredictionSlipCollapsed(false); // Open slip if closed
 
@@ -409,7 +399,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     return (
         <div className="flex flex-col flex-1 min-h-0 w-full text-white">
             {/* Compact Header Section */}
-            <div className="p-4 pb-2 flex-shrink-0">
+            <div className="p-0 sm:p-2 pb-2 flex-shrink-0">
                 <button
                     onClick={onBack}
                     className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors mb-2"
@@ -420,27 +410,27 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                     <span className="text-sm">{dict?.matches?.backToMatches || 'Back to Matches'}</span>
                 </button>
 
-                <h1 className="text-xl font-bold text-white mb-1">{dict?.matches?.matchDetails || 'Match Details'}</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-white mb-1">{dict?.matches?.matchDetails || 'Match Details'}</h1>
                 <p className="text-gray-400 text-xs">{dict?.matches?.loading || 'Monitor live tennis events and place your predictions'}</p>
             </div>
 
             {/* Tab Navigation */}
-            <div className="px-4 pb-2">
+            <div className="px-0 sm:px-4 pb-2">
                 <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
                     <button
                         onClick={() => setActiveTab('match')}
-                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'match'
+                        className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'match'
                             ? 'bg-purple-600 text-white'
-                            : 'text-gray-400 hover:text-white'
+                            : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
                             }`}
                     >
                         {dict?.matches?.matchTab || 'Match'}
                     </button>
                     <button
                         onClick={() => setActiveTab('outrights')}
-                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'outrights'
+                        className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'outrights'
                             ? 'bg-purple-600 text-white'
-                            : 'text-gray-400 hover:text-white'
+                            : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
                             }`}
                     >
                         {dict?.matches?.outrightsTab || 'Outrights'}
@@ -451,22 +441,22 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
             {/* Tab Content */}
             {activeTab === 'match' ? (
                 /* Match Tab Content */
-                <div className="px-4 flex-1 flex gap-4 min-h-0">
-                    {/* Left Column: MatchHeader - 20% */}
-                    <div className="w-1/5 flex-shrink-0">
+                <div className="px-0 sm:px-4 flex-1 flex flex-col lg:flex-row gap-0 sm:gap-4 min-h-0">
+                    {/* Left Column: MatchHeader - Full width on mobile, 20% on large screens */}
+                    <div className="w-full lg:w-1/5 flex-shrink-0">
                         <MatchHeader match={match} details={details} />
                     </div>
 
-                    {/* Right Column: Prediction Form - 80% */}
-                    <div className="w-4/5 flex-1 min-h-0 flex flex-col">
+                    {/* Right Column: Prediction Form - Full width on mobile, 80% on large screens */}
+                    <div className="w-full lg:w-4/5 flex-1 min-h-0 flex flex-col">
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
-                            <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
-                                <h2 className="text-lg font-bold text-white mb-1">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
+                            <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0">
+                                <h2 className="text-base sm:text-lg font-bold text-white mb-1">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
                                 <p className="text-gray-400 text-xs">{dict?.matches?.makePredictionsDescription || 'Choose from multiple prediction types to maximize your points!'}</p>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
-                                <div className="p-4 pb-0 flex-1">
+                            <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
+                                <div className="p-0 sm:p-4 pb-0 flex-1">
                                     <PredictionForm
                                         matchId={match.id}
                                         formPredictions={formPredictions}
@@ -485,11 +475,11 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
+                            <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
                                 <button
                                     onClick={handleSubmitPredictions}
-                                    disabled={!hasAnyPredictions || !hasFormChanged || betAmount < COIN_CONSTANTS.MIN_BET || betAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && hasFormChanged && betAmount >= COIN_CONSTANTS.MIN_BET && betAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                    disabled={!hasAnyPredictions || !hasFormChanged}
+                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && hasFormChanged
                                         ? 'bg-purple-600 hover:bg-purple-700 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}
@@ -502,17 +492,17 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 </div>
             ) : (
                 /* Outrights Tab Content */
-                <div className="px-4 flex-1 flex flex-col gap-4 min-h-0">
+                <div className="px-0 sm:px-4 flex-1 flex flex-col gap-0 sm:gap-4 min-h-0">
                     {/* OutrightsForm - Full Width */}
                     <div className="flex-1 min-h-0 flex flex-col">
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
-                            <div className="p-4 border-b border-slate-700/50 flex-shrink-0">
-                                <h2 className="text-lg font-bold text-white mb-1">{dict?.matches?.outrights || 'Outrights'}</h2>
+                            <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0">
+                                <h2 className="text-base sm:text-lg font-bold text-white mb-1">{dict?.matches?.outrights || 'Outrights'}</h2>
                                 <p className="text-gray-400 text-xs">{dict?.matches?.outrightsDescription || 'Predict the tournament winner and finals pair for big wins!'}</p>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto min-h-0 pb-24 flex flex-col">
-                                <div className="p-4 pb-0 flex-1">
+                            <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
+                                <div className="p-0 sm:p-4 pb-0 flex-1">
                                     <OutrightsForm
                                         matchId={match.id}
                                         selectedTournamentWinner={selectedTournamentWinner}
@@ -524,7 +514,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                 </div>
                             </div>
 
-                            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
+                            <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
                                 <button
                                     onClick={() => {
                                         // Handle outrights submission
@@ -539,9 +529,9 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                                     finalsPair: selectedFinalsPair
                                                 },
                                                 points: match.points * 2, // Higher points for outrights
-                                                betAmount: outrightsBetAmount,
+                                                betAmount: 0, // Start with 0, user will set in slip
                                                 multiplier: outrightsMultiplier,
-                                                potentialWinnings: Math.round(outrightsBetAmount * outrightsMultiplier),
+                                                potentialWinnings: 0, // Will be calculated in slip based on bet amount
                                                 isOutrights: true
                                             });
                                             setIsPredictionSlipCollapsed(false);
@@ -550,8 +540,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                             setHasOutrightsFormChanged(false);
                                         }
                                     }}
-                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged || outrightsBetAmount < COIN_CONSTANTS.MIN_BET || outrightsBetAmount > Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
-                                    className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${(selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged && outrightsBetAmount >= COIN_CONSTANTS.MIN_BET && outrightsBetAmount <= Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)
+                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged}
+                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${(selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged
                                         ? 'bg-purple-600 hover:bg-purple-700 text-white'
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}

@@ -48,7 +48,7 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayoutProps) {
     const { user, signOut, loading } = useAuth();
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState<'matches' | 'leaderboard' | 'rewards'>('matches');
     const router = useRouter();
     const { predictions, removePrediction, slipCollapsed, setSlipCollapsed } = usePredictionSlip();
@@ -85,11 +85,11 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
                             lang={lang}
                         />
                         <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
-                            {/* Toggle button - always visible */}
+                            {/* Toggle button - only visible on xl+ */}
                             <button
-                                className="fixed top-16 z-50 flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 transition-all duration-300 bg-white hover:bg-gray-200"
+                                className="hidden xl:flex fixed top-16 z-50 items-center justify-center w-8 h-8 rounded-full border border-gray-300 transition-all duration-300 bg-white hover:bg-gray-200"
                                 style={{
-                                    left: window.innerWidth >= 1280 ? (sidebarOpen ? '380px' : '192px') : '0px',
+                                    left: sidebarOpen ? '380px' : '192px',
                                     transition: 'left 0.3s ease-in-out'
                                 }}
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -101,7 +101,7 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
                                 }
                             </button>
 
-                            {/* Sidebar - only visible as drawer on xl+ */}
+                            {/* Sidebar - only visible on xl+ */}
                             <div className={`hidden xl:block fixed top-16 left-0 bottom-0 transition-all duration-300 ease-in-out flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[400px]' : 'w-48'}`}>
                                 <Sidebar
                                     onClose={() => setSidebarOpen(false)}
@@ -112,23 +112,9 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
                                 />
                             </div>
 
-                            {/* Sidebar overlay for smaller screens */}
-                            <div className={`fixed inset-0 z-40 flex xl:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-                                <div className="fixed inset-0 bg-black/40 transition-opacity duration-300" onClick={() => setSidebarOpen(false)} />
-                                <div className={`relative w-full max-w-[320px] h-full z-50 pt-[64px] transform transition-transform duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                                    <Sidebar
-                                        sidebarOpen={sidebarOpen}
-                                        setSidebarOpen={setSidebarOpen}
-                                        onClose={() => setSidebarOpen(false)}
-                                        dict={dict}
-                                        lang={lang}
-                                    />
-                                </div>
-                            </div>
-
                             {/* Main content */}
                             <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out`}>
-                                <div className="flex-1 p-0.5 sm:p-1 md:p-2 lg:p-3 overflow-y-auto bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90">
+                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90">
                                     {children}
                                 </div>
                             </div>

@@ -234,7 +234,16 @@ export function PredictionSlip({
 
     const isIndividualModeValid = () => {
         const totalStake = getTotalIndividualStake();
-        return totalStake > 0 && totalStake <= wallet.balance;
+        // Check that all predictions have stakes > 0
+        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) > 0);
+        return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
+    };
+
+    const isOutrightsModeValid = () => {
+        const totalOutrightsStake = outrightsPredictions.reduce((total, item) => total + (item.betAmount || 0), 0);
+        // Check that all outrights predictions have stakes > 0
+        const allOutrightsHaveStakes = outrightsPredictions.every(prediction => (prediction.betAmount || 0) > 0);
+        return allOutrightsHaveStakes && totalOutrightsStake > 0 && totalOutrightsStake <= wallet.balance;
     };
 
     return (
@@ -605,13 +614,28 @@ export function PredictionSlip({
                                 </div>
                             </div>
 
+                            {!isOutrightsModeValid() && (
+                                <div className="text-red-400 text-xs mb-2 text-center">
+                                    {outrightsPredictions.some(prediction => (prediction.betAmount || 0) === 0)
+                                        ? (dict?.matches?.pleaseSetStakes || 'Please set stakes for all outrights')
+                                        : outrightsPredictions.reduce((total, item) => total + (item.betAmount || 0), 0) > wallet.balance
+                                            ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
+                                            : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your outrights')
+                                    }
+                                </div>
+                            )}
+
                             <Button
                                 onClick={() => {
                                     // Handle outrights submission separately
                                     console.log('Submitting outrights predictions:', outrightsPredictions);
                                     // TODO: Implement outrights submission logic
                                 }}
-                                className="w-full font-bold py-2 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-sm"
+                                disabled={!isOutrightsModeValid()}
+                                className={`w-full font-bold py-2 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 text-sm ${isOutrightsModeValid()
+                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white'
+                                    : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                    }`}
                             >
                                 {dict?.matches?.placeOutrightsBet || 'Place Outrights Bet'}
                             </Button>
@@ -698,7 +722,12 @@ export function PredictionSlip({
 
                                 {!isIndividualModeValid() && (
                                     <div className="text-red-400 text-xs mb-2 text-center">
-                                        {getTotalIndividualStake() === 0 ? (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions') : (dict?.matches?.insufficientBalance || 'Insufficient balance')}
+                                        {predictions.some(prediction => (prediction.betAmount || 0) === 0)
+                                            ? (dict?.matches?.pleaseSetStakes || 'Please set stakes for all predictions')
+                                            : getTotalIndividualStake() > wallet.balance
+                                                ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
+                                                : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions')
+                                        }
                                     </div>
                                 )}
 
