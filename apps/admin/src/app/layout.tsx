@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: "NetProphet Admin",
@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         {children}
-        <Toaster position="top-right" />
+        <Toaster />
       </body>
     </html>
   );

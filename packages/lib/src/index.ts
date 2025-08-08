@@ -22,3 +22,9 @@ export * from './utils/validation';
 // Odds Calculation
 export * from './odds/calculateOdds';
 export * from './odds/parlayCalculations'; 
+
+// Tournament management
+export * from './supabase/tournaments';
+
+// Enhanced match management
+export * from './supabase/matches'; 
