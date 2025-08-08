@@ -211,19 +211,19 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
     const getCategoryColor = (category: string) => {
         switch (category) {
             case 'merchandise':
-                return 'bg-blue-100 text-blue-800 border-blue-200';
+                return 'bg-blue-900/50 text-blue-300 border-blue-700/50';
             case 'experience':
-                return 'bg-green-100 text-green-800 border-green-200';
+                return 'bg-green-900/50 text-green-300 border-green-700/50';
             case 'badge':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                return 'bg-yellow-900/50 text-yellow-300 border-yellow-700/50';
             case 'premium':
-                return 'bg-purple-100 text-purple-800 border-purple-200';
+                return 'bg-purple-900/50 text-purple-300 border-purple-700/50';
             case 'boost':
-                return 'bg-orange-100 text-orange-800 border-orange-200';
+                return 'bg-orange-900/50 text-orange-300 border-orange-700/50';
             case 'exclusive':
-                return 'bg-pink-100 text-pink-800 border-pink-200';
+                return 'bg-pink-900/50 text-pink-300 border-pink-700/50';
             default:
-                return 'bg-gray-100 text-gray-800 border-gray-200';
+                return 'bg-slate-700/50 text-slate-300 border-slate-600/50';
         }
     };
 
@@ -249,15 +249,15 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
     const getRarityColor = (rarity?: string) => {
         switch (rarity) {
             case 'common':
-                return 'border-gray-300 bg-gray-50';
+                return 'border-slate-600 bg-slate-800/50';
             case 'rare':
-                return 'border-blue-300 bg-blue-50';
+                return 'border-blue-600 bg-blue-900/30';
             case 'epic':
-                return 'border-purple-300 bg-purple-50';
+                return 'border-purple-600 bg-purple-900/30';
             case 'legendary':
-                return 'border-yellow-300 bg-gradient-to-r from-yellow-50 to-orange-50';
+                return 'border-yellow-500 bg-gradient-to-r from-yellow-900/30 to-orange-900/30';
             default:
-                return 'border-gray-300 bg-gray-50';
+                return 'border-slate-600 bg-slate-800/50';
         }
     };
 
@@ -329,23 +329,23 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${selectedCategory === category.id
-                                ? 'bg-blue-600 text-white shadow-lg'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                ? 'bg-purple-600 text-white shadow-lg'
+                                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border border-slate-600/50'
                                 }`}
                         >
                             {category.label}
-                            <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs">
+                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${selectedCategory === category.id ? 'bg-white/20' : 'bg-slate-600/50'}`}>
                                 {category.count}
                             </span>
                         </button>
                     ))}
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Sort by:</span>
+                    <span className="text-sm text-gray-400">Sort by:</span>
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value as any)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="px-3 py-2 border border-slate-600 bg-slate-800 text-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     >
                         <option value="points">Points (Low to High)</option>
                         <option value="rarity">Rarity</option>
@@ -357,7 +357,7 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
             {/* Featured Items */}
             {selectedCategory === 'all' && (
                 <div className="space-y-4">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
                         <span className="text-2xl">⭐</span>
                         Featured Items
                     </h3>
@@ -365,7 +365,7 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                         {mockRewards.filter(r => r.featured).map((reward) => {
                             const canAfford = userPoints >= reward.points;
                             return (
-                                <Card key={reward.id} className={`group relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 ${getRarityColor(reward.rarity)} ${reward.featured ? 'border-yellow-400 shadow-xl' : ''}`}>
+                                <Card key={reward.id} className={`group relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 bg-slate-800/50 border-slate-700/50 ${getRarityColor(reward.rarity)} ${reward.featured ? 'border-yellow-400 shadow-xl' : ''}`}>
                                     <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-400 to-orange-500 text-white px-3 py-1 text-xs font-bold rounded-bl-lg">
                                         FEATURED
                                     </div>
@@ -388,13 +388,13 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                                         </div>
                                     </CardHeader>
                                     <CardContent className="pt-0">
-                                        <p className="text-gray-600 text-sm mb-4">
+                                        <p className="text-gray-400 text-sm mb-4">
                                             {reward.description.replace(/'/g, "&#39;")}
                                         </p>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-2">
-                                                <span className="text-sm text-gray-500">Cost:</span>
-                                                <span className={`font-bold text-lg ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
+                                                <span className="text-sm text-gray-400">Cost:</span>
+                                                <span className={`font-bold text-lg ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
                                                     {reward.points} π
                                                 </span>
                                             </div>
@@ -424,7 +424,7 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                     const discountedPoints = reward.discount ? Math.floor(reward.points * (1 - reward.discount / 100)) : reward.points;
 
                     return (
-                        <Card key={reward.id} className={`group relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 hover:shadow-accent/30 cursor-pointer`}>
+                        <Card key={reward.id} className={`group relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/20 cursor-pointer bg-slate-800/50 border-slate-700/50`}>
                             {reward.discount && (
                                 <div className="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs font-bold rounded-bl-lg z-10">
                                     -{reward.discount}%
@@ -450,20 +450,20 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                             </CardHeader>
 
                             <CardContent className="pt-0">
-                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                <p className="text-gray-400 text-sm mb-4 line-clamp-2">
                                     {reward.description.replace(/'/g, "&#39;")}
                                 </p>
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-2">
-                                        <span className="text-sm text-gray-500">Cost:</span>
+                                        <span className="text-sm text-gray-400">Cost:</span>
                                         <div className="flex items-center gap-1">
                                             {reward.discount && (
-                                                <span className="text-sm text-gray-400 line-through">
+                                                <span className="text-sm text-gray-500 line-through">
                                                     {reward.points} π
                                                 </span>
                                             )}
-                                            <span className={`font-bold ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
+                                            <span className={`font-bold ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
                                                 {discountedPoints} π
                                             </span>
                                         </div>
@@ -482,7 +482,7 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                                 </div>
 
                                 {!canAfford && (
-                                    <div className="mt-2 text-xs text-red-600">
+                                    <div className="mt-2 text-xs text-red-400">
                                         Need {discountedPoints - userPoints} more points
                                     </div>
                                 )}
@@ -496,35 +496,35 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
             {filteredRewards.length === 0 && (
                 <div className="text-center py-16">
                     <div className="text-8xl mb-6">🎁</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">No Rewards Found</h3>
-                    <p className="text-gray-600 mb-6">Try adjusting your filters or check back later for new rewards!</p>
-                    <Button onClick={() => setSelectedCategory('all')} className="bg-blue-600 hover:bg-blue-700">
+                    <h3 className="text-2xl font-bold text-white mb-4">No Rewards Found</h3>
+                    <p className="text-gray-400 mb-6">Try adjusting your filters or check back later for new rewards!</p>
+                    <Button onClick={() => setSelectedCategory('all')} className="bg-purple-600 hover:bg-purple-700">
                         View All Items
                     </Button>
                 </div>
             )}
 
             {/* Info Section */}
-            <div className="mt-12 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200">
+            <div className="mt-12 p-6 bg-gradient-to-r from-slate-800/50 to-purple-900/30 rounded-2xl border border-slate-700/50">
                 <div className="flex items-start space-x-4">
-                    <div className="text-blue-600 text-2xl">ℹ️</div>
+                    <div className="text-purple-400 text-2xl">ℹ️</div>
                     <div className="flex-1">
-                        <h4 className="font-bold text-blue-900 mb-2 text-lg">How the Reward Shop Works</h4>
-                        <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-800">
+                        <h4 className="font-bold text-white mb-2 text-lg">How the Reward Shop Works</h4>
+                        <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-300">
                             <div>
-                                <h5 className="font-semibold mb-1">💰 Earn Points</h5>
+                                <h5 className="font-semibold mb-1 text-purple-300">💰 Earn Points</h5>
                                 <p>Make accurate predictions to earn points. The more correct picks, the more points you get!</p>
                             </div>
                             <div>
-                                <h5 className="font-semibold mb-1">🎯 Redeem Rewards</h5>
+                                <h5 className="font-semibold mb-1 text-purple-300">🎯 Redeem Rewards</h5>
                                 <p>Use your points to unlock premium features, exclusive merchandise, and special experiences.</p>
                             </div>
                             <div>
-                                <h5 className="font-semibold mb-1">⭐ Rarity System</h5>
+                                <h5 className="font-semibold mb-1 text-purple-300">⭐ Rarity System</h5>
                                 <p>Items come in different rarities: Common, Rare, Epic, and Legendary. Rarer items offer better value!</p>
                             </div>
                             <div>
-                                <h5 className="font-semibold mb-1">🔥 Limited Time</h5>
+                                <h5 className="font-semibold mb-1 text-purple-300">🔥 Limited Time</h5>
                                 <p>Some items are featured or discounted for a limited time. Don&apos;t miss out on great deals!</p>
                             </div>
                         </div>

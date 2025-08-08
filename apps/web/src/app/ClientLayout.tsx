@@ -87,17 +87,17 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
                         <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
                             {/* Toggle button - only visible on xl+ */}
                             <button
-                                className="hidden xl:flex fixed top-16 z-50 items-center justify-center w-8 h-8 rounded-full border border-gray-300 transition-all duration-300 bg-white hover:bg-gray-200"
+                                className="hidden xl:flex fixed top-1/2 -translate-y-1/2 z-40 items-center justify-center w-4 h-12 rounded-r-md transition-all duration-300 bg-slate-600/90 hover:bg-slate-700 backdrop-blur-sm border-r border-slate-500/60 hover:border-slate-400/70 shadow-lg hover:shadow-xl"
                                 style={{
-                                    left: sidebarOpen ? '380px' : '192px',
+                                    left: sidebarOpen ? '400px' : '192px',
                                     transition: 'left 0.3s ease-in-out'
                                 }}
                                 onClick={() => setSidebarOpen(!sidebarOpen)}
                                 aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
                             >
                                 {sidebarOpen
-                                    ? <ChevronLeftIcon size={20} color="black" />
-                                    : <ChevronRightIcon size={20} color="black" />
+                                    ? <ChevronLeftIcon size={12} color="white" />
+                                    : <ChevronRightIcon size={12} color="white" />
                                 }
                             </button>
 

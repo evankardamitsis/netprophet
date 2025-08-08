@@ -50,7 +50,7 @@
     "whoWinsEachSet": "Ποιος κερδίζει κάθε σετ βάσει της πρόβλεψής σου {result};",
     "setWinner": "Νικητής Σετ {setNumber}",
     "setScore": "Σκορ Σετ {setNumber} - Ο {player} κερδίζει",
-    "wins": "κερδίζει",
+    "wins": "N",
     "maxReached": "(μέγιστο)",
     "setTiebreaks": "Tiebreak Σετ",
     "optional": "Προαιρετικό",
@@ -157,7 +157,10 @@
     "errorPlacingBetCheckBalance": "Σφάλμα κατά την τοποθέτηση προβλέψεων {type}. Παρακαλώ έλεγξε το υπόλοιπό σου και δοκίμασε ξανά.",
     "needSafeBetTokens": "Χρειάζεσαι {cost} token ασφαλής προβλέψης για αυτή τη λειτουργία. Έχεις {tokens}.",
     "parlayBetDescription": "Προβλέψη παρολί - {count} προβλέψεις - {odds}x πιθανότητες",
-    "individualBetDescription": "{name} - {multiplier}x πολλαπλασιαστής"
+    "individualBetDescription": "{name} - {multiplier}x πολλαπλασιαστής",
+    "headToHead": "H2H",
+    "losses": "Η",
+    "leads": "προηγείται"
   },
   "sidebar": {
     "live": "Ζωντανά",
@@ -180,7 +183,19 @@
     "player": "Παίκτης",
     "points": "Πόντοι",
     "wins": "Νίκες",
-    "losses": "Ήττες"
+    "losses": "Ήττες",
+    "weeklyTopPerformers": "Οι καλύτεροι της εβδομάδας",
+    "allTimeChampions": "Οι καλύτεροι όλων των εποχών",
+    "weekly": "Εβδομαδιαία",
+    "allTime": "Όλων των εποχών",
+    "topPlayers": "Κορυφαίοι Παίκτες",
+    "thisWeek": "Αυτή την Εβδομάδα",
+    "streak": "Σερί",
+    "accuracy": "Ακρίβεια",
+    "picks": "Προβλέψεις",
+    "topScore": "Υψηλότερο Σκορ",
+    "bestStreak": "Καλύτερο Σερί",
+    "avgAccuracy": "Μέση Ακρίβεια"
   },
   "rewards": {
     "title": "Ανταμοιβές",

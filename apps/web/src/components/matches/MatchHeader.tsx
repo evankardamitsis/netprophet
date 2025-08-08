@@ -63,6 +63,15 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
 
     const isBestOf5 = details.format === 'best-of-5';
 
+    // Function to translate head-to-head string
+    const translateHeadToHead = (headToHead: string) => {
+        // Check if the string contains "leads"
+        if (headToHead.includes('leads')) {
+            return headToHead.replace('leads', dict?.matches?.leads || 'leads');
+        }
+        return headToHead;
+    };
+
     return (
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden">
             {/* Compact View - Always visible */}
@@ -100,7 +109,7 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                             <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                         </div>
 
-                        <div className="text-sm text-gray-400 font-bold px-2">VS</div>
+                        <div className="text-sm text-gray-400 font-bold px-2">{dict?.matches?.vs || 'VS'}</div>
 
                         <div className="text-center min-w-0">
                             <div className="text-sm font-medium text-white truncate mb-1">{details.player2.name.split(' ')[1]}</div>
@@ -142,7 +151,7 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                                 <div className="text-sm font-medium text-white leading-tight">{details.player1.name}</div>
                                 <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                             </div>
-                            <div className="text-sm text-gray-400 font-bold">VS</div>
+                            <div className="text-sm text-gray-400 font-bold">{dict?.matches?.vs || 'VS'}</div>
                             <div className="text-right">
                                 <div className="text-sm font-medium text-white leading-tight">{details.player2.name}</div>
                                 <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
@@ -160,18 +169,18 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                             {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
                         </div>
                         <div className="text-xs sm:text-sm text-gray-400">
-                            H2H: {details.headToHead}
+                            {dict?.matches?.headToHead || 'H2H'}: {translateHeadToHead(details.headToHead)}
                         </div>
                         <div className="grid grid-cols-2 gap-4 lg:gap-6 text-xs sm:text-sm">
                             <div>
-                                <div className="text-gray-400 mb-1">Player 1</div>
+                                <div className="text-gray-400 mb-1">{dict?.matches?.player1 || 'Player 1'}</div>
                                 <div className="text-white font-medium">{details.player1.name}</div>
-                                <div className="text-gray-400">W: {details.player1.wins} L: {details.player1.losses}</div>
+                                <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}</div>
                             </div>
                             <div>
-                                <div className="text-gray-400 mb-1">Player 2</div>
+                                <div className="text-gray-400 mb-1">{dict?.matches?.player2 || 'Player 2'}</div>
                                 <div className="text-white font-medium">{details.player2.name}</div>
-                                <div className="text-gray-400">W: {details.player2.wins} L: {details.player2.losses}</div>
+                                <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}</div>
                             </div>
                         </div>
                     </div>

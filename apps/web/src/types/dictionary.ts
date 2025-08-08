@@ -173,6 +173,9 @@ export interface Dictionary {
         oneSetPreSelected?: string;
         selectOneSetWinner?: string;
         predictExactScoreForEachSet?: string;
+        headToHead?: string;
+        losses?: string;
+        leads?: string;
     };
     leaderboard: {
         title: string;
@@ -181,6 +184,18 @@ export interface Dictionary {
         points: string;
         wins: string;
         losses: string;
+        weeklyTopPerformers: string;
+        allTimeChampions: string;
+        weekly: string;
+        allTime: string;
+        topPlayers: string;
+        thisWeek: string;
+        streak: string;
+        accuracy: string;
+        picks: string;
+        topScore: string;
+        bestStreak: string;
+        avgAccuracy: string;
     };
     rewards: {
         title: string;

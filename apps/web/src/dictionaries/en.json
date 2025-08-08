@@ -154,7 +154,12 @@
     "errorPlacingBetCheckBalance": "Error placing {type} bet(s). Please check your balance and try again.",
     "needSafeBetTokens": "You need {cost} safe bet tokens to use this feature. You have {tokens}.",
     "parlayBetDescription": "Parlay bet - {count} predictions - {odds}x odds",
-    "individualBetDescription": "{name} - {multiplier}x multiplier"
+    "individualBetDescription": "{name} - {multiplier}x multiplier",
+    "headToHead": "H2H",
+    "player1": "Player 1",
+    "player2": "Player 2",
+    "losses": "L",
+    "leads": "leads"
   },
   "sidebar": {
     "live": "Live",
@@ -177,7 +182,19 @@
     "player": "Player",
     "points": "Points",
     "wins": "Wins",
-    "losses": "Losses"
+    "losses": "Losses",
+    "weeklyTopPerformers": "This week's top performers",
+    "allTimeChampions": "All-time champions",
+    "weekly": "Weekly",
+    "allTime": "All Time",
+    "topPlayers": "Top Players",
+    "thisWeek": "This Week",
+    "streak": "Streak",
+    "accuracy": "Accuracy",
+    "picks": "Picks",
+    "topScore": "Top Score",
+    "bestStreak": "Best Streak",
+    "avgAccuracy": "Avg Accuracy"
   },
   "rewards": {
     "title": "Rewards",

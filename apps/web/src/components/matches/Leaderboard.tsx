@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
+import { useDictionary } from '@/context/DictionaryContext';
 
 interface LeaderboardEntry {
     id: number;
@@ -206,6 +207,7 @@ const allTimeLeaderboard: LeaderboardEntry[] = [
 ];
 
 export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps) {
+    const { dict } = useDictionary();
     const [timeFrame, setTimeFrame] = useState<'weekly' | 'allTime'>('weekly');
 
     const currentLeaderboard = timeFrame === 'weekly' ? weeklyLeaderboard : allTimeLeaderboard;
@@ -249,68 +251,68 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Leaderboard</h1>
-                    <p className="text-gray-600">
-                        {timeFrame === 'weekly' ? 'This week\'s top performers' : 'All-time champions'}
+                    <h1 className="text-2xl font-bold text-white">{dict?.leaderboard?.title || 'Leaderboard'}</h1>
+                    <p className="text-gray-400">
+                        {timeFrame === 'weekly' ? dict?.leaderboard?.weeklyTopPerformers || 'This week\'s top performers' : dict?.leaderboard?.allTimeChampions || 'All-time champions'}
                     </p>
                 </div>
 
                 {/* Time Frame Toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1">
+                <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
                     <Button
                         variant={timeFrame === 'weekly' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setTimeFrame('weekly')}
-                        className="text-xs"
+                        className={`text-xs ${timeFrame === 'weekly' ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'text-gray-300 hover:text-white hover:bg-slate-700/50'}`}
                     >
-                        Weekly
+                        {dict?.leaderboard?.weekly || 'Weekly'}
                     </Button>
                     <Button
                         variant={timeFrame === 'allTime' ? 'default' : 'ghost'}
                         size="sm"
                         onClick={() => setTimeFrame('allTime')}
-                        className="text-xs"
+                        className={`text-xs ${timeFrame === 'allTime' ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'text-gray-300 hover:text-white hover:bg-slate-700/50'}`}
                     >
-                        All Time
+                        {dict?.leaderboard?.allTime || 'All Time'}
                     </Button>
                 </div>
             </div>
 
             {/* Leaderboard Table */}
-            <Card>
+            <Card className="bg-slate-800/50 border-slate-700/50">
                 <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                        <span>Top Players</span>
+                    <CardTitle className="flex items-center justify-between text-white">
+                        <span>{dict?.leaderboard?.topPlayers || 'Top Players'}</span>
                         <Badge variant="secondary">
-                            {timeFrame === 'weekly' ? 'This Week' : 'All Time'}
+                            {timeFrame === 'weekly' ? dict?.leaderboard?.thisWeek || 'This Week' : dict?.leaderboard?.allTime || 'All Time'}
                         </Badge>
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-16">Rank</TableHead>
-                                <TableHead>Player</TableHead>
-                                <TableHead className="text-right">Points</TableHead>
-                                <TableHead className="text-center">Streak</TableHead>
-                                <TableHead className="text-center">Accuracy</TableHead>
-                                <TableHead className="text-center">Picks</TableHead>
+                            <TableRow className="border-slate-700/50">
+                                <TableHead className="w-16 text-gray-300">{dict?.leaderboard?.rank || 'Rank'}</TableHead>
+                                <TableHead className="text-gray-300">{dict?.leaderboard?.player || 'Player'}</TableHead>
+                                <TableHead className="text-right text-gray-300">{dict?.leaderboard?.points || 'Points'}</TableHead>
+                                <TableHead className="text-center text-gray-300">{dict?.leaderboard?.streak || 'Streak'}</TableHead>
+                                <TableHead className="text-center text-gray-300">{dict?.leaderboard?.accuracy || 'Accuracy'}</TableHead>
+                                <TableHead className="text-center text-gray-300">{dict?.leaderboard?.picks || 'Picks'}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {currentLeaderboard.map((entry) => (
-                                <TableRow key={entry.id} className="hover:bg-gray-50">
+                                <TableRow key={entry.id} className="hover:bg-slate-700/30 border-slate-700/50">
                                     <TableCell className="font-medium">
                                         {getRankBadge(entry.rank)}
                                     </TableCell>
                                     <TableCell>
-                                        <div className="font-semibold text-gray-900">
+                                        <div className="font-semibold text-white">
                                             {entry.username}
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="font-bold text-green-600">
+                                        <div className="font-bold text-green-400">
                                             {entry.totalPoints.toLocaleString()}
                                         </div>
                                     </TableCell>
@@ -318,11 +320,11 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
                                         {getStreakDisplay(entry.streak)}
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        <div className="font-medium text-blue-600">
+                                        <div className="font-medium text-blue-400">
                                             {getAccuracy(entry.correctPicks, entry.totalPicks)}
                                         </div>
                                     </TableCell>
-                                    <TableCell className="text-center text-sm text-gray-600">
+                                    <TableCell className="text-center text-sm text-gray-400">
                                         {entry.correctPicks}/{entry.totalPicks}
                                     </TableCell>
                                 </TableRow>
@@ -334,28 +336,28 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
 
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
+                <Card className="bg-slate-800/50 border-slate-700/50">
                     <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-green-600">
+                        <div className="text-2xl font-bold text-green-400">
                             {currentLeaderboard[0]?.totalPoints.toLocaleString()}
                         </div>
-                        <div className="text-sm text-gray-600">Top Score</div>
+                        <div className="text-sm text-gray-400">{dict?.leaderboard?.topScore || 'Top Score'}</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-slate-800/50 border-slate-700/50">
                     <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-orange-600">
+                        <div className="text-2xl font-bold text-orange-400">
                             {Math.max(...currentLeaderboard.map(e => e.streak))}
                         </div>
-                        <div className="text-sm text-gray-600">Best Streak</div>
+                        <div className="text-sm text-gray-400">{dict?.leaderboard?.bestStreak || 'Best Streak'}</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-slate-800/50 border-slate-700/50">
                     <CardContent className="p-4 text-center">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-blue-400">
                             {Math.round(currentLeaderboard.reduce((acc, e) => acc + (e.correctPicks / e.totalPicks), 0) / currentLeaderboard.length * 100)}%
                         </div>
-                        <div className="text-sm text-gray-600">Avg Accuracy</div>
+                        <div className="text-sm text-gray-400">{dict?.leaderboard?.avgAccuracy || 'Avg Accuracy'}</div>
                     </CardContent>
                 </Card>
             </div>
