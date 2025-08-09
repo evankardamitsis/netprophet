@@ -27,8 +27,8 @@
   },
   "packageManager": "pnpm@8.15.0",
   "engines": {
-    "node": "18.x",
-    "pnpm": ">=8.0.0"
+    "node": ">=18.x",
+    "pnpm": ">=6.0.0"
   },
   "workspaces": [
     "apps/*",
