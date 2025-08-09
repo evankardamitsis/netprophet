@@ -3,5 +3,5 @@
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && pnpm install",
   "framework": "nextjs",
-  "ignoreCommand": "cd ../.. && npx turbo-ignore @netprophet/admin"
+  "ignoreCommand": "cd ../.. && npx turbo-ignore @netprophet/web --fallback=HEAD^"
 }
