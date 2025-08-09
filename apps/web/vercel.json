@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd ../.. && cd packages/lib && npm run build && cd ../ui && npm run build && cd ../../apps/web && npm run build",
+  "buildCommand": "cd ../.. && pnpm run build --filter=@netprophet/web^... && pnpm run build --filter=@netprophet/web",
   "outputDirectory": ".next",
-  "installCommand": "npm install",
+  "installCommand": "cd ../.. && pnpm install",
   "framework": "nextjs",
   "ignoreCommand": "cd ../.. && npx turbo-ignore @netprophet/admin"
 }
