@@ -13,13 +13,13 @@ export default function MyProfilePage() {
     const { user, signOut, loading } = useAuth();
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/auth/signin');
+            router.push(`/${lang}/auth/signin`);
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, lang]);
 
     const handleSignOut = async () => {
         await signOut();
-        router.push('/');
+        router.push(`/${lang}`);
     };
 
     if (loading || !user) {
@@ -182,7 +182,7 @@ export default function MyProfilePage() {
                                 <Button
                                     variant="outline"
                                     className="w-full justify-start"
-                                    onClick={() => router.push('/my-picks')}
+                                    onClick={() => router.push(`/${lang}/matches/my-picks`)}
                                 >
                                     <span className="mr-2">📊</span>
                                     View My Picks

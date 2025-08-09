@@ -90,13 +90,13 @@ export default function MyPicksPage() {
 
     useEffect(() => {
         if (!loading && !user) {
-            router.push('/auth/signin');
+            router.push(`/${lang}/auth/signin`);
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, lang]);
 
     const handleSignOut = async () => {
         await signOut();
-        router.push('/');
+        router.push(`/${lang}`);
     };
 
     if (loading || !user) {

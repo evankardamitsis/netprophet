@@ -40,7 +40,14 @@ export default function AuthPage() {
         setLoading(true);
         setMessage('');
         try {
-            const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+            // Store the current language in localStorage for callback handling
+            localStorage.setItem('oauth_lang', lang as string);
+
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google'
+                // Let Supabase use the default Site URL from dashboard config
+                // The home page will detect OAuth callback and redirect properly
+            });
             if (error) setMessage(error.message);
         } catch (err: any) {
             setMessage('An unexpected error occurred.');

@@ -30,10 +30,14 @@ export function useAuth() {
   }, []);
 
   const signIn = async (email: string) => {
+    // Extract language from current path
+    const pathSegments = window.location.pathname.split('/');
+    const lang = pathSegments[1] || 'en';
+    
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/${lang}/auth/callback`,
       },
     });
     return { error };
