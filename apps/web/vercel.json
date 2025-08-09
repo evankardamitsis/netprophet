@@ -3,5 +3,5 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "ignoreCommand": "cd ../.. && npx turbo-ignore web"
+  "ignoreCommand": "cd ../.. && git diff HEAD^ HEAD --quiet apps/admin/"
 }

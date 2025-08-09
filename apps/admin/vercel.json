@@ -2,5 +2,5 @@
   "buildCommand": "cd ../.. && pnpm install && pnpm run build --filter=admin --include-dependencies",
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && pnpm install",
-  "ignoreCommand": "cd ../.. && npx turbo-ignore admin"
+  "ignoreCommand": "cd ../.. && git diff HEAD^ HEAD --quiet apps/web/"
 }
