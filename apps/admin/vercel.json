@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm run build --filter=admin",
+  "buildCommand": "cd ../.. && pnpm install && pnpm run build --filter=admin --include-dependencies",
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && pnpm install",
   "ignoreCommand": "cd ../.. && npx turbo-ignore admin"
