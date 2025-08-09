@@ -32,10 +32,16 @@ export function middleware(request: NextRequest) {
   console.log('🔍 Search:', search);
   console.log('📍 Has locale in path:', pathnameHasLocale);
 
-  // Debug OAuth callbacks
-  if (search.includes('code=')) {
+  // Debug OAuth callbacks and ensure they go to callback route
+  if (search.includes('code=') || search.includes('access_token=') || search.includes('error=')) {
     console.log('🔄 Middleware: OAuth callback detected');
     console.log('📍 Original URL:', request.url);
+    console.log('📍 Pathname:', pathname);
+    
+    // If OAuth callback is not going to /auth/callback, we need to ensure it gets redirected properly
+    if (!pathname.includes('/auth/callback')) {
+      console.log('⚠️ OAuth callback not going to callback route, allowing through for home page to handle');
+    }
   }
 
   if (pathnameHasLocale) {

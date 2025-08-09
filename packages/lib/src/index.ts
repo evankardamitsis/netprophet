@@ -7,7 +7,7 @@ export type { SupabaseClient } from './supabase/client';
 
 // Services
 export { BetsService } from './supabase/bets';
-export type { CreateBetData, CreateParlayBetData } from './supabase/bets';
+export type { CreateBetData, CreateParlayBetData, BetWithMatch } from './supabase/bets';
 export { DailyRewardsService } from './supabase/dailyRewards';
 export type { DailyRewardStatus, DailyRewardClaim } from './supabase/dailyRewards';
 export { WalletOperationsService } from './supabase/walletOperations';

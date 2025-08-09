@@ -44,9 +44,10 @@ export default function AuthPage() {
             localStorage.setItem('oauth_lang', lang as string);
 
             const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google'
-                // Let Supabase use the default Site URL from dashboard config
-                // The home page will detect OAuth callback and redirect properly
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/${lang}/auth/callback`
+                }
             });
             if (error) setMessage(error.message);
         } catch (err: any) {

@@ -13,76 +13,126 @@ export default function AuthCallbackPage() {
         console.log('🔗 Hash:', window.location.hash);
         console.log('❓ Search:', window.location.search);
 
+        // Check if this is an OAuth callback with proper parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+        const hasOAuthCode = urlParams.has('code');
+        const hasAccessToken = hashParams.has('access_token');
+        const hasErrorParam = urlParams.has('error') || hashParams.has('error');
+
+        console.log('🔑 OAuth params:', { hasOAuthCode, hasAccessToken, hasErrorParam });
+
+        // If there are error parameters, handle them immediately
+        if (hasErrorParam) {
+            const errorParam = urlParams.get('error') || hashParams.get('error');
+            const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
+            console.log('❌ OAuth error detected:', { errorParam, errorDescription });
+            setError(errorDescription || 'Authentication failed');
+            setLoading(false);
+            return;
+        }
+
         // Set up auth state listener for OAuth callbacks
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('🔄 Auth state change:', event);
-            console.log('👤 Session:', session ? 'Found' : 'None');
+            console.log('🔄 Auth state change:', event, session ? 'Session found' : 'No session');
 
             if (event === 'SIGNED_IN' && session) {
                 console.log('🎉 OAuth sign-in successful');
                 console.log('👤 User:', session.user.email);
 
-                // Extract language from the URL path
+                // Extract language from the URL path or localStorage
                 const pathSegments = window.location.pathname.split('/');
-                const lang = pathSegments[1] || 'en';
+                const pathLang = pathSegments[1];
+                const storedLang = localStorage.getItem('oauth_lang');
+                const lang = pathLang || storedLang || 'en';
+
+                // Clean up stored language
+                localStorage.removeItem('oauth_lang');
 
                 console.log('🌐 Language:', lang);
                 console.log('🚀 Redirecting to matches...');
 
-                // Small delay to ensure everything is processed
-                setTimeout(() => {
-                    window.location.href = `/${lang}/matches`;
-                }, 100);
-            } else if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
-                // Check for error parameters in URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-
-                const errorParam = urlParams.get('error') || hashParams.get('error');
-                const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
-
-                console.log('🔍 URL error params:', { errorParam, errorDescription });
-
-                if (errorParam) {
-                    setError(errorDescription || 'Authentication failed');
-                    setLoading(false);
-                } else if (event === 'INITIAL_SESSION') {
-                    // No session and no error - this might be a delayed OAuth callback
-                    console.log('⏳ No initial session, waiting for OAuth callback...');
-
-                    // Wait a bit longer for OAuth to process
-                    setTimeout(async () => {
-                        const { data: delayedSession } = await supabase.auth.getSession();
-                        if (!delayedSession.session) {
-                            setError('No session found. Please try signing in again.');
-                            setLoading(false);
-                        }
-                    }, 2000);
-                }
+                // Use router.push for better navigation
+                window.location.href = `/${lang}/matches`;
+            } else if (event === 'SIGNED_OUT') {
+                console.log('🚪 User signed out on callback page');
+                const pathSegments = window.location.pathname.split('/');
+                const lang = pathSegments[1] || 'en';
+                setError('Authentication was cancelled or failed');
+                setLoading(false);
             }
         });
 
-        // Also check current session immediately
-        const checkCurrentSession = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
+        // Handle OAuth callback immediately if we have the right parameters
+        const handleOAuthCallback = async () => {
+            if (hasOAuthCode || hasAccessToken) {
+                console.log('🔄 Processing OAuth callback...');
 
-            if (error) {
-                console.error('❌ Session check error:', error);
-                setError(`Authentication failed: ${error.message}`);
-                setLoading(false);
-                return;
-            }
+                try {
+                    // Let Supabase handle the OAuth callback
+                    const { data, error } = await supabase.auth.getSession();
 
-            if (session) {
-                console.log('✅ Existing session found');
-                const pathSegments = window.location.pathname.split('/');
-                const lang = pathSegments[1] || 'en';
-                window.location.href = `/${lang}/matches`;
+                    if (error) {
+                        console.error('❌ OAuth callback error:', error);
+                        setError(`Authentication failed: ${error.message}`);
+                        setLoading(false);
+                        return;
+                    }
+
+                    if (data.session) {
+                        console.log('✅ OAuth session established immediately');
+                        const pathSegments = window.location.pathname.split('/');
+                        const pathLang = pathSegments[1];
+                        const storedLang = localStorage.getItem('oauth_lang');
+                        const lang = pathLang || storedLang || 'en';
+
+                        localStorage.removeItem('oauth_lang');
+                        window.location.href = `/${lang}/matches`;
+                        return;
+                    }
+
+                    // If no immediate session, wait for auth state change
+                    console.log('⏳ Waiting for OAuth session to be established...');
+                } catch (err) {
+                    console.error('❌ OAuth processing error:', err);
+                    setError('An error occurred during authentication');
+                    setLoading(false);
+                }
+            } else {
+                // No OAuth parameters, check if there's already a session
+                console.log('🔍 No OAuth params, checking existing session...');
+
+                try {
+                    const { data: { session }, error } = await supabase.auth.getSession();
+
+                    if (error) {
+                        console.error('❌ Session check error:', error);
+                        setError(`Authentication failed: ${error.message}`);
+                        setLoading(false);
+                        return;
+                    }
+
+                    if (session) {
+                        console.log('✅ Existing session found');
+                        const pathSegments = window.location.pathname.split('/');
+                        const lang = pathSegments[1] || 'en';
+                        window.location.href = `/${lang}/matches`;
+                    } else {
+                        console.log('❌ No session and no OAuth params');
+                        setError('No authentication data found. Please try signing in again.');
+                        setLoading(false);
+                    }
+                } catch (err) {
+                    console.error('❌ Session check error:', err);
+                    setError('An error occurred checking authentication');
+                    setLoading(false);
+                }
             }
         };
 
-        // Check session after a short delay
-        const timer = setTimeout(checkCurrentSession, 200);
+        // Process callback with a small delay to ensure URL is fully loaded
+        const timer = setTimeout(handleOAuthCallback, 100);
 
         return () => {
             subscription.unsubscribe();
