@@ -48,11 +48,20 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Debug current URL
+        console.log('🏠 Home page URL:', window.location.href);
+        console.log('🔍 Search params:', window.location.search);
+        console.log('🔗 Hash:', window.location.hash);
+
         // Check if this is an OAuth callback (has code parameter)
         const urlParams = new URLSearchParams(window.location.search);
         const hasOAuthCode = urlParams.has('code');
+        const hasAccessToken = urlParams.has('access_token') || window.location.hash.includes('access_token');
 
-        if (hasOAuthCode) {
+        console.log('🔑 Has OAuth code:', hasOAuthCode);
+        console.log('🎫 Has access token:', hasAccessToken);
+
+        if (hasOAuthCode || hasAccessToken) {
             console.log('🔄 OAuth callback detected on home page, redirecting to proper callback handler...');
             // Get the stored language from OAuth initiation, fallback to current lang
             const oauthLang = localStorage.getItem('oauth_lang') || lang;
