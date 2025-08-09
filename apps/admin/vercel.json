@@ -2,5 +2,5 @@
   "buildCommand": "cd ../.. && pnpm run build --filter=admin...",
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && pnpm install",
-  "ignoreCommand": "cd ../.. && git diff HEAD^ HEAD --quiet apps/web/"
+  "ignoreCommand": "cd ../.. && git diff HEAD^ HEAD --quiet apps/admin/ packages/lib/ && exit 1 || exit 0"
 }
