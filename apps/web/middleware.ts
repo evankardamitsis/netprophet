@@ -19,44 +19,19 @@ function getLocale(request: NextRequest): string {
 }
 
 export function middleware(request: NextRequest) {
-  // Debug all requests
-  console.log('🔧 Middleware running for:', request.url);
-  
   // Check if there is any supported locale in the pathname
-  const { pathname, search } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
 
-  console.log('🛤️ Pathname:', pathname);
-  console.log('🔍 Search:', search);
-  console.log('📍 Has locale in path:', pathnameHasLocale);
-
-  // Debug OAuth callbacks and ensure they go to callback route
-  if (search.includes('code=') || search.includes('access_token=') || search.includes('error=')) {
-    console.log('🔄 Middleware: OAuth callback detected');
-    console.log('📍 Original URL:', request.url);
-    console.log('📍 Pathname:', pathname);
-    
-    // If OAuth callback is not going to /auth/callback, we need to ensure it gets redirected properly
-    if (!pathname.includes('/auth/callback')) {
-      console.log('⚠️ OAuth callback not going to callback route, allowing through for home page to handle');
-    }
-  }
-
   if (pathnameHasLocale) {
-    console.log('✅ Locale found, continuing...');
     return;
   }
 
   // Redirect if there is no locale
   const locale = getLocale(request);
-  console.log('🌐 Redirecting to locale:', locale);
-  
   request.nextUrl.pathname = `/${locale}${pathname}`;
-  
-  // Search parameters should be automatically preserved in request.nextUrl
-  console.log('🚀 Middleware: Redirecting to:', request.nextUrl.toString());
   
   return NextResponse.redirect(request.nextUrl);
 }

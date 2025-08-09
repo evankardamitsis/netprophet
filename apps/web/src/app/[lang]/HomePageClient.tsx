@@ -48,11 +48,6 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Debug current URL
-        console.log('🏠 Home page URL:', window.location.href);
-        console.log('🔍 Search params:', window.location.search);
-        console.log('🔗 Hash:', window.location.hash);
-
         // Check if this is an OAuth callback (has code parameter)
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -61,13 +56,8 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
         const hasAccessToken = hashParams.has('access_token');
         const hasErrorParam = urlParams.has('error') || hashParams.has('error');
 
-        console.log('🔑 Has OAuth code:', hasOAuthCode);
-        console.log('🎫 Has access token:', hasAccessToken);
-        console.log('❌ Has OAuth error:', hasErrorParam);
-
         // If OAuth callback ended up on home page, redirect to proper callback handler
         if (hasOAuthCode || hasAccessToken || hasErrorParam) {
-            console.log('🔄 OAuth callback detected on home page, redirecting to proper callback handler...');
             // Get the stored language from OAuth initiation, fallback to current lang
             const oauthLang = localStorage.getItem('oauth_lang') || lang;
 
@@ -75,36 +65,27 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
 
             // Redirect to the proper callback page with all parameters
             const callbackUrl = `/${oauthLang}/auth/callback${window.location.search}${window.location.hash}`;
-            console.log('🚀 Redirecting to callback:', callbackUrl);
             window.location.href = callbackUrl;
             return;
         }
 
         const checkAuth = async () => {
-            console.log('🔍 Checking authentication status on home page...');
-
             try {
                 const { data: { session }, error } = await supabase.auth.getSession();
 
                 if (error) {
-                    console.error('❌ Session check error:', error);
                     setLoading(false);
                     return;
                 }
 
                 if (session) {
-                    console.log('✅ User is authenticated, redirecting to matches');
-                    console.log('👤 User email:', session.user.email);
-
                     // Use window.location for immediate redirect to avoid potential routing issues
                     window.location.href = `/${lang}/matches`;
                     return;
                 }
 
-                console.log('❌ No session found, staying on home page');
                 setLoading(false);
             } catch (err) {
-                console.error('❌ Auth check error:', err);
                 setLoading(false);
             }
         };
@@ -116,7 +97,6 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
     }, [router, lang]);
 
     if (loading) {
-        console.log('⏳ Home page showing loading state');
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
