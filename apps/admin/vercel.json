@@ -1,0 +1,11 @@
+{
+  "buildCommand": "cd ../.. && pnpm run build --filter=admin",
+  "outputDirectory": ".next",
+  "installCommand": "cd ../.. && pnpm install",
+  "framework": "nextjs",
+  "functions": {
+    "pages/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
