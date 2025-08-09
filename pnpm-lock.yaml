@@ -39,6 +39,9 @@ importers:
       turbo:
         specifier: ^1.11.0
         version: 1.13.4
+      turbo-ignore:
+        specifier: ^2.5.5
+        version: 2.5.5
       typescript:
         specifier: ^5.3.0
         version: 5.8.3
@@ -49,8 +52,8 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.60.0)
       '@netprophet/lib':
-        specifier: file:../../packages/lib
-        version: file:packages/lib(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
+        specifier: workspace:*
+        version: link:../../packages/lib
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@18.3.7)(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
@@ -16912,6 +16915,13 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /turbo-ignore@2.5.5:
+    resolution: {integrity: sha512-1baD6Wx6WWBhya+JSN8jaJE0mhdc92PICx5acHBdwVsTlpOcuskV/hZR0qTECzIRtKbXP7FRvD9Xj97MRpm88w==}
+    hasBin: true
+    dependencies:
+      json5: 2.2.3
+    dev: true
 
   /turbo-linux-64@1.13.4:
     resolution: {integrity: sha512-Bq0JphDeNw3XEi+Xb/e4xoKhs1DHN7OoLVUbTIQz+gazYjigVZvtwCvgrZI7eW9Xo1eOXM2zw2u1DGLLUfmGkQ==}

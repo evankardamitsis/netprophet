@@ -1,5 +1,6 @@
 {
-  "buildCommand": "cd ../.. && pnpm run build --filter=admin^... && pnpm run build --filter=admin",
+  "buildCommand": "cd ../.. && pnpm run build --filter=@netprophet/admin^... && pnpm run build --filter=@netprophet/admin",
   "outputDirectory": ".next",
-  "installCommand": "cd ../.. && pnpm install"
+  "installCommand": "cd ../.. && pnpm install",
+  "ignoreCommand": "cd ../.. && npx turbo-ignore @netprophet/web"
 }
