@@ -2,6 +2,5 @@
   "buildCommand": "cd ../.. && cd packages/lib && npm run build && cd ../ui && npm run build && cd ../../apps/web && npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "ignoreCommand": "cd ../.. && git diff HEAD^ HEAD --quiet apps/web/ packages/ && exit 1 || exit 0"
+  "framework": "nextjs"
 }
