@@ -1,3 +1,7 @@
+# Exclude other apps
+apps/admin/
+apps/mobile/
+
 # Development files
 .env.local
 .env.development
@@ -22,7 +26,6 @@ docs/
 .gitignore
 
 # Package manager
-pnpm-lock.yaml
 package-lock.json
 yarn.lock
 

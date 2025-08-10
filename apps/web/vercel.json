@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd ../.. && corepack enable && corepack prepare pnpm@latest --activate && pnpm run build --filter=@netprophet/web^... && pnpm run build --filter=@netprophet/web",
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm run build --filter=@netprophet/web",
   "outputDirectory": ".next",
-  "installCommand": "cd ../.. && corepack enable && corepack prepare pnpm@latest --activate && pnpm install",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": "nextjs",
   "ignoreCommand": "cd ../.. && npx turbo-ignore @netprophet/web --fallback=HEAD^"
 }

@@ -1,3 +1,45 @@
+# Exclude other apps
+../../apps/web/
+../../apps/mobile/
+
+# Exclude packages that aren't needed for admin
+../../packages/ui/
+
+# Development files
+.env.local
+.env.development
+.env.test
+
+# Build artifacts from other apps
+../../apps/web/.next
+../../apps/mobile/
+
+# Test files
+**/*.test.ts
+**/*.spec.ts
+**/__tests__
+
+# Documentation
+../../docs/
+*.md
+
+# Git
+../../.git/
+../../.gitignore
+
+# Package manager
+../../package-lock.json
+../../yarn.lock
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
 ../../turbo.json
 ../../.turbo/
 .turbo/
