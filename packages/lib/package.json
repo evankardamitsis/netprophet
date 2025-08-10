@@ -10,7 +10,7 @@
     "dist/**"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm",
+    "build": "npx tsup src/index.ts --format cjs,esm",
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
     "lint": "eslint \"src/**/*.ts*\"",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
@@ -21,8 +21,7 @@
     "@supabase/supabase-js": "^2.38.0",
     "@tanstack/react-query": "^5.8.0",
     "zustand": "^4.4.7",
-    "zod": "^3.22.4",
-    "tsup": "^8.0.0"
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@netprophet/config": "workspace:*",
