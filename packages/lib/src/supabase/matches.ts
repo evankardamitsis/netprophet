@@ -264,6 +264,8 @@ export async function getLiveMatches() {
 }
 
 export async function getMatchesByTournament(tournamentId: string) {
+
+
     const { data, error } = await supabase
         .from('matches')
         .select(`
@@ -312,6 +314,7 @@ export async function updateMatchResult(id: string, result: {
     match_duration: number;
     status: 'finished';
 }) {
+
     const { data, error } = await supabase
         .from('matches')
         .update({
@@ -329,6 +332,8 @@ export async function updateMatchResult(id: string, result: {
 
 // Utility functions
 export async function getAvailablePlayersForMatch(tournamentId?: string, categoryId?: string) {
+
+
     let query = supabase
         .from('players')
         .select('id, first_name, last_name, ntrp_rating, age, surface_preference')
@@ -337,6 +342,8 @@ export async function getAvailablePlayersForMatch(tournamentId?: string, categor
     // If tournament is specified, only show players registered for that tournament
     if (tournamentId) {
         // First get the player IDs for this tournament
+
+
         let participantQuery = supabase
             .from('tournament_participants')
             .select('player_id')
@@ -367,6 +374,8 @@ export async function getAvailablePlayersForMatch(tournamentId?: string, categor
 
 export async function calculateMatchOdds(playerAId: string, playerBId: string, surface?: string) {
     // This is a simplified odds calculation - in a real system, this would be more sophisticated
+    
+
     const { data: playerA } = await supabase
         .from('players')
         .select('ntrp_rating, surface_win_rates, surface_preference')

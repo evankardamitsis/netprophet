@@ -26,6 +26,12 @@ export default function AuthCallbackPage() {
         }
 
         // Set up auth state listener for OAuth callbacks
+        if (!supabase) {
+            setError('Authentication service is not available.');
+            setLoading(false);
+            return;
+        }
+
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 // Extract language from the URL path or localStorage
@@ -47,6 +53,12 @@ export default function AuthCallbackPage() {
 
         // Handle OAuth callback immediately if we have the right parameters
         const handleOAuthCallback = async () => {
+            if (!supabase) {
+                setError('Authentication service is not available.');
+                setLoading(false);
+                return;
+            }
+
             if (hasOAuthCode || hasAccessToken) {
                 try {
                     // Let Supabase handle the OAuth callback

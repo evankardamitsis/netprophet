@@ -20,6 +20,11 @@ export default function AuthPage() {
         setLoading(true);
         setMessage('');
         try {
+            if (!supabase) {
+                setMessage('Authentication service is not available.');
+                return;
+            }
+
             if (mode === 'signin') {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) setMessage(error.message);
@@ -40,6 +45,11 @@ export default function AuthPage() {
         setLoading(true);
         setMessage('');
         try {
+            if (!supabase) {
+                setMessage('Authentication service is not available.');
+                return;
+            }
+
             // Store the current language in localStorage for callback handling
             localStorage.setItem('oauth_lang', lang as string);
 

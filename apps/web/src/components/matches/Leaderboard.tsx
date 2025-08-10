@@ -215,11 +215,11 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
     const getRankBadge = (rank: number) => {
         switch (rank) {
             case 1:
-                return <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white border-0">🥇</Badge>;
+                return <Badge variant="default" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white border-0">🥇</Badge>;
             case 2:
-                return <Badge className="bg-gradient-to-r from-gray-400 to-gray-600 text-white border-0">🥈</Badge>;
+                return <Badge variant="default" className="bg-gradient-to-r from-gray-400 to-gray-600 text-white border-0">🥈</Badge>;
             case 3:
-                return <Badge className="bg-gradient-to-r from-orange-400 to-orange-600 text-white border-0">🥉</Badge>;
+                return <Badge variant="default" className="bg-gradient-to-r from-orange-400 to-orange-600 text-white border-0">🥉</Badge>;
             default:
                 return <Badge variant="secondary">#{rank}</Badge>;
         }
