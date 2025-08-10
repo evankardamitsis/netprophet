@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm run build --filter=@netprophet/web^... && pnpm run build --filter=@netprophet/web",
+  "buildCommand": "cd ../.. && pnpm run build --filter=@netprophet/web",
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": "nextjs",

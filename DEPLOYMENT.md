@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This project is set up for separate Vercel deployments for the web and admin apps.
+This project is set up for separate Vercel deployments for the web and admin apps using Turborepo best practices.
 
 ## Setup Instructions
 
@@ -12,7 +12,7 @@ This project is set up for separate Vercel deployments for the web and admin app
 4. Set the following configuration:
    - **Framework Preset**: Next.js
    - **Root Directory**: `apps/web`
-   - **Build Command**: `cd ../.. && pnpm install --frozen-lockfile && pnpm run build --filter=@netprophet/web`
+   - **Build Command**: `cd ../.. && pnpm run build --filter=@netprophet/web`
    - **Output Directory**: `.next`
    - **Install Command**: `cd ../.. && pnpm install --frozen-lockfile`
 
@@ -24,7 +24,7 @@ This project is set up for separate Vercel deployments for the web and admin app
 4. Set the following configuration:
    - **Framework Preset**: Next.js
    - **Root Directory**: `apps/admin`
-   - **Build Command**: `cd ../.. && pnpm install --frozen-lockfile && pnpm run build --filter=@netprophet/admin`
+   - **Build Command**: `cd ../.. && pnpm run build --filter=@netprophet/admin`
    - **Output Directory**: `.next`
    - **Install Command**: `cd ../.. && pnpm install --frozen-lockfile`
 
@@ -46,9 +46,17 @@ Make sure to set the following environment variables for each deployment:
 
 ## How It Works
 
+### Turborepo Integration
+
+- **Smart Filtering**: Uses `--filter` to build only the specific app and its dependencies
+- **Dependency Management**: Automatically builds shared packages (`@netprophet/lib`, `@netprophet/ui`) when needed
+- **Caching**: Leverages Turborepo's caching for faster builds
+- **Turbo Ignore**: Uses `turbo-ignore` to determine if deployment is needed based on file changes
+
+### Deployment Triggers
+
 - **Web App**: Only deploys when changes are made to `apps/web/` or shared packages
 - **Admin App**: Only deploys when changes are made to `apps/admin/` or shared packages
-- **Turbo Ignore**: Uses `turbo-ignore` to determine if a deployment is needed based on file changes
 - **Shared Dependencies**: Both apps share the `@netprophet/lib` package, so changes to it will trigger both deployments
 
 ## Deployment URLs
@@ -65,3 +73,14 @@ If deployments fail:
 1. Check that `pnpm-lock.yaml` is committed to the repository
 2. Ensure all environment variables are set correctly
 3. Verify that the root directory paths are correct in Vercel settings
+4. Check that shared packages (`@netprophet/lib`, `@netprophet/ui`) are building correctly
+
+## Turborepo Best Practices
+
+This setup follows [Turborepo best practices](https://turborepo.com/docs):
+
+- ✅ **Single build command**: Uses `pnpm run build --filter=@package` for efficiency
+- ✅ **Proper dependency management**: `dependsOn: ["^build"]` ensures correct build order
+- ✅ **Caching**: Leverages Turborepo's built-in caching
+- ✅ **Selective deployment**: Uses `turbo-ignore` to deploy only when needed
+- ✅ **Frozen lockfile**: Ensures reproducible builds with `--frozen-lockfile`
