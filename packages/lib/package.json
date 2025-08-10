@@ -10,7 +10,7 @@
     "dist/**"
   ],
   "scripts": {
-    "build": "npx tsup src/index.ts --format cjs,esm",
+    "build": "npx tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --watch --dts",
     "lint": "npx eslint \"src/**/*.ts*\"",
     "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
