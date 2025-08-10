@@ -195,7 +195,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         loadBetStats();
         syncWalletWithDatabase();
-    }, []); // Add empty dependency array to run only on mount
+    }, [syncWalletWithDatabase]); // Include syncWalletWithDatabase in dependencies
 
     const loadBetStats = async () => {
         try {
