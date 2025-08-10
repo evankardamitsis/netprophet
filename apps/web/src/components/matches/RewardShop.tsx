@@ -376,10 +376,10 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                                                 <div className="flex-1">
                                                     <CardTitle className="text-xl">{reward.title}</CardTitle>
                                                     <div className="flex items-center gap-2 mt-2">
-                                                        <Badge className={`text-xs ${getCategoryColor(reward.category)}`}>
+                                                        <Badge variant="secondary" className={`text-xs ${getCategoryColor(reward.category)}`}>
                                                             {getCategoryLabel(reward.category)}
                                                         </Badge>
-                                                        <Badge className="text-xs bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+                                                        <Badge variant="secondary" className="text-xs bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
                                                             {getRarityLabel(reward.rarity)}
                                                         </Badge>
                                                     </div>
@@ -437,10 +437,10 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
                                         <div className="flex-1">
                                             <CardTitle className="text-lg">{reward.title}</CardTitle>
                                             <div className="flex items-center gap-2 mt-2">
-                                                <Badge className={`text-xs ${getCategoryColor(reward.category)}`}>
+                                                <Badge variant="secondary" className={`text-xs ${getCategoryColor(reward.category)}`}>
                                                     {getCategoryLabel(reward.category)}
                                                 </Badge>
-                                                <Badge className={`text-xs ${reward.rarity === 'legendary' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0' : 'bg-gray-100 text-gray-700'}`}>
+                                                <Badge variant="secondary" className={`text-xs ${reward.rarity === 'legendary' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0' : 'bg-gray-100 text-gray-700'}`}>
                                                     {getRarityLabel(reward.rarity)}
                                                 </Badge>
                                             </div>
