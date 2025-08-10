@@ -20,14 +20,14 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@netprophet/lib": "file:../lib",
+    "@netprophet/lib": "workspace:*",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "tailwind-merge": "^2.0.0",
     "tsup": "^8.0.0"
   },
   "devDependencies": {
-    "@netprophet/config": "file:../config",
+    "@netprophet/config": "workspace:*",
     "@storybook/addon-essentials": "^7.6.0",
     "@storybook/addon-interactions": "^7.6.0",
     "@storybook/addon-links": "^7.6.0",
