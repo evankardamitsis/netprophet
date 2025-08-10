@@ -351,7 +351,7 @@ export class BetsService {
   /**
    * Get bets with match details
    */
-  static async getBetsWithMatches(): Promise<Bet[]> {
+  static async getBetsWithMatches(): Promise<BetWithMatch[]> {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -360,7 +360,16 @@ export class BetsService {
 
     const { data, error } = await supabase
       .from('bets')
-      .select('*')
+      .select(`
+        *,
+        match:matches(
+          player_a,
+          player_b,
+          played_at,
+          a_score,
+          b_score
+        )
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
