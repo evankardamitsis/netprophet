@@ -56,12 +56,13 @@ export default function AuthPage() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/${lang}/auth/callback`
+                    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/${lang}/auth/callback`
                 }
             });
             if (error) setMessage(error.message);
         } catch (err: any) {
             setMessage('An unexpected error occurred.');
+            
         } finally {
             setLoading(false);
         }

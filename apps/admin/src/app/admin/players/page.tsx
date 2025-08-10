@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +57,15 @@ export default function PlayersPage() {
                 setFetchError('Σφάλμα κατά τη φόρτωση των παικτών: ' + (err?.message || err));
             })
             .finally(() => setLoading(false));
+    }, []);
+
+    const handleEdit = useCallback((player: Player) => {
+        router.push(`/admin/players/${player.id}`);
+    }, [router]);
+
+    const handleDelete = useCallback((player: Player) => {
+        setDeletingPlayer(player);
+        setIsDeleteModalOpen(true);
     }, []);
 
     const columns = useMemo<ColumnDef<Player, any>[]>(
@@ -196,7 +205,7 @@ export default function PlayersPage() {
                 enableSorting: false,
             },
         ],
-        []
+        [handleEdit, handleDelete]
     );
 
     const table = useReactTable({
@@ -283,15 +292,6 @@ export default function PlayersPage() {
             setImportError(err.message || 'Import failed');
         }
     }
-
-    const handleEdit = (player: Player) => {
-        router.push(`/admin/players/${player.id}`);
-    };
-
-    const handleDelete = (player: Player) => {
-        setDeletingPlayer(player);
-        setIsDeleteModalOpen(true);
-    };
 
     const confirmDelete = async () => {
         if (deletingPlayer) {

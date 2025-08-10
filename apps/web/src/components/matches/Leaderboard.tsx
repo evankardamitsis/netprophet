@@ -221,7 +221,7 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
             case 3:
                 return <Badge variant="default" className="bg-gradient-to-r from-orange-400 to-orange-600 text-white border-0">🥉</Badge>;
             default:
-                return <Badge variant="secondary">#{rank}</Badge>;
+                return <Badge variant="secondary" className="bg-slate-600 text-white">#{rank}</Badge>;
         }
     };
 
@@ -283,7 +283,7 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between text-white">
                         <span>{dict?.leaderboard?.topPlayers || 'Top Players'}</span>
-                        <Badge variant="secondary">
+                        <Badge variant="secondary" className="bg-slate-600 text-white">
                             {timeFrame === 'weekly' ? dict?.leaderboard?.thisWeek || 'This Week' : dict?.leaderboard?.allTime || 'All Time'}
                         </Badge>
                     </CardTitle>

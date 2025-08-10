@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,11 +64,7 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
     const [showParticipantForm, setShowParticipantForm] = useState(false);
     const [editingParticipant, setEditingParticipant] = useState<any>(null);
 
-    useEffect(() => {
-        loadTournamentData();
-    }, [tournament.id]);
-
-    const loadTournamentData = async () => {
+    const loadTournamentData = useCallback(async () => {
         try {
             setLoading(true);
             const [categoriesData, participantsData, availablePlayersData] = await Promise.all([
@@ -85,7 +81,11 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
         } finally {
             setLoading(false);
         }
-    };
+    }, [tournament.id]);
+
+    useEffect(() => {
+        loadTournamentData();
+    }, [tournament.id, loadTournamentData]);
 
     const handleCreateCategory = async (categoryData: any) => {
         try {

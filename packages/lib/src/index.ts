@@ -21,7 +21,8 @@ export * from './utils/validation';
 
 // Odds Calculation
 export * from './odds/calculateOdds';
-export * from './odds/parlayCalculations'; 
+export * from './odds/parlayCalculations';
+export type { PlayerOddsData, MatchContext, OddsResult, H2HRecordInput } from './odds/calculateOdds'; 
 
 // Tournament management
 export * from './supabase/tournaments';
