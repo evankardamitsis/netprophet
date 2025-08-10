@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BetsService, BetWithMatch } from '@netprophet/lib';
+import { BetsService } from '@netprophet/lib';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui';
 
 interface BetManagementProps { }

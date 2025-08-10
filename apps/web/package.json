@@ -7,7 +7,7 @@
     "build": "npx next build",
     "start": "npx next start",
     "lint": "npx next lint",
-    "type-check": "tsc --noEmit",
+    "type-check": "npx tsc --noEmit",
     "clean": "rm -rf .next && rm -rf node_modules"
   },
   "dependencies": {
