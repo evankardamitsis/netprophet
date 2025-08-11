@@ -29,25 +29,7 @@ import {
 } from '@netprophet/lib';
 import { CategoryForm } from './CategoryForm';
 import { ParticipantForm } from './ParticipantForm';
-
-interface Tournament {
-    id: string;
-    name: string;
-    description: string | null;
-    start_date: string;
-    end_date: string;
-    status: string;
-    surface: string;
-    location: string | null;
-    prize_pool: number | null;
-    entry_fee: number;
-    max_participants: number | null;
-    current_participants: number;
-    tournament_type: string;
-    format: string;
-    tournament_categories?: any[];
-    tournament_participants?: any[];
-}
+import { Tournament } from '@/types';
 
 interface TournamentDetailsProps {
     tournament: Tournament;

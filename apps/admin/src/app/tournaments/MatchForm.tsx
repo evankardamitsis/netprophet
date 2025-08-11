@@ -6,31 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Match {
-    id: string;
-    player_a: string;
-    player_b: string;
-    tournament_id: string | null;
-    category_id: string | null;
-    round: string | null;
-    court_number: number | null;
-    status: string;
-    start_time: string | null;
-    lock_time: string | null;
-    points_value: number;
-    odds_a: number | null;
-    odds_b: number | null;
-}
-
-interface Tournament {
-    id: string;
-    name: string;
-    tournament_categories?: Array<{
-        id: string;
-        name: string;
-    }>;
-}
+import { Match, Tournament, MatchFormData } from '@/types';
 
 interface MatchFormProps {
     match?: Match | null;
@@ -40,7 +16,7 @@ interface MatchFormProps {
 }
 
 export function MatchForm({ match, tournaments, onSubmit, onCancel }: MatchFormProps) {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<MatchFormData>({
         player_a: '',
         player_b: '',
         tournament_id: '',

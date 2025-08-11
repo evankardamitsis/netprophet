@@ -6,29 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Participant {
-    id: string;
-    player_id: string;
-    category_id: string | null;
-    status: string;
-    seed_position: number | null;
-    final_position: number | null;
-    points_earned: number;
-}
-
-interface Category {
-    id: string;
-    name: string;
-}
-
-interface Player {
-    id: string;
-    first_name: string;
-    last_name: string;
-    ntrp_rating: number;
-    age: number;
-}
+import { Category, Player, Participant } from '@/types';
 
 interface ParticipantFormProps {
     participant?: Participant | null;

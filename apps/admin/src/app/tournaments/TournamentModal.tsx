@@ -7,23 +7,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { TournamentForm } from './TournamentForm';
-
-interface Tournament {
-    id: string;
-    name: string;
-    description: string | null;
-    start_date: string;
-    end_date: string;
-    status: string;
-    surface: string;
-    location: string | null;
-    prize_pool: number | null;
-    entry_fee: number;
-    max_participants: number | null;
-    current_participants: number;
-    tournament_type: string;
-    format: string;
-}
+import { Tournament } from '@/types';
 
 interface TournamentModalProps {
     isOpen: boolean;

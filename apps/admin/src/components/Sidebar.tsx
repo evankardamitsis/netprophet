@@ -27,7 +27,7 @@ const menuItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/users', label: 'Users', icon: Users },
     { href: '/players', label: 'Players', icon: UserCheck },
-    { href: '/tournaments', label: 'Tournament Management', icon: Trophy },
+    { href: '/tournaments', label: 'Tournaments', icon: Trophy },
     { href: '/bets', label: 'Bets', icon: DollarSign },
     { href: '/rewards', label: 'Rewards', icon: Gift },
     { href: '/logs', label: 'Logs', icon: FileText },

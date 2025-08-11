@@ -7,20 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-
-interface Category {
-    id: string;
-    name: string;
-    description: string | null;
-    age_min: number | null;
-    age_max: number | null;
-    skill_level_min: string | null;
-    skill_level_max: string | null;
-    gender: string | null;
-    max_participants: number | null;
-    entry_fee: number;
-    prize_pool: number | null;
-}
+import { Category, CategoryFormData } from '@/types';
 
 interface CategoryFormProps {
     category?: Category | null;
@@ -29,7 +16,7 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ category, onSubmit, onCancel }: CategoryFormProps) {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<CategoryFormData>({
         name: '',
         description: '',
         age_min: '',

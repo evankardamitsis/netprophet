@@ -70,7 +70,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <div className="flex-1 flex flex-col min-w-0">
                     {/* Top bar */}
                     <TopBar
-                        userEmail={user.email}
+                        userEmail={user?.email || 'Unknown User'}
                         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
                         onSignOut={handleSignOut}
                     />

@@ -18,16 +18,7 @@ import {
     SortingState,
     ColumnFiltersState,
 } from '@tanstack/react-table';
-
-interface Profile {
-    id: string;
-    email: string;
-    username?: string | null;
-    avatar_url?: string | null;
-    is_admin: boolean;
-    suspended?: boolean;
-    created_at: string;
-}
+import { Profile } from '@/types';
 
 export default function UsersPage() {
     const [users, setUsers] = useState<Profile[]>([]);

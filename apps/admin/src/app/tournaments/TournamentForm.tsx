@@ -7,23 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-
-interface Tournament {
-    id: string;
-    name: string;
-    description: string | null;
-    start_date: string;
-    end_date: string;
-    status: string;
-    surface: string;
-    location: string | null;
-    prize_pool: number | null;
-    entry_fee: number;
-    max_participants: number | null;
-    current_participants: number;
-    tournament_type: string;
-    format: string;
-}
+import { Tournament, TournamentFormData } from '@/types';
 
 interface TournamentFormProps {
     tournament?: Tournament | null;
@@ -32,7 +16,7 @@ interface TournamentFormProps {
 }
 
 export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFormProps) {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<TournamentFormData>({
         name: '',
         description: '',
         start_date: '',
