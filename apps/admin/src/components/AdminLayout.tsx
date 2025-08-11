@@ -1,31 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { TopBar } from '@/components/TopBar';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function AdminLayout({
-    children,
-}: {
+interface AdminLayoutProps {
     children: React.ReactNode;
-}) {
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
     const router = useRouter();
+    const pathname = usePathname();
     const { user, loading, signOut } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // Check if we're on an auth page
+    const isAuthPage = pathname?.startsWith('/auth');
+
     useEffect(() => {
-        if (!loading && !user) {
+        if (!loading && !user && !isAuthPage) {
             router.push('/auth/signin');
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, isAuthPage]);
 
     const handleSignOut = async () => {
         await signOut();
         router.push('/');
     };
 
+    // For auth pages, just render the children without admin layout
+    if (isAuthPage) {
+        return <>{children}</>;
+    }
+
+    // For all other pages, apply the admin layout
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -38,7 +48,13 @@ export default function AdminLayout({
     }
 
     if (!user) {
-        return null;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="text-center">
+                    <p className="text-gray-600">Redirecting to sign in...</p>
+                </div>
+            </div>
+        );
     }
 
     return (

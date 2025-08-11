@@ -60,7 +60,7 @@ export default function PlayersPage() {
     }, []);
 
     const handleEdit = useCallback((player: Player) => {
-        router.push(`/admin/players/${player.id}`);
+        router.push(`/players/${player.id}`);
     }, [router]);
 
     const handleDelete = useCallback((player: Player) => {
@@ -359,7 +359,7 @@ export default function PlayersPage() {
                     </p>
                 </div>
                 <Button
-                    onClick={() => router.push('/admin/players/new')}
+                    onClick={() => router.push('/players/new')}
                     className="transition-all duration-200 hover:scale-105 hover:shadow-lg"
                 >
                     + Προσθήκη Παίκτη
@@ -545,7 +545,7 @@ export default function PlayersPage() {
                                         onClick={e => {
                                             // Prevent navigation if clicking on a button or input
                                             if ((e.target as HTMLElement).closest('button,input')) return;
-                                            router.push(`/admin/players/${row.original.id}`);
+                                            router.push(`/players/${row.original.id}`);
                                         }}
                                     >
                                         {row.getVisibleCells().map(cell => (

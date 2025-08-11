@@ -24,14 +24,14 @@ interface SidebarProps {
 }
 
 const menuItems = [
-    { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/users', label: 'Users', icon: Users },
-    { href: '/admin/players', label: 'Players', icon: UserCheck },
-    { href: '/admin/tournaments', label: 'Tournament Management', icon: Trophy },
-    { href: '/admin/bets', label: 'Bets', icon: DollarSign },
-    { href: '/admin/rewards', label: 'Rewards', icon: Gift },
-    { href: '/admin/logs', label: 'Logs', icon: FileText },
-    { href: '/admin/odds-demo', label: 'Odds Demo', icon: Brain },
+    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/users', label: 'Users', icon: Users },
+    { href: '/players', label: 'Players', icon: UserCheck },
+    { href: '/tournaments', label: 'Tournament Management', icon: Trophy },
+    { href: '/bets', label: 'Bets', icon: DollarSign },
+    { href: '/rewards', label: 'Rewards', icon: Gift },
+    { href: '/logs', label: 'Logs', icon: FileText },
+    { href: '/odds-demo', label: 'Odds Demo', icon: Brain },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {

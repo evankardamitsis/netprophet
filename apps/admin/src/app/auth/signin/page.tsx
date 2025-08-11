@@ -36,7 +36,7 @@ export default function SignInPage() {
                     .single();
 
                 if (profile?.is_admin) {
-                    router.push('/admin');
+                    router.push('/');
                 } else {
                     setError('Access denied. Admin privileges required.');
                     await supabase.auth.signOut();
