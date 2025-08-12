@@ -66,21 +66,21 @@ export async function getMatch(id: string) {
                 id,
                 name
             ),
-            players!matches_player_a_id_fkey (
+            player_a:players!matches_player_a_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_player_b_id_fkey (
+            player_b:players!matches_player_b_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_winner_id_fkey (
+            winner:players!matches_winner_id_fkey (
                 id,
                 first_name,
                 last_name
@@ -109,21 +109,21 @@ export async function createMatch(match: MatchInsert) {
                 id,
                 name
             ),
-            players!matches_player_a_id_fkey (
+            player_a:players!matches_player_a_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_player_b_id_fkey (
+            player_b:players!matches_player_b_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_winner_id_fkey (
+            winner:players!matches_winner_id_fkey (
                 id,
                 first_name,
                 last_name
@@ -152,21 +152,21 @@ export async function updateMatch(id: string, updates: MatchUpdate) {
                 id,
                 name
             ),
-            players!matches_player_a_id_fkey (
+            player_a:players!matches_player_a_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_player_b_id_fkey (
+            player_b:players!matches_player_b_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_winner_id_fkey (
+            winner:players!matches_winner_id_fkey (
                 id,
                 first_name,
                 last_name
@@ -280,14 +280,14 @@ export async function getMatchesByTournament(tournamentId: string) {
                 id,
                 name
             ),
-            players!matches_player_a_fkey (
+            player_a:players!matches_player_a_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
                 surface_preference
             ),
-            players!matches_player_b_fkey (
+            player_b:players!matches_player_b_id_fkey (
                 id,
                 first_name,
                 last_name,

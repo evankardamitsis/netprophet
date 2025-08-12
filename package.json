@@ -10,7 +10,8 @@
     "test": "turbo run test",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "pre-push": "./scripts/pre-push.sh"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

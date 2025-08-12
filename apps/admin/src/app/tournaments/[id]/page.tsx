@@ -22,7 +22,7 @@ import {
     updateTournamentCategory,
     deleteTournamentCategory
 } from '@netprophet/lib/supabase/tournaments';
-import { getMatches, createMatch, updateMatch, deleteMatch } from '@netprophet/lib/supabase/matches';
+import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches } from '@netprophet/lib/supabase/matches';
 import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
@@ -56,14 +56,12 @@ export default function TournamentPage() {
             setLoading(true);
             const [tournamentData, matchesData, categoriesData] = await Promise.all([
                 getTournamentWithDetails(tournamentId),
-                getMatches(),
+                getMatchesByTournament(tournamentId),
                 getTournamentCategories(tournamentId)
             ]);
 
             setTournament(tournamentData as Tournament);
-            // Filter matches for this tournament
-            const tournamentMatches = matchesData.filter((match: Match) => match.tournament_id === tournamentId);
-            setMatches(tournamentMatches);
+            setMatches(matchesData);
             setCategories(categoriesData);
         } catch (error) {
             console.error('Error loading tournament data:', error);
@@ -315,6 +313,7 @@ export default function TournamentPage() {
                     }}
                     match={editingMatch}
                     tournaments={[tournament]}
+                    currentTournament={tournament}
                     onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
                 />
 

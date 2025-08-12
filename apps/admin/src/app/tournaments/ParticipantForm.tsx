@@ -65,7 +65,7 @@ export function ParticipantForm({
 
     const getPlayerName = (playerId: string) => {
         const player = availablePlayers.find(p => p.id === playerId);
-        return player ? `${player.first_name} ${player.last_name}` : '';
+        return player ? `${player.firstName} ${player.lastName}` : '';
     };
 
     return (
@@ -90,7 +90,7 @@ export function ParticipantForm({
                                 <SelectContent>
                                     {availablePlayers.map((player) => (
                                         <SelectItem key={player.id} value={player.id}>
-                                            {player.first_name} {player.last_name} (NTRP: {player.ntrp_rating}, Age: {player.age})
+                                            {player.firstName} {player.lastName} (NTRP: {player.ntrpRating}, Age: {player.age})
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

@@ -23,8 +23,8 @@ export interface Tournament {
 // Match Types
 export interface Match {
     id: string;
-    player_a: string;
-    player_b: string;
+    player_a_id: string | null;
+    player_b_id: string | null;
     tournament_id: string | null;
     category_id: string | null;
     round: string | null;
@@ -45,6 +45,20 @@ export interface Match {
     tournament_categories?: {
         id: string;
         name: string;
+    };
+    player_a?: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        ntrp_rating: number;
+        surface_preference: string;
+    };
+    player_b?: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        ntrp_rating: number;
+        surface_preference: string;
     };
 }
 
@@ -70,10 +84,26 @@ export interface Category {
 // Player Types
 export interface Player {
     id: string;
-    first_name: string;
-    last_name: string;
-    ntrp_rating: number;
+    firstName: string;
+    lastName: string;
+    ntrpRating: number;
+    wins: number;
+    losses: number;
+    last5: string[];
+    currentStreak: number;
+    streakType: string;
+    surfacePreference: string;
+    surfaceWinRates?: any;
+    aggressiveness: number;
+    stamina: number;
+    consistency: number;
     age: number;
+    hand: string;
+    notes?: string;
+    lastMatchDate?: string;
+    fatigueLevel?: number;
+    injuryStatus?: string;
+    seasonalForm?: any;
 }
 
 // Participant Types
@@ -100,16 +130,14 @@ export interface Profile {
 
 // Form Data Types
 export interface MatchFormData {
-    player_a: string;
-    player_b: string;
+    player_a_id: string;
+    player_b_id: string;
     tournament_id: string;
     category_id: string;
     round: string;
-    court_number: string;
     status: string;
     start_time: string;
     lock_time: string;
-    points_value: string;
 }
 
 export interface TournamentFormData {

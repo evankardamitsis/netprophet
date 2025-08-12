@@ -23,6 +23,12 @@ export function TournamentOverview({
     getStatusColor,
     getSurfaceColor
 }: TournamentOverviewProps) {
+    const getPlayerName = (player: any) => {
+        if (player?.first_name && player?.last_name) {
+            return `${player.first_name} ${player.last_name}`;
+        }
+        return 'TBD';
+    };
     return (
         <div className="space-y-8">
             <div className="grid gap-8 lg:grid-cols-3">
@@ -133,7 +139,7 @@ export function TournamentOverview({
                                         <div key={match.id} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium text-sm text-gray-900 truncate">
-                                                    {match.player_a} vs {match.player_b}
+                                                    {getPlayerName(match.player_a)} vs {getPlayerName(match.player_b)}
                                                 </div>
                                                 <div className="text-xs text-gray-500 flex items-center gap-2">
                                                     {match.round && <span>{match.round}</span>}
