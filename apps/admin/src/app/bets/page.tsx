@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { BetsService } from '@netprophet/lib';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui';
 
@@ -24,7 +25,9 @@ export default function BetManagement({ }: BetManagementProps) {
             setBets(allBets);
             setError(null);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load bets');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to load bets';
+            setError(errorMessage);
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -36,8 +39,10 @@ export default function BetManagement({ }: BetManagementProps) {
             await loadBets(); // Reload to get updated data
             setIsDialogOpen(false);
             setSelectedBet(null);
+            toast.success(`Bet status updated to ${status}`);
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to update bet status');
+            const errorMessage = err instanceof Error ? err.message : 'Failed to update bet status';
+            toast.error(errorMessage);
         }
     };
 

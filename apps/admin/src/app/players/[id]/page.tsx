@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@netprophet/lib/types/player';
 import { insertPlayer, updatePlayer, fetchPlayers } from '@netprophet/lib/supabase/players';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 // Mock data for demo
 const mockPlayer: Player = {

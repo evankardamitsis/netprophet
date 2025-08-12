@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@netprophet/lib/types/player';
 import { insertPlayer } from '@netprophet/lib/supabase/players';
+import { toast } from 'sonner';
 
 export default function NewPlayerPage() {
     const router = useRouter();
@@ -48,9 +49,11 @@ export default function NewPlayerPage() {
         setLoading(true);
         try {
             await insertPlayer(player);
+            toast.success('Player created successfully!');
             router.push('/players');
         } catch (error) {
             console.error('Error saving player:', error);
+            toast.error('Failed to create player');
         } finally {
             setLoading(false);
         }

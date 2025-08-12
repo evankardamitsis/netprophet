@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@netprophet/lib';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
     useReactTable,
     getCoreRowModel,

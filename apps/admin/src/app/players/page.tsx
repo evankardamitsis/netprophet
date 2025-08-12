@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,9 +35,7 @@ export default function PlayersPage() {
     // Bulk upload state
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [importedPlayers, setImportedPlayers] = useState<Player[]>([]);
-    const [importError, setImportError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
     const [globalFilter, setGlobalFilter] = useState('');
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'lastName', desc: false }
@@ -54,7 +53,7 @@ export default function PlayersPage() {
             })
             .catch((err) => {
                 console.error('Error fetching players:', err);
-                setFetchError('Σφάλμα κατά τη φόρτωση των παικτών: ' + (err?.message || err));
+                toast.error('Failed to load players: ' + (err?.message || err));
             })
             .finally(() => setLoading(false));
     }, []);
@@ -233,7 +232,6 @@ export default function PlayersPage() {
     });
 
     function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-        setImportError(null);
         const file = e.target.files?.[0];
         if (!file) return;
         Papa.parse<File>(file, {
@@ -272,10 +270,10 @@ export default function PlayersPage() {
                     }));
                     setImportedPlayers(parsed);
                 } catch (err) {
-                    setImportError('Error parsing CSV. Please check your file format.');
+                    toast.error('Error parsing CSV. Please check your file format.');
                 }
             },
-            error: (error: Error, file: File) => setImportError(error.message),
+            error: (error: Error, file: File) => toast.error(error.message),
         });
     }
 
@@ -288,17 +286,25 @@ export default function PlayersPage() {
             // Refetch players from Supabase
             const freshPlayers = await fetchPlayers();
             setPlayers(freshPlayers);
+            toast.success(`Successfully imported ${importedPlayers.length} players!`);
         } catch (err: any) {
-            setImportError(err.message || 'Import failed');
+            console.error('Import error:', err);
+            toast.error(err.message || 'Import failed');
         }
     }
 
     const confirmDelete = async () => {
         if (deletingPlayer) {
-            await deletePlayer(deletingPlayer.id);
-            const freshPlayers = await fetchPlayers();
-            setPlayers(freshPlayers);
-            setDeletingPlayer(null);
+            try {
+                await deletePlayer(deletingPlayer.id);
+                const freshPlayers = await fetchPlayers();
+                setPlayers(freshPlayers);
+                setDeletingPlayer(null);
+                toast.success('Player deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting player:', error);
+                toast.error('Failed to delete player');
+            }
         }
         setIsDeleteModalOpen(false);
     };
@@ -338,15 +344,7 @@ export default function PlayersPage() {
             </div>
         );
     }
-    if (fetchError) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-600 font-bold">{fetchError}</p>
-                </div>
-            </div>
-        );
-    }
+
 
     return (
         <div className="space-y-6">
@@ -399,9 +397,7 @@ export default function PlayersPage() {
                             onChange={handleFileUpload}
                             className="mb-4 block"
                         />
-                        {importError && (
-                            <div className="text-red-600 mb-2 font-semibold">{importError}</div>
-                        )}
+
                         {importedPlayers.length > 0 && (
                             <>
                                 <div className="max-h-64 overflow-x-auto border mb-4 rounded">

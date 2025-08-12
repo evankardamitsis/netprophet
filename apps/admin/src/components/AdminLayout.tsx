@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { TopBar } from '@/components/TopBar';
 import { useAuth } from '@/hooks/useAuth';
+import { Toaster } from '@/components/ui/sonner';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -81,6 +82,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     </main>
                 </div>
             </div>
+            <Toaster />
         </div>
     );
 } 

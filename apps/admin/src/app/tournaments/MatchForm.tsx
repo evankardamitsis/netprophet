@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronDownIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -129,7 +129,7 @@ export function MatchForm({ match, tournaments, currentTournament, onSubmit, onC
         updateDateTimeFields();
     };
 
-    const updateDateTimeFields = () => {
+    const updateDateTimeFields = useCallback(() => {
         if (startDate && startTime) {
             const [hours, minutes] = startTime.split(':');
             const startDateTime = new Date(startDate);
@@ -149,12 +149,12 @@ export function MatchForm({ match, tournaments, currentTournament, onSubmit, onC
             setLockDate(lockDateTime);
             setLockTime(lockDateTime.toTimeString().slice(0, 5));
         }
-    };
+    }, [startDate, startTime]);
 
     // Update when startDate or startTime changes
     useEffect(() => {
         updateDateTimeFields();
-    }, [startDate, startTime]);
+    }, [updateDateTimeFields]);
 
     const getPlayerName = (playerId: string) => {
         const player = players.find(p => p.id === playerId);
