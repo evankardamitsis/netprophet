@@ -26,7 +26,7 @@ import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatch
 import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
-import { CategoryForm } from '../CategoryForm';
+import { CategoryModal } from '../CategoryModal';
 import { TournamentOverview } from './components/TournamentOverview';
 import { TournamentMatches } from './components/TournamentMatches';
 import { TournamentCategories } from './components/TournamentCategories';
@@ -34,6 +34,7 @@ import { TournamentSettings } from './components/TournamentSettings';
 import { getStatusColor, getSurfaceColor, getGenderColor, formatTime } from './utils/tournamentHelpers';
 import { Tournament, Match, Category } from '@/types';
 import router from 'next/router';
+import { CategoryForm } from '../CategoryForm';
 
 export default function TournamentPage() {
     const params = useParams();
@@ -327,20 +328,7 @@ export default function TournamentPage() {
                     onSubmit={handleUpdateTournament}
                 />
 
-                {showCategoryForm && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <CategoryForm
-                                category={editingCategory}
-                                onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
-                                onCancel={() => {
-                                    setShowCategoryForm(false);
-                                    setEditingCategory(null);
-                                }}
-                            />
-                        </div>
-                    </div>
-                )}
+
 
                 <Tabs defaultValue="overview" className="w-full">
                     <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg mb-8">
@@ -373,7 +361,6 @@ export default function TournamentPage() {
                     </TabsList>
 
                     <TabsContent value="overview" className="mt-6">
-                        <div className="text-sm text-gray-500 mb-4">Overview tab is active: overview</div>
                         <TournamentOverview
                             tournament={tournament}
                             matches={matches}
@@ -385,7 +372,6 @@ export default function TournamentPage() {
                     </TabsContent>
 
                     <TabsContent value="matches" className="mt-6">
-                        <div className="text-sm text-gray-500 mb-4">Matches tab is active: matches</div>
                         <TournamentMatches
                             matches={matches}
                             onAddMatch={() => setShowMatchForm(true)}
@@ -400,7 +386,6 @@ export default function TournamentPage() {
                     </TabsContent>
 
                     <TabsContent value="categories" className="mt-6">
-                        <div className="text-sm text-gray-500 mb-4">Categories tab is active: categories</div>
                         <TournamentCategories
                             categories={categories}
                             onAddCategory={() => {
@@ -417,7 +402,6 @@ export default function TournamentPage() {
                     </TabsContent>
 
                     <TabsContent value="settings" className="mt-6">
-                        <div className="text-sm text-gray-500 mb-4">Settings tab is active: settings</div>
                         <TournamentSettings
                             tournament={tournament}
                             onEditTournament={() => {
@@ -433,6 +417,39 @@ export default function TournamentPage() {
                         />
                     </TabsContent>
                 </Tabs>
+
+                {/* Modals */}
+                <MatchModal
+                    isOpen={showMatchForm}
+                    onClose={() => {
+                        setShowMatchForm(false);
+                        setEditingMatch(null);
+                    }}
+                    match={editingMatch}
+                    tournaments={[]}
+                    currentTournament={tournament}
+                    onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
+                />
+
+                <TournamentModal
+                    isOpen={showTournamentForm}
+                    onClose={() => {
+                        setShowTournamentForm(false);
+                        setEditingTournament(null);
+                    }}
+                    tournament={editingTournament}
+                    onSubmit={handleUpdateTournament}
+                />
+
+                <CategoryModal
+                    isOpen={showCategoryForm}
+                    onClose={() => {
+                        setShowCategoryForm(false);
+                        setEditingCategory(null);
+                    }}
+                    category={editingCategory}
+                    onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
+                />
             </div>
         </div>
     );

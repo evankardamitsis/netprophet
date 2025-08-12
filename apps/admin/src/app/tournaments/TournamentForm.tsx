@@ -22,7 +22,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
         start_date: '',
         end_date: '',
         status: 'upcoming',
-        surface: 'Hard Court',
+        surface: tournament?.surface || '',
         location: '',
         prize_pool: '',
         entry_fee: '0',
@@ -39,7 +39,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 start_date: tournament.start_date,
                 end_date: tournament.end_date,
                 status: tournament.status,
-                surface: tournament.surface,
+                surface: tournament.surface || '',
                 location: tournament.location || '',
                 prize_pool: tournament.prize_pool?.toString() || '',
                 entry_fee: tournament.entry_fee.toString(),
@@ -69,110 +69,119 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="name">Tournament Name *</Label>
+                    <Label htmlFor="name" className="text-base font-semibold">Tournament Name *</Label>
                     <Input
                         id="name"
                         value={formData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         placeholder="Enter tournament name"
+                        className="h-12 text-base"
                         required
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
+                    <Label htmlFor="status" className="text-base font-semibold">Status</Label>
                     <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-base">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="upcoming">Upcoming</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="finished">Finished</SelectItem>
-                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                            <SelectItem value="upcoming" className="text-base py-3">Upcoming</SelectItem>
+                            <SelectItem value="active" className="text-base py-3">Active</SelectItem>
+                            <SelectItem value="finished" className="text-base py-3">Finished</SelectItem>
+                            <SelectItem value="cancelled" className="text-base py-3">Cancelled</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="start_date">Start Date *</Label>
+                    <Label htmlFor="start_date" className="text-base font-semibold">Start Date *</Label>
                     <Input
                         id="start_date"
                         type="date"
                         value={formData.start_date}
                         onChange={(e) => handleInputChange('start_date', e.target.value)}
+                        className="h-12 text-base"
                         required
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="end_date">End Date *</Label>
+                    <Label htmlFor="end_date" className="text-base font-semibold">End Date *</Label>
                     <Input
                         id="end_date"
                         type="date"
                         value={formData.end_date}
                         onChange={(e) => handleInputChange('end_date', e.target.value)}
+                        className="h-12 text-base"
                         required
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="surface">Surface</Label>
-                    <Select value={formData.surface} onValueChange={(value) => handleInputChange('surface', value)}>
-                        <SelectTrigger>
-                            <SelectValue />
+                    <Label htmlFor="surface" className="text-base font-semibold">Surface</Label>
+                    <Select
+                        key={tournament?.id || 'new'}
+                        defaultValue={formData.surface || ''}
+                        onValueChange={(value) => handleInputChange('surface', value)}
+                    >
+                        <SelectTrigger className="h-12 text-base">
+                            <SelectValue placeholder="Select surface" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Hard Court">Hard Court</SelectItem>
-                            <SelectItem value="Clay Court">Clay Court</SelectItem>
-                            <SelectItem value="Grass Court">Grass Court</SelectItem>
-                            <SelectItem value="Indoor">Indoor</SelectItem>
+                            <SelectItem value="Hard Court" className="text-base py-3">Hard Court</SelectItem>
+                            <SelectItem value="Clay Court" className="text-base py-3">Clay Court</SelectItem>
+                            <SelectItem value="Grass Court" className="text-base py-3">Grass Court</SelectItem>
+                            <SelectItem value="Indoor" className="text-base py-3">Indoor</SelectItem>
                         </SelectContent>
                     </Select>
+
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
+                    <Label htmlFor="location" className="text-base font-semibold">Location</Label>
                     <Input
                         id="location"
                         value={formData.location}
                         onChange={(e) => handleInputChange('location', e.target.value)}
                         placeholder="Enter location"
+                        className="h-12 text-base"
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="tournament_type">Tournament Type</Label>
+                    <Label htmlFor="tournament_type" className="text-base font-semibold">Tournament Type</Label>
                     <Select value={formData.tournament_type} onValueChange={(value) => handleInputChange('tournament_type', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-base">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="singles">Singles</SelectItem>
-                            <SelectItem value="doubles">Doubles</SelectItem>
-                            <SelectItem value="mixed">Mixed</SelectItem>
+                            <SelectItem value="singles" className="text-base py-3">Singles</SelectItem>
+                            <SelectItem value="doubles" className="text-base py-3">Doubles</SelectItem>
+                            <SelectItem value="mixed" className="text-base py-3">Mixed</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="format">Format</Label>
+                    <Label htmlFor="format" className="text-base font-semibold">Format</Label>
                     <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-12 text-base">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="knockout">Knockout</SelectItem>
-                            <SelectItem value="round_robin">Round Robin</SelectItem>
-                            <SelectItem value="group_stage">Group Stage</SelectItem>
+                            <SelectItem value="knockout" className="text-base py-3">Knockout</SelectItem>
+                            <SelectItem value="round_robin" className="text-base py-3">Round Robin</SelectItem>
+                            <SelectItem value="group_stage" className="text-base py-3">Group Stage</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="prize_pool">Prize Pool ($)</Label>
+                    <Label htmlFor="prize_pool" className="text-base font-semibold">Prize Pool ($)</Label>
                     <Input
                         id="prize_pool"
                         type="number"
@@ -181,11 +190,12 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                         placeholder="0.00"
                         min="0"
                         step="0.01"
+                        className="h-12 text-base"
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="entry_fee">Entry Fee ($)</Label>
+                    <Label htmlFor="entry_fee" className="text-base font-semibold">Entry Fee ($)</Label>
                     <Input
                         id="entry_fee"
                         type="number"
@@ -194,11 +204,12 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                         placeholder="0.00"
                         min="0"
                         step="0.01"
+                        className="h-12 text-base"
                     />
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="max_participants">Max Participants</Label>
+                    <Label htmlFor="max_participants" className="text-base font-semibold">Max Participants</Label>
                     <Input
                         id="max_participants"
                         type="number"
@@ -206,26 +217,28 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                         onChange={(e) => handleInputChange('max_participants', e.target.value)}
                         placeholder="Unlimited"
                         min="1"
+                        className="h-12 text-base"
                     />
                 </div>
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="text-base font-semibold">Description</Label>
                 <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Enter tournament description"
-                    rows={3}
+                    rows={4}
+                    className="text-base resize-none"
                 />
             </div>
 
-            <div className="flex justify-end gap-3">
-                <Button type="button" variant="outline" onClick={onCancel}>
+            <div className="flex justify-end gap-4 pt-6">
+                <Button type="button" variant="outline" onClick={onCancel} className="h-12 px-8 text-base">
                     Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className="h-12 px-8 text-base">
                     {tournament ? 'Update Tournament' : 'Create Tournament'}
                 </Button>
             </div>

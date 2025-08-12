@@ -6,17 +6,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { TournamentForm } from './TournamentForm';
-import { Tournament } from '@/types';
+import { CategoryForm } from './CategoryForm';
+import { Category } from '@/types';
 
-interface TournamentModalProps {
+interface CategoryModalProps {
     isOpen: boolean;
     onClose: () => void;
-    tournament?: Tournament | null;
+    category?: Category | null;
     onSubmit: (data: any) => void;
 }
 
-export function TournamentModal({ isOpen, onClose, tournament, onSubmit }: TournamentModalProps) {
+export function CategoryModal({ isOpen, onClose, category, onSubmit }: CategoryModalProps) {
     const handleSubmit = (data: any) => {
         onSubmit(data);
         onClose();
@@ -31,12 +31,12 @@ export function TournamentModal({ isOpen, onClose, tournament, onSubmit }: Tourn
             <DialogContent className="!max-w-[95vw] !w-[800px] !max-h-[95vh] overflow-y-auto sm:!max-w-[95vw]">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-semibold">
-                        {tournament ? 'Edit Tournament' : 'Create New Tournament'}
+                        {category ? 'Edit Category' : 'Create New Category'}
                     </DialogTitle>
                 </DialogHeader>
                 <div className="py-4">
-                    <TournamentForm
-                        tournament={tournament}
+                    <CategoryForm
+                        category={category}
                         onSubmit={handleSubmit}
                         onCancel={handleCancel}
                     />
