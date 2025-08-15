@@ -100,6 +100,22 @@ export function TournamentOverview({
                                         <div className="text-sm text-gray-600">${tournament.entry_fee}</div>
                                     </div>
                                 </div>
+
+                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <Trophy className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">Tournament Type</div>
+                                        <div className="text-sm text-gray-600 capitalize">{tournament.tournament_type}</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <Trophy className="h-5 w-5 text-gray-500" />
+                                    <div>
+                                        <div className="text-sm font-medium text-gray-900">Format</div>
+                                        <div className="text-sm text-gray-600 capitalize">{tournament.format.replace('_', ' ')}</div>
+                                    </div>
+                                </div>
                             </div>
 
                             {tournament.prize_pool && (
@@ -117,6 +133,8 @@ export function TournamentOverview({
                                     </div>
                                 </div>
                             )}
+
+
                         </CardContent>
                     </Card>
                 </div>

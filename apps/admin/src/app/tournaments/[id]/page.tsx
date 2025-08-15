@@ -27,10 +27,10 @@ import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
 import { CategoryModal } from '../CategoryModal';
+import { WarningModal } from '@/components/ui/warning-modal';
 import { TournamentOverview } from './components/TournamentOverview';
 import { TournamentMatches } from './components/TournamentMatches';
 import { TournamentCategories } from './components/TournamentCategories';
-import { TournamentSettings } from './components/TournamentSettings';
 import { getStatusColor, getSurfaceColor, getGenderColor, formatTime } from './utils/tournamentHelpers';
 import { Tournament, Match, Category } from '@/types';
 import router from 'next/router';
@@ -48,6 +48,8 @@ export default function TournamentPage() {
     const [showMatchForm, setShowMatchForm] = useState(false);
     const [showTournamentForm, setShowTournamentForm] = useState(false);
     const [showCategoryForm, setShowCategoryForm] = useState(false);
+    const [showDeleteWarning, setShowDeleteWarning] = useState(false);
+    const [matchToDelete, setMatchToDelete] = useState<string | null>(null);
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -136,14 +138,22 @@ export default function TournamentPage() {
     };
 
     const handleDeleteMatch = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this match?')) return;
+        setMatchToDelete(id);
+        setShowDeleteWarning(true);
+    };
+
+    const confirmDeleteMatch = async () => {
+        if (!matchToDelete) return;
         try {
-            await deleteMatch(id);
+            await deleteMatch(matchToDelete);
             loadTournamentData();
             toast.success('Match deleted successfully!');
         } catch (error) {
             console.error('Error deleting match:', error);
             toast.error('Failed to delete match');
+        } finally {
+            setShowDeleteWarning(false);
+            setMatchToDelete(null);
         }
     };
 
@@ -251,19 +261,28 @@ export default function TournamentPage() {
             {/* Header Section */}
             <div className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    {/* Back Button Row */}
+                    <div className="mb-4">
+                        <Button
+                            variant="ghost"
+                            onClick={() => router.push('/tournaments')}
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
+                            <span className="hidden sm:inline">Back to Tournaments</span>
+                        </Button>
+                    </div>
+
+                    {/* Tournament Title and Actions Row */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <Button
-                                variant="ghost"
-                                onClick={() => router.push('/tournaments')}
-                                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                <span className="hidden sm:inline">Back to Tournaments</span>
-                            </Button>
-                            <div className="border-l border-gray-300 h-6 hidden sm:block"></div>
                             <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{tournament.name}</h1>
+                                <div className="flex items-center gap-3">
+                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{tournament.name}</h1>
+                                    <Badge className={`${getSurfaceColor(tournament.surface)} text-sm font-medium px-3 py-1`}>
+                                        {tournament.surface}
+                                    </Badge>
+                                </div>
                                 <p className="text-sm text-gray-600 mt-1">Tournament Management</p>
                             </div>
                         </div>
@@ -282,13 +301,24 @@ export default function TournamentPage() {
                                         <span className="hidden sm:inline">Settings</span>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuContent align="end" className="w-56">
                                     <DropdownMenuItem onClick={() => {
                                         setEditingTournament(tournament);
                                         setShowTournamentForm(true);
                                     }}>
                                         <Edit className="h-4 w-4 mr-2" />
                                         Edit Tournament
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setShowMatchForm(true)}>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Add Match
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => {
+                                        setEditingCategory(null);
+                                        setShowCategoryForm(true);
+                                    }}>
+                                        <Tag className="h-4 w-4 mr-2" />
+                                        Add Category
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={handleDeleteTournament}
@@ -306,32 +336,11 @@ export default function TournamentPage() {
 
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <MatchModal
-                    isOpen={showMatchForm}
-                    onClose={() => {
-                        setShowMatchForm(false);
-                        setEditingMatch(null);
-                    }}
-                    match={editingMatch}
-                    tournaments={[tournament]}
-                    currentTournament={tournament}
-                    onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
-                />
-
-                <TournamentModal
-                    isOpen={showTournamentForm}
-                    onClose={() => {
-                        setShowTournamentForm(false);
-                        setEditingTournament(null);
-                    }}
-                    tournament={editingTournament}
-                    onSubmit={handleUpdateTournament}
-                />
 
 
 
                 <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg mb-8">
                         <TabsTrigger value="overview" className="flex items-center gap-2">
                             <BarChart3 className="h-4 w-4" />
                             <span className="hidden sm:inline">Overview</span>
@@ -353,10 +362,6 @@ export default function TournamentPage() {
                                     {categories.length}
                                 </Badge>
                             )}
-                        </TabsTrigger>
-                        <TabsTrigger value="settings" className="flex items-center gap-2">
-                            <Settings className="h-4 w-4" />
-                            <span className="hidden sm:inline">Settings</span>
                         </TabsTrigger>
                     </TabsList>
 
@@ -401,21 +406,7 @@ export default function TournamentPage() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="settings" className="mt-6">
-                        <TournamentSettings
-                            tournament={tournament}
-                            onEditTournament={() => {
-                                setEditingTournament(tournament);
-                                setShowTournamentForm(true);
-                            }}
-                            onAddMatch={() => setShowMatchForm(true)}
-                            onAddCategory={() => {
-                                setEditingCategory(null);
-                                setShowCategoryForm(true);
-                            }}
-                            onDeleteTournament={handleDeleteTournament}
-                        />
-                    </TabsContent>
+
                 </Tabs>
 
                 {/* Modals */}
@@ -426,7 +417,7 @@ export default function TournamentPage() {
                         setEditingMatch(null);
                     }}
                     match={editingMatch}
-                    tournaments={[]}
+                    tournaments={[tournament]}
                     currentTournament={tournament}
                     onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
                 />
@@ -449,6 +440,20 @@ export default function TournamentPage() {
                     }}
                     category={editingCategory}
                     onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
+                />
+
+                <WarningModal
+                    isOpen={showDeleteWarning}
+                    onClose={() => {
+                        setShowDeleteWarning(false);
+                        setMatchToDelete(null);
+                    }}
+                    onConfirm={confirmDeleteMatch}
+                    title="Delete Match"
+                    description="Are you sure you want to delete this match? This action cannot be undone."
+                    confirmText="Delete Match"
+                    cancelText="Cancel"
+                    variant="destructive"
                 />
             </div>
         </div>

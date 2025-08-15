@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NetProphet Admin
 
-## Getting Started
+This is the admin interface for the NetProphet application, built with Next.js and Supabase.
 
-First, run the development server:
+## Setup
+
+### 1. Environment Variables
+
+The admin app requires Supabase environment variables to function properly. Create a `.env.local` file in the root directory of the project (not in the admin app directory) with the following variables:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You can copy the `env.example` file from the root directory and fill in your actual Supabase credentials.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Start Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# From the root directory
+pnpm dev
 
-## Learn More
+# Or specifically for admin
+pnpm --filter=@netprophet/admin dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Player Management**: Create, edit, and delete players
+- **Tournament Management**: Create tournaments with categories
+- **Match Management**: Schedule matches with automatic odds calculation
+- **User Management**: View and manage user accounts
+- **Betting Management**: Monitor and manage betting activity
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Troubleshooting
 
-## Deploy on Vercel
+### Players Not Loading
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If you see "Failed to load players" in the MatchForm, check that:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Your `.env.local` file exists in the root directory
+2. The Supabase environment variables are correctly set
+3. Your Supabase project is running and accessible
+4. The players table exists in your database
+
+### Time Synchronization Issues
+
+The MatchForm automatically calculates lock times (20 minutes before start time). If you experience time synchronization issues:
+
+1. Make sure you're using the latest version of the form
+2. Check that your browser's timezone settings are correct
+3. The lock time is automatically calculated and cannot be manually edited
+
+## Development
+
+The admin app uses:
+
+- Next.js 15
+- TypeScript
+- Tailwind CSS
+- Radix UI components
+- Supabase for backend
