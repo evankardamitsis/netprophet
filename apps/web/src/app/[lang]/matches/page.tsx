@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@netprophet/lib';
 import { MatchesGrid } from '@/components/matches/MatchesGrid';
@@ -125,7 +125,21 @@ async function fetchSyncedMatches(): Promise<Match[]> {
 export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { slipCollapsed } = usePredictionSlip();
+    const { slipCollapsed, resetSlipState } = usePredictionSlip();
+
+    // Reset slip state on first load (after login)
+    useEffect(() => {
+        // Check if this is the first load after login by checking if there's a session
+        const checkAndResetSlip = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                // Reset slip state for fresh login
+                resetSlipState();
+            }
+        };
+
+        checkAndResetSlip();
+    }, [resetSlipState]);
 
     // Fetch synced matches
     const { data: matches = [], isLoading, error } = useQuery({

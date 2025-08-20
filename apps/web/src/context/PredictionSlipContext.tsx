@@ -66,6 +66,7 @@ interface PredictionSlipContextType {
     updateOutrightsBetAmount: (matchId: string, betAmount: number) => void;
     setSlipCollapsed?: (collapsed: boolean) => void;
     slipCollapsed?: boolean;
+    resetSlipState: () => void;
     // New parlay-specific methods
     getParlayEligibility: () => { isEligible: boolean; minRequired: number; current: number };
     getParlayStats: () => { totalPicks: number; liveMatches: number; tournaments: number };
@@ -85,6 +86,7 @@ const PredictionSlipContext = createContext<PredictionSlipContextType>({
     clearOutrightsPredictions: () => { },
     updatePredictionBetAmount: () => { },
     updateOutrightsBetAmount: () => { },
+    resetSlipState: () => { },
     getParlayEligibility: () => ({ isEligible: false, minRequired: 2, current: 0 }),
     getParlayStats: () => ({ totalPicks: 0, liveMatches: 0, tournaments: 0 }),
     hasPrediction: () => false,
@@ -123,7 +125,8 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
     });
 
     const [slipCollapsed, setSlipCollapsed] = useState<boolean>(() => {
-        return loadFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, false);
+        const stored = loadFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, true); // Default to true (collapsed)
+        return stored;
     });
 
     // Save predictions to session storage whenever they change
@@ -140,6 +143,13 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
     useEffect(() => {
         saveToSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, slipCollapsed);
     }, [slipCollapsed]);
+
+    // Auto-collapse slip when there are no predictions
+    useEffect(() => {
+        if (predictions.length === 0 && outrightsPredictions.length === 0) {
+            setSlipCollapsed(true);
+        }
+    }, [predictions.length, outrightsPredictions.length]);
 
     const addPrediction = (item: StructuredPredictionItem) => {
         setPredictions(prev => {
@@ -175,10 +185,15 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
 
     const clearOutrightsPredictions = () => {
         setOutrightsPredictions([]);
+        // Only collapse if there are no regular predictions either
+        if (predictions.length === 0) {
+            setSlipCollapsed(true);
+        }
     };
 
     const clearPredictions = () => {
         setPredictions([]);
+        setSlipCollapsed(true); // Collapse slip when clearing predictions
         // Clear all form predictions from session storage
         removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
     };
@@ -227,6 +242,15 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         return outrightsPredictions.some(p => p.matchId === matchId);
     };
 
+    const resetSlipState = () => {
+        setPredictions([]);
+        setOutrightsPredictions([]);
+        setSlipCollapsed(true);
+        removeFromSessionStorage(SESSION_KEYS.PREDICTIONS);
+        removeFromSessionStorage(SESSION_KEYS.OUTRIGHTS_PREDICTIONS);
+        removeFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED);
+    };
+
     return (
         <PredictionSlipContext.Provider value={{
             predictions,
@@ -241,6 +265,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
             updateOutrightsBetAmount,
             setSlipCollapsed,
             slipCollapsed,
+            resetSlipState,
             getParlayEligibility,
             getParlayStats,
             hasPrediction,

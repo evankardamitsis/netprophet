@@ -153,7 +153,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <span className="text-sm text-slate-500">Live Match</span>
-                                            <Badge className="bg-green-100 text-green-800 border-green-200">Live</Badge>
+                                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Live</Badge>
                                         </div>
                                         <div className="border-t border-slate-200 pt-4">
                                             <div className="text-sm text-slate-500 mb-3">Maroussi Tennis Open • Best of 3</div>
