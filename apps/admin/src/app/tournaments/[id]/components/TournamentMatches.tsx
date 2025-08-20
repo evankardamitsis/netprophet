@@ -14,7 +14,8 @@ interface TournamentMatchesProps {
     onEditMatch: (match: Match) => void;
     onDeleteMatch: (id: string) => void;
     onCalculateOdds: (matchIds: string[]) => void;
-    onSyncToWeb: () => void;
+    onSyncToWeb: (matchIds: string[]) => void;
+    onRemoveFromWeb: (matchIds: string[]) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
 }
@@ -26,10 +27,23 @@ export function TournamentMatches({
     onDeleteMatch,
     onCalculateOdds,
     onSyncToWeb,
+    onRemoveFromWeb,
     getStatusColor,
     formatTime
 }: TournamentMatchesProps) {
     const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
+
+    const handleSyncToWeb = () => {
+        if (selectedMatches.length === 0) {
+            // If no matches are selected, sync all matches
+            const allMatchIds = matches.map(match => match.id);
+            onSyncToWeb(allMatchIds);
+        } else {
+            // Sync only selected matches
+            onSyncToWeb(selectedMatches);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -39,14 +53,14 @@ export function TournamentMatches({
                 </div>
                 <div className="flex gap-2">
                     <Button
-                        onClick={onSyncToWeb}
+                        onClick={handleSyncToWeb}
                         variant="outline"
                         className="flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
                     >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Sync to Web
+                        Sync to Web {selectedMatches.length > 0 && `(${selectedMatches.length} selected)`}
                     </Button>
                     <Button
                         onClick={onAddMatch}
@@ -64,6 +78,8 @@ export function TournamentMatches({
                     onEditMatch={onEditMatch}
                     onDeleteMatch={onDeleteMatch}
                     onCalculateOdds={onCalculateOdds}
+                    onSyncToWeb={onSyncToWeb}
+                    onRemoveFromWeb={onRemoveFromWeb}
                     getStatusColor={getStatusColor}
                     formatTime={formatTime}
                     selectedMatches={selectedMatches}

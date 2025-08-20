@@ -13,7 +13,7 @@ import {
     useReactTable,
     VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2 } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2, Globe, Globe2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     Table,
     TableBody,
@@ -41,6 +42,8 @@ interface TournamentMatchesTableProps {
     onEditMatch: (match: Match) => void;
     onDeleteMatch: (id: string) => void;
     onCalculateOdds: (matchIds: string[]) => void;
+    onSyncToWeb: (matchIds: string[]) => void;
+    onRemoveFromWeb: (matchIds: string[]) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
     selectedMatches: string[];
@@ -52,6 +55,8 @@ export function TournamentMatchesTable({
     onEditMatch,
     onDeleteMatch,
     onCalculateOdds,
+    onSyncToWeb,
+    onRemoveFromWeb,
     getStatusColor,
     formatTime,
     selectedMatches,
@@ -61,6 +66,7 @@ export function TournamentMatchesTable({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [webSyncFilter, setWebSyncFilter] = React.useState<string>("all");
 
     const getPlayerName = (player: any) => {
         if (player?.first_name && player?.last_name) {
@@ -204,6 +210,28 @@ export function TournamentMatchesTable({
             },
         },
         {
+            accessorKey: "web_synced",
+            header: "Web Status",
+            cell: ({ row }) => {
+                const match = row.original;
+                return (
+                    <div className="flex items-center gap-2">
+                        {match.web_synced ? (
+                            <Badge className="bg-green-100 text-green-800 border-green-200">
+                                <Globe className="h-3 w-3 mr-1" />
+                                Synced
+                            </Badge>
+                        ) : (
+                            <Badge variant="secondary" className="text-gray-600">
+                                <Globe2 className="h-3 w-3 mr-1" />
+                                Not Synced
+                            </Badge>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
             id: "actions",
             enableHiding: false,
             cell: ({ row }) => {
@@ -236,8 +264,16 @@ export function TournamentMatchesTable({
         },
     ];
 
+    // Filter matches based on web sync status
+    const filteredMatches = React.useMemo(() => {
+        if (webSyncFilter === "all") return matches;
+        if (webSyncFilter === "synced") return matches.filter(match => match.web_synced);
+        if (webSyncFilter === "not-synced") return matches.filter(match => !match.web_synced);
+        return matches;
+    }, [matches, webSyncFilter]);
+
     const table = useReactTable({
-        data: matches,
+        data: filteredMatches,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
@@ -249,7 +285,7 @@ export function TournamentMatchesTable({
         onRowSelectionChange: (updater) => {
             const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
             setRowSelection(newSelection);
-            const selectedIds = Object.keys(newSelection).map(index => matches[parseInt(index)].id);
+            const selectedIds = Object.keys(newSelection).map(index => filteredMatches[parseInt(index)].id);
             onSelectionChange(selectedIds);
         },
         state: {
@@ -271,14 +307,44 @@ export function TournamentMatchesTable({
                     }
                     className="max-w-sm"
                 />
+                <Select value={webSyncFilter} onValueChange={setWebSyncFilter}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filter by sync status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Matches</SelectItem>
+                        <SelectItem value="synced">Synced to Web</SelectItem>
+                        <SelectItem value="not-synced">Not Synced</SelectItem>
+                    </SelectContent>
+                </Select>
 
                 {selectedMatches.length > 0 && (
-                    <Button
-                        onClick={() => onCalculateOdds(selectedMatches)}
-                        className="bg-green-600 hover:bg-green-700"
-                    >
-                        Calculate Odds ({selectedMatches.length} selected)
-                    </Button>
+                    <>
+                        <Button
+                            onClick={() => onCalculateOdds(selectedMatches)}
+                            className="bg-green-600 hover:bg-green-700"
+                        >
+                            Calculate Odds ({selectedMatches.length} selected)
+                        </Button>
+                        <Button
+                            onClick={() => onSyncToWeb(selectedMatches)}
+                            variant="outline"
+                            className="border-green-600 text-green-600 hover:bg-green-50"
+                        >
+                            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Sync to Web ({selectedMatches.length} selected)
+                        </Button>
+                        <Button
+                            onClick={() => onRemoveFromWeb(selectedMatches)}
+                            variant="outline"
+                            className="border-red-600 text-red-600 hover:bg-red-50"
+                        >
+                            <Globe2 className="h-4 w-4 mr-2" />
+                            Remove from Web ({selectedMatches.length} selected)
+                        </Button>
+                    </>
                 )}
 
                 <DropdownMenu>
@@ -334,6 +400,7 @@ export function TournamentMatchesTable({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className={row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : ""}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>

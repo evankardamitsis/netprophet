@@ -55,108 +55,29 @@ serve(async (req) => {
       )
     }
 
-    // Get selected matches with full details
-    const { data: matches, error: matchesError } = await supabaseClient
-      .from('matches')
-      .select(`
-        id,
-        tournament_id,
-        category_id,
-        player_a_id,
-        player_b_id,
-        winner_id,
-        status,
-        start_time,
-        lock_time,
-        odds_a,
-        odds_b,
-        a_score,
-        b_score,
-        tournaments (
-          id,
-          name,
-          surface,
-          location,
-          start_date,
-          end_date,
-          status
-        ),
-        tournament_categories (
-          id,
-          name
-        ),
-        player_a:players!matches_player_a_id_fkey (
-          id,
-          first_name,
-          last_name,
-          ntrp_rating,
-          surface_preference,
-          wins,
-          losses,
-          last5,
-          current_streak,
-          streak_type,
-          age,
-          hand,
-          notes
-        ),
-        player_b:players!matches_player_b_id_fkey (
-          id,
-          first_name,
-          last_name,
-          ntrp_rating,
-          surface_preference,
-          wins,
-          losses,
-          last5,
-          current_streak,
-          streak_type,
-          age,
-          hand,
-          notes
-        ),
-        winner:players!matches_winner_id_fkey (
-          id,
-          first_name,
-          last_name
-        )
-      `)
-      .in('id', matchIds)
-      .order('start_time', { ascending: true })
-
-    if (matchesError) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch matches', details: matchesError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Update the web_synced flag for the synced matches
+    // Update the web_synced flag to false for the specified matches
     const { error: updateError } = await supabaseClient
       .from('matches')
-      .update({ web_synced: true })
+      .update({ web_synced: false })
       .in('id', matchIds)
 
     if (updateError) {
       return new Response(
-        JSON.stringify({ error: 'Failed to update sync status', details: updateError.message }),
+        JSON.stringify({ error: 'Failed to remove matches from web', details: updateError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Update web app cache or trigger web app refresh
-    // For now, we'll return the matches data and let the web app handle the sync
-    const syncResult = {
+    const removeResult = {
       success: true,
       matchIds,
-      matchesCount: matches?.length || 0,
-      matches: matches || [],
+      matchesCount: matchIds.length,
       timestamp: new Date().toISOString(),
-      message: `Successfully synced ${matches?.length || 0} selected matches`
+      message: `Successfully removed ${matchIds.length} matches from web`
     }
 
     return new Response(
-      JSON.stringify(syncResult),
+      JSON.stringify(removeResult),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }

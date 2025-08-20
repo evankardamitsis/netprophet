@@ -22,7 +22,7 @@ import {
     updateTournamentCategory,
     deleteTournamentCategory
 } from '@netprophet/lib/supabase/tournaments';
-import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure, syncMatchesToWeb } from '@netprophet/lib/supabase/matches';
+import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure, syncMatchesToWeb, removeMatchesFromWeb } from '@netprophet/lib/supabase/matches';
 import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
@@ -240,16 +240,35 @@ export default function TournamentPage() {
         }
     };
 
-    const handleSyncToWeb = async () => {
+    const handleSyncToWeb = async (matchIds: string[]) => {
         try {
-            // Call the sync API to push matches to web app
-            const result = await syncMatchesToWeb(tournamentId);
+            // Call the sync API to push selected matches to web app
+            const result = await syncMatchesToWeb(matchIds);
+
+            // Reload tournament data to show updated sync status
+            loadTournamentData();
 
             // Show success message
             toast.success(`Successfully synced ${result.matchesCount} matches to web app!`);
         } catch (error) {
             console.error('Error syncing matches:', error);
             toast.error('Failed to sync matches: ' + (error as Error).message);
+        }
+    };
+
+    const handleRemoveFromWeb = async (matchIds: string[]) => {
+        try {
+            // Call the remove API to remove selected matches from web app
+            const result = await removeMatchesFromWeb(matchIds);
+
+            // Reload tournament data to show updated sync status
+            loadTournamentData();
+
+            // Show success message
+            toast.success(`Successfully removed ${result.matchesCount} matches from web app!`);
+        } catch (error) {
+            console.error('Error removing matches from web:', error);
+            toast.error('Failed to remove matches from web: ' + (error as Error).message);
         }
     };
 
@@ -442,6 +461,7 @@ export default function TournamentPage() {
                             onDeleteMatch={handleDeleteMatch}
                             onCalculateOdds={handleCalculateOdds}
                             onSyncToWeb={handleSyncToWeb}
+                            onRemoveFromWeb={handleRemoveFromWeb}
                             getStatusColor={getStatusColor}
                             formatTime={formatTime}
                         />

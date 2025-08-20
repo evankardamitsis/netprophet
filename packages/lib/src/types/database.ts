@@ -249,6 +249,7 @@ export interface Database {
           tiebreaks_a: number;
           tiebreaks_b: number;
           match_notes: string | null;
+          web_synced: boolean;
         };
         Insert: {
           id?: string;
@@ -282,6 +283,7 @@ export interface Database {
           tiebreaks_a?: number;
           tiebreaks_b?: number;
           match_notes?: string | null;
+          web_synced?: boolean;
         };
         Update: {
           id?: string;
@@ -315,6 +317,7 @@ export interface Database {
           tiebreaks_a?: number;
           tiebreaks_b?: number;
           match_notes?: string | null;
+          web_synced?: boolean;
         };
       };
       clubs: {

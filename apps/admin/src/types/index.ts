@@ -36,6 +36,7 @@ export interface Match {
     odds_a: number | null;
     odds_b: number | null;
     winner_id: string | null;
+    web_synced: boolean;
     tournaments?: {
         id: string;
         name: string;

@@ -461,7 +461,7 @@ export async function calculateMatchOddsSecure(matchIds: string[]) {
     return await response.json()
 } 
 
-export async function syncMatchesToWeb(tournamentId: string) {
+export async function syncMatchesToWeb(matchIds: string[]) {
     const { data: { session } } = await supabase.auth.getSession()
     
     if (!session) {
@@ -483,12 +483,45 @@ export async function syncMatchesToWeb(tournamentId: string) {
             'Authorization': `Bearer ${session.access_token}`,
             'apikey': supabaseKey,
         },
-        body: JSON.stringify({ tournamentId }),
+        body: JSON.stringify({ matchIds }),
     })
 
     if (!response.ok) {
         const error = await response.json() as { error?: string }
         throw new Error(error.error || 'Failed to sync matches')
+    }
+
+    return await response.json()
+} 
+
+export async function removeMatchesFromWeb(matchIds: string[]) {
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+        throw new Error('Authentication required')
+    }
+
+    // Get the Supabase URL and key from environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase configuration not found')
+    }
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/remove-matches-from-web`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': supabaseKey,
+        },
+        body: JSON.stringify({ matchIds }),
+    })
+
+    if (!response.ok) {
+        const error = await response.json() as { error?: string }
+        throw new Error(error.error || 'Failed to remove matches from web')
     }
 
     return await response.json()
