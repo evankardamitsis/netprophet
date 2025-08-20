@@ -40,7 +40,7 @@ export function CategoryForm({ category, onSubmit, onCancel }: CategoryFormProps
                 skill_level_max: category.skill_level_max || '',
                 gender: category.gender || '',
                 max_participants: category.max_participants?.toString() || '',
-                entry_fee: category.entry_fee.toString(),
+                entry_fee: category.entry_fee?.toString() || '',
                 prize_pool: category.prize_pool?.toString() || ''
             });
         }

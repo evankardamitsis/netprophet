@@ -9,9 +9,9 @@ export interface Tournament {
     surface: string;
     location: string | null;
     prize_pool: number | null;
-    entry_fee: number;
+    entry_fee: number | null;
     max_participants: number | null;
-    current_participants: number;
+    current_participants: number | null;
     tournament_type: string;
     format: string;
     matches_type: string;
@@ -33,35 +33,35 @@ export interface Match {
     status: string;
     start_time: string | null;
     lock_time: string | null;
-    points_value: number;
+    points_value: number | null;
     odds_a: number | null;
     odds_b: number | null;
     winner_id: string | null;
-    web_synced: boolean;
+    web_synced: boolean | null;
     tournaments?: {
         id: string;
         name: string;
         surface: string;
         location: string | null;
-    };
+    } | null;
     tournament_categories?: {
         id: string;
         name: string;
-    };
+    } | null;
     player_a?: {
         id: string;
         first_name: string;
         last_name: string;
         ntrp_rating: number;
         surface_preference: string;
-    };
+    } | null;
     player_b?: {
         id: string;
         first_name: string;
         last_name: string;
         ntrp_rating: number;
         surface_preference: string;
-    };
+    } | null;
 }
 
 // Category Types
@@ -76,11 +76,11 @@ export interface Category {
     skill_level_max: string | null;
     gender: string | null;
     max_participants: number | null;
-    current_participants: number;
-    entry_fee: number;
+    current_participants: number | null;
+    entry_fee: number | null;
     prize_pool: number | null;
-    created_at: string;
-    updated_at: string;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 // Player Types
@@ -125,9 +125,92 @@ export interface Profile {
     email: string;
     username?: string | null;
     avatar_url?: string | null;
-    is_admin: boolean;
+    is_admin: boolean | null;
     suspended?: boolean;
+    created_at: string | null;
+}
+
+// Match Results Types
+export interface MatchResult {
+    id: string;
+    match_id: string;
+    winner_id: string;
+    match_result: string;
+    set1_score: string | null;
+    set2_score: string | null;
+    set3_score: string | null;
+    set4_score: string | null;
+    set5_score: string | null;
+    set1_winner_id: string | null;
+    set2_winner_id: string | null;
+    set3_winner_id: string | null;
+    set4_winner_id: string | null;
+    set5_winner_id: string | null;
+    set1_tiebreak_score: string | null;
+    set2_tiebreak_score: string | null;
+    set3_tiebreak_score: string | null;
+    set4_tiebreak_score: string | null;
+    set5_tiebreak_score: string | null;
+    super_tiebreak_score: string | null;
+    super_tiebreak_winner_id: string | null;
+    total_games: number | null;
+    aces_leader_id: string | null;
+    double_faults_count: number | null;
+    break_points_count: number | null;
     created_at: string;
+    updated_at: string;
+    created_by: string | null;
+}
+
+export interface MatchResultWithDetails extends MatchResult {
+    match: {
+        id: string;
+        player_a_id: string;
+        player_b_id: string;
+        tournaments: {
+            matches_type: string;
+        } | null;
+    } | null;
+    winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    set1_winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    set2_winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    set3_winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    set4_winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    set5_winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    super_tiebreak_winner: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
+    aces_leader: {
+        id: string;
+        first_name: string;
+        last_name: string;
+    } | null;
 }
 
 // Form Data Types

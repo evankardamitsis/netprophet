@@ -70,14 +70,14 @@ export async function insertPlayer(player: Player) {
   const dbPlayer = toDbPlayer(player);
   const { data, error } = await supabase.from(TABLE).insert([dbPlayer]).select();
   if (error) throw error;
-  return data?.[0] as Player;
+  return data?.[0] as unknown as Player;
 }
 
 export async function bulkInsertPlayers(players: Player[]) {
   const dbPlayers = players.map(toDbPlayer);
   const { data, error } = await supabase.from(TABLE).insert(dbPlayers).select();
   if (error) throw error;
-  return data as Player[];
+  return data as unknown as Player[];
 }
 
 export async function updatePlayer(id: string, updates: Partial<Player>) {
@@ -85,7 +85,7 @@ export async function updatePlayer(id: string, updates: Partial<Player>) {
   console.log('Updating player in DB:', dbUpdates);
   const { data, error } = await supabase.from(TABLE).update(dbUpdates).eq('id', id).select();
   if (error) throw error;
-  return data?.[0] as Player;
+  return data?.[0] as unknown as Player;
 }
 
 export async function deletePlayer(id: string) {

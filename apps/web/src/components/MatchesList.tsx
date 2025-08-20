@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@netprophet/lib';
+import { supabase, MATCH_STATUSES } from '@netprophet/lib';
 import { Button } from '@netprophet/ui';
 import { useTheme } from './Providers';
 import { Dictionary } from '@/types/dictionary';
@@ -23,8 +23,8 @@ interface RawMatch {
     odds_b: number | null;
     a_score: number | null;
     b_score: number | null;
-    points_value: number;
-    web_synced: boolean;
+    points_value: number | null;
+    web_synced: boolean | null;
     tournaments?: any;
     tournament_categories?: any;
     player_a?: any;
@@ -45,9 +45,9 @@ function transformMatch(rawMatch: RawMatch): Match {
     const now = new Date();
 
     let status_display: 'live' | 'upcoming' | 'finished' = 'upcoming';
-    if (rawMatch.status === 'live') {
+    if (rawMatch.status === MATCH_STATUSES.LIVE) {
         status_display = 'live';
-    } else if (rawMatch.status === 'finished') {
+    } else if (rawMatch.status === MATCH_STATUSES.FINISHED) {
         status_display = 'finished';
     } else if (startTime <= now) {
         status_display = 'live';
@@ -67,8 +67,8 @@ function transformMatch(rawMatch: RawMatch): Match {
         odds_b: rawMatch.odds_b,
         a_score: rawMatch.a_score,
         b_score: rawMatch.b_score,
-        points_value: rawMatch.points_value,
-        web_synced: rawMatch.web_synced,
+        points_value: rawMatch.points_value || 0,
+        web_synced: rawMatch.web_synced || false,
         tournaments: Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0] : rawMatch.tournaments,
         tournament_categories: Array.isArray(rawMatch.tournament_categories) ? rawMatch.tournament_categories[0] : rawMatch.tournament_categories,
         player_a: rawMatch.player_a,
@@ -85,7 +85,7 @@ function transformMatch(rawMatch: RawMatch): Match {
         },
         time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
         status_display,
-        points: rawMatch.points_value,
+        points: rawMatch.points_value || 0,
         startTime,
         lockTime,
         isLocked: lockTime <= now

@@ -39,7 +39,7 @@ export interface BetWithMatch extends Bet {
     played_at: string;
     a_score: number | null;
     b_score: number | null;
-  };
+  } | null;
 }
 
 export class BetsService {
@@ -378,7 +378,7 @@ export class BetsService {
       throw new Error(`Failed to fetch bets: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as unknown as BetWithMatch[];
   }
 
   /**

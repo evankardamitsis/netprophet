@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@netprophet/lib';
+import { supabase, MATCH_STATUSES } from '@netprophet/lib';
 import { MatchesGrid } from '@/components/matches/MatchesGrid';
 import { MatchDetail } from '@/components/matches/MatchDetail';
 import { Match } from '@/types/dashboard';
@@ -74,9 +74,9 @@ async function fetchSyncedMatches(): Promise<Match[]> {
         const now = new Date();
 
         let status_display: 'live' | 'upcoming' | 'finished' = 'upcoming';
-        if (rawMatch.status === 'live') {
+        if (rawMatch.status === MATCH_STATUSES.LIVE) {
             status_display = 'live';
-        } else if (rawMatch.status === 'finished') {
+        } else if (rawMatch.status === MATCH_STATUSES.FINISHED) {
             status_display = 'finished';
         } else if (startTime <= now) {
             status_display = 'live';

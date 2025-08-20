@@ -308,10 +308,10 @@ export default function UsersPage() {
                             <div className="flex items-center gap-2">
                                 <label className="block text-gray-700 font-medium">Admin</label>
                                 <Switch
-                                    checked={editUser.is_admin}
+                                    checked={editUser.is_admin || false}
                                     onCheckedChange={(checked: boolean) => handleEditChange('is_admin', checked)}
                                 />
-                                <span>{editUser.is_admin ? 'Yes' : 'No'}</span>
+                                <span>{(editUser.is_admin || false) ? 'Yes' : 'No'}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <label className="block text-gray-700 font-medium">Suspended</label>

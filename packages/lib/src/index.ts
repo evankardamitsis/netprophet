@@ -29,3 +29,9 @@ export * from './supabase/tournaments';
 
 // Enhanced match management
 export * from './supabase/matches'; 
+
+export { MatchResultsService } from './supabase/matchResults';
+export type { MatchResultWithDetails } from './supabase/matchResults';
+
+// Match Status Constants
+export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses'; 

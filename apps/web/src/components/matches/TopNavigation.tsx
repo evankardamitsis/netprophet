@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@netprophet/ui';
 import { Wallet } from './Wallet';
 import { Dictionary } from '@/types/dictionary';
+import Logo from '@/components/Logo';
 
 // Icon components
 function ChevronDownIcon() {
@@ -173,9 +174,9 @@ export function TopNavigation({
                     </button>
                     <Link
                         href={`/${currentLang}`}
-                        className="text-lg sm:text-xl font-extrabold tracking-tight text-accent hover:text-accent/80 transition-colors cursor-pointer px-1 sm:px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-accent/50"
+                        className="hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent/50 rounded"
                     >
-                        NetProphet
+                        <Logo size="md" />
                     </Link>
                 </div>
 

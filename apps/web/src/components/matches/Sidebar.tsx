@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { Card as UiCard } from '@/components/ui/card';
 import { MatchesList } from '@/components/MatchesList';
-import { supabase } from '@netprophet/lib';
+import { supabase, MATCH_STATUSES } from '@netprophet/lib';
 
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
@@ -198,9 +198,9 @@ async function fetchSyncedMatches(): Promise<Match[]> {
         const now = new Date();
 
         let status_display: 'live' | 'upcoming' | 'finished' = 'upcoming';
-        if (rawMatch.status === 'live') {
+        if (rawMatch.status === MATCH_STATUSES.LIVE) {
             status_display = 'live';
-        } else if (rawMatch.status === 'finished') {
+        } else if (rawMatch.status === MATCH_STATUSES.FINISHED) {
             status_display = 'finished';
         } else if (startTime <= now) {
             status_display = 'live';

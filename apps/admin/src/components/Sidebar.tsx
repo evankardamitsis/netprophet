@@ -14,7 +14,8 @@ import {
     Menu,
     X,
     Brain,
-    DollarSign
+    DollarSign,
+    Award
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -28,10 +29,11 @@ const menuItems = [
     { href: '/users', label: 'Users', icon: Users },
     { href: '/players', label: 'Players', icon: UserCheck },
     { href: '/tournaments', label: 'Tournaments', icon: Trophy },
+    { href: '/match-results', label: 'Match Results', icon: Award },
     { href: '/bets', label: 'Bets', icon: DollarSign },
     { href: '/rewards', label: 'Rewards', icon: Gift },
     { href: '/logs', label: 'Logs', icon: FileText },
-    { href: '/odds-demo', label: 'Odds Demo', icon: Brain },
+    { href: '/odds-demo', label: 'Odds Demo', icon: Brain }
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {

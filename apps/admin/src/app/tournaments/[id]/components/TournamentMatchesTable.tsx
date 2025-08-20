@@ -14,6 +14,7 @@ import {
     VisibilityState,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2, Globe, Globe2 } from "lucide-react";
+import { MATCH_STATUSES, MATCH_STATUS_OPTIONS, type MatchStatus } from "@netprophet/lib";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,8 @@ export function TournamentMatchesTable({
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [webSyncFilter, setWebSyncFilter] = React.useState<string>("all");
+    const [editingStatus, setEditingStatus] = React.useState<string | null>(null);
+    const [editValue, setEditValue] = React.useState<string>("");
 
     const getPlayerName = (player: any) => {
         if (player?.first_name && player?.last_name) {
@@ -137,11 +140,56 @@ export function TournamentMatchesTable({
         },
         {
             accessorKey: "status",
-            header: "Status",
-            cell: ({ row }) => {
-                const status = row.getValue("status") as string;
+            header: ({ column }) => {
                 return (
-                    <Badge className={`${getStatusColor(status)} text-xs font-medium px-2 py-1`}>
+                    <div className="flex flex-col">
+                        <span>Status</span>
+                        <span className="text-xs text-gray-500 font-normal">(Click to edit)</span>
+                    </div>
+                );
+            },
+            cell: ({ row }) => {
+                const match = row.original;
+                const status = row.getValue("status") as string;
+                const isEditing = editingStatus === match.id;
+
+                const statusOptions = MATCH_STATUS_OPTIONS;
+
+                const handleStatusChange = async (newStatus: MatchStatus) => {
+                    setEditValue(newStatus);
+                    setEditingStatus(null);
+                    // Update the match status immediately
+                    onEditMatch({ ...match, status: newStatus });
+                };
+
+                const handleStartEditing = () => {
+                    setEditingStatus(match.id);
+                    setEditValue(status);
+                };
+
+                if (isEditing) {
+                    return (
+                        <Select value={editValue} onValueChange={handleStatusChange}>
+                            <SelectTrigger className="w-28 h-7">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {statusOptions.map(option => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        <span className="capitalize">{option.label}</span>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    );
+                }
+
+                return (
+                    <Badge
+                        className={`${getStatusColor(status)} text-xs font-medium px-2 py-1 cursor-pointer hover:opacity-80`}
+                        onClick={handleStartEditing}
+                        title="Click to edit status"
+                    >
                         {status}
                     </Badge>
                 );
@@ -298,81 +346,110 @@ export function TournamentMatchesTable({
 
     return (
         <div className="w-full">
-            <div className="flex items-center py-4 gap-4">
-                <Input
-                    placeholder="Filter by player name..."
-                    value={(table.getColumn("player_a")?.getFilterValue() as string) ?? ""}
-                    onChange={(event) =>
-                        table.getColumn("player_a")?.setFilterValue(event.target.value)
-                    }
-                    className="max-w-sm"
-                />
-                <Select value={webSyncFilter} onValueChange={setWebSyncFilter}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Filter by sync status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Matches</SelectItem>
-                        <SelectItem value="synced">Synced to Web</SelectItem>
-                        <SelectItem value="not-synced">Not Synced</SelectItem>
-                    </SelectContent>
-                </Select>
+            <div className="space-y-4">
+                {/* Filters Row */}
+                <div className="flex items-center gap-4">
+                    <Input
+                        placeholder="Filter by player name..."
+                        value={(table.getColumn("player_a")?.getFilterValue() as string) ?? ""}
+                        onChange={(event) =>
+                            table.getColumn("player_a")?.setFilterValue(event.target.value)
+                        }
+                        className="max-w-sm"
+                    />
+                    <Select value={webSyncFilter} onValueChange={setWebSyncFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Filter by sync status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Matches</SelectItem>
+                            <SelectItem value="synced">Synced to Web</SelectItem>
+                            <SelectItem value="not-synced">Not Synced</SelectItem>
+                        </SelectContent>
+                    </Select>
 
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="ml-auto">
+                                Columns <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {table
+                                .getAllColumns()
+                                .filter((column) => column.getCanHide())
+                                .map((column) => {
+                                    return (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) =>
+                                                column.toggleVisibility(!!value)
+                                            }
+                                        >
+                                            {column.id}
+                                        </DropdownMenuCheckboxItem>
+                                    );
+                                })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                {/* Actions Row - Only show when matches are selected */}
                 {selectedMatches.length > 0 && (
-                    <>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <div className="text-sm text-muted-foreground mr-2">
+                            {selectedMatches.length} match{selectedMatches.length !== 1 ? 'es' : ''} selected:
+                        </div>
                         <Button
                             onClick={() => onCalculateOdds(selectedMatches)}
+                            size="sm"
                             className="bg-green-600 hover:bg-green-700"
                         >
-                            Calculate Odds ({selectedMatches.length} selected)
+                            Calculate Odds
                         </Button>
                         <Button
                             onClick={() => onSyncToWeb(selectedMatches)}
+                            size="sm"
                             variant="outline"
                             className="border-green-600 text-green-600 hover:bg-green-50"
                         >
                             <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
-                            Sync to Web ({selectedMatches.length} selected)
+                            Sync to Web
                         </Button>
                         <Button
                             onClick={() => onRemoveFromWeb(selectedMatches)}
+                            size="sm"
                             variant="outline"
                             className="border-red-600 text-red-600 hover:bg-red-50"
                         >
                             <Globe2 className="h-4 w-4 mr-2" />
-                            Remove from Web ({selectedMatches.length} selected)
+                            Remove from Web
                         </Button>
-                    </>
-                )}
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
-                            Columns <ChevronDown className="ml-2 h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        {table
-                            .getAllColumns()
-                            .filter((column) => column.getCanHide())
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
+                        <Button
+                            onClick={() => {
+                                // Update all selected matches to finished status
+                                const selectedMatchObjects = filteredMatches.filter(match =>
+                                    selectedMatches.includes(match.id)
                                 );
-                            })}
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                                selectedMatchObjects.forEach(match => {
+                                    onEditMatch({ ...match, status: MATCH_STATUSES.FINISHED });
+                                });
+                            }}
+                            size="sm"
+                            variant="outline"
+                            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        >
+                            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Set to Finished
+                        </Button>
+                    </div>
+                )}
             </div>
             <div className="rounded-md border">
                 <Table>

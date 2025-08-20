@@ -43,7 +43,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 surface: tournament.surface || '',
                 location: tournament.location || '',
                 prize_pool: tournament.prize_pool?.toString() || '',
-                entry_fee: tournament.entry_fee.toString(),
+                entry_fee: tournament.entry_fee?.toString() || '',
                 max_participants: tournament.max_participants?.toString() || '',
                 tournament_type: tournament.tournament_type,
                 format: tournament.format,
