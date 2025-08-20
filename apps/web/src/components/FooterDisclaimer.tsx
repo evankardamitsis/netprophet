@@ -1,14 +1,32 @@
 import React from 'react';
 
-export function FooterDisclaimer() {
+interface FooterDisclaimerProps {
+    lang?: 'en' | 'el';
+}
+
+export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
+    const translations = {
+        en: {
+            disclaimer: 'NetProphet is a points-only prediction game. No real-money betting.',
+            privacy: 'Privacy Policy',
+            terms: 'Terms of Service',
+        },
+        el: {
+            disclaimer: 'Το NetProphet είναι παιχνίδι προβλέψεων μόνο με πόντους. Δεν υπάρχει στοίχημα με πραγματικά χρήματα.',
+            privacy: 'Πολιτική Απορρήτου',
+            terms: 'Όροι Χρήσης'
+        }
+    };
+
+    const t = translations[lang];
+
     return (
-        <footer className="fixed bottom-0 left-0 right-0 bg-gray-900 text-white py-6 px-6 z-30">
+        <footer className="bottom-0 left-0 right-0 bg-gray-900 text-white py-6 px-6 z-30">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                     <div className="flex items-center space-x-2">
-                        <span className="text-yellow-400 text-lg">⚠️</span>
-                        <span className="font-medium">
-                            NetProphet is a points-only prediction game. No real-money betting.
+                        <span className="text-xs">
+                            {t.disclaimer}
                         </span>
                     </div>
 
@@ -17,19 +35,14 @@ export function FooterDisclaimer() {
                             href="/privacy"
                             className="hover:text-white transition-colors"
                         >
-                            Privacy Policy
+                            {t.privacy}
                         </a>
                         <a
                             href="/terms"
                             className="hover:text-white transition-colors"
                         >
-                            Terms of Service
+                            {t.terms}
                         </a>
-                        <div className="flex items-center space-x-1">
-                            <span>Made with</span>
-                            <span className="text-red-400">❤️</span>
-                            <span>in Athens</span>
-                        </div>
                     </div>
                 </div>
             </div>
