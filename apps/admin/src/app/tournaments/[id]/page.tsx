@@ -22,7 +22,7 @@ import {
     updateTournamentCategory,
     deleteTournamentCategory
 } from '@netprophet/lib/supabase/tournaments';
-import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure } from '@netprophet/lib/supabase/matches';
+import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure, syncMatchesToWeb } from '@netprophet/lib/supabase/matches';
 import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
@@ -240,6 +240,19 @@ export default function TournamentPage() {
         }
     };
 
+    const handleSyncToWeb = async () => {
+        try {
+            // Call the sync API to push matches to web app
+            const result = await syncMatchesToWeb(tournamentId);
+
+            // Show success message
+            toast.success(`Successfully synced ${result.matchesCount} matches to web app!`);
+        } catch (error) {
+            console.error('Error syncing matches:', error);
+            toast.error('Failed to sync matches: ' + (error as Error).message);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -428,6 +441,7 @@ export default function TournamentPage() {
                             }}
                             onDeleteMatch={handleDeleteMatch}
                             onCalculateOdds={handleCalculateOdds}
+                            onSyncToWeb={handleSyncToWeb}
                             getStatusColor={getStatusColor}
                             formatTime={formatTime}
                         />
