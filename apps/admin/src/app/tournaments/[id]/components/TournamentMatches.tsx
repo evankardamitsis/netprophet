@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge, Clock, Edit, MoreHorizontal, Plus, Trash2, Users } from 'lucide-react';
 import { Match } from '@/types';
@@ -12,6 +13,7 @@ interface TournamentMatchesProps {
     onAddMatch: () => void;
     onEditMatch: (match: Match) => void;
     onDeleteMatch: (id: string) => void;
+    onCalculateOdds: (matchIds: string[]) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
 }
@@ -21,9 +23,11 @@ export function TournamentMatches({
     onAddMatch,
     onEditMatch,
     onDeleteMatch,
+    onCalculateOdds,
     getStatusColor,
     formatTime
 }: TournamentMatchesProps) {
+    const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -45,8 +49,11 @@ export function TournamentMatches({
                     matches={matches}
                     onEditMatch={onEditMatch}
                     onDeleteMatch={onDeleteMatch}
+                    onCalculateOdds={onCalculateOdds}
                     getStatusColor={getStatusColor}
                     formatTime={formatTime}
+                    selectedMatches={selectedMatches}
+                    onSelectionChange={setSelectedMatches}
                 />
             ) : (
                 <div className="text-center py-12">

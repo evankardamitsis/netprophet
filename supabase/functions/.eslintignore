@@ -1,1 +1,2 @@
+# Ignore Edge Functions (Deno environment)
 *.ts 

@@ -427,3 +427,36 @@ export async function calculateMatchOdds(playerAId: string, playerBId: string, s
         prob_b: Math.round(probB * 100) / 100
     };
 } 
+
+export async function calculateMatchOddsSecure(matchIds: string[]) {
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session) {
+        throw new Error('Authentication required')
+    }
+
+    // Get the Supabase URL and key from environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase configuration not found')
+    }
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/calculate-odds`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': supabaseKey,
+        },
+        body: JSON.stringify({ matchIds }),
+    })
+
+    if (!response.ok) {
+        const error = await response.json() as { error?: string }
+        throw new Error(error.error || 'Failed to calculate odds')
+    }
+
+    return await response.json()
+} 

@@ -22,7 +22,7 @@ import {
     updateTournamentCategory,
     deleteTournamentCategory
 } from '@netprophet/lib/supabase/tournaments';
-import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches } from '@netprophet/lib/supabase/matches';
+import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure } from '@netprophet/lib/supabase/matches';
 import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
@@ -35,6 +35,7 @@ import { getStatusColor, getSurfaceColor, getGenderColor, formatTime } from './u
 import { Tournament, Match, Category } from '@/types';
 import router from 'next/router';
 import { CategoryForm } from '../CategoryForm';
+import { PlayerOddsData, MatchContext, calculateOdds } from '@netprophet/lib';
 
 export default function TournamentPage() {
     const params = useParams();
@@ -53,6 +54,7 @@ export default function TournamentPage() {
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [activeTab, setActiveTab] = useState<string>('overview');
 
     const loadTournamentData = useCallback(async () => {
         try {
@@ -79,6 +81,21 @@ export default function TournamentPage() {
             loadTournamentData();
         }
     }, [tournamentId, loadTournamentData]);
+
+    // Initialize active tab from localStorage or URL params
+    useEffect(() => {
+        const savedTab = localStorage.getItem(`tournament-${tournamentId}-tab`);
+        if (savedTab && ['overview', 'matches', 'categories'].includes(savedTab)) {
+            setActiveTab(savedTab);
+        }
+    }, [tournamentId]);
+
+    // Save active tab to localStorage whenever it changes
+    useEffect(() => {
+        if (tournamentId && activeTab) {
+            localStorage.setItem(`tournament-${tournamentId}-tab`, activeTab);
+        }
+    }, [activeTab, tournamentId]);
 
     const handleUpdateTournament = async (tournamentData: any) => {
         if (!tournament) return;
@@ -195,6 +212,31 @@ export default function TournamentPage() {
         } catch (error) {
             console.error('Error deleting category:', error);
             toast.error('Failed to delete category');
+        }
+    };
+
+    const handleCalculateOdds = async (matchIds: string[]) => {
+        try {
+            // Call the secure API to calculate odds
+            const result = await calculateMatchOddsSecure(matchIds);
+
+            // Reload tournament data to show updated odds
+            loadTournamentData();
+
+            // Show success message with results
+            const successCount = result.results.filter((r: any) => r.success).length;
+            const errorCount = result.results.filter((r: any) => !r.success).length;
+
+            if (successCount > 0) {
+                toast.success(`Odds calculated for ${successCount} match(es)!`);
+            }
+
+            if (errorCount > 0) {
+                toast.error(`${errorCount} match(es) failed to calculate odds`);
+            }
+        } catch (error) {
+            console.error('Error calculating odds:', error);
+            toast.error('Failed to calculate odds: ' + (error as Error).message);
         }
     };
 
@@ -339,7 +381,7 @@ export default function TournamentPage() {
 
 
 
-                <Tabs defaultValue="overview" className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg mb-8">
                         <TabsTrigger value="overview" className="flex items-center gap-2">
                             <BarChart3 className="h-4 w-4" />
@@ -385,6 +427,7 @@ export default function TournamentPage() {
                                 setShowMatchForm(true);
                             }}
                             onDeleteMatch={handleDeleteMatch}
+                            onCalculateOdds={handleCalculateOdds}
                             getStatusColor={getStatusColor}
                             formatTime={formatTime}
                         />

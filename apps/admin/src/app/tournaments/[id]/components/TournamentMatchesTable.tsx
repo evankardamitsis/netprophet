@@ -17,6 +17,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2 } from "lucide-r
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -39,16 +40,22 @@ interface TournamentMatchesTableProps {
     matches: Match[];
     onEditMatch: (match: Match) => void;
     onDeleteMatch: (id: string) => void;
+    onCalculateOdds: (matchIds: string[]) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
+    selectedMatches: string[];
+    onSelectionChange: (matchIds: string[]) => void;
 }
 
 export function TournamentMatchesTable({
     matches,
     onEditMatch,
     onDeleteMatch,
+    onCalculateOdds,
     getStatusColor,
-    formatTime
+    formatTime,
+    selectedMatches,
+    onSelectionChange
 }: TournamentMatchesTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -64,6 +71,28 @@ export function TournamentMatchesTable({
     };
 
     const columns: ColumnDef<Match>[] = [
+        {
+            id: "select",
+            header: ({ table }) => (
+                <Checkbox
+                    checked={
+                        table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && "indeterminate")
+                    }
+                    onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
         {
             accessorKey: "player_a",
             header: ({ column }) => {
@@ -152,6 +181,29 @@ export function TournamentMatchesTable({
             },
         },
         {
+            accessorKey: "odds",
+            header: "Odds",
+            cell: ({ row }) => {
+                const match = row.original;
+                if (!match.odds_a || !match.odds_b) {
+                    return <div className="text-gray-400 text-sm">Not calculated</div>;
+                }
+
+                return (
+                    <div className="text-sm space-y-1">
+                        <div className="flex justify-between gap-2">
+                            <span className="font-medium">A:</span>
+                            <span className="text-green-600">{match.odds_a.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                            <span className="font-medium">B:</span>
+                            <span className="text-green-600">{match.odds_b.toFixed(2)}</span>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
             id: "actions",
             enableHiding: false,
             cell: ({ row }) => {
@@ -194,7 +246,12 @@ export function TournamentMatchesTable({
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
+        onRowSelectionChange: (updater) => {
+            const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
+            setRowSelection(newSelection);
+            const selectedIds = Object.keys(newSelection).map(index => matches[parseInt(index)].id);
+            onSelectionChange(selectedIds);
+        },
         state: {
             sorting,
             columnFilters,
@@ -205,7 +262,7 @@ export function TournamentMatchesTable({
 
     return (
         <div className="w-full">
-            <div className="flex items-center py-4">
+            <div className="flex items-center py-4 gap-4">
                 <Input
                     placeholder="Filter by player name..."
                     value={(table.getColumn("player_a")?.getFilterValue() as string) ?? ""}
@@ -214,6 +271,16 @@ export function TournamentMatchesTable({
                     }
                     className="max-w-sm"
                 />
+
+                {selectedMatches.length > 0 && (
+                    <Button
+                        onClick={() => onCalculateOdds(selectedMatches)}
+                        className="bg-green-600 hover:bg-green-700"
+                    >
+                        Calculate Odds ({selectedMatches.length} selected)
+                    </Button>
+                )}
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">

@@ -130,7 +130,6 @@ export function MatchForm({ match, tournaments, currentTournament, onSubmit, onC
     }, []);
 
 
-
     // Initialize date/time states when match changes
     useEffect(() => {
         if (match?.start_time) {
