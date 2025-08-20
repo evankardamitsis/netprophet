@@ -44,7 +44,7 @@ interface MatchDetails {
 }
 
 interface PredictionFormProps {
-    matchId: number;
+    matchId: string;
     formPredictions: PredictionOptions;
     onPredictionChange: (type: keyof PredictionOptions, value: string) => void;
     details: MatchDetails;

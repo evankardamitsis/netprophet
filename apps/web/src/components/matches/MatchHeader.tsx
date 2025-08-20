@@ -16,7 +16,7 @@ interface MatchDetails {
 }
 
 interface Match {
-    id: number;
+    id: string;
     status: string;
 }
 

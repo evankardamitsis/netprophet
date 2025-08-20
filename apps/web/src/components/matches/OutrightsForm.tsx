@@ -5,7 +5,7 @@ import { useDictionary } from '@/context/DictionaryContext';
 import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
 
 interface OutrightsFormProps {
-    matchId: number;
+    matchId: string;
     selectedTournamentWinner: string;
     selectedFinalsPair: string;
     onTournamentWinnerChange: (winner: string) => void;

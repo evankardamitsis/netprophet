@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { Card as UiCard } from '@/components/ui/card';
 import { MatchesList } from '@/components/MatchesList';
+import { supabase } from '@netprophet/lib';
 
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
@@ -29,7 +31,7 @@ function XIcon() {
 }
 
 interface Tournament {
-    id: number;
+    id: string;
     name: string;
     status: 'active' | 'upcoming' | 'finished';
     matches: Match[];
@@ -38,128 +40,14 @@ interface Tournament {
 interface SidebarProps {
     onClose: () => void;
     onMatchSelect?: (match: Match) => void;
-    selectedMatchId?: number;
+    selectedMatchId?: string;
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
     dict?: Dictionary;
     lang?: 'en' | 'el';
 }
 
-// Enhanced mock data with start times and lock times
-const mockTournaments: Tournament[] = [
-    {
-        id: 1,
-        name: 'Roland Garros 2024',
-        status: 'active',
-        matches: [
-            {
-                id: 1,
-                tournament: 'Roland Garros 2024',
-                player1: { name: 'Rafael Nadal', odds: 2.15 },
-                player2: { name: 'Novak Djokovic', odds: 1.85 },
-                time: '14:00',
-                status: 'live',
-                points: 250,
-                startTime: new Date(Date.now() - 30 * 60 * 1000), // Started 30 minutes ago
-                lockTime: new Date(Date.now() + 5 * 60 * 1000), // Locks in 5 minutes
-                isLocked: false
-            },
-            {
-                id: 2,
-                tournament: 'Roland Garros 2024',
-                player1: { name: 'Carlos Alcaraz', odds: 1.65 },
-                player2: { name: 'Daniil Medvedev', odds: 2.35 },
-                time: '16:30',
-                status: 'upcoming',
-                points: 200,
-                startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // Starts in 2 hours
-                lockTime: new Date(Date.now() + 1.5 * 60 * 60 * 1000), // Locks in 1.5 hours
-                isLocked: false
-            },
-            {
-                id: 3,
-                tournament: 'Roland Garros 2024',
-                player1: { name: 'Jannik Sinner', odds: 1.95 },
-                player2: { name: 'Alexander Zverev', odds: 1.95 },
-                time: '19:00',
-                status: 'upcoming',
-                points: 180,
-                startTime: new Date(Date.now() + 4 * 60 * 60 * 1000), // Starts in 4 hours
-                lockTime: new Date(Date.now() + 3.5 * 60 * 60 * 1000), // Locks in 3.5 hours
-                isLocked: false
-            },
-        ]
-    },
-    {
-        id: 2,
-        name: 'Wimbledon 2024',
-        status: 'upcoming',
-        matches: [
-            {
-                id: 4,
-                tournament: 'Wimbledon 2024',
-                player1: { name: 'Andy Murray', odds: 2.50 },
-                player2: { name: 'Stefanos Tsitsipas', odds: 1.60 },
-                time: '13:00',
-                status: 'upcoming',
-                points: 150,
-                startTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // Starts in 6 hours
-                lockTime: new Date(Date.now() + 5.5 * 60 * 60 * 1000), // Locks in 5.5 hours
-                isLocked: false
-            },
-            {
-                id: 5,
-                tournament: 'Wimbledon 2024',
-                player1: { name: 'Roger Federer', odds: 3.00 },
-                player2: { name: 'Nick Kyrgios', odds: 1.40 },
-                time: '15:30',
-                status: 'upcoming',
-                points: 120,
-                startTime: new Date(Date.now() + 8 * 60 * 60 * 1000), // Starts in 8 hours
-                lockTime: new Date(Date.now() + 7.5 * 60 * 60 * 1000), // Locks in 7.5 hours
-                isLocked: false
-            },
-        ]
-    },
-    {
-        id: 3,
-        name: 'US Open 2024',
-        status: 'upcoming',
-        matches: [
-            {
-                id: 6,
-                tournament: 'US Open 2024',
-                player1: { name: 'Daniil Medvedev', odds: 1.80 },
-                player2: { name: 'Andrey Rublev', odds: 2.20 },
-                time: '20:00',
-                status: 'upcoming',
-                points: 100,
-                startTime: new Date(Date.now() + 10 * 60 * 60 * 1000), // Starts in 10 hours
-                lockTime: new Date(Date.now() + 9.5 * 60 * 60 * 1000), // Locks in 9.5 hours
-                isLocked: false
-            },
-        ]
-    },
-    {
-        id: 4,
-        name: 'Australian Open 2024',
-        status: 'finished',
-        matches: [
-            {
-                id: 7,
-                tournament: 'Australian Open 2024',
-                player1: { name: 'Novak Djokovic', odds: 1.50 },
-                player2: { name: 'Stefanos Tsitsipas', odds: 2.80 },
-                time: '19:30',
-                status: 'finished',
-                points: 300,
-                startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Started 24 hours ago
-                lockTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // Already locked
-                isLocked: true
-            },
-        ]
-    }
-];
+
 
 // Countdown component
 function CountdownTimer({ lockTime, dict }: { lockTime: Date; dict?: Dictionary }) {
@@ -213,7 +101,7 @@ function CountdownTimer({ lockTime, dict }: { lockTime: Date; dict?: Dictionary 
 
 // Live Match Banner component
 function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionary }) {
-    const liveMatches = matches.filter(match => match.status === 'live' && !match.isLocked);
+    const liveMatches = matches.filter(match => match.status_display === 'live' && !match.isLocked);
 
     if (liveMatches.length === 0) return null;
 
@@ -231,7 +119,7 @@ function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionar
                     <div key={match.id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-red-700/40">
                         <div className="flex-1">
                             <div className="text-sm font-semibold text-yellow-200">
-                                {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
+                                {match.player1.name.split(' ')[1] || match.player1.name} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1] || match.player2.name}
                             </div>
 
                         </div>
@@ -245,12 +133,130 @@ function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionar
     );
 }
 
+// Function to fetch synced matches (same as in MatchesList)
+async function fetchSyncedMatches(): Promise<Match[]> {
+    const { data, error } = await supabase
+        .from('matches')
+        .select(`
+            id,
+            tournament_id,
+            category_id,
+            player_a_id,
+            player_b_id,
+            winner_id,
+            status,
+            start_time,
+            lock_time,
+            odds_a,
+            odds_b,
+            a_score,
+            b_score,
+            points_value,
+            web_synced,
+            tournaments (
+                id,
+                name,
+                surface,
+                location
+            ),
+            tournament_categories (
+                id,
+                name
+            ),
+            player_a:players!matches_player_a_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b:players!matches_player_b_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            )
+        `)
+        .eq('web_synced', true)
+        .order('start_time', { ascending: true });
+
+    if (error) throw error;
+
+    // Transform raw database match to web app format (same logic as in MatchesList)
+    return (data || []).map((rawMatch: any) => {
+        const getPlayerName = (player: any) => {
+            if (player?.first_name && player?.last_name) {
+                return `${player.first_name} ${player.last_name}`;
+            }
+            return 'TBD';
+        };
+
+        const startTime = rawMatch.start_time ? new Date(rawMatch.start_time) : new Date();
+        const lockTime = rawMatch.lock_time ? new Date(rawMatch.lock_time) : new Date();
+        const now = new Date();
+
+        let status_display: 'live' | 'upcoming' | 'finished' = 'upcoming';
+        if (rawMatch.status === 'live') {
+            status_display = 'live';
+        } else if (rawMatch.status === 'finished') {
+            status_display = 'finished';
+        } else if (startTime <= now) {
+            status_display = 'live';
+        }
+
+        return {
+            id: rawMatch.id,
+            tournament_id: rawMatch.tournament_id,
+            category_id: rawMatch.category_id,
+            player_a_id: rawMatch.player_a_id,
+            player_b_id: rawMatch.player_b_id,
+            winner_id: rawMatch.winner_id,
+            status: rawMatch.status,
+            start_time: rawMatch.start_time,
+            lock_time: rawMatch.lock_time,
+            odds_a: rawMatch.odds_a,
+            odds_b: rawMatch.odds_b,
+            a_score: rawMatch.a_score,
+            b_score: rawMatch.b_score,
+            points_value: rawMatch.points_value,
+            web_synced: rawMatch.web_synced,
+            tournaments: Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0] : rawMatch.tournaments,
+            tournament_categories: Array.isArray(rawMatch.tournament_categories) ? rawMatch.tournament_categories[0] : rawMatch.tournament_categories,
+            player_a: rawMatch.player_a,
+            player_b: rawMatch.player_b,
+            // Computed properties for web app compatibility
+            tournament: (Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0]?.name : rawMatch.tournaments?.name) || 'Unknown Tournament',
+            player1: {
+                name: getPlayerName(rawMatch.player_a),
+                odds: rawMatch.odds_a || 1.0
+            },
+            player2: {
+                name: getPlayerName(rawMatch.player_b),
+                odds: rawMatch.odds_b || 1.0
+            },
+            time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
+            status_display,
+            points: rawMatch.points_value,
+            startTime,
+            lockTime,
+            isLocked: lockTime <= now
+        };
+    });
+}
+
 export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: onMatchSelectProp, dict, lang = 'en' }: SidebarProps) {
     const matchSelectFromContext = useMatchSelect();
     const onMatchSelect = onMatchSelectProp || matchSelectFromContext;
-    const [expandedTournaments, setExpandedTournaments] = useState<Set<number>>(new Set([1])); // Default expand first tournament
+    const [expandedTournaments, setExpandedTournaments] = useState<Set<string>>(new Set(["1"])); // Default expand first tournament
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
+    // Fetch synced matches
+    const { data: allMatches = [], isLoading } = useQuery({
+        queryKey: ['syncedMatches'],
+        queryFn: fetchSyncedMatches,
+        refetchInterval: 30000, // Refetch every 30 seconds
+    });
 
     // Update current time every second
     useEffect(() => {
@@ -261,7 +267,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
         return () => clearInterval(timer);
     }, []);
 
-    const toggleTournament = (tournamentId: number) => {
+    const toggleTournament = (tournamentId: string) => {
         const newExpanded = new Set(expandedTournaments);
         if (newExpanded.has(tournamentId)) {
             newExpanded.delete(tournamentId);
@@ -297,9 +303,6 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
         }
     };
 
-    // Get all matches for the live banner
-    const allMatches = mockTournaments.flatMap(t => t.matches);
-
     return (
         <aside
             className={`h-full flex flex-col transition-all duration-300 ease-in-out
@@ -332,12 +335,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                     <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
                         <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
                             {/* Live matches */}
-                            {allMatches.filter(m => m.status === 'live' && !m.isLocked).length > 0 && (
+                            {allMatches.filter(m => m.status_display === 'live' && !m.isLocked).length > 0 && (
                                 <div className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1 px-1">
                                     {dict?.sidebar?.live || 'Live'}
                                 </div>
                             )}
-                            {allMatches.filter(m => m.status === 'live' && !m.isLocked).map((match) => (
+                            {allMatches.filter(m => m.status_display === 'live' && !m.isLocked).map((match) => (
                                 <button
                                     key={match.id}
                                     onClick={(e) => {
@@ -348,19 +351,19 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     title={`${match.player1.name} vs ${match.player2.name}`}
                                 >
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
-                                        {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
+                                        {match.player1.name.split(' ')[1] || match.player1.name} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1] || match.player2.name}
                                     </div>
 
                                 </button>
                             ))}
 
                             {/* Upcoming matches */}
-                            {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).length > 0 && (
+                            {allMatches.filter(m => m.status_display === 'upcoming' && !m.isLocked).length > 0 && (
                                 <div className="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1 mt-2 sm:mt-3 px-1">
                                     {dict?.sidebar?.upcoming || 'Upcoming'}
                                 </div>
                             )}
-                            {allMatches.filter(m => m.status === 'upcoming' && !m.isLocked).map((match) => (
+                            {allMatches.filter(m => m.status_display === 'upcoming' && !m.isLocked).map((match) => (
                                 <button
                                     key={match.id}
                                     onClick={(e) => {
@@ -371,7 +374,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     title={`${match.player1.name} vs ${match.player2.name} - ${match.time}`}
                                 >
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
-                                        {match.player1.name.split(' ')[1]} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1]}
+                                        {match.player1.name.split(' ')[1] || match.player1.name} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1] || match.player2.name}
                                     </div>
                                     <div className="text-xs text-gray-500 truncate">{match.time}</div>
                                 </button>

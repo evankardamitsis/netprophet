@@ -55,7 +55,7 @@ function ParlayIcon() {
 }
 
 interface PredictionSlipProps {
-    onRemovePrediction: (matchId: number) => void;
+    onRemovePrediction: (matchId: string) => void;
     onSubmitPredictions: () => void;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
@@ -206,7 +206,7 @@ export function PredictionSlip({
         }
     };
 
-    const handleRemovePrediction = (matchId: number) => {
+    const handleRemovePrediction = (matchId: string) => {
         removePrediction(matchId);
         // Clear form predictions for this match from session storage
         clearFormPredictionsForMatch(matchId);

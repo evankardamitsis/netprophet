@@ -47,7 +47,7 @@ export function removeFromSessionStorage(key: string): void {
 }
 
 // Helper to clear form predictions for a specific match
-export function clearFormPredictionsForMatch(matchId: number): void {
+export function clearFormPredictionsForMatch(matchId: string): void {
     if (typeof window === 'undefined') return;
     
     try {

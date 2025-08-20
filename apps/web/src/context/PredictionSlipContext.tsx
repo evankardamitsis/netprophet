@@ -58,20 +58,20 @@ interface PredictionSlipContextType {
     outrightsPredictions: OutrightsPredictionItem[];
     addPrediction: (item: StructuredPredictionItem) => void;
     addOutrightsPrediction: (item: OutrightsPredictionItem) => void;
-    removePrediction: (matchId: number) => void;
-    removeOutrightsPrediction: (matchId: number) => void;
+    removePrediction: (matchId: string) => void;
+    removeOutrightsPrediction: (matchId: string) => void;
     clearPredictions: () => void;
     clearOutrightsPredictions: () => void;
-    updatePredictionBetAmount: (matchId: number, betAmount: number) => void;
-    updateOutrightsBetAmount: (matchId: number, betAmount: number) => void;
+    updatePredictionBetAmount: (matchId: string, betAmount: number) => void;
+    updateOutrightsBetAmount: (matchId: string, betAmount: number) => void;
     setSlipCollapsed?: (collapsed: boolean) => void;
     slipCollapsed?: boolean;
     // New parlay-specific methods
     getParlayEligibility: () => { isEligible: boolean; minRequired: number; current: number };
     getParlayStats: () => { totalPicks: number; liveMatches: number; tournaments: number };
     // Helper methods
-    hasPrediction: (matchId: number) => boolean;
-    hasOutrightsPrediction: (matchId: number) => boolean;
+    hasPrediction: (matchId: string) => boolean;
+    hasOutrightsPrediction: (matchId: string) => boolean;
 }
 
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
@@ -153,7 +153,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         setSlipCollapsed(false); // Open slip if closed
     };
 
-    const removePrediction = (matchId: number) => {
+    const removePrediction = (matchId: string) => {
         setPredictions(prev => prev.filter(p => p.matchId !== matchId));
     };
 
@@ -169,7 +169,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         setSlipCollapsed(false); // Open slip if closed
     };
 
-    const removeOutrightsPrediction = (matchId: number) => {
+    const removeOutrightsPrediction = (matchId: string) => {
         setOutrightsPredictions(prev => prev.filter(p => p.matchId !== matchId));
     };
 
@@ -202,7 +202,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         };
     };
 
-    const updatePredictionBetAmount = (matchId: number, betAmount: number) => {
+    const updatePredictionBetAmount = (matchId: string, betAmount: number) => {
         setPredictions(prev => prev.map(p =>
             p.matchId === matchId
                 ? { ...p, betAmount, potentialWinnings: betAmount * (p.multiplier || 1) }
@@ -210,7 +210,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         ));
     };
 
-    const updateOutrightsBetAmount = (matchId: number, betAmount: number) => {
+    const updateOutrightsBetAmount = (matchId: string, betAmount: number) => {
         setOutrightsPredictions(prev => prev.map(p =>
             p.matchId === matchId
                 ? { ...p, betAmount, potentialWinnings: betAmount * (p.multiplier || 1) }
@@ -219,11 +219,11 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
     };
 
     // Helper methods to check if predictions exist
-    const hasPrediction = (matchId: number) => {
+    const hasPrediction = (matchId: string) => {
         return predictions.some(p => p.matchId === matchId);
     };
 
-    const hasOutrightsPrediction = (matchId: number) => {
+    const hasOutrightsPrediction = (matchId: string) => {
         return outrightsPredictions.some(p => p.matchId === matchId);
     };
 

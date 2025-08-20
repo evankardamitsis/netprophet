@@ -3,7 +3,6 @@
 import { Card, CardContent, Badge, Button } from '@netprophet/ui';
 import { Match } from '@/types/dashboard';
 import { CardTitle } from '@/components/ui/card';
-import { mockMatches } from '@/components/MatchesList';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
@@ -15,14 +14,14 @@ interface MatchesGridProps {
     slipCollapsed?: boolean;
 }
 
-export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCollapsed }: MatchesGridProps) {
+export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }: MatchesGridProps) {
     const onSelectMatch = useMatchSelect();
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
     const { dict, lang } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
 
-    const liveMatches = matches.filter(match => match.status === 'live');
-    const upcomingMatches = matches.filter(match => match.status === 'upcoming');
+    const liveMatches = matches.filter(match => match.status_display === 'live');
+    const upcomingMatches = matches.filter(match => match.status_display === 'upcoming');
 
     return (
         <div className="flex flex-col h-full w-full text-white">
@@ -99,11 +98,11 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                         {/* Betting Odds */}
                                         <div className="flex justify-between items-center px-1 xs:px-2">
                                             <div className="text-center flex-1">
-                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player1.name.split(' ')[1]}</div>
+                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player1.name.split(' ')[1] || match.player1.name}</div>
                                                 <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                             </div>
                                             <div className="text-center flex-1">
-                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player2.name.split(' ')[1]}</div>
+                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player2.name.split(' ')[1] || match.player2.name}</div>
                                                 <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                             </div>
                                         </div>
@@ -187,11 +186,11 @@ export function MatchesGrid({ matches = mockMatches, sidebarOpen = true, slipCol
                                         {/* Betting Odds */}
                                         <div className="flex justify-between items-center px-1 xs:px-2">
                                             <div className="text-center flex-1">
-                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player1.name.split(' ')[1]}</div>
+                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player1.name.split(' ')[1] || match.player1.name}</div>
                                                 <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                             </div>
                                             <div className="text-center flex-1">
-                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player2.name.split(' ')[1]}</div>
+                                                <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player2.name.split(' ')[1] || match.player2.name}</div>
                                                 <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                             </div>
                                         </div>

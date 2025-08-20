@@ -38,82 +38,39 @@ interface MatchDetailProps {
     sidebarOpen?: boolean;
 }
 
-function loadFormPredictionsFromSession(matchId: number): PredictionOptions {
-    const stored = loadFromSessionStorage<Record<number, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
+function loadFormPredictionsFromSession(matchId: string): PredictionOptions {
+    const stored = loadFromSessionStorage<Record<string, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
     return stored[matchId] || createEmptyPredictions();
 }
 
-function saveFormPredictionsToSession(matchId: number, predictions: PredictionOptions): void {
-    const stored = loadFromSessionStorage<Record<number, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
+function saveFormPredictionsToSession(matchId: string, predictions: PredictionOptions): void {
+    const stored = loadFromSessionStorage<Record<string, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
     stored[matchId] = predictions;
     saveToSessionStorage(SESSION_KEYS.FORM_PREDICTIONS, stored);
 }
 
-// Mock match data with additional details
-const getMatchDetails = (matchId: number) => {
-    const matchDetails = {
-        1: {
-            tournament: 'Roland Garros 2024',
-            player1: { name: 'Rafael Nadal', odds: 2.15, wins: 22, losses: 8 },
-            player2: { name: 'Novak Djokovic', odds: 1.85, wins: 24, losses: 6 },
-            points: 250,
-            headToHead: 'Nadal leads 30-29',
-            surface: 'Clay',
-            round: 'Final',
-            format: 'best-of-5' // Grand Slam final
+// Create match details from actual match data
+const createMatchDetails = (match: Match) => {
+    return {
+        tournament: match.tournament,
+        player1: {
+            name: match.player1.name,
+            odds: match.player1.odds,
+            wins: match.player_a?.wins || 0,
+            losses: match.player_a?.losses || 0
         },
-        2: {
-            tournament: 'Roland Garros 2024',
-            player1: { name: 'Carlos Alcaraz', odds: 1.65, wins: 20, losses: 10 },
-            player2: { name: 'Daniil Medvedev', odds: 2.35, wins: 18, losses: 12 },
-            points: 200,
-            headToHead: 'Alcaraz leads 3-2',
-            surface: 'Clay',
-            round: 'Semi-Final',
-            format: 'best-of-5' // Grand Slam semi-final
+        player2: {
+            name: match.player2.name,
+            odds: match.player2.odds,
+            wins: match.player_b?.wins || 0,
+            losses: match.player_b?.losses || 0
         },
-        3: {
-            tournament: 'Roland Garros 2024',
-            player1: { name: 'Jannik Sinner', odds: 1.95, wins: 19, losses: 11 },
-            player2: { name: 'Alexander Zverev', odds: 1.95, wins: 17, losses: 13 },
-            points: 180,
-            headToHead: 'Sinner leads 4-3',
-            surface: 'Clay',
-            round: 'Quarter-Final',
-            format: 'best-of-5' // Grand Slam quarter-final
-        },
-        4: {
-            tournament: 'Wimbledon 2024',
-            player1: { name: 'Andy Murray', odds: 2.50, wins: 15, losses: 15 },
-            player2: { name: 'Stefanos Tsitsipas', odds: 1.60, wins: 21, losses: 9 },
-            points: 150,
-            headToHead: 'Tsitsipas leads 2-1',
-            surface: 'Grass',
-            round: 'Third Round',
-            format: 'best-of-3' // Early rounds
-        },
-        5: {
-            tournament: 'Local Amateur Tournament',
-            player1: { name: 'John Smith', odds: 1.80, wins: 12, losses: 8 },
-            player2: { name: 'Mike Johnson', odds: 2.20, wins: 10, losses: 10 },
-            points: 50,
-            headToHead: 'Smith leads 3-2',
-            surface: 'Hard',
-            round: 'Final',
-            format: 'best-of-3-super-tiebreak' // Amateur format with super tiebreak
-        },
-        6: {
-            tournament: 'Local Amateur Tournament',
-            player1: { name: 'John Smith', odds: 1.80, wins: 12, losses: 8 },
-            player2: { name: 'Mike Johnson', odds: 2.20, wins: 10, losses: 10 },
-            points: 50,
-            headToHead: 'Smith leads 3-2',
-            surface: 'Hard',
-            round: 'Final',
-            format: 'best-of-3-super-tiebreak' // Amateur format with super tiebreak
-        }
+        points: match.points,
+        headToHead: `${match.player1.name} vs ${match.player2.name}`, // We can enhance this later with actual H2H data
+        surface: match.tournaments?.surface || 'Unknown',
+        round: match.tournament_categories?.name || 'Unknown',
+        format: 'best-of-3' // Default format, can be enhanced later
     };
-    return matchDetails[matchId as keyof typeof matchDetails];
 };
 
 export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen = true }: MatchDetailProps) {
@@ -190,7 +147,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     }, [match, predictions]);
 
     // Dynamic calculations based on form predictions (must be before conditional returns)
-    const details = match ? getMatchDetails(match.id) : null;
+    const details = match ? createMatchDetails(match) : null;
     const predictionCount = useMemo(() => getPredictionCount(formPredictions), [formPredictions]);
     const hasAnyPredictions = useMemo(() => hasPredictions(formPredictions), [formPredictions]);
 

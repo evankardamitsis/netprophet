@@ -10,8 +10,6 @@ const dictionaries = {
 };
 
 export const getDictionary = (locale: 'en' | 'el') => {
-  console.log('🔍 Getting dictionary for locale:', locale);
   const dict = dictionaries[locale];
-  console.log('📚 Retrieved dictionary:', dict);
   return dict;
 }; 

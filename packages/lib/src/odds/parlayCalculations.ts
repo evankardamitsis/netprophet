@@ -10,9 +10,9 @@ export interface ParlayCalculation {
 }
 
 export interface PredictionItem {
-    matchId: number;
+    matchId: string;
     match: {
-        id: number;
+        id: string;
         tournament: string;
         player1: { name: string; odds: number };
         player2: { name: string; odds: number };
