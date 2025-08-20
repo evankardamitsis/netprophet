@@ -21,6 +21,7 @@ export interface Tournament {
     start_date?: string;
     end_date?: string;
     status?: string;
+    matches_type?: string;
 }
 
 export interface Category {

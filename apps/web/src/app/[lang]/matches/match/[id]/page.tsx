@@ -30,7 +30,8 @@ async function fetchMatch(id: string): Promise<Match | null> {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,

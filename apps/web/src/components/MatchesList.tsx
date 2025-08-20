@@ -115,7 +115,8 @@ async function fetchSyncedMatches(): Promise<Match[]> {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,

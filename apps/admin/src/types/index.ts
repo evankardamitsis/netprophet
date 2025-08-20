@@ -14,6 +14,7 @@ export interface Tournament {
     current_participants: number;
     tournament_type: string;
     format: string;
+    matches_type: string;
     tournament_categories?: Array<{
         id: string;
         name: string;
@@ -154,6 +155,7 @@ export interface TournamentFormData {
     max_participants: string;
     tournament_type: string;
     format: string;
+    matches_type: string;
 }
 
 export interface CategoryFormData {

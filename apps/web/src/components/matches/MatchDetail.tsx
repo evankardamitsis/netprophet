@@ -69,7 +69,7 @@ const createMatchDetails = (match: Match) => {
         headToHead: `${match.player1.name} vs ${match.player2.name}`, // We can enhance this later with actual H2H data
         surface: match.tournaments?.surface || 'Unknown',
         round: match.tournament_categories?.name || 'Unknown',
-        format: 'best-of-3' // Default format, can be enhanced later
+        format: match.tournaments?.matches_type || 'best-of-3' // Use the tournament's matches_type
     };
 };
 

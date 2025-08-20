@@ -28,7 +28,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
         entry_fee: '0',
         max_participants: '',
         tournament_type: 'singles',
-        format: 'knockout'
+        format: 'knockout',
+        matches_type: 'best-of-3'
     });
 
     useEffect(() => {
@@ -45,7 +46,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 entry_fee: tournament.entry_fee.toString(),
                 max_participants: tournament.max_participants?.toString() || '',
                 tournament_type: tournament.tournament_type,
-                format: tournament.format
+                format: tournament.format,
+                matches_type: tournament.matches_type || 'best-of-3'
             });
         }
     }, [tournament]);
@@ -176,6 +178,20 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                             <SelectItem value="knockout" className="text-base py-3">Knockout</SelectItem>
                             <SelectItem value="round_robin" className="text-base py-3">Round Robin</SelectItem>
                             <SelectItem value="group_stage" className="text-base py-3">Group Stage</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="matches_type" className="text-base font-semibold">Matches Type</Label>
+                    <Select value={formData.matches_type} onValueChange={(value) => handleInputChange('matches_type', value)}>
+                        <SelectTrigger className="h-12 text-base">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="best-of-3" className="text-base py-3">Best of 3</SelectItem>
+                            <SelectItem value="best-of-5" className="text-base py-3">Best of 5</SelectItem>
+                            <SelectItem value="best-of-3-super-tiebreak" className="text-base py-3">Best of 3 with Super Tiebreak</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
