@@ -132,43 +132,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 .single();
 
             if (error && error.code === 'PGRST116') {
-                // Profile doesn't exist, create one with default values
-                const { data: newProfile, error: createError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: user.id,
-                        balance: 1000,
-                        daily_login_streak: 0,
-                        has_received_welcome_bonus: false,
-                        total_winnings: 0,
-                        total_losses: 0,
-                        won_bets: 0,
-                        lost_bets: 0,
-                        total_bets: 0,
-                        referral_bonus_earned: 0,
-                        leaderboard_prizes_earned: 0
-                    })
-                    .select()
-                    .single();
-
-                if (createError) {
-                    console.error('Failed to create profile:', createError);
-                    return;
-                }
-
-                // Update local wallet state with new profile
-                setWallet(prevWallet => {
-                    const updatedWallet = {
-                        ...prevWallet,
-                        balance: newProfile.balance,
-                        dailyLoginStreak: newProfile.daily_login_streak,
-                        hasReceivedWelcomeBonus: newProfile.has_received_welcome_bonus,
-                    };
-                    saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
-                    return updatedWallet;
-                });
-
-                toast.success('Wallet initialized with $1000 starting balance!');
+                // Profile doesn't exist - this should be handled by the signup process
+                console.error('Profile not found - user should have a profile after signup');
+                toast.error('Profile not found. Please contact support.');
+                return;
             } else if (error) {
                 console.error('Failed to load profile:', error);
                 return;
@@ -203,13 +170,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             if (betStats) {
                 setWallet(prev => ({
                     ...prev,
-                    totalBets: betStats.total_bets,
-                    wonBets: betStats.won_bets,
-                    lostBets: betStats.lost_bets,
-                    totalWinnings: betStats.total_winnings,
-                    totalLosses: betStats.total_losses,
-                    netProfit: betStats.total_winnings - betStats.total_losses,
-                    winRate: betStats.win_rate,
+                    totalBets: betStats.total_bets || 0,
+                    wonBets: betStats.won_bets || 0,
+                    lostBets: betStats.lost_bets || 0,
+                    totalWinnings: betStats.total_winnings || 0,
+                    totalLosses: betStats.total_losses || 0,
+                    netProfit: (betStats.total_winnings || 0) - (betStats.total_losses || 0),
+                    winRate: betStats.win_rate || 0,
                 }));
             }
         } catch (error) {
