@@ -1,37 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { supabase, MatchResultsService, MATCH_STATUSES, isFinishedStatus } from '@netprophet/lib';
+import { useState, useEffect, useMemo } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { supabase, MatchResultsService } from '@netprophet/lib';
 import { MatchResultWithDetails } from '@/types';
 import { toast } from 'sonner';
-
-interface Match {
-    id: string;
-    player_a: {
-        id: string;
-        first_name: string;
-        last_name: string;
-    };
-    player_b: {
-        id: string;
-        first_name: string;
-        last_name: string;
-    };
-    tournaments: {
-        name: string;
-        matches_type: string;
-    } | null;
-    status: string;
-    start_time: string | null;
-    web_synced: boolean | null;
-}
+import { MatchResultsFilters } from './components/MatchResultsFilters';
+import { MatchResultsTable } from './components/MatchResultsTable';
+import { MatchResultForm } from './components/MatchResultForm';
+import { Match, FilterStatus, FormData } from './types';
 
 export default function MatchResultsPage() {
     const [matches, setMatches] = useState<Match[]>([]);
@@ -42,8 +19,14 @@ export default function MatchResultsPage() {
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingResult, setEditingResult] = useState<MatchResultWithDetails | null>(null);
 
+    // Filter states
+    const [statusFilter, setStatusFilter] = useState<FilterStatus>('finished');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [tournamentFilter, setTournamentFilter] = useState('all');
+    const [dateFilter, setDateFilter] = useState('all');
+
     // Form state for new result
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         winner_id: '',
         match_result: '',
         set1_score: '',
@@ -62,11 +45,7 @@ export default function MatchResultsPage() {
         set4_tiebreak_score: '',
         set5_tiebreak_score: '',
         super_tiebreak_score: '',
-        super_tiebreak_winner_id: '',
-        total_games: '',
-        aces_leader_id: '',
-        double_faults_count: '',
-        break_points_count: ''
+        super_tiebreak_winner_id: ''
     });
 
     useEffect(() => {
@@ -82,8 +61,8 @@ export default function MatchResultsPage() {
           id,
           player_a_id,
           player_b_id,
-          player_a,
-          player_b,
+          player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
+          player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
           tournaments(id, name, matches_type),
           status,
           start_time,
@@ -98,14 +77,14 @@ export default function MatchResultsPage() {
             const transformedMatches = (data || []).map(match => ({
                 id: match.id,
                 player_a: {
-                    id: match.player_a_id || '',
-                    first_name: match.player_a ? match.player_a.split(' ')[0] : '',
-                    last_name: match.player_a ? match.player_a.split(' ').slice(1).join(' ') : ''
+                    id: match.player_a?.id || '',
+                    first_name: match.player_a?.first_name || '',
+                    last_name: match.player_a?.last_name || ''
                 },
                 player_b: {
-                    id: match.player_b_id || '',
-                    first_name: match.player_b ? match.player_b.split(' ')[0] : '',
-                    last_name: match.player_b ? match.player_b.split(' ').slice(1).join(' ') : ''
+                    id: match.player_b?.id || '',
+                    first_name: match.player_b?.first_name || '',
+                    last_name: match.player_b?.last_name || ''
                 },
                 tournaments: Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments,
                 status: match.status,
@@ -116,7 +95,7 @@ export default function MatchResultsPage() {
             setMatches(transformedMatches);
         } catch (error) {
             console.error('Error fetching matches:', error);
-            toast.error('Failed to fetch matches');
+            toast.error('Failed to load matches');
         } finally {
             setLoading(false);
         }
@@ -144,8 +123,60 @@ export default function MatchResultsPage() {
             setMatchResults((data || []) as MatchResultWithDetails[]);
         } catch (error) {
             console.error('Error fetching match results:', error);
+            toast.error('Failed to load match results');
         }
     };
+
+    // Filter matches based on current filters
+    const filteredMatches = useMemo(() => {
+        return matches.filter(match => {
+            const matchesStatus = statusFilter === 'all' || match.status === statusFilter;
+            const matchesSearch = !searchTerm ||
+                match.player_a.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.player_a.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.player_b.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.player_b.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.tournaments?.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesTournament = tournamentFilter === 'all' || match.tournaments?.name === tournamentFilter;
+            const matchesDate = dateFilter === 'all' ||
+                (match.start_time && new Date(match.start_time).toDateString() === dateFilter);
+
+            return matchesStatus && matchesSearch && matchesTournament && matchesDate;
+        });
+    }, [matches, statusFilter, searchTerm, tournamentFilter, dateFilter]);
+
+    // Group matches by date
+    const groupedMatches = useMemo(() => {
+        const groups: { [key: string]: Match[] } = {};
+
+        filteredMatches.forEach(match => {
+            const date = match.start_time ? new Date(match.start_time).toDateString() : 'No Date';
+            if (!groups[date]) {
+                groups[date] = [];
+            }
+            groups[date].push(match);
+        });
+
+        return Object.entries(groups).sort(([a], [b]) => {
+            if (a === 'No Date') return 1;
+            if (b === 'No Date') return 1;
+            return new Date(b).getTime() - new Date(a).getTime();
+        });
+    }, [filteredMatches]);
+
+    // Get unique tournaments for filter
+    const tournaments = useMemo(() => {
+        const unique = [...new Set(matches.map(match => match.tournaments?.name).filter((name): name is string => Boolean(name)))];
+        return unique.sort();
+    }, [matches]);
+
+    // Get unique dates for filter
+    const dates = useMemo(() => {
+        const unique = [...new Set(matches.map(match =>
+            match.start_time ? new Date(match.start_time).toDateString() : null
+        ).filter((date): date is string => date !== null))];
+        return unique.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    }, [matches]);
 
     const handleAddResult = (match: Match) => {
         setSelectedMatch(match);
@@ -168,17 +199,60 @@ export default function MatchResultsPage() {
             set4_tiebreak_score: '',
             set5_tiebreak_score: '',
             super_tiebreak_score: '',
-            super_tiebreak_winner_id: '',
-            total_games: '',
-            aces_leader_id: '',
-            double_faults_count: '',
-            break_points_count: ''
+            super_tiebreak_winner_id: ''
         });
         setIsResultDialogOpen(true);
     };
 
-    const handleEditResult = (result: MatchResultWithDetails) => {
+    const handleEditResult = async (result: MatchResultWithDetails) => {
         setEditingResult(result);
+
+        // Fetch the full match data for the form
+        try {
+            const { data: matchData, error } = await supabase
+                .from('matches')
+                .select(`
+                    id,
+                    player_a_id,
+                    player_b_id,
+                    player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
+                    player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
+                    tournaments(id, name, matches_type),
+                    status,
+                    start_time,
+                    web_synced
+                `)
+                .eq('id', result.match_id)
+                .single();
+
+            if (error) throw error;
+
+            // Transform the data to match our interface
+            const transformedMatch = {
+                id: matchData.id,
+                player_a: {
+                    id: matchData.player_a?.id || '',
+                    first_name: matchData.player_a?.first_name || '',
+                    last_name: matchData.player_a?.last_name || ''
+                },
+                player_b: {
+                    id: matchData.player_b?.id || '',
+                    first_name: matchData.player_b?.first_name || '',
+                    last_name: matchData.player_b?.last_name || ''
+                },
+                tournaments: Array.isArray(matchData.tournaments) ? matchData.tournaments[0] : matchData.tournaments,
+                status: matchData.status,
+                start_time: matchData.start_time,
+                web_synced: matchData.web_synced
+            };
+
+            setSelectedMatch(transformedMatch);
+        } catch (error) {
+            console.error('Error fetching match data for editing:', error);
+            toast.error('Failed to load match data for editing');
+            return;
+        }
+
         setFormData({
             winner_id: result.winner_id,
             match_result: result.match_result,
@@ -198,11 +272,7 @@ export default function MatchResultsPage() {
             set4_tiebreak_score: result.set4_tiebreak_score || '',
             set5_tiebreak_score: result.set5_tiebreak_score || '',
             super_tiebreak_score: result.super_tiebreak_score || '',
-            super_tiebreak_winner_id: result.super_tiebreak_winner_id || '',
-            total_games: result.total_games?.toString() || '',
-            aces_leader_id: result.aces_leader_id || '',
-            double_faults_count: result.double_faults_count?.toString() || '',
-            break_points_count: result.break_points_count?.toString() || ''
+            super_tiebreak_winner_id: result.super_tiebreak_winner_id || ''
         });
         setIsEditDialogOpen(true);
     };
@@ -211,15 +281,27 @@ export default function MatchResultsPage() {
         if (!selectedMatch) return;
 
         try {
+            // Helper function to clear regular set score if tiebreak exists
+            const getSetScore = (setNum: number) => {
+                const tiebreakScore = formData[`set${setNum}_tiebreak_score`];
+                const regularScore = formData[`set${setNum}_score`];
+
+                // If there's a tiebreak, don't save the regular set score
+                if (tiebreakScore && tiebreakScore !== 'none') {
+                    return null;
+                }
+                return regularScore || null;
+            };
+
             const resultData = {
                 match_id: selectedMatch.id,
                 winner_id: formData.winner_id,
                 match_result: formData.match_result,
-                set1_score: formData.set1_score || null,
-                set2_score: formData.set2_score || null,
-                set3_score: formData.set3_score || null,
-                set4_score: formData.set4_score || null,
-                set5_score: formData.set5_score || null,
+                set1_score: getSetScore(1),
+                set2_score: getSetScore(2),
+                set3_score: getSetScore(3),
+                set4_score: getSetScore(4),
+                set5_score: getSetScore(5),
                 set1_winner_id: formData.set1_winner_id || null,
                 set2_winner_id: formData.set2_winner_id || null,
                 set3_winner_id: formData.set3_winner_id || null,
@@ -231,15 +313,10 @@ export default function MatchResultsPage() {
                 set4_tiebreak_score: formData.set4_tiebreak_score || null,
                 set5_tiebreak_score: formData.set5_tiebreak_score || null,
                 super_tiebreak_score: formData.super_tiebreak_score || null,
-                super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null,
-                total_games: formData.total_games ? parseInt(formData.total_games) : null,
-                aces_leader_id: formData.aces_leader_id || null,
-                double_faults_count: formData.double_faults_count ? parseInt(formData.double_faults_count) : null,
-                break_points_count: formData.break_points_count ? parseInt(formData.break_points_count) : null
+                super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null
             };
 
-            const { error } = await MatchResultsService.createMatchResult(resultData);
-            if (error) throw error;
+            await MatchResultsService.createMatchResult(resultData);
 
             toast.success('Match result added successfully');
             setIsResultDialogOpen(false);
@@ -254,14 +331,26 @@ export default function MatchResultsPage() {
         if (!editingResult) return;
 
         try {
+            // Helper function to clear regular set score if tiebreak exists
+            const getSetScore = (setNum: number) => {
+                const tiebreakScore = formData[`set${setNum}_tiebreak_score`];
+                const regularScore = formData[`set${setNum}_score`];
+
+                // If there's a tiebreak, don't save the regular set score
+                if (tiebreakScore && tiebreakScore !== 'none') {
+                    return null;
+                }
+                return regularScore || null;
+            };
+
             const resultData = {
                 winner_id: formData.winner_id,
                 match_result: formData.match_result,
-                set1_score: formData.set1_score || null,
-                set2_score: formData.set2_score || null,
-                set3_score: formData.set3_score || null,
-                set4_score: formData.set4_score || null,
-                set5_score: formData.set5_score || null,
+                set1_score: getSetScore(1),
+                set2_score: getSetScore(2),
+                set3_score: getSetScore(3),
+                set4_score: getSetScore(4),
+                set5_score: getSetScore(5),
                 set1_winner_id: formData.set1_winner_id || null,
                 set2_winner_id: formData.set2_winner_id || null,
                 set3_winner_id: formData.set3_winner_id || null,
@@ -274,15 +363,9 @@ export default function MatchResultsPage() {
                 set5_tiebreak_score: formData.set5_tiebreak_score || null,
                 super_tiebreak_score: formData.super_tiebreak_score || null,
                 super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null,
-                total_games: formData.total_games ? parseInt(formData.total_games) : null,
-                aces_leader_id: formData.aces_leader_id || null,
-                double_faults_count: formData.double_faults_count ? parseInt(formData.double_faults_count) : null,
-                break_points_count: formData.break_points_count ? parseInt(formData.break_points_count) : null
             };
 
-            const { error } = await MatchResultsService.updateMatchResult(editingResult.id, resultData);
-            if (error) throw error;
-
+            await MatchResultsService.updateMatchResult(editingResult.id, resultData);
             toast.success('Match result updated successfully');
             setIsEditDialogOpen(false);
             fetchMatchResults();
@@ -290,14 +373,6 @@ export default function MatchResultsPage() {
             console.error('Error updating match result:', error);
             toast.error('Failed to update match result');
         }
-    };
-
-    const hasResult = (matchId: string) => {
-        return matchResults.some(result => result.match_id === matchId);
-    };
-
-    const getResult = (matchId: string) => {
-        return matchResults.find(result => result.match_id === matchId);
     };
 
     if (loading) {
@@ -317,93 +392,27 @@ export default function MatchResultsPage() {
                 </p>
             </div>
 
-            <div className="grid gap-6">
-                {matches.length === 0 && (
-                    <Card>
-                        <CardContent className="p-8 text-center">
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No matches found</h3>
-                            <p className="text-gray-600 mb-4">
-                                No web-synced matches available. Make sure you have:
-                            </p>
-                            <ul className="text-sm text-gray-500 space-y-1">
-                                <li>• Created matches in tournaments</li>
-                                <li>• Synced matches to the web app</li>
-                                <li>• Set match status to &apos;finished&apos; to add results</li>
-                            </ul>
-                        </CardContent>
-                    </Card>
-                )}
-                {matches.map((match) => {
-                    const result = getResult(match.id);
-                    const hasExistingResult = hasResult(match.id);
+            {/* Filters */}
+            <MatchResultsFilters
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                tournamentFilter={tournamentFilter}
+                setTournamentFilter={setTournamentFilter}
+                dateFilter={dateFilter}
+                setDateFilter={setDateFilter}
+                tournaments={tournaments}
+                dates={dates}
+            />
 
-                    return (
-                        <Card key={match.id}>
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle className="text-lg">
-                                            {match.player_a.first_name} {match.player_a.last_name} vs {match.player_b.first_name} {match.player_b.last_name}
-                                        </CardTitle>
-                                        <CardDescription>
-                                            {match.tournaments?.name} • {match.tournaments?.matches_type} • {match.start_time ? new Date(match.start_time).toLocaleDateString() : 'No date'}
-                                            <br />
-                                            <span className="text-xs text-gray-500">Status: {match.status} | Web Synced: {match.web_synced ? 'Yes' : 'No'}</span>
-                                        </CardDescription>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Badge variant={match.status === 'finished' ? 'default' : 'secondary'}>
-                                            {match.status}
-                                        </Badge>
-                                        {hasExistingResult && (
-                                            <Badge variant="outline" className="text-green-600">
-                                                Results Added
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-muted-foreground">
-                                        {result ? (
-                                            <span>
-                                                Winner: {result.winner?.first_name} {result.winner?.last_name} •
-                                                Result: {result.match_result}
-                                            </span>
-                                        ) : (
-                                            <span>No results added yet</span>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        {hasExistingResult ? (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handleEditResult(result!)}
-                                            >
-                                                Edit Results
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleAddResult(match)}
-                                                disabled={!isFinishedStatus(match.status as any)}
-                                                title={!isFinishedStatus(match.status as any) ? `Match status is "${match.status}" - change to "finished" to add results` : 'Add match results'}
-                                            >
-                                                Add Results
-                                                {!isFinishedStatus(match.status as any) && (
-                                                    <span className="ml-2 text-xs opacity-70">({match.status})</span>
-                                                )}
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-            </div>
+            {/* Results Table */}
+            <MatchResultsTable
+                groupedMatches={groupedMatches}
+                matchResults={matchResults}
+                onAddResult={handleAddResult}
+                onEditResult={handleEditResult}
+            />
 
             {/* Add Result Dialog */}
             <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
@@ -444,248 +453,6 @@ export default function MatchResultsPage() {
                     />
                 </DialogContent>
             </Dialog>
-        </div>
-    );
-}
-
-// Match Result Form Component
-interface MatchResultFormProps {
-    formData: any;
-    setFormData: (data: any) => void;
-    match: Match | null;
-    onSubmit: () => void;
-    submitLabel: string;
-}
-
-function MatchResultForm({ formData, setFormData, match, onSubmit, submitLabel }: MatchResultFormProps) {
-    if (!match) return null;
-
-    const isAmateurFormat = match.tournaments?.matches_type === 'best-of-3-super-tiebreak';
-    const isBestOf5 = match.tournaments?.matches_type === 'best-of-5';
-
-    return (
-        <div className="space-y-6">
-            {/* Match Winner */}
-            <div className="space-y-2">
-                <Label>Match Winner *</Label>
-                <Select value={formData.winner_id} onValueChange={(value) => setFormData({ ...formData, winner_id: value })}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select winner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={match.player_a.id}>
-                            {match.player_a.first_name} {match.player_a.last_name}
-                        </SelectItem>
-                        <SelectItem value={match.player_b.id}>
-                            {match.player_b.first_name} {match.player_b.last_name}
-                        </SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {/* Match Result */}
-            <div className="space-y-2">
-                <Label>Match Result *</Label>
-                <Select value={formData.match_result} onValueChange={(value) => setFormData({ ...formData, match_result: value })}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select match result" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {isBestOf5 ? (
-                            <>
-                                <SelectItem value="3-0">3-0 (Straight sets)</SelectItem>
-                                <SelectItem value="3-1">3-1 (Four sets)</SelectItem>
-                                <SelectItem value="3-2">3-2 (Five sets)</SelectItem>
-                                <SelectItem value="0-3">0-3 (Straight sets)</SelectItem>
-                                <SelectItem value="1-3">1-3 (Four sets)</SelectItem>
-                                <SelectItem value="2-3">2-3 (Five sets)</SelectItem>
-                            </>
-                        ) : (
-                            <>
-                                <SelectItem value="2-0">2-0 (Straight sets)</SelectItem>
-                                <SelectItem value="2-1">2-1 ({isAmateurFormat ? 'Super tiebreak' : 'Three sets'})</SelectItem>
-                                <SelectItem value="0-2">0-2 (Straight sets)</SelectItem>
-                                <SelectItem value="1-2">1-2 ({isAmateurFormat ? 'Super tiebreak' : 'Three sets'})</SelectItem>
-                            </>
-                        )}
-                    </SelectContent>
-                </Select>
-            </div>
-
-            {/* Set Scores */}
-            <div className="space-y-4">
-                <Label>Set Scores</Label>
-                <div className="grid grid-cols-2 gap-4">
-                    {[1, 2, 3, 4, 5].map((setNum) => {
-                        if (isBestOf5 || setNum <= 3) {
-                            return (
-                                <div key={setNum} className="space-y-2">
-                                    <Label>Set {setNum} Score</Label>
-                                    <Input
-                                        placeholder="e.g., 6-4"
-                                        value={formData[`set${setNum}_score`]}
-                                        onChange={(e) => setFormData({ ...formData, [`set${setNum}_score`]: e.target.value })}
-                                    />
-                                </div>
-                            );
-                        }
-                        return null;
-                    })}
-                </div>
-            </div>
-
-            {/* Set Winners */}
-            <div className="space-y-4">
-                <Label>Set Winners</Label>
-                <div className="grid grid-cols-2 gap-4">
-                    {[1, 2, 3, 4, 5].map((setNum) => {
-                        if (isBestOf5 || setNum <= 3) {
-                            return (
-                                <div key={setNum} className="space-y-2">
-                                    <Label>Set {setNum} Winner</Label>
-                                    <Select
-                                        value={formData[`set${setNum}_winner_id`]}
-                                        onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_winner_id`]: value })}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select winner" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value={match.player_a.id}>
-                                                {match.player_a.first_name} {match.player_a.last_name}
-                                            </SelectItem>
-                                            <SelectItem value={match.player_b.id}>
-                                                {match.player_b.first_name} {match.player_b.last_name}
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            );
-                        }
-                        return null;
-                    })}
-                </div>
-            </div>
-
-            {/* Tiebreak Scores */}
-            <div className="space-y-4">
-                <Label>Tiebreak Scores</Label>
-                <div className="grid grid-cols-2 gap-4">
-                    {[1, 2, 3, 4, 5].map((setNum) => {
-                        if (isBestOf5 || setNum <= 3) {
-                            return (
-                                <div key={setNum} className="space-y-2">
-                                    <Label>Set {setNum} Tiebreak Score</Label>
-                                    <Input
-                                        placeholder="e.g., 7-5"
-                                        value={formData[`set${setNum}_tiebreak_score`]}
-                                        onChange={(e) => setFormData({ ...formData, [`set${setNum}_tiebreak_score`]: e.target.value })}
-                                    />
-                                </div>
-                            );
-                        }
-                        return null;
-                    })}
-                </div>
-            </div>
-
-            {/* Super Tiebreak (for amateur format) */}
-            {isAmateurFormat && (
-                <div className="space-y-4">
-                    <Label>Super Tiebreak</Label>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Super Tiebreak Score</Label>
-                            <Input
-                                placeholder="e.g., 10-8"
-                                value={formData.super_tiebreak_score}
-                                onChange={(e) => setFormData({ ...formData, super_tiebreak_score: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Super Tiebreak Winner</Label>
-                            <Select
-                                value={formData.super_tiebreak_winner_id}
-                                onValueChange={(value) => setFormData({ ...formData, super_tiebreak_winner_id: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select winner" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value={match.player_a.id}>
-                                        {match.player_a.first_name} {match.player_a.last_name}
-                                    </SelectItem>
-                                    <SelectItem value={match.player_b.id}>
-                                        {match.player_b.first_name} {match.player_b.last_name}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Additional Statistics */}
-            <div className="space-y-4">
-                <Label>Additional Statistics</Label>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <Label>Total Games</Label>
-                        <Input
-                            type="number"
-                            placeholder="e.g., 24"
-                            value={formData.total_games}
-                            onChange={(e) => setFormData({ ...formData, total_games: e.target.value })}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Aces Leader</Label>
-                        <Select
-                            value={formData.aces_leader_id}
-                            onValueChange={(value) => setFormData({ ...formData, aces_leader_id: value })}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select player" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={match.player_a.id}>
-                                    {match.player_a.first_name} {match.player_a.last_name}
-                                </SelectItem>
-                                <SelectItem value={match.player_b.id}>
-                                    {match.player_b.first_name} {match.player_b.last_name}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Double Faults Count</Label>
-                        <Input
-                            type="number"
-                            placeholder="e.g., 8"
-                            value={formData.double_faults_count}
-                            onChange={(e) => setFormData({ ...formData, double_faults_count: e.target.value })}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Break Points Count</Label>
-                        <Input
-                            type="number"
-                            placeholder="e.g., 12"
-                            value={formData.break_points_count}
-                            onChange={(e) => setFormData({ ...formData, break_points_count: e.target.value })}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => { }}>
-                    Cancel
-                </Button>
-                <Button onClick={onSubmit}>
-                    {submitLabel}
-                </Button>
-            </div>
         </div>
     );
 }
