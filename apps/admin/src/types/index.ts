@@ -38,6 +38,8 @@ export interface Match {
     odds_b: number | null;
     winner_id: string | null;
     web_synced: boolean | null;
+    locked: boolean | null;
+    updated_at: string | null;
     tournaments?: {
         id: string;
         name: string;

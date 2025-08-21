@@ -29,6 +29,8 @@ async function fetchSyncedMatches(): Promise<Match[]> {
             b_score,
             points_value,
             web_synced,
+            locked,
+            updated_at,
             tournaments (
                 id,
                 name,
@@ -115,9 +117,11 @@ async function fetchSyncedMatches(): Promise<Match[]> {
             time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
             status_display,
             points: rawMatch.points_value,
+            locked: rawMatch.locked || false,
+            updated_at: rawMatch.updated_at,
             startTime,
             lockTime,
-            isLocked: lockTime <= now
+            isLocked: rawMatch.locked || lockTime <= now
         };
     });
 }

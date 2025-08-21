@@ -153,6 +153,8 @@ async function fetchSyncedMatches(): Promise<Match[]> {
             b_score,
             points_value,
             web_synced,
+            locked,
+            updated_at,
             tournaments (
                 id,
                 name,
@@ -239,9 +241,11 @@ async function fetchSyncedMatches(): Promise<Match[]> {
             time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
             status_display,
             points: rawMatch.points_value,
+            locked: rawMatch.locked || false,
+            updated_at: rawMatch.updated_at,
             startTime,
             lockTime,
-            isLocked: lockTime <= now
+            isLocked: rawMatch.locked || lockTime <= now
         };
     });
 }
@@ -354,7 +358,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
                                         {match.player1.name.split(' ')[1] || match.player1.name} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1] || match.player2.name}
                                     </div>
-
+                                    <div className="text-xs text-gray-400 truncate">
+                                        {match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                        {match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}
+                                    </div>
                                 </button>
                             ))}
 
@@ -377,7 +386,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                     <div className="text-xs sm:text-sm font-semibold text-left leading-tight truncate">
                                         {match.player1.name.split(' ')[1] || match.player1.name} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1] || match.player2.name}
                                     </div>
-                                    <div className="text-xs text-gray-500 truncate">{match.time}</div>
+                                    <div className="text-xs text-gray-400 truncate">
+                                        {match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                        {match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}
+                                    </div>
                                 </button>
                             ))}
                         </div>

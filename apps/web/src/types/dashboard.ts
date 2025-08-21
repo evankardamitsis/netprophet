@@ -45,6 +45,8 @@ export interface Match {
     b_score: number | null;
     points_value: number;
     web_synced: boolean;
+    locked: boolean | null;
+    updated_at: string | null;
     tournaments?: Tournament;
     tournament_categories?: Category;
     player_a?: Player;

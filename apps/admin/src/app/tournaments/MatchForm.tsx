@@ -33,11 +33,12 @@ interface MatchFormProps {
     match?: Match | null;
     tournaments: Tournament[];
     currentTournament?: Tournament | null;
+    categories?: Array<{ id: string; name: string }>;
     onSubmit: (data: any) => void;
     onCancel: () => void;
 }
 
-export function MatchForm({ match, tournaments, currentTournament, onSubmit, onCancel }: MatchFormProps) {
+export function MatchForm({ match, tournaments, currentTournament, categories, onSubmit, onCancel }: MatchFormProps) {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(false);
     const [playersError, setPlayersError] = useState<string | null>(null);
@@ -202,8 +203,9 @@ export function MatchForm({ match, tournaments, currentTournament, onSubmit, onC
             tournament_id: data.tournament_id === 'none' || !data.tournament_id ? null : data.tournament_id,
             category_id: data.category_id === 'none' || !data.category_id ? null : data.category_id,
             round: data.round || null,
-            odds_a: null, // Will be calculated automatically
-            odds_b: null  // Will be calculated automatically
+            // Preserve existing odds when editing, only set to null for new matches
+            odds_a: match?.odds_a || null,
+            odds_b: match?.odds_b || null
         };
 
         onSubmit(submitData);
@@ -323,14 +325,11 @@ export function MatchForm({ match, tournaments, currentTournament, onSubmit, onC
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="none" className="text-base py-3">No Category</SelectItem>
-                            {(() => {
-                                const tournament = tournaments.find(t => t.id === watchedValues.tournament_id);
-                                return tournament?.tournament_categories?.map((category: any) => (
-                                    <SelectItem key={category.id} value={category.id} className="text-base py-3">
-                                        {category.name}
-                                    </SelectItem>
-                                ));
-                            })()}
+                            {categories?.map((category) => (
+                                <SelectItem key={category.id} value={category.id} className="text-base py-3">
+                                    {category.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

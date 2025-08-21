@@ -18,6 +18,7 @@ export interface Dictionary {
         liveMatches: string;
         expandSidebar: string;
         locked: string;
+        days: string;
         hours: string;
         minutes: string;
         seconds: string;

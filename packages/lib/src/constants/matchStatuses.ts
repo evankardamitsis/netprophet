@@ -1,5 +1,5 @@
 export const MATCH_STATUSES = {
-    SCHEDULED: 'scheduled',
+    SCHEDULED: 'upcoming',
     LIVE: 'live',
     FINISHED: 'finished',
     CANCELLED: 'cancelled',
@@ -12,8 +12,7 @@ export const MATCH_STATUS_OPTIONS: { value: MatchStatus; label: string }[] = [
     { value: MATCH_STATUSES.SCHEDULED, label: 'Scheduled' },
     { value: MATCH_STATUSES.LIVE, label: 'Live' },
     { value: MATCH_STATUSES.FINISHED, label: 'Finished' },
-    { value: MATCH_STATUSES.CANCELLED, label: 'Cancelled' },
-    { value: MATCH_STATUSES.POSTPONED, label: 'Postponed' }
+    { value: MATCH_STATUSES.CANCELLED, label: 'Cancelled' }
 ];
 
 // Helper function to get status label

@@ -1,0 +1,4 @@
+{
+  "cron": "*/1 * * * *",
+  "description": "Run match automation every minute to check lock times and start times"
+}

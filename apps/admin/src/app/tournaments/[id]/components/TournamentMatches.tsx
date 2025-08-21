@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge, Clock, Edit, MoreHorizontal, Plus, Trash2, Users } from 'lucide-react';
+import { Badge, Clock, Edit, MoreHorizontal, Trash2, Users } from 'lucide-react';
 import { Match } from '@/types';
 import { TournamentMatchesTable } from './TournamentMatchesTable';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
@@ -16,6 +16,7 @@ interface TournamentMatchesProps {
     onCalculateOdds: (matchIds: string[]) => void;
     onSyncToWeb: (matchIds: string[]) => void;
     onRemoveFromWeb: (matchIds: string[]) => void;
+    onUpdateMatchStatus: (matchId: string, status: string) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
 }
@@ -28,21 +29,11 @@ export function TournamentMatches({
     onCalculateOdds,
     onSyncToWeb,
     onRemoveFromWeb,
+    onUpdateMatchStatus,
     getStatusColor,
     formatTime
 }: TournamentMatchesProps) {
     const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
-
-    const handleSyncToWeb = () => {
-        if (selectedMatches.length === 0) {
-            // If no matches are selected, sync all matches
-            const allMatchIds = matches.map(match => match.id);
-            onSyncToWeb(allMatchIds);
-        } else {
-            // Sync only selected matches
-            onSyncToWeb(selectedMatches);
-        }
-    };
 
     return (
         <div className="space-y-6">
@@ -50,25 +41,6 @@ export function TournamentMatches({
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">Tournament Matches</h2>
                     <p className="text-gray-600 mt-1">Manage all matches for this tournament</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button
-                        onClick={handleSyncToWeb}
-                        variant="outline"
-                        className="flex items-center gap-2 border-green-600 text-green-600 hover:bg-green-50"
-                    >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Sync to Web {selectedMatches.length > 0 && `(${selectedMatches.length} selected)`}
-                    </Button>
-                    <Button
-                        onClick={onAddMatch}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Add Match
-                    </Button>
                 </div>
             </div>
 
@@ -80,6 +52,7 @@ export function TournamentMatches({
                     onCalculateOdds={onCalculateOdds}
                     onSyncToWeb={onSyncToWeb}
                     onRemoveFromWeb={onRemoveFromWeb}
+                    onUpdateMatchStatus={onUpdateMatchStatus}
                     getStatusColor={getStatusColor}
                     formatTime={formatTime}
                     selectedMatches={selectedMatches}

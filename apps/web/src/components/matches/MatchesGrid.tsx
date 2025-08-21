@@ -73,20 +73,20 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
+                                                <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
                                             </div>
                                         </div>
 
-                                        {/* Teams and Score */}
+                                        {/* Teams */}
                                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                             {/* Team 1 */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player1.name}</div>
                                             </div>
 
-                                            {/* Score */}
+                                            {/* VS */}
                                             <div className="text-center mx-1 xs:mx-2 sm:mx-3 md:mx-4 flex-shrink-0">
-                                                <div className="text-sm xs:text-lg sm:text-xl md:text-2xl font-bold text-white">6-4, 3-6</div>
-                                                <div className="text-xs text-gray-400 mt-0.5 xs:mt-1">2ND SET</div>
+                                                <div className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-400">{dict?.sidebar?.versus || 'VS'}</div>
                                             </div>
 
                                             {/* Team 2 */}
@@ -110,13 +110,19 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                     {/* Action Button - Always at bottom */}
                                     <button
-                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 rounded-lg transition-colors text-xs xs:text-sm mt-2 xs:mt-3"
+                                        className={`w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 rounded-lg transition-colors text-xs xs:text-sm mt-2 xs:mt-3 ${match.locked
+                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                                            }`}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onSelectMatch(match);
+                                            if (!match.locked) {
+                                                onSelectMatch(match);
+                                            }
                                         }}
+                                        disabled={match.locked || false}
                                     >
-                                        {dict?.sidebar?.makePrediction || 'Make your prediction'}
+                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (dict?.sidebar?.makePrediction || 'Make your prediction')}
                                     </button>
                                 </div>
                             ))}
@@ -161,6 +167,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
+                                                <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
                                             </div>
                                         </div>
 
@@ -198,13 +205,19 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                     {/* Action Button - Always at bottom */}
                                     <button
-                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 rounded-lg transition-colors text-xs xs:text-sm mt-2 xs:mt-3"
+                                        className={`w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 rounded-lg transition-colors text-xs xs:text-sm mt-2 xs:mt-3 ${match.locked
+                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                                            }`}
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            onSelectMatch(match);
+                                            if (!match.locked) {
+                                                onSelectMatch(match);
+                                            }
                                         }}
+                                        disabled={match.locked || false}
                                     >
-                                        {dict?.sidebar?.makePrediction || 'Make your prediction'}
+                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (dict?.sidebar?.makePrediction || 'Make your prediction')}
                                     </button>
                                 </div>
                             ))}

@@ -14,6 +14,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+    getTournament,
     getTournamentWithDetails,
     updateTournament,
     deleteTournament,
@@ -23,6 +24,7 @@ import {
     deleteTournamentCategory
 } from '@netprophet/lib/supabase/tournaments';
 import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure, syncMatchesToWeb, removeMatchesFromWeb } from '@netprophet/lib/supabase/matches';
+import { supabase } from '@netprophet/lib';
 import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
@@ -56,18 +58,25 @@ export default function TournamentPage() {
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [activeTab, setActiveTab] = useState<string>('overview');
 
+
+
     const loadTournamentData = useCallback(async () => {
         try {
             setLoading(true);
-            const [tournamentData, matchesData, categoriesData] = await Promise.all([
+
+            // Load tournament with details (including categories) and matches in parallel
+            const [tournamentData, matchesData] = await Promise.all([
                 getTournamentWithDetails(tournamentId),
-                getMatchesByTournament(tournamentId),
-                getTournamentCategories(tournamentId)
+                getMatchesByTournament(tournamentId)
             ]);
 
             setTournament(tournamentData as Tournament);
-            setMatches(matchesData);
-            setCategories(categoriesData);
+            setMatches(matchesData as any);
+
+            // Set categories from the tournament data if available
+            if (tournamentData.tournament_categories) {
+                setCategories(tournamentData.tournament_categories as any);
+            }
         } catch (error) {
             console.error('Error loading tournament data:', error);
             toast.error('Failed to load tournament data');
@@ -80,7 +89,7 @@ export default function TournamentPage() {
         if (tournamentId) {
             loadTournamentData();
         }
-    }, [tournamentId, loadTournamentData]);
+    }, [tournamentId]); // Removed loadTournamentData from dependencies
 
     // Initialize active tab from localStorage or URL params
     useEffect(() => {
@@ -272,6 +281,49 @@ export default function TournamentPage() {
         }
     };
 
+    const handleRunMatchAutomation = async () => {
+        try {
+            // Call the database automation function directly
+            const { error } = await (supabase.rpc as any)('process_match_automation');
+
+            if (error) {
+                console.error('Error running match automation:', error);
+                toast.error('Failed to run match automation: ' + error.message);
+                return;
+            }
+
+            // Reload tournament data to show updated status
+            loadTournamentData();
+
+            toast.success('Match automation completed successfully!');
+        } catch (error) {
+            console.error('Error running match automation:', error);
+            toast.error('Failed to run match automation: ' + (error as Error).message);
+        }
+    };
+
+    const handleUpdateMatchStatus = async (matchId: string, status: string) => {
+        try {
+            // Find the match to get its current data
+            const match = matches.find(m => m.id === matchId);
+            if (!match) {
+                toast.error('Match not found');
+                return;
+            }
+
+            // Update only the status field
+            await updateMatch(matchId, { status });
+
+            // Reload tournament data to show updated status
+            loadTournamentData();
+
+            toast.success(`Match status updated to ${status}!`);
+        } catch (error) {
+            console.error('Error updating match status:', error);
+            toast.error('Failed to update match status');
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -368,6 +420,13 @@ export default function TournamentPage() {
                                 <Plus className="h-4 w-4" />
                                 <span className="hidden sm:inline">Add Match</span>
                             </Button>
+                            <Button
+                                onClick={handleRunMatchAutomation}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                            >
+                                <Clock className="h-4 w-4" />
+                                <span className="hidden sm:inline">Run Automation</span>
+                            </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="border-gray-300">
@@ -462,6 +521,7 @@ export default function TournamentPage() {
                             onCalculateOdds={handleCalculateOdds}
                             onSyncToWeb={handleSyncToWeb}
                             onRemoveFromWeb={handleRemoveFromWeb}
+                            onUpdateMatchStatus={handleUpdateMatchStatus}
                             getStatusColor={getStatusColor}
                             formatTime={formatTime}
                         />
@@ -496,6 +556,7 @@ export default function TournamentPage() {
                     match={editingMatch}
                     tournaments={[tournament]}
                     currentTournament={tournament}
+                    categories={categories}
                     onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
                 />
 

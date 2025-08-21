@@ -57,6 +57,7 @@ interface PredictionFormProps {
     setSetScore: (setNumber: number, value: string) => void;
     getSetWinner: (setNumber: number) => string;
     setSetWinner: (setNumber: number, value: string) => void;
+    locked?: boolean;
 }
 
 export function PredictionForm({
@@ -72,7 +73,8 @@ export function PredictionForm({
     getSetScore,
     setSetScore,
     getSetWinner,
-    setSetWinner
+    setSetWinner,
+    locked
 }: PredictionFormProps) {
 
     const { dict, lang } = useDictionary();
@@ -350,9 +352,12 @@ export function PredictionForm({
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     <button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name)}
-                        className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${formPredictions.winner === details.player1.name
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                        disabled={locked}
+                        className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${locked
+                            ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                            : (formPredictions.winner === details.player1.name
+                                ? 'bg-purple-600 border-purple-600 text-white'
+                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                             }`}
                     >
                         <div className="text-sm sm:text-base font-semibold truncate">{details.player1.name.split(' ')[1]}</div>
@@ -360,9 +365,12 @@ export function PredictionForm({
                     </button>
                     <button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player2.name ? '' : details.player2.name)}
-                        className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${formPredictions.winner === details.player2.name
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                        disabled={locked}
+                        className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${locked
+                            ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                            : (formPredictions.winner === details.player2.name
+                                ? 'bg-purple-600 border-purple-600 text-white'
+                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                             }`}
                     >
                         <div className="text-sm sm:text-base font-semibold truncate">{details.player2.name.split(' ')[1]}</div>
@@ -401,9 +409,12 @@ export function PredictionForm({
                                         <>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-0' ? '' : '3-0')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-0'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '3-0'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">3-0</div>
@@ -411,9 +422,12 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-1' ? '' : '3-1')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-1'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '3-1'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">3-1</div>
@@ -421,9 +435,12 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-2' ? '' : '3-2')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '3-2'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '3-2'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">3-2</div>
@@ -434,9 +451,12 @@ export function PredictionForm({
                                         <>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-3' ? '' : '0-3')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-3'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '0-3'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">0-3</div>
@@ -444,9 +464,12 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-3' ? '' : '1-3')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-3'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '1-3'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">1-3</div>
@@ -454,9 +477,12 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-3' ? '' : '2-3')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-3'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '2-3'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">2-3</div>
@@ -471,9 +497,12 @@ export function PredictionForm({
                                         <>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-0' ? '' : '2-0')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-0'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '2-0'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">2-0</div>
@@ -481,9 +510,12 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-1' ? '' : '2-1')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '2-1'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '2-1'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">2-1</div>
@@ -494,9 +526,12 @@ export function PredictionForm({
                                         <>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-2' ? '' : '0-2')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '0-2'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '0-2'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">0-2</div>
@@ -504,9 +539,12 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-2' ? '' : '1-2')}
-                                                className={`p-3 rounded-lg border transition-colors ${formPredictions.matchResult === '1-2'
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                disabled={locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (formPredictions.matchResult === '1-2'
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                                                     }`}
                                             >
                                                 <div className="text-base font-semibold">1-2</div>
@@ -677,12 +715,14 @@ export function PredictionForm({
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
-                                                disabled={!canPlayer1Win}
-                                                className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player1.name
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : canPlayer1Win
-                                                        ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                        : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'
+                                                disabled={!canPlayer1Win || locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (currentWinner === details.player1.name
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : canPlayer1Win
+                                                            ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                            : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed')
                                                     }`}
                                             >
                                                 {details.player1.name.split(' ')[1]}
@@ -690,12 +730,14 @@ export function PredictionForm({
                                             </button>
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player2.name ? '' : details.player2.name)}
-                                                disabled={!canPlayer2Win}
-                                                className={`p-3 rounded-lg border transition-colors ${currentWinner === details.player2.name
-                                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                                    : canPlayer2Win
-                                                        ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
-                                                        : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'
+                                                disabled={!canPlayer2Win || locked}
+                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                    ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                    : (currentWinner === details.player2.name
+                                                        ? 'bg-purple-600 border-purple-600 text-white'
+                                                        : canPlayer2Win
+                                                            ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                                            : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed')
                                                     }`}
                                             >
                                                 {details.player2.name.split(' ')[1]}
@@ -831,7 +873,11 @@ export function PredictionForm({
                                         <select
                                             value={formPredictions.set1TieBreakScore}
                                             onChange={(e) => onPredictionChange('set1TieBreakScore', e.target.value)}
-                                            className="w-full p-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            disabled={locked}
+                                            className={`w-full p-2 border rounded-lg text-sm ${locked
+                                                ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                                }`}
                                         >
                                             <option value="">{dict?.matches?.selectTiebreakScore || 'Select tiebreak score'}</option>
                                             {(() => {
@@ -888,7 +934,11 @@ export function PredictionForm({
                                         <select
                                             value={formPredictions.set2TieBreakScore}
                                             onChange={(e) => onPredictionChange('set2TieBreakScore', e.target.value)}
-                                            className="w-full p-2 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                            disabled={locked}
+                                            className={`w-full p-2 border rounded-lg text-sm ${locked
+                                                ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                                : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                                }`}
                                         >
                                             <option value="">{dict?.matches?.selectTiebreakScore || 'Select tiebreak score'}</option>
                                             {(() => {
@@ -987,7 +1037,11 @@ export function PredictionForm({
                                 <select
                                     value={formPredictions.superTieBreakScore}
                                     onChange={(e) => onPredictionChange('superTieBreakScore', e.target.value)}
-                                    className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                    disabled={locked}
+                                    className={`w-full p-3 border rounded-lg text-sm ${locked
+                                        ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                        : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                        }`}
                                 >
                                     <option value="">{dict?.matches?.selectSuperTiebreakScore || 'Select super tiebreak score'}</option>
                                     {formPredictions.winner === details.player1.name ? (

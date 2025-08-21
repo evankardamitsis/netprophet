@@ -13,7 +13,7 @@ import {
     useReactTable,
     VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2, Globe, Globe2 } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2, Globe, Globe2, Lock } from "lucide-react";
 import { MATCH_STATUSES, MATCH_STATUS_OPTIONS, type MatchStatus } from "@netprophet/lib";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Match } from "@/types";
 
 interface TournamentMatchesTableProps {
@@ -45,6 +53,7 @@ interface TournamentMatchesTableProps {
     onCalculateOdds: (matchIds: string[]) => void;
     onSyncToWeb: (matchIds: string[]) => void;
     onRemoveFromWeb: (matchIds: string[]) => void;
+    onUpdateMatchStatus: (matchId: string, status: string) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
     selectedMatches: string[];
@@ -58,6 +67,7 @@ export function TournamentMatchesTable({
     onCalculateOdds,
     onSyncToWeb,
     onRemoveFromWeb,
+    onUpdateMatchStatus,
     getStatusColor,
     formatTime,
     selectedMatches,
@@ -68,8 +78,15 @@ export function TournamentMatchesTable({
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
     const [webSyncFilter, setWebSyncFilter] = React.useState<string>("all");
-    const [editingStatus, setEditingStatus] = React.useState<string | null>(null);
-    const [editValue, setEditValue] = React.useState<string>("");
+
+    // Confirmation modal state
+    const [showConfirmModal, setShowConfirmModal] = React.useState(false);
+    const [pendingStatusChange, setPendingStatusChange] = React.useState<{
+        matchId: string;
+        newStatus: MatchStatus;
+        currentStatus: string;
+        matchName: string;
+    } | null>(null);
 
     const getPlayerName = (player: any) => {
         if (player?.first_name && player?.last_name) {
@@ -77,6 +94,32 @@ export function TournamentMatchesTable({
             return `${player.first_name} ${player.last_name}${ntrp}`;
         }
         return 'TBD';
+    };
+
+    // Handle status change confirmation
+    const handleConfirmStatusChange = () => {
+        if (pendingStatusChange) {
+            onUpdateMatchStatus(pendingStatusChange.matchId, pendingStatusChange.newStatus);
+        }
+        setShowConfirmModal(false);
+        setPendingStatusChange(null);
+    };
+
+    // Handle status change cancellation
+    const handleCancelStatusChange = () => {
+        setShowConfirmModal(false);
+        setPendingStatusChange(null);
+    };
+
+    // Get status warning message based on the status change
+    const getStatusWarning = (current: string, newStatus: string) => {
+        const warnings = {
+            finished: "This will mark the match as completed and may trigger result calculations.",
+            live: "This will mark the match as live and make it available for betting.",
+            upcoming: "This will open the edit modal to set the scheduled date and time.",
+            cancelled: "This will mark the match as cancelled and may affect betting."
+        };
+        return warnings[newStatus as keyof typeof warnings] || "This will update the match status.";
     };
 
     const columns: ColumnDef<Match>[] = [
@@ -144,54 +187,141 @@ export function TournamentMatchesTable({
                 return (
                     <div className="flex flex-col">
                         <span>Status</span>
-                        <span className="text-xs text-gray-500 font-normal">(Click to edit)</span>
+                        <span className="text-xs text-gray-500 font-normal">(Select to change)</span>
                     </div>
                 );
             },
             cell: ({ row }) => {
                 const match = row.original;
                 const status = row.getValue("status") as string;
-                const isEditing = editingStatus === match.id;
 
                 const statusOptions = MATCH_STATUS_OPTIONS;
 
-                const handleStatusChange = async (newStatus: MatchStatus) => {
-                    setEditValue(newStatus);
-                    setEditingStatus(null);
-                    // Update the match status immediately
-                    onEditMatch({ ...match, status: newStatus });
+                const handleStatusChange = (newStatus: MatchStatus) => {
+                    if (newStatus === status) return; // No change needed
+
+                    // Special handling for scheduled status - open edit modal
+                    if (newStatus === 'upcoming') {
+                        // Open edit match modal for scheduling
+                        onEditMatch(match);
+                        return;
+                    }
+
+                    // Get match name for display
+                    const playerAName = getPlayerName(match.player_a);
+                    const playerBName = getPlayerName(match.player_b);
+                    const matchName = `${playerAName} vs ${playerBName}`;
+
+                    // Show confirmation modal for other status changes
+                    setPendingStatusChange({
+                        matchId: match.id,
+                        newStatus,
+                        currentStatus: status,
+                        matchName
+                    });
+                    setShowConfirmModal(true);
                 };
 
-                const handleStartEditing = () => {
-                    setEditingStatus(match.id);
-                    setEditValue(status);
+                // Find the current status option to display the proper label
+                const currentStatusOption = statusOptions.find(option => option.value === status);
+                const displayValue = currentStatusOption ? currentStatusOption.label : status;
+
+                // Define colors for each status
+                const getStatusColors = (statusValue: string) => {
+                    switch (statusValue) {
+                        case 'upcoming':
+                            return 'bg-blue-50 border-blue-200 text-blue-800';
+                        case 'live':
+                            return 'bg-green-50 border-green-200 text-green-800';
+                        case 'finished':
+                            return 'bg-gray-50 border-gray-200 text-gray-800';
+                        case 'cancelled':
+                            return 'bg-red-50 border-red-200 text-red-800';
+                        default:
+                            return 'bg-gray-50 border-gray-200 text-gray-800';
+                    }
                 };
 
-                if (isEditing) {
-                    return (
-                        <Select value={editValue} onValueChange={handleStatusChange}>
-                            <SelectTrigger className="w-28 h-7">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {statusOptions.map(option => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        <span className="capitalize">{option.label}</span>
+                const triggerColors = getStatusColors(status);
+
+                return (
+                    <Select value={status} onValueChange={handleStatusChange}>
+                        <SelectTrigger className={`w-28 h-7 ${triggerColors} border`}>
+                            <SelectValue>{displayValue}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                            {statusOptions.map(option => {
+                                const itemColors = getStatusColors(option.value);
+                                const isScheduled = option.value === 'upcoming';
+                                return (
+                                    <SelectItem
+                                        key={option.value}
+                                        value={option.value}
+                                        className={`${itemColors} border-l-4 my-1`}
+                                    >
+                                        <div className="flex items-center justify-between w-full">
+                                            <span className="capitalize font-medium">{option.label}</span>
+                                            {isScheduled && (
+                                                <span className="text-xs text-blue-600 ml-2">
+                                                    (opens edit modal)
+                                                </span>
+                                            )}
+                                        </div>
                                     </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                                );
+                            })}
+                        </SelectContent>
+                    </Select>
+                );
+            },
+        },
+        {
+            accessorKey: "locked",
+            header: "Lock Status",
+            cell: ({ row }) => {
+                const match = row.original;
+                const isLocked = match.locked;
+                const lockTime = match.lock_time;
+
+                if (!lockTime) {
+                    return <div className="text-gray-400 text-sm">No lock time</div>;
+                }
+
+                if (isLocked) {
+                    return (
+                        <div className="flex items-center gap-2">
+                            <Lock className="h-4 w-4 text-red-500" />
+                            <Badge className="bg-red-100 text-red-800 border-red-200 text-xs">
+                                Locked
+                            </Badge>
+                        </div>
+                    );
+                }
+
+                // Check if lock time has passed
+                const now = new Date();
+                const lockDateTime = new Date(lockTime);
+                const isPastLockTime = now >= lockDateTime;
+
+                if (isPastLockTime) {
+                    return (
+                        <div className="flex items-center gap-2">
+                            <Lock className="h-4 w-4 text-orange-500" />
+                            <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                                Should Lock
+                            </Badge>
+                            <span className="text-xs text-orange-600">(Run Automation)</span>
+                        </div>
                     );
                 }
 
                 return (
-                    <Badge
-                        className={`${getStatusColor(status)} text-xs font-medium px-2 py-1 cursor-pointer hover:opacity-80`}
-                        onClick={handleStartEditing}
-                        title="Click to edit status"
-                    >
-                        {status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-green-500" />
+                        <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                            Open
+                        </Badge>
+                    </div>
                 );
             },
         },
@@ -240,7 +370,11 @@ export function TournamentMatchesTable({
             cell: ({ row }) => {
                 const match = row.original;
                 if (!match.odds_a || !match.odds_b) {
-                    return <div className="text-gray-400 text-sm">Not calculated</div>;
+                    return (
+                        <div className="text-red-500 text-sm font-medium">
+                            Not calculated
+                        </div>
+                    );
                 }
 
                 return (
@@ -401,6 +535,23 @@ export function TournamentMatchesTable({
                     <div className="flex items-center gap-2 flex-wrap">
                         <div className="text-sm text-muted-foreground mr-2">
                             {selectedMatches.length} match{selectedMatches.length !== 1 ? 'es' : ''} selected:
+                            {(() => {
+                                const selectedMatchObjects = filteredMatches.filter(match =>
+                                    selectedMatches.includes(match.id)
+                                );
+                                const matchesWithoutOdds = selectedMatchObjects.filter(match =>
+                                    !match.odds_a || !match.odds_b
+                                );
+
+                                if (matchesWithoutOdds.length > 0) {
+                                    return (
+                                        <span className="text-red-600 ml-2">
+                                            ({matchesWithoutOdds.length} without odds)
+                                        </span>
+                                    );
+                                }
+                                return null;
+                            })()}
                         </div>
                         <Button
                             onClick={() => onCalculateOdds(selectedMatches)}
@@ -410,7 +561,28 @@ export function TournamentMatchesTable({
                             Calculate Odds
                         </Button>
                         <Button
-                            onClick={() => onSyncToWeb(selectedMatches)}
+                            onClick={() => {
+                                // Check if selected matches have odds calculated
+                                const selectedMatchObjects = filteredMatches.filter(match =>
+                                    selectedMatches.includes(match.id)
+                                );
+                                const matchesWithoutOdds = selectedMatchObjects.filter(match =>
+                                    !match.odds_a || !match.odds_b
+                                );
+
+                                if (matchesWithoutOdds.length > 0) {
+                                    const matchNames = matchesWithoutOdds.map(match => {
+                                        const playerA = getPlayerName(match.player_a);
+                                        const playerB = getPlayerName(match.player_b);
+                                        return `${playerA} vs ${playerB}`;
+                                    }).join(', ');
+
+                                    alert(`Cannot sync matches without calculated odds. Please calculate odds for: ${matchNames}`);
+                                    return;
+                                }
+
+                                onSyncToWeb(selectedMatches);
+                            }}
                             size="sm"
                             variant="outline"
                             className="border-green-600 text-green-600 hover:bg-green-50"
@@ -477,7 +649,11 @@ export function TournamentMatchesTable({
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
-                                    className={row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : ""}
+                                    className={`
+                                        ${row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : ""}
+                                        ${row.original.locked ? "bg-red-50 border-l-4 border-l-red-500" : ""}
+                                        ${row.original.status === 'live' ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
+                                    `}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
@@ -526,6 +702,54 @@ export function TournamentMatchesTable({
                     </Button>
                 </div>
             </div>
+
+            {/* Status Change Confirmation Modal */}
+            <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirm Status Change</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to change the status of this match?
+                        </DialogDescription>
+                    </DialogHeader>
+                    {pendingStatusChange && (
+                        <div className="space-y-4">
+                            <div className="bg-blue-50 p-3 rounded-md border">
+                                <p className="font-medium text-sm text-blue-900">
+                                    {pendingStatusChange.matchName}
+                                </p>
+                                <p className="text-xs text-blue-700 mt-1">
+                                    Status change: <span className="capitalize font-medium">{pendingStatusChange.currentStatus}</span> → <span className="capitalize font-medium">{pendingStatusChange.newStatus}</span>
+                                </p>
+                            </div>
+                            <div className="bg-amber-50 p-3 rounded-md border border-amber-200">
+                                <p className="text-sm text-amber-800">
+                                    <strong>Warning:</strong> {getStatusWarning(pendingStatusChange.currentStatus, pendingStatusChange.newStatus)}
+                                </p>
+                                <p className="text-xs text-amber-700 mt-2">
+                                    This action will affect match visibility in the web app and may trigger automated processes.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter className="sm:justify-start">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleCancelStatusChange}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={handleConfirmStatusChange}
+                            className="bg-blue-600 hover:bg-blue-700"
+                        >
+                            Confirm Change
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 } 

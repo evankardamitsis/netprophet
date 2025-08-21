@@ -8,28 +8,14 @@ import { useTheme } from './Providers';
 import { Dictionary } from '@/types/dictionary';
 import { Match } from '@/types/dashboard';
 
-// Raw database match interface
-interface RawMatch {
-    id: string;
-    tournament_id: string | null;
-    category_id: string | null;
-    player_a_id: string | null;
-    player_b_id: string | null;
-    winner_id: string | null;
-    status: string;
-    start_time: string | null;
-    lock_time: string | null;
-    odds_a: number | null;
-    odds_b: number | null;
-    a_score: number | null;
-    b_score: number | null;
-    points_value: number | null;
-    web_synced: boolean | null;
+// Use database types directly
+import type { Database } from '@netprophet/lib/src/types/database';
+type RawMatch = Database['public']['Tables']['matches']['Row'] & {
     tournaments?: any;
     tournament_categories?: any;
     player_a?: any;
     player_b?: any;
-}
+};
 
 // Transform raw database match to web app format
 function transformMatch(rawMatch: RawMatch): Match {
@@ -86,9 +72,11 @@ function transformMatch(rawMatch: RawMatch): Match {
         time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
         status_display,
         points: rawMatch.points_value || 0,
+        locked: rawMatch.locked,
+        updated_at: rawMatch.updated_at,
         startTime,
         lockTime,
-        isLocked: lockTime <= now
+        isLocked: rawMatch.locked || lockTime <= now
     };
 }
 
@@ -142,7 +130,7 @@ async function fetchSyncedMatches(): Promise<Match[]> {
 
     if (error) throw error;
 
-    return (data || []).map(transformMatch);
+    return (data || []).map((rawMatch: any) => transformMatch(rawMatch));
 }
 
 
@@ -153,7 +141,7 @@ interface MatchesListProps {
     lang?: 'en' | 'el';
 }
 
-function Countdown({ targetTime, label, dict }: { targetTime: Date; label: string; dict?: Dictionary }) {
+function Countdown({ targetTime, label, dict, isLocked }: { targetTime: Date; label: string; dict?: Dictionary; isLocked?: boolean }) {
     const [timeLeft, setTimeLeft] = useState<number>(targetTime.getTime() - Date.now());
 
     useEffect(() => {
@@ -164,15 +152,26 @@ function Countdown({ targetTime, label, dict }: { targetTime: Date; label: strin
         return () => clearInterval(timer);
     }, [targetTime]);
 
-    if (timeLeft <= 0) return <span className="text-xs text-red-500 font-bold">{dict?.sidebar?.locked || 'LOCKED'}</span>;
+    if (isLocked || timeLeft <= 0) return <span className="text-xs text-red-500 font-bold">{dict?.sidebar?.locked || 'LOCKED'}</span>;
 
-    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
+    // If more than 1 day, show only days
+    if (days > 1) {
+        return (
+            <span className="text-xs text-gray-500">
+                {label}: {days} {dict?.sidebar?.days || 'days'}
+            </span>
+        );
+    }
+
+    // If 1 day or less, show hours, minutes, seconds
     return (
         <span className="text-xs text-gray-500">
-            {label}: {hours > 0 ? `${hours}${dict?.sidebar?.hours || 'h'} ` : ''}{minutes}${dict?.sidebar?.minutes || 'm'} {seconds}${dict?.sidebar?.seconds || 's'}
+            {label}: {days > 0 ? `${days}${dict?.sidebar?.days?.charAt(0) || 'd'} ` : ''}{hours > 0 ? `${hours}${dict?.sidebar?.hours || 'h'} ` : ''}{minutes}${dict?.sidebar?.minutes || 'm'} {seconds}${dict?.sidebar?.seconds || 's'}
         </span>
     );
 }
@@ -213,22 +212,23 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                             <div className="flex items-center gap-0 sm:gap-0.5">
                                                 <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player1.name}
-                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
                                                 <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
-                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 gap-0 sm:gap-0.5">
+                                        <span className="truncate">{match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}</span>
+                                    </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
                                         <span className="truncate">{match.tournament}</span>
-                                        <span>{match.time}</span>
+                                        <span>{match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
-                                        <Countdown targetTime={match.lockTime} label={dict?.sidebar?.lockIn || 'Lock in'} dict={dict} />
+                                        <Countdown targetTime={match.lockTime} label={dict?.sidebar?.lockIn || 'Lock in'} dict={dict} isLocked={match.locked || false} />
                                         <span className={`text-gray-400`}>{dict?.sidebar?.startedAgo || 'Started'} {Math.floor((Date.now() - match.startTime.getTime()) / 60000)} {dict?.sidebar?.minutes || 'min'} {dict?.common?.ago || 'ago'}</span>
                                     </div>
                                 </div>
@@ -255,22 +255,23 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                             <div className="flex items-center gap-0 sm:gap-0.5">
                                                 <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player1.name}
-                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player1.odds})</span>
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
                                                 <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
-                                                    <span className="text-xs font-normal text-gray-500 ml-1">({match.player2.odds})</span>
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-gray-500 gap-0 sm:gap-0.5">
+                                        <span className="truncate">{match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}</span>
+                                    </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
                                         <span className="truncate">{match.tournament}</span>
-                                        <span>{match.time}</span>
+                                        <span>{match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
-                                        <Countdown targetTime={match.startTime} label={dict?.sidebar?.startsIn || 'Starts in'} dict={dict} />
+                                        <Countdown targetTime={match.startTime} label={dict?.sidebar?.startsIn || 'Starts in'} dict={dict} isLocked={match.locked || false} />
                                         <span className={`text-gray-400`}>{new Date(match.startTime).toLocaleDateString()}</span>
                                     </div>
                                 </div>

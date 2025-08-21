@@ -312,6 +312,7 @@ export type Database = {
           games_b: number | null
           id: string
           lock_time: string | null
+          locked: boolean | null
           match_duration: number | null
           match_notes: string | null
           odds_a: number | null
@@ -335,6 +336,7 @@ export type Database = {
           tiebreaks_a: number | null
           tiebreaks_b: number | null
           tournament_id: string | null
+          updated_at: string | null
           web_synced: boolean | null
           winner_id: string | null
         }
@@ -349,6 +351,7 @@ export type Database = {
           games_b?: number | null
           id?: string
           lock_time?: string | null
+          locked?: boolean | null
           match_duration?: number | null
           match_notes?: string | null
           odds_a?: number | null
@@ -372,6 +375,7 @@ export type Database = {
           tiebreaks_a?: number | null
           tiebreaks_b?: number | null
           tournament_id?: string | null
+          updated_at?: string | null
           web_synced?: boolean | null
           winner_id?: string | null
         }
@@ -386,6 +390,7 @@ export type Database = {
           games_b?: number | null
           id?: string
           lock_time?: string | null
+          locked?: boolean | null
           match_duration?: number | null
           match_notes?: string | null
           odds_a?: number | null
@@ -409,6 +414,7 @@ export type Database = {
           tiebreaks_a?: number | null
           tiebreaks_b?: number | null
           tournament_id?: string | null
+          updated_at?: string | null
           web_synced?: boolean | null
           winner_id?: string | null
         }
@@ -883,6 +889,10 @@ export type Database = {
       is_current_user_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      process_match_automation: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       set_first_admin: {
         Args: { admin_email: string }

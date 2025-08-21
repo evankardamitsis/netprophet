@@ -428,6 +428,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                         setSetScore={setSetScore}
                                         getSetWinner={getSetWinner}
                                         setSetWinner={setSetWinner}
+                                        locked={match.locked || false}
                                     />
                                 </div>
                             </div>
@@ -435,13 +436,15 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                             <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
                                 <button
                                     onClick={handleSubmitPredictions}
-                                    disabled={!hasAnyPredictions || !hasFormChanged}
-                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${hasAnyPredictions && hasFormChanged
-                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
+                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
+                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                        : (hasAnyPredictions && hasFormChanged
+                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed')
                                         }`}
                                 >
-                                    {hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction'}
+                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
                                 </button>
                             </div>
                         </div>
@@ -497,13 +500,15 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                             setHasOutrightsFormChanged(false);
                                         }
                                     }}
-                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged}
-                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${(selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged
-                                        ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged || match.locked || false}
+                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
+                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                        : ((selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged
+                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed')
                                         }`}
                                 >
-                                    {(selectedTournamentWinner || selectedFinalsPair) ? (hasOutrightsPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : 'Select at least one outright prediction'}
+                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : ((selectedTournamentWinner || selectedFinalsPair) ? (hasOutrightsPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : 'Select at least one outright prediction')}
                                 </button>
                             </div>
                         </div>
