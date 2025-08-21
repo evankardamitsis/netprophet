@@ -32,6 +32,10 @@ export * from './supabase/matches';
 
 export { MatchResultsService } from './supabase/matchResults';
 export type { MatchResultWithDetails } from './supabase/matchResults';
+export { NotificationsService } from './supabase/notifications';
+export type { NotificationWithData } from './supabase/notifications';
+export { TransactionsService } from './supabase/transactions';
+export type { TransactionWithDetails } from './supabase/transactions';
 
 // Match Status Constants
 export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses'; 

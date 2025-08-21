@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@netprophet/ui';
 import { Wallet } from './Wallet';
+import { Notifications } from '@/components/Notifications';
 import { Dictionary } from '@/types/dictionary';
 import Logo from '@/components/Logo';
 
@@ -204,11 +205,45 @@ export function TopNavigation({
                     </nav>
                 )}
 
-                {/* Right Section - Wallet, Account, Language */}
+                {/* Right Section - Wallet, Notifications, Language, Account */}
                 <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
                     {/* Wallet Component */}
                     <div className="block">
                         <Wallet dict={dict} lang={lang} />
+                    </div>
+
+                    {/* Notifications Component */}
+                    <div className="block">
+                        <Notifications />
+                    </div>
+
+                    {/* Language Switcher - Hidden on mobile */}
+                    <div className="relative hidden lg:block" ref={languageDropdownRef}>
+                        <button
+                            onClick={() => setLanguageDropdownOpen((open) => !open)}
+                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white focus:outline-none text-sm sm:text-base"
+                            aria-label="Language menu"
+                        >
+                            <GlobeIcon />
+                            <span className="hidden sm:inline">{currentLang === 'en' ? 'EN' : 'EL'}</span>
+                            <ChevronDownIcon />
+                        </button>
+                        {languageDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-32 sm:w-36 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
+                                <button
+                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base ${currentLang === 'en' ? 'text-accent' : ''}`}
+                                    onClick={() => switchLanguage('en')}
+                                >
+                                    🇺🇸 English
+                                </button>
+                                <button
+                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base ${currentLang === 'el' ? 'text-accent' : ''}`}
+                                    onClick={() => switchLanguage('el')}
+                                >
+                                    🇬🇷 Ελληνικά
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Account dropdown */}
@@ -241,35 +276,6 @@ export function TopNavigation({
                                     onClick={() => { setAccountDropdownOpen(false); onSignOut(); }}
                                 >
                                     {dict?.auth?.signOut || 'Sign Out'}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Language Switcher - Hidden on mobile */}
-                    <div className="relative hidden lg:block" ref={languageDropdownRef}>
-                        <button
-                            onClick={() => setLanguageDropdownOpen((open) => !open)}
-                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white focus:outline-none text-sm sm:text-base"
-                            aria-label="Language menu"
-                        >
-                            <GlobeIcon />
-                            <span className="hidden sm:inline">{currentLang === 'en' ? 'EN' : 'EL'}</span>
-                            <ChevronDownIcon />
-                        </button>
-                        {languageDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-32 sm:w-36 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
-                                <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base ${currentLang === 'en' ? 'text-accent' : ''}`}
-                                    onClick={() => switchLanguage('en')}
-                                >
-                                    🇺🇸 English
-                                </button>
-                                <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base ${currentLang === 'el' ? 'text-accent' : ''}`}
-                                    onClick={() => switchLanguage('el')}
-                                >
-                                    🇬🇷 Ελληνικά
                                 </button>
                             </div>
                         )}

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { BetsService } from '@netprophet/lib';
+import { BetsService, TransactionsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
 import { DailyRewardsService, WalletOperationsService, supabase } from '@netprophet/lib';
 import toast from 'react-hot-toast';
@@ -49,6 +49,7 @@ interface WalletContextType {
     enterTournament: (cost: number, tournamentName: string) => void;
     unlockInsight: (cost: number, insightName: string) => void;
     loadBetStats: () => Promise<void>;
+    loadTransactions: () => Promise<void>;
     syncWalletWithDatabase: () => Promise<void>;
 }
 
@@ -158,9 +159,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
-    // Load bet statistics from database on mount
+    // Load bet statistics and transactions from database on mount
     useEffect(() => {
         loadBetStats();
+        loadTransactions();
         syncWalletWithDatabase();
     }, [syncWalletWithDatabase]); // Include syncWalletWithDatabase in dependencies
 
@@ -181,6 +183,28 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Failed to load bet stats:', error);
+        }
+    };
+
+    const loadTransactions = async () => {
+        try {
+            const transactions = await TransactionsService.getRecentTransactions(10);
+
+            // Convert database transactions to local Transaction format
+            const localTransactions: Transaction[] = transactions.map(dbTransaction => ({
+                id: dbTransaction.id,
+                type: dbTransaction.type as Transaction['type'],
+                amount: dbTransaction.amount,
+                description: dbTransaction.description || '',
+                timestamp: new Date(dbTransaction.created_at || new Date()),
+            }));
+
+            setWallet(prev => ({
+                ...prev,
+                recentTransactions: localTransactions,
+            }));
+        } catch (error) {
+            console.error('Failed to load transactions:', error);
         }
     };
 
@@ -206,6 +230,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             } else {
                 newTotalCoinsSpent += Math.abs(amount);
             }
+
+            // Save transaction to database
+            TransactionsService.createTransaction({
+                type,
+                amount,
+                description,
+            }).catch(error => {
+                console.error('Failed to save transaction to database:', error);
+            });
 
             return {
                 ...prev,
@@ -538,6 +571,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         enterTournament,
         unlockInsight,
         loadBetStats,
+        loadTransactions,
         syncWalletWithDatabase,
     };
 

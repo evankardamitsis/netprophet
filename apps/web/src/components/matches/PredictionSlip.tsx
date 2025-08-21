@@ -164,12 +164,11 @@ export function PredictionSlip({
                 for (const prediction of predictions) {
                     const betAmount = prediction.betAmount || 0;
                     if (betAmount > 0) {
-                        const placeholderMatchId = '00000000-0000-0000-0000-000000000001';
                         const multiplier = prediction.multiplier || 1;
                         const potentialWinnings = prediction.potentialWinnings || 0;
 
                         await BetsServiceModule.createBet({
-                            matchId: placeholderMatchId,
+                            matchId: prediction.matchId,
                             betAmount: betAmount,
                             multiplier: multiplier,
                             potentialWinnings: potentialWinnings,
@@ -213,15 +212,68 @@ export function PredictionSlip({
     };
 
     function formatPrediction(prediction: any) {
+        // Handle case where prediction might be undefined or null
+        if (!prediction) {
+            console.warn('formatPrediction called with null/undefined prediction');
+            return { type: 'winner' };
+        }
+
+        // Create a structured JSON object for bet resolution
+        const formattedPrediction: any = {
+            type: 'winner', // Default type
+            winner: prediction.winner || null,
+            matchResult: prediction.matchResult || null,
+            set1Score: prediction.set1Score || null,
+            set2Score: prediction.set2Score || null,
+            set3Score: prediction.set3Score || null,
+            set4Score: prediction.set4Score || null,
+            set5Score: prediction.set5Score || null,
+            set1Winner: prediction.set1Winner || null,
+            set2Winner: prediction.set2Winner || null,
+            set3Winner: prediction.set3Winner || null,
+            set4Winner: prediction.set4Winner || null,
+            set5Winner: prediction.set5Winner || null,
+            set1TieBreak: prediction.set1TieBreak || null,
+            set2TieBreak: prediction.set2TieBreak || null,
+            set1TieBreakScore: prediction.set1TieBreakScore || null,
+            set2TieBreakScore: prediction.set2TieBreakScore || null,
+            superTieBreak: prediction.superTieBreak || null,
+            superTieBreakScore: prediction.superTieBreakScore || null,
+            superTieBreakWinner: prediction.superTieBreakWinner || null,
+            tieBreak: prediction.tieBreak || null
+        };
+
+        // Determine the prediction type based on what's selected
+        if (prediction.matchResult && prediction.set1Score) {
+            formattedPrediction.type = 'set_score';
+        } else if (prediction.matchResult && prediction.set1Winner) {
+            formattedPrediction.type = 'set_winner';
+        } else if (prediction.matchResult) {
+            formattedPrediction.type = 'match_result';
+        } else if (prediction.winner) {
+            formattedPrediction.type = 'winner';
+        }
+
+        return formattedPrediction;
+    }
+
+    function formatPredictionDisplay(prediction: any) {
+        // Handle case where prediction might be undefined or null
+        if (!prediction) {
+            return 'No prediction';
+        }
+
         const parts = [];
         if (prediction.winner) parts.push(`Winner: ${prediction.winner}`);
         if (prediction.matchResult) parts.push(`Result: ${prediction.matchResult}`);
-        if (prediction.tieBreak) parts.push(`Tie-break: ${prediction.tieBreak}`);
-        if (prediction.totalGames) parts.push(`Games: ${prediction.totalGames}`);
-        if (prediction.acesLeader) parts.push(`Aces: ${prediction.acesLeader}`);
-        if (prediction.doubleFaults) parts.push(`DF: ${prediction.doubleFaults}`);
-        if (prediction.breakPoints) parts.push(`BP: ${prediction.breakPoints}`);
-        return parts.join(' | ');
+        if (prediction.set1Score) parts.push(`Set 1: ${prediction.set1Score}`);
+        if (prediction.set2Score) parts.push(`Set 2: ${prediction.set2Score}`);
+        if (prediction.set3Score) parts.push(`Set 3: ${prediction.set3Score}`);
+        if (prediction.set1TieBreakScore) parts.push(`TB1: ${prediction.set1TieBreakScore}`);
+        if (prediction.set2TieBreakScore) parts.push(`TB2: ${prediction.set2TieBreakScore}`);
+        if (prediction.superTieBreakScore) parts.push(`STB: ${prediction.superTieBreakScore}`);
+
+        return parts.length > 0 ? parts.join(' | ') : 'No prediction';
     }
 
     const handleSafeBetToggle = () => {
@@ -440,7 +492,7 @@ export function PredictionSlip({
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="text-xs">
                                                     <span className="text-slate-300">{dict?.matches?.pick || 'Pick'}: </span>
-                                                    <span className="font-semibold text-yellow-200">{formatPrediction(item.prediction)}</span>
+                                                    <span className="font-semibold text-yellow-200">{formatPredictionDisplay(item.prediction)}</span>
                                                 </div>
                                             </div>
                                             <div className="flex justify-between items-center">

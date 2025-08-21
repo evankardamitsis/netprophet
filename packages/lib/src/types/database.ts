@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       bets: {
@@ -456,6 +481,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           age: number
@@ -869,6 +927,22 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_set_score_prediction: {
+        Args: { match_result: Record<string, unknown>; prediction: Json }
+        Returns: boolean
+      }
+      check_set_winner_prediction: {
+        Args: { match_result: Record<string, unknown>; prediction: Json }
+        Returns: boolean
+      }
+      check_super_tiebreak_prediction: {
+        Args: { match_result: Record<string, unknown>; prediction: Json }
+        Returns: boolean
+      }
+      check_tiebreak_prediction: {
+        Args: { match_result: Record<string, unknown>; prediction: Json }
+        Returns: boolean
+      }
       claim_daily_reward: {
         Args: { user_uuid: string }
         Returns: {
@@ -882,6 +956,19 @@ export type Database = {
         Args: { tokens_to_consume: number; user_uuid: string }
         Returns: boolean
       }
+      create_bet_notification: {
+        Args: {
+          bet_id: string
+          bet_status: string
+          user_uuid: string
+          winnings_amount?: number
+        }
+        Returns: undefined
+      }
+      determine_bet_outcome: {
+        Args: { match_result: Record<string, unknown>; prediction: Json }
+        Returns: string
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -892,6 +979,10 @@ export type Database = {
       }
       process_match_automation: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      resolve_bets_for_match: {
+        Args: { match_id_param: string }
         Returns: undefined
       }
       set_first_admin: {
@@ -1026,6 +1117,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

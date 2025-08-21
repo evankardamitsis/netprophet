@@ -1,31 +1,43 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { supabase, MatchResultsService } from '@netprophet/lib';
-import { MatchResultWithDetails } from '@/types';
-import { toast } from 'sonner';
-import { MatchResultsFilters } from './components/MatchResultsFilters';
+import { useState, useEffect } from 'react';
+import { MatchResultsService, supabase } from '@netprophet/lib';
+import { BetsService } from '@netprophet/lib';
 import { MatchResultsTable } from './components/MatchResultsTable';
+import { MatchResultsFilters } from './components/MatchResultsFilters';
 import { MatchResultForm } from './components/MatchResultForm';
-import { Match, FilterStatus, FormData } from './types';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { Match, FormData } from './types';
+import { MatchResultWithDetails } from '@/types';
 
 export default function MatchResultsPage() {
     const [matches, setMatches] = useState<Match[]>([]);
     const [matchResults, setMatchResults] = useState<MatchResultWithDetails[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
-    const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [editingResult, setEditingResult] = useState<MatchResultWithDetails | null>(null);
+    const [isBetResolutionDialogOpen, setIsBetResolutionDialogOpen] = useState(false);
+    const [selectedMatchForBetResolution, setSelectedMatchForBetResolution] = useState<Match | null>(null);
+    const [betStats, setBetStats] = useState<any>(null);
+    const [betDetails, setBetDetails] = useState<any>(null);
+    const [isResolvingBets, setIsResolvingBets] = useState(false);
 
     // Filter states
-    const [statusFilter, setStatusFilter] = useState<FilterStatus>('finished');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'finished' | 'live' | 'upcoming'>('finished');
     const [searchTerm, setSearchTerm] = useState('');
     const [tournamentFilter, setTournamentFilter] = useState('all');
     const [dateFilter, setDateFilter] = useState('all');
 
-    // Form state for new result
+    // Get unique tournaments and dates for filters
+    const tournaments = [...new Set(matches.map(match => match.tournaments?.name).filter((name): name is string => Boolean(name)))].sort();
+    const dates = [...new Set(matches.map(match =>
+        match.start_time ? new Date(match.start_time).toDateString() : null
+    ).filter((date): date is string => date !== null))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     const [formData, setFormData] = useState<FormData>({
         winner_id: '',
         match_result: '',
@@ -49,32 +61,32 @@ export default function MatchResultsPage() {
     });
 
     useEffect(() => {
-        fetchMatches();
-        fetchMatchResults();
+        loadData();
     }, []);
 
-    const fetchMatches = async () => {
+    const loadData = async () => {
         try {
-            const { data, error } = await supabase
+            // Get matches from the matches service
+            const { data: matchesData, error: matchesError } = await supabase
                 .from('matches')
                 .select(`
-          id,
-          player_a_id,
-          player_b_id,
-          player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
-          player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
-          tournaments(id, name, matches_type),
-          status,
-          start_time,
-          web_synced
-        `)
+                    id,
+                    player_a_id,
+                    player_b_id,
+                    player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
+                    player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
+                    tournaments(id, name, matches_type),
+                    status,
+                    start_time,
+                    web_synced
+                `)
                 .eq('web_synced', true)
                 .order('start_time', { ascending: false });
 
-            if (error) throw error;
+            if (matchesError) throw matchesError;
 
             // Transform the data to match our interface
-            const transformedMatches = (data || []).map(match => ({
+            const transformedMatches = (matchesData || []).map((match: any) => ({
                 id: match.id,
                 player_a: {
                     id: match.player_a?.id || '',
@@ -93,18 +105,10 @@ export default function MatchResultsPage() {
             }));
 
             setMatches(transformedMatches);
-        } catch (error) {
-            console.error('Error fetching matches:', error);
-            toast.error('Failed to load matches');
-        } finally {
-            setLoading(false);
-        }
-    };
+            setFilteredMatches(transformedMatches);
 
-    const fetchMatchResults = async () => {
-        try {
-            // Get all match results from the database
-            const { data, error } = await supabase
+            // Get match results
+            const { data: resultsData, error: resultsError } = await supabase
                 .from('match_results')
                 .select(`
                     *,
@@ -119,64 +123,14 @@ export default function MatchResultsPage() {
                 `)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            setMatchResults((data || []) as MatchResultWithDetails[]);
+            if (resultsError) throw resultsError;
+            setMatchResults((resultsData || []) as MatchResultWithDetails[]);
+
         } catch (error) {
-            console.error('Error fetching match results:', error);
-            toast.error('Failed to load match results');
+            console.error('Error loading data:', error);
+            toast.error('Failed to load data');
         }
     };
-
-    // Filter matches based on current filters
-    const filteredMatches = useMemo(() => {
-        return matches.filter(match => {
-            const matchesStatus = statusFilter === 'all' || match.status === statusFilter;
-            const matchesSearch = !searchTerm ||
-                match.player_a.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.player_a.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.player_b.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.player_b.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.tournaments?.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesTournament = tournamentFilter === 'all' || match.tournaments?.name === tournamentFilter;
-            const matchesDate = dateFilter === 'all' ||
-                (match.start_time && new Date(match.start_time).toDateString() === dateFilter);
-
-            return matchesStatus && matchesSearch && matchesTournament && matchesDate;
-        });
-    }, [matches, statusFilter, searchTerm, tournamentFilter, dateFilter]);
-
-    // Group matches by date
-    const groupedMatches = useMemo(() => {
-        const groups: { [key: string]: Match[] } = {};
-
-        filteredMatches.forEach(match => {
-            const date = match.start_time ? new Date(match.start_time).toDateString() : 'No Date';
-            if (!groups[date]) {
-                groups[date] = [];
-            }
-            groups[date].push(match);
-        });
-
-        return Object.entries(groups).sort(([a], [b]) => {
-            if (a === 'No Date') return 1;
-            if (b === 'No Date') return 1;
-            return new Date(b).getTime() - new Date(a).getTime();
-        });
-    }, [filteredMatches]);
-
-    // Get unique tournaments for filter
-    const tournaments = useMemo(() => {
-        const unique = [...new Set(matches.map(match => match.tournaments?.name).filter((name): name is string => Boolean(name)))];
-        return unique.sort();
-    }, [matches]);
-
-    // Get unique dates for filter
-    const dates = useMemo(() => {
-        const unique = [...new Set(matches.map(match =>
-            match.start_time ? new Date(match.start_time).toDateString() : null
-        ).filter((date): date is string => date !== null))];
-        return unique.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-    }, [matches]);
 
     const handleAddResult = (match: Match) => {
         setSelectedMatch(match);
@@ -201,58 +155,14 @@ export default function MatchResultsPage() {
             super_tiebreak_score: '',
             super_tiebreak_winner_id: ''
         });
-        setIsResultDialogOpen(true);
+        setIsAddDialogOpen(true);
     };
 
     const handleEditResult = async (result: MatchResultWithDetails) => {
-        setEditingResult(result);
+        const match = matches.find(m => m.id === result.match_id);
+        if (!match) return;
 
-        // Fetch the full match data for the form
-        try {
-            const { data: matchData, error } = await supabase
-                .from('matches')
-                .select(`
-                    id,
-                    player_a_id,
-                    player_b_id,
-                    player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
-                    player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
-                    tournaments(id, name, matches_type),
-                    status,
-                    start_time,
-                    web_synced
-                `)
-                .eq('id', result.match_id)
-                .single();
-
-            if (error) throw error;
-
-            // Transform the data to match our interface
-            const transformedMatch = {
-                id: matchData.id,
-                player_a: {
-                    id: matchData.player_a?.id || '',
-                    first_name: matchData.player_a?.first_name || '',
-                    last_name: matchData.player_a?.last_name || ''
-                },
-                player_b: {
-                    id: matchData.player_b?.id || '',
-                    first_name: matchData.player_b?.first_name || '',
-                    last_name: matchData.player_b?.last_name || ''
-                },
-                tournaments: Array.isArray(matchData.tournaments) ? matchData.tournaments[0] : matchData.tournaments,
-                status: matchData.status,
-                start_time: matchData.start_time,
-                web_synced: matchData.web_synced
-            };
-
-            setSelectedMatch(transformedMatch);
-        } catch (error) {
-            console.error('Error fetching match data for editing:', error);
-            toast.error('Failed to load match data for editing');
-            return;
-        }
-
+        setSelectedMatch(match);
         setFormData({
             winner_id: result.winner_id,
             match_result: result.match_result,
@@ -275,6 +185,57 @@ export default function MatchResultsPage() {
             super_tiebreak_winner_id: result.super_tiebreak_winner_id || ''
         });
         setIsEditDialogOpen(true);
+    };
+
+    const handleBetResolution = async (match: Match) => {
+        setSelectedMatchForBetResolution(match);
+
+        try {
+            console.log('Loading bet resolution for match:', match.id);
+
+            // Load bet statistics
+            const stats = await (BetsService as any).getBetResolutionStats(match.id);
+            console.log('Bet stats:', stats);
+            setBetStats(stats);
+
+            // Load bet details
+            const details = await (BetsService as any).getBetResolutionDetails(match.id);
+            console.log('Bet details:', details);
+            setBetDetails(details);
+
+            setIsBetResolutionDialogOpen(true);
+        } catch (error) {
+            console.error('Error loading bet resolution data:', error);
+            toast.error('Failed to load bet resolution data');
+        }
+    };
+
+    const handleResolveBets = async () => {
+        if (!selectedMatchForBetResolution) return;
+
+        setIsResolvingBets(true);
+        try {
+            const result = await (BetsService as any).resolveBetsForMatch(selectedMatchForBetResolution.id);
+
+            if (result.errors.length > 0) {
+                toast.error(`Bet resolution completed with errors: ${result.errors.join(', ')}`);
+            } else {
+                toast.success(`Successfully resolved ${result.resolved} bets`);
+            }
+
+            // Reload bet data
+            const stats = await (BetsService as any).getBetResolutionStats(selectedMatchForBetResolution.id);
+            setBetStats(stats);
+
+            const details = await (BetsService as any).getBetResolutionDetails(selectedMatchForBetResolution.id);
+            setBetDetails(details);
+
+        } catch (error) {
+            console.error('Error resolving bets:', error);
+            toast.error('Failed to resolve bets');
+        } finally {
+            setIsResolvingBets(false);
+        }
     };
 
     const handleSubmitResult = async () => {
@@ -319,8 +280,8 @@ export default function MatchResultsPage() {
             await MatchResultsService.createMatchResult(resultData);
 
             toast.success('Match result added successfully');
-            setIsResultDialogOpen(false);
-            fetchMatchResults();
+            setIsAddDialogOpen(false);
+            loadData();
         } catch (error) {
             console.error('Error adding match result:', error);
             toast.error('Failed to add match result');
@@ -328,7 +289,7 @@ export default function MatchResultsPage() {
     };
 
     const handleUpdateResult = async () => {
-        if (!editingResult) return;
+        if (!selectedMatch) return;
 
         try {
             // Helper function to clear regular set score if tiebreak exists
@@ -344,6 +305,7 @@ export default function MatchResultsPage() {
             };
 
             const resultData = {
+                match_id: selectedMatch.id,
                 winner_id: formData.winner_id,
                 match_result: formData.match_result,
                 set1_score: getSetScore(1),
@@ -362,37 +324,95 @@ export default function MatchResultsPage() {
                 set4_tiebreak_score: formData.set4_tiebreak_score || null,
                 set5_tiebreak_score: formData.set5_tiebreak_score || null,
                 super_tiebreak_score: formData.super_tiebreak_score || null,
-                super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null,
+                super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null
             };
 
-            await MatchResultsService.updateMatchResult(editingResult.id, resultData);
+            await MatchResultsService.updateMatchResult(selectedMatch.id, resultData);
+
             toast.success('Match result updated successfully');
             setIsEditDialogOpen(false);
-            fetchMatchResults();
+            loadData();
         } catch (error) {
             console.error('Error updating match result:', error);
             toast.error('Failed to update match result');
         }
     };
 
-    if (loading) {
-        return (
-            <div className="container mx-auto py-8">
-                <div className="text-center">Loading matches...</div>
-            </div>
-        );
-    }
+    const handleDeleteResult = async (resultId: string) => {
+        if (!confirm('Are you sure you want to delete this match result?')) return;
+
+        try {
+            await MatchResultsService.deleteMatchResult(resultId);
+            toast.success('Match result deleted successfully');
+            loadData();
+        } catch (error) {
+            console.error('Error deleting match result:', error);
+            toast.error('Failed to delete match result');
+        }
+    };
+
+    // Apply filters whenever filter states change
+    useEffect(() => {
+        let filtered = matches;
+
+        // Apply status filter
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(match => match.status === statusFilter);
+        }
+
+        // Apply search term filter
+        if (searchTerm) {
+            filtered = filtered.filter(match =>
+                match.player_a.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.player_a.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.player_b.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.player_b.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                match.tournaments?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        }
+
+        // Apply tournament filter
+        if (tournamentFilter !== 'all') {
+            filtered = filtered.filter(match => match.tournaments?.name === tournamentFilter);
+        }
+
+        // Apply date filter
+        if (dateFilter !== 'all') {
+            filtered = filtered.filter(match =>
+                match.start_time && new Date(match.start_time).toDateString() === dateFilter
+            );
+        }
+
+        setFilteredMatches(filtered);
+    }, [matches, statusFilter, searchTerm, tournamentFilter, dateFilter]);
+
+    // Group matches by date
+    const groupedMatches = filteredMatches.reduce((groups, match) => {
+        const date = match.start_time ? new Date(match.start_time).toDateString() : 'No Date';
+        if (!groups[date]) {
+            groups[date] = [];
+        }
+        groups[date].push(match);
+        return groups;
+    }, {} as Record<string, Match[]>);
+
+    const sortedGroups = Object.entries(groupedMatches).sort(([a], [b]) => {
+        if (a === 'No Date') return 1;
+        if (b === 'No Date') return -1;
+        return new Date(b).getTime() - new Date(a).getTime();
+    });
 
     return (
-        <div className="container mx-auto py-8">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Match Results Management</h1>
-                <p className="text-muted-foreground">
-                    Add and manage detailed match results for prediction evaluation
-                </p>
+        <div className="container mx-auto py-6 space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold">Match Results</h1>
+                <div className="flex gap-2">
+                    <Button onClick={() => loadData()}>
+                        Refresh
+                    </Button>
+                </div>
             </div>
 
-            {/* Filters */}
             <MatchResultsFilters
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
@@ -406,30 +426,26 @@ export default function MatchResultsPage() {
                 dates={dates}
             />
 
-            {/* Results Table */}
             <MatchResultsTable
-                groupedMatches={groupedMatches}
+                groupedMatches={sortedGroups}
                 matchResults={matchResults}
                 onAddResult={handleAddResult}
                 onEditResult={handleEditResult}
+                onBetResolution={handleBetResolution}
             />
 
             {/* Add Result Dialog */}
-            <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Add Match Results</DialogTitle>
-                        <DialogDescription>
-                            Enter detailed match results for {selectedMatch?.player_a.first_name} {selectedMatch?.player_a.last_name} vs {selectedMatch?.player_b.first_name} {selectedMatch?.player_b.last_name}
-                        </DialogDescription>
+                        <DialogTitle>Add Match Result</DialogTitle>
                     </DialogHeader>
-
                     <MatchResultForm
                         formData={formData}
                         setFormData={setFormData}
                         match={selectedMatch}
                         onSubmit={handleSubmitResult}
-                        submitLabel="Add Results"
+                        submitLabel="Add Result"
                     />
                 </DialogContent>
             </Dialog>
@@ -438,19 +454,113 @@ export default function MatchResultsPage() {
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Edit Match Results</DialogTitle>
-                        <DialogDescription>
-                            Update match results for {editingResult?.match?.player_a_id} vs {editingResult?.match?.player_b_id}
-                        </DialogDescription>
+                        <DialogTitle>Edit Match Result</DialogTitle>
                     </DialogHeader>
-
                     <MatchResultForm
                         formData={formData}
                         setFormData={setFormData}
                         match={selectedMatch}
                         onSubmit={handleUpdateResult}
-                        submitLabel="Update Results"
+                        submitLabel="Update Result"
                     />
+                </DialogContent>
+            </Dialog>
+
+            {/* Bet Resolution Dialog */}
+            <Dialog open={isBetResolutionDialogOpen} onOpenChange={setIsBetResolutionDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Bet Resolution - {selectedMatchForBetResolution?.player_a?.first_name} {selectedMatchForBetResolution?.player_a?.last_name} vs {selectedMatchForBetResolution?.player_b?.first_name} {selectedMatchForBetResolution?.player_b?.last_name}</DialogTitle>
+                    </DialogHeader>
+
+                    {betStats && (
+                        <div className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Bet Statistics</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold">{betStats.totalBets}</div>
+                                            <div className="text-sm text-muted-foreground">Total Bets</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-blue-600">{betStats.activeBets}</div>
+                                            <div className="text-sm text-muted-foreground">Active</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-green-600">{betStats.wonBets}</div>
+                                            <div className="text-sm text-muted-foreground">Won</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-red-600">{betStats.lostBets}</div>
+                                            <div className="text-sm text-muted-foreground">Lost</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-yellow-600">{betStats.resolvedBets}</div>
+                                            <div className="text-sm text-muted-foreground">Resolved</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-green-600">{betStats.totalWinnings}</div>
+                                            <div className="text-sm text-muted-foreground">Total Winnings</div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={handleResolveBets}
+                                    disabled={isResolvingBets || betStats.activeBets === 0}
+                                    className="flex-1"
+                                >
+                                    {isResolvingBets ? 'Resolving...' : `Resolve ${betStats.activeBets} Active Bets`}
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsBetResolutionDialogOpen(false)}
+                                >
+                                    Close
+                                </Button>
+                            </div>
+
+                            {betDetails && betDetails.bets.length > 0 && (
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Bet Details</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                                            {betDetails.bets.map((bet: any) => (
+                                                <div key={bet.id} className="border rounded-lg p-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <div className="font-medium">{bet.user.email}</div>
+                                                            <div className="text-sm text-muted-foreground">{bet.description}</div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <Badge variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : 'secondary'}>
+                                                                {bet.status}
+                                                            </Badge>
+                                                            <div className="text-sm">
+                                                                Bet: {bet.bet_amount}
+                                                            </div>
+                                                            {bet.winnings_paid > 0 && (
+                                                                <div className="text-sm text-green-600">
+                                                                    Won: {bet.winnings_paid}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

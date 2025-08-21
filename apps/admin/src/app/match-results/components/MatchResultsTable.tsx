@@ -13,13 +13,15 @@ interface MatchResultsTableProps {
     matchResults: MatchResultWithDetails[];
     onAddResult: (match: Match) => void;
     onEditResult: (result: MatchResultWithDetails) => void;
+    onBetResolution?: (match: Match) => void;
 }
 
 export function MatchResultsTable({
     groupedMatches,
     matchResults,
     onAddResult,
-    onEditResult
+    onEditResult,
+    onBetResolution
 }: MatchResultsTableProps) {
     const hasResult = (matchId: string) => {
         return matchResults.some(result => result.match_id === matchId);
@@ -41,53 +43,36 @@ export function MatchResultsTable({
     const getDetailedScore = (result: MatchResultWithDetails) => {
         const scores = [];
 
-        // Helper function to format score with winner first
-        const formatScore = (score: string, winnerId: string | null) => {
+        // Helper function to format score as inputted (no reordering)
+        const formatScore = (score: string) => {
             if (!score) return null;
-
-            const [score1, score2] = score.split('-').map(Number);
-            const isWinnerFirst = winnerId === result.winner_id;
-
-            if (isWinnerFirst) {
-                return `${score1}-${score2}`;
-            } else {
-                return `${score2}-${score1}`;
-            }
+            return score;
         };
 
-        // Helper function to format tiebreak score in tennis notation
-        const formatTiebreakScore = (score: string, winnerId: string | null) => {
+        // Helper function to format tiebreak score as inputted
+        const formatTiebreakScore = (score: string) => {
             if (!score) return null;
-
-            const [score1, score2] = score.split('-').map(Number);
-            const isWinnerFirst = winnerId === result.winner_id;
-
-            // In tennis, tiebreak is shown as 7-6(2) where (2) is the loser's points
-            if (isWinnerFirst) {
-                return `7-6(${score2})`;
-            } else {
-                return `6-7(${score1})`;
-            }
+            return score;
         };
 
         // Add set scores (only if no tiebreak for that set)
         if (result.set1_score) {
             if (result.set1_tiebreak_score && result.set1_tiebreak_score !== 'none') {
                 // If there's a tiebreak, show tiebreak notation instead of set score
-                const tiebreakScore = formatTiebreakScore(result.set1_tiebreak_score, result.set1_winner_id);
+                const tiebreakScore = formatTiebreakScore(result.set1_tiebreak_score);
                 if (tiebreakScore) scores.push(tiebreakScore);
             } else {
                 // No tiebreak, show regular set score
-                const formattedScore = formatScore(result.set1_score, result.set1_winner_id);
+                const formattedScore = formatScore(result.set1_score);
                 if (formattedScore) scores.push(formattedScore);
             }
         }
         if (result.set2_score) {
             if (result.set2_tiebreak_score && result.set2_tiebreak_score !== 'none') {
-                const tiebreakScore = formatTiebreakScore(result.set2_tiebreak_score, result.set2_winner_id);
+                const tiebreakScore = formatTiebreakScore(result.set2_tiebreak_score);
                 if (tiebreakScore) scores.push(tiebreakScore);
             } else {
-                const formattedScore = formatScore(result.set2_score, result.set2_winner_id);
+                const formattedScore = formatScore(result.set2_score);
                 if (formattedScore) scores.push(formattedScore);
             }
         }
@@ -98,28 +83,28 @@ export function MatchResultsTable({
                 // Skip showing set3_score for amateur format with super tiebreak
                 // The super tiebreak will be shown separately at the end
             } else if (result.set3_tiebreak_score && result.set3_tiebreak_score !== 'none') {
-                const tiebreakScore = formatTiebreakScore(result.set3_tiebreak_score, result.set3_winner_id);
+                const tiebreakScore = formatTiebreakScore(result.set3_tiebreak_score);
                 if (tiebreakScore) scores.push(tiebreakScore);
             } else {
-                const formattedScore = formatScore(result.set3_score, result.set3_winner_id);
+                const formattedScore = formatScore(result.set3_score);
                 if (formattedScore) scores.push(formattedScore);
             }
         }
         if (result.set4_score) {
             if (result.set4_tiebreak_score && result.set4_tiebreak_score !== 'none') {
-                const tiebreakScore = formatTiebreakScore(result.set4_tiebreak_score, result.set4_winner_id);
+                const tiebreakScore = formatTiebreakScore(result.set4_tiebreak_score);
                 if (tiebreakScore) scores.push(tiebreakScore);
             } else {
-                const formattedScore = formatScore(result.set4_score, result.set4_winner_id);
+                const formattedScore = formatScore(result.set4_score);
                 if (formattedScore) scores.push(formattedScore);
             }
         }
         if (result.set5_score) {
             if (result.set5_tiebreak_score && result.set5_tiebreak_score !== 'none') {
-                const tiebreakScore = formatTiebreakScore(result.set5_tiebreak_score, result.set5_winner_id);
+                const tiebreakScore = formatTiebreakScore(result.set5_tiebreak_score);
                 if (tiebreakScore) scores.push(tiebreakScore);
             } else {
-                const formattedScore = formatScore(result.set5_score, result.set5_winner_id);
+                const formattedScore = formatScore(result.set5_score);
                 if (formattedScore) scores.push(formattedScore);
             }
         }
@@ -224,13 +209,25 @@ export function MatchResultsTable({
                                             <TableCell>
                                                 <div className="flex gap-2">
                                                     {hasExistingResult ? (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => onEditResult(result!)}
-                                                        >
-                                                            Edit
-                                                        </Button>
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => onEditResult(result!)}
+                                                            >
+                                                                Edit
+                                                            </Button>
+                                                            {onBetResolution && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => onBetResolution(match)}
+                                                                    title="View and resolve bets for this match"
+                                                                >
+                                                                    Bet Resolution
+                                                                </Button>
+                                                            )}
+                                                        </>
                                                     ) : (
                                                         <Button
                                                             size="sm"
