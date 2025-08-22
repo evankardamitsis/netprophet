@@ -41,7 +41,7 @@ export { ProfilesService } from './supabase/profiles';
 export type { Profile } from './supabase/profiles';
 
 // Player management
-export { fetchPlayers, fetchPlayerById, insertPlayer, bulkInsertPlayers, updatePlayer, deletePlayer } from './supabase/players';
+export { fetchPlayers, fetchPlayerById, insertPlayer, bulkInsertPlayers, updatePlayer, deletePlayer, updatePlayerStatsFromMatchResult, reversePlayerStatsFromMatchResult } from './supabase/players';
 
 // Match Status Constants
 export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses'; 

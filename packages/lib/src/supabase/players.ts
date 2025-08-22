@@ -103,5 +103,244 @@ export async function updatePlayer(id: string, updates: Partial<Player>) {
 export async function deletePlayer(id: string) {
   const { error } = await supabase.from(TABLE).delete().eq('id', id);
   if (error) throw error;
-  return true;
+}
+
+/**
+ * Update player statistics based on match result
+ * This function should be called when a match result is added/updated
+ */
+export async function updatePlayerStatsFromMatchResult(
+  matchId: string,
+  winnerId: string,
+  loserId: string,
+  matchDate: string,
+  tournamentSurface?: string
+) {
+  try {
+    // Get current player data
+    const winner = await fetchPlayerById(winnerId);
+    const loser = await fetchPlayerById(loserId);
+
+    // Helper function to update surface win rates
+    const updateSurfaceWinRate = (player: any, surface: string, isWin: boolean) => {
+      const surfaceKey = getSurfaceKey(surface);
+      if (!surfaceKey) return player;
+
+      const currentRate = player.surfaceWinRates?.[surfaceKey] || 0.5;
+      const currentWins = Math.round(currentRate * 10); // Assuming we track last 10 matches per surface
+      const currentLosses = 10 - currentWins;
+      
+      if (isWin) {
+        const newWins = currentWins + 1;
+        const newRate = newWins / 10;
+        return {
+          ...player,
+          surfaceWinRates: {
+            ...player.surfaceWinRates,
+            [surfaceKey]: Math.min(1, newRate)
+          }
+        };
+      } else {
+        const newLosses = currentLosses + 1;
+        const newRate = currentWins / 10;
+        return {
+          ...player,
+          surfaceWinRates: {
+            ...player.surfaceWinRates,
+            [surfaceKey]: Math.max(0, newRate)
+          }
+        };
+      }
+    };
+
+    // Update winner stats
+    let updatedWinner = {
+      ...winner,
+      wins: winner.wins + 1,
+      last5: [...winner.last5.slice(1), 'W'], // Remove oldest, add new W
+      lastMatchDate: matchDate,
+    };
+
+    // Update winner surface win rates if tournament surface is provided
+    if (tournamentSurface) {
+      updatedWinner = updateSurfaceWinRate(updatedWinner, tournamentSurface, true);
+    }
+
+    // Update winner streak
+    if (winner.streakType === 'W') {
+      updatedWinner.currentStreak = winner.currentStreak + 1;
+    } else {
+      updatedWinner.currentStreak = 1;
+      updatedWinner.streakType = 'W';
+    }
+
+    // Update winner seasonal form (simple average of last 10 matches)
+    const recentResults = updatedWinner.last5;
+    const recentWins = recentResults.filter(r => r === 'W').length;
+    updatedWinner.seasonalForm = recentWins / recentResults.length;
+
+    // Update loser stats
+    let updatedLoser = {
+      ...loser,
+      losses: loser.losses + 1,
+      last5: [...loser.last5.slice(1), 'L'], // Remove oldest, add new L
+      lastMatchDate: matchDate,
+    };
+
+    // Update loser surface win rates if tournament surface is provided
+    if (tournamentSurface) {
+      updatedLoser = updateSurfaceWinRate(updatedLoser, tournamentSurface, false);
+    }
+
+    // Update loser streak
+    if (loser.streakType === 'L') {
+      updatedLoser.currentStreak = loser.currentStreak + 1;
+    } else {
+      updatedLoser.currentStreak = 1;
+      updatedLoser.streakType = 'L';
+    }
+
+    // Update loser seasonal form
+    const loserRecentResults = updatedLoser.last5;
+    const loserRecentWins = loserRecentResults.filter(r => r === 'W').length;
+    updatedLoser.seasonalForm = loserRecentWins / loserRecentResults.length;
+
+    // Update both players in database
+    await Promise.all([
+      updatePlayer(winnerId, updatedWinner),
+      updatePlayer(loserId, updatedLoser)
+    ]);
+
+    console.log(`Updated player stats for match ${matchId}: Winner ${winner.firstName} ${winner.lastName}, Loser ${loser.firstName} ${loser.lastName}${tournamentSurface ? ` on ${tournamentSurface}` : ''}`);
+  } catch (error) {
+    console.error('Error updating player stats from match result:', error);
+    throw error;
+  }
+}
+
+/**
+ * Helper function to map tournament surface to surface key
+ */
+function getSurfaceKey(surface: string): string | null {
+  const surfaceMap: { [key: string]: string } = {
+    'Hard Court': 'hardCourt',
+    'hard': 'hardCourt',
+    'Hard': 'hardCourt',
+    'Clay Court': 'clayCourt',
+    'clay': 'clayCourt',
+    'Clay': 'clayCourt',
+    'Grass Court': 'grassCourt',
+    'grass': 'grassCourt',
+    'Grass': 'grassCourt',
+    'Indoor': 'indoor',
+    'indoor': 'indoor',
+    'Carpet': 'indoor', // Map carpet to indoor
+    'carpet': 'indoor'
+  };
+  
+  return surfaceMap[surface] || null;
+}
+
+/**
+ * Reverse player statistics when a match result is deleted
+ * This function should be called when a match result is deleted
+ */
+export async function reversePlayerStatsFromMatchResult(
+  matchId: string,
+  winnerId: string,
+  loserId: string,
+  tournamentSurface?: string
+) {
+  try {
+    // Get current player data
+    const winner = await fetchPlayerById(winnerId);
+    const loser = await fetchPlayerById(loserId);
+
+    // Helper function to reverse surface win rates
+    const reverseSurfaceWinRate = (player: any, surface: string, wasWin: boolean) => {
+      const surfaceKey = getSurfaceKey(surface);
+      if (!surfaceKey) return player;
+
+      const currentRate = player.surfaceWinRates?.[surfaceKey] || 0.5;
+      const currentWins = Math.round(currentRate * 10);
+      const currentLosses = 10 - currentWins;
+      
+      if (wasWin) {
+        // Reverse a win - decrease wins
+        const newWins = Math.max(0, currentWins - 1);
+        const newRate = newWins / 10;
+        return {
+          ...player,
+          surfaceWinRates: {
+            ...player.surfaceWinRates,
+            [surfaceKey]: Math.max(0, newRate)
+          }
+        };
+      } else {
+        // Reverse a loss - decrease losses (increase wins)
+        const newWins = Math.min(10, currentWins + 1);
+        const newRate = newWins / 10;
+        return {
+          ...player,
+          surfaceWinRates: {
+            ...player.surfaceWinRates,
+            [surfaceKey]: Math.min(1, newRate)
+          }
+        };
+      }
+    };
+
+    // Reverse winner stats
+    let updatedWinner = {
+      ...winner,
+      wins: Math.max(0, winner.wins - 1), // Don't go below 0
+      last5: [...winner.last5.slice(1), 'L'], // Remove oldest, add L (assuming this was their most recent match)
+    };
+
+    // Reverse winner surface win rates if tournament surface is provided
+    if (tournamentSurface) {
+      updatedWinner = reverseSurfaceWinRate(updatedWinner, tournamentSurface, true);
+    }
+
+    // Update winner streak (simplified - reset to 0)
+    updatedWinner.currentStreak = 0;
+    updatedWinner.streakType = 'L';
+
+    // Update winner seasonal form
+    const recentResults = updatedWinner.last5;
+    const recentWins = recentResults.filter(r => r === 'W').length;
+    updatedWinner.seasonalForm = recentWins / recentResults.length;
+
+    // Reverse loser stats
+    let updatedLoser = {
+      ...loser,
+      losses: Math.max(0, loser.losses - 1), // Don't go below 0
+      last5: [...loser.last5.slice(1), 'W'], // Remove oldest, add W (assuming this was their most recent match)
+    };
+
+    // Reverse loser surface win rates if tournament surface is provided
+    if (tournamentSurface) {
+      updatedLoser = reverseSurfaceWinRate(updatedLoser, tournamentSurface, false);
+    }
+
+    // Update loser streak (simplified - reset to 0)
+    updatedLoser.currentStreak = 0;
+    updatedLoser.streakType = 'W';
+
+    // Update loser seasonal form
+    const loserRecentResults = updatedLoser.last5;
+    const loserRecentWins = loserRecentResults.filter(r => r === 'W').length;
+    updatedLoser.seasonalForm = loserRecentWins / loserRecentResults.length;
+
+    // Update both players in database
+    await Promise.all([
+      updatePlayer(winnerId, updatedWinner),
+      updatePlayer(loserId, updatedLoser)
+    ]);
+
+    console.log(`Reversed player stats for match ${matchId}: Previous Winner ${winner.firstName} ${winner.lastName}, Previous Loser ${loser.firstName} ${loser.lastName}${tournamentSurface ? ` on ${tournamentSurface}` : ''}`);
+  } catch (error) {
+    console.error('Error reversing player stats from match result:', error);
+    throw error;
+  }
 } 
