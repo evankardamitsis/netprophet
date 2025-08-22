@@ -47,7 +47,7 @@ export type Database = {
           id: string
           is_parlay: boolean | null
           is_safe_bet: boolean | null
-          match_id: string | null
+          match_id: string
           multiplier: number
           outcome: string | null
           parlay_base_odds: number | null
@@ -73,7 +73,7 @@ export type Database = {
           id?: string
           is_parlay?: boolean | null
           is_safe_bet?: boolean | null
-          match_id?: string | null
+          match_id: string
           multiplier: number
           outcome?: string | null
           parlay_base_odds?: number | null
@@ -99,7 +99,7 @@ export type Database = {
           id?: string
           is_parlay?: boolean | null
           is_safe_bet?: boolean | null
-          match_id?: string | null
+          match_id?: string
           multiplier?: number
           outcome?: string | null
           parlay_base_odds?: number | null
@@ -118,7 +118,15 @@ export type Database = {
           user_id?: string
           winnings_paid?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bets_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clubs: {
         Row: {
@@ -596,6 +604,7 @@ export type Database = {
           has_received_welcome_bonus: boolean | null
           id: string
           is_admin: boolean | null
+          language_preference: string | null
           leaderboard_prizes_earned: number | null
           lost_bets: number | null
           referral_bonus_earned: number | null
@@ -616,6 +625,7 @@ export type Database = {
           has_received_welcome_bonus?: boolean | null
           id: string
           is_admin?: boolean | null
+          language_preference?: string | null
           leaderboard_prizes_earned?: number | null
           lost_bets?: number | null
           referral_bonus_earned?: number | null
@@ -636,6 +646,7 @@ export type Database = {
           has_received_welcome_bonus?: boolean | null
           id?: string
           is_admin?: boolean | null
+          language_preference?: string | null
           leaderboard_prizes_earned?: number | null
           lost_bets?: number | null
           referral_bonus_earned?: number | null
@@ -957,12 +968,20 @@ export type Database = {
         Returns: boolean
       }
       create_bet_notification: {
-        Args: {
-          bet_id: string
-          bet_status: string
-          user_uuid: string
-          winnings_amount?: number
-        }
+        Args:
+          | {
+              bet_id: string
+              bet_status: string
+              user_language?: string
+              user_uuid: string
+              winnings_amount?: number
+            }
+          | {
+              bet_id: string
+              bet_status: string
+              user_uuid: string
+              winnings_amount?: number
+            }
         Returns: undefined
       }
       determine_bet_outcome: {

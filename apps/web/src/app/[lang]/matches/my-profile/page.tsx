@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '@netpro
 import { useAuth } from '@/hooks/useAuth';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useDictionary } from '@/context/DictionaryContext';
-import { BetsService } from '@netprophet/lib';
+import { BetsService, supabase } from '@netprophet/lib';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -25,13 +25,31 @@ export default function MyProfilePage() {
     });
     const [loadingStats, setLoadingStats] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     useEffect(() => {
         if (!loading && !user) {
             router.push(`/${lang}/auth/signin`);
         } else if (user) {
             loadProfileStats();
+            checkAdminStatus();
         }
     }, [user, loading, router, lang]);
+
+    // Check if user is admin
+    const checkAdminStatus = async () => {
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user?.id || '')
+                .single();
+
+            setIsAdmin(profile?.is_admin || false);
+        } catch (err) {
+            console.error('Failed to check admin status:', err);
+            setIsAdmin(false);
+        }
+    };
 
     // Load profile statistics
     const loadProfileStats = async () => {
@@ -127,9 +145,16 @@ export default function MyProfilePage() {
                                 <div>
                                     <h3 className="font-semibold text-white">{dict?.profile?.netProphetUser || 'NetProphet User'}</h3>
                                     <p className="text-gray-300">{user.email}</p>
-                                    <Badge variant="secondary" className="mt-1 bg-green-600 text-white">
-                                        {dict?.profile?.activeMember || 'Active Member'}
-                                    </Badge>
+                                    <div className="flex gap-2 mt-1">
+                                        <Badge variant="secondary" className="bg-green-600 text-white">
+                                            {dict?.profile?.activeMember || 'Active Member'}
+                                        </Badge>
+                                        {isAdmin && (
+                                            <Badge variant="secondary" className="bg-purple-600 text-white">
+                                                {dict?.profile?.admin || 'Admin'}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 

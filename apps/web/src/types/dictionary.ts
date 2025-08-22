@@ -237,6 +237,7 @@ export interface Dictionary {
         profileInformation: string;
         netProphetUser: string;
         activeMember: string;
+        admin: string;
         email: string;
         memberSince: string;
         status: string;
@@ -258,9 +259,29 @@ export interface Dictionary {
         viewMyPicks: string;
         contactSupport: string;
         helpAndFaq: string;
-        signOut: string;
-    };
-    wallet: {
+            signOut: string;
+  };
+  notifications: {
+    title: string;
+    clearAll: string;
+    markAllRead: string;
+    loading: string;
+    noNotifications: string;
+    winnings: string;
+    justNow: string;
+    minutesAgo: string;
+    hoursAgo: string;
+    daysAgo: string;
+    markedAsRead: string;
+    failedToMarkAsRead: string;
+    allMarkedAsRead: string;
+    failedToMarkAllAsRead: string;
+    notificationDeleted: string;
+    failedToDelete: string;
+    allNotificationsDeleted: string;
+    failedToDeleteAll: string;
+  };
+  wallet: {
         balance: string;
         deposit: string;
         withdraw: string;

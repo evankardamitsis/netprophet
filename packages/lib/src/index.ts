@@ -36,6 +36,8 @@ export { NotificationsService } from './supabase/notifications';
 export type { NotificationWithData } from './supabase/notifications';
 export { TransactionsService } from './supabase/transactions';
 export type { TransactionWithDetails } from './supabase/transactions';
+export { ProfilesService } from './supabase/profiles';
+export type { Profile } from './supabase/profiles';
 
 // Match Status Constants
 export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses'; 

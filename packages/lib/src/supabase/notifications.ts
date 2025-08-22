@@ -131,6 +131,27 @@ export class NotificationsService {
   }
 
   /**
+   * Delete all notifications for the current user
+   */
+  static async deleteAllNotifications(): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to delete notifications');
+    }
+
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error deleting all notifications:', error);
+      throw new Error(`Failed to delete all notifications: ${error.message}`);
+    }
+  }
+
+  /**
    * Subscribe to real-time notifications
    */
   static async subscribeToNotifications(callback: (payload: any) => void) {

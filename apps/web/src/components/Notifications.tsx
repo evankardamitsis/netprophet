@@ -5,6 +5,7 @@ import { Bell, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { NotificationsService } from '@netprophet/lib';
+import { useDictionary } from '@/context/DictionaryContext';
 
 interface Notification {
     id: string;
@@ -26,6 +27,7 @@ interface Notification {
 }
 
 export function Notifications() {
+    const { dict } = useDictionary();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
@@ -105,10 +107,10 @@ export function Notifications() {
                 )
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
-            toast.success('Notification marked as read');
+            toast.success(dict?.notifications?.markedAsRead || 'Notification marked as read');
         } catch (error) {
             console.error('Error marking notification as read:', error);
-            toast.error('Failed to mark notification as read');
+            toast.error(dict?.notifications?.failedToMarkAsRead || 'Failed to mark notification as read');
         }
     };
 
@@ -119,25 +121,44 @@ export function Notifications() {
                 prev.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() }))
             );
             setUnreadCount(0);
-            toast.success('All notifications marked as read');
+            toast.success(dict?.notifications?.allMarkedAsRead || 'All notifications marked as read');
         } catch (error) {
             console.error('Error marking all notifications as read:', error);
-            toast.error('Failed to mark all notifications as read');
+            toast.error(dict?.notifications?.failedToMarkAllAsRead || 'Failed to mark all notifications as read');
         }
     };
 
     const deleteNotification = async (notificationId: string) => {
         try {
-            // This will be implemented when we have the NotificationsService
-            // await NotificationsService.deleteNotification(notificationId);
+            await NotificationsService.deleteNotification(notificationId);
+
+            // Check if the deleted notification was unread before removing it from state
+            const deletedNotification = notifications.find(n => n.id === notificationId);
+            const wasUnread = deletedNotification && !deletedNotification.read_at;
+
             setNotifications(prev => prev.filter(n => n.id !== notificationId));
-            if (!notifications.find(n => n.id === notificationId)?.read_at) {
+
+            // Update unread count if the deleted notification was unread
+            if (wasUnread) {
                 setUnreadCount(prev => Math.max(0, prev - 1));
             }
-            toast.success('Notification deleted');
+
+            toast.success(dict?.notifications?.notificationDeleted || 'Notification deleted');
         } catch (error) {
             console.error('Error deleting notification:', error);
-            toast.error('Failed to delete notification');
+            toast.error(dict?.notifications?.failedToDelete || 'Failed to delete notification');
+        }
+    };
+
+    const clearAllNotifications = async () => {
+        try {
+            await NotificationsService.deleteAllNotifications();
+            setNotifications([]);
+            setUnreadCount(0);
+            toast.success(dict?.notifications?.allNotificationsDeleted || 'All notifications deleted');
+        } catch (error) {
+            console.error('Error clearing all notifications:', error);
+            toast.error(dict?.notifications?.failedToDeleteAll || 'Failed to delete all notifications');
         }
     };
 
@@ -161,10 +182,10 @@ export function Notifications() {
         const now = new Date();
         const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-        if (diffInMinutes < 1) return 'Just now';
-        if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-        if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-        return `${Math.floor(diffInMinutes / 1440)}d ago`;
+        if (diffInMinutes < 1) return dict?.notifications?.justNow || 'Just now';
+        if (diffInMinutes < 60) return `${diffInMinutes}${dict?.notifications?.minutesAgo || 'm ago'}`;
+        if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}${dict?.notifications?.hoursAgo || 'h ago'}`;
+        return `${Math.floor(diffInMinutes / 1440)}${dict?.notifications?.daysAgo || 'd ago'}`;
     };
 
     return (
@@ -187,18 +208,15 @@ export function Notifications() {
                 <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden rounded-lg shadow-lg z-50 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                     <div className="p-4 border-b border-slate-700/50">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">Notifications</h3>
+                            <h3 className="text-lg font-semibold">{dict?.notifications?.title || 'Notifications'}</h3>
                             <div className="flex gap-2">
                                 {notifications.length > 0 && (
                                     <Button
                                         variant="outline"
-                                        onClick={() => {
-                                            setNotifications([]);
-                                            setUnreadCount(0);
-                                        }}
+                                        onClick={clearAllNotifications}
                                         className="text-xs px-3 py-2"
                                     >
-                                        Clear all
+                                        {dict?.notifications?.clearAll || 'Clear all'}
                                     </Button>
                                 )}
                                 {unreadCount > 0 && (
@@ -207,7 +225,7 @@ export function Notifications() {
                                         onClick={markAllAsRead}
                                         className="text-xs px-3 py-2"
                                     >
-                                        Mark all read
+                                        {dict?.notifications?.markAllRead || 'Mark all read'}
                                     </Button>
                                 )}
                             </div>
@@ -216,11 +234,11 @@ export function Notifications() {
 
                     <div className="max-h-64 overflow-y-auto">
                         {loading ? (
-                            <div className="text-center py-4 text-gray-400">Loading notifications...</div>
+                            <div className="text-center py-4 text-gray-400">{dict?.notifications?.loading || 'Loading notifications...'}</div>
                         ) : notifications.length === 0 ? (
                             <div className="text-center py-8 text-gray-400">
                                 <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p>No notifications yet</p>
+                                <p>{dict?.notifications?.noNotifications || 'No notifications yet'}</p>
                             </div>
                         ) : (
                             notifications.map((notification) => (
@@ -240,7 +258,7 @@ export function Notifications() {
                                                 </p>
                                                 {notification.data?.winnings && (
                                                     <p className="text-xs text-green-400 font-medium mt-1">
-                                                        Winnings: {notification.data.winnings} 🌕
+                                                        {dict?.notifications?.winnings || 'Winnings'}: {notification.data.winnings} 🌕
                                                     </p>
                                                 )}
                                                 {notification.data?.match_details && (

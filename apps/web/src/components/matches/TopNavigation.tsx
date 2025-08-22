@@ -9,6 +9,7 @@ import { Wallet } from './Wallet';
 import { Notifications } from '@/components/Notifications';
 import { Dictionary } from '@/types/dictionary';
 import Logo from '@/components/Logo';
+import { ProfilesService } from '@netprophet/lib';
 
 // Icon components
 function ChevronDownIcon() {
@@ -153,8 +154,17 @@ export function TopNavigation({
         };
     }, [mobileMenuOpen]);
 
-    const switchLanguage = (newLang: 'en' | 'el') => {
+    const switchLanguage = async (newLang: 'en' | 'el') => {
         setLanguageDropdownOpen(false);
+
+        try {
+            // Save language preference to user profile
+            await ProfilesService.updateLanguagePreference(newLang);
+        } catch (error) {
+            console.error('Failed to save language preference:', error);
+            // Continue with language switch even if saving fails
+        }
+
         // Replace the current language in the pathname
         const newPath = pathname.replace(/^\/(en|el)/, `/${newLang}`);
         router.push(newPath);

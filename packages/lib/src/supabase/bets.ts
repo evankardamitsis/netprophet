@@ -114,7 +114,11 @@ export class BetsService {
       const prediction = parlayData.predictions[i];
       
       // Use the matchId from the prediction if available
-      const matchId = prediction.matchId || null;
+      const matchId = prediction.matchId;
+
+      if (!matchId) {
+        throw new Error('Match ID is required for parlay bet');
+      }
 
       const { data, error } = await supabase
         .from('bets')
