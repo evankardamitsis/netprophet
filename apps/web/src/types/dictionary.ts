@@ -4,6 +4,7 @@ export interface Dictionary {
         leaderboard: string;
         myPicks: string;
         rewards: string;
+        players: string;
         myProfile: string;
         howItWorks: string;
         backToMatches: string;
@@ -198,6 +199,40 @@ export interface Dictionary {
         headToHead?: string;
         losses?: string;
         leads?: string;
+    };
+    players: {
+        years: string;
+        handed: string;
+        left: string;
+        right: string;
+        winRate: string;
+        record: string;
+        last5: string;
+        currentStreak: string;
+        wins: string;
+        win: string;
+        losses: string;
+        loss: string;
+        preferredSurface: string;
+        aggressiveness: string;
+        stamina: string;
+        consistency: string;
+        minorInjury: string;
+        majorInjury: string;
+        title: string;
+        subtitle: string;
+        searchPlaceholder: string;
+        allSurfaces: string;
+        playersFound: string;
+        noPlayersFound: string;
+        tryDifferentSearch: string;
+        playerNotFound: string;
+        totalMatches: string;
+        attributes: string;
+        additionalInfo: string;
+        notes: string;
+        injuryStatus: string;
+        fatigueLevel: string;
     };
     leaderboard: {
         title: string;

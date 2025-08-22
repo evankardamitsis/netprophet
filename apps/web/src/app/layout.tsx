@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: 'NetProphet',
     description: 'Tennis prediction platform',
     icons: {
-        icon: '/favicon.ico',
+        icon: '/net-prophet-favicon.svg',
     },
 };
 

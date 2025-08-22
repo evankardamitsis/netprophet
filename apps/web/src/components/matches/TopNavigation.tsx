@@ -196,22 +196,29 @@ export function TopNavigation({
                     <nav className="hidden lg:flex flex-1 justify-center gap-2 xl:gap-4">
                         <button
                             onClick={() => router.push(`/${currentLang}/matches`)}
-                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm xl:text-base"
+                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm xl:text-base"
                         >
                             {dict?.navigation?.matches || 'Matches'}
                         </button>
                         <button
                             onClick={() => router.push(`/${currentLang}/matches/leaderboard`)}
-                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm xl:text-base"
+                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm xl:text-base"
                         >
                             {dict?.navigation?.leaderboard || 'Leaderboard'}
                         </button>
                         <button
+                            onClick={() => router.push(`/${currentLang}/players`)}
+                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm xl:text-base"
+                        >
+                            {dict?.navigation?.players || 'Players'}
+                        </button>
+                        <button
                             onClick={() => router.push(`/${currentLang}/matches/rewards`)}
-                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm xl:text-base"
+                            className="px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm xl:text-base"
                         >
                             {dict?.navigation?.rewards || 'Rewards'}
                         </button>
+
                     </nav>
                 )}
 
@@ -231,7 +238,7 @@ export function TopNavigation({
                     <div className="relative hidden lg:block" ref={languageDropdownRef}>
                         <button
                             onClick={() => setLanguageDropdownOpen((open) => !open)}
-                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white focus:outline-none text-sm sm:text-base"
+                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white focus:outline-none text-sm sm:text-base"
                             aria-label="Language menu"
                         >
                             <GlobeIcon />
@@ -241,13 +248,13 @@ export function TopNavigation({
                         {languageDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-32 sm:w-36 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                                 <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs ${currentLang === 'en' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs ${currentLang === 'en' ? 'text-purple-300' : ''}`}
                                     onClick={() => switchLanguage('en')}
                                 >
                                     🇺🇸 English
                                 </button>
                                 <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs ${currentLang === 'el' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs ${currentLang === 'el' ? 'text-purple-300' : ''}`}
                                     onClick={() => switchLanguage('el')}
                                 >
                                     🇬🇷 Ελληνικά
@@ -268,13 +275,13 @@ export function TopNavigation({
                         {accountDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                                 <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs sm:text-sm"
+                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs sm:text-sm"
                                     onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/matches/my-profile`); }}
                                 >
                                     <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
                                 </button>
                                 <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs sm:text-sm"
+                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs sm:text-sm"
                                     onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/matches/my-picks`); }}
                                 >
                                     <LeaderboardIcon /> {dict?.navigation?.myPicks || 'My Picks'}
@@ -311,7 +318,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/matches`);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base"
+                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base"
                                 >
                                     {dict?.navigation?.matches || 'Matches'}
                                 </button>
@@ -320,7 +327,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/matches/leaderboard`);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base"
+                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base"
                                 >
                                     {dict?.navigation?.leaderboard || 'Leaderboard'}
                                 </button>
@@ -329,7 +336,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/matches/rewards`);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base"
+                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base"
                                 >
                                     {dict?.navigation?.rewards || 'Rewards'}
                                 </button>
@@ -345,7 +352,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/matches/my-profile`);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base flex items-center gap-2"
+                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base flex items-center gap-2"
                                 >
                                     <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
                                 </button>
@@ -354,7 +361,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/matches/my-picks`);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base flex items-center gap-2"
+                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base flex items-center gap-2"
                                 >
                                     <LeaderboardIcon /> {dict?.navigation?.myPicks || 'My Picks'}
                                 </button>
@@ -373,7 +380,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         switchLanguage('en');
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm flex items-center gap-2 ${currentLang === 'en' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm flex items-center gap-2 ${currentLang === 'en' ? 'text-purple-300' : ''}`}
                                 >
                                     <GlobeIcon /> 🇺🇸 English
                                 </button>
@@ -382,7 +389,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         switchLanguage('el');
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm flex items-center gap-2 ${currentLang === 'el' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm flex items-center gap-2 ${currentLang === 'el' ? 'text-purple-300' : ''}`}
                                 >
                                     <GlobeIcon /> 🇬🇷 Ελληνικά
                                 </button>
