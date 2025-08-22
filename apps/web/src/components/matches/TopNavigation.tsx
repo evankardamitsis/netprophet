@@ -235,19 +235,19 @@ export function TopNavigation({
                             aria-label="Language menu"
                         >
                             <GlobeIcon />
-                            <span className="hidden sm:inline">{currentLang === 'en' ? 'EN' : 'EL'}</span>
+                            <span className="hidden sm:inline text-xs">{currentLang === 'en' ? 'EN' : 'EL'}</span>
                             <ChevronDownIcon />
                         </button>
                         {languageDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-32 sm:w-36 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                                 <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base ${currentLang === 'en' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs ${currentLang === 'en' ? 'text-accent' : ''}`}
                                     onClick={() => switchLanguage('en')}
                                 >
                                     🇺🇸 English
                                 </button>
                                 <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base ${currentLang === 'el' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs ${currentLang === 'el' ? 'text-accent' : ''}`}
                                     onClick={() => switchLanguage('el')}
                                 >
                                     🇬🇷 Ελληνικά
@@ -260,11 +260,10 @@ export function TopNavigation({
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setAccountDropdownOpen((open) => !open)}
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-accent flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none hover:bg-accent/80 transition-colors"
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-purple-600 flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none hover:bg-purple-700 transition-colors"
                             aria-label="Account menu"
                         >
-                            U
-                            <ChevronDownIcon />
+                            {userEmail?.charAt(0).toUpperCase() || 'U'}
                         </button>
                         {accountDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
@@ -374,7 +373,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         switchLanguage('en');
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base flex items-center gap-2 ${currentLang === 'en' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm flex items-center gap-2 ${currentLang === 'en' ? 'text-accent' : ''}`}
                                 >
                                     <GlobeIcon /> 🇺🇸 English
                                 </button>
@@ -383,7 +382,7 @@ export function TopNavigation({
                                         setMobileMenuOpen(false);
                                         switchLanguage('el');
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-base flex items-center gap-2 ${currentLang === 'el' ? 'text-accent' : ''}`}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-accent/10 hover:text-accent text-white text-sm flex items-center gap-2 ${currentLang === 'el' ? 'text-accent' : ''}`}
                                 >
                                     <GlobeIcon /> 🇬🇷 Ελληνικά
                                 </button>

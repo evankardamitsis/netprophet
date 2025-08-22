@@ -5,6 +5,7 @@ import { ReactNode } from 'react'
 import { Providers } from '../../components/Providers'
 import { PredictionSlipProvider } from '../../context/PredictionSlipContext'
 import { WalletProvider } from '../../context/WalletContext'
+import { DictionaryProvider } from '../../context/DictionaryContext'
 import { getDictionary } from '../../lib/dictionaries'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -36,11 +37,13 @@ export default async function LocaleLayout({
         <html lang={lang}>
             <body className={inter.className}>
                 <Providers>
-                    <WalletProvider>
-                        <PredictionSlipProvider>
-                            {children}
-                        </PredictionSlipProvider>
-                    </WalletProvider>
+                    <DictionaryProvider dict={dict} lang={lang}>
+                        <WalletProvider>
+                            <PredictionSlipProvider>
+                                {children}
+                            </PredictionSlipProvider>
+                        </WalletProvider>
+                    </DictionaryProvider>
                 </Providers>
                 <Toaster
                     position="bottom-right"

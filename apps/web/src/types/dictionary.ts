@@ -6,6 +6,7 @@ export interface Dictionary {
         rewards: string;
         myProfile: string;
         howItWorks: string;
+        backToMatches: string;
     };
     auth: {
         signIn: string;
@@ -280,6 +281,45 @@ export interface Dictionary {
     failedToDelete: string;
     allNotificationsDeleted: string;
     failedToDeleteAll: string;
+  };
+  toast: {
+    placingPrediction: string;
+    predictionPlaced: string;
+    failedToPlacePrediction: string;
+    recordingWin: string;
+    recordingLoss: string;
+    congratulationsWon: string;
+    failedToRecordWin: string;
+    failedToRecordLoss: string;
+    claimingDailyReward: string;
+    dailyRewardClaimed: string;
+    failedToClaimDailyReward: string;
+    claimingWelcomeBonus: string;
+    welcomeBonusClaimed: string;
+    failedToClaimWelcomeBonus: string;
+    serverEmptyResponse: string;
+    addingReferralBonus: string;
+    referralBonusAdded: string;
+    failedToAddReferralBonus: string;
+    addingLeaderboardPrize: string;
+    leaderboardPrizeAdded: string;
+    failedToAddLeaderboardPrize: string;
+    purchasingItem: string;
+    itemPurchased: string;
+    failedToPurchaseItem: string;
+    failedToPurchaseItemGeneric: string;
+    enteringTournament: string;
+    tournamentEntered: string;
+    failedToEnterTournament: string;
+    failedToEnterTournamentGeneric: string;
+    unlockingInsight: string;
+    insightUnlocked: string;
+    failedToUnlockInsight: string;
+    failedToUnlockInsightGeneric: string;
+    profileNotFound: string;
+    failedToSyncWallet: string;
+    failedToLoadBetStats: string;
+    failedToLoadTransactions: string;
   };
   wallet: {
         balance: string;

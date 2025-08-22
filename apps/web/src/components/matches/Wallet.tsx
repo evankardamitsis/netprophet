@@ -159,14 +159,14 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-full transition shadow-lg hover:shadow-xl bg-[#23262F] hover:bg-[#2A2D38] shadow-gray-900/50"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-[#23262F] hover:bg-[#2A2D38] shadow-gray-900/50"
                 aria-label="Wallet"
             >
-                <span className="font-bold text-yellow-300">
+                <span className="font-bold text-yellow-300 text-sm">
                     {availableBalance} 🌕
                 </span>
                 {pendingBetAmount > 0 && (
-                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-blue-900 text-blue-300">
+                    <span className="text-xs px-1 py-0.5 rounded-full bg-blue-900 text-blue-300">
                         -{pendingBetAmount}
                     </span>
                 )}

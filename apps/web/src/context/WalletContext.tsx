@@ -5,6 +5,7 @@ import { BetsService, TransactionsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
 import { DailyRewardsService, WalletOperationsService, supabase } from '@netprophet/lib';
 import toast from 'react-hot-toast';
+import { useDictionary } from '@/context/DictionaryContext';
 
 export interface Transaction {
     id: string;
@@ -93,6 +94,7 @@ export function useWallet() {
 }
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
+    const { dict } = useDictionary();
     const [wallet, setWallet] = useState<UserWallet>(() => {
         const storedWallet = loadFromSessionStorage(SESSION_KEYS.WALLET, defaultWallet);
 
@@ -135,7 +137,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             if (error && error.code === 'PGRST116') {
                 // Profile doesn't exist - this should be handled by the signup process
                 console.error('Profile not found - user should have a profile after signup');
-                toast.error('Profile not found. Please contact support.');
+                toast.error(dict?.toast?.profileNotFound || 'Profile not found. Please contact support.');
                 return;
             } else if (error) {
                 console.error('Failed to load profile:', error);
@@ -155,7 +157,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Failed to sync wallet with database:', error);
-            toast.error('Failed to sync wallet with database');
+            toast.error(dict?.toast?.failedToSyncWallet || 'Failed to sync wallet with database');
         }
     }, []);
 
@@ -252,7 +254,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const placeBet = async (amount: number, matchId: number, description: string) => {
         try {
-            const loadingToast = toast.loading('Placing your bet...');
+            const loadingToast = toast.loading(dict?.toast?.placingPrediction || 'Placing your prediction...');
 
             const result = await WalletOperationsService.placeBet(amount, matchId.toString(), description);
 
@@ -263,7 +265,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     balance: result.data.newBalance,
                 }));
 
-                toast.success(`Bet placed successfully! New balance: $${result.data.newBalance}`, {
+                toast.success((dict?.toast?.predictionPlaced || '🎯 Prediction placed successfully! New balance: {balance} 🌕').replace('{balance}', result.data.newBalance.toString()), {
                     id: loadingToast,
                 });
             } else {
@@ -272,14 +274,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 });
             }
         } catch (error) {
-            console.error('Error placing bet:', error);
-            toast.error('Failed to place bet. Please try again.');
+            console.error('Error placing prediction:', error);
+            toast.error(dict?.toast?.failedToPlacePrediction || 'Failed to place prediction. Please try again.');
         }
     };
 
     const recordWin = async (stake: number, odds: number, description: string) => {
         try {
-            const loadingToast = toast.loading('Recording win...');
+            const loadingToast = toast.loading(dict?.toast?.recordingWin || 'Recording win...');
 
             const result = await WalletOperationsService.recordWin(stake, odds, description);
 
@@ -292,7 +294,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     balance: result.data.newBalance,
                 }));
 
-                toast.success(`Congratulations! You won $${winnings}!`, {
+                toast.success((dict?.toast?.congratulationsWon || '🎉 Congratulations! You won {amount} 🌕!').replace('{amount}', winnings.toString()), {
                     id: loadingToast,
                 });
             } else {
@@ -302,13 +304,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Error recording win:', error);
-            toast.error('Failed to record win. Please try again.');
+            toast.error(dict?.toast?.failedToRecordWin || 'Failed to record win. Please try again.');
         }
     };
 
     const recordLoss = async (stake: number, description: string) => {
         try {
-            const loadingToast = toast.loading('Recording loss...');
+            const loadingToast = toast.loading(dict?.toast?.recordingLoss || 'Recording loss...');
 
             const result = await WalletOperationsService.recordLoss(stake, description);
 
@@ -323,7 +325,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Error recording loss:', error);
-            toast.error('Failed to record loss. Please try again.');
+            toast.error(dict?.toast?.failedToRecordLoss || 'Failed to record loss. Please try again.');
         }
     };
 
@@ -339,7 +341,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const claimDailyLogin = async (): Promise<number> => {
         try {
-            const loadingToast = toast.loading('Claiming daily reward...');
+            const loadingToast = toast.loading(dict?.toast?.claimingDailyReward || 'Claiming daily reward...');
 
             const result = await DailyRewardsService.claimDailyReward();
 
@@ -353,7 +355,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     dailyLoginStreak: result.new_streak,
                 }));
 
-                toast.success(`Daily reward claimed! +$${rewardAmount} (${result.new_streak} day streak)`, {
+                toast.success((dict?.toast?.dailyRewardClaimed || '🎁 Daily reward claimed! +{amount} 🌕 ({streak} day streak)').replace('{amount}', rewardAmount.toString()).replace('{streak}', result.new_streak.toString()), {
                     id: loadingToast,
                 });
 
@@ -366,7 +368,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Error claiming daily reward:', error);
-            toast.error('Failed to claim daily reward. Please try again.');
+            toast.error(dict?.toast?.failedToClaimDailyReward || 'Failed to claim daily reward. Please try again.');
             return 0;
         }
     };
@@ -374,7 +376,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const claimWelcomeBonus = async (): Promise<number> => {
         let loadingToast: string | undefined;
         try {
-            loadingToast = toast.loading('Claiming welcome bonus...');
+            loadingToast = toast.loading(dict?.toast?.claimingWelcomeBonus || 'Claiming welcome bonus...');
 
             const result = await WalletOperationsService.claimWelcomeBonus();
 
@@ -388,13 +390,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     hasReceivedWelcomeBonus: true,
                 }));
 
-                toast.success(`Welcome bonus claimed! +$${bonusAmount}`, {
+                toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()), {
                     id: loadingToast,
                 });
 
                 return bonusAmount;
             } else {
-                toast.error(`Failed to claim welcome bonus: ${result.error}`, {
+                toast.error((dict?.toast?.failedToClaimWelcomeBonus || 'Failed to claim welcome bonus: {error}').replace('{error}', result.error || 'Unknown error'), {
                     id: loadingToast,
                 });
                 return 0;
@@ -404,7 +406,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
             // Handle specific JSON parsing errors
             if (error instanceof Error && error.message.includes('Unexpected end of JSON input')) {
-                toast.error('Server returned an empty response. Please try again.', {
+                toast.error(dict?.toast?.serverEmptyResponse || 'Server returned an empty response. Please try again.', {
                     id: loadingToast,
                 });
             } else {
@@ -418,7 +420,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const addReferralBonus = async (amount: number) => {
         try {
-            const loadingToast = toast.loading('Adding referral bonus...');
+            const loadingToast = toast.loading(dict?.toast?.addingReferralBonus || 'Adding referral bonus...');
 
             const result = await WalletOperationsService.addReferralBonus(amount);
 
@@ -429,7 +431,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     balance: result.data.newBalance,
                 }));
 
-                toast.success(`Referral bonus added! +$${amount}`, {
+                toast.success((dict?.toast?.referralBonusAdded || '👥 Referral bonus added! +{amount} 🌕').replace('{amount}', amount.toString()), {
                     id: loadingToast,
                 });
             } else {
@@ -439,13 +441,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Error adding referral bonus:', error);
-            toast.error('Failed to add referral bonus. Please try again.');
+            toast.error(dict?.toast?.failedToAddReferralBonus || 'Failed to add referral bonus. Please try again.');
         }
     };
 
     const addLeaderboardPrize = async (amount: number) => {
         try {
-            const loadingToast = toast.loading('Adding leaderboard prize...');
+            const loadingToast = toast.loading(dict?.toast?.addingLeaderboardPrize || 'Adding leaderboard prize...');
 
             const result = await WalletOperationsService.addLeaderboardPrize(amount);
 
@@ -456,7 +458,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     balance: result.data.newBalance,
                 }));
 
-                toast.success(`Leaderboard prize added! +$${amount}`, {
+                toast.success((dict?.toast?.leaderboardPrizeAdded || '🏆 Leaderboard prize added! +{amount} 🌕').replace('{amount}', amount.toString()), {
                     id: loadingToast,
                 });
             } else {
@@ -466,7 +468,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Error adding leaderboard prize:', error);
-            toast.error('Failed to add leaderboard prize. Please try again.');
+            toast.error(dict?.toast?.failedToAddLeaderboardPrize || 'Failed to add leaderboard prize. Please try again.');
         }
     };
 

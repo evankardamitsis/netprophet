@@ -177,7 +177,7 @@ export default function MyPicksPage() {
                     onClick={() => router.push(`/${lang}/matches`)}
                     className="mb-6 bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
                 >
-                    ← Back to Dashboard
+                    {dict?.navigation?.backToMatches || '← Back to Matches'}
                 </Button>
             </div>
             {/* Content Area */}
