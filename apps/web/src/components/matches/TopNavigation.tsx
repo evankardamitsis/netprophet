@@ -172,7 +172,7 @@ export function TopNavigation({
 
     return (
         <div className="relative">
-            <header className="w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-10 border-b border-slate-700/50 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white shadow-lg">
+            <header className="w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-10  bg-gradient-to-r from-slate-900 via-blue-950 to-purple-950 text-white shadow-lg">
                 {/* Left Section - Logo and Menu */}
                 <div className="flex items-center gap-1 sm:gap-2">
                     <button
@@ -185,7 +185,7 @@ export function TopNavigation({
                     </button>
                     <Link
                         href={`/${currentLang}`}
-                        className="hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent/50 rounded"
+                        className="focus:outline-none focus:ring-2 focus:ring-accent/50 rounded group"
                     >
                         <Logo size="md" />
                     </Link>

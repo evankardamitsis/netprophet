@@ -159,7 +159,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-[#23262F] hover:bg-[#2A2D38] shadow-gray-900/50"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-transparent "
                 aria-label="Wallet"
             >
                 <span className="font-bold text-yellow-300 text-sm">

@@ -76,7 +76,7 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
         <DictionaryProvider dict={dict} lang={lang}>
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
-                    <div className="relative h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+                    <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white">
                         <TopNavigation
                             userEmail={user?.email}
                             onMenuClick={() => setSidebarOpen(true)}
@@ -114,14 +114,14 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
 
                             {/* Main content */}
                             <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out`}>
-                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-900/90 via-slate-800/80 to-slate-900/90">
+                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90">
                                     {children}
                                 </div>
                             </div>
 
                             {/* Global Prediction Slip - overlay on smaller screens, drawer on xl+ */}
                             <div className={
-                                `bg-gradient-to-b from-slate-800 via-slate-900 to-slate-800 border-l border-slate-700/50 shadow-2xl
+                                `bg-gradient-to-b from-slate-900 via-blue-950 to-purple-950 border-l border-blue-700/50 shadow-2xl
                                 xl:flex hidden
                                 transition-all duration-300
                                 ${slipCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-96 opacity-100 pointer-events-auto'}
@@ -142,7 +142,7 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
                             {!slipCollapsed && (
                                 <div className="fixed inset-0 z-40 flex xl:hidden">
                                     <div className="fixed inset-0 bg-black/40" onClick={() => setSlipCollapsed?.(true)} />
-                                    <div className="relative w-full max-w-[320px] h-full bg-gradient-to-b from-slate-800 via-slate-900 to-slate-800 z-50 pt-[64px] ml-auto overflow-hidden shadow-2xl">
+                                    <div className="relative w-full max-w-[320px] h-full bg-gradient-to-b from-slate-900 via-blue-950 to-purple-950 z-50 pt-[64px] ml-auto overflow-hidden shadow-2xl">
                                         <div className="overflow-y-auto h-full w-full">
                                             <PredictionSlip
                                                 onRemovePrediction={removePrediction}

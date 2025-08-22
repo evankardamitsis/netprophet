@@ -61,26 +61,29 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             </h2>
                             <span className="text-xs xs:text-sm text-gray-400">({liveMatches.length})</span>
                         </div>
-                        <div className={`grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ${
-                            // Locked matches need fewer columns to ensure full text visibility
+                        <div className={`${
+                            // Locked matches on small screens: horizontal carousel with peek
                             liveMatches.some(m => m.locked)
-                                ? 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                                : // When both sidebar and prediction slip are open, max 2 columns
-                                sidebarOpen && !isSlipCollapsed
-                                    ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
-                                    : // All other states: max 3 columns
-                                    'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
+                                ? 'flex gap-2 xs:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-2 xs:pb-3 pr-4 xs:pr-6'
+                                : // Grid layout for active matches
+                                'grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ' + (
+                                    // When both sidebar and prediction slip are open, max 2 columns
+                                    sidebarOpen && !isSlipCollapsed
+                                        ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
+                                        : // All other states: max 3 columns
+                                        'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
+                                )
                             }`}>
                             {liveMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
-                                        ? 'border-gray-500 bg-slate-800 opacity-75 cursor-not-allowed'
-                                        : 'border-slate-600 hover:border-purple-500/50 cursor-pointer'
+                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
+                                        ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
+                                        : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
                                         } ${
                                         // Locked matches are much smaller and compact
                                         match.locked
-                                            ? 'p-2 xs:p-2.5 sm:p-3 h-[90px] xs:h-[100px] sm:h-[110px] md:h-[120px]'
+                                            ? 'p-2 xs:p-2.5 sm:p-3 h-[90px] xs:h-[100px] sm:h-[110px] md:h-[120px] min-w-[280px] xs:min-w-[300px] sm:min-w-[320px]'
                                             : // Active matches - adjust padding and height based on available space
                                             sidebarOpen && !isSlipCollapsed
                                                 ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
@@ -91,27 +94,29 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                     {/* Content Area - Takes up available space */}
                                     <div className="flex-1 flex flex-col">
                                         {match.locked ? (
-                                            // Compact layout for locked matches
+                                            // Professional compact layout for locked matches
                                             <>
                                                 {/* Header with tournament info */}
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="text-xs font-bold px-1 py-0.5 rounded-full border bg-gray-600/20 text-gray-400 border-gray-600/30">
-                                                        LOCKED
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center space-x-2">
+                                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                                                        <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
+                                                            {match.tournament}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-gray-400 text-xs truncate max-w-[100px] xs:max-w-[120px] sm:max-w-[140px] md:max-w-[160px]">{match.tournament}</div>
-                                                    <div className="text-gray-400 text-xs">{match.time}</div>
+                                                    <div className="text-xs text-slate-400 font-medium">{match.time}</div>
                                                 </div>
 
-                                                {/* Player names with first letter + last name */}
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="text-white font-semibold text-xs truncate flex-1">
+                                                {/* Player names with better typography */}
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="text-white font-semibold text-sm truncate flex-1">
                                                         {match.player1.name.split(' ').length > 1
                                                             ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
                                                             : match.player1.name
                                                         }
                                                     </div>
-                                                    <div className="text-gray-400 text-xs mx-1">VS</div>
-                                                    <div className="text-white font-semibold text-xs truncate flex-1 text-right">
+                                                    <div className="text-slate-500 text-xs font-bold mx-2">VS</div>
+                                                    <div className="text-white font-semibold text-sm truncate flex-1 text-right">
                                                         {match.player2.name.split(' ').length > 1
                                                             ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
                                                             : match.player2.name
@@ -119,13 +124,13 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     </div>
                                                 </div>
 
-                                                {/* Odds */}
+                                                {/* Odds with better styling */}
                                                 <div className="flex justify-between items-center">
                                                     <div className="text-center flex-1">
-                                                        <div className="text-xs font-bold text-white">{match.player1.odds.toFixed(2)}</div>
+                                                        <div className="text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                                     </div>
                                                     <div className="text-center flex-1">
-                                                        <div className="text-xs font-bold text-white">{match.player2.odds.toFixed(2)}</div>
+                                                        <div className="text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                                     </div>
                                                 </div>
                                             </>
@@ -220,9 +225,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             {upcomingMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
-                                        ? 'border-gray-500 bg-slate-800 opacity-75 cursor-not-allowed'
-                                        : 'border-slate-600 hover:border-purple-500/50 cursor-pointer'
+                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
+                                        ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
+                                        : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
                                         } ${
                                         // Locked matches are much smaller and compact
                                         match.locked
@@ -237,27 +242,29 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                     {/* Content Area - Takes up available space */}
                                     <div className="flex-1 flex flex-col">
                                         {match.locked ? (
-                                            // Compact layout for locked matches
+                                            // Professional compact layout for locked matches
                                             <>
                                                 {/* Header with tournament info */}
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="text-xs font-bold px-1 py-0.5 rounded-full border bg-gray-600/20 text-gray-400 border-gray-600/30">
-                                                        LOCKED
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center space-x-2">
+                                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                                                        <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
+                                                            {match.tournament}
+                                                        </div>
                                                     </div>
-                                                    <div className="text-gray-400 text-xs truncate max-w-[200px] xs:max-w-[200px] sm:max-w-[200px] md:max-w-[180px] lg:max-w-[200px]">{match.tournament}</div>
-                                                    <div className="text-gray-400 text-xs">{match.time}</div>
+                                                    <div className="text-xs text-slate-400 font-medium">{match.time}</div>
                                                 </div>
 
-                                                {/* Player names with first letter + last name */}
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="text-white font-semibold text-xs truncate flex-1">
+                                                {/* Player names with better typography */}
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="text-white font-semibold text-sm truncate flex-1">
                                                         {match.player1.name.split(' ').length > 1
                                                             ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
                                                             : match.player1.name
                                                         }
                                                     </div>
-                                                    <div className="text-gray-400 text-xs mx-1">VS</div>
-                                                    <div className="text-white font-semibold text-xs truncate flex-1 text-right">
+                                                    <div className="text-slate-500 text-xs font-bold mx-2">VS</div>
+                                                    <div className="text-white font-semibold text-sm truncate flex-1 text-right">
                                                         {match.player2.name.split(' ').length > 1
                                                             ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
                                                             : match.player2.name
@@ -265,13 +272,13 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     </div>
                                                 </div>
 
-                                                {/* Odds */}
-                                                <div className="flex justify-between items-center mt-auto">
+                                                {/* Odds with better styling */}
+                                                <div className="flex justify-between items-center">
                                                     <div className="text-center flex-1">
-                                                        <div className="text-xs font-bold text-white">{match.player1.odds.toFixed(2)}</div>
+                                                        <div className="text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                                     </div>
                                                     <div className="text-center flex-1">
-                                                        <div className="text-xs font-bold text-white">{match.player2.odds.toFixed(2)}</div>
+                                                        <div className="text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                                     </div>
                                                 </div>
                                             </>

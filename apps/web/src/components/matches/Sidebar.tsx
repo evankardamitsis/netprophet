@@ -199,10 +199,10 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     return (
         <aside
             className={`h-full flex flex-col transition-all duration-300 ease-in-out
-                bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950
+                bg-gradient-to-br from-slate-900 via-blue-950 to-purple-950
                 ${sidebarOpen
-                    ? 'w-full max-w-[320px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:w-[400px]'
-                    : 'w-48'
+                    ? 'w-full max-w-[320px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:w-[400px] rounded-r-3xl'
+                    : 'w-48 rounded-r-3xl'
                 }
             `}
             style={{
@@ -212,7 +212,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
             {sidebarOpen ? (
                 // Expanded view
                 <div className="flex flex-col h-full pt-4 p-1.5 sm:p-2 md:p-3 lg:p-4 min-w-0">
-                    <Card className="flex-1 overflow-hidden bg-gradient-to-br from-slate-950/50 via-slate-900/30 to-slate-950/50 min-w-0 shadow-none border-0">
+                    <Card className="flex-1 overflow-hidden bg-gradient-to-br from-slate-900 via-blue-950 to-purple-950 min-w-0 shadow-none border-0 rounded-3xl">
                         <div className="h-full overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
                             <MatchesList onSelectMatch={onMatchSelect} dict={dict} lang={lang} />
                         </div>
@@ -221,7 +221,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
             ) : (
                 // Compact view - clickable to expand
                 <div
-                    className="flex flex-col h-full p-2 sm:p-3 min-w-0 cursor-pointer hover:bg-slate-800/20 transition-colors"
+                    className="flex flex-col h-full p-2 sm:p-3 min-w-0 cursor-pointer hover:bg-blue-800/20 transition-colors rounded-3xl"
                     onClick={(e) => {
                         // Only expand if clicking on the container itself, not on match buttons
                         if (e.target === e.currentTarget) {
