@@ -66,6 +66,18 @@ export async function fetchPlayers() {
   return mapped;
 }
 
+export async function fetchPlayerById(id: string) {
+  const { data, error } = await supabase.from(TABLE).select('*').eq('id', id).single();
+  if (error) {
+    console.error('[fetchPlayerById] Supabase error:', error);
+    throw error;
+  }
+  if (!data) {
+    throw new Error('Player not found');
+  }
+  return mapPlayer(data);
+}
+
 export async function insertPlayer(player: Player) {
   const dbPlayer = toDbPlayer(player);
   const { data, error } = await supabase.from(TABLE).insert([dbPlayer]).select();

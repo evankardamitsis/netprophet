@@ -1,5 +1,6 @@
 // Types
 export type { Database } from './types/database';
+export type { Player } from './types/player';
 
 // Supabase
 export { supabase } from './supabase/client';
@@ -38,6 +39,9 @@ export { TransactionsService } from './supabase/transactions';
 export type { TransactionWithDetails } from './supabase/transactions';
 export { ProfilesService } from './supabase/profiles';
 export type { Profile } from './supabase/profiles';
+
+// Player management
+export { fetchPlayers, fetchPlayerById, insertPlayer, bulkInsertPlayers, updatePlayer, deletePlayer } from './supabase/players';
 
 // Match Status Constants
 export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses'; 

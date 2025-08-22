@@ -5,6 +5,9 @@ import './globals.css';
 export const metadata: Metadata = {
     title: 'NetProphet Admin',
     description: 'Admin panel for NetProphet tennis prediction platform',
+    icons: {
+        icon: '/net-prophet-favicon.svg',
+    },
 };
 
 export default function RootLayout({
