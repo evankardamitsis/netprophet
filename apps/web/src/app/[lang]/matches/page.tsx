@@ -117,7 +117,7 @@ async function fetchSyncedMatches(): Promise<Match[]> {
             time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
             status_display,
             points: rawMatch.points_value,
-            locked: rawMatch.locked || false,
+            locked: rawMatch.locked || (lockTime <= now),
             updated_at: rawMatch.updated_at,
             startTime,
             lockTime,

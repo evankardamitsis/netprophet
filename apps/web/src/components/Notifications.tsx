@@ -78,9 +78,7 @@ export function Notifications() {
     const loadNotifications = async () => {
         try {
             setLoading(true);
-            console.log('Loading notifications...');
             const data = await NotificationsService.getNotifications();
-            console.log('Notifications loaded:', data);
             setNotifications(data);
         } catch (error) {
             console.error('Error loading notifications:', error);
@@ -91,9 +89,7 @@ export function Notifications() {
 
     const loadUnreadCount = async () => {
         try {
-            console.log('Loading unread count...');
             const count = await NotificationsService.getUnreadCount();
-            console.log('Unread count:', count);
             setUnreadCount(count);
         } catch (error) {
             console.error('Error loading unread count:', error);
@@ -192,15 +188,29 @@ export function Notifications() {
                     <div className="p-4 border-b border-slate-700/50">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold">Notifications</h3>
-                            {unreadCount > 0 && (
-                                <Button
-                                    variant="outline"
-                                    onClick={markAllAsRead}
-                                    className="text-xs px-3 py-2"
-                                >
-                                    Mark all read
-                                </Button>
-                            )}
+                            <div className="flex gap-2">
+                                {notifications.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setNotifications([]);
+                                            setUnreadCount(0);
+                                        }}
+                                        className="text-xs px-3 py-2"
+                                    >
+                                        Clear all
+                                    </Button>
+                                )}
+                                {unreadCount > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={markAllAsRead}
+                                        className="text-xs px-3 py-2"
+                                    >
+                                        Mark all read
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -221,9 +231,6 @@ export function Notifications() {
                                 >
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-start gap-2 flex-1">
-                                            <span className="text-lg">
-                                                {getNotificationIcon(notification.type)}
-                                            </span>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-medium text-sm text-white">
                                                     {notification.title}

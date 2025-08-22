@@ -72,7 +72,7 @@ function transformMatch(rawMatch: RawMatch): Match {
         time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
         status_display,
         points: rawMatch.points_value || 0,
-        locked: rawMatch.locked,
+        locked: rawMatch.locked || (lockTime <= now),
         updated_at: rawMatch.updated_at,
         startTime,
         lockTime,
@@ -80,7 +80,7 @@ function transformMatch(rawMatch: RawMatch): Match {
     };
 }
 
-async function fetchSyncedMatches(): Promise<Match[]> {
+export async function fetchSyncedMatches(): Promise<Match[]> {
     const { data, error } = await supabase
         .from('matches')
         .select(`
@@ -203,10 +203,18 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                             {liveMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl pt-5 pb-1 px-1 sm:pt-5 sm:pb-1.5 sm:px-1.5 md:pt-5 md:pb-2 md:px-2 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-24 sm:h-28 md:h-32 relative ${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'}`}
-                                    onClick={() => onSelectMatch?.(match)}
+                                    className={`border rounded-lg sm:rounded-xl pt-5 pb-1 px-1 sm:pt-5 sm:pb-1.5 sm:px-1.5 md:pt-5 md:pb-2 md:px-2 flex flex-col justify-between transition-all duration-150 min-w-0 h-24 sm:h-28 md:h-32 relative ${match.locked
+                                        ? `${theme === 'dark' ? 'border-gray-500 bg-slate-800/50' : 'border-gray-400 bg-gray-100'} cursor-not-allowed opacity-75`
+                                        : `${theme === 'dark' ? 'border-red-400 bg-slate-800/50 backdrop-blur-sm hover:bg-red-900/10' : 'border-red-200 bg-white hover:bg-red-50'} cursor-pointer`
+                                        }`}
+                                    onClick={() => !match.locked && onSelectMatch?.(match)}
                                 >
-                                    <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`}>{dict?.sidebar?.live || 'LIVE'}</span>
+                                    <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.5 rounded ${match.locked
+                                        ? `${theme === 'dark' ? 'bg-gray-600/20 text-gray-400' : 'bg-gray-200 text-gray-600'}`
+                                        : `${theme === 'dark' ? 'bg-red-400/20 text-red-300' : 'bg-red-100 text-red-600'}`
+                                        }`}>
+                                        {dict?.sidebar?.live || 'LIVE'}
+                                    </span>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-0.5">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0 sm:gap-0.5 flex-1 min-w-0">
                                             <div className="flex items-center gap-0 sm:gap-0.5">
@@ -246,10 +254,18 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                             {upcomingMatches.map(match => (
                                 <div
                                     key={match.id}
-                                    className={`border rounded-lg sm:rounded-xl pt-5 pb-1 px-1 sm:pt-5 sm:pb-1.5 sm:px-1.5 md:pt-5 md:pb-2 md:px-2 flex flex-col justify-between cursor-pointer transition-all duration-150 min-w-0 h-24 sm:h-28 md:h-32 relative ${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'}`}
-                                    onClick={() => onSelectMatch?.(match)}
+                                    className={`border rounded-lg sm:rounded-xl pt-5 pb-1 px-1 sm:pt-5 sm:pb-1.5 sm:px-1.5 md:pt-5 md:pb-2 md:px-2 flex flex-col justify-between transition-all duration-150 min-w-0 h-24 sm:h-28 md:h-32 relative ${match.locked
+                                        ? `${theme === 'dark' ? 'border-gray-600 bg-slate-800/30' : 'border-gray-300 bg-gray-50'} cursor-not-allowed opacity-60`
+                                        : `${theme === 'dark' ? 'border-blue-400 bg-slate-800/50 backdrop-blur-sm hover:bg-blue-900/10' : 'border-blue-200 bg-white hover:bg-blue-50'} cursor-pointer`
+                                        }`}
+                                    onClick={() => !match.locked && onSelectMatch?.(match)}
                                 >
-                                    <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.5 rounded ${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`}>{dict?.sidebar?.upcoming || 'UPCOMING'}</span>
+                                    <span className={`absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.5 rounded ${match.locked
+                                        ? `${theme === 'dark' ? 'bg-gray-600/20 text-gray-400' : 'bg-gray-200 text-gray-600'}`
+                                        : `${theme === 'dark' ? 'bg-blue-400/20 text-blue-300' : 'bg-blue-100 text-blue-600'}`
+                                        }`}>
+                                        {match.locked ? 'LOCKED' : (dict?.sidebar?.upcoming || 'UPCOMING')}
+                                    </span>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-0.5">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0 sm:gap-0.5 flex-1 min-w-0">
                                             <div className="flex items-center gap-0 sm:gap-0.5">

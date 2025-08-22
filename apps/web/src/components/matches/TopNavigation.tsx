@@ -259,20 +259,20 @@ export function TopNavigation({
                         {accountDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                                 <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base"
+                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs sm:text-sm"
                                     onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/matches/my-profile`); }}
                                 >
                                     <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
                                 </button>
                                 <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-sm sm:text-base"
+                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-[#23262F]/80 text-xs sm:text-sm"
                                     onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/matches/my-picks`); }}
                                 >
                                     <LeaderboardIcon /> {dict?.navigation?.myPicks || 'My Picks'}
                                 </button>
                                 <div className="border-t my-2 border-gray-700" />
                                 <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 text-red-600 hover:bg-[#23262F]/80 text-sm sm:text-base"
+                                    className="w-full text-left px-4 py-2 flex items-center gap-2 text-red-600 hover:bg-[#23262F]/80 text-xs sm:text-sm"
                                     onClick={() => { setAccountDropdownOpen(false); onSignOut(); }}
                                 >
                                     {dict?.auth?.signOut || 'Sign Out'}

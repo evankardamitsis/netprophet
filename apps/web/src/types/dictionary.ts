@@ -28,6 +28,22 @@ export interface Dictionary {
         startsIn: string;
         makePrediction: string;
     };
+    myPicks: {
+        title: string;
+        subtitle: string;
+        match: string;
+        dateTime: string;
+        predictionDetails: string;
+        bet: string;
+        multiplier: string;
+        potential: string;
+        status: string;
+        winnings: string;
+        noBetsFound: string;
+        goToMatches: string;
+        loadingBets: string;
+        tryAgain: string;
+    };
     matches: {
         title: string;
         noMatches: string;

@@ -133,122 +133,8 @@ function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionar
     );
 }
 
-// Function to fetch synced matches (same as in MatchesList)
-async function fetchSyncedMatches(): Promise<Match[]> {
-    const { data, error } = await supabase
-        .from('matches')
-        .select(`
-            id,
-            tournament_id,
-            category_id,
-            player_a_id,
-            player_b_id,
-            winner_id,
-            status,
-            start_time,
-            lock_time,
-            odds_a,
-            odds_b,
-            a_score,
-            b_score,
-            points_value,
-            web_synced,
-            locked,
-            updated_at,
-            tournaments (
-                id,
-                name,
-                surface,
-                location,
-                matches_type
-            ),
-            tournament_categories (
-                id,
-                name
-            ),
-            player_a:players!matches_player_a_id_fkey (
-                id,
-                first_name,
-                last_name,
-                ntrp_rating,
-                surface_preference
-            ),
-            player_b:players!matches_player_b_id_fkey (
-                id,
-                first_name,
-                last_name,
-                ntrp_rating,
-                surface_preference
-            )
-        `)
-        .eq('web_synced', true)
-        .order('start_time', { ascending: true });
-
-    if (error) throw error;
-
-    // Transform raw database match to web app format (same logic as in MatchesList)
-    return (data || []).map((rawMatch: any) => {
-        const getPlayerName = (player: any) => {
-            if (player?.first_name && player?.last_name) {
-                return `${player.first_name} ${player.last_name}`;
-            }
-            return 'TBD';
-        };
-
-        const startTime = rawMatch.start_time ? new Date(rawMatch.start_time) : new Date();
-        const lockTime = rawMatch.lock_time ? new Date(rawMatch.lock_time) : new Date();
-        const now = new Date();
-
-        let status_display: 'live' | 'upcoming' | 'finished' = 'upcoming';
-        if (rawMatch.status === MATCH_STATUSES.LIVE) {
-            status_display = 'live';
-        } else if (rawMatch.status === MATCH_STATUSES.FINISHED) {
-            status_display = 'finished';
-        } else if (startTime <= now) {
-            status_display = 'live';
-        }
-
-        return {
-            id: rawMatch.id,
-            tournament_id: rawMatch.tournament_id,
-            category_id: rawMatch.category_id,
-            player_a_id: rawMatch.player_a_id,
-            player_b_id: rawMatch.player_b_id,
-            winner_id: rawMatch.winner_id,
-            status: rawMatch.status,
-            start_time: rawMatch.start_time,
-            lock_time: rawMatch.lock_time,
-            odds_a: rawMatch.odds_a,
-            odds_b: rawMatch.odds_b,
-            a_score: rawMatch.a_score,
-            b_score: rawMatch.b_score,
-            points_value: rawMatch.points_value,
-            web_synced: rawMatch.web_synced,
-            tournaments: Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0] : rawMatch.tournaments,
-            tournament_categories: Array.isArray(rawMatch.tournament_categories) ? rawMatch.tournament_categories[0] : rawMatch.tournament_categories,
-            player_a: rawMatch.player_a,
-            player_b: rawMatch.player_b,
-            // Computed properties for web app compatibility
-            tournament: (Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0]?.name : rawMatch.tournaments?.name) || 'Unknown Tournament',
-            player1: {
-                name: getPlayerName(rawMatch.player_a),
-                odds: rawMatch.odds_a || 1.0
-            },
-            player2: {
-                name: getPlayerName(rawMatch.player_b),
-                odds: rawMatch.odds_b || 1.0
-            },
-            time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
-            status_display,
-            points: rawMatch.points_value,
-            locked: rawMatch.locked || false,
-            updated_at: rawMatch.updated_at,
-            startTime,
-            lockTime,
-            isLocked: rawMatch.locked || lockTime <= now
-        };
-    });
-}
+// Import the fetchSyncedMatches function from MatchesList to ensure consistency
+import { fetchSyncedMatches } from '@/components/MatchesList';
 
 export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: onMatchSelectProp, dict, lang = 'en' }: SidebarProps) {
     const matchSelectFromContext = useMatchSelect();
@@ -257,11 +143,13 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
     // Fetch synced matches
-    const { data: allMatches = [], isLoading } = useQuery({
+    const { data: allMatches = [], isLoading } = useQuery<Match[]>({
         queryKey: ['syncedMatches'],
         queryFn: fetchSyncedMatches,
         refetchInterval: 30000, // Refetch every 30 seconds
     });
+
+
 
     // Update current time every second
     useEffect(() => {
@@ -334,18 +222,24 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                 // Compact view - clickable to expand
                 <div
                     className="flex flex-col h-full p-2 sm:p-3 min-w-0 cursor-pointer hover:bg-slate-800/20 transition-colors"
-                    onClick={() => setSidebarOpen(true)}
+                    onClick={(e) => {
+                        // Only expand if clicking on the container itself, not on match buttons
+                        if (e.target === e.currentTarget) {
+                            setSidebarOpen(true);
+                        }
+                    }}
                     title={dict?.sidebar?.expandSidebar || 'Click to expand sidebar'}
                 >
                     <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
                         <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
+
                             {/* Live matches */}
-                            {allMatches.filter(m => m.status_display === 'live' && !m.isLocked).length > 0 && (
+                            {allMatches.filter(m => m.status_display === 'live').length > 0 && (
                                 <div className="text-xs font-bold text-red-500 uppercase tracking-wide mb-1 px-1">
                                     {dict?.sidebar?.live || 'Live'}
                                 </div>
                             )}
-                            {allMatches.filter(m => m.status_display === 'live' && !m.isLocked).map((match) => (
+                            {allMatches.filter(m => m.status_display === 'live').map((match) => (
                                 <button
                                     key={match.id}
                                     onClick={(e) => {

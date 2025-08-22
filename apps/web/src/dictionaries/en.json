@@ -161,6 +161,22 @@
     "losses": "L",
     "leads": "leads"
   },
+  "myPicks": {
+    "title": "My Predictions",
+    "subtitle": "View your prediction history and the points you've earned",
+    "match": "Match",
+    "dateTime": "Date & Time",
+    "predictionDetails": "Prediction Details",
+    "bet": "Bet",
+    "multiplier": "Mult",
+    "potential": "Potential",
+    "status": "Status",
+    "winnings": "Winnings",
+    "noBetsFound": "No bets found. Start making predictions to see them here!",
+    "goToMatches": "Go to Matches",
+    "loadingBets": "Loading your bets...",
+    "tryAgain": "Try Again"
+  },
   "sidebar": {
     "live": "Live",
     "upcoming": "Upcoming",

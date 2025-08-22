@@ -34,11 +34,19 @@ export interface CreateParlayBetData {
 
 export interface BetWithMatch extends Bet {
   match: {
-    player_a: string;
-    player_b: string;
-    played_at: string;
+    player_a_id: string;
+    player_b_id: string;
+    start_time: string;
     a_score: number | null;
     b_score: number | null;
+    player_a: {
+      first_name: string;
+      last_name: string;
+    } | null;
+    player_b: {
+      first_name: string;
+      last_name: string;
+    } | null;
   } | null;
 }
 
@@ -362,11 +370,19 @@ export class BetsService {
       .select(`
         *,
         match:matches(
-          player_a,
-          player_b,
-          played_at,
+          player_a_id,
+          player_b_id,
+          start_time,
           a_score,
-          b_score
+          b_score,
+          player_a:players!matches_player_a_id_fkey(
+            first_name,
+            last_name
+          ),
+          player_b:players!matches_player_b_id_fkey(
+            first_name,
+            last_name
+          )
         )
       `)
       .eq('user_id', user.id)

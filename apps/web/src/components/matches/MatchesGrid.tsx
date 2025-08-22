@@ -53,20 +53,26 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             {liveMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border border-slate-600 hover:border-purple-500/50 transition-all duration-200 cursor-pointer flex flex-col ${
+                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
+                                        ? 'border-gray-500 bg-slate-800 opacity-75 cursor-not-allowed'
+                                        : 'border-slate-600 hover:border-purple-500/50 cursor-pointer'
+                                        } ${
                                         // Adjust padding and height based on available space
                                         sidebarOpen && !isSlipCollapsed
                                             ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
                                             : 'p-2 xs:p-2.5 sm:p-3 md:p-4 h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px]'
                                         }`}
-                                    onClick={() => onSelectMatch(match)}
+                                    onClick={() => !match.locked && onSelectMatch(match)}
                                 >
                                     {/* Content Area - Takes up available space */}
                                     <div className="flex-1 flex flex-col">
                                         {/* Match Header */}
                                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                             <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
-                                                <div className="bg-red-500/20 text-red-400 text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-red-500/30">
+                                                <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
+                                                    ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
+                                                    : 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                    }`}>
                                                     {dict?.sidebar?.live || 'LIVE'}
                                                 </div>
                                                 <span className="text-gray-400 text-xs xs:text-sm truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
@@ -147,21 +153,27 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             {upcomingMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border border-slate-600 hover:border-purple-500/50 transition-all duration-200 cursor-pointer flex flex-col ${
+                                    className={`bg-slate-900 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
+                                        ? 'border-gray-500 bg-slate-800 opacity-75 cursor-not-allowed'
+                                        : 'border-slate-600 hover:border-purple-500/50 cursor-pointer'
+                                        } ${
                                         // Adjust padding and height based on available space
                                         sidebarOpen && !isSlipCollapsed
                                             ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
                                             : 'p-2 xs:p-2.5 sm:p-3 md:p-4 h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px]'
                                         }`}
-                                    onClick={() => onSelectMatch(match)}
+                                    onClick={() => !match.locked && onSelectMatch(match)}
                                 >
                                     {/* Content Area - Takes up available space */}
                                     <div className="flex-1 flex flex-col">
                                         {/* Match Header */}
                                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                             <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
-                                                <div className="bg-blue-500/20 text-blue-400 text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-blue-500/30">
-                                                    {dict?.sidebar?.upcoming || 'UPCOMING'}
+                                                <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
+                                                    ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
+                                                    : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                                    }`}>
+                                                    {match.locked ? 'LOCKED' : (dict?.sidebar?.upcoming || 'UPCOMING')}
                                                 </div>
                                                 <span className="text-gray-400 text-xs xs:text-sm truncate max-w-[80px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
                                             </div>
