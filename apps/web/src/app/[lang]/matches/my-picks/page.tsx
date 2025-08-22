@@ -44,6 +44,18 @@ export default function MyPicksPage() {
     const [loadingBets, setLoadingBets] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Helper function to format prediction for display
+    const formatPrediction = (prediction: any) => {
+        const parts = [];
+        if (prediction.winner) parts.push(`Winner: ${prediction.winner}`);
+        if (prediction.matchResult) parts.push(`Result: ${prediction.matchResult}`);
+        if (prediction.set1Score) parts.push(`Set 1: ${prediction.set1Score}`);
+        if (prediction.set2Score) parts.push(`Set 2: ${prediction.set2Score}`);
+        if (prediction.set3Score) parts.push(`Set 3: ${prediction.set3Score}`);
+        if (prediction.superTiebreakScore) parts.push(`Super TB: ${prediction.superTiebreakScore}`);
+        return parts.join(' | ');
+    };
+
     // Load user bets
     const loadBets = async () => {
         try {
@@ -180,7 +192,73 @@ export default function MyPicksPage() {
                     </p>
                 </div>
 
-                {/* Prediction History */}
+                {/* Active Bets Section */}
+                {!loadingBets && !error && (
+                    <div className="mb-8">
+                        <h2 className="text-md font-bold text-white mb-4">
+                            {dict?.myPicks?.activeBets || 'Active Bets'}
+                        </h2>
+                        {(() => {
+                            const activeBets = bets.filter(bet => bet.status === 'active');
+                            return activeBets.length > 0 ? (
+                                <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+                                    <div className="grid gap-4">
+                                        {activeBets.map((bet) => (
+                                            <div key={bet.id} className="bg-slate-700 rounded-lg p-4 border border-slate-600">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div className="flex-1">
+                                                        <h3 className="font-semibold text-white text-lg mb-1">
+                                                            {bet.matchTitle}
+                                                        </h3>
+                                                        <p className="text-gray-300 text-sm">
+                                                            {new Date(bet.created_at).toLocaleDateString('en-GB', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-green-400 font-bold text-lg">
+                                                            {bet.betAmount} 🌕
+                                                        </div>
+                                                        <div className="text-gray-400 text-sm">
+                                                            {bet.multiplier}x
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-slate-600 rounded p-3 mb-3">
+                                                    <p className="text-gray-300 text-sm">
+                                                        <span className="font-medium text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
+                                                    </p>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <div className="text-gray-300 text-sm">
+                                                        {dict?.myPicks?.potential || 'Potential'}: <span className="text-green-400 font-medium">{bet.potentialWinnings} 🌕</span>
+                                                    </div>
+                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300">
+                                                        Active
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 text-center">
+                                    <p className="text-gray-300 mb-4">
+                                        {dict?.myPicks?.noActiveBets || 'No active bets at the moment.'}
+                                    </p>
+                                    <Button onClick={() => router.push(`/${lang}/matches`)} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+                                        {dict?.myPicks?.goToMatches || 'Go to Matches'}
+                                    </Button>
+                                </div>
+                            );
+                        })()}
+                    </div>
+                )}
+
+                {/* Bet History Section */}
                 {loadingBets ? (
                     <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
@@ -196,12 +274,17 @@ export default function MyPicksPage() {
                 ) : bets.length === 0 ? (
                     <div className="text-center py-8">
                         <p className="text-gray-300 mb-4">{dict?.myPicks?.noBetsFound || 'No bets found. Start making predictions to see them here!'}</p>
-                        <Button onClick={() => router.push(`/${lang}/matches`)} variant="outline" className="border-gray-600 text-gray-300">
+                        <Button onClick={() => router.push(`/${lang}/matches`)} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
                             {dict?.myPicks?.goToMatches || 'Go to Matches'}
                         </Button>
                     </div>
                 ) : (
-                    <BetHistoryTable bets={bets} dict={dict} />
+                    <div>
+                        <h2 className="text-md font-bold text-white mb-4">
+                            {dict?.myPicks?.betHistory || 'Bet History'}
+                        </h2>
+                        <BetHistoryTable bets={bets.filter(bet => bet.status !== 'active')} dict={dict} />
+                    </div>
                 )}
             </div>
         </div>

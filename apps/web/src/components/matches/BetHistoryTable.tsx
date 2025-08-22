@@ -92,28 +92,28 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
             <table className="w-full bg-slate-800 rounded-lg border border-slate-700">
                 <thead className="bg-slate-700">
                     <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-48">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-48">
                             {dict?.myPicks?.match || 'Match'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-32">
-                            {dict?.myPicks?.dateTime || 'Date & Time'}
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-32">
+                            {dict?.myPicks?.dateTime || 'Date'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-80">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-80">
                             {dict?.myPicks?.predictionDetails || 'Prediction Details'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-24">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-24">
                             {dict?.myPicks?.bet || 'Bet'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-20">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-20">
                             {dict?.myPicks?.multiplier || 'Mult'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-32">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-32">
                             {dict?.myPicks?.potential || 'Potential'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-20">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-20">
                             {dict?.myPicks?.status || 'Status'}
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-24">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-24">
                             {dict?.myPicks?.winnings || 'Winnings'}
                         </th>
                     </tr>
@@ -129,9 +129,6 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
                             <td className="px-4 py-4">
                                 <div className="text-sm text-gray-300">
                                     {formatDate(bet.created_at)}
-                                </div>
-                                <div className="text-sm text-gray-400">
-                                    {formatTime(bet.created_at)}
                                 </div>
                             </td>
                             <td className="px-4 py-4">

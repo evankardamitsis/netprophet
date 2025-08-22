@@ -43,6 +43,10 @@ export interface Dictionary {
         goToMatches: string;
         loadingBets: string;
         tryAgain: string;
+        activeBets: string;
+        noActiveBets: string;
+        betHistory: string;
+        prediction: string;
     };
     matches: {
         title: string;
@@ -222,11 +226,39 @@ export interface Dictionary {
     };
     profile: {
         title: string;
+        subtitle: string;
         balance: string;
         totalWins: string;
         totalLosses: string;
         winRate: string;
         dailyStreak: string;
+        totalCoins: string;
+        totalBets: string;
+        profileInformation: string;
+        netProphetUser: string;
+        activeMember: string;
+        email: string;
+        memberSince: string;
+        status: string;
+        verified: string;
+        statistics: string;
+        loadingStatistics: string;
+        tryAgain: string;
+        settings: string;
+        emailNotifications: string;
+        emailNotificationsDesc: string;
+        configure: string;
+        privacySettings: string;
+        privacySettingsDesc: string;
+        manage: string;
+        changePassword: string;
+        changePasswordDesc: string;
+        update: string;
+        accountActions: string;
+        viewMyPicks: string;
+        contactSupport: string;
+        helpAndFaq: string;
+        signOut: string;
     };
     wallet: {
         balance: string;
