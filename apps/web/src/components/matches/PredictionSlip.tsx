@@ -15,6 +15,7 @@ import {
     validateParlayBet,
     PARLAY_CONSTANTS
 } from '@netprophet/lib';
+import { COIN_CONSTANTS } from '@/context/WalletContext';
 import { PredictionItem } from '@/types/dashboard';
 // BetsService will be imported dynamically in handleSubmit
 import {
@@ -95,13 +96,13 @@ export function PredictionSlip({
     // Calculate individual bet totals using existing betAmount from predictions
     const getTotalIndividualStake = () => {
         return predictions.reduce((total, prediction) => {
-            return total + (prediction.betAmount || 0);
+            return total + (prediction.betAmount || COIN_CONSTANTS.MIN_BET);
         }, 0);
     };
 
     const getTotalIndividualWinnings = () => {
         return predictions.reduce((total, prediction) => {
-            return total + (prediction.potentialWinnings || 0);
+            return total + (prediction.potentialWinnings || (prediction.betAmount || COIN_CONSTANTS.MIN_BET) * (prediction.multiplier || 1));
         }, 0);
     };
 
@@ -283,8 +284,8 @@ export function PredictionSlip({
 
     const isIndividualModeValid = () => {
         const totalStake = getTotalIndividualStake();
-        // Check that all predictions have stakes > 0
-        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) > 0);
+        // Check that all predictions have stakes >= MIN_BET
+        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || COIN_CONSTANTS.MIN_BET) >= COIN_CONSTANTS.MIN_BET);
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
     };
 
@@ -499,17 +500,20 @@ export function PredictionSlip({
                                                             <span className="text-xs text-slate-300">{dict?.matches?.stake || 'Stake'}:</span>
                                                             <input
                                                                 type="number"
-                                                                min="0"
+                                                                min={COIN_CONSTANTS.MIN_BET}
                                                                 max={wallet.balance}
-                                                                value={item.betAmount || 0}
+                                                                value={item.betAmount || COIN_CONSTANTS.MIN_BET}
                                                                 onChange={(e) => {
-                                                                    const value = parseInt(e.target.value) || 0;
+                                                                    const value = parseInt(e.target.value) || COIN_CONSTANTS.MIN_BET;
                                                                     updatePredictionBetAmount(item.matchId, value);
                                                                 }}
                                                                 className="w-16 px-1.5 py-0.5 text-xs bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                                placeholder="0"
+                                                                placeholder={COIN_CONSTANTS.MIN_BET.toString()}
                                                             />
                                                             <span className="text-xs text-slate-400">🌕</span>
+                                                        </div>
+                                                        <div className="text-xs text-slate-500 mt-1">
+                                                            (min {COIN_CONSTANTS.MIN_BET})
                                                         </div>
                                                         <div className="flex items-center space-x-3">
                                                             <div className="text-center">
@@ -518,7 +522,7 @@ export function PredictionSlip({
                                                             </div>
                                                             <div className="text-center">
                                                                 <div className="text-xs text-slate-400">{dict?.matches?.potentialWin || 'Win'}</div>
-                                                                <div className="text-xs font-bold text-green-400">{(item.betAmount || 0) * (item.multiplier || 1)} 🌕</div>
+                                                                <div className="text-xs font-bold text-green-400">{(item.betAmount || COIN_CONSTANTS.MIN_BET) * (item.multiplier || 1)} 🌕</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -771,8 +775,8 @@ export function PredictionSlip({
 
                                 {!isIndividualModeValid() && (
                                     <div className="text-red-400 text-xs mb-2 text-center">
-                                        {predictions.some(prediction => (prediction.betAmount || 0) === 0)
-                                            ? (dict?.matches?.pleaseSetStakes || 'Please set stakes for all predictions')
+                                        {predictions.some(prediction => (prediction.betAmount || COIN_CONSTANTS.MIN_BET) < COIN_CONSTANTS.MIN_BET)
+                                            ? (dict?.matches?.pleaseSetStakes || `Please set stakes of at least ${COIN_CONSTANTS.MIN_BET} for all predictions`)
                                             : getTotalIndividualStake() > wallet.balance
                                                 ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
                                                 : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions')
