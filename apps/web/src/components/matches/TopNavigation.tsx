@@ -178,7 +178,7 @@ export function TopNavigation({
                     <button
                         ref={burgerButtonRef}
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="text-accent focus:outline-none lg:hidden p-2 rounded hover:bg-accent/10 transition-colors"
+                        className="text-white focus:outline-none lg:hidden p-2 rounded hover:bg-purple-600/20 hover:text-purple-300 transition-colors"
                         aria-label="Mobile menu"
                     >
                         <BurgerIcon isOpen={mobileMenuOpen} />
