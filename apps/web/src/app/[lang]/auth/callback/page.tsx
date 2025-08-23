@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 
 export default function AuthCallbackPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         // Check if this is an OAuth callback with proper parameters
@@ -43,8 +45,10 @@ export default function AuthCallbackPage() {
                 // Clean up stored language
                 localStorage.removeItem('oauth_lang');
 
-                // Redirect to matches
-                window.location.href = `/${lang}/matches`;
+                // Small delay to ensure session is fully persisted
+                setTimeout(() => {
+                    router.push(`/${lang}/matches`);
+                }, 100);
             } else if (event === 'SIGNED_OUT') {
                 setError('Authentication was cancelled or failed');
                 setLoading(false);
@@ -77,7 +81,7 @@ export default function AuthCallbackPage() {
                     if (session) {
                         const pathSegments = window.location.pathname.split('/');
                         const lang = pathSegments[1] || 'en';
-                        window.location.href = `/${lang}/matches`;
+                        router.push(`/${lang}/matches`);
                     } else {
                         setError('No authentication data found. Please try signing in again.');
                         setLoading(false);
@@ -122,7 +126,7 @@ export default function AuthCallbackPage() {
                             onClick={() => {
                                 const pathSegments = window.location.pathname.split('/');
                                 const lang = pathSegments[1] || 'en';
-                                window.location.href = `/${lang}/auth/signin`;
+                                router.push(`/${lang}/auth/signin`);
                             }}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                         >

@@ -3,19 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Utility function to get current user ID using direct auth call
-export const getCurrentUserId = async (): Promise<string | null> => {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error('Error getting current user ID:', error);
-      return null;
-    }
-    return user?.id || null;
-  } catch (error) {
-    console.error('Error getting current user ID:', error);
-    return null;
+// Create client with proper browser configuration
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true
   }
-}; 
+});
+
+ 

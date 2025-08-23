@@ -1,11 +1,12 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { BetsService, TransactionsService, useAuthStore } from '@netprophet/lib';
+import { BetsService, TransactionsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
 import { DailyRewardsService, WalletOperationsService, supabase } from '@netprophet/lib';
 import toast from 'react-hot-toast';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Transaction {
     id: string;
@@ -36,6 +37,7 @@ export interface UserWallet {
 
 interface WalletContextType {
     wallet: UserWallet;
+    isWalletSyncing: boolean;
     placeBet: (amount: number, matchId: number, description: string) => Promise<void>;
     recordWin: (stake: number, odds: number, description: string) => void;
     recordLoss: (stake: number, description: string) => void;
@@ -95,6 +97,7 @@ export function useWallet() {
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
     const { dict } = useDictionary();
+    const { user } = useAuth();
     const [wallet, setWallet] = useState<UserWallet>(() => {
         const storedWallet = loadFromSessionStorage(SESSION_KEYS.WALLET, defaultWallet);
 
@@ -122,11 +125,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         return walletWithDefaults;
     });
 
+    // Add a loading state to track when wallet is being synced
+    const [isWalletSyncing, setIsWalletSyncing] = useState(false);
+
     const syncWalletWithDatabase = useCallback(async () => {
         try {
-            // Use the centralized auth state instead of making a direct call
-            const { user } = useAuthStore.getState();
-            if (!user) return;
+            setIsWalletSyncing(true);
+            if (!user) {
+                setIsWalletSyncing(false);
+                return;
+            }
 
             // Get user profile from database
             const { data: profile, error } = await supabase
@@ -159,64 +167,87 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error('Failed to sync wallet with database:', error);
             toast.error(dict?.toast?.failedToSyncWallet || 'Failed to sync wallet with database');
+        } finally {
+            setIsWalletSyncing(false);
         }
-    }, []);
+    }, [user, dict?.toast?.profileNotFound, dict?.toast?.failedToSyncWallet]);
+
+    const loadBetStats = useCallback(async () => {
+        try {
+            const betStats = await BetsService.getUserBetStats();
+            if (betStats) {
+                setWallet(prev => {
+                    const updatedWallet = {
+                        ...prev,
+                        totalBets: betStats.total_bets || 0,
+                        wonBets: betStats.won_bets || 0,
+                        lostBets: betStats.lost_bets || 0,
+                        totalWinnings: betStats.total_winnings || 0,
+                        totalLosses: betStats.total_losses || 0,
+                        netProfit: (betStats.total_winnings || 0) - (betStats.total_losses || 0),
+                        winRate: betStats.win_rate || 0,
+                    };
+                    saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
+                    return updatedWallet;
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load bet stats:', error);
+            toast.error(dict?.toast?.failedToLoadBetStats || 'Failed to load bet stats');
+        }
+    }, [user, dict?.toast?.failedToLoadBetStats]);
+
+    const loadTransactions = useCallback(async () => {
+        try {
+            const transactions = await TransactionsService.getRecentTransactions(10);
+
+            if (transactions && transactions.length > 0) {
+                // Convert database transactions to local Transaction format
+                const localTransactions: Transaction[] = transactions.map(dbTransaction => ({
+                    id: dbTransaction.id,
+                    type: dbTransaction.type as Transaction['type'],
+                    amount: dbTransaction.amount,
+                    description: dbTransaction.description || '',
+                    timestamp: new Date(dbTransaction.created_at || new Date()),
+                }));
+
+                setWallet(prev => {
+                    const updatedWallet = {
+                        ...prev,
+                        recentTransactions: localTransactions,
+                    };
+                    saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
+                    return updatedWallet;
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load transactions:', error);
+            toast.error(dict?.toast?.failedToLoadTransactions || 'Failed to load transactions');
+        }
+    }, [user, dict?.toast?.failedToLoadTransactions]);
 
     // Load bet statistics and transactions from database on mount
     useEffect(() => {
-        const { user } = useAuthStore.getState();
         if (!user) {
             // For unauthenticated users, just load the default wallet state
             setWallet(defaultWallet);
             return;
         }
 
-        loadBetStats();
-        loadTransactions();
-        syncWalletWithDatabase();
-    }, [syncWalletWithDatabase]); // Include syncWalletWithDatabase in dependencies
-
-    const loadBetStats = async () => {
-        try {
-            const betStats = await BetsService.getUserBetStats();
-            if (betStats) {
-                setWallet(prev => ({
-                    ...prev,
-                    totalBets: betStats.total_bets || 0,
-                    wonBets: betStats.won_bets || 0,
-                    lostBets: betStats.lost_bets || 0,
-                    totalWinnings: betStats.total_winnings || 0,
-                    totalLosses: betStats.total_losses || 0,
-                    netProfit: (betStats.total_winnings || 0) - (betStats.total_losses || 0),
-                    winRate: betStats.win_rate || 0,
-                }));
+        // Load data for authenticated users
+        const loadUserData = async () => {
+            try {
+                // Load data sequentially to avoid race conditions
+                await syncWalletWithDatabase();
+                await loadBetStats();
+                await loadTransactions();
+            } catch (error) {
+                console.error('Error loading user data:', error);
             }
-        } catch (error) {
-            console.error('Failed to load bet stats:', error);
-        }
-    };
+        };
 
-    const loadTransactions = async () => {
-        try {
-            const transactions = await TransactionsService.getRecentTransactions(10);
-
-            // Convert database transactions to local Transaction format
-            const localTransactions: Transaction[] = transactions.map(dbTransaction => ({
-                id: dbTransaction.id,
-                type: dbTransaction.type as Transaction['type'],
-                amount: dbTransaction.amount,
-                description: dbTransaction.description || '',
-                timestamp: new Date(dbTransaction.created_at || new Date()),
-            }));
-
-            setWallet(prev => ({
-                ...prev,
-                recentTransactions: localTransactions,
-            }));
-        } catch (error) {
-            console.error('Failed to load transactions:', error);
-        }
-    };
+        loadUserData();
+    }, [user, syncWalletWithDatabase, loadBetStats, loadTransactions]); // Include all dependencies
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {
@@ -568,6 +599,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const value: WalletContextType = {
         wallet,
+        isWalletSyncing,
         placeBet,
         recordWin,
         recordLoss,

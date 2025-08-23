@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardTitle, Button, Badge } from '@netprophet/ui';
 import { useWallet, COIN_CONSTANTS } from '@/context/WalletContext';
 import { useTheme } from '../Providers';
+import { useAuth } from '@/hooks/useAuth';
 
 // Icon components
 function GiftIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -30,7 +31,8 @@ interface WelcomeBonusProps {
 }
 
 export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
-    const { wallet, claimWelcomeBonus, checkDailyLogin, claimDailyLogin, syncWalletWithDatabase } = useWallet();
+    const { user, loading: authLoading } = useAuth();
+    const { wallet, isWalletSyncing, claimWelcomeBonus, checkDailyLogin, claimDailyLogin, syncWalletWithDatabase } = useWallet();
     const { theme } = useTheme();
     const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
     const [showDailyLogin, setShowDailyLogin] = useState(false);
@@ -43,22 +45,17 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
         const initializeWallet = async () => {
             try {
                 await syncWalletWithDatabase();
-                // Wait a bit for the wallet state to update
-                setTimeout(() => {
-                    setShowWelcomeBonus(!wallet.hasReceivedWelcomeBonus);
-                    setHasCheckedWelcomeBonus(true);
-                    setIsLoading(false);
-                }, 100);
+                setHasCheckedWelcomeBonus(true);
             } catch (error) {
                 console.error('Error syncing wallet:', error);
-                setIsLoading(false);
+                setHasCheckedWelcomeBonus(true);
             }
         };
 
         if (!hasCheckedWelcomeBonus) {
             initializeWallet();
         }
-    }, [syncWalletWithDatabase, wallet.hasReceivedWelcomeBonus, hasCheckedWelcomeBonus]);
+    }, [syncWalletWithDatabase, hasCheckedWelcomeBonus]);
 
     useEffect(() => {
         // Check for daily login reward on component mount
@@ -75,6 +72,14 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
         };
         checkDailyReward();
     }, []); // Empty dependency array to run only once on mount
+
+    // Check welcome bonus status after wallet sync is complete
+    useEffect(() => {
+        if (hasCheckedWelcomeBonus && !isWalletSyncing) {
+            setShowWelcomeBonus(!wallet.hasReceivedWelcomeBonus);
+            setIsLoading(false);
+        }
+    }, [hasCheckedWelcomeBonus, isWalletSyncing, wallet.hasReceivedWelcomeBonus]);
 
     const handleClaimWelcomeBonus = async () => {
         try {
@@ -96,8 +101,8 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
         }
     };
 
-    // Don't render anything while loading
-    if (isLoading) {
+    // Don't render anything if user is not authenticated, auth is loading, wallet is syncing, or we haven't checked welcome bonus yet
+    if (!user || authLoading || isLoading || isWalletSyncing || !hasCheckedWelcomeBonus) {
         return null;
     }
 

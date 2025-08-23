@@ -30,6 +30,12 @@ function RewardsIcon() {
     </svg>
 }
 
+function PlayersIcon() {
+    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+    </svg>
+}
+
 function UserIcon() {
     return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -339,6 +345,15 @@ export function TopNavigation({
                                     className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base"
                                 >
                                     {dict?.navigation?.rewards || 'Rewards'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMobileMenuOpen(false);
+                                        router.push(`/${currentLang}/players`);
+                                    }}
+                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base"
+                                >
+                                    {dict?.navigation?.players || 'Players'}
                                 </button>
                             </div>
 

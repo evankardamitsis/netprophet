@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, useAuthStore } from '@netprophet/lib';
+import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -49,6 +49,7 @@ interface HomePageClientProps {
 
 export default function HomePageClient({ dict, lang }: HomePageClientProps) {
     const router = useRouter();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -75,7 +76,6 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
 
         const checkAuth = async () => {
             try {
-                const { user } = useAuthStore.getState();
                 if (user) {
                     // Use window.location for immediate redirect to avoid potential routing issues
                     window.location.href = `/${lang}/matches`;
@@ -92,7 +92,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
         const timer = setTimeout(checkAuth, 300);
 
         return () => clearTimeout(timer);
-    }, [router, lang]);
+    }, [router, lang, user]);
 
     if (loading) {
         return (

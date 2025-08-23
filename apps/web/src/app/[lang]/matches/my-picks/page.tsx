@@ -61,9 +61,13 @@ export default function MyPicksPage() {
         try {
             setLoadingBets(true);
             setError(null);
-            const betsData = await BetsService.getBetsWithMatches();
 
-            console.log('Raw bets data:', betsData);
+            // Ensure user is authenticated
+            if (!user) {
+                throw new Error('User not authenticated');
+            }
+
+            const betsData = await BetsService.getBetsWithMatches();
 
             // Transform bets data to match the expected format
             const transformedBets: BetWithMatchDetails[] = betsData.map(bet => {
@@ -147,7 +151,7 @@ export default function MyPicksPage() {
     useEffect(() => {
         if (!loading && !user) {
             router.push(`/${lang}/auth/signin`);
-        } else if (user) {
+        } else if (user && !loading) {
             loadBets();
         }
     }, [user, loading, router, lang]);

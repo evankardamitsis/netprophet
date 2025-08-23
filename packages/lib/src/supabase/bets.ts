@@ -1,4 +1,4 @@
-import { getCurrentUserId, supabase } from './client';
+import { supabase } from './client';
 import { Database } from '../types/database';
 
 type Bet = Database['public']['Tables']['bets']['Row'];
@@ -62,19 +62,9 @@ export class BetsService {
    * Create a new bet
    */
   static async createBet(betData: CreateBetData): Promise<Bet> {
-    const userId = await getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to create a bet');
-    }
-
-    // Use the provided matchId if available, otherwise use NULL
-    // This allows for proper bet resolution when match results are added
-
     const { data, error } = await supabase
       .from('bets')
       .insert({
-        user_id: userId,
         match_id: betData.matchId,
         bet_amount: betData.betAmount,
         multiplier: betData.multiplier,
@@ -98,20 +88,6 @@ export class BetsService {
    * Create a parlay bet (multiple predictions as one bet)
    */
   static async createParlayBet(parlayData: CreateParlayBetData): Promise<Bet[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to create a parlay bet');
-    }
-
-    // Check if user has enough safe bet tokens if using safe bet
-    if (parlayData.isSafeBet) {
-      const hasEnoughTokens = await this.consumeSafeBetTokens(parlayData.safeBetCost);
-      if (!hasEnoughTokens) {
-        throw new Error(`Insufficient safe bet tokens. Required: ${parlayData.safeBetCost}`);
-      }
-    }
-
     // Generate a unique parlay ID
     const parlayId = crypto.randomUUID();
     const createdBets: Bet[] = [];
@@ -130,7 +106,6 @@ export class BetsService {
       const { data, error } = await supabase
         .from('bets')
         .insert({
-          user_id: user.id,
           match_id: matchId,
           bet_amount: parlayData.totalStake, // Use total stake for each bet
           multiplier: parlayData.finalOdds, // Use final parlay odds
@@ -168,16 +143,15 @@ export class BetsService {
    * Get bet statistics for the current user
    */
   static async getUserBetStats(): Promise<BetStats | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to view bet stats');
+    // Ensure we have a valid session before making the query
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User not authenticated');
     }
 
     const { data, error } = await supabase
       .from('bet_stats')
       .select('*')
-      .eq('user_id', user.id)
       .single();
 
     if (error) {
@@ -196,16 +170,15 @@ export class BetsService {
    * Get active bets for the current user
    */
   static async getActiveBets(): Promise<Bet[]> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error('User must be authenticated to view active bets');
+    // Ensure we have a valid session before making the query
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User not authenticated');
     }
 
     const { data, error } = await supabase
       .from('bets')
       .select('*')
-      .eq('user_id', user.id)
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -221,10 +194,16 @@ export class BetsService {
    * Get bets with match details
    */
   static async getBetsWithMatches(): Promise<BetWithMatch[]> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view bets');
+    // Ensure we have a valid session before making the query
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User not authenticated');
+    }
+
+    // Ensure the session is properly set in the client
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('Failed to get authenticated user');
     }
 
     const { data, error } = await supabase
@@ -247,7 +226,6 @@ export class BetsService {
           )
         )
       `)
-      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -262,12 +240,6 @@ export class BetsService {
    * Update bet status (admin only)
    */
   static async updateBetStatus(betId: string, status: 'won' | 'lost' | 'cancelled', winningsPaid?: number): Promise<Bet> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to update bet status');
-    }
-
     const updateData: any = { status };
     if (winningsPaid !== undefined) {
       updateData.winnings_paid = winningsPaid;
@@ -277,7 +249,6 @@ export class BetsService {
       .from('bets')
       .update(updateData)
       .eq('id', betId)
-      .eq('user_id', userId)
       .select()
       .single();
 
@@ -293,16 +264,15 @@ export class BetsService {
    * Get user bets
    */
   static async getUserBets(): Promise<Bet[]> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view bets');
+    // Ensure we have a valid session before making the query
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User not authenticated');
     }
 
     const { data, error } = await supabase
       .from('bets')
       .select('*')
-      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -311,230 +281,6 @@ export class BetsService {
     }
 
     return data || [];
-  }
-
-
-
-  /**
-   * Get bets by match ID
-   */
-  static async getBetsByMatchId(matchId: string): Promise<Bet[]> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view bets');
-    }
-
-    const { data, error } = await supabase
-      .from('bets')
-      .select('*')
-      .eq('match_id', matchId)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching bets by match ID:', error);
-      throw new Error(`Failed to fetch bets by match ID: ${error.message}`);
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Get parlay bets
-   */
-  static async getParlayBets(): Promise<Bet[]> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view parlay bets');
-    }
-
-    const { data, error } = await supabase
-      .from('bets')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_parlay', true)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching parlay bets:', error);
-      throw new Error(`Failed to fetch parlay bets: ${error.message}`);
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Get bets by parlay ID
-   */
-  static async getBetsByParlayId(parlayId: string): Promise<Bet[]> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view parlay bets');
-    }
-
-    const { data, error } = await supabase
-      .from('bets')
-      .select('*')
-      .eq('parlay_id', parlayId)
-      .eq('user_id', userId)
-      .order('parlay_position', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching bets by parlay ID:', error);
-      throw new Error(`Failed to fetch bets by parlay ID: ${error.message}`);
-    }
-
-    return data || [];
-  }
-
-  /**
-   * Get safe bet tokens for user
-   */
-  static async getSafeBetTokens(): Promise<number> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view safe bet tokens');
-    }
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('safe_bet_tokens')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching safe bet tokens:', error);
-      return 0;
-    }
-
-    return data?.safe_bet_tokens || 0;
-  }
-
-  /**
-   * Consume safe bet tokens
-   */
-  static async consumeSafeBetTokens(tokensToConsume: number): Promise<boolean> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to consume safe bet tokens');
-    }
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('safe_bet_tokens')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching safe bet tokens:', error);
-      return false;
-    }
-
-    const currentTokens = data?.safe_bet_tokens || 0;
-    if (currentTokens < tokensToConsume) {
-      return false;
-    }
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ safe_bet_tokens: currentTokens - tokensToConsume })
-      .eq('id', userId);
-
-    if (updateError) {
-      console.error('Error updating safe bet tokens:', updateError);
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Get bet by ID
-   */
-  static async getBetById(betId: string): Promise<Bet | null> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view bet');
-    }
-
-    const { data, error } = await supabase
-      .from('bets')
-      .select('*')
-      .eq('id', betId)
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null;
-      }
-      console.error('Error fetching bet by ID:', error);
-      throw new Error(`Failed to fetch bet by ID: ${error.message}`);
-    }
-
-    return data;
-  }
-
-  /**
-   * Cancel bet
-   */
-  static async cancelBet(betId: string): Promise<Bet> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to cancel bet');
-    }
-
-    const { data, error } = await supabase
-      .from('bets')
-      .update({ status: 'cancelled' })
-      .eq('id', betId)
-      .eq('user_id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error cancelling bet:', error);
-      throw new Error(`Failed to cancel bet: ${error.message}`);
-    }
-
-    return data;
-  }
-
-  /**
-   * Get bet history with pagination
-   */
-  static async getBetHistory(page: number = 1, limit: number = 20): Promise<{ bets: Bet[]; total: number }> {
-    const userId = getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view bet history');
-    }
-
-    const offset = (page - 1) * limit;
-
-    const { data, error, count } = await supabase
-      .from('bets')
-      .select('*', { count: 'exact' })
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (error) {
-      console.error('Error fetching bet history:', error);
-      throw new Error(`Failed to fetch bet history: ${error.message}`);
-    }
-
-    return {
-      bets: data || [],
-      total: count || 0
-    };
   }
 
   /**
@@ -552,5 +298,185 @@ export class BetsService {
     }
 
     return data || [];
+  }
+
+  /**
+   * Get bets by match ID
+   */
+  static async getBetsByMatchId(matchId: string): Promise<Bet[]> {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .eq('match_id', matchId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching bets by match ID:', error);
+      throw new Error(`Failed to fetch bets by match ID: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  /**
+   * Get parlay bets
+   */
+  static async getParlayBets(): Promise<Bet[]> {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .eq('is_parlay', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching parlay bets:', error);
+      throw new Error(`Failed to fetch parlay bets: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  /**
+   * Get bets by parlay ID
+   */
+  static async getBetsByParlayId(parlayId: string): Promise<Bet[]> {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .eq('parlay_id', parlayId)
+      .order('parlay_position', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching bets by parlay ID:', error);
+      throw new Error(`Failed to fetch bets by parlay ID: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  /**
+   * Get safe bet tokens for user
+   */
+  static async getSafeBetTokens(): Promise<number> {
+    // Ensure we have a valid session before making the query
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('safe_bet_tokens')
+      .single();
+
+    if (error) {
+      console.error('Error fetching safe bet tokens:', error);
+      return 0;
+    }
+
+    return data?.safe_bet_tokens || 0;
+  }
+
+  /**
+   * Consume safe bet tokens
+   */
+  static async consumeSafeBetTokens(tokensToConsume: number): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('safe_bet_tokens')
+      .single();
+
+    if (error) {
+      console.error('Error fetching safe bet tokens:', error);
+      return false;
+    }
+
+    const currentTokens = data?.safe_bet_tokens || 0;
+    if (currentTokens < tokensToConsume) {
+      return false;
+    }
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ safe_bet_tokens: currentTokens - tokensToConsume });
+
+    if (updateError) {
+      console.error('Error updating safe bet tokens:', updateError);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Get bet by ID
+   */
+  static async getBetById(betId: string): Promise<Bet | null> {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .eq('id', betId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      console.error('Error fetching bet by ID:', error);
+      throw new Error(`Failed to fetch bet by ID: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Cancel bet
+   */
+  static async cancelBet(betId: string): Promise<Bet> {
+    const { data, error } = await supabase
+      .from('bets')
+      .update({ status: 'cancelled' })
+      .eq('id', betId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error cancelling bet:', error);
+      throw new Error(`Failed to cancel bet: ${error.message}`);
+    }
+
+    return data;
+  }
+
+  /**
+   * Get bet history with pagination
+   */
+  static async getBetHistory(page: number = 1, limit: number = 20): Promise<{ bets: Bet[]; total: number }> {
+    const offset = (page - 1) * limit;
+
+    const { data: bets, error: betsError } = await supabase
+      .from('bets')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (betsError) {
+      console.error('Error fetching bet history:', betsError);
+      throw new Error(`Failed to fetch bet history: ${betsError.message}`);
+    }
+
+    const { count, error: countError } = await supabase
+      .from('bets')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error('Error counting bets:', countError);
+      throw new Error(`Failed to count bets: ${countError.message}`);
+    }
+
+    return {
+      bets: bets || [],
+      total: count || 0
+    };
   }
 } 

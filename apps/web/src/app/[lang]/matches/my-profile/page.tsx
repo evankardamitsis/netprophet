@@ -29,7 +29,7 @@ export default function MyProfilePage() {
     useEffect(() => {
         if (!loading && !user) {
             router.push(`/${lang}/auth/signin`);
-        } else if (user) {
+        } else if (user && !loading) {
             loadProfileStats();
             checkAdminStatus();
         }
@@ -56,6 +56,11 @@ export default function MyProfilePage() {
         try {
             setLoadingStats(true);
             setError(null);
+
+            // Ensure user is authenticated
+            if (!user) {
+                throw new Error('User not authenticated');
+            }
 
             // Get user's bets to calculate statistics
             const betsData = await BetsService.getBetsWithMatches();

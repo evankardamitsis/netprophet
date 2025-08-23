@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { NotificationsService, useAuthStore } from '@netprophet/lib';
+import { NotificationsService } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Notification {
     id: string;
@@ -28,6 +29,7 @@ interface Notification {
 
 export function Notifications() {
     const { dict } = useDictionary();
+    const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +37,6 @@ export function Notifications() {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const { user } = useAuthStore.getState();
         if (!user) return; // Don't load notifications if user is not authenticated
 
         loadNotifications();
@@ -62,7 +63,7 @@ export function Notifications() {
             }
             clearInterval(interval);
         };
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         if (!isOpen) return;

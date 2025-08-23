@@ -2,7 +2,6 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, createContext, useContext, useEffect } from 'react';
-import { AuthProvider } from './AuthProvider';
 
 // Theme context - Always dark theme
 const ThemeContext = createContext({
@@ -54,9 +53,7 @@ export function Providers({ children }: ProvidersProps) {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider>
-                <AuthProvider>
-                    {children}
-                </AuthProvider>
+                {children}
             </ThemeProvider>
         </QueryClientProvider>
     );

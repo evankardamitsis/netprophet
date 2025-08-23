@@ -3,7 +3,7 @@ export type { Database } from './types/database';
 export type { Player } from './types/player';
 
 // Supabase
-export { supabase, getCurrentUserId } from './supabase/client';
+export { supabase } from './supabase/client';
 
 // Services
 export { BetsService } from './supabase/bets';
@@ -14,9 +14,6 @@ export { WalletOperationsService } from './supabase/walletOperations';
 export type { WalletOperationResult } from './supabase/walletOperations';
 export { LeaderboardService } from './supabase/leaderboard';
 export type { LeaderboardEntry, UserStats } from './supabase/leaderboard';
-
-// Stores
-export { useAuthStore } from './store/auth';
 
 // Utilities
 export * from './utils/validation';

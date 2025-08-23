@@ -1,4 +1,4 @@
-import { supabase, getCurrentUserId } from './client';
+import { supabase } from './client';
 import type { Database } from '../types/database';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
@@ -13,16 +13,9 @@ export class TransactionsService {
    * Get recent transactions for the current user
    */
   static async getRecentTransactions(limit: number = 10): Promise<TransactionWithDetails[]> {
-    const userId = await getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to view transactions');
-    }
-
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
-      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -43,21 +36,9 @@ export class TransactionsService {
     totalLosses: number;
     totalBets: number;
   }> {
-    const userId = await getCurrentUserId();
-    
-    if (!userId) {
-      return {
-        totalTransactions: 0,
-        totalWinnings: 0,
-        totalLosses: 0,
-        totalBets: 0,
-      };
-    }
-
     const { data, error } = await supabase
       .from('transactions')
-      .select('type, amount')
-      .eq('user_id', userId);
+      .select('type, amount');
 
     if (error) {
       console.error('Error fetching transaction stats:', error);
@@ -93,18 +74,9 @@ export class TransactionsService {
    * Create a new transaction
    */
   static async createTransaction(transactionData: Omit<TransactionInsert, 'user_id'>): Promise<Transaction> {
-    const userId = await getCurrentUserId();
-    
-    if (!userId) {
-      throw new Error('User must be authenticated to create transactions');
-    }
-
     const { data, error } = await supabase
       .from('transactions')
-      .insert({
-        ...transactionData,
-        user_id: userId,
-      })
+      .insert(transactionData)
       .select()
       .single();
 

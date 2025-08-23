@@ -1,4 +1,4 @@
-import { supabase, getCurrentUserId } from './client';
+import { supabase } from './client';
 
 export interface LeaderboardEntry {
     userId: string;
