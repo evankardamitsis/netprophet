@@ -21,7 +21,8 @@ export async function getMatches(filters?: {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,
@@ -60,7 +61,8 @@ export async function getMatch(id: string) {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,
@@ -103,7 +105,8 @@ export async function createMatch(match: MatchInsert) {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,
@@ -146,7 +149,8 @@ export async function updateMatch(id: string, updates: MatchUpdate) {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,
@@ -197,7 +201,8 @@ export async function getUpcomingMatches(limit = 10) {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,
@@ -235,7 +240,8 @@ export async function getLiveMatches() {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,
@@ -274,7 +280,8 @@ export async function getMatchesByTournament(tournamentId: string) {
                 id,
                 name,
                 surface,
-                location
+                location,
+                matches_type
             ),
             tournament_categories (
                 id,

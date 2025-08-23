@@ -62,9 +62,16 @@ export class BetsService {
    * Create a new bet
    */
   static async createBet(betData: CreateBetData): Promise<Bet> {
+    // Ensure we have a valid session before creating the bet
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User must be authenticated to create a bet');
+    }
+
     const { data, error } = await supabase
       .from('bets')
       .insert({
+        user_id: sessionData.session.user.id,
         match_id: betData.matchId,
         bet_amount: betData.betAmount,
         multiplier: betData.multiplier,
@@ -88,6 +95,12 @@ export class BetsService {
    * Create a parlay bet (multiple predictions as one bet)
    */
   static async createParlayBet(parlayData: CreateParlayBetData): Promise<Bet[]> {
+    // Ensure we have a valid session before creating the bet
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error('User must be authenticated to create a parlay bet');
+    }
+
     // Generate a unique parlay ID
     const parlayId = crypto.randomUUID();
     const createdBets: Bet[] = [];
@@ -106,6 +119,7 @@ export class BetsService {
       const { data, error } = await supabase
         .from('bets')
         .insert({
+          user_id: sessionData.session.user.id,
           match_id: matchId,
           bet_amount: parlayData.totalStake, // Use total stake for each bet
           multiplier: parlayData.finalOdds, // Use final parlay odds

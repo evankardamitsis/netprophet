@@ -184,9 +184,13 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
 
                 <div className="space-y-2">
                     <Label htmlFor="matches_type" className="text-base font-semibold">Matches Type</Label>
-                    <Select value={formData.matches_type} onValueChange={(value) => handleInputChange('matches_type', value)}>
+                    <Select
+                        key={tournament?.id || 'new'}
+                        value={formData.matches_type}
+                        onValueChange={(value) => handleInputChange('matches_type', value)}
+                    >
                         <SelectTrigger className="h-12 text-base">
-                            <SelectValue />
+                            <SelectValue placeholder="Select matches type" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="best-of-3" className="text-base py-3">Best of 3</SelectItem>

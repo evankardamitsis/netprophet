@@ -68,7 +68,7 @@ export default function MatchResultsPage() {
                     *,
                     player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
                     player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
-                    tournaments:tournaments!matches_tournament_id_fkey(id, name)
+                    tournaments:tournaments!matches_tournament_id_fkey(id, name, matches_type)
                 `)
                 .order('start_time', { ascending: true });
 
