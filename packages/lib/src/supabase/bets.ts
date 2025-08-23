@@ -1,6 +1,8 @@
 import { supabase } from './client';
 import { Database } from '../types/database';
 
+
+
 type Bet = Database['public']['Tables']['bets']['Row'];
 type BetInsert = Database['public']['Tables']['bets']['Insert'];
 type BetWithMatch = Bet & {
@@ -61,25 +63,45 @@ export class BetsService {
   /**
    * Create a new bet
    */
-  static async createBet(betData: CreateBetData): Promise<Bet> {
-    // Ensure we have a valid session before creating the bet
+    static async createBet(betData: CreateBetData): Promise<Bet> {
+    // Ensure we have a valid session before making the query
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData.session) {
       throw new Error('User must be authenticated to create a bet');
     }
 
+    // Debug logging to identify the issue
+    console.log('Creating bet with data:', {
+      user_id: sessionData.session.user.id,
+      match_id: betData.matchId,
+      bet_amount: betData.betAmount,
+      bet_amount_type: typeof betData.betAmount,
+      multiplier: betData.multiplier,
+      multiplier_type: typeof betData.multiplier,
+      potential_winnings: betData.potentialWinnings,
+      potential_winnings_type: typeof betData.potentialWinnings,
+      prediction: betData.prediction,
+      description: betData.description
+    });
+
+    // Create the insert data object
+    const insertData = {
+      user_id: sessionData.session.user.id,
+      match_id: betData.matchId,
+      bet_amount: betData.betAmount,
+      multiplier: betData.multiplier, // Keep as decimal
+      potential_winnings: betData.potentialWinnings, // Now supports decimal values
+      prediction: betData.prediction,
+      description: betData.description,
+      status: 'active'
+    };
+
+    console.log('Insert data object:', insertData);
+    console.log('Insert data JSON:', JSON.stringify(insertData, null, 2));
+
     const { data, error } = await supabase
       .from('bets')
-      .insert({
-        user_id: sessionData.session.user.id,
-        match_id: betData.matchId,
-        bet_amount: betData.betAmount,
-        multiplier: betData.multiplier,
-        potential_winnings: betData.potentialWinnings,
-        prediction: betData.prediction,
-        description: betData.description,
-        status: 'active'
-      })
+      .insert(insertData)
       .select()
       .single();
 
@@ -208,46 +230,68 @@ export class BetsService {
    * Get bets with match details
    */
   static async getBetsWithMatches(): Promise<BetWithMatch[]> {
-    // Ensure we have a valid session before making the query
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      throw new Error('User not authenticated');
-    }
+    try {
+      // Ensure we have a valid session before making the query
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error(`Session error: ${sessionError.message}`);
+      }
+      
+      if (!sessionData.session) {
+        console.log('No session found, user not authenticated');
+        throw new Error('User not authenticated');
+      }
 
-    // Ensure the session is properly set in the client
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Failed to get authenticated user');
-    }
+      console.log('Session found, user ID:', sessionData.session.user.id);
 
-    const { data, error } = await supabase
-      .from('bets')
-      .select(`
-        *,
-        match:matches(
-          player_a_id,
-          player_b_id,
-          start_time,
-          a_score,
-          b_score,
-          player_a:players!matches_player_a_id_fkey(
-            first_name,
-            last_name
-          ),
-          player_b:players!matches_player_b_id_fkey(
-            first_name,
-            last_name
+      // Ensure the session is properly set in the client
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('User error:', userError);
+        throw new Error(`Failed to get authenticated user: ${userError.message}`);
+      }
+      
+      if (!user) {
+        console.log('No user found from getUser()');
+        throw new Error('Failed to get authenticated user');
+      }
+
+      console.log('User authenticated successfully:', user.id);
+
+      const { data, error } = await supabase
+        .from('bets')
+        .select(`
+          *,
+          match:matches(
+            player_a_id,
+            player_b_id,
+            start_time,
+            a_score,
+            b_score,
+            player_a:players!matches_player_a_id_fkey(
+              first_name,
+              last_name
+            ),
+            player_b:players!matches_player_b_id_fkey(
+              first_name,
+              last_name
+            )
           )
-        )
-      `)
-      .order('created_at', { ascending: false });
+        `)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching bets with matches:', error);
-      throw new Error(`Failed to fetch bets: ${error.message}`);
+      if (error) {
+        console.error('Error fetching bets with matches:', error);
+        throw new Error(`Failed to fetch bets: ${error.message}`);
+      }
+
+      return (data || []) as unknown as BetWithMatch[];
+    } catch (error) {
+      console.error('getBetsWithMatches error:', error);
+      throw error;
     }
-
-    return (data || []) as unknown as BetWithMatch[];
   }
 
   /**

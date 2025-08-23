@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.bets (
     match_id UUID REFERENCES public.matches(id) ON DELETE CASCADE NOT NULL,
     bet_amount INTEGER NOT NULL CHECK (bet_amount > 0),
     multiplier DECIMAL(5,2) NOT NULL CHECK (multiplier > 0),
-    potential_winnings INTEGER NOT NULL CHECK (potential_winnings > 0),
+    potential_winnings DECIMAL(10,2) NOT NULL CHECK (potential_winnings > 0),
     prediction JSONB NOT NULL, -- Store the structured prediction data
     status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'won', 'lost', 'cancelled')),
     outcome TEXT, -- 'won', 'lost', or null if not yet determined

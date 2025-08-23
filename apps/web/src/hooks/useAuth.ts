@@ -11,11 +11,20 @@ export function useAuth() {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
+        console.log('useAuth: Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('useAuth: Session error:', error);
+        } else if (session) {
+          console.log('useAuth: Session found, user ID:', session.user.id);
+          setSession(session);
+          setUser(session.user);
+        } else {
+          console.log('useAuth: No session found');
+        }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('useAuth: Error getting initial session:', error);
       } finally {
         setLoading(false);
       }
@@ -25,6 +34,7 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('useAuth: Auth state change:', event, session ? 'session present' : 'no session');
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
