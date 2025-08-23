@@ -424,11 +424,11 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                     </div>
 
                     {/* Right Column: Prediction Form - Full width on mobile, 80% on large screens */}
-                    <div className="w-full lg:w-4/5 flex-1 min-h-0 flex flex-col">
+                    <div className="w-full lg:w-4/5 flex-1 min-h-0 flex flex-col mt-4">
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
-                            <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0">
-                                <h2 className="text-base sm:text-lg font-bold text-white mb-1">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
-                                <p className="text-gray-400 text-xs">{dict?.matches?.makePredictionsDescription || 'Choose from multiple prediction types to maximize your points!'}</p>
+                            <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0 mt-4">
+                                <h2 className="text-base sm:text-lg font-bold text-white mb-1 px-4">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
+
                             </div>
 
                             <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">

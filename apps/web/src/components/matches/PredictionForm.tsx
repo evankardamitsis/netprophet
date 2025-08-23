@@ -2,7 +2,7 @@
 
 import { Button, Badge } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { calculateMultiplier, getPredictionCount } from '@/lib/predictionHelpers';
 import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
 import { motion } from 'framer-motion';
@@ -79,11 +79,147 @@ export function PredictionForm({
 
     const { dict, lang } = useDictionary();
 
+    // Refs for smooth scrolling to sections
+    const matchResultRef = useRef<HTMLDivElement>(null);
+    const setWinnersRef = useRef<HTMLDivElement>(null);
+    const setScoresRef = useRef<HTMLDivElement>(null);
+    const setTiebreaksRef = useRef<HTMLDivElement>(null);
+    const superTiebreakRef = useRef<HTMLDivElement>(null);
+
     // Save form predictions to session storage whenever they change
     useEffect(() => {
         const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
         saveToSessionStorage(storageKey, formPredictions);
     }, [formPredictions, matchId]);
+
+    // Track previous state to detect when new sections are unlocked
+    const prevState = useRef({
+        winner: '',
+        matchResult: '',
+        setWinnersSelected: false,
+        setScoresSelected: false,
+        tiebreaksSelected: false,
+        superTiebreakSelected: false
+    });
+
+    // State for visual indicators
+    const [showMatchResultPulse, setShowMatchResultPulse] = useState(false);
+    const [showSetWinnersPulse, setShowSetWinnersPulse] = useState(false);
+    const [showSetScoresPulse, setShowSetScoresPulse] = useState(false);
+    const [showTiebreaksPulse, setShowTiebreaksPulse] = useState(false);
+    const [showSuperTiebreakPulse, setShowSuperTiebreakPulse] = useState(false);
+
+
+
+    // Effect to automatically stop pulsing after a fixed duration
+    useEffect(() => {
+        const pulseDuration = 3000; // 3 seconds of pulsing
+
+        const timeouts: NodeJS.Timeout[] = [];
+
+        if (showMatchResultPulse) {
+            const timeout = setTimeout(() => setShowMatchResultPulse(false), pulseDuration);
+            timeouts.push(timeout);
+        }
+
+        if (showSetWinnersPulse) {
+            const timeout = setTimeout(() => setShowSetWinnersPulse(false), pulseDuration);
+            timeouts.push(timeout);
+        }
+
+        if (showSetScoresPulse) {
+            const timeout = setTimeout(() => setShowSetScoresPulse(false), pulseDuration);
+            timeouts.push(timeout);
+        }
+
+        if (showTiebreaksPulse) {
+            const timeout = setTimeout(() => setShowTiebreaksPulse(false), pulseDuration);
+            timeouts.push(timeout);
+        }
+
+        if (showSuperTiebreakPulse) {
+            const timeout = setTimeout(() => setShowSuperTiebreakPulse(false), pulseDuration);
+            timeouts.push(timeout);
+        }
+
+        return () => {
+            timeouts.forEach(timeout => clearTimeout(timeout));
+        };
+    }, [showMatchResultPulse, showSetWinnersPulse, showSetScoresPulse, showTiebreaksPulse, showSuperTiebreakPulse]);
+
+    // Effect to detect when new sections are unlocked and show subtle visual indicators
+    useEffect(() => {
+        const currentState = {
+            winner: formPredictions.winner,
+            matchResult: formPredictions.matchResult,
+            setWinnersSelected: Boolean(formPredictions.matchResult && (
+                ['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) ||
+                Array.from({ length: setsToShowFromResult }, (_, i) => getSetWinner(i + 1)).some(winner => Boolean(winner))
+            )),
+            setScoresSelected: Boolean(['2-1', '1-2'].includes(formPredictions.matchResult) &&
+                Array.from({ length: 2 }, (_, i) => getSetWinner(i + 1)).some(winner => Boolean(winner))),
+            tiebreaksSelected: (() => {
+                const set1Score = getSetScore(1);
+                const set2Score = getSetScore(2);
+                const set3Score = getSetScore(3);
+                const set4Score = getSetScore(4);
+                const set5Score = getSetScore(5);
+                return set1Score === '7-6' || set1Score === '6-7' ||
+                    set2Score === '7-6' || set2Score === '6-7' ||
+                    set3Score === '7-6' || set3Score === '6-7' ||
+                    set4Score === '7-6' || set4Score === '6-7' ||
+                    set5Score === '7-6' || set5Score === '6-7';
+            })(),
+            superTiebreakSelected: isAmateurFormat && ['2-1', '1-2'].includes(formPredictions.matchResult)
+        };
+
+        // When winner is selected (first selection), pulse the match result section
+        if (!prevState.current.winner && currentState.winner) {
+            console.log('Winner selected, pulsing match result section...');
+            setShowMatchResultPulse(true);
+        }
+
+        // When match result is selected, pulse the match result section itself
+        if (!prevState.current.matchResult && currentState.matchResult) {
+            console.log('Match result selected, pulsing match result section...');
+            setShowMatchResultPulse(true);
+        }
+
+        // When match result is selected, also pulse the next available section
+        if (!prevState.current.matchResult && currentState.matchResult) {
+            console.log('Match result selected, pulsing next section...');
+
+            // Determine which section should pulse next based on the match result
+            if (['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult)) {
+                // For straight sets, pulse the set scores section
+                setShowSetScoresPulse(true);
+            } else {
+                // For 2-1/1-2, pulse the set winners section
+                setShowSetWinnersPulse(true);
+            }
+        }
+
+        // When set winners are selected (for 2-1/1-2), pulse set scores section
+        if (!prevState.current.setWinnersSelected && currentState.setWinnersSelected) {
+            console.log('Set winners selected, pulsing set scores...');
+            setShowSetScoresPulse(true);
+        }
+
+        // When set scores are selected and include tiebreaks, pulse tiebreak section
+        if (!prevState.current.tiebreaksSelected && currentState.tiebreaksSelected) {
+            console.log('Tiebreak scores detected, pulsing tiebreak section...');
+            setShowTiebreaksPulse(true);
+        }
+
+        // When super tiebreak becomes available (amateur format 2-1/1-2), pulse super tiebreak section
+        if (!prevState.current.superTiebreakSelected && currentState.superTiebreakSelected) {
+            console.log('Super tiebreak available, pulsing super tiebreak section...');
+            setShowSuperTiebreakPulse(true);
+        }
+
+        // Update previous state
+        prevState.current = currentState;
+    }, [formPredictions, setsToShowFromResult, getSetWinner, getSetScore, isAmateurFormat]);
 
     // Calculate dynamic multiplier and bonus by adding up each section's multipliers
     const currentMultiplier = useMemo(() => {
@@ -316,7 +452,7 @@ export function PredictionForm({
     };
 
     return (
-        <div className="space-y-3 sm:space-y-4 pb-4 h-full flex flex-col relative">
+        <div className="space-y-4 sm:space-y-6 pb-6 h-full flex flex-col relative px-2 sm:px-0">
             {/* Clear All Button */}
             <button
                 onClick={handleClearAll}
@@ -348,19 +484,17 @@ export function PredictionForm({
                             </span>
                         </div>
                     </div>
-                    <div className="text-xs text-green-400 mt-1">
-                        {dict?.matches?.predictionCount?.replace('{count}', 'Multiple') || 'Multiple predictions selected'}
-                    </div>
+
                 </div>
             )}
             {/* Match Winner */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-slate-700/50">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-slate-700/50">
                 <h3 className="text-sm sm:text-base font-bold text-white mb-2 sm:mb-3">{dict?.matches?.matchWinner || 'Match Winner'}</h3>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name)}
                         disabled={locked}
-                        className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${locked
+                        className={`p-3 sm:p-4 rounded-lg border transition-colors ${locked
                             ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                             : (formPredictions.winner === details.player1.name
                                 ? 'bg-purple-600 border-purple-600 text-white'
@@ -389,7 +523,16 @@ export function PredictionForm({
             {/* Match Result */}
             {
                 formPredictions.winner && (
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-slate-700/50">
+                    <motion.div
+                        ref={matchResultRef}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showMatchResultPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        animate={showMatchResultPulse ? {
+                            scale: [1, 1.02, 1],
+                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
+                        } : {}}
+                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
+
+                    >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-3 gap-2">
                             <div className="flex items-center space-x-2">
                                 <h3 className="text-sm sm:text-base font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
@@ -409,7 +552,7 @@ export function PredictionForm({
                             </div>
                         </div>
                         <p className="text-xs text-gray-400 mb-2 sm:mb-3">{dict?.matches?.howWillWin?.replace('{player}', formPredictions.winner.split(' ')[1]) || `How will ${formPredictions.winner.split(' ')[1]} win the match?`}</p>
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             {isBestOf5 ? (
                                 <>
                                     {formPredictions.winner === details.player1.name ? (
@@ -562,7 +705,7 @@ export function PredictionForm({
                                 </>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 )
             }
 
@@ -571,7 +714,7 @@ export function PredictionForm({
                 formPredictions.matchResult && (
                     // For straight-set results, show set scores directly
                     ['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) ? (
-                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                        <div ref={setScoresRef} className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-slate-700/50">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
                                     <h3 className="text-base font-bold text-white">{dict?.matches?.setScores || 'Set Scores'}</h3>
@@ -635,7 +778,16 @@ export function PredictionForm({
                         </div>
                     ) : (
                         // For non-straight-set results, show set winners with inline scores
-                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                        <motion.div
+                            ref={setWinnersRef}
+                            className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showSetWinnersPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                            animate={showSetWinnersPulse ? {
+                                scale: [1, 1.02, 1],
+                                boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
+                            } : {}}
+                            transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
+
+                        >
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
                                     <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
@@ -719,7 +871,7 @@ export function PredictionForm({
                                 return (
                                     <div key={i} className="space-y-3 mb-4">
                                         <h4 className="font-semibold text-white text-sm">{dict?.matches?.setWinner?.replace('{setNumber}', (i + 1).toString()) || `Set ${i + 1} Winner`}</h4>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
                                                 disabled={!canPlayer1Win || locked}
@@ -756,7 +908,7 @@ export function PredictionForm({
                                     </div>
                                 );
                             })}
-                        </div>
+                        </motion.div>
                     )
                 )
             }
@@ -765,7 +917,16 @@ export function PredictionForm({
             {
                 formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) &&
                 Array.from({ length: 2 }, (_, i) => getSetWinner(i + 1)).some(winner => winner) && (
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                    <motion.div
+                        ref={setScoresRef}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showSetScoresPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        animate={showSetScoresPulse ? {
+                            scale: [1, 1.02, 1],
+                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
+                        } : {}}
+                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
+
+                    >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
                                 <h3 className="text-base font-bold text-white">{dict?.matches?.setScores || 'Set Scores'}</h3>
@@ -807,7 +968,7 @@ export function PredictionForm({
                                 </div>
                             );
                         })}
-                    </div>
+                    </motion.div>
                 )
             }
 
@@ -831,7 +992,16 @@ export function PredictionForm({
 
                     return hasTiebreakScore();
                 })() && (
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                    <motion.div
+                        ref={setTiebreaksRef}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showTiebreaksPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        animate={showTiebreaksPulse ? {
+                            scale: [1, 1.02, 1],
+                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
+                        } : {}}
+                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
+
+                    >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
                                 <h3 className="text-base font-bold text-white">{dict?.matches?.setTiebreaks || 'Set Tiebreaks'}</h3>
@@ -985,14 +1155,23 @@ export function PredictionForm({
                                     </div>
                                 </div>
                             )}
-                    </div>
+                    </motion.div>
                 )
             }
 
             {/* Super Tiebreak - Only for amateur format when 2-1/1-2 is selected */}
             {
                 isAmateurFormat && formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) && (
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50">
+                    <motion.div
+                        ref={superTiebreakRef}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showSuperTiebreakPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        animate={showSuperTiebreakPulse ? {
+                            scale: [1, 1.02, 1],
+                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
+                        } : {}}
+                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
+
+                    >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
                                 <h3 className="text-base font-bold text-white">{dict?.matches?.superTiebreak || 'Super Tiebreak'}</h3>
@@ -1029,7 +1208,7 @@ export function PredictionForm({
                             <p className="text-xs text-gray-400 mb-3">
                                 {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', formPredictions.winner.split(' ')[1]) || `The super tiebreak winner must be ${formPredictions.winner.split(' ')[1]} to match your overall prediction.`}
                             </p>
-                            <div className="grid grid-cols-1 gap-3">
+                            <div className="grid grid-cols-1 gap-3 sm:gap-4">
                                 <div className="p-3 rounded-lg border bg-purple-600/20 border-purple-500/30 text-purple-300">
                                     <div className="text-sm font-semibold">{formPredictions.winner.split(' ')[1]}</div>
                                     <div className="text-xs text-purple-400">{dict?.matches?.winsSuperTiebreak || 'Wins super tiebreak (pre-selected)'}</div>
@@ -1083,7 +1262,7 @@ export function PredictionForm({
                                 </select>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )
             }
 
