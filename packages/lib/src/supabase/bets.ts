@@ -1,4 +1,4 @@
-import { supabase, getCurrentUserId } from './client';
+import { getCurrentUserId, supabase } from './client';
 import { Database } from '../types/database';
 
 type Bet = Database['public']['Tables']['bets']['Row'];
@@ -62,7 +62,7 @@ export class BetsService {
    * Create a new bet
    */
   static async createBet(betData: CreateBetData): Promise<Bet> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to create a bet');
@@ -98,9 +98,9 @@ export class BetsService {
    * Create a parlay bet (multiple predictions as one bet)
    */
   static async createParlayBet(parlayData: CreateParlayBetData): Promise<Bet[]> {
-    const userId = getCurrentUserId();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!userId) {
+    if (!user) {
       throw new Error('User must be authenticated to create a parlay bet');
     }
 
@@ -130,7 +130,7 @@ export class BetsService {
       const { data, error } = await supabase
         .from('bets')
         .insert({
-          user_id: userId,
+          user_id: user.id,
           match_id: matchId,
           bet_amount: parlayData.totalStake, // Use total stake for each bet
           multiplier: parlayData.finalOdds, // Use final parlay odds
@@ -168,16 +168,16 @@ export class BetsService {
    * Get bet statistics for the current user
    */
   static async getUserBetStats(): Promise<BetStats | null> {
-    const userId = getCurrentUserId();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!userId) {
+    if (!user) {
       throw new Error('User must be authenticated to view bet stats');
     }
 
     const { data, error } = await supabase
       .from('bet_stats')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .single();
 
     if (error) {
@@ -196,16 +196,16 @@ export class BetsService {
    * Get active bets for the current user
    */
   static async getActiveBets(): Promise<Bet[]> {
-    const userId = getCurrentUserId();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!userId) {
+    if (!user) {
       throw new Error('User must be authenticated to view active bets');
     }
 
     const { data, error } = await supabase
       .from('bets')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -535,22 +535,5 @@ export class BetsService {
       bets: data || [],
       total: count || 0
     };
-  }
-
-  /**
-   * Get all bets (admin only)
-   */
-  static async getAllBets(): Promise<Bet[]> {
-    const { data, error } = await supabase
-      .from('bets')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching all bets:', error);
-      throw new Error(`Failed to fetch all bets: ${error.message}`);
-    }
-
-    return data || [];
   }
 } 

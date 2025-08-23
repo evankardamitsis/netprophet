@@ -13,7 +13,7 @@ export class TransactionsService {
    * Get recent transactions for the current user
    */
   static async getRecentTransactions(limit: number = 10): Promise<TransactionWithDetails[]> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to view transactions');
@@ -43,7 +43,7 @@ export class TransactionsService {
     totalLosses: number;
     totalBets: number;
   }> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       return {
@@ -93,7 +93,7 @@ export class TransactionsService {
    * Create a new transaction
    */
   static async createTransaction(transactionData: Omit<TransactionInsert, 'user_id'>): Promise<Transaction> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to create transactions');

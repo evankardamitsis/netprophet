@@ -3,7 +3,7 @@ export type { Database } from './types/database';
 export type { Player } from './types/player';
 
 // Supabase
-export { supabase, getCurrentUserId, getCurrentSession } from './supabase/client';
+export { supabase, getCurrentUserId } from './supabase/client';
 
 // Services
 export { BetsService } from './supabase/bets';

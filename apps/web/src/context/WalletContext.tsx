@@ -165,7 +165,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     // Load bet statistics and transactions from database on mount
     useEffect(() => {
         const { user } = useAuthStore.getState();
-        if (!user) return; // Don't load data if user is not authenticated
+        if (!user) {
+            // For unauthenticated users, just load the default wallet state
+            setWallet(defaultWallet);
+            return;
+        }
 
         loadBetStats();
         loadTransactions();

@@ -19,16 +19,16 @@ export class NotificationsService {
    * Get notifications for the current user
    */
   static async getNotifications(limit: number = 50): Promise<NotificationWithData[]> {
-    const userId = getCurrentUserId();
+    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!userId) {
+    if (!user) {
       throw new Error('User must be authenticated to view notifications');
     }
 
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -44,7 +44,7 @@ export class NotificationsService {
    * Get unread notifications count for the current user
    */
   static async getUnreadCount(): Promise<number> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       return 0;
@@ -68,7 +68,7 @@ export class NotificationsService {
    * Mark a notification as read
    */
   static async markAsRead(notificationId: string): Promise<void> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to mark notifications as read');
@@ -90,7 +90,7 @@ export class NotificationsService {
    * Mark all notifications as read for the current user
    */
   static async markAllAsRead(): Promise<void> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to mark notifications as read');
@@ -112,7 +112,7 @@ export class NotificationsService {
    * Delete a notification
    */
   static async deleteNotification(notificationId: string): Promise<void> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to delete notifications');
@@ -134,7 +134,7 @@ export class NotificationsService {
    * Delete all notifications for the current user
    */
   static async deleteAllNotifications(): Promise<void> {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       throw new Error('User must be authenticated to delete notifications');
@@ -155,7 +155,7 @@ export class NotificationsService {
    * Subscribe to real-time notifications
    */
   static async subscribeToNotifications(callback: (payload: any) => void) {
-    const userId = getCurrentUserId();
+    const userId = await getCurrentUserId();
     
     if (!userId) {
       return null;
