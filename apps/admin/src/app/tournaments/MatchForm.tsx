@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Match, Tournament, Player } from '@/types';
@@ -211,76 +212,40 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
         onSubmit(submitData);
     });
 
+    // Transform players to searchable select items
+    const playerItems = players.map((player) => ({
+        value: player.id,
+        label: `${player.firstName} ${player.lastName} (NTRP: ${player.ntrpRating})`
+    }));
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8 p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                    <Label htmlFor="player_a_id" className="text-base font-semibold">Player A *</Label>
-                    <Select
-                        value={watchedValues.player_a_id || ''}
-                        onValueChange={(value) => setValue('player_a_id', value)}
-                        disabled={loading}
-                    >
-                        <SelectTrigger className={`h-12 text-base ${errors.player_a_id ? 'border-red-500' : ''}`}>
-                            <SelectValue placeholder={loading ? "Loading players..." : "Select player A"} />
-                        </SelectTrigger>
-                        {errors.player_a_id && (
-                            <div className="text-xs text-red-500 mt-1">{errors.player_a_id.message}</div>
-                        )}
-                        <SelectContent>
-                            {loading ? (
-                                <div className="flex items-center justify-center py-4">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                                    <span className="ml-2 text-sm text-gray-500">Loading players...</span>
-                                </div>
-                            ) : playersError ? (
-                                <div className="flex items-center justify-center py-4">
-                                    <span className="text-sm text-red-500">{playersError}</span>
-                                </div>
-                            ) : (
-                                players.map((player) => (
-                                    <SelectItem key={player.id} value={player.id} className="text-base py-3">
-                                        {player.firstName} {player.lastName} (NTRP: {player.ntrpRating})
-                                    </SelectItem>
-                                ))
-                            )}
-                        </SelectContent>
-                    </Select>
-                </div>
+                <SearchableSelect
+                    value={watchedValues.player_a_id || ''}
+                    onValueChange={(value) => setValue('player_a_id', value)}
+                    placeholder="Select player A"
+                    label="Player A *"
+                    disabled={loading}
+                    error={errors.player_a_id?.message as string | null}
+                    items={playerItems}
+                    loading={loading}
+                    loadingText="Loading players..."
+                    errorText={playersError}
+                />
 
-                <div className="space-y-3">
-                    <Label htmlFor="player_b_id" className="text-base font-semibold">Player B *</Label>
-                    <Select
-                        value={watchedValues.player_b_id || ''}
-                        onValueChange={(value) => setValue('player_b_id', value)}
-                        disabled={loading}
-                    >
-                        <SelectTrigger className={`h-12 text-base ${errors.player_b_id ? 'border-red-500' : ''}`}>
-                            <SelectValue placeholder={loading ? "Loading players..." : "Select player B"} />
-                        </SelectTrigger>
-                        {errors.player_b_id && (
-                            <div className="text-xs text-red-500 mt-1">{errors.player_b_id.message}</div>
-                        )}
-                        <SelectContent>
-                            {loading ? (
-                                <div className="flex items-center justify-center py-4">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                                    <span className="ml-2 text-sm text-gray-500">Loading players...</span>
-                                </div>
-                            ) : playersError ? (
-                                <div className="flex items-center justify-center py-4">
-                                    <span className="text-sm text-red-500">{playersError}</span>
-                                </div>
-                            ) : (
-                                players.map((player) => (
-                                    <SelectItem key={player.id} value={player.id} className="text-base py-3">
-                                        {player.firstName} {player.lastName} (NTRP: {player.ntrpRating})
-                                    </SelectItem>
-                                ))
-                            )}
-                        </SelectContent>
-                    </Select>
-                </div>
+                <SearchableSelect
+                    value={watchedValues.player_b_id || ''}
+                    onValueChange={(value) => setValue('player_b_id', value)}
+                    placeholder="Select player B"
+                    label="Player B *"
+                    disabled={loading}
+                    error={errors.player_b_id?.message as string | null}
+                    items={playerItems}
+                    loading={loading}
+                    loadingText="Loading players..."
+                    errorText={playersError}
+                />
 
                 {currentTournament ? (
                     <div className="space-y-3">

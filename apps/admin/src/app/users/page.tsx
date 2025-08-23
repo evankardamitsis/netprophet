@@ -1,24 +1,17 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, flexRender, ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@netprophet/lib';
-import { toast } from 'sonner';
-import {
-    useReactTable,
-    getCoreRowModel,
-    getSortedRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    flexRender,
-    ColumnDef,
-    SortingState,
-    ColumnFiltersState,
-} from '@tanstack/react-table';
 import { Profile } from '@/types';
+import { toast } from 'sonner';
+import { normalizeText } from '@/lib/utils';
 
 export default function UsersPage() {
     const [users, setUsers] = useState<Profile[]>([]);
@@ -118,7 +111,9 @@ export default function UsersPage() {
         globalFilterFn: (row, columnId, filterValue) => {
             // Filter by email or username
             const value = row.getValue<string>('email') + ' ' + (row.getValue<string>('username') || '');
-            return value.toLowerCase().includes(filterValue.toLowerCase());
+            const normalizedValue = normalizeText(value);
+            const normalizedFilter = normalizeText(filterValue);
+            return normalizedValue.includes(normalizedFilter);
         },
     });
 

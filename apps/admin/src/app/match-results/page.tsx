@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MatchResultsService, supabase } from '@netprophet/lib';
-import { BetsService } from '@netprophet/lib';
 import { MatchResultsTable } from './components/MatchResultsTable';
 import { MatchResultsFilters } from './components/MatchResultsFilters';
 import { MatchResultForm } from './components/MatchResultForm';
@@ -13,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { toast } from 'sonner';
 import { Match, FormData } from './types';
 import { MatchResultWithDetails } from '@/types';
+import { normalizeText } from '@/lib/utils';
 
 export default function MatchResultsPage() {
     const [matches, setMatches] = useState<Match[]>([]);
@@ -21,11 +21,6 @@ export default function MatchResultsPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-    const [isBetResolutionDialogOpen, setIsBetResolutionDialogOpen] = useState(false);
-    const [selectedMatchForBetResolution, setSelectedMatchForBetResolution] = useState<Match | null>(null);
-    const [betStats, setBetStats] = useState<any>(null);
-    const [betDetails, setBetDetails] = useState<any>(null);
-    const [isResolvingBets, setIsResolvingBets] = useState(false);
 
     // Filter states
     const [statusFilter, setStatusFilter] = useState<'all' | 'finished' | 'live' | 'upcoming'>('finished');
@@ -70,18 +65,12 @@ export default function MatchResultsPage() {
             const { data: matchesData, error: matchesError } = await supabase
                 .from('matches')
                 .select(`
-                    id,
-                    player_a_id,
-                    player_b_id,
+                    *,
                     player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
                     player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
-                    tournaments(id, name, matches_type),
-                    status,
-                    start_time,
-                    web_synced
+                    tournaments:tournaments!matches_tournament_id_fkey(id, name)
                 `)
-                .eq('web_synced', true)
-                .order('start_time', { ascending: false });
+                .order('start_time', { ascending: true });
 
             if (matchesError) throw matchesError;
 
@@ -187,65 +176,14 @@ export default function MatchResultsPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleBetResolution = async (match: Match) => {
-        setSelectedMatchForBetResolution(match);
-
-        try {
-            console.log('Loading bet resolution for match:', match.id);
-
-            // Load bet statistics
-            const stats = await (BetsService as any).getBetResolutionStats(match.id);
-            console.log('Bet stats:', stats);
-            setBetStats(stats);
-
-            // Load bet details
-            const details = await (BetsService as any).getBetResolutionDetails(match.id);
-            console.log('Bet details:', details);
-            setBetDetails(details);
-
-            setIsBetResolutionDialogOpen(true);
-        } catch (error) {
-            console.error('Error loading bet resolution data:', error);
-            toast.error('Failed to load bet resolution data');
-        }
-    };
-
-    const handleResolveBets = async () => {
-        if (!selectedMatchForBetResolution) return;
-
-        setIsResolvingBets(true);
-        try {
-            const result = await (BetsService as any).resolveBetsForMatch(selectedMatchForBetResolution.id);
-
-            if (result.errors.length > 0) {
-                toast.error(`Bet resolution completed with errors: ${result.errors.join(', ')}`);
-            } else {
-                toast.success(`Successfully resolved ${result.resolved} bets`);
-            }
-
-            // Reload bet data
-            const stats = await (BetsService as any).getBetResolutionStats(selectedMatchForBetResolution.id);
-            setBetStats(stats);
-
-            const details = await (BetsService as any).getBetResolutionDetails(selectedMatchForBetResolution.id);
-            setBetDetails(details);
-
-        } catch (error) {
-            console.error('Error resolving bets:', error);
-            toast.error('Failed to resolve bets');
-        } finally {
-            setIsResolvingBets(false);
-        }
-    };
-
     const handleSubmitResult = async () => {
         if (!selectedMatch) return;
 
         try {
             // Helper function to clear regular set score if tiebreak exists
             const getSetScore = (setNum: number) => {
-                const tiebreakScore = formData[`set${setNum}_tiebreak_score`];
-                const regularScore = formData[`set${setNum}_score`];
+                const tiebreakScore = formData[`set${setNum}_tiebreak_score` as keyof typeof formData];
+                const regularScore = formData[`set${setNum}_score` as keyof typeof formData];
 
                 // If there's a tiebreak, don't save the regular set score
                 if (tiebreakScore && tiebreakScore !== 'none') {
@@ -294,8 +232,8 @@ export default function MatchResultsPage() {
         try {
             // Helper function to clear regular set score if tiebreak exists
             const getSetScore = (setNum: number) => {
-                const tiebreakScore = formData[`set${setNum}_tiebreak_score`];
-                const regularScore = formData[`set${setNum}_score`];
+                const tiebreakScore = formData[`set${setNum}_tiebreak_score` as keyof typeof formData];
+                const regularScore = formData[`set${setNum}_score` as keyof typeof formData];
 
                 // If there's a tiebreak, don't save the regular set score
                 if (tiebreakScore && tiebreakScore !== 'none') {
@@ -363,11 +301,11 @@ export default function MatchResultsPage() {
         // Apply search term filter
         if (searchTerm) {
             filtered = filtered.filter(match =>
-                match.player_a.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.player_a.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.player_b.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.player_b.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                match.tournaments?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+                normalizeText(match.player_a.first_name).includes(normalizeText(searchTerm)) ||
+                normalizeText(match.player_a.last_name).includes(normalizeText(searchTerm)) ||
+                normalizeText(match.player_b.first_name).includes(normalizeText(searchTerm)) ||
+                normalizeText(match.player_b.last_name).includes(normalizeText(searchTerm)) ||
+                normalizeText(match.tournaments?.name || '').includes(normalizeText(searchTerm))
             );
         }
 
@@ -431,7 +369,6 @@ export default function MatchResultsPage() {
                 matchResults={matchResults}
                 onAddResult={handleAddResult}
                 onEditResult={handleEditResult}
-                onBetResolution={handleBetResolution}
             />
 
             {/* Add Result Dialog */}
@@ -463,104 +400,6 @@ export default function MatchResultsPage() {
                         onSubmit={handleUpdateResult}
                         submitLabel="Update Result"
                     />
-                </DialogContent>
-            </Dialog>
-
-            {/* Bet Resolution Dialog */}
-            <Dialog open={isBetResolutionDialogOpen} onOpenChange={setIsBetResolutionDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Bet Resolution - {selectedMatchForBetResolution?.player_a?.first_name} {selectedMatchForBetResolution?.player_a?.last_name} vs {selectedMatchForBetResolution?.player_b?.first_name} {selectedMatchForBetResolution?.player_b?.last_name}</DialogTitle>
-                    </DialogHeader>
-
-                    {betStats && (
-                        <div className="space-y-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Bet Statistics</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold">{betStats.totalBets}</div>
-                                            <div className="text-sm text-muted-foreground">Total Bets</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-blue-600">{betStats.activeBets}</div>
-                                            <div className="text-sm text-muted-foreground">Active</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-green-600">{betStats.wonBets}</div>
-                                            <div className="text-sm text-muted-foreground">Won</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-red-600">{betStats.lostBets}</div>
-                                            <div className="text-sm text-muted-foreground">Lost</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-yellow-600">{betStats.resolvedBets}</div>
-                                            <div className="text-sm text-muted-foreground">Resolved</div>
-                                        </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-green-600">{betStats.totalWinnings}</div>
-                                            <div className="text-sm text-muted-foreground">Total Winnings</div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <div className="flex gap-2">
-                                <Button
-                                    onClick={handleResolveBets}
-                                    disabled={isResolvingBets || betStats.activeBets === 0}
-                                    className="flex-1"
-                                >
-                                    {isResolvingBets ? 'Resolving...' : `Resolve ${betStats.activeBets} Active Bets`}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setIsBetResolutionDialogOpen(false)}
-                                >
-                                    Close
-                                </Button>
-                            </div>
-
-                            {betDetails && betDetails.bets.length > 0 && (
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Bet Details</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                                            {betDetails.bets.map((bet: any) => (
-                                                <div key={bet.id} className="border rounded-lg p-3">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <div className="font-medium">{bet.user.email}</div>
-                                                            <div className="text-sm text-muted-foreground">{bet.description}</div>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <Badge variant={bet.status === 'won' ? 'default' : bet.status === 'lost' ? 'destructive' : 'secondary'}>
-                                                                {bet.status}
-                                                            </Badge>
-                                                            <div className="text-sm">
-                                                                Bet: {bet.bet_amount}
-                                                            </div>
-                                                            {bet.winnings_paid > 0 && (
-                                                                <div className="text-sm text-green-600">
-                                                                    Won: {bet.winnings_paid}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            )}
-                        </div>
-                    )}
                 </DialogContent>
             </Dialog>
         </div>

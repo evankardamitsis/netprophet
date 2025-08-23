@@ -6,6 +6,7 @@ import { fetchPlayers } from '@netprophet/lib';
 import { PlayerCard } from '@/components/players/PlayerCard';
 import { useDictionary } from '@/context/DictionaryContext';
 import { Card, CardContent } from '@netprophet/ui';
+import { normalizeText } from '@/lib/utils';
 
 export default function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
@@ -33,8 +34,8 @@ export default function PlayersPage() {
     const filteredPlayers = useMemo(() => {
         return players.filter(player => {
             const matchesSearch = searchTerm === '' ||
-                player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                player.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+                normalizeText(player.firstName).includes(normalizeText(searchTerm)) ||
+                normalizeText(player.lastName).includes(normalizeText(searchTerm));
 
             const matchesSurface = selectedSurface === 'all' ||
                 player.surfacePreference.toLowerCase() === selectedSurface.toLowerCase();

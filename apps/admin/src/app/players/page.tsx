@@ -25,6 +25,7 @@ import {
 } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { normalizeText } from '@/lib/utils';
 
 export default function PlayersPage() {
     const router = useRouter();
@@ -226,7 +227,9 @@ export default function PlayersPage() {
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue<string>('firstName') + ' ' + row.getValue<string>('lastName');
-            return value.toLowerCase().includes(filterValue.toLowerCase());
+            const normalizedValue = normalizeText(value);
+            const normalizedFilter = normalizeText(filterValue);
+            return normalizedValue.includes(normalizedFilter);
         },
         enableRowSelection: true,
     });

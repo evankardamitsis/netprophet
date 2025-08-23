@@ -13,15 +13,13 @@ interface MatchResultsTableProps {
     matchResults: MatchResultWithDetails[];
     onAddResult: (match: Match) => void;
     onEditResult: (result: MatchResultWithDetails) => void;
-    onBetResolution?: (match: Match) => void;
 }
 
 export function MatchResultsTable({
     groupedMatches,
     matchResults,
     onAddResult,
-    onEditResult,
-    onBetResolution
+    onEditResult
 }: MatchResultsTableProps) {
     const hasResult = (matchId: string) => {
         return matchResults.some(result => result.match_id === matchId);
@@ -217,16 +215,6 @@ export function MatchResultsTable({
                                                             >
                                                                 Edit
                                                             </Button>
-                                                            {onBetResolution && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => onBetResolution(match)}
-                                                                    title="View and resolve bets for this match"
-                                                                >
-                                                                    Bet Resolution
-                                                                </Button>
-                                                            )}
                                                         </>
                                                     ) : (
                                                         <Button
