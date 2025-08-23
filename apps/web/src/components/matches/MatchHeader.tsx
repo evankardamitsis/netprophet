@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui'
 import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 
 interface MatchDetails {
     tournament: string;
@@ -23,11 +24,15 @@ interface Match {
 interface MatchHeaderProps {
     match: Match;
     details: MatchDetails;
+    player1Id?: string | null;
+    player2Id?: string | null;
 }
 
-export function MatchHeader({ match, details }: MatchHeaderProps) {
+export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeaderProps) {
     const { theme } = useTheme();
     const { dict, lang } = useDictionary();
+    const router = useRouter();
+    const params = useParams();
     const [isExpanded, setIsExpanded] = useState(true); // Default expanded on large screens
 
     // Auto-expand on large screens, collapse on small screens
@@ -72,6 +77,13 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
         return headToHead;
     };
 
+    // Function to navigate to player page
+    const navigateToPlayer = (playerId: string | null | undefined) => {
+        if (playerId && params?.lang) {
+            router.push(`/${params.lang}/players/${playerId}`);
+        }
+    };
+
     return (
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden">
             {/* Compact View - Always visible */}
@@ -105,14 +117,32 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                     {/* Bottom row - Players and odds */}
                     <div className="flex items-center justify-center gap-3">
                         <div className="text-center min-w-0">
-                            <div className="text-sm font-medium text-white truncate mb-1">{details.player1.name.split(' ')[1]}</div>
+                            <button
+                                onClick={() => navigateToPlayer(player1Id)}
+                                disabled={!player1Id}
+                                className={`text-sm font-medium truncate mb-1 transition-colors ${player1Id
+                                    ? 'text-white hover:text-purple-300 cursor-pointer'
+                                    : 'text-white cursor-default'
+                                    }`}
+                            >
+                                {details.player1.name.split(' ')[1]}
+                            </button>
                             <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                         </div>
 
                         <div className="text-sm text-gray-400 font-bold px-2">{dict?.matches?.vs || 'VS'}</div>
 
                         <div className="text-center min-w-0">
-                            <div className="text-sm font-medium text-white truncate mb-1">{details.player2.name.split(' ')[1]}</div>
+                            <button
+                                onClick={() => navigateToPlayer(player2Id)}
+                                disabled={!player2Id}
+                                className={`text-sm font-medium truncate mb-1 transition-colors ${player2Id
+                                    ? 'text-white hover:text-purple-300 cursor-pointer'
+                                    : 'text-white cursor-default'
+                                    }`}
+                            >
+                                {details.player2.name.split(' ')[1]}
+                            </button>
                             <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                         </div>
                     </div>
@@ -148,12 +178,30 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center justify-between">
                             <div className="text-left">
-                                <div className="text-sm font-medium text-white leading-tight">{details.player1.name}</div>
+                                <button
+                                    onClick={() => navigateToPlayer(player1Id)}
+                                    disabled={!player1Id}
+                                    className={`text-sm font-medium leading-tight transition-colors ${player1Id
+                                        ? 'text-white hover:text-purple-300 cursor-pointer'
+                                        : 'text-white cursor-default'
+                                        }`}
+                                >
+                                    {details.player1.name}
+                                </button>
                                 <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                             </div>
                             <div className="text-sm text-gray-400 font-bold">{dict?.matches?.vs || 'VS'}</div>
                             <div className="text-right">
-                                <div className="text-sm font-medium text-white leading-tight">{details.player2.name}</div>
+                                <button
+                                    onClick={() => navigateToPlayer(player2Id)}
+                                    disabled={!player2Id}
+                                    className={`text-sm font-medium leading-tight transition-colors ${player2Id
+                                        ? 'text-white hover:text-purple-300 cursor-pointer'
+                                        : 'text-white cursor-default'
+                                        }`}
+                                >
+                                    {details.player2.name}
+                                </button>
                                 <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                             </div>
                         </div>
@@ -174,12 +222,30 @@ export function MatchHeader({ match, details }: MatchHeaderProps) {
                         <div className="grid grid-cols-2 gap-4 lg:gap-6 text-xs sm:text-sm">
                             <div>
                                 <div className="text-gray-400 mb-1">{dict?.matches?.player1 || 'Player 1'}</div>
-                                <div className="text-white font-medium">{details.player1.name}</div>
+                                <button
+                                    onClick={() => navigateToPlayer(player1Id)}
+                                    disabled={!player1Id}
+                                    className={`text-white font-medium transition-colors ${player1Id
+                                        ? 'hover:text-purple-300 cursor-pointer'
+                                        : 'cursor-default'
+                                        }`}
+                                >
+                                    {details.player1.name}
+                                </button>
                                 <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}</div>
                             </div>
                             <div>
                                 <div className="text-gray-400 mb-1">{dict?.matches?.player2 || 'Player 2'}</div>
-                                <div className="text-white font-medium">{details.player2.name}</div>
+                                <button
+                                    onClick={() => navigateToPlayer(player2Id)}
+                                    disabled={!player2Id}
+                                    className={`text-white font-medium transition-colors ${player2Id
+                                        ? 'hover:text-purple-300 cursor-pointer'
+                                        : 'cursor-default'
+                                        }`}
+                                >
+                                    {details.player2.name}
+                                </button>
                                 <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}</div>
                             </div>
                         </div>

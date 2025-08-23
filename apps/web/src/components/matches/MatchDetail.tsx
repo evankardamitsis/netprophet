@@ -415,7 +415,12 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 <div className="px-0 sm:px-4 flex-1 flex flex-col lg:flex-row gap-0 sm:gap-4 min-h-0">
                     {/* Left Column: MatchHeader - Full width on mobile, 20% on large screens */}
                     <div className="w-full lg:w-1/5 flex-shrink-0">
-                        <MatchHeader match={match} details={details} />
+                        <MatchHeader
+                            match={match}
+                            details={details}
+                            player1Id={match.player_a_id}
+                            player2Id={match.player_b_id}
+                        />
                     </div>
 
                     {/* Right Column: Prediction Form - Full width on mobile, 80% on large screens */}
