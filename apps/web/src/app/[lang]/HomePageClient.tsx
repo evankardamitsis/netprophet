@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@netprophet/lib';
+import { supabase, useAuthStore } from '@netprophet/lib';
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Dictionary {
     navigation: {
@@ -74,14 +75,8 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
 
         const checkAuth = async () => {
             try {
-                const { data: { session }, error } = await supabase.auth.getSession();
-
-                if (error) {
-                    setLoading(false);
-                    return;
-                }
-
-                if (session) {
+                const { user } = useAuthStore.getState();
+                if (user) {
                     // Use window.location for immediate redirect to avoid potential routing issues
                     window.location.href = `/${lang}/matches`;
                     return;

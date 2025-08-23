@@ -3,12 +3,11 @@ export type { Database } from './types/database';
 export type { Player } from './types/player';
 
 // Supabase
-export { supabase } from './supabase/client';
-export type { SupabaseClient } from './supabase/client';
+export { supabase, getCurrentUserId, getCurrentSession } from './supabase/client';
 
 // Services
 export { BetsService } from './supabase/bets';
-export type { CreateBetData, CreateParlayBetData, BetWithMatch } from './supabase/bets';
+export type { CreateBetData, CreateParlayBetData } from './supabase/bets';
 export { DailyRewardsService } from './supabase/dailyRewards';
 export type { DailyRewardStatus, DailyRewardClaim } from './supabase/dailyRewards';
 export { WalletOperationsService } from './supabase/walletOperations';

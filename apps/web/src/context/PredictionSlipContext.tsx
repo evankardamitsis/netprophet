@@ -1,12 +1,13 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { PredictionItem } from '@/types/dashboard';
 import {
     SESSION_KEYS,
     loadFromSessionStorage,
     saveToSessionStorage,
-    removeFromSessionStorage
+    removeFromSessionStorage,
+    clearAllFormPredictions
 } from '@/lib/sessionStorage';
 
 // Add PredictionOptions type
@@ -73,6 +74,7 @@ interface PredictionSlipContextType {
     // Helper methods
     hasPrediction: (matchId: string) => boolean;
     hasOutrightsPrediction: (matchId: string) => boolean;
+    hasFormPredictions: () => boolean;
 }
 
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
@@ -91,6 +93,7 @@ const PredictionSlipContext = createContext<PredictionSlipContextType>({
     getParlayStats: () => ({ totalPicks: 0, liveMatches: 0, tournaments: 0 }),
     hasPrediction: () => false,
     hasOutrightsPrediction: () => false,
+    hasFormPredictions: () => false,
 });
 
 export function usePredictionSlip() {
@@ -100,15 +103,45 @@ export function usePredictionSlip() {
 // Helper to migrate string predictions to structured objects
 function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
     return predictions.map(p => {
-        if (typeof p.prediction === 'object' && p.prediction !== null && 'winner' in p.prediction) {
-            return p;
+        // If prediction is already a structured object with all required fields
+        if (typeof p.prediction === 'object' && p.prediction !== null &&
+            'winner' in p.prediction &&
+            'matchResult' in p.prediction &&
+            'set1Score' in p.prediction) {
+            return p as StructuredPredictionItem;
         }
-        // If prediction is a string, return empty structured prediction
+
+        // If prediction is a string or missing fields, return empty structured prediction
         return {
-            ...p, prediction: {
-                winner: '', matchResult: '', set1Score: '', set2Score: '', set3Score: '', set4Score: '', set5Score: '', set1Winner: '', set2Winner: '', set3Winner: '', set4Winner: '', set5Winner: '', tieBreak: '', totalGames: '', acesLeader: '', doubleFaults: '', breakPoints: ''
+            ...p,
+            prediction: {
+                winner: '',
+                matchResult: '',
+                set1Score: '',
+                set2Score: '',
+                set3Score: '',
+                set4Score: '',
+                set5Score: '',
+                set1Winner: '',
+                set2Winner: '',
+                set3Winner: '',
+                set4Winner: '',
+                set5Winner: '',
+                tieBreak: '',
+                totalGames: '',
+                acesLeader: '',
+                doubleFaults: '',
+                breakPoints: '',
+                // Add new tiebreak fields
+                set1TieBreak: '',
+                set2TieBreak: '',
+                set1TieBreakScore: '',
+                set2TieBreakScore: '',
+                superTieBreak: '',
+                superTieBreakScore: '',
+                superTieBreakWinner: ''
             }
-        };
+        } as StructuredPredictionItem;
     });
 }
 
@@ -144,10 +177,40 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         saveToSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, slipCollapsed);
     }, [slipCollapsed]);
 
-    // Auto-collapse slip when there are no predictions
+    // Auto-collapse slip when there are no predictions and no form predictions
+    // Only trigger when predictions are actually removed, not on initial load
     useEffect(() => {
+        // Skip auto-collapse on initial mount to avoid overriding manual collapse state
         if (predictions.length === 0 && outrightsPredictions.length === 0) {
-            setSlipCollapsed(true);
+            const checkForFormPredictions = () => {
+                try {
+                    // Check the main form predictions key (used by MatchDetail)
+                    const stored = sessionStorage.getItem(SESSION_KEYS.FORM_PREDICTIONS);
+                    if (stored) {
+                        const formData = JSON.parse(stored);
+                        if (Object.keys(formData).length > 0) {
+                            return true;
+                        }
+                    }
+
+                    // Check for individual form prediction keys (used by PredictionForm)
+                    const allKeys = Object.keys(sessionStorage);
+                    const formPredictionKeys = allKeys.filter(key =>
+                        key.startsWith(`${SESSION_KEYS.FORM_PREDICTIONS}_`) &&
+                        !key.includes('_outrights_')
+                    );
+
+                    return formPredictionKeys.length > 0;
+                } catch (error) {
+                    console.warn('Failed to check form predictions:', error);
+                }
+                return false;
+            };
+
+            // Only auto-collapse if there are no form predictions either
+            if (!checkForFormPredictions()) {
+                setSlipCollapsed(true);
+            }
         }
     }, [predictions.length, outrightsPredictions.length]);
 
@@ -195,7 +258,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         setPredictions([]);
         setSlipCollapsed(true); // Collapse slip when clearing predictions
         // Clear all form predictions from session storage
-        removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
+        clearAllFormPredictions();
     };
 
     // New parlay-specific methods
@@ -242,14 +305,40 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         return outrightsPredictions.some(p => p.matchId === matchId);
     };
 
-    const resetSlipState = () => {
+    const hasFormPredictions = () => {
+        try {
+            // Check the main form predictions key (used by MatchDetail)
+            const stored = sessionStorage.getItem(SESSION_KEYS.FORM_PREDICTIONS);
+            if (stored) {
+                const formData = JSON.parse(stored);
+                if (Object.keys(formData).length > 0) {
+                    return true;
+                }
+            }
+
+            // Check for individual form prediction keys (used by PredictionForm)
+            const allKeys = Object.keys(sessionStorage);
+            const formPredictionKeys = allKeys.filter(key =>
+                key.startsWith(`${SESSION_KEYS.FORM_PREDICTIONS}_`) &&
+                !key.includes('_outrights_')
+            );
+
+            return formPredictionKeys.length > 0;
+        } catch (error) {
+            console.warn('Failed to check form predictions:', error);
+        }
+        return false;
+    };
+
+    const resetSlipState = useCallback(() => {
         setPredictions([]);
         setOutrightsPredictions([]);
         setSlipCollapsed(true);
         removeFromSessionStorage(SESSION_KEYS.PREDICTIONS);
         removeFromSessionStorage(SESSION_KEYS.OUTRIGHTS_PREDICTIONS);
         removeFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED);
-    };
+        clearAllFormPredictions();
+    }, []); // Empty dependency array since this function doesn't depend on any props or state
 
     return (
         <PredictionSlipContext.Provider value={{
@@ -269,7 +358,8 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
             getParlayEligibility,
             getParlayStats,
             hasPrediction,
-            hasOutrightsPrediction
+            hasOutrightsPrediction,
+            hasFormPredictions
         }}>
             {children}
         </PredictionSlipContext.Provider>

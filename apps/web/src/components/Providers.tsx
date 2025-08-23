@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, createContext, useContext, useEffect } from 'react';
+import { AuthProvider } from './AuthProvider';
 
 // Theme context - Always dark theme
 const ThemeContext = createContext({
@@ -31,7 +32,11 @@ export function useTheme() {
     return useContext(ThemeContext);
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+interface ProvidersProps {
+    children: React.ReactNode;
+}
+
+export function Providers({ children }: ProvidersProps) {
     const [queryClient] = useState(
         () =>
             new QueryClient({
@@ -39,6 +44,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
                     queries: {
                         staleTime: 60 * 1000, // 1 minute
                         refetchOnWindowFocus: false,
+                        refetchOnMount: false, // Prevent refetch on mount if data is fresh
+                        retry: 1, // Reduce retry attempts
                     },
                 },
             })
@@ -46,7 +53,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+                <AuthProvider>
+                    {children}
+                </AuthProvider>
+            </ThemeProvider>
         </QueryClientProvider>
     );
 } 

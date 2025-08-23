@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase, getCurrentUserId } from './client';
 import type { Database } from '../types/database';
 
 type Notification = Database['public']['Tables']['notifications']['Row'];
@@ -19,16 +19,16 @@ export class NotificationsService {
    * Get notifications for the current user
    */
   static async getNotifications(limit: number = 50): Promise<NotificationWithData[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to view notifications');
     }
 
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -44,16 +44,16 @@ export class NotificationsService {
    * Get unread notifications count for the current user
    */
   static async getUnreadCount(): Promise<number> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       return 0;
     }
 
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .is('read_at', null);
 
     if (error) {
@@ -68,9 +68,9 @@ export class NotificationsService {
    * Mark a notification as read
    */
   static async markAsRead(notificationId: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to mark notifications as read');
     }
 
@@ -78,7 +78,7 @@ export class NotificationsService {
       .from('notifications')
       .update({ read_at: new Date().toISOString() })
       .eq('id', notificationId)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error marking notification as read:', error);
@@ -90,16 +90,16 @@ export class NotificationsService {
    * Mark all notifications as read for the current user
    */
   static async markAllAsRead(): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to mark notifications as read');
     }
 
     const { error } = await supabase
       .from('notifications')
       .update({ read_at: new Date().toISOString() })
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .is('read_at', null);
 
     if (error) {
@@ -112,9 +112,9 @@ export class NotificationsService {
    * Delete a notification
    */
   static async deleteNotification(notificationId: string): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to delete notifications');
     }
 
@@ -122,7 +122,7 @@ export class NotificationsService {
       .from('notifications')
       .delete()
       .eq('id', notificationId)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error deleting notification:', error);
@@ -134,16 +134,16 @@ export class NotificationsService {
    * Delete all notifications for the current user
    */
   static async deleteAllNotifications(): Promise<void> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to delete notifications');
     }
 
     const { error } = await supabase
       .from('notifications')
       .delete()
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error deleting all notifications:', error);
@@ -155,9 +155,9 @@ export class NotificationsService {
    * Subscribe to real-time notifications
    */
   static async subscribeToNotifications(callback: (payload: any) => void) {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       return null;
     }
 
@@ -169,7 +169,7 @@ export class NotificationsService {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`
+          filter: `user_id=eq.${userId}`
         },
         callback
       )

@@ -60,32 +60,9 @@ export default function AuthCallbackPage() {
             }
 
             if (hasOAuthCode || hasAccessToken) {
-                try {
-                    // Let Supabase handle the OAuth callback
-                    const { data, error } = await supabase.auth.getSession();
-
-                    if (error) {
-                        setError(`Authentication failed: ${error.message}`);
-                        setLoading(false);
-                        return;
-                    }
-
-                    if (data.session) {
-                        const pathSegments = window.location.pathname.split('/');
-                        const pathLang = pathSegments[1];
-                        const storedLang = localStorage.getItem('oauth_lang');
-                        const lang = pathLang || storedLang || 'en';
-
-                        localStorage.removeItem('oauth_lang');
-                        window.location.href = `/${lang}/matches`;
-                        return;
-                    }
-
-                    // If no immediate session, wait for auth state change
-                } catch (err) {
-                    setError('An error occurred during authentication');
-                    setLoading(false);
-                }
+                // For OAuth callbacks, let the auth state change handler deal with it
+                // This reduces redundant calls to getSession()
+                return;
             } else {
                 // No OAuth parameters, check if there's already a session
                 try {

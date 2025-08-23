@@ -128,27 +128,6 @@ export type Database = {
           },
         ]
       }
-      clubs: {
-        Row: {
-          city: string
-          created_at: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          city: string
-          created_at?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          city?: string
-          created_at?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       daily_rewards: {
         Row: {
           claimed_date: string
@@ -596,63 +575,84 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accuracy_percentage: number | null
           avatar_url: string | null
           balance: number | null
+          best_winning_streak: number | null
           created_at: string | null
+          current_winning_streak: number | null
           daily_login_streak: number | null
           email: string
           has_received_welcome_bonus: boolean | null
           id: string
           is_admin: boolean | null
           language_preference: string | null
+          last_leaderboard_update: string | null
+          leaderboard_points: number | null
           leaderboard_prizes_earned: number | null
           lost_bets: number | null
           referral_bonus_earned: number | null
           safe_bet_tokens: number | null
           total_bets: number | null
+          total_correct_picks: number | null
           total_losses: number | null
+          total_picks: number | null
           total_winnings: number | null
           updated_at: string | null
           username: string | null
           won_bets: number | null
         }
         Insert: {
+          accuracy_percentage?: number | null
           avatar_url?: string | null
           balance?: number | null
+          best_winning_streak?: number | null
           created_at?: string | null
+          current_winning_streak?: number | null
           daily_login_streak?: number | null
           email: string
           has_received_welcome_bonus?: boolean | null
           id: string
           is_admin?: boolean | null
           language_preference?: string | null
+          last_leaderboard_update?: string | null
+          leaderboard_points?: number | null
           leaderboard_prizes_earned?: number | null
           lost_bets?: number | null
           referral_bonus_earned?: number | null
           safe_bet_tokens?: number | null
           total_bets?: number | null
+          total_correct_picks?: number | null
           total_losses?: number | null
+          total_picks?: number | null
           total_winnings?: number | null
           updated_at?: string | null
           username?: string | null
           won_bets?: number | null
         }
         Update: {
+          accuracy_percentage?: number | null
           avatar_url?: string | null
           balance?: number | null
+          best_winning_streak?: number | null
           created_at?: string | null
+          current_winning_streak?: number | null
           daily_login_streak?: number | null
           email?: string
           has_received_welcome_bonus?: boolean | null
           id?: string
           is_admin?: boolean | null
           language_preference?: string | null
+          last_leaderboard_update?: string | null
+          leaderboard_points?: number | null
           leaderboard_prizes_earned?: number | null
           lost_bets?: number | null
           referral_bonus_earned?: number | null
           safe_bet_tokens?: number | null
           total_bets?: number | null
+          total_correct_picks?: number | null
           total_losses?: number | null
+          total_picks?: number | null
           total_winnings?: number | null
           updated_at?: string | null
           username?: string | null
@@ -988,6 +988,20 @@ export type Database = {
         Args: { match_result: Record<string, unknown>; prediction: Json }
         Returns: string
       }
+      get_weekly_leaderboard_stats: {
+        Args: { week_start_date?: string }
+        Returns: {
+          accuracy_percentage: number
+          avatar_url: string
+          best_winning_streak: number
+          current_winning_streak: number
+          leaderboard_points: number
+          total_correct_picks: number
+          total_picks: number
+          user_id: string
+          username: string
+        }[]
+      }
       is_admin_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -1006,6 +1020,10 @@ export type Database = {
       }
       set_first_admin: {
         Args: { admin_email: string }
+        Returns: undefined
+      }
+      update_user_leaderboard_stats: {
+        Args: { user_id_param: string }
         Returns: undefined
       }
     }

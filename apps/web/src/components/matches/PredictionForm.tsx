@@ -303,9 +303,16 @@ export function PredictionForm({
         onPredictionChange('superTieBreakScore', '');
         onPredictionChange('superTieBreakWinner', '');
 
-        // Clear session storage for this match
+        // Clear session storage for this match (both individual key and from main record)
         const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
         removeFromSessionStorage(storageKey);
+
+        // Also clear from main form predictions record
+        const stored = loadFromSessionStorage<Record<string, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
+        if (stored[matchId]) {
+            delete stored[matchId];
+            saveToSessionStorage(SESSION_KEYS.FORM_PREDICTIONS, stored);
+        }
     };
 
     return (

@@ -39,14 +39,28 @@ interface MatchDetailProps {
 }
 
 function loadFormPredictionsFromSession(matchId: string): PredictionOptions {
+    // First try to load from the main form predictions key (record format)
     const stored = loadFromSessionStorage<Record<string, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
-    return stored[matchId] || createEmptyPredictions();
+    if (stored[matchId]) {
+        return stored[matchId];
+    }
+
+    // If not found, try to load from individual key (used by PredictionForm)
+    const individualKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
+    const individualStored = loadFromSessionStorage<PredictionOptions>(individualKey, createEmptyPredictions());
+
+    return individualStored;
 }
 
 function saveFormPredictionsToSession(matchId: string, predictions: PredictionOptions): void {
+    // Save to main form predictions key (record format)
     const stored = loadFromSessionStorage<Record<string, PredictionOptions>>(SESSION_KEYS.FORM_PREDICTIONS, {});
     stored[matchId] = predictions;
     saveToSessionStorage(SESSION_KEYS.FORM_PREDICTIONS, stored);
+
+    // Also save to individual key for consistency with PredictionForm
+    const individualKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
+    saveToSessionStorage(individualKey, predictions);
 }
 
 // Create match details from actual match data

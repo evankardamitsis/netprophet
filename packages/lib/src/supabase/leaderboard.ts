@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase, getCurrentUserId } from './client';
 
 export interface LeaderboardEntry {
     userId: string;
@@ -126,158 +126,80 @@ export class LeaderboardService {
      * Get weekly leaderboard
      */
     static async getWeeklyLeaderboard(limit: number = 50): Promise<LeaderboardEntry[]> {
-        const weekStart = new Date();
-        weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of current week
-        weekStart.setHours(0, 0, 0, 0);
+        // Use the database function to get weekly leaderboard stats
+        const { data: weeklyStats, error } = await supabase
+            .rpc('get_weekly_leaderboard_stats');
 
-        const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url')
-            .not('username', 'is', null);
-
-        if (profilesError) {
-            console.error('Error fetching profiles:', profilesError);
-            throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+        if (error) {
+            console.error('Error fetching weekly leaderboard:', error);
+            throw new Error(`Failed to fetch weekly leaderboard: ${error.message}`);
         }
 
-        const leaderboardData: LeaderboardEntry[] = [];
+        // The function returns an array, so we need to slice it for the limit
+        const limitedStats = (weeklyStats || []).slice(0, limit);
 
-        for (const profile of profiles || []) {
-            // Get user's bets for this week
-            const { data: bets, error: betsError } = await supabase
-                .from('bets')
-                .select('*')
-                .eq('user_id', profile.id)
-                .gte('resolved_at', weekStart.toISOString())
-                .in('status', ['won', 'lost']);
-
-            if (betsError) {
-                console.error(`Error fetching bets for user ${profile.id}:`, betsError);
-                continue;
-            }
-
-            if (!bets || bets.length === 0) continue;
-
-            const wonBets = bets.filter(bet => bet.status === 'won');
-            const totalPoints = this.calculatePoints(wonBets);
-            const currentStreak = this.calculateCurrentStreak(bets);
-            const bestStreak = this.calculateBestStreak(bets);
-            const correctPicks = wonBets.length;
-            const totalPicks = bets.length;
-            const accuracyPercentage = totalPicks > 0 ? Math.round((correctPicks / totalPicks) * 100 * 10) / 10 : 0;
-
-            leaderboardData.push({
-                userId: profile.id,
-                username: profile.username,
-                avatarUrl: profile.avatar_url,
-                totalPoints,
-                currentStreak,
-                bestStreak,
-                correctPicks,
-                totalPicks,
-                accuracyPercentage,
-                rank: 0 // Will be set after sorting
-            });
-        }
-
-        // Sort by points and streak, then assign ranks
-        leaderboardData.sort((a, b) => {
-            if (a.totalPoints !== b.totalPoints) {
-                return b.totalPoints - a.totalPoints;
-            }
-            return b.currentStreak - a.currentStreak;
-        });
-
-        leaderboardData.forEach((entry, index) => {
-            entry.rank = index + 1;
-        });
-
-        return leaderboardData.slice(0, limit);
+        return limitedStats.map((entry: any, index: number) => ({
+            userId: entry.user_id,
+            username: entry.username,
+            avatarUrl: entry.avatar_url,
+            totalPoints: entry.leaderboard_points || 0,
+            currentStreak: entry.current_winning_streak || 0,
+            bestStreak: entry.best_winning_streak || 0,
+            correctPicks: entry.total_correct_picks || 0,
+            totalPicks: entry.total_picks || 0,
+            accuracyPercentage: entry.accuracy_percentage || 0,
+            rank: index + 1
+        }));
     }
 
     /**
      * Get all-time leaderboard
      */
     static async getAllTimeLeaderboard(limit: number = 50): Promise<LeaderboardEntry[]> {
+        // Use the pre-calculated database columns for all-time leaderboard
         const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
-            .select('id, username, avatar_url')
-            .not('username', 'is', null);
+            .select('id, username, avatar_url, leaderboard_points, current_winning_streak, best_winning_streak, total_correct_picks, total_picks, accuracy_percentage')
+            .not('username', 'is', null)
+            .gte('total_picks', 1) // Only include users who have made picks
+            .order('leaderboard_points', { ascending: false })
+            .order('current_winning_streak', { ascending: false })
+            .limit(limit);
 
         if (profilesError) {
             console.error('Error fetching profiles:', profilesError);
             throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
         }
 
-        const leaderboardData: LeaderboardEntry[] = [];
-
-        for (const profile of profiles || []) {
-            // Get all user's resolved bets
-            const { data: bets, error: betsError } = await supabase
-                .from('bets')
-                .select('*')
-                .eq('user_id', profile.id)
-                .in('status', ['won', 'lost']);
-
-            if (betsError) {
-                console.error(`Error fetching bets for user ${profile.id}:`, betsError);
-                continue;
-            }
-
-            if (!bets || bets.length === 0) continue;
-
-            const wonBets = bets.filter(bet => bet.status === 'won');
-            const totalPoints = this.calculatePoints(wonBets);
-            const currentStreak = this.calculateCurrentStreak(bets);
-            const bestStreak = this.calculateBestStreak(bets);
-            const correctPicks = wonBets.length;
-            const totalPicks = bets.length;
-            const accuracyPercentage = totalPicks > 0 ? Math.round((correctPicks / totalPicks) * 100 * 10) / 10 : 0;
-
-            leaderboardData.push({
-                userId: profile.id,
-                username: profile.username,
-                avatarUrl: profile.avatar_url,
-                totalPoints,
-                currentStreak,
-                bestStreak,
-                correctPicks,
-                totalPicks,
-                accuracyPercentage,
-                rank: 0 // Will be set after sorting
-            });
-        }
-
-        // Sort by points and best streak, then assign ranks
-        leaderboardData.sort((a, b) => {
-            if (a.totalPoints !== b.totalPoints) {
-                return b.totalPoints - a.totalPoints;
-            }
-            return b.bestStreak - a.bestStreak;
-        });
-
-        leaderboardData.forEach((entry, index) => {
-            entry.rank = index + 1;
-        });
-
-        return leaderboardData.slice(0, limit);
+        return (profiles || []).map((profile, index) => ({
+            userId: profile.id,
+            username: profile.username,
+            avatarUrl: profile.avatar_url,
+            totalPoints: profile.leaderboard_points || 0,
+            currentStreak: profile.current_winning_streak || 0,
+            bestStreak: profile.best_winning_streak || 0,
+            correctPicks: profile.total_correct_picks || 0,
+            totalPicks: profile.total_picks || 0,
+            accuracyPercentage: profile.accuracy_percentage || 0,
+            rank: index + 1
+        }));
     }
 
     /**
      * Get user's leaderboard statistics
      */
     static async getUserStats(userId?: string): Promise<UserStats | null> {
-        const { data: { user } } = await supabase.auth.getUser();
-        const targetUserId = userId || user?.id;
+        const currentUserId = getCurrentUserId();
+        const targetUserId = userId || currentUserId;
 
         if (!targetUserId) {
             throw new Error('User must be authenticated to get leaderboard stats');
         }
 
-        // Get user profile
+        // Get user profile with leaderboard stats
         const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id, username, avatar_url')
+            .select('id, username, avatar_url, leaderboard_points, current_winning_streak, best_winning_streak, total_correct_picks, total_picks, accuracy_percentage')
             .eq('id', targetUserId)
             .single();
 
@@ -286,67 +208,60 @@ export class LeaderboardService {
             return null;
         }
 
-        // Get all user's bets
-        const { data: bets, error: betsError } = await supabase
+        // Get active bets for additional stats
+        const { data: activeBets, error: activeBetsError } = await supabase
             .from('bets')
             .select('*')
-            .eq('user_id', targetUserId);
+            .eq('user_id', targetUserId)
+            .eq('status', 'active');
 
-        if (betsError) {
-            console.error('Error fetching user bets:', betsError);
-            throw new Error(`Failed to fetch user bets: ${betsError.message}`);
+        if (activeBetsError) {
+            console.error('Error fetching active bets:', activeBetsError);
         }
 
-        if (!bets || bets.length === 0) {
-            return {
-                userId: profile.id,
-                username: profile.username,
-                avatarUrl: profile.avatar_url,
-                totalPoints: 0,
-                currentStreak: 0,
-                bestStreak: 0,
-                correctPicks: 0,
-                totalPicks: 0,
-                activeBets: 0,
-                accuracyPercentage: 0,
-                totalWinnings: 0,
-                totalLosses: 0,
-                parlayWins: 0,
-                totalParlays: 0
-            };
+        // Get parlay stats
+        const { data: parlayBets, error: parlayBetsError } = await supabase
+            .from('bets')
+            .select('*')
+            .eq('user_id', targetUserId)
+            .eq('is_parlay', true);
+
+        if (parlayBetsError) {
+            console.error('Error fetching parlay bets:', parlayBetsError);
         }
 
-        const resolvedBets = bets.filter(bet => bet.status === 'won' || bet.status === 'lost');
-        const wonBets = bets.filter(bet => bet.status === 'won');
-        const activeBets = bets.filter(bet => bet.status === 'active');
-        const parlayBets = bets.filter(bet => bet.is_parlay);
-        const parlayWins = parlayBets.filter(bet => bet.status === 'won').length;
+        // Get winnings and losses
+        const { data: wonBets, error: wonBetsError } = await supabase
+            .from('bets')
+            .select('winnings_paid')
+            .eq('user_id', targetUserId)
+            .eq('status', 'won');
 
-        const totalPoints = this.calculatePoints(wonBets);
-        const currentStreak = this.calculateCurrentStreak(resolvedBets);
-        const bestStreak = this.calculateBestStreak(resolvedBets);
-        const correctPicks = wonBets.length;
-        const totalPicks = resolvedBets.length;
-        const accuracyPercentage = totalPicks > 0 ? Math.round((correctPicks / totalPicks) * 100 * 10) / 10 : 0;
+        const { data: lostBets, error: lostBetsError } = await supabase
+            .from('bets')
+            .select('bet_amount')
+            .eq('user_id', targetUserId)
+            .eq('status', 'lost');
 
-        const totalWinnings = wonBets.reduce((sum, bet) => sum + (bet.winnings_paid || 0), 0);
-        const totalLosses = bets.filter(bet => bet.status === 'lost').reduce((sum, bet) => sum + bet.bet_amount, 0);
+        const totalWinnings = wonBets?.reduce((sum, bet) => sum + (bet.winnings_paid || 0), 0) || 0;
+        const totalLosses = lostBets?.reduce((sum, bet) => sum + bet.bet_amount, 0) || 0;
+        const parlayWins = parlayBets?.filter(bet => bet.status === 'won').length || 0;
 
         return {
             userId: profile.id,
             username: profile.username,
             avatarUrl: profile.avatar_url,
-            totalPoints,
-            currentStreak,
-            bestStreak,
-            correctPicks,
-            totalPicks,
-            activeBets: activeBets.length,
-            accuracyPercentage,
+            totalPoints: profile.leaderboard_points || 0,
+            currentStreak: profile.current_winning_streak || 0,
+            bestStreak: profile.best_winning_streak || 0,
+            correctPicks: profile.total_correct_picks || 0,
+            totalPicks: profile.total_picks || 0,
+            activeBets: activeBets?.length || 0,
+            accuracyPercentage: profile.accuracy_percentage || 0,
             totalWinnings,
             totalLosses,
             parlayWins,
-            totalParlays: parlayBets.length
+            totalParlays: parlayBets?.length || 0
         };
     }
 
@@ -354,14 +269,14 @@ export class LeaderboardService {
      * Get current user's rank in weekly leaderboard
      */
     static async getCurrentUserWeeklyRank(): Promise<number | null> {
-        const { data: { user } } = await supabase.auth.getUser();
+        const userId = getCurrentUserId();
         
-        if (!user) {
+        if (!userId) {
             return null;
         }
 
         const weeklyLeaderboard = await this.getWeeklyLeaderboard(1000); // Get all users
-        const userEntry = weeklyLeaderboard.find(entry => entry.userId === user.id);
+        const userEntry = weeklyLeaderboard.find(entry => entry.userId === userId);
         
         return userEntry ? userEntry.rank : null;
     }
@@ -370,17 +285,19 @@ export class LeaderboardService {
      * Get current user's rank in all-time leaderboard
      */
     static async getCurrentUserAllTimeRank(): Promise<number | null> {
-        const { data: { user } } = await supabase.auth.getUser();
+        const userId = getCurrentUserId();
         
-        if (!user) {
+        if (!userId) {
             return null;
         }
 
         const allTimeLeaderboard = await this.getAllTimeLeaderboard(1000); // Get all users
-        const userEntry = allTimeLeaderboard.find(entry => entry.userId === user.id);
+        const userEntry = allTimeLeaderboard.find(entry => entry.userId === userId);
         
         return userEntry ? userEntry.rank : null;
     }
+
+
 
     /**
      * Get leaderboard summary statistics

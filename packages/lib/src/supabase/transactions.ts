@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase, getCurrentUserId } from './client';
 import type { Database } from '../types/database';
 
 type Transaction = Database['public']['Tables']['transactions']['Row'];
@@ -13,16 +13,16 @@ export class TransactionsService {
    * Get recent transactions for the current user
    */
   static async getRecentTransactions(limit: number = 10): Promise<TransactionWithDetails[]> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to view transactions');
     }
 
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -43,9 +43,9 @@ export class TransactionsService {
     totalLosses: number;
     totalBets: number;
   }> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       return {
         totalTransactions: 0,
         totalWinnings: 0,
@@ -57,7 +57,7 @@ export class TransactionsService {
     const { data, error } = await supabase
       .from('transactions')
       .select('type, amount')
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error fetching transaction stats:', error);
@@ -93,9 +93,9 @@ export class TransactionsService {
    * Create a new transaction
    */
   static async createTransaction(transactionData: Omit<TransactionInsert, 'user_id'>): Promise<Transaction> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const userId = getCurrentUserId();
     
-    if (!user) {
+    if (!userId) {
       throw new Error('User must be authenticated to create transactions');
     }
 
@@ -103,7 +103,7 @@ export class TransactionsService {
       .from('transactions')
       .insert({
         ...transactionData,
-        user_id: user.id,
+        user_id: userId,
       })
       .select()
       .single();

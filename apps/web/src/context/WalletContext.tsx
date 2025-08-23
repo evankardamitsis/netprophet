@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { BetsService, TransactionsService } from '@netprophet/lib';
+import { BetsService, TransactionsService, useAuthStore } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
 import { DailyRewardsService, WalletOperationsService, supabase } from '@netprophet/lib';
 import toast from 'react-hot-toast';
@@ -124,7 +124,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const syncWalletWithDatabase = useCallback(async () => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            // Use the centralized auth state instead of making a direct call
+            const { user } = useAuthStore.getState();
             if (!user) return;
 
             // Get user profile from database
@@ -163,6 +164,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     // Load bet statistics and transactions from database on mount
     useEffect(() => {
+        const { user } = useAuthStore.getState();
+        if (!user) return; // Don't load data if user is not authenticated
+
         loadBetStats();
         loadTransactions();
         syncWalletWithDatabase();

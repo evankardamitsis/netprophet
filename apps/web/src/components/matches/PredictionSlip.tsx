@@ -192,9 +192,6 @@ export function PredictionSlip({
             // Clear the slip after successful placement
             clearPredictions();
 
-            // Clear all form predictions from session storage when submitting
-            removeFromSessionStorage(SESSION_KEYS.FORM_PREDICTIONS);
-
         } catch (error) {
             // Handle insufficient balance or other errors
             if (error instanceof Error) {

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { NotificationsService } from '@netprophet/lib';
+import { NotificationsService, useAuthStore } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
 
 interface Notification {
@@ -35,6 +35,9 @@ export function Notifications() {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        const { user } = useAuthStore.getState();
+        if (!user) return; // Don't load notifications if user is not authenticated
+
         loadNotifications();
         loadUnreadCount();
 

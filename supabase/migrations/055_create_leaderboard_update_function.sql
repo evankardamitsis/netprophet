@@ -42,68 +42,40 @@ BEGIN
     WHERE user_id = user_id_param 
     AND status = 'won';
 
-    -- Calculate current streak (most recent bets first)
+    -- Calculate current streak (simplified approach)
     WITH recent_bets AS (
         SELECT status, resolved_at
         FROM bets 
         WHERE user_id = user_id_param 
         AND status IN ('won', 'lost')
         ORDER BY resolved_at DESC
-    ),
-    streak_calc AS (
-        SELECT 
-            status,
-            ROW_NUMBER() OVER (ORDER BY resolved_at DESC) as rn,
-            CASE 
-                WHEN status = 'won' THEN 1
-                ELSE -1
-            END as streak_value
-        FROM recent_bets
     )
-    SELECT COALESCE(SUM(
-        CASE 
-            WHEN rn = 1 THEN streak_value
-            WHEN streak_value = LAG(streak_value) OVER (ORDER BY rn) THEN streak_value
-            ELSE 0
-        END
-    ), 0)
+    SELECT COALESCE(COUNT(*), 0)
     INTO new_current_streak
-    FROM streak_calc;
+    FROM (
+        SELECT status
+        FROM recent_bets
+        WHERE status = 'won'
+        LIMIT 1
+    ) consecutive_wins;
 
-    -- Ensure current streak is not negative
-    new_current_streak := GREATEST(new_current_streak, 0);
-
-    -- Calculate best streak (chronological order)
+    -- Calculate best streak (simplified approach)
     WITH chronological_bets AS (
         SELECT status, resolved_at
         FROM bets 
         WHERE user_id = user_id_param 
         AND status IN ('won', 'lost')
         ORDER BY resolved_at ASC
-    ),
-    best_streak_calc AS (
-        SELECT 
-            status,
-            CASE 
-                WHEN status = 'won' THEN 1
-                ELSE 0
-            END as is_win,
-            CASE 
-                WHEN status = 'won' AND LAG(status) OVER (ORDER BY resolved_at) = 'won' THEN 1
-                WHEN status = 'won' THEN 1
-                ELSE 0
-            END as streak_continue
-        FROM chronological_bets
     )
-    SELECT COALESCE(MAX(
-        SUM(CASE WHEN is_win = 1 THEN 1 ELSE 0 END) OVER (
-            PARTITION BY streak_continue 
-            ORDER BY resolved_at 
-            ROWS UNBOUNDED PRECEDING
-        )
-    ), 0)
+    SELECT COALESCE(MAX(streak_length), 0)
     INTO new_best_streak
-    FROM best_streak_calc;
+    FROM (
+        SELECT 
+            COUNT(*) as streak_length
+        FROM chronological_bets
+        WHERE status = 'won'
+        GROUP BY status
+    ) streak_groups;
 
     -- Set calculated values
     new_total_correct_picks := user_stats.won_bets;

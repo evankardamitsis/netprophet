@@ -92,7 +92,7 @@ export class MatchResultsService {
             : matchData.player_a_id;
 
           if (loserId) {
-            const tournamentSurface = matchData.tournaments?.surface;
+            const tournamentSurface = (matchData.tournaments as any)?.surface;
             await updatePlayerStatsFromMatchResult(
               data.match_id,
               data.winner_id,
@@ -153,7 +153,7 @@ export class MatchResultsService {
             : matchData.player_a_id;
 
           if (loserId) {
-            const tournamentSurface = matchData.tournaments?.surface;
+            const tournamentSurface = (matchData.tournaments as any)?.surface;
             await updatePlayerStatsFromMatchResult(
               result.match_id,
               data.winner_id,
@@ -334,7 +334,7 @@ export class MatchResultsService {
             : matchData.player_a_id;
 
           if (loserId) {
-            const tournamentSurface = matchData.tournaments?.surface;
+            const tournamentSurface = (matchData.tournaments as any)?.surface;
             await reversePlayerStatsFromMatchResult(
               resultToDelete.match_id,
               resultToDelete.winner_id,

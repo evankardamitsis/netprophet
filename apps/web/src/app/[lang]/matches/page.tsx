@@ -131,19 +131,8 @@ export default function DashboardPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
 
-    // Reset slip state on first load (after login)
-    useEffect(() => {
-        // Check if this is the first load after login by checking if there's a session
-        const checkAndResetSlip = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                // Reset slip state for fresh login
-                resetSlipState();
-            }
-        };
-
-        checkAndResetSlip();
-    }, [resetSlipState]);
+    // Note: Removed resetSlipState() call as it was clearing predictions on every page navigation
+    // The slip state should persist across page navigations
 
     // Fetch synced matches
     const { data: matches = [], isLoading, error } = useQuery({
