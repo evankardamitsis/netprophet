@@ -124,10 +124,10 @@ export default function MyProfilePage() {
             <div className="max-w-6xl mx-auto px-6 pb-6">
                 {/* Page Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    <h1 className="text-2xl font-bold text-white mb-4">
                         {dict?.profile?.title || 'My Profile'}
                     </h1>
-                    <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+                    <p className="text-gray-300 max-w-2xl mx-auto">
                         {dict?.profile?.subtitle || 'Manage your account information and settings.'}
                     </p>
                 </div>

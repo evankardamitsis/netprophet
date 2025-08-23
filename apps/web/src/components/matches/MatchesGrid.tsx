@@ -38,8 +38,8 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
         <div className="flex flex-col h-full w-full text-white">
             {/* Header Section */}
             <div className="p-3 xs:p-4 sm:p-5 md:p-6 pb-2 xs:pb-3 sm:pb-4 flex-shrink-0">
-                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 xs:mb-2">{dict?.matches?.title || 'Tennis Matches'}</h1>
-                <p className="text-gray-400 text-xs xs:text-sm">{dict?.matches?.loading || 'Monitor tennis games and place your predictions'}</p>
+                <h1 className="text-2xl font-bold text-white mb-1 xs:mb-2">{dict?.matches?.title || 'Tennis Matches'}</h1>
+                <p className="text-gray-400">{dict?.matches?.loading || 'Monitor tennis games and place your predictions'}</p>
             </div>
 
             {/* Tournament Filter */}

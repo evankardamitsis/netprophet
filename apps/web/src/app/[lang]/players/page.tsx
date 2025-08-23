@@ -51,7 +51,7 @@ export default function PlayersPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto"></div>
                     <p className="mt-4 text-gray-400">Loading players...</p>
@@ -61,10 +61,10 @@ export default function PlayersPage() {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-white mb-2">
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-2xl font-bold text-white mb-2">
                     {dict?.players?.title || 'Players'}
                 </h1>
                 <p className="text-gray-400">
@@ -73,7 +73,7 @@ export default function PlayersPage() {
             </div>
 
             {/* Search and Filters */}
-            <div className="mb-8 space-y-4">
+            <div className="mb-6 sm:mb-8 space-y-4">
                 {/* Search */}
                 <div className="relative">
                     <input
@@ -106,7 +106,7 @@ export default function PlayersPage() {
             </div>
 
             {/* Results Count */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
                 <p className="text-gray-400">
                     {filteredPlayers.length} {dict?.players?.playersFound || 'players found'}
                 </p>
@@ -125,7 +125,7 @@ export default function PlayersPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {filteredPlayers.map((player) => (
                         <PlayerCard key={player.id} player={player} />
                     ))}
