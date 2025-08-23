@@ -132,7 +132,7 @@ export default function AuthPage() {
                                         type="email"
                                         autoComplete="email"
                                         required
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
                                         placeholder={lang === 'el' ? 'εισάγετε το email σας' : 'Enter your email'}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -148,7 +148,7 @@ export default function AuthPage() {
                                         type="password"
                                         autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                                         required
-                                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
                                         placeholder={lang === 'el' ? 'εισάγετε τον κωδικό σας' : 'Enter your password'}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
