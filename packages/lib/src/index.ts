@@ -13,6 +13,8 @@ export { DailyRewardsService } from './supabase/dailyRewards';
 export type { DailyRewardStatus, DailyRewardClaim } from './supabase/dailyRewards';
 export { WalletOperationsService } from './supabase/walletOperations';
 export type { WalletOperationResult } from './supabase/walletOperations';
+export { LeaderboardService } from './supabase/leaderboard';
+export type { LeaderboardEntry, UserStats } from './supabase/leaderboard';
 
 // Stores
 export { useAuthStore } from './store/auth';
