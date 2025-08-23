@@ -536,4 +536,21 @@ export class BetsService {
       total: count || 0
     };
   }
+
+  /**
+   * Get all bets (admin only)
+   */
+  static async getAllBets(): Promise<Bet[]> {
+    const { data, error } = await supabase
+      .from('bets')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all bets:', error);
+      throw new Error(`Failed to fetch all bets: ${error.message}`);
+    }
+
+    return data || [];
+  }
 } 
