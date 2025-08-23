@@ -130,6 +130,7 @@ export interface Profile {
     is_admin: boolean | null;
     suspended?: boolean;
     created_at: string | null;
+    balance?: number | null;
 }
 
 // Match Results Types

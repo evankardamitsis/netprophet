@@ -73,6 +73,16 @@ export default function UsersPage() {
                 enableColumnFilter: true,
             },
             {
+                accessorKey: 'balance',
+                header: 'Balance',
+                cell: info => {
+                    const balance = info.getValue();
+                    return balance !== null && balance !== undefined ? `${balance} 🌕` : '0 🌕';
+                },
+                enableSorting: true,
+                enableColumnFilter: true,
+            },
+            {
                 accessorKey: 'created_at',
                 header: 'Created At',
                 cell: info => new Date(info.getValue()).toLocaleString(),
@@ -109,8 +119,11 @@ export default function UsersPage() {
         getFilteredRowModel: getFilteredRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         globalFilterFn: (row, columnId, filterValue) => {
-            // Filter by email or username
-            const value = row.getValue<string>('email') + ' ' + (row.getValue<string>('username') || '');
+            // Filter by email, username, or balance
+            const email = row.getValue<string>('email') || '';
+            const username = row.getValue<string>('username') || '';
+            const balance = row.getValue<number>('balance') || 0;
+            const value = `${email} ${username} ${balance}`;
             const normalizedValue = normalizeText(value);
             const normalizedFilter = normalizeText(filterValue);
             return normalizedValue.includes(normalizedFilter);
@@ -126,6 +139,23 @@ export default function UsersPage() {
     const handleEditChange = (field: keyof Profile, value: any) => {
         if (!editUser) return;
         setEditUser({ ...editUser, [field]: value });
+    };
+
+    const handleResetPassword = async (email: string) => {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/auth/reset-password`,
+            });
+
+            if (error) {
+                toast.error(`Failed to send reset email: ${error.message}`);
+            } else {
+                toast.success(`Password reset email sent to ${email}`);
+            }
+        } catch (error) {
+            console.error('Error sending password reset:', error);
+            toast.error('Failed to send password reset email');
+        }
     };
 
     const handleEditSave = async () => {
@@ -315,6 +345,25 @@ export default function UsersPage() {
                                     onCheckedChange={(checked: boolean) => handleEditChange('suspended', checked)}
                                 />
                                 <span>{editUser.suspended ? 'Yes' : 'No'}</span>
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 font-medium mb-1">Balance (🌕)</label>
+                                <Input
+                                    type="number"
+                                    value={editUser.balance || 0}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditChange('balance', parseInt(e.target.value) || 0)}
+                                    className="w-full"
+                                    min="0"
+                                />
+                            </div>
+                            <div className="pt-2">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleResetPassword(editUser.email)}
+                                    className="w-full text-blue-600 hover:text-blue-700"
+                                >
+                                    Send Password Reset Email
+                                </Button>
                             </div>
                         </div>
                         {editError && <div className="text-red-600 mt-2 font-semibold">{editError}</div>}
