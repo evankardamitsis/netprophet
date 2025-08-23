@@ -44,7 +44,7 @@ export function Providers({ children }: ProvidersProps) {
                     queries: {
                         staleTime: 60 * 1000, // 1 minute
                         refetchOnWindowFocus: false,
-                        refetchOnMount: false, // Prevent refetch on mount if data is fresh
+                        refetchOnMount: true, // Allow refetch on mount to ensure data loads
                         retry: 1, // Reduce retry attempts
                     },
                 },

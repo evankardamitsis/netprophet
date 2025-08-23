@@ -141,6 +141,8 @@ export default function DashboardPage() {
         refetchInterval: 30000, // Refetch every 30 seconds
     });
 
+
+
     const handleSelectMatch = (match: Match) => {
         setSelectedMatch(match);
     };
