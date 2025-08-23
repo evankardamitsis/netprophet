@@ -1,4 +1,4 @@
-import { supabase, getCurrentUserId } from './client';
+import { getCurrentUserId, supabase } from './client';
 
 export interface LeaderboardEntry {
     userId: string;
@@ -189,8 +189,8 @@ export class LeaderboardService {
      * Get user's leaderboard statistics
      */
     static async getUserStats(userId?: string): Promise<UserStats | null> {
-        const currentUserId = getCurrentUserId();
-        const targetUserId = userId || currentUserId;
+        const { data: { user } } = await supabase.auth.getUser();
+        const targetUserId = userId || user?.id;
 
         if (!targetUserId) {
             throw new Error('User must be authenticated to get leaderboard stats');
@@ -269,14 +269,14 @@ export class LeaderboardService {
      * Get current user's rank in weekly leaderboard
      */
     static async getCurrentUserWeeklyRank(): Promise<number | null> {
-        const userId = getCurrentUserId();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (!userId) {
+        if (!user?.id) {
             return null;
         }
 
         const weeklyLeaderboard = await this.getWeeklyLeaderboard(1000); // Get all users
-        const userEntry = weeklyLeaderboard.find(entry => entry.userId === userId);
+        const userEntry = weeklyLeaderboard.find(entry => entry.userId === user.id);
         
         return userEntry ? userEntry.rank : null;
     }
@@ -285,14 +285,14 @@ export class LeaderboardService {
      * Get current user's rank in all-time leaderboard
      */
     static async getCurrentUserAllTimeRank(): Promise<number | null> {
-        const userId = getCurrentUserId();
+        const { data: { user } } = await supabase.auth.getUser();
         
-        if (!userId) {
+        if (!user?.id) {
             return null;
         }
 
         const allTimeLeaderboard = await this.getAllTimeLeaderboard(1000); // Get all users
-        const userEntry = allTimeLeaderboard.find(entry => entry.userId === userId);
+        const userEntry = allTimeLeaderboard.find(entry => entry.userId === user.id);
         
         return userEntry ? userEntry.rank : null;
     }
