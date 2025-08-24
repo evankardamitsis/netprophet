@@ -22,6 +22,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Logo from '@/components/Logo';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -90,7 +91,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       `}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
+                    <Link href="/" className="hover:opacity-80 transition-opacity">
+                        <div className="hidden lg:flex items-center">
+                            <Logo size="sm" showText={false} />
+                            <span className="text-xl font-bold text-gray-900 ml-2">Admin Panel</span>
+                        </div>
+                    </Link>
                     <Button
                         variant="ghost"
                         size="icon"
@@ -111,9 +117,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                         return (
                             <div key={item.href}>
-                                <div
+                                <Link
+                                    href={item.href}
                                     className={`
-                                        flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer
+                                        flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors
                                         ${itemIsActive
                                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                             : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -122,11 +129,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     onClick={() => {
                                         if (hasChildren) {
                                             toggleExpanded(item.href);
-                                        } else {
-                                            // Close sidebar on mobile after navigation
-                                            if (window.innerWidth < 1024) {
-                                                onClose();
-                                            }
+                                        }
+                                        // Close sidebar on mobile after navigation
+                                        if (window.innerWidth < 1024) {
+                                            onClose();
                                         }
                                     }}
                                 >
@@ -137,7 +143,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     {hasChildren && (
                                         isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
                                     )}
-                                </div>
+                                </Link>
 
                                 {hasChildren && isExpanded && (
                                     <div className="ml-6 mt-2 space-y-1">
