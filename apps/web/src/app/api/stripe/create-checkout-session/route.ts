@@ -26,13 +26,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Define coin packs
-    const coinPacks = {
-      starter: { name: 'Starter Pack', price: 199, coins: 350 }, // €1.99 in cents
-      basic: { name: 'Basic Pack', price: 499, coins: 950 }, // €4.99 in cents
-      pro: { name: 'Pro Pack', price: 999, coins: 1950 }, // €9.99 in cents
-      champion: { name: 'Champion Pack', price: 1999, coins: 3900 }, // €19.99 in cents
-      legend: { name: 'Legend Pack', price: 3999, coins: 7700 }, // €39.99 in cents
-    };
+    if (!supabase) {
+      return NextResponse.json(
+        { error: 'Database not configured' },
+        { status: 500 }
+      );
+    }
+
+    // Get coin packs from database
+    const coinPacksData = await supabase
+      .from('coin_packs')
+      .select('*')
+      .eq('is_active', true)
+      .order('price_euro', { ascending: true });
+
+    if (coinPacksData.error) {
+      console.error('Error fetching coin packs:', coinPacksData.error);
+      return NextResponse.json(
+        { error: 'Failed to fetch coin packs' },
+        { status: 500 }
+      );
+    }
+
+    const coinPacks = coinPacksData.data?.reduce((acc, pack) => {
+      const totalCoins = pack.base_coins + pack.bonus_coins;
+      const priceInCents = Math.round(pack.price_euro * 100);
+      acc[pack.id] = { 
+        name: pack.name, 
+        price: priceInCents, 
+        coins: totalCoins 
+      };
+      return acc;
+    }, {} as Record<string, { name: string; price: number; coins: number }>) || {};
 
     const pack = coinPacks[packId as keyof typeof coinPacks];
     if (!pack) {
