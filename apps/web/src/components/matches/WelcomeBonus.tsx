@@ -151,27 +151,32 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
                                 Daily Login Reward! 🔥
                             </CardTitle>
                             <p className={`mb-3 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                                {wallet.dailyLoginStreak > 1
-                                    ? `You're on a ${wallet.dailyLoginStreak} day streak!`
-                                    : 'Come back tomorrow for more rewards!'
+                                {dailyReward > 0
+                                    ? (wallet.dailyLoginStreak > 1
+                                        ? `You're on a ${wallet.dailyLoginStreak} day streak!`
+                                        : 'Come back tomorrow for more rewards!'
+                                    )
+                                    : 'Streak broken! Come back tomorrow to start a new streak.'
                                 }
                             </p>
                             <div className="mb-4">
-                                <div className={`text-2xl font-bold text-blue-500 mb-1`}>
-                                    +{dailyReward} 🪙
+                                <div className={`text-2xl font-bold ${dailyReward > 0 ? 'text-blue-500' : 'text-gray-500'} mb-1`}>
+                                    {dailyReward > 0 ? `+${dailyReward} 🪙` : 'No Reward'}
                                 </div>
-                                <div className="flex items-center justify-center gap-1">
-                                    <FireIcon className="text-orange-500 h-3 w-3" />
-                                    <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                                        {wallet.dailyLoginStreak} day streak
-                                    </span>
-                                </div>
+                                {dailyReward > 0 && (
+                                    <div className="flex items-center justify-center gap-1">
+                                        <FireIcon className="text-orange-500 h-3 w-3" />
+                                        <span className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                                            {wallet.dailyLoginStreak} day streak
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             <Button
                                 onClick={handleClaimDailyLogin}
-                                className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm py-2"
+                                className={`w-full text-white text-sm py-2 ${dailyReward > 0 ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600'}`}
                             >
-                                Claim Daily Reward
+                                {dailyReward > 0 ? 'Claim Daily Reward' : 'Streak Broken'}
                             </Button>
                         </div>
                     )}

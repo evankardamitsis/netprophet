@@ -223,7 +223,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 
 async function handleClaimWelcomeBonus(supabase: any, user: any) {
   console.log('handleClaimWelcomeBonus called for user:', user.id)
-  const bonus = 250 // Welcome bonus amount
+      const bonus = 200 // Welcome bonus amount
 
   try {
     // Get current profile

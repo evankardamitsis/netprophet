@@ -75,9 +75,9 @@ const defaultWallet: UserWallet = {
 };
 
 export const COIN_CONSTANTS = {
-    WELCOME_BONUS: 250,
-    DAILY_LOGIN_BASE: 25,
-    DAILY_LOGIN_STREAK_BONUS: 5,
+    WELCOME_BONUS: 200,
+    DAILY_LOGIN_BASE: 100,
+    DAILY_LOGIN_STREAK_BONUS: 0,
     MIN_BET: 10,
     MAX_BET: 1000,
     REFERRAL_BONUS: 250,
@@ -387,16 +387,23 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             if (result.success) {
                 const rewardAmount = result.reward_amount;
 
-                // Update local wallet state
+                // Update local wallet state (balance only changes if reward was given)
                 setWallet(prev => ({
                     ...prev,
                     balance: prev.balance + rewardAmount,
                     dailyLoginStreak: result.new_streak,
                 }));
 
-                toast.success((dict?.toast?.dailyRewardClaimed || '🎁 Daily reward claimed! +{amount} 🌕 ({streak} day streak)').replace('{amount}', rewardAmount.toString()).replace('{streak}', result.new_streak.toString()), {
-                    id: loadingToast,
-                });
+                // Show appropriate message based on whether reward was given
+                if (rewardAmount > 0) {
+                    toast.success((dict?.toast?.dailyRewardClaimed || '🎁 Daily reward claimed! +{amount} 🌕').replace('{amount}', rewardAmount.toString()), {
+                        id: loadingToast,
+                    });
+                } else {
+                    toast.error(result.message || 'Streak broken - no reward today. Come back tomorrow to start a new streak!', {
+                        id: loadingToast,
+                    });
+                }
 
                 return rewardAmount;
             } else {
@@ -420,7 +427,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             const result = await WalletOperationsService.claimWelcomeBonus();
 
             if (result.success) {
-                const bonusAmount = 250; // Welcome bonus amount
+                const bonusAmount = 200; // Welcome bonus amount
 
                 // Update local wallet state
                 setWallet(prev => ({

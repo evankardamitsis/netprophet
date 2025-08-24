@@ -1,26 +1,5 @@
--- Create daily_rewards table for secure tracking
-CREATE TABLE IF NOT EXISTS daily_rewards (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    claimed_date DATE NOT NULL,
-    reward_amount INTEGER NOT NULL,
-    streak_count INTEGER NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, claimed_date)
-);
-
--- Create index for efficient lookups
-CREATE INDEX IF NOT EXISTS idx_daily_rewards_user_date ON daily_rewards(user_id, claimed_date);
-
--- Enable RLS
-ALTER TABLE daily_rewards ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies
-CREATE POLICY "Users can view their own daily rewards" ON daily_rewards
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own daily rewards" ON daily_rewards
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- Update daily rewards functions to implement streak system
+-- Users only get daily login bonus if they maintain consecutive daily logins
 
 -- Function to check if user can claim daily reward
 CREATE OR REPLACE FUNCTION can_claim_daily_reward(user_uuid UUID)
@@ -127,4 +106,4 @@ BEGIN
         RETURN QUERY SELECT true, 0, new_streak, 'Streak broken - no reward today. Come back tomorrow to start a new streak!'::TEXT;
     END IF;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER; 
+$$ LANGUAGE plpgsql SECURITY DEFINER;
