@@ -54,10 +54,7 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
         }
     };
 
-    const handleTopUp = (pack: CoinPack) => {
-        console.log(`Top-up: ${pack.name} - €${pack.priceEuro}`);
-        // TODO: Implement payment processing
-    };
+
 
     const filteredRewards = mockRewards
         .filter(reward => selectedCategory === 'all' || reward.category === selectedCategory)
@@ -84,7 +81,7 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
         <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
             <RewardShopHeader userPoints={userPoints} />
 
-            <CoinTopUpSection onTopUp={handleTopUp} />
+            <CoinTopUpSection />
 
             <RewardFilters
                 categories={categories}

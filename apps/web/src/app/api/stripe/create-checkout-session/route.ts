@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
             product_data: {
               name: pack.name,
               description: `${pack.coins} coins for NetProphet`,
+              images: ['https://your-domain.com/coin-pack-image.png'], // Optional: Add product image
             },
             unit_amount: pack.price,
           },
@@ -105,13 +106,18 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${request.nextUrl.origin}/matches/rewards?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/matches/rewards?canceled=true`,
+      success_url: `${request.nextUrl.origin}/en/matches/rewards?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${request.nextUrl.origin}/en/matches/rewards?canceled=true`,
       metadata: {
         userId,
         packId,
         coins: pack.coins.toString(),
       },
+      // Customization options
+      billing_address_collection: 'auto', // or 'required'
+      customer_email: profile.email, // Pre-fill customer email
+      locale: 'auto', // or 'en', 'es', 'fr', etc.
+      submit_type: 'pay', // Button text
     });
 
     return NextResponse.json({ sessionId: session.id });

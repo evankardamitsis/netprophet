@@ -49,6 +49,18 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
         }
 
+        // Check if this session has already been processed (idempotency)
+        const { data: existingTransaction } = await supabase
+          .from('transactions')
+          .select('id')
+          .eq('stripe_session_id', session.id)
+          .single();
+
+        if (existingTransaction) {
+          console.log(`Session ${session.id} already processed, skipping`);
+          return NextResponse.json({ received: true });
+        }
+
         // Add coins to user's balance
         const { error: updateError } = await supabase.rpc('add_coins_to_balance', {
           user_uuid: userId,

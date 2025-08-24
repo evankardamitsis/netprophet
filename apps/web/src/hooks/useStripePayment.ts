@@ -19,7 +19,7 @@ export function useStripePayment(): UseStripePaymentReturn {
     }
 
     setIsProcessing(true);
-    const loadingToast = toast.loading('Processing payment...');
+    const loadingToast = toast.loading('Taking you to Checkout...');
 
     try {
       // Create checkout session
@@ -40,6 +40,10 @@ export function useStripePayment(): UseStripePaymentReturn {
       }
 
       const { sessionId } = await response.json();
+
+      if (!sessionId) {
+        throw new Error('No session ID received from API');
+      }
 
       // Redirect to Stripe checkout
       const stripe = await stripePromise;

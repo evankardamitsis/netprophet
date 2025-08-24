@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useStripePayment } from '@/hooks/useStripePayment';
+import { useAuth } from '@/hooks/useAuth';
 import { createClient } from '@supabase/supabase-js';
 
 export type CoinPack = {
@@ -25,6 +26,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
     const [coinPacks, setCoinPacks] = useState<CoinPack[]>([]);
     const [loading, setLoading] = useState(true);
     const { isProcessing, processPayment } = useStripePayment();
+    const { user } = useAuth();
 
     // Fetch coin packs from database
     useEffect(() => {
@@ -118,20 +120,28 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                         </div>
                                     </div>
                                     <Button
-                                        onClick={() => {
+                                        onClick={async () => {
+                                            if (!user) {
+                                                return;
+                                            }
+
                                             if (onTopUp) {
                                                 onTopUp(pack);
                                             } else {
-                                                processPayment(pack.id);
+                                                try {
+                                                    await processPayment(pack.id);
+                                                } catch (error) {
+                                                    console.error('Payment error:', error);
+                                                }
                                             }
                                         }}
-                                        disabled={isProcessing}
+                                        disabled={isProcessing || !user}
                                         className={`w-full mt-3 md:mt-6 py-1.5 md:py-3 text-sm md:text-base font-bold text-white transition-all duration-300 ${isBestValue
                                             ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg shadow-yellow-500/25'
                                             : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-purple-500/25'
                                             } hover:scale-105 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
                                     >
-                                        {isProcessing ? 'Processing...' : 'Buy Now'}
+                                        {!user ? 'Sign In to Buy' : isProcessing ? 'Processing...' : 'Buy Now'}
                                     </Button>
                                 </CardContent>
                             </Card>
