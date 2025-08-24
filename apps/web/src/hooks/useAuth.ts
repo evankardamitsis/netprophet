@@ -30,6 +30,7 @@ export function useAuth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('useAuth: Auth state change:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -55,8 +56,32 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
+    try {
+      console.log('useAuth: Starting signOut...');
+      
+      // Clear local state immediately
+      setUser(null);
+      setSession(null);
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('useAuth: SignOut error:', error);
+        return { error };
+      }
+      
+      console.log('useAuth: SignOut successful');
+      
+      // Clear any cached data
+      localStorage.removeItem('oauth_lang');
+      sessionStorage.clear();
+      
+      return { error: null };
+    } catch (error) {
+      console.error('useAuth: SignOut exception:', error);
+      return { error };
+    }
   };
 
   return {

@@ -16,24 +16,42 @@ export function useAuth() {
   useEffect(() => {
     // Get initial session
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profile?.is_admin) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            is_admin: true
-          });
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Check if user is admin
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('is_admin')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error('Admin useAuth: Profile check error:', error);
+              setUser(null);
+            } else if (profile?.is_admin) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                is_admin: true
+              });
+            } else {
+              setUser(null);
+            }
+          } catch (profileError) {
+            console.error('Admin useAuth: Profile check exception:', profileError);
+            setUser(null);
+          }
+        } else {
+          setUser(null);
         }
+      } catch (error) {
+        console.error('Admin useAuth: Session error:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     getSession();
@@ -41,21 +59,31 @@ export function useAuth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Admin useAuth: Auth state change:', event, session?.user?.email);
+        
         if (session?.user) {
           // Check if user is admin
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile?.is_admin) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              is_admin: true
-            });
-          } else {
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('is_admin')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              console.error('Admin useAuth: Profile check error:', error);
+              setUser(null);
+            } else if (profile?.is_admin) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                is_admin: true
+              });
+            } else {
+              setUser(null);
+            }
+          } catch (profileError) {
+            console.error('Admin useAuth: Profile check exception:', profileError);
             setUser(null);
           }
         } else {
@@ -69,8 +97,28 @@ export function useAuth() {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      console.log('Admin useAuth: Starting signOut...');
+      
+      // Clear local state immediately
+      setUser(null);
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Admin useAuth: SignOut error:', error);
+      } else {
+        console.log('Admin useAuth: SignOut successful');
+      }
+      
+      // Clear any cached data
+      localStorage.removeItem('oauth_lang');
+      sessionStorage.clear();
+      
+    } catch (error) {
+      console.error('Admin useAuth: SignOut exception:', error);
+    }
   };
 
   return { user, loading, signOut };

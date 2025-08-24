@@ -27,8 +27,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }, [user, loading, router, isAuthPage]);
 
     const handleSignOut = async () => {
-        await signOut();
-        router.push('/');
+        try {
+            console.log('AdminLayout: Starting signOut...');
+            await signOut();
+            console.log('AdminLayout: SignOut completed, redirecting...');
+
+            // Force a hard redirect to clear any cached state
+            window.location.href = '/auth/signin';
+        } catch (error) {
+            console.error('AdminLayout: SignOut exception:', error);
+            // Still redirect even if there's an exception
+            window.location.href = '/auth/signin';
+        }
     };
 
     // For auth pages, just render the children without admin layout
