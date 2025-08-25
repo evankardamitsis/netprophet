@@ -93,6 +93,7 @@ serve(async (req) => {
           .update({ 
             balance: newBalance,
             daily_login_streak: result.new_streak
+            // welcome_bonus_claimed is handled in the database function
           })
           .eq('id', user.id)
 
@@ -108,7 +109,7 @@ serve(async (req) => {
               user_id: user.id,
               type: 'daily_login',
               amount: result.reward_amount,
-              description: `Daily login bonus (${result.new_streak} day streak)`
+              description: result.message || `Daily login reward (${result.new_streak} day streak)`
             })
 
           if (transactionError) {

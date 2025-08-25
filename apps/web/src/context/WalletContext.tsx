@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { BetsService, TransactionsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
-import { DailyRewardsService, WalletOperationsService, supabase } from '@netprophet/lib';
+import { DailyRewardsService, WalletOperationsService, supabase, DAILY_REWARDS_CONSTANTS } from '@netprophet/lib';
 import toast from 'react-hot-toast';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -75,9 +75,9 @@ const defaultWallet: UserWallet = {
 };
 
 export const COIN_CONSTANTS = {
-    WELCOME_BONUS: 200,
-    DAILY_LOGIN_BASE: 100,
-    DAILY_LOGIN_STREAK_BONUS: 0,
+    WELCOME_BONUS: DAILY_REWARDS_CONSTANTS.WELCOME_BONUS, // Use centralized constants
+    DAILY_LOGIN_BASE: DAILY_REWARDS_CONSTANTS.DAILY_LOGIN_REWARD, // Use centralized constants
+    DAILY_LOGIN_STREAK_BONUS: DAILY_REWARDS_CONSTANTS.SEVEN_DAY_STREAK_BONUS, // Use centralized constants
     MIN_BET: 10,
     MAX_BET: 1000,
     REFERRAL_BONUS: 250,
@@ -427,7 +427,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             const result = await WalletOperationsService.claimWelcomeBonus();
 
             if (result.success) {
-                const bonusAmount = 200; // Welcome bonus amount
+                const bonusAmount = COIN_CONSTANTS.WELCOME_BONUS; // Use constant
 
                 // Update local wallet state
                 setWallet(prev => ({

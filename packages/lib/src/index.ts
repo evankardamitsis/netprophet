@@ -42,4 +42,7 @@ export type { Profile } from './supabase/profiles';
 export { fetchPlayers, fetchPlayerById, insertPlayer, bulkInsertPlayers, updatePlayer, deletePlayer, updatePlayerStatsFromMatchResult, reversePlayerStatsFromMatchResult } from './supabase/players';
 
 // Match Status Constants
-export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses'; 
+export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses';
+
+// Daily Rewards Constants
+export { DAILY_REWARDS_CONSTANTS, type DailyRewardsConstants } from './constants/dailyRewards'; 
