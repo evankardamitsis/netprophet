@@ -7,6 +7,8 @@ import { TopBar } from '@/components/TopBar';
 import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/sonner';
 
+
+
 interface AdminLayoutProps {
     children: React.ReactNode;
 }
@@ -17,6 +19,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const { user, loading, signOut } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+
     // Check if we're on an auth page
     const isAuthPage = pathname?.startsWith('/auth');
 
@@ -25,6 +28,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             router.push('/auth/signin');
         }
     }, [user, loading, router, isAuthPage]);
+
+
 
     const handleSignOut = async () => {
         try {

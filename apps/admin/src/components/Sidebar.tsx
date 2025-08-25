@@ -43,7 +43,19 @@ const menuItems: MenuItem[] = [
     { href: '/tournaments', label: 'Tournaments', icon: Trophy },
     { href: '/match-results', label: 'Match Results', icon: Award },
     { href: '/bets', label: 'Bets', icon: DollarSign },
-    { href: '/rewards', label: 'Rewards', icon: Gift },
+    {
+        href: '/rewards',
+        label: 'Rewards',
+        icon: Gift,
+        children: [
+            { href: '/rewards', label: 'Overview', icon: Gift },
+            { href: '/rewards/coin-packs', label: 'Coin Packs', icon: DollarSign },
+            { href: '/rewards/daily-rewards', label: 'Daily Rewards', icon: Award },
+            { href: '/rewards/achievements', label: 'Achievements', icon: Trophy },
+            { href: '/rewards/leaderboards', label: 'Leaderboards', icon: TrendingUp },
+            { href: '/rewards/settings', label: 'Settings', icon: Calculator }
+        ]
+    },
     {
         href: '/economy',
         label: 'Economy',
@@ -71,7 +83,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         setExpandedItems(newExpanded);
     };
 
-    const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/');
+    const isActive = (href: string) => pathname === href;
+
+    const isParentActive = (href: string) => {
+        // For parent items with children, only show as active if exactly on that path
+        // and not on any child path
+        return pathname === href;
+    };
 
     return (
         <>
@@ -111,8 +129,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <nav className="p-4 space-y-2">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
-                        const itemIsActive = isActive(item.href);
                         const hasChildren = item.children && item.children.length > 0;
+                        const itemIsActive = hasChildren ? isParentActive(item.href) : isActive(item.href);
                         const isExpanded = expandedItems.has(item.href);
 
                         return (
