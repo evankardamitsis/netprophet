@@ -433,3 +433,96 @@ export async function getActivePowerUps(userId: string): Promise<UserPowerUp[]> 
         return [];
     }
 }
+
+// Check if user has safe slip power-ups
+export async function hasSafeSlipPowerUp(userId: string, powerUpId: 'safeParlay' | 'safeSingle'): Promise<boolean> {
+    try {
+        const { data, error } = await supabase
+            .from('user_power_ups')
+            .select('quantity')
+            .eq('user_id', userId)
+            .eq('power_up_id', powerUpId)
+            .gt('quantity', 0);
+
+        if (error || !data || data.length === 0) {
+            return false;
+        }
+
+        return data[0].quantity > 0;
+    } catch (error) {
+        console.error('Error checking safe slip power-up:', error);
+        return false;
+    }
+}
+
+// Use a safe slip power-up
+export async function applySafeSlipPowerUp(
+    userId: string,
+    powerUpId: 'safeParlay' | 'safeSingle',
+    betId?: string
+): Promise<{ success: boolean; message: string }> {
+    try {
+        // Check if user has the power-up
+        const { data: userPowerUp, error: fetchError } = await supabase
+            .from('user_power_ups')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('power_up_id', powerUpId)
+            .gt('quantity', 0)
+            .single();
+
+        if (fetchError || !userPowerUp) {
+            return {
+                success: false,
+                message: 'You don\'t have this safe slip power-up available'
+            };
+        }
+
+        // Decrease quantity
+        const { error: updateError } = await supabase
+            .from('user_power_ups')
+            .update({ 
+                quantity: userPowerUp.quantity - 1,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userPowerUp.id);
+
+        if (updateError) {
+            return {
+                success: false,
+                message: 'Failed to use safe slip power-up'
+            };
+        }
+
+        // Log the usage
+        const { error: logError } = await supabase
+            .from('power_up_usage_log')
+            .insert({
+                user_id: userId,
+                power_up_id: powerUpId,
+                bet_id: betId,
+                effect_applied: {
+                    used_at: new Date().toISOString(),
+                    bet_id: betId,
+                    power_up_type: powerUpId
+                }
+            });
+
+        if (logError) {
+            console.error('Error logging safe slip usage:', logError);
+            // Don't fail the operation if logging fails
+        }
+
+        return {
+            success: true,
+            message: `Successfully used ${powerUpId === 'safeParlay' ? 'Safe Parlay Slip' : 'Safe Slip'} power-up!`
+        };
+
+    } catch (error) {
+        console.error('Error using safe slip power-up:', error);
+        return {
+            success: false,
+            message: 'Failed to use safe slip power-up'
+        };
+    }
+}

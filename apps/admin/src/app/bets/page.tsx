@@ -3,16 +3,17 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { BetsService } from '@netprophet/lib';
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui';
+import { supabase } from '@netprophet/lib';
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui';
 
 interface BetManagementProps { }
 
 export default function BetManagement({ }: BetManagementProps) {
     const [bets, setBets] = useState<any[]>([]);
+    const [userProfiles, setUserProfiles] = useState<{ [key: string]: any }>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [selectedBet, setSelectedBet] = useState<any | null>(null);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
 
     useEffect(() => {
         loadBets();
@@ -23,6 +24,26 @@ export default function BetManagement({ }: BetManagementProps) {
             setLoading(true);
             const allBets = await BetsService.getAllBets();
             setBets(allBets);
+
+            // Get unique user IDs from bets
+            const userIds = [...new Set(allBets.map(bet => bet.user_id))];
+
+            // Fetch user profiles
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, username, email')
+                .in('id', userIds);
+
+            if (profilesError) {
+                console.error('Error fetching user profiles:', profilesError);
+            } else {
+                const profilesMap = profiles?.reduce((acc, profile) => {
+                    acc[profile.id] = profile;
+                    return acc;
+                }, {} as { [key: string]: any }) || {};
+                setUserProfiles(profilesMap);
+            }
+
             setError(null);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to load bets';
@@ -33,18 +54,7 @@ export default function BetManagement({ }: BetManagementProps) {
         }
     };
 
-    const handleUpdateBetStatus = async (betId: string, status: 'won' | 'lost' | 'cancelled', winningsPaid?: number) => {
-        try {
-            await BetsService.updateBetStatus(betId, status, winningsPaid);
-            await loadBets(); // Reload to get updated data
-            setIsDialogOpen(false);
-            setSelectedBet(null);
-            toast.success(`Bet status updated to ${status}`);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to update bet status';
-            toast.error(errorMessage);
-        }
-    };
+
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -84,6 +94,14 @@ export default function BetManagement({ }: BetManagementProps) {
         if (prediction.breakPoints) parts.push(`BP: ${prediction.breakPoints}`);
 
         return parts.length > 0 ? parts.join(' | ') : 'Complex prediction';
+    };
+
+    const getUserDisplayName = (userId: string) => {
+        const profile = userProfiles[userId];
+        if (!profile) return `${userId.slice(0, 8)}...`;
+
+        // Prefer username, fallback to email, then truncated UUID
+        return profile.username || profile.email || `${userId.slice(0, 8)}...`;
     };
 
     if (loading) {
@@ -154,6 +172,9 @@ export default function BetManagement({ }: BetManagementProps) {
             <Card>
                 <CardHeader>
                     <CardTitle>Active Bets ({activeBets.length})</CardTitle>
+                    <p className="text-sm text-gray-500 mt-2">
+                        Bets are automatically resolved when match results are added. No manual intervention required.
+                    </p>
                 </CardHeader>
                 <CardContent>
                     {activeBets.length === 0 ? (
@@ -169,13 +190,12 @@ export default function BetManagement({ }: BetManagementProps) {
                                     <TableHead>Multiplier</TableHead>
                                     <TableHead>Potential Win</TableHead>
                                     <TableHead>Created</TableHead>
-                                    <TableHead>Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {activeBets.map((bet) => (
                                     <TableRow key={bet.id}>
-                                        <TableCell className="font-medium">{bet.user_id.slice(0, 8)}...</TableCell>
+                                        <TableCell className="font-medium">{getUserDisplayName(bet.user_id)}</TableCell>
                                         <TableCell>
                                             {bet.description || 'Match details not available'}
                                         </TableCell>
@@ -186,57 +206,6 @@ export default function BetManagement({ }: BetManagementProps) {
                                         <TableCell>{bet.multiplier}x</TableCell>
                                         <TableCell>{bet.potential_winnings} 🌕</TableCell>
                                         <TableCell>{formatDate(bet.created_at)}</TableCell>
-                                        <TableCell>
-                                            <Dialog open={isDialogOpen && selectedBet?.id === bet.id} onOpenChange={(open: boolean) => {
-                                                setIsDialogOpen(open);
-                                                if (open) {
-                                                    setSelectedBet(bet);
-                                                } else {
-                                                    setSelectedBet(null);
-                                                }
-                                            }}>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="outline" size="sm">
-                                                        Resolve
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Resolve Bet</DialogTitle>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <p className="text-sm text-gray-600 mb-2">Bet Details:</p>
-                                                            <p><strong>Match:</strong> {bet.description || 'Match details not available'}</p>
-                                                            <p><strong>Bet Amount:</strong> {bet.bet_amount} 🌕</p>
-                                                            <p><strong>Multiplier:</strong> {bet.multiplier}x</p>
-                                                            <p><strong>Potential Win:</strong> {bet.potential_winnings} 🌕</p>
-                                                            <p><strong>Prediction:</strong> {formatPrediction(bet.prediction)}</p>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <Button
-                                                                onClick={() => handleUpdateBetStatus(bet.id, 'won', bet.potential_winnings)}
-                                                                className="bg-green-600 hover:bg-green-700"
-                                                            >
-                                                                Mark as Won
-                                                            </Button>
-                                                            <Button
-                                                                onClick={() => handleUpdateBetStatus(bet.id, 'lost')}
-                                                                variant="destructive"
-                                                            >
-                                                                Mark as Lost
-                                                            </Button>
-                                                            <Button
-                                                                onClick={() => handleUpdateBetStatus(bet.id, 'cancelled')}
-                                                                variant="outline"
-                                                            >
-                                                                Cancel Bet
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -268,7 +237,7 @@ export default function BetManagement({ }: BetManagementProps) {
                             <TableBody>
                                 {resolvedBets.map((bet) => (
                                     <TableRow key={bet.id}>
-                                        <TableCell className="font-medium">{bet.user_id.slice(0, 8)}...</TableCell>
+                                        <TableCell className="font-medium">{getUserDisplayName(bet.user_id)}</TableCell>
                                         <TableCell>
                                             {bet.description || 'Match details not available'}
                                         </TableCell>
