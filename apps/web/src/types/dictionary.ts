@@ -159,6 +159,9 @@ export interface Dictionary {
         match?: string;
         matches?: string;
         pleaseSetStakes?: string;
+        pleaseSetStakesMin?: string;
+        pleaseSetStakesForOutrights?: string;
+        pleaseSetStakesForOutrightsGeneric?: string;
         insufficientBalance?: string;
         invalidParlayBet?: string;
         errorPlacingParlayBet?: string;
@@ -196,6 +199,8 @@ export interface Dictionary {
         oneSetPreSelected?: string;
         selectOneSetWinner?: string;
         predictExactScoreForEachSet?: string;
+        noPrediction?: string;
+        errorPlacingBet?: string;
         headToHead?: string;
         losses?: string;
         leads?: string;

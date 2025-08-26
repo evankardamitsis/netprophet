@@ -87,23 +87,23 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     return (
         <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden">
             {/* Compact View - Always visible */}
-            <div className="p-3 sm:p-4 lg:p-5 min-h-[70px] lg:min-h-[80px]">
+            <div className="p-2 sm:p-3 lg:p-4 min-h-[60px] lg:min-h-[70px]">
                 {/* Small screens: Stacked layout */}
                 <div className="lg:hidden">
                     {/* Top row - Tournament info and controls */}
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold text-white truncate mb-1">{details.tournament}</h3>
+                            <h3 className="text-xs font-semibold text-white truncate mb-0.5">{details.tournament}</h3>
                             <p className="text-xs text-gray-400 truncate">{details.round} • {details.surface}</p>
                         </div>
-                        <div className="flex items-center gap-2 ml-3">
+                        <div className="flex items-center gap-1 ml-2">
                             <button
                                 onClick={() => setIsExpanded(!isExpanded)}
-                                className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50"
+                                className="p-1 text-gray-400 hover:text-white transition-colors rounded hover:bg-slate-700/50"
                                 aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                             >
                                 <svg
-                                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -115,55 +115,55 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                     </div>
 
                     {/* Bottom row - Players and odds */}
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="text-center min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="text-left min-w-0">
                             <button
                                 onClick={() => navigateToPlayer(player1Id)}
                                 disabled={!player1Id}
-                                className={`text-sm font-medium truncate mb-1 transition-colors ${player1Id
+                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player1Id
                                     ? 'text-white hover:text-purple-300 cursor-pointer'
                                     : 'text-white cursor-default'
                                     }`}
                             >
                                 {details.player1.name.split(' ')[1]}
                             </button>
-                            <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
+                            <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                         </div>
 
-                        <div className="text-sm text-gray-400 font-bold px-2">{dict?.matches?.vs || 'VS'}</div>
+                        <div className="text-xs text-gray-400 font-bold px-1">{dict?.matches?.vs || 'VS'}</div>
 
-                        <div className="text-center min-w-0">
+                        <div className="text-right min-w-0">
                             <button
                                 onClick={() => navigateToPlayer(player2Id)}
                                 disabled={!player2Id}
-                                className={`text-sm font-medium truncate mb-1 transition-colors ${player2Id
+                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player2Id
                                     ? 'text-white hover:text-purple-300 cursor-pointer'
                                     : 'text-white cursor-default'
                                     }`}
                             >
                                 {details.player2.name.split(' ')[1]}
                             </button>
-                            <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
+                            <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                         </div>
                     </div>
                 </div>
 
                 {/* Large screens: Vertical layout */}
-                <div className="hidden lg:flex lg:flex-col lg:gap-4">
+                <div className="hidden lg:flex lg:flex-col lg:gap-3">
                     {/* Top section - Tournament info and controls */}
                     <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-white mb-1 leading-tight">{details.tournament}</h3>
-                            <p className="text-sm text-gray-400 leading-tight">{details.round} • {details.surface}</p>
+                            <h3 className="text-sm font-semibold text-white mb-1 leading-tight">{details.tournament}</h3>
+                            <p className="text-xs text-gray-400 leading-tight">{details.round} • {details.surface}</p>
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
+                        <div className="flex items-center gap-1 ml-3">
                             <button
                                 onClick={() => setIsExpanded(!isExpanded)}
-                                className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-slate-700/50"
+                                className="p-1 text-gray-400 hover:text-white transition-colors rounded hover:bg-slate-700/50"
                                 aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
                             >
                                 <svg
-                                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                    className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -175,34 +175,34 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                     </div>
 
                     {/* Bottom section - Players and odds */}
-                    <div className="flex flex-col gap-3">
-                        <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-center gap-4">
                             <div className="text-left">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
                                     disabled={!player1Id}
-                                    className={`text-sm font-medium leading-tight transition-colors ${player1Id
+                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player1Id
                                         ? 'text-white hover:text-purple-300 cursor-pointer'
                                         : 'text-white cursor-default'
                                         }`}
                                 >
                                     {details.player1.name}
                                 </button>
-                                <div className="text-sm text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
+                                <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                             </div>
-                            <div className="text-sm text-gray-400 font-bold">{dict?.matches?.vs || 'VS'}</div>
-                            <div className="text-right">
+                            <div className="text-xs text-gray-400 font-bold text-center flex-shrink-0">{dict?.matches?.vs || 'VS'}</div>
+                            <div className="text-left">
                                 <button
                                     onClick={() => navigateToPlayer(player2Id)}
                                     disabled={!player2Id}
-                                    className={`text-sm font-medium leading-tight transition-colors ${player2Id
+                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player2Id
                                         ? 'text-white hover:text-purple-300 cursor-pointer'
                                         : 'text-white cursor-default'
                                         }`}
                                 >
                                     {details.player2.name}
                                 </button>
-                                <div className="text-sm text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
+                                <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                             </div>
                         </div>
                     </div>
@@ -213,19 +213,18 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
             {isExpanded && (
                 <div className="border-t border-slate-700/50 p-2 sm:p-3 lg:p-4 bg-slate-700/20">
                     <div className="space-y-2 lg:space-y-3">
-                        <div className="text-xs sm:text-sm text-gray-400">
+                        <div className="text-xs text-gray-400">
                             {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
                         </div>
-                        <div className="text-xs sm:text-sm text-gray-400">
+                        <div className="text-xs text-gray-400">
                             {dict?.matches?.headToHead || 'H2H'}: {translateHeadToHead(details.headToHead)}
                         </div>
-                        <div className="grid grid-cols-2 gap-4 lg:gap-6 text-xs sm:text-sm">
-                            <div>
-                                <div className="text-gray-400 mb-1">{dict?.matches?.player1 || 'Player 1'}</div>
+                        <div className="grid grid-cols-2 gap-3 lg:gap-4 text-xs">
+                            <div className="text-left">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
                                     disabled={!player1Id}
-                                    className={`text-white font-medium transition-colors ${player1Id
+                                    className={`text-white font-medium text-left transition-colors ${player1Id
                                         ? 'hover:text-purple-300 cursor-pointer'
                                         : 'cursor-default'
                                         }`}
@@ -234,12 +233,11 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                 </button>
                                 <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}</div>
                             </div>
-                            <div>
-                                <div className="text-gray-400 mb-1">{dict?.matches?.player2 || 'Player 2'}</div>
+                            <div className="text-left">
                                 <button
                                     onClick={() => navigateToPlayer(player2Id)}
                                     disabled={!player2Id}
-                                    className={`text-white font-medium transition-colors ${player2Id
+                                    className={`text-white text-left font-medium transition-colors ${player2Id
                                         ? 'hover:text-purple-300 cursor-pointer'
                                         : 'cursor-default'
                                         }`}

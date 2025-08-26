@@ -468,7 +468,7 @@ export function PredictionForm({
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-semibold text-green-300">
+                            <span className="text-xs sm:text-sm font-semibold text-green-300">
                                 {dict?.matches?.multiplierBonus || 'Multiplier Bonus'}
                             </span>
                         </div>
@@ -476,10 +476,10 @@ export function PredictionForm({
                             <span className="text-xs text-green-400">
                                 {dict?.matches?.baseOdds || 'Base'}: {baseOdds.toFixed(2)}x
                             </span>
-                            <span className="text-lg font-bold text-green-300">
+                            <span className="text-sm sm:text-lg font-bold text-green-300">
                                 +{bonusMultiplier.toFixed(2)}x
                             </span>
-                            <span className="text-sm font-bold text-green-200">
+                            <span className="text-xs sm:text-sm font-bold text-green-200">
                                 = {currentMultiplier.toFixed(2)}x
                             </span>
                         </div>

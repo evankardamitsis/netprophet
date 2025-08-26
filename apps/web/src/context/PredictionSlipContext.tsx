@@ -108,12 +108,19 @@ function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
             'winner' in p.prediction &&
             'matchResult' in p.prediction &&
             'set1Score' in p.prediction) {
-            return p as StructuredPredictionItem;
+            // Ensure betAmount is 0 for all predictions (migration from old default of 10)
+            return {
+                ...p,
+                betAmount: 0,
+                potentialWinnings: 0
+            } as StructuredPredictionItem;
         }
 
         // If prediction is a string or missing fields, return empty structured prediction
         return {
             ...p,
+            betAmount: 0,
+            potentialWinnings: 0,
             prediction: {
                 winner: '',
                 matchResult: '',
@@ -161,6 +168,12 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         const stored = loadFromSessionStorage(SESSION_KEYS.SLIP_COLLAPSED, true); // Default to true (collapsed)
         return stored;
     });
+
+    // Clear old predictions on mount to ensure fresh start with 0 bet amounts
+    useEffect(() => {
+        // Clear any old predictions that might have default bet amounts
+        removeFromSessionStorage(SESSION_KEYS.PREDICTIONS);
+    }, []);
 
     // Save predictions to session storage whenever they change
     useEffect(() => {
@@ -221,7 +234,13 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
                 // Replace the existing prediction
                 return prev.map(p => p.matchId === item.matchId ? item : p);
             }
-            return [...prev, item];
+            // Ensure new predictions start with 0 bet amount
+            const newItem = {
+                ...item,
+                betAmount: 0,
+                potentialWinnings: 0
+            };
+            return [...prev, newItem];
         });
         setSlipCollapsed(false); // Open slip if closed
     };

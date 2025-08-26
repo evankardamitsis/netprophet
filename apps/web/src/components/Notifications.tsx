@@ -186,23 +186,29 @@ export function Notifications() {
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold">{dict?.notifications?.title || 'Notifications'}</h3>
                             <div className="flex gap-2">
-                                {notifications.length > 0 && (
+                                {notifications.length > 0 && unreadCount === 0 && (
                                     <Button
                                         variant="outline"
                                         onClick={clearAllNotifications}
-                                        className="text-xs px-3 py-2 text-red-400 hover:text-red-300"
+                                        className="text-xs px-2 py-1 text-red-400 hover:text-red-300"
                                     >
                                         {dict?.notifications?.clearAll || 'Clear all'}
                                     </Button>
                                 )}
                                 {unreadCount > 0 && (
-                                    <Button
-                                        variant="outline"
-                                        onClick={markAllAsRead}
-                                        className="text-xs px-3 py-2 text-blue-400 hover:text-blue-300"
-                                    >
-                                        {dict?.notifications?.markAllRead || 'Mark all read'}
-                                    </Button>
+                                    <div className="relative group">
+                                        <Button
+                                            variant="outline"
+                                            onClick={markAllAsRead}
+                                            className="h-6 w-6 p-0 text-blue-400 hover:text-blue-300"
+                                            title=""
+                                        >
+                                            <Check className="h-3 w-3" />
+                                        </Button>
+                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 overflow-visible">
+                                            {dict?.notifications?.markAllRead || 'Mark all read'}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

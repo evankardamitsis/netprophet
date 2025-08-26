@@ -122,8 +122,13 @@ export default function PlayerDetailPage() {
                             </span>
                         </div>
                     </div>
-                    <div className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium border ${getSurfaceColor(player.surfacePreference)}`}>
-                        {player.surfacePreference}
+                    <div className="text-right">
+                        <div className="text-xs text-gray-400 mb-1">
+                            {dict?.players?.preferredSurface || 'Preferred Surface'}
+                        </div>
+                        <div className={`inline-block px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium border ${getSurfaceColor(player.surfacePreference)}`}>
+                            {player.surfacePreference}
+                        </div>
                     </div>
                 </div>
             </div>

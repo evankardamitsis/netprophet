@@ -96,13 +96,13 @@ export function PredictionSlip({
     // Calculate individual bet totals using existing betAmount from predictions
     const getTotalIndividualStake = () => {
         return predictions.reduce((total, prediction) => {
-            return total + (prediction.betAmount || COIN_CONSTANTS.MIN_BET);
+            return total + (prediction.betAmount || 0);
         }, 0);
     };
 
     const getTotalIndividualWinnings = () => {
         return predictions.reduce((total, prediction) => {
-            return total + (prediction.potentialWinnings || (prediction.betAmount || COIN_CONSTANTS.MIN_BET) * (prediction.multiplier || 1));
+            return total + (prediction.potentialWinnings || (prediction.betAmount || 0) * (prediction.multiplier || 1));
         }, 0);
     };
 
@@ -125,7 +125,7 @@ export function PredictionSlip({
             if (isParlayMode) {
                 // Parlay mode - place single parlay bet
                 if (!parlayValidation?.isValid) {
-                    alert(parlayValidation?.error || 'Invalid parlay bet');
+                    alert(parlayValidation?.error || dict?.matches?.invalidParlayBet || 'Invalid parlay bet');
                     return;
                 }
 
@@ -196,9 +196,9 @@ export function PredictionSlip({
         } catch (error) {
             // Handle insufficient balance or other errors
             if (error instanceof Error) {
-                alert(`Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s): ${error.message}`);
+                alert(dict?.matches?.errorPlacingBet?.replace('{type}', isParlayMode ? 'parlay' : 'individual').replace('{error}', error.message) || `Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s): ${error.message}`);
             } else {
-                alert(`Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s). Please check your balance and try again.`);
+                alert(dict?.matches?.errorPlacingBetCheckBalance?.replace('{type}', isParlayMode ? 'parlay' : 'individual') || `Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s). Please check your balance and try again.`);
             }
         }
     };
@@ -258,7 +258,7 @@ export function PredictionSlip({
     function formatPredictionDisplay(prediction: any) {
         // Handle case where prediction might be undefined or null
         if (!prediction) {
-            return 'No prediction';
+            return dict?.matches?.noPrediction || 'No prediction';
         }
 
         const parts = [];
@@ -271,7 +271,7 @@ export function PredictionSlip({
         if (prediction.set2TieBreakScore) parts.push(`TB2: ${prediction.set2TieBreakScore}`);
         if (prediction.superTieBreakScore) parts.push(`STB: ${prediction.superTieBreakScore}`);
 
-        return parts.length > 0 ? parts.join(' | ') : 'No prediction';
+        return parts.length > 0 ? parts.join(' | ') : (dict?.matches?.noPrediction || 'No prediction');
     }
 
     const handleSafeBetToggle = () => {
@@ -285,7 +285,7 @@ export function PredictionSlip({
     const isIndividualModeValid = () => {
         const totalStake = getTotalIndividualStake();
         // Check that all predictions have stakes >= MIN_BET
-        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || COIN_CONSTANTS.MIN_BET) >= COIN_CONSTANTS.MIN_BET);
+        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) >= COIN_CONSTANTS.MIN_BET);
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
     };
 
@@ -496,24 +496,25 @@ export function PredictionSlip({
                                             <div className="flex justify-between items-center">
                                                 {!isParlayMode && (
                                                     <div className="flex items-center justify-between w-full space-x-2">
-                                                        <div className="flex items-center space-x-2">
-                                                            <span className="text-xs text-slate-300">{dict?.matches?.stake || 'Stake'}:</span>
-                                                            <input
-                                                                type="number"
-                                                                min={COIN_CONSTANTS.MIN_BET}
-                                                                max={wallet.balance}
-                                                                value={item.betAmount || COIN_CONSTANTS.MIN_BET}
-                                                                onChange={(e) => {
-                                                                    const value = parseInt(e.target.value) || COIN_CONSTANTS.MIN_BET;
-                                                                    updatePredictionBetAmount(item.matchId, value);
-                                                                }}
-                                                                className="w-16 px-1.5 py-0.5 text-xs bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                                placeholder={COIN_CONSTANTS.MIN_BET.toString()}
-                                                            />
-                                                            <span className="text-xs text-slate-400">🌕</span>
-                                                        </div>
-                                                        <div className="text-xs text-slate-500 mt-1">
-                                                            (min {COIN_CONSTANTS.MIN_BET})
+                                                        <div className="flex flex-col space-y-1">
+                                                            <span className="text-xs text-slate-300">{dict?.matches?.stake || 'Stake'}</span>
+                                                            <div className="flex items-center space-x-1">
+                                                                <input
+                                                                    type="number"
+                                                                    max={wallet.balance}
+                                                                    value={item.betAmount || ''}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
+                                                                        updatePredictionBetAmount(item.matchId, value);
+                                                                    }}
+                                                                    className="w-16 px-1.5 py-0.5 text-xs bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                                    placeholder="0"
+                                                                />
+                                                                <span className="text-xs text-slate-400">🌕</span>
+                                                            </div>
+                                                            <div className="text-xs text-slate-500">
+                                                                (min {COIN_CONSTANTS.MIN_BET})
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center space-x-3">
                                                             <div className="text-center">
@@ -522,7 +523,7 @@ export function PredictionSlip({
                                                             </div>
                                                             <div className="text-center">
                                                                 <div className="text-xs text-slate-400">{dict?.matches?.potentialWin || 'Win'}</div>
-                                                                <div className="text-xs font-bold text-green-400">{(item.betAmount || COIN_CONSTANTS.MIN_BET) * (item.multiplier || 1)} 🌕</div>
+                                                                <div className="text-xs font-bold text-green-400">{formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} 🌕</div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -670,10 +671,10 @@ export function PredictionSlip({
                             {!isOutrightsModeValid() && (
                                 <div className="text-red-400 text-xs mb-2 text-center">
                                     {outrightsPredictions.some(prediction => (prediction.betAmount || 0) === 0)
-                                        ? (dict?.matches?.pleaseSetStakes || 'Please set stakes for all outrights')
+                                        ? (dict?.matches?.pleaseSetStakesForOutrights || 'Please set stakes for all outrights')
                                         : outrightsPredictions.reduce((total, item) => total + (item.betAmount || 0), 0) > wallet.balance
                                             ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
-                                            : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your outrights')
+                                            : (dict?.matches?.pleaseSetStakesForOutrightsGeneric || 'Please set stakes for your outrights')
                                     }
                                 </div>
                             )}
@@ -775,8 +776,8 @@ export function PredictionSlip({
 
                                 {!isIndividualModeValid() && (
                                     <div className="text-red-400 text-xs mb-2 text-center">
-                                        {predictions.some(prediction => (prediction.betAmount || COIN_CONSTANTS.MIN_BET) < COIN_CONSTANTS.MIN_BET)
-                                            ? (dict?.matches?.pleaseSetStakes || `Please set stakes of at least ${COIN_CONSTANTS.MIN_BET} for all predictions`)
+                                        {predictions.some(prediction => (prediction.betAmount || 0) < COIN_CONSTANTS.MIN_BET)
+                                            ? (dict?.matches?.pleaseSetStakesMin?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()) || `Please set stakes of at least ${COIN_CONSTANTS.MIN_BET} for all predictions`)
                                             : getTotalIndividualStake() > wallet.balance
                                                 ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
                                                 : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions')
