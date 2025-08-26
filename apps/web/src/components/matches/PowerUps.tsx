@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { useWallet } from '@/context/WalletContext';
 import { useAuth } from '@/hooks/useAuth';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { fetchPowerUps, purchasePowerUp, type PowerUp as DBPowerUp } from '@netprophet/lib';
 
 export interface PowerUp {

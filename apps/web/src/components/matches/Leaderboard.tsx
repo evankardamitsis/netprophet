@@ -66,7 +66,7 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
         if (streak === 0) return <span className="text-gray-400">-</span>;
 
         const multiplier = streak >= 5 ? `x${Math.floor(streak / 5) + 1}` : '';
-        const fireCount = Math.min(Math.floor(streak / 3), 3); // Max 3 fires
+        const fireCount = Math.max(0, Math.min(Math.floor(streak / 3), 3)); // Max 3 fires, min 0
         const fires = '🔥'.repeat(fireCount);
 
         return (

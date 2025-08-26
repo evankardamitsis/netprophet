@@ -6,3 +6,4 @@ export { ParlaySummary } from './ParlaySummary';
 export { PredictionCard } from './PredictionCard';
 export { SubmitSection } from './SubmitSection';
 export { EmptyState } from './EmptyState';
+export { DoublePointsMatchPowerUp } from './DoublePointsMatchPowerUp';

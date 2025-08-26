@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { stripePromise } from '@/lib/stripe';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface UseStripePaymentReturn {
   isProcessing: boolean;

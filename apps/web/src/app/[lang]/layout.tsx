@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { Toaster } from 'react-hot-toast'
+import { Toaster } from 'sonner'
 import { ReactNode } from 'react'
 import { Providers } from '../../components/Providers'
 import { PredictionSlipProvider } from '../../context/PredictionSlipContext'
@@ -47,26 +47,9 @@ export default async function LocaleLayout({
                 </Providers>
                 <Toaster
                     position="bottom-right"
-                    toastOptions={{
-                        duration: 3000,
-                        style: {
-                            background: '#1A1A1A',
-                            color: '#fff',
-                            border: '1px solid #2A2A2A',
-                        },
-                        success: {
-                            iconTheme: {
-                                primary: '#10B981',
-                                secondary: '#fff',
-                            },
-                        },
-                        error: {
-                            iconTheme: {
-                                primary: '#EF4444',
-                                secondary: '#fff',
-                            },
-                        },
-                    }}
+                    duration={3000}
+                    theme="dark"
+                    richColors
                 />
             </body>
         </html>

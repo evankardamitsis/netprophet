@@ -526,3 +526,96 @@ export async function applySafeSlipPowerUp(
         };
     }
 }
+
+// Check if user has Double Points Match power-up
+export async function hasDoublePointsMatchPowerUp(userId: string): Promise<boolean> {
+    try {
+        const { data, error } = await supabase
+            .from('user_power_ups')
+            .select('quantity')
+            .eq('user_id', userId)
+            .eq('power_up_id', 'doubleXP')
+            .gt('quantity', 0);
+
+        if (error || !data || data.length === 0) {
+            return false;
+        }
+
+        return data[0].quantity > 0;
+    } catch (error) {
+        console.error('Error checking Double Points Match power-up:', error);
+        return false;
+    }
+}
+
+// Use Double Points Match power-up
+export async function applyDoublePointsMatchPowerUp(
+    userId: string,
+    matchId: string
+): Promise<{ success: boolean; message: string }> {
+    try {
+        // Check if user has the power-up
+        const { data: userPowerUp, error: fetchError } = await supabase
+            .from('user_power_ups')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('power_up_id', 'doubleXP')
+            .gt('quantity', 0)
+            .single();
+
+        if (fetchError || !userPowerUp) {
+            return {
+                success: false,
+                message: 'You don\'t have Double Points Match power-up available'
+            };
+        }
+
+        // Decrease quantity
+        const { error: updateError } = await supabase
+            .from('user_power_ups')
+            .update({ 
+                quantity: userPowerUp.quantity - 1,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userPowerUp.id);
+
+        if (updateError) {
+            return {
+                success: false,
+                message: 'Failed to use Double Points Match power-up'
+            };
+        }
+
+        // Log the usage
+        const { error: logError } = await supabase
+            .from('power_up_usage_log')
+            .insert({
+                user_id: userId,
+                power_up_id: 'doubleXP',
+                match_id: matchId,
+                effect_applied: {
+                    used_at: new Date().toISOString(),
+                    match_id: matchId,
+                    power_up_type: 'doubleXP',
+                    effect: 'double_points'
+                }
+            });
+
+        if (logError) {
+            console.error('Error logging Double Points Match usage:', logError);
+            // Don't fail the operation if logging fails
+        }
+
+        return {
+            success: true,
+            message: 'Successfully applied Double Points Match power-up! 🎯'
+        };
+
+    } catch (error) {
+        console.error('Error using Double Points Match power-up:', error);
+        return {
+            success: false,
+            message: 'Failed to use Double Points Match power-up'
+        };
+    }
+}

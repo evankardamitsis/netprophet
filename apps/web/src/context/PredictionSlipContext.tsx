@@ -108,19 +108,19 @@ function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
             'winner' in p.prediction &&
             'matchResult' in p.prediction &&
             'set1Score' in p.prediction) {
-            // Ensure betAmount is 0 for all predictions (migration from old default of 10)
+            // Preserve existing betAmount and potentialWinnings if they exist
             return {
                 ...p,
-                betAmount: 0,
-                potentialWinnings: 0
+                betAmount: p.betAmount || 0,
+                potentialWinnings: p.potentialWinnings || 0
             } as StructuredPredictionItem;
         }
 
         // If prediction is a string or missing fields, return empty structured prediction
         return {
             ...p,
-            betAmount: 0,
-            potentialWinnings: 0,
+            betAmount: p.betAmount || 0,
+            potentialWinnings: p.potentialWinnings || 0,
             prediction: {
                 winner: '',
                 matchResult: '',
@@ -169,11 +169,7 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         return stored;
     });
 
-    // Clear old predictions on mount to ensure fresh start with 0 bet amounts
-    useEffect(() => {
-        // Clear any old predictions that might have default bet amounts
-        removeFromSessionStorage(SESSION_KEYS.PREDICTIONS);
-    }, []);
+    // No longer clearing predictions on mount - we want to persist the state
 
     // Save predictions to session storage whenever they change
     useEffect(() => {
@@ -231,14 +227,20 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         setPredictions(prev => {
             const exists = prev.find(p => p.matchId === item.matchId);
             if (exists) {
-                // Replace the existing prediction
-                return prev.map(p => p.matchId === item.matchId ? item : p);
+                // Replace the existing prediction, but preserve bet amount if not provided
+                const existingBetAmount = exists.betAmount || 0;
+                const existingPotentialWinnings = exists.potentialWinnings || 0;
+                return prev.map(p => p.matchId === item.matchId ? {
+                    ...item,
+                    betAmount: item.betAmount !== undefined ? item.betAmount : existingBetAmount,
+                    potentialWinnings: item.potentialWinnings !== undefined ? item.potentialWinnings : existingPotentialWinnings
+                } : p);
             }
-            // Ensure new predictions start with 0 bet amount
+            // For new predictions, preserve any bet amount that was passed in
             const newItem = {
                 ...item,
-                betAmount: 0,
-                potentialWinnings: 0
+                betAmount: item.betAmount || 0,
+                potentialWinnings: item.potentialWinnings || 0
             };
             return [...prev, newItem];
         });

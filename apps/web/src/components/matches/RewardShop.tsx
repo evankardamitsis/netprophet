@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/context/WalletContext';
 import { useSearchParams } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
     RewardShopHeader,
     CoinTopUpSection,

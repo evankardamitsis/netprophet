@@ -15,11 +15,13 @@ import {
     validateParlayBet,
     PARLAY_CONSTANTS,
     hasSafeSlipPowerUp,
-    applySafeSlipPowerUp
+    applySafeSlipPowerUp,
+    hasDoublePointsMatchPowerUp as checkDoublePointsMatch,
+    applyDoublePointsMatchPowerUp
 } from '@netprophet/lib';
 import { COIN_CONSTANTS } from '@/context/WalletContext';
 import { PredictionItem } from '@/types/dashboard';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 // BetsService will be imported dynamically in handleSubmit
 import {
     SESSION_KEYS,
@@ -30,7 +32,6 @@ import {
 // Import the smaller components
 import { ParlayModeToggle } from './ParlayModeToggle';
 import { SafeSlipPowerUps } from './SafeSlipPowerUps';
-import { ParlaySummary } from './ParlaySummary';
 import { PredictionCard } from './PredictionCard';
 import { SubmitSection } from './SubmitSection';
 import { EmptyState } from './EmptyState';
@@ -64,15 +65,17 @@ export function PredictionSlip({
 
     // Parlay state
     const [isParlayMode, setIsParlayMode] = useState<boolean>(false);
-    const [isSafeBet, setIsSafeBet] = useState<boolean>(false);
     const [userStreak, setUserStreak] = useState<number>(5); // Mock user streak - in real app this would come from user stats
-    const [safeBetTokens, setSafeBetTokens] = useState<number>(3); // Mock safe bet tokens
 
     // Safe slip power-up state
     const [hasSafeParlayPowerUp, setHasSafeParlayPowerUp] = useState<boolean>(false);
     const [hasSafeSinglePowerUp, setHasSafeSinglePowerUp] = useState<boolean>(false);
     const [isUsingSafeParlay, setIsUsingSafeParlay] = useState<boolean>(false);
     const [isUsingSafeSingle, setIsUsingSafeSingle] = useState<boolean>(false);
+
+    // Double Points Match power-up state
+    const [hasDoublePointsMatchPowerUp, setHasDoublePointsMatchPowerUp] = useState<boolean>(false);
+    const [doublePointsMatchId, setDoublePointsMatchId] = useState<string | null>(null);
 
     // Reset parlay mode if less than 2 predictions
     useEffect(() => {
@@ -81,30 +84,32 @@ export function PredictionSlip({
         }
     }, [predictions.length, isParlayMode]);
 
-    // Check for safe slip power-ups
+    // Check for power-ups
     useEffect(() => {
-        const checkSafeSlipPowerUps = async () => {
+        const checkPowerUps = async () => {
             try {
                 const userId = user?.id;
                 if (!userId) return;
 
-                const [hasParlay, hasSingle] = await Promise.all([
+                const [hasParlay, hasSingle, hasDoublePoints] = await Promise.all([
                     hasSafeSlipPowerUp(userId, 'safeParlay'),
-                    hasSafeSlipPowerUp(userId, 'safeSingle')
+                    hasSafeSlipPowerUp(userId, 'safeSingle'),
+                    checkDoublePointsMatch(userId)
                 ]);
 
                 setHasSafeParlayPowerUp(hasParlay);
                 setHasSafeSinglePowerUp(hasSingle);
+                setHasDoublePointsMatchPowerUp(hasDoublePoints);
             } catch (error) {
-                console.error('Error checking safe slip power-ups:', error);
+                console.error('Error checking power-ups:', error);
             }
         };
 
-        checkSafeSlipPowerUps();
+        checkPowerUps();
 
         // Listen for power-up refresh events
         const handlePowerUpRefresh = () => {
-            checkSafeSlipPowerUps();
+            checkPowerUps();
         };
 
         window.addEventListener('refreshPowerUps', handlePowerUpRefresh);
@@ -139,9 +144,8 @@ export function PredictionSlip({
     const parlayStake = getTotalIndividualStake();
 
     // Calculate parlay odds and winnings (only when in parlay mode)
-    const parlayCalculation = isParlayMode ? calculateParlayOdds(predictionItems, parlayStake, userStreak, isSafeBet) : null;
+    const parlayCalculation = isParlayMode ? calculateParlayOdds(predictionItems, parlayStake, userStreak) : null;
     const bonusDescriptions = isParlayMode ? getBonusDescription(predictionItems, userStreak) : [];
-    const safeBetCost = isParlayMode ? calculateSafeBetCost(predictions.length) : 0;
     const parlayValidation = isParlayMode ? validateParlayBet(predictionItems, parlayStake, wallet.balance) : null;
 
     const handleSubmit = async () => {
@@ -172,8 +176,8 @@ export function PredictionSlip({
                     finalOdds: parlayCalculation!.finalOdds,
                     bonusMultiplier: parlayCalculation!.bonusMultiplier,
                     streakBooster: parlayCalculation!.streakBooster,
-                    isSafeBet: isSafeBet,
-                    safeBetCost: safeBetCost
+                    isSafeBet: false,
+                    safeBetCost: 0
                 });
 
                 // Use safe parlay power-up if enabled
@@ -187,6 +191,17 @@ export function PredictionSlip({
                     }
                 }
 
+                // Use Double Points Match power-up if enabled for parlay (apply to the selected match)
+                if (doublePointsMatchId && user?.id) {
+                    try {
+                        await applyDoublePointsMatchPowerUp(user.id, doublePointsMatchId);
+                        toast.success('Double Points Match power-up applied! 🎯');
+                    } catch (powerUpError) {
+                        console.error('Error using Double Points Match power-up:', powerUpError);
+                        // Don't fail the bet placement if power-up usage fails
+                    }
+                }
+
                 // Update wallet balance
                 await placeBet(
                     parlayStake,
@@ -194,10 +209,7 @@ export function PredictionSlip({
                     `${dict?.matches?.parlayBetDescription?.replace('{count}', predictionItems.length.toString()).replace('{odds}', formatParlayOdds(parlayCalculation!.finalOdds)) || `Parlay bet - ${predictionItems.length} predictions - ${formatParlayOdds(parlayCalculation!.finalOdds)}x odds`}`
                 );
 
-                // Use safe bet token if enabled
-                if (isSafeBet) {
-                    setSafeBetTokens(prev => prev - 1);
-                }
+
             } else {
                 // Individual mode - place separate bets for each prediction using existing betAmount
                 for (const prediction of predictions) {
@@ -226,6 +238,17 @@ export function PredictionSlip({
                             }
                         }
 
+                        // Use Double Points Match power-up if enabled for this specific match
+                        if (doublePointsMatchId === prediction.matchId && user?.id) {
+                            try {
+                                await applyDoublePointsMatchPowerUp(user.id, prediction.matchId);
+                                toast.success('Double Points Match power-up applied! 🎯');
+                            } catch (powerUpError) {
+                                console.error('Error using Double Points Match power-up:', powerUpError);
+                                // Don't fail the bet placement if power-up usage fails
+                            }
+                        }
+
                         // Update wallet balance
                         await placeBet(
                             betAmount,
@@ -245,6 +268,7 @@ export function PredictionSlip({
             // Reset safe slip power-up states
             setIsUsingSafeParlay(false);
             setIsUsingSafeSingle(false);
+            setDoublePointsMatchId(null);
 
         } catch (error) {
             // Handle insufficient balance or other errors
@@ -327,15 +351,16 @@ export function PredictionSlip({
         return parts.length > 0 ? parts.join(' | ') : (dict?.matches?.noPrediction || 'No prediction');
     }
 
-    const handleSafeBetToggle = () => {
-        if (!isSafeBet && safeBetTokens < safeBetCost) {
-            alert(`You need ${safeBetCost} safe bet tokens to use this feature. You have ${safeBetTokens}.`);
-            return;
-        }
-        setIsSafeBet(!isSafeBet);
-    };
+
 
     const isIndividualModeValid = () => {
+        const totalStake = getTotalIndividualStake();
+        // Check that all predictions have stakes >= MIN_BET
+        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) >= COIN_CONSTANTS.MIN_BET);
+        return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
+    };
+
+    const isParlayModeValid = () => {
         const totalStake = getTotalIndividualStake();
         // Check that all predictions have stakes >= MIN_BET
         const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) >= COIN_CONSTANTS.MIN_BET);
@@ -419,17 +444,27 @@ export function PredictionSlip({
                             isParlayMode={isParlayMode}
                         />
 
-                        {/* Parlay Summary - Only show when in parlay mode */}
-                        <ParlaySummary
-                            predictionsCount={predictions.length}
-                            parlayCalculation={parlayCalculation}
-                            parlayStake={parlayStake}
-                            isSafeBet={isSafeBet}
-                            safeBetTokens={safeBetTokens}
-                            safeBetCost={safeBetCost}
-                            onToggleSafeBet={handleSafeBetToggle}
-                            dict={dict}
-                        />
+                        {/* Double Points Match Power-up Status */}
+                        {hasDoublePointsMatchPowerUp && doublePointsMatchId && (
+                            <motion.div
+                                className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg p-2 border border-purple-500/30"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-lg">🎯</span>
+                                    <div className="text-white text-xs">
+                                        <span className="font-semibold">
+                                            Double Points Match power-up applied
+                                        </span> - Single use per slip
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+
+
 
                         {/* Individual Predictions */}
                         <AnimatePresence>
@@ -444,6 +479,15 @@ export function PredictionSlip({
                                     onUpdateBetAmount={updatePredictionBetAmount}
                                     formatPredictionDisplay={formatPredictionDisplay}
                                     dict={dict}
+                                    hasDoublePointsMatchPowerUp={hasDoublePointsMatchPowerUp && (doublePointsMatchId === null || doublePointsMatchId === item.matchId)}
+                                    isUsingDoublePointsMatch={doublePointsMatchId === item.matchId}
+                                    onToggleDoublePointsMatch={(matchId) => {
+                                        if (doublePointsMatchId === matchId) {
+                                            setDoublePointsMatchId(null);
+                                        } else {
+                                            setDoublePointsMatchId(matchId);
+                                        }
+                                    }}
                                 />
                             ))}
                         </AnimatePresence>
@@ -463,8 +507,10 @@ export function PredictionSlip({
                     totalIndividualWinnings={getTotalIndividualWinnings()}
                     walletBalance={wallet.balance}
                     isIndividualModeValid={isIndividualModeValid()}
+                    isParlayModeValid={isParlayModeValid()}
                     onSubmit={handleSubmit}
                     dict={dict}
+                    doublePointsMatchId={doublePointsMatchId}
                 />
             </AnimatePresence>
         </motion.div>

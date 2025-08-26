@@ -20,7 +20,21 @@ export interface PredictionItem {
         status: string;
         isLocked: boolean;
     };
-    prediction: string;
+    prediction: string | {
+        winner?: string;
+        matchResult?: string;
+        set1Score?: string;
+        set2Score?: string;
+        set3Score?: string;
+        set4Score?: string;
+        set5Score?: string;
+        set1Winner?: string;
+        set2Winner?: string;
+        set3Winner?: string;
+        set4Winner?: string;
+        set5Winner?: string;
+        [key: string]: any;
+    };
     points: number;
 }
 
@@ -38,17 +52,29 @@ export const PARLAY_CONSTANTS = {
  * Calculate the odds for a specific prediction based on the selected outcome
  */
 export function calculatePredictionOdds(prediction: PredictionItem): number {
-    // For now, we'll use the player odds based on the prediction
-    // In a real implementation, this would be more complex based on the specific prediction type
+    // Handle both string and object prediction formats
+    let winner: string | null = null;
     
-    const predictionText = prediction.prediction.toLowerCase();
-    const player1Name = prediction.match.player1.name.toLowerCase();
-    const player2Name = prediction.match.player2.name.toLowerCase();
+    if (typeof prediction.prediction === 'string') {
+        // Legacy string format - try to extract winner from text
+        const predictionText = prediction.prediction.toLowerCase();
+        const player1Name = prediction.match.player1.name.toLowerCase();
+        const player2Name = prediction.match.player2.name.toLowerCase();
+        
+        if (predictionText.includes(player1Name.split(' ')[1]?.toLowerCase() || '')) {
+            winner = prediction.match.player1.name;
+        } else if (predictionText.includes(player2Name.split(' ')[1]?.toLowerCase() || '')) {
+            winner = prediction.match.player2.name;
+        }
+    } else if (prediction.prediction && typeof prediction.prediction === 'object') {
+        // Structured object format - use winner field
+        winner = prediction.prediction.winner || null;
+    }
     
-    // Simple logic to determine which player's odds to use
-    if (predictionText.includes(player1Name.split(' ')[1]?.toLowerCase() || '')) {
+    // Return odds based on winner
+    if (winner === prediction.match.player1.name) {
         return prediction.match.player1.odds;
-    } else if (predictionText.includes(player2Name.split(' ')[1]?.toLowerCase() || '')) {
+    } else if (winner === prediction.match.player2.name) {
         return prediction.match.player2.odds;
     }
     

@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { BetsService, TransactionsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
 import { DailyRewardsService, WalletOperationsService, supabase, DAILY_REWARDS_CONSTANTS } from '@netprophet/lib';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -420,7 +420,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
 
     const claimWelcomeBonus = async (): Promise<number> => {
-        let loadingToast: string | undefined;
+        let loadingToast: string | number | undefined;
         try {
             loadingToast = toast.loading(dict?.toast?.claimingWelcomeBonus || 'Claiming welcome bonus...');
 
