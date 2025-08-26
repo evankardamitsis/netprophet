@@ -4,7 +4,6 @@ export interface DailyRewardStatus {
   can_claim: boolean;
   current_streak: number;
   next_reward_amount: number;
-  welcome_bonus_available: boolean;
 }
 
 export interface DailyRewardClaim {

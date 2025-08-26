@@ -57,7 +57,7 @@ interface WalletContextType {
 }
 
 const defaultWallet: UserWallet = {
-    balance: 1000, // Starting balance
+    balance: 0, // Starting balance - users get welcome bonus instead
     totalWinnings: 0,
     totalLosses: 0,
     netProfit: 0,
@@ -156,7 +156,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 setWallet(prevWallet => {
                     const updatedWallet = {
                         ...prevWallet,
-                        balance: profile.balance || 1000, // Default to 1000 if null
+                        balance: profile.balance || 0, // Default to 0 if null
                         dailyLoginStreak: profile.daily_login_streak || 0,
                         hasReceivedWelcomeBonus: profile.has_received_welcome_bonus || false,
                     };
@@ -195,7 +195,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             console.error('Failed to load bet stats:', error);
             toast.error(dict?.toast?.failedToLoadBetStats || 'Failed to load bet stats');
         }
-    }, [user, dict?.toast?.failedToLoadBetStats]);
+    }, [dict?.toast?.failedToLoadBetStats]);
 
     const loadTransactions = useCallback(async () => {
         try {
@@ -224,7 +224,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             console.error('Failed to load transactions:', error);
             toast.error(dict?.toast?.failedToLoadTransactions || 'Failed to load transactions');
         }
-    }, [user, dict?.toast?.failedToLoadTransactions]);
+    }, [dict?.toast?.failedToLoadTransactions]);
 
     // Load bet statistics and transactions from database on mount
     useEffect(() => {

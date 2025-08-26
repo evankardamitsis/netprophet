@@ -4,6 +4,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// Daily rewards constants - centralized configuration
+const DAILY_REWARDS_CONSTANTS = {
+  // Daily login reward (given every day)
+  DAILY_LOGIN_REWARD: 30,
+  
+  // Welcome bonus (given only once to new users)
+  WELCOME_BONUS: 100,
+  
+  // 7-day streak bonus (given every 7th consecutive day)
+  SEVEN_DAY_STREAK_BONUS: 100,
+  
+  // Streak milestone interval (every X days)
+  STREAK_MILESTONE_INTERVAL: 7,
+} as const;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -137,12 +152,12 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 
   if (!profile) {
     console.log('No profile found, creating one with default balance')
-    // Create profile with default balance
+    // Create profile with 0 balance - users get welcome bonus instead
     const { data: newProfile, error: createError } = await supabase
       .from('profiles')
       .insert({
         id: user.id,
-        balance: 1000,
+        balance: 0,
         daily_login_streak: 0,
         has_received_welcome_bonus: false,
         total_winnings: 0,
@@ -175,7 +190,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
   }
 
   // Update balance and create transaction
-  const currentBalance = profile ? profile.balance : 1000
+  const currentBalance = profile ? profile.balance : 0
   const newBalance = currentBalance - amount
   
   const { error: updateError } = await supabase
@@ -223,7 +238,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 
 async function handleClaimWelcomeBonus(supabase: any, user: any) {
   console.log('handleClaimWelcomeBonus called for user:', user.id)
-      const bonus = 200 // Welcome bonus amount
+      const bonus = DAILY_REWARDS_CONSTANTS.WELCOME_BONUS // Use centralized constant
 
   try {
     // Get current profile
@@ -250,7 +265,7 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
       throw new Error('Welcome bonus already claimed')
     }
 
-    const currentBalance = profile.balance || 1000
+    const currentBalance = profile.balance || 0
     const newBalance = currentBalance + bonus
 
     console.log('Updating balance:', { currentBalance, newBalance })
@@ -314,7 +329,7 @@ async function handleAddReferralBonus(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`)
   }
 
-  const currentBalance = profile?.balance || 1000
+  const currentBalance = profile?.balance || 0
   const currentReferralBonus = profile?.referral_bonus_earned || 0
   const newBalance = currentBalance + amount
   const newReferralBonus = currentReferralBonus + amount
@@ -372,7 +387,7 @@ async function handleAddLeaderboardPrize(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`)
   }
 
-  const currentBalance = profile?.balance || 1000
+  const currentBalance = profile?.balance || 0
   const currentLeaderboardPrizes = profile?.leaderboard_prizes_earned || 0
   const newBalance = currentBalance + amount
   const newLeaderboardPrizes = currentLeaderboardPrizes + amount
@@ -430,7 +445,7 @@ async function handlePurchaseItem(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`)
   }
 
-  const currentBalance = profile?.balance || 1000
+  const currentBalance = profile?.balance || 0
 
   if (currentBalance < cost) {
     throw new Error('Insufficient balance')
@@ -488,7 +503,7 @@ async function handleEnterTournament(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`)
   }
 
-  const currentBalance = profile?.balance || 1000
+  const currentBalance = profile?.balance || 0
 
   if (currentBalance < cost) {
     throw new Error('Insufficient balance')
@@ -546,7 +561,7 @@ async function handleUnlockInsight(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`)
   }
 
-  const currentBalance = profile?.balance || 1000
+  const currentBalance = profile?.balance || 0
 
   if (currentBalance < cost) {
     throw new Error('Insufficient balance')
@@ -605,7 +620,7 @@ async function handleRecordWin(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`)
   }
 
-  const currentBalance = profile?.balance || 1000
+  const currentBalance = profile?.balance || 0
   const currentTotalWinnings = profile?.total_winnings || 0
   const currentWonBets = profile?.won_bets || 0
   const newBalance = currentBalance + winnings
