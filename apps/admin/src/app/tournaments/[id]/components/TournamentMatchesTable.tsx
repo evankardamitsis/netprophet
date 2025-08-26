@@ -73,7 +73,12 @@ export function TournamentMatchesTable({
     selectedMatches,
     onSelectionChange
 }: TournamentMatchesTableProps) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [sorting, setSorting] = React.useState<SortingState>([
+        {
+            id: "start_time",
+            desc: true
+        }
+    ]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});

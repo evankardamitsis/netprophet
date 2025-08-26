@@ -54,12 +54,23 @@ export function useAuth() {
       }
     };
 
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.warn('Admin useAuth: Loading timeout reached, forcing loading to false');
+      setLoading(false);
+    }, 10000); // 10 second timeout
+
     getSession();
+
+    return () => clearTimeout(timeoutId);
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Admin useAuth: Auth state change:', event, session?.user?.email);
+        
+        // Set loading to true when auth state changes
+        setLoading(true);
         
         if (session?.user) {
           // Check if user is admin
@@ -89,6 +100,8 @@ export function useAuth() {
         } else {
           setUser(null);
         }
+        
+        // Set loading to false after processing
         setLoading(false);
       }
     );

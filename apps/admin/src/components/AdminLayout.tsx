@@ -29,6 +29,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         }
     }, [user, loading, router, isAuthPage]);
 
+    // Reset sidebar state on route change
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [pathname]);
+
 
 
     const handleSignOut = async () => {
@@ -92,7 +97,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     />
 
                     {/* Page content */}
-                    <main className="flex-1 overflow-y-auto p-6">
+                    <main key={pathname} className="flex-1 overflow-y-auto p-6">
                         {children}
                     </main>
                 </div>
