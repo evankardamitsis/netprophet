@@ -62,12 +62,16 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
 
         fetchCoinPacks();
     }, []);
+
     return (
-        <div className="space-y-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className="text-2xl">💳</span>
-                Coin Top-Up Packs
-            </h3>
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="text-center space-y-3">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
+                    Coin Top-Up Packs
+                </h3>
+                <p className="text-gray-400 text-md">Purchase coins to unlock powerful upgrades and boost your prediction performance</p>
+            </div>
 
             {loading ? (
                 <div className="text-center py-8">
@@ -79,14 +83,23 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-4">
-                    {coinPacks.map((pack) => {
+                    {coinPacks.map((pack, index) => {
                         const totalCoins = pack.baseCoins + pack.bonusCoins;
                         const valueRatio = totalCoins / pack.priceEuro;
                         const isBestValue = valueRatio === Math.max(...coinPacks.map(p => (p.baseCoins + p.bonusCoins) / p.priceEuro));
                         const isProPack = pack.id === 'pro';
 
+                        // Mobile layout: first row 2 cols, second row full width, third row 2 cols
+                        const getMobileLayoutClass = () => {
+                            if (index === 2) {
+                                // Third item (index 2) takes full width on mobile
+                                return 'col-span-2 md:col-span-1 lg:col-span-1 xl:col-span-1';
+                            }
+                            return 'col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-1';
+                        };
+
                         return (
-                            <Card key={pack.id} className={`group relative overflow-hidden border-2 transition-all duration-500 hover:scale-105 cursor-pointer bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-600/50 backdrop-blur-sm ${isBestValue ? 'border-yellow-400/80 shadow-2xl shadow-yellow-400/20' : 'hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10'} ${isProPack ? 'col-span-2 md:col-span-1 lg:col-span-1 xl:col-span-1' : ''}`}>
+                            <Card key={pack.id} className={`group relative overflow-hidden border-2 transition-all duration-500 hover:scale-105 cursor-pointer bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-slate-600/50 backdrop-blur-sm ${isBestValue ? 'border-yellow-400/80 shadow-2xl shadow-yellow-400/20' : 'hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10'} ${getMobileLayoutClass()}`}>
                                 {/* Background gradient overlay */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${isBestValue ? 'from-yellow-400/5 to-orange-500/5' : 'from-purple-500/5 to-blue-500/5'} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
 

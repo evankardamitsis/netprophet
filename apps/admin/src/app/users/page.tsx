@@ -163,20 +163,36 @@ export default function UsersPage() {
         setEditLoading(true);
         setEditError(null);
         setEditSuccess(false);
-        const { id, username, is_admin, suspended } = editUser;
-        const { error } = await supabase
-            .from('profiles')
-            .update({ username: username ?? '', is_admin, suspended })
-            .eq('id', id);
-        if (error) {
-            setEditError(error.message);
-            toast.error('Failed to update user: ' + error.message);
-        } else {
-            setEditSuccess(true);
-            setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, username, is_admin, suspended } : u)));
-            toast.success('User updated!');
-            setTimeout(() => setEditUser(null), 1000);
+        const { id, username, is_admin, suspended, balance } = editUser;
+
+
+        try {
+            const response = await fetch('/api/admin/update-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id, username, is_admin, suspended, balance }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                console.error('Update error:', result.error);
+                setEditError(result.error);
+                toast.error('Failed to update user: ' + result.error);
+            } else {
+                setEditSuccess(true);
+                setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, username, is_admin, suspended, balance } : u)));
+                toast.success('User updated!');
+                setTimeout(() => setEditUser(null), 1000);
+            }
+        } catch (error) {
+            console.error('API call error:', error);
+            setEditError('Failed to connect to server');
+            toast.error('Failed to update user: Network error');
         }
+
         setEditLoading(false);
     };
 

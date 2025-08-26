@@ -2,9 +2,10 @@ import { useWallet } from '@/context/WalletContext';
 
 interface RewardShopHeaderProps {
     userPoints?: number;
+    onInfoClick?: () => void;
 }
 
-export function RewardShopHeader({ userPoints = 1250 }: RewardShopHeaderProps) {
+export function RewardShopHeader({ userPoints = 1250, onInfoClick }: RewardShopHeaderProps) {
     const { wallet } = useWallet();
     const actualBalance = wallet?.balance ?? userPoints;
 
@@ -14,8 +15,21 @@ export function RewardShopHeader({ userPoints = 1250 }: RewardShopHeaderProps) {
             <div className="relative">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-3xl font-bold mb-2">🎁 Reward Shop</h2>
-                        <p className="text-blue-100">Redeem your points for exclusive rewards and premium features</p>
+                        <div className="flex items-center gap-3 mb-2">
+                            <h2 className="text-3xl font-bold">🎁 Reward Shop</h2>
+                            {onInfoClick && (
+                                <button
+                                    onClick={onInfoClick}
+                                    className="text-blue-100 hover:text-white transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    title="How the Reward Shop Works"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-blue-100">Redeem your Coins for exclusive rewards and premium features</p>
                     </div>
                     <div className="text-right">
                         <div className="text-blue-100 text-sm">Your Balance</div>

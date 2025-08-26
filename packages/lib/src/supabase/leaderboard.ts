@@ -1,4 +1,5 @@
 import { supabase } from './client';
+import { hasActiveStreakMultiplier } from './powerUps';
 
 export interface LeaderboardEntry {
     userId: string;
@@ -11,6 +12,7 @@ export interface LeaderboardEntry {
     totalPicks: number;
     accuracyPercentage: number;
     rank: number;
+    hasActiveStreakMultiplier?: boolean;
 }
 
 export interface UserStats {
@@ -34,7 +36,7 @@ export class LeaderboardService {
     /**
      * Calculate leaderboard points for a user
      */
-    private static calculatePoints(wonBets: any[]): number {
+    private static async calculatePoints(wonBets: any[], userId?: string): Promise<number> {
         let totalPoints = 0;
         
         for (const bet of wonBets) {
@@ -49,6 +51,14 @@ export class LeaderboardService {
             // Bonus points for parlay wins
             if (bet.is_parlay && bet.parlay_final_odds > 1.0) {
                 totalPoints += Math.floor(bet.parlay_final_odds * 10);
+            }
+        }
+
+        // Apply streak multiplier power-up if active
+        if (userId) {
+            const hasStreakMultiplier = await hasActiveStreakMultiplier(userId);
+            if (hasStreakMultiplier) {
+                totalPoints = Math.floor(totalPoints * 1.5); // 1.5x multiplier
             }
         }
         
@@ -138,18 +148,27 @@ export class LeaderboardService {
         // The function returns an array, so we need to slice it for the limit
         const limitedStats = (weeklyStats || []).slice(0, limit);
 
-        return limitedStats.map((entry: any, index: number) => ({
-            userId: entry.user_id,
-            username: entry.username,
-            avatarUrl: entry.avatar_url,
-            totalPoints: entry.leaderboard_points || 0,
-            currentStreak: entry.current_winning_streak || 0,
-            bestStreak: entry.best_winning_streak || 0,
-            correctPicks: entry.total_correct_picks || 0,
-            totalPicks: entry.total_picks || 0,
-            accuracyPercentage: entry.accuracy_percentage || 0,
-            rank: index + 1
-        }));
+        // Check for active streak multipliers for all users
+        const entriesWithPowerUps = await Promise.all(
+            limitedStats.map(async (entry: any, index: number) => {
+                const hasStreakMultiplier = await hasActiveStreakMultiplier(entry.user_id);
+                return {
+                    userId: entry.user_id,
+                    username: entry.username,
+                    avatarUrl: entry.avatar_url,
+                    totalPoints: entry.leaderboard_points || 0,
+                    currentStreak: entry.current_winning_streak || 0,
+                    bestStreak: entry.best_winning_streak || 0,
+                    correctPicks: entry.total_correct_picks || 0,
+                    totalPicks: entry.total_picks || 0,
+                    accuracyPercentage: entry.accuracy_percentage || 0,
+                    rank: index + 1,
+                    hasActiveStreakMultiplier: hasStreakMultiplier
+                };
+            })
+        );
+
+        return entriesWithPowerUps;
     }
 
     /**
@@ -171,18 +190,27 @@ export class LeaderboardService {
             throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
         }
 
-        return (profiles || []).map((profile, index) => ({
-            userId: profile.id,
-            username: profile.username,
-            avatarUrl: profile.avatar_url,
-            totalPoints: profile.leaderboard_points || 0,
-            currentStreak: profile.current_winning_streak || 0,
-            bestStreak: profile.best_winning_streak || 0,
-            correctPicks: profile.total_correct_picks || 0,
-            totalPicks: profile.total_picks || 0,
-            accuracyPercentage: profile.accuracy_percentage || 0,
-            rank: index + 1
-        }));
+        // Check for active streak multipliers for all users
+        const entriesWithPowerUps = await Promise.all(
+            (profiles || []).map(async (profile, index) => {
+                const hasStreakMultiplier = await hasActiveStreakMultiplier(profile.id);
+                return {
+                    userId: profile.id,
+                    username: profile.username,
+                    avatarUrl: profile.avatar_url,
+                    totalPoints: profile.leaderboard_points || 0,
+                    currentStreak: profile.current_winning_streak || 0,
+                    bestStreak: profile.best_winning_streak || 0,
+                    correctPicks: profile.total_correct_picks || 0,
+                    totalPicks: profile.total_picks || 0,
+                    accuracyPercentage: profile.accuracy_percentage || 0,
+                    rank: index + 1,
+                    hasActiveStreakMultiplier: hasStreakMultiplier
+                };
+            })
+        );
+
+        return entriesWithPowerUps;
     }
 
     /**
@@ -247,11 +275,13 @@ export class LeaderboardService {
         const totalLosses = lostBets?.reduce((sum, bet) => sum + bet.bet_amount, 0) || 0;
         const parlayWins = parlayBets?.filter(bet => bet.status === 'won').length || 0;
 
+        // Use profile points (which are calculated correctly in the database)
+        // The database function now handles power-up effects properly
         return {
             userId: profile.id,
             username: profile.username,
             avatarUrl: profile.avatar_url,
-            totalPoints: profile.leaderboard_points || 0,
+            totalPoints: profile.leaderboard_points || 0, // Use database-calculated points
             currentStreak: profile.current_winning_streak || 0,
             bestStreak: profile.best_winning_streak || 0,
             correctPicks: profile.total_correct_picks || 0,
@@ -270,15 +300,41 @@ export class LeaderboardService {
      */
     static async getCurrentUserWeeklyRank(): Promise<number | null> {
         const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user?.id) {
-            return null;
-        }
+        if (!user) return null;
 
-        const weeklyLeaderboard = await this.getWeeklyLeaderboard(1000); // Get all users
-        const userEntry = weeklyLeaderboard.find(entry => entry.userId === user.id);
-        
-        return userEntry ? userEntry.rank : null;
+        const { data: weeklyStats } = await supabase.rpc('get_weekly_leaderboard_stats');
+        if (!weeklyStats) return null;
+
+        const userIndex = weeklyStats.findIndex((entry: any) => entry.user_id === user.id);
+        return userIndex >= 0 ? userIndex + 1 : null;
+    }
+
+    /**
+     * Manually update user's leaderboard stats (for testing power-up effects)
+     */
+    static async updateUserLeaderboardStats(userId: string): Promise<{ success: boolean; message: string }> {
+        try {
+            const { error } = await supabase.rpc('update_user_leaderboard_stats', { user_id_param: userId });
+            
+            if (error) {
+                console.error('Error updating leaderboard stats:', error);
+                return {
+                    success: false,
+                    message: 'Failed to update leaderboard stats'
+                };
+            }
+
+            return {
+                success: true,
+                message: 'Leaderboard stats updated successfully'
+            };
+        } catch (error) {
+            console.error('Error updating leaderboard stats:', error);
+            return {
+                success: false,
+                message: 'Failed to update leaderboard stats'
+            };
+        }
     }
 
     /**

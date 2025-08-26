@@ -247,8 +247,16 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-right w-24">
-                                                    <div className="font-bold text-green-400 text-lg">
-                                                        {entry.totalPoints.toLocaleString()}
+                                                    <div className="flex items-center justify-end space-x-2">
+                                                        {entry.hasActiveStreakMultiplier && (
+                                                            <div className="flex items-center space-x-1 bg-orange-500/20 px-2 py-1 rounded-full border border-orange-500/30">
+                                                                <span className="text-orange-400 text-xs">🔥</span>
+                                                                <span className="text-orange-400 text-xs font-medium">1.5x</span>
+                                                            </div>
+                                                        )}
+                                                        <div className="font-bold text-green-400 text-lg">
+                                                            {entry.totalPoints.toLocaleString()}
+                                                        </div>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-center w-32">
@@ -295,8 +303,16 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
                                                     {entry.correctPicks}/{entry.totalPicks}
                                                 </div>
                                             </div>
-                                            <div className="font-bold text-green-400 text-right w-20 text-lg">
-                                                {entry.totalPoints.toLocaleString()}
+                                            <div className="flex items-center justify-end space-x-2 w-20">
+                                                {entry.hasActiveStreakMultiplier && (
+                                                    <div className="flex items-center space-x-1 bg-orange-500/20 px-1 py-0.5 rounded-full border border-orange-500/30">
+                                                        <span className="text-orange-400 text-xs">🔥</span>
+                                                        <span className="text-orange-400 text-xs font-medium">1.5x</span>
+                                                    </div>
+                                                )}
+                                                <div className="font-bold text-green-400 text-lg">
+                                                    {entry.totalPoints.toLocaleString()}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

@@ -8,13 +8,11 @@ import toast from 'react-hot-toast';
 import {
     RewardShopHeader,
     CoinTopUpSection,
-    RewardFilters,
-    RewardCard,
-    RewardInfoSection,
-    mockRewards,
     type RewardItem,
-    type CoinPack
+    type CoinPack,
+    RewardFilters
 } from './reward-shop';
+import { PowerUps, type PowerUp } from './PowerUps';
 
 interface RewardShopProps {
     userPoints?: number;
@@ -25,8 +23,7 @@ interface RewardShopProps {
 export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: RewardShopProps) {
     const { wallet, syncWalletWithDatabase } = useWallet();
     const searchParams = useSearchParams();
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [sortBy, setSortBy] = useState<'points' | 'rarity' | 'name'>('points');
+    const [showInfoModal, setShowInfoModal] = useState(false);
 
     // Handle payment success/cancel
     useEffect(() => {
@@ -54,95 +51,94 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
         }
     };
 
-
-
-    const filteredRewards = mockRewards
-        .filter(reward => selectedCategory === 'all' || reward.category === selectedCategory)
-        .sort((a, b) => {
-            if (sortBy === 'points') return a.points - b.points;
-            if (sortBy === 'rarity') {
-                const rarityOrder = { common: 0, rare: 1, epic: 2, legendary: 3 };
-                return (rarityOrder[a.rarity || 'common'] || 0) - (rarityOrder[b.rarity || 'common'] || 0);
-            }
-            return a.title.localeCompare(b.title);
-        });
-
-    const categories = [
-        { id: 'all', label: 'All Items', count: mockRewards.length },
-        { id: 'premium', label: 'Premium', count: mockRewards.filter(r => r.category === 'premium').length },
-        { id: 'boost', label: 'Boosts', count: mockRewards.filter(r => r.category === 'boost').length },
-        { id: 'merchandise', label: 'Merchandise', count: mockRewards.filter(r => r.category === 'merchandise').length },
-        { id: 'experience', label: 'Experiences', count: mockRewards.filter(r => r.category === 'experience').length },
-        { id: 'badge', label: 'Badges', count: mockRewards.filter(r => r.category === 'badge').length },
-        { id: 'exclusive', label: 'Exclusive', count: mockRewards.filter(r => r.category === 'exclusive').length },
-    ];
+    const handlePowerUpPurchase = (powerUp: PowerUp) => {
+        console.log(`Power-up purchased: ${powerUp.name}`);
+        // TODO: Implement power-up purchase logic
+        // This would typically involve:
+        // 1. Call API to purchase power-up
+        // 2. Deduct coins from wallet
+        // 3. Add power-up to user's inventory
+        // 4. Refresh wallet balance
+        syncWalletWithDatabase();
+    };
 
     return (
-        <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
-            <RewardShopHeader userPoints={userPoints} />
+        <>
+            <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
+                <RewardShopHeader userPoints={userPoints} onInfoClick={() => setShowInfoModal(true)} />
 
-            <CoinTopUpSection />
+                <CoinTopUpSection />
 
-            <RewardFilters
-                categories={categories}
-                selectedCategory={selectedCategory}
-                sortBy={sortBy}
-                onCategoryChange={setSelectedCategory}
-                onSortChange={setSortBy}
-            />
+                {/* Power Ups Section */}
+                <PowerUps onPurchase={handlePowerUpPurchase} sidebarOpen={sidebarOpen} />
+            </div>
 
-            {/* Featured Items */}
-            {selectedCategory === 'all' && (
-                <div className="space-y-4">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        <span className="text-2xl">⭐</span>
-                        Featured Items
-                    </h3>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {mockRewards.filter(r => r.featured).map((reward) => {
-                            const canAfford = actualBalance >= reward.points;
-                            return (
-                                <RewardCard
-                                    key={reward.id}
-                                    reward={reward}
-                                    canAfford={canAfford}
-                                    onRedeem={handleRedeem}
-                                    isFeatured={true}
-                                />
-                            );
-                        })}
+            {/* Info Modal */}
+            {showInfoModal && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={() => setShowInfoModal(false)}
+                >
+                    <div
+                        className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-slate-700/50 rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-sm"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                How the Reward Shop Works
+                            </h3>
+                            <button
+                                onClick={() => setShowInfoModal(false)}
+                                className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-slate-700/50"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
+                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
+                                    <span>🌕</span>
+                                    Earn Coins
+                                </h4>
+                                <p className="text-gray-300">Make accurate predictions to earn coins. The more correct picks, the more coins you get!</p>
+                            </div>
+                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
+                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
+                                    <span>🎯</span>
+                                    Redeem Coins
+                                </h4>
+                                <p className="text-gray-300">Use your coins to unlock premium features, exclusive merchandise, and special experiences.</p>
+                            </div>
+                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
+                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
+                                    <span>⭐</span>
+                                    Rarity System
+                                </h4>
+                                <p className="text-gray-300">Items come in different rarities: Common, Rare, Epic, and Legendary. Rarer items offer better value!</p>
+                            </div>
+                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
+                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
+                                    <span>🔥</span>
+                                    Limited Time
+                                </h4>
+                                <p className="text-gray-300">Some items are featured or discounted for a limited time. Don&apos;t miss out on great deals!</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                            <Button
+                                onClick={() => setShowInfoModal(false)}
+                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                            >
+                                Got it!
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}
-
-            {/* All Items Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredRewards.map((reward) => {
-                    const canAfford = actualBalance >= reward.points;
-                    return (
-                        <RewardCard
-                            key={reward.id}
-                            reward={reward}
-                            canAfford={canAfford}
-                            onRedeem={handleRedeem}
-                        />
-                    );
-                })}
-            </div>
-
-            {/* Empty State */}
-            {filteredRewards.length === 0 && (
-                <div className="text-center py-16">
-                    <div className="text-8xl mb-6">🎁</div>
-                    <h3 className="text-2xl font-bold text-white mb-4">No Rewards Found</h3>
-                    <p className="text-gray-400 mb-6">Try adjusting your filters or check back later for new rewards!</p>
-                    <Button onClick={() => setSelectedCategory('all')} className="bg-purple-600 hover:bg-purple-700">
-                        View All Items
-                    </Button>
-                </div>
-            )}
-
-            <RewardInfoSection onViewAll={() => setSelectedCategory('all')} />
-        </div>
+        </>
     );
 } 

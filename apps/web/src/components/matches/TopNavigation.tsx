@@ -4,12 +4,12 @@ import { useRef, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@netprophet/ui';
 import { Wallet } from './Wallet';
 import { Notifications } from '@/components/Notifications';
 import { Dictionary } from '@/types/dictionary';
 import Logo from '@/components/Logo';
-import { ProfilesService } from '@netprophet/lib';
+import { ProfilesService, fetchUserPowerUps, supabase, type UserPowerUp } from '@netprophet/lib';
+import { useAuth } from '@/hooks/useAuth';
 
 // Icon components
 function ChevronDownIcon() {
@@ -45,6 +45,12 @@ function UserIcon() {
 function GlobeIcon() {
     return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+}
+
+function PowerUpIcon() {
+    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
     </svg>
 }
 
@@ -97,11 +103,35 @@ export function TopNavigation({
     dict,
     lang = 'en'
 }: TopNavigationProps) {
+    // Add CSS for slow pulse animation
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slowPulse {
+                0%, 100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 0.8;
+                    transform: scale(1.05);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        return () => {
+            document.head.removeChild(style);
+        };
+    }, []);
     const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [userPowerUps, setUserPowerUps] = useState<UserPowerUp[]>([]);
+    const [powerUpsLoading, setPowerUpsLoading] = useState(false);
     const router = useRouter();
     const pathname = usePathname();
+    const { user } = useAuth();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const languageDropdownRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -109,6 +139,59 @@ export function TopNavigation({
 
     // Extract current language from pathname
     const currentLang = pathname.startsWith('/el') ? 'el' : 'en';
+
+    // Load user power-ups
+    useEffect(() => {
+        const loadUserPowerUps = async () => {
+            if (!user) return;
+
+            setPowerUpsLoading(true);
+            try {
+                const powerUps = await fetchUserPowerUps(user.id);
+                setUserPowerUps(powerUps);
+            } catch (error) {
+                console.error('Error loading user power-ups:', error);
+            } finally {
+                setPowerUpsLoading(false);
+            }
+        };
+
+        loadUserPowerUps();
+    }, [user]);
+
+
+
+    // Manual refresh listener
+    useEffect(() => {
+        const handleManualRefresh = () => {
+            if (user) {
+                const loadUserPowerUps = async () => {
+                    try {
+                        const powerUps = await fetchUserPowerUps(user.id);
+                        setUserPowerUps(powerUps);
+                    } catch (error) {
+                        console.error('Error manually refreshing user power-ups:', error);
+                    }
+                };
+                loadUserPowerUps();
+            }
+        };
+
+        window.addEventListener('refreshPowerUps', handleManualRefresh);
+
+        return () => {
+            window.removeEventListener('refreshPowerUps', handleManualRefresh);
+        };
+    }, [user]);
+
+    // Calculate total active power-ups
+    const totalActivePowerUps = userPowerUps.reduce((total, powerUp) => {
+        // Check if power-up has expired
+        if (powerUp.expires_at && new Date(powerUp.expires_at) < new Date()) {
+            return total;
+        }
+        return total + powerUp.quantity;
+    }, 0);
 
     useEffect(() => {
         if (!accountDropdownOpen) return;
@@ -269,17 +352,102 @@ export function TopNavigation({
                         )}
                     </div>
 
-                    {/* Account dropdown */}
+                    {/* Account dropdown with power-up badge */}
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setAccountDropdownOpen((open) => !open)}
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-purple-600 flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none hover:bg-purple-700 transition-colors"
+                            className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none transition-all duration-300 ${totalActivePowerUps > 0
+                                ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-lg shadow-purple-500/50 ring-2 ring-purple-400/30'
+                                : 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-sm shadow-purple-500/30'
+                                }`}
+                            style={totalActivePowerUps > 0 ? {
+                                animation: 'slowPulse 2s ease-in-out infinite'
+                            } : {}}
                             aria-label="Account menu"
                         >
                             {userEmail?.charAt(0).toUpperCase() || 'U'}
+
+                            {/* Power-up Badge */}
+                            {totalActivePowerUps > 0 && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/30 shadow-orange-400/60 ring-1 ring-orange-300/50">
+                                    <PowerUpIcon />
+                                </div>
+                            )}
                         </button>
                         {accountDropdownOpen && (
                             <div className="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
+                                {/* Power-ups section */}
+                                {totalActivePowerUps > 0 && (
+                                    <>
+                                        <div className="px-4 py-2 border-b border-slate-700/50">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                                                <PowerUpIcon />
+                                                <span>Active Power-ups</span>
+                                                <span className="ml-auto bg-purple-600/20 px-2 py-1 rounded-full text-xs">
+                                                    {totalActivePowerUps}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="max-h-32 overflow-y-auto">
+                                            {userPowerUps.map((userPowerUp) => {
+                                                // Skip expired power-ups
+                                                if (userPowerUp.expires_at && new Date(userPowerUp.expires_at) < new Date()) {
+                                                    return null;
+                                                }
+
+                                                // Calculate time until expiry
+                                                const getExpiryText = () => {
+                                                    if (!userPowerUp.expires_at) return null;
+
+                                                    const now = new Date();
+                                                    const expiryDate = new Date(userPowerUp.expires_at);
+                                                    const diffTime = expiryDate.getTime() - now.getTime();
+                                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+
+                                                    if (diffDays > 1) {
+                                                        return `Expires in: ${diffDays} days`;
+                                                    } else if (diffDays === 1) {
+                                                        return 'Expires in: 1 day';
+                                                    } else if (diffHours > 1) {
+                                                        return `Expires in: ${diffHours} hours`;
+                                                    } else if (diffHours === 1) {
+                                                        return 'Expires in: 1 hour';
+                                                    } else {
+                                                        return 'Expires soon';
+                                                    }
+                                                };
+
+                                                const expiryText = getExpiryText();
+
+                                                return (
+                                                    <div key={userPowerUp.id} className="px-4 py-2 text-xs">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-lg">{userPowerUp.power_up?.icon || '⚡'}</span>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="font-medium text-white truncate">
+                                                                    {userPowerUp.power_up?.name || 'Power-up'}
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-gray-400 text-xs">
+                                                                        {userPowerUp.quantity}x
+                                                                    </span>
+                                                                    {expiryText && (
+                                                                        <span className="text-orange-400 text-xs font-medium">
+                                                                            {expiryText}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="border-t border-slate-700/50 my-2" />
+                                    </>
+                                )}
+
                                 <button
                                     className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs sm:text-sm"
                                     onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/matches/my-profile`); }}

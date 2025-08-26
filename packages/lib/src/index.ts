@@ -45,4 +45,7 @@ export { fetchPlayers, fetchPlayerById, insertPlayer, bulkInsertPlayers, updateP
 export { MATCH_STATUSES, MATCH_STATUS_OPTIONS, getMatchStatusLabel, isActiveStatus, isFinishedStatus, type MatchStatus } from './constants/matchStatuses';
 
 // Daily Rewards Constants
-export { DAILY_REWARDS_CONSTANTS, type DailyRewardsConstants } from './constants/dailyRewards'; 
+export { DAILY_REWARDS_CONSTANTS, type DailyRewardsConstants } from './constants/dailyRewards';
+
+// Power-ups
+export * from './supabase/powerUps'; 
