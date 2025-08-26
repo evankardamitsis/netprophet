@@ -186,20 +186,15 @@ export class BetsService {
     }
 
     const { data, error } = await supabase
-      .from('bet_stats')
-      .select('*')
-      .single();
+      .rpc('get_user_bet_stats', { user_uuid: sessionData.session.user.id });
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No stats found for user (no bets yet)
-        return null;
-      }
       console.error('Error fetching bet stats:', error);
       throw new Error(`Failed to fetch bet stats: ${error.message}`);
     }
 
-    return data;
+    // The function always returns exactly one row, so we can safely access data[0]
+    return data[0] || null;
   }
 
   /**
