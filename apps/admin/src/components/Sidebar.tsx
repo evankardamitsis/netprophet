@@ -19,7 +19,8 @@ import {
     TrendingUp,
     Calculator,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -48,12 +49,11 @@ const menuItems: MenuItem[] = [
         label: 'Rewards',
         icon: Gift,
         children: [
-            { href: '/rewards', label: 'Overview', icon: Gift },
             { href: '/rewards/coin-packs', label: 'Coin Packs', icon: DollarSign },
+            { href: '/rewards/power-ups', label: 'Power Ups', icon: Zap },
             { href: '/rewards/daily-rewards', label: 'Daily Rewards', icon: Award },
             { href: '/rewards/achievements', label: 'Achievements', icon: Trophy },
-            { href: '/rewards/leaderboards', label: 'Leaderboards', icon: TrendingUp },
-            { href: '/rewards/settings', label: 'Settings', icon: Calculator }
+            { href: '/rewards/leaderboards', label: 'Leaderboards', icon: TrendingUp }
         ]
     },
     {
@@ -135,10 +135,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                         return (
                             <div key={item.href}>
-                                <Link
-                                    href={item.href}
+                                <div
                                     className={`
-                                        flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors
+                                        flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-colors cursor-pointer
                                         ${itemIsActive
                                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                             : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -147,6 +146,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     onClick={() => {
                                         if (hasChildren) {
                                             toggleExpanded(item.href);
+                                        } else {
+                                            // Only navigate if no children
+                                            window.location.href = item.href;
                                         }
                                         // Close sidebar on mobile after navigation
                                         if (window.innerWidth < 1024) {
@@ -161,7 +163,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     {hasChildren && (
                                         isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
                                     )}
-                                </Link>
+                                </div>
 
                                 {hasChildren && isExpanded && (
                                     <div className="ml-6 mt-2 space-y-1">
