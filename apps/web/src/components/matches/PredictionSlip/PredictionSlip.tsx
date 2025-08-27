@@ -37,11 +37,19 @@ import { PredictionCard } from './PredictionCard';
 import { SubmitSection } from './SubmitSection';
 import { EmptyState } from './EmptyState';
 
-// Icon component
+// Icon components
 function ChevronUpIcon() {
     return (
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+        </svg>
+    );
+}
+
+function WarningIcon() {
+    return (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
     );
 }
@@ -407,11 +415,11 @@ export function PredictionSlip({
 
     const getLowBalanceMessage = () => {
         if (isCriticalBalance) {
-            return 'Critical low balance!';
+            return lang === 'el' ? 'Πολύ χαμηλό υπόλοιπο!' : 'Critical low balance!';
         } else if (isVeryLowBalance) {
-            return 'Very low balance';
+            return lang === 'el' ? 'Πολύ χαμηλό υπόλοιπο' : 'Very low balance';
         } else if (isLowBalance) {
-            return 'Low balance';
+            return lang === 'el' ? 'Χαμηλό υπόλοιπο' : 'Low balance';
         }
         return null;
     };
@@ -601,23 +609,28 @@ export function PredictionSlip({
             {/* Low Balance Alert - Footer */}
             {isLowBalance && (
                 <motion.div
-                    className="px-4 py-2 border-t border-slate-700/50 bg-slate-800/50"
+                    className={`px-4 py-3 border-t ${isCriticalBalance
+                        ? 'bg-gradient-to-r from-red-900/80 to-red-800/80 border-red-600/50'
+                        : isVeryLowBalance
+                            ? 'bg-gradient-to-r from-orange-900/80 to-orange-800/80 border-orange-600/50'
+                            : 'bg-gradient-to-r from-blue-900/80 to-blue-800/80 border-blue-600/50'
+                        }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                            <span className="text-sm">⚠️</span>
-                            <span className={`text-xs font-medium ${getLowBalanceColor()}`}>
+                            <WarningIcon />
+                            <span className={`text-sm font-semibold ${getLowBalanceColor()}`}>
                                 {getLowBalanceMessage()}
                             </span>
                         </div>
                         <a
                             href={`/${lang}/matches/rewards`}
-                            className="text-xs text-blue-400 hover:text-blue-300 underline transition-colors"
+                            className="text-sm text-blue-300 hover:text-blue-200 underline transition-colors font-medium"
                         >
-                            Top up
+                            {lang === 'el' ? 'Ανανέωση' : 'Top up'}
                         </a>
                     </div>
                 </motion.div>
