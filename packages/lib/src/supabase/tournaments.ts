@@ -286,4 +286,12 @@ export async function getTournamentWithDetails(id: string) {
 
     if (error) throw error;
     return data;
+}
+
+// Utility function to manually sync tournament participants from matches
+export async function syncTournamentParticipants(tournamentId: string) {
+    const { error } = await supabase.rpc('sync_existing_tournament_participants');
+    
+    if (error) throw error;
+    return { success: true };
 } 

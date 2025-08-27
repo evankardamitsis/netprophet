@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Calendar, MapPin, Users, Clock } from 'lucide-react';
-import { Tournament, Match } from '@/types';
+import { Tournament, Match, TournamentParticipant } from '@/types';
+import { ParticipantsTable } from './ParticipantsTable';
 
 interface TournamentOverviewProps {
     tournament: Tournament;
     matches: Match[];
+    participants: TournamentParticipant[];
     onAddMatch: () => void;
     onViewAllMatches: () => void;
     getStatusColor: (status: string) => string;
@@ -18,6 +20,7 @@ interface TournamentOverviewProps {
 export function TournamentOverview({
     tournament,
     matches,
+    participants,
     onAddMatch,
     onViewAllMatches,
     getStatusColor,
@@ -200,6 +203,13 @@ export function TournamentOverview({
                     </Card>
                 </div>
             </div>
+
+            {/* Participants Table */}
+            <ParticipantsTable
+                participants={participants}
+                tournamentName={tournament.name}
+                matches={matches}
+            />
         </div>
     );
 } 

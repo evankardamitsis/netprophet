@@ -85,6 +85,31 @@ export interface Category {
     updated_at: string | null;
 }
 
+// Tournament Participant Types
+export interface TournamentParticipant {
+    id: string;
+    tournament_id: string;
+    category_id: string | null;
+    player_id: string;
+    registration_date: string | null;
+    status: string;
+    seed_position: number | null;
+    final_position: number | null;
+    points_earned: number | null;
+    players?: {
+        id: string;
+        first_name: string;
+        last_name: string;
+        ntrp_rating: number;
+        age: number;
+        surface_preference: string;
+    } | null;
+    tournament_categories?: {
+        id: string;
+        name: string;
+    } | null;
+}
+
 // Player Types
 export interface Player {
     id: string;

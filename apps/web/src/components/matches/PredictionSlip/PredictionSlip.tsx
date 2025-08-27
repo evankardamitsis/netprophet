@@ -390,7 +390,7 @@ export function PredictionSlip({
                 {onToggleCollapse && (
                     <motion.button
                         onClick={onToggleCollapse}
-                        className="text-slate-400 hover:text-yellow-300 transition-colors duration-200 p-1 rounded-full hover:bg-slate-700"
+                        className="text-yellow-300 bg-slate-700 transition-colors duration-200 p-1 rounded-full hover:bg-slate-600"
                         title={dict?.matches?.minimizeSlip || 'Minimize slip'}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}

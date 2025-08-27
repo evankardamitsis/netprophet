@@ -21,11 +21,12 @@ import {
     getTournamentCategories,
     createTournamentCategory,
     updateTournamentCategory,
-    deleteTournamentCategory
+    deleteTournamentCategory,
+    getTournamentParticipants
 } from '@netprophet/lib/supabase/tournaments';
 import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure, syncMatchesToWeb, removeMatchesFromWeb } from '@netprophet/lib/supabase/matches';
 import { supabase } from '@netprophet/lib';
-import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Settings, Plus, Trophy, Clock, Tag, BarChart3, Edit, Trash2, Users } from 'lucide-react';
 import { MatchModal } from '../MatchModal';
 import { TournamentModal } from '../TournamentModal';
 import { CategoryModal } from '../CategoryModal';
@@ -33,8 +34,9 @@ import { WarningModal } from '@/components/ui/warning-modal';
 import { TournamentOverview } from './components/TournamentOverview';
 import { TournamentMatches } from './components/TournamentMatches';
 import { TournamentCategories } from './components/TournamentCategories';
+import { ParticipantsTable } from './components/ParticipantsTable';
 import { getStatusColor, getSurfaceColor, getGenderColor, formatTime } from './utils/tournamentHelpers';
-import { Tournament, Match, Category } from '@/types';
+import { Tournament, Match, Category, TournamentParticipant } from '@/types';
 import router from 'next/router';
 import { CategoryForm } from '../CategoryForm';
 import { PlayerOddsData, MatchContext, calculateOdds } from '@netprophet/lib';
@@ -47,6 +49,7 @@ export default function TournamentPage() {
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [matches, setMatches] = useState<Match[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [participants, setParticipants] = useState<TournamentParticipant[]>([]);
     const [loading, setLoading] = useState(true);
     const [showMatchForm, setShowMatchForm] = useState(false);
     const [showTournamentForm, setShowTournamentForm] = useState(false);
@@ -64,14 +67,16 @@ export default function TournamentPage() {
         try {
             setLoading(true);
 
-            // Load tournament with details (including categories) and matches in parallel
-            const [tournamentData, matchesData] = await Promise.all([
+            // Load tournament with details (including categories), matches, and participants in parallel
+            const [tournamentData, matchesData, participantsData] = await Promise.all([
                 getTournamentWithDetails(tournamentId),
-                getMatchesByTournament(tournamentId)
+                getMatchesByTournament(tournamentId),
+                getTournamentParticipants(tournamentId)
             ]);
 
             setTournament(tournamentData as Tournament);
             setMatches(matchesData as any);
+            setParticipants(participantsData as any);
 
             // Set categories from the tournament data if available
             if (tournamentData.tournament_categories) {
@@ -94,7 +99,7 @@ export default function TournamentPage() {
     // Initialize active tab from localStorage or URL params
     useEffect(() => {
         const savedTab = localStorage.getItem(`tournament-${tournamentId}-tab`);
-        if (savedTab && ['overview', 'matches', 'categories'].includes(savedTab)) {
+        if (savedTab && ['overview', 'matches', 'categories', 'participants'].includes(savedTab)) {
             setActiveTab(savedTab);
         }
     }, [tournamentId]);
@@ -302,6 +307,8 @@ export default function TournamentPage() {
         }
     };
 
+
+
     const handleUpdateMatchStatus = async (matchId: string, status: string) => {
         try {
             // Find the match to get its current data
@@ -473,7 +480,7 @@ export default function TournamentPage() {
 
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 bg-gray-100 p-1 rounded-lg mb-8">
+                    <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg mb-8">
                         <TabsTrigger value="overview" className="flex items-center gap-2">
                             <BarChart3 className="h-4 w-4" />
                             <span className="hidden sm:inline">Overview</span>
@@ -496,12 +503,22 @@ export default function TournamentPage() {
                                 </Badge>
                             )}
                         </TabsTrigger>
+                        <TabsTrigger value="participants" className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            <span className="hidden sm:inline">Participants</span>
+                            {participants.length > 0 && (
+                                <Badge variant="secondary" className="ml-1">
+                                    {participants.length}
+                                </Badge>
+                            )}
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="mt-6">
                         <TournamentOverview
                             tournament={tournament}
                             matches={matches}
+                            participants={participants}
                             onAddMatch={() => setShowMatchForm(true)}
                             onViewAllMatches={() => { }}
                             getStatusColor={getStatusColor}
@@ -540,6 +557,14 @@ export default function TournamentPage() {
                             }}
                             onDeleteCategory={handleDeleteCategory}
                             getGenderColor={getGenderColor}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="participants" className="mt-6">
+                        <ParticipantsTable
+                            participants={participants}
+                            tournamentName={tournament?.name || ''}
+                            matches={matches}
                         />
                     </TabsContent>
 
