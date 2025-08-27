@@ -1,3 +1,5 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Users,
@@ -7,16 +9,87 @@ import {
     TrendingUp,
     Activity
 } from 'lucide-react';
+import { useDashboardData } from '@/hooks/useDashboardData';
+import { formatTimeAgo, formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 export default function AdminDashboardPage() {
+    const { stats, loading, error, refresh } = useDashboardData();
+
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                    <p className="text-gray-600 mt-2">
+                        Welcome to the NetProphet Admin Panel
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(6)].map((_, i) => (
+                        <Card key={i}>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-2"></div>
+                                <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                    <p className="text-red-600 mt-2">
+                        Error loading dashboard data: {error}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!stats) {
+        return (
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                    <p className="text-gray-600 mt-2">
+                        No data available
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* Page header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600 mt-2">
-                    Welcome to the NetProphet Admin Panel
-                </p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                    <p className="text-gray-600 mt-2">
+                        Welcome to the NetProphet Admin Panel
+                    </p>
+                </div>
+                <Button
+                    onClick={refresh}
+                    disabled={loading}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                >
+                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    {loading ? 'Refreshing...' : 'Refresh'}
+                </Button>
             </div>
 
             {/* Stats cards */}
@@ -27,9 +100,9 @@ export default function AdminDashboardPage() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">1,234</div>
+                        <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
-                            +12% from last month
+                            Registered users
                         </p>
                     </CardContent>
                 </Card>
@@ -40,9 +113,9 @@ export default function AdminDashboardPage() {
                         <UserCheck className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">567</div>
+                        <div className="text-2xl font-bold">{stats.activePlayers.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
-                            +8% from last month
+                            Active in last 30 days
                         </p>
                     </CardContent>
                 </Card>
@@ -53,9 +126,9 @@ export default function AdminDashboardPage() {
                         <Trophy className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">23</div>
+                        <div className="text-2xl font-bold">{stats.tournaments}</div>
                         <p className="text-xs text-muted-foreground">
-                            5 active tournaments
+                            {stats.activeTournaments} active tournaments
                         </p>
                     </CardContent>
                 </Card>
@@ -66,9 +139,9 @@ export default function AdminDashboardPage() {
                         <Gamepad2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">12</div>
+                        <div className="text-2xl font-bold">{stats.liveMatches}</div>
                         <p className="text-xs text-muted-foreground">
-                            3 matches starting soon
+                            {stats.upcomingMatches} matches starting soon
                         </p>
                     </CardContent>
                 </Card>
@@ -79,9 +152,9 @@ export default function AdminDashboardPage() {
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">€45,231</div>
+                        <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
                         <p className="text-xs text-muted-foreground">
-                            +20.1% from last month
+                            Total from purchases
                         </p>
                     </CardContent>
                 </Card>
@@ -92,9 +165,9 @@ export default function AdminDashboardPage() {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">89</div>
+                        <div className="text-2xl font-bold">{stats.activeSessions}</div>
                         <p className="text-xs text-muted-foreground">
-                            +5% from last hour
+                            Active in last hour
                         </p>
                     </CardContent>
                 </Card>
@@ -107,27 +180,25 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium">New user registered</p>
-                                <p className="text-xs text-muted-foreground">2 minutes ago</p>
+                        {stats.recentActivity.length > 0 ? (
+                            stats.recentActivity.map((activity) => (
+                                <div key={activity.id} className="flex items-center space-x-4">
+                                    <div className={`w-2 h-2 rounded-full ${activity.type === 'prediction' ? 'bg-green-500' :
+                                        activity.type === 'tournament' ? 'bg-blue-500' : 'bg-yellow-500'
+                                        }`}></div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium">{activity.description}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {formatTimeAgo(activity.timestamp)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center text-gray-500 py-4">
+                                No recent activity
                             </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium">Tournament created</p>
-                                <p className="text-xs text-muted-foreground">15 minutes ago</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium">Match result updated</p>
-                                <p className="text-xs text-muted-foreground">1 hour ago</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>

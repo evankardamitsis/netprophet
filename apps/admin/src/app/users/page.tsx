@@ -198,18 +198,48 @@ export default function UsersPage() {
 
     const handleDelete = async () => {
         if (!editUser) return;
+
+        // Show confirmation dialog
+        const confirmed = window.confirm(
+            `Are you sure you want to delete user "${editUser.email}"?\n\nThis action will:\n• Delete the user from the database\n• Delete the user from authentication system\n• Remove all user data permanently\n\nThis action cannot be undone.`
+        );
+
+        if (!confirmed) return;
+
         setEditLoading(true);
         setEditError(null);
-        const { id } = editUser;
-        const { error } = await supabase.from('profiles').delete().eq('id', id);
-        if (error) {
-            setEditError(error.message);
-            toast.error('Failed to delete user: ' + error.message);
-        } else {
-            setUsers((prev) => prev.filter((u) => u.id !== id));
-            setEditUser(null);
-            toast.success('User deleted!');
+
+        try {
+            const response = await fetch('/api/admin/delete-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: editUser.id }),
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                setEditError(result.error);
+                toast.error('Failed to delete user: ' + result.error);
+            } else {
+                setUsers((prev) => prev.filter((u) => u.id !== editUser.id));
+                setEditUser(null);
+
+                if (result.warning) {
+                    toast.warning(result.warning);
+                    toast.success(result.message);
+                } else {
+                    toast.success(result.message || 'User deleted successfully!');
+                }
+            }
+        } catch (error) {
+            console.error('Delete API call error:', error);
+            setEditError('Failed to connect to server');
+            toast.error('Failed to delete user: Network error');
         }
+
         setEditLoading(false);
     };
 
@@ -384,16 +414,26 @@ export default function UsersPage() {
                         </div>
                         {editError && <div className="text-red-600 mt-2 font-semibold">{editError}</div>}
                         {editSuccess && <div className="text-green-600 mt-2 font-semibold">Saved!</div>}
+                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                            <p className="text-yellow-800 text-sm">
+                                <strong>⚠️ Warning:</strong> Deleting a user will permanently remove them from both the database and authentication system. This action cannot be undone.
+                            </p>
+                        </div>
                         <div className="mt-6 flex justify-between gap-2">
-                            <Button variant="destructive" onClick={handleDelete} disabled={editLoading}>
-                                Delete
+                            <Button
+                                variant="destructive"
+                                onClick={handleDelete}
+                                disabled={editLoading}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                {editLoading ? 'Deleting...' : 'Delete User'}
                             </Button>
                             <div className="flex gap-2">
                                 <Button variant="outline" onClick={() => setEditUser(null)} disabled={editLoading}>
                                     Cancel
                                 </Button>
                                 <Button onClick={handleEditSave} disabled={editLoading}>
-                                    Save
+                                    Save Changes
                                 </Button>
                             </div>
                         </div>
