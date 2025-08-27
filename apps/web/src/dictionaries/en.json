@@ -98,6 +98,13 @@
     "result": "Result",
     "tieBreak": "Tie-break",
     "games": "Games",
+    "powerUps": {
+      "safeSingleSlip": "Safe Single Slip",
+      "safeParlaySlip": "Safe Parlay Slip",
+      "surviveOneWrongPick": "Survive 1 wrong pick",
+      "surviveOneWrongPickParlay": "Survive 1 wrong pick in parlay",
+      "powerUpWillBeConsumed": "⚡ Power-up will be consumed when bet is placed"
+    },
     "aces": "Aces",
     "noPrediction": "No prediction",
     "invalidParlayBet": "Invalid parlay prediction",

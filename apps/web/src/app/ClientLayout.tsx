@@ -9,6 +9,7 @@ import { PredictionSlip, FloatingPredictionButton } from '../components/matches/
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { Dictionary } from '@/types/dictionary';
 import { DictionaryProvider } from '@/context/DictionaryContext';
+import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -178,6 +179,9 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
                                     onClick={handleExpandPredictionSlip}
                                 />
                             )}
+
+                            {/* Global Low Balance Notification */}
+                            <LowBalanceNotification lang={lang} />
                         </div>
                     </div>
                 </MatchSelectContext.Provider>

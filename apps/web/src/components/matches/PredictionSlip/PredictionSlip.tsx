@@ -32,6 +32,7 @@ import {
 // Import the smaller components
 import { ParlayModeToggle } from './ParlayModeToggle';
 import { SafeSlipPowerUps } from './SafeSlipPowerUps';
+import { PowerUpSuggestions } from './PowerUpSuggestions';
 import { PredictionCard } from './PredictionCard';
 import { SubmitSection } from './SubmitSection';
 import { EmptyState } from './EmptyState';
@@ -76,6 +77,7 @@ export function PredictionSlip({
     // Double Points Match power-up state
     const [hasDoublePointsMatchPowerUp, setHasDoublePointsMatchPowerUp] = useState<boolean>(false);
     const [doublePointsMatchId, setDoublePointsMatchId] = useState<string | null>(null);
+    const [showDoublePointsStatus, setShowDoublePointsStatus] = useState<boolean>(false);
 
     // Reset parlay mode if less than 2 predictions
     useEffect(() => {
@@ -118,6 +120,24 @@ export function PredictionSlip({
             window.removeEventListener('refreshPowerUps', handlePowerUpRefresh);
         };
     }, [user?.id]);
+
+    // Handle power-up purchase from suggestions
+    const handlePowerUpPurchased = (powerUpId: string) => {
+        // Update power-up states based on what was purchased
+        if (powerUpId === 'safeParlay') {
+            setHasSafeParlayPowerUp(true);
+        } else if (powerUpId === 'safeSingle') {
+            setHasSafeSinglePowerUp(true);
+        } else if (powerUpId === 'doubleXP') {
+            setHasDoublePointsMatchPowerUp(true);
+            setShowDoublePointsStatus(true);
+
+            // Hide the status after 3 seconds
+            setTimeout(() => {
+                setShowDoublePointsStatus(false);
+            }, 3000);
+        }
+    };
 
     // Convert StructuredPredictionItem to PredictionItem for parlay calculations
     const predictionItems: PredictionItem[] = predictions.map(p => ({
@@ -367,9 +387,49 @@ export function PredictionSlip({
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
     };
 
+    // Determine if any safe slip power-up is active
+    const isSafeSlipActive = isUsingSafeSingle || isUsingSafeParlay;
+
+    // Get the appropriate gradient class based on which power-up is active
+    const getSafeSlipGradient = () => {
+        if (isUsingSafeSingle) {
+            return 'shadow-emerald-500/30 shadow-lg';
+        } else if (isUsingSafeParlay) {
+            return 'shadow-emerald-500/30 shadow-lg';
+        }
+        return 'border-l border-border';
+    };
+
+    // Low balance alert logic
+    const isLowBalance = wallet.balance <= 200;
+    const isVeryLowBalance = wallet.balance < 100;
+    const isCriticalBalance = wallet.balance < 50;
+
+    const getLowBalanceMessage = () => {
+        if (isCriticalBalance) {
+            return 'Critical low balance!';
+        } else if (isVeryLowBalance) {
+            return 'Very low balance';
+        } else if (isLowBalance) {
+            return 'Low balance';
+        }
+        return null;
+    };
+
+    const getLowBalanceColor = () => {
+        if (isCriticalBalance) {
+            return 'text-red-400';
+        } else if (isVeryLowBalance) {
+            return 'text-orange-400';
+        } else if (isLowBalance) {
+            return 'text-blue-400';
+        }
+        return '';
+    };
+
     return (
         <motion.div
-            className="h-full bg-slate-900 border-l border-slate-800 flex flex-col shadow-xl rounded-l-2xl relative overflow-hidden"
+            className={`h-full flex flex-col shadow-2xl relative overflow-hidden border-l-2 border-blue-500/30 bg-gradient-to-b from-slate-900 via-blue-950 to-purple-950 ${getSafeSlipGradient()}`}
             initial={false}
             animate={{
                 opacity: isCollapsed ? 0 : 1,
@@ -380,7 +440,13 @@ export function PredictionSlip({
                 duration: 0.3
             }}
             style={{
-                transformOrigin: "bottom right"
+                transformOrigin: "bottom right",
+                boxShadow: isSafeSlipActive
+                    ? '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.4), 0 0 15px rgba(16, 185, 129, 0.2)'
+                    : '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(59, 130, 246, 0.3)',
+                backgroundImage: isSafeSlipActive
+                    ? 'linear-gradient(to bottom, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05))'
+                    : undefined
             }}
         >
             <div className="flex-shrink-0 p-4 border-b border-dashed border-slate-700 bg-slate-800 flex justify-between items-center">
@@ -442,26 +508,44 @@ export function PredictionSlip({
                             onToggleSafeSingle={() => setIsUsingSafeSingle(!isUsingSafeSingle)}
                             predictionsCount={predictions.length}
                             isParlayMode={isParlayMode}
+                            dict={dict}
+                        />
+
+                        {/* Power-up Suggestions */}
+                        <PowerUpSuggestions
+                            predictionsCount={predictions.length}
+                            totalStake={getTotalIndividualStake()}
+                            isParlayMode={isParlayMode}
+                            parlayOdds={parlayCalculation?.finalOdds}
+                            dict={dict}
+                            lang={lang}
+                            onPowerUpPurchased={handlePowerUpPurchased}
+                            hasSafeParlayPowerUp={hasSafeParlayPowerUp}
+                            hasSafeSinglePowerUp={hasSafeSinglePowerUp}
+                            hasDoublePointsMatchPowerUp={hasDoublePointsMatchPowerUp}
                         />
 
                         {/* Double Points Match Power-up Status */}
-                        {hasDoublePointsMatchPowerUp && doublePointsMatchId && (
-                            <motion.div
-                                className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg p-2 border border-purple-500/30"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-lg">🎯</span>
-                                    <div className="text-white text-xs">
-                                        <span className="font-semibold">
-                                            Double Points Match power-up applied
-                                        </span> - Single use per slip
+                        <AnimatePresence>
+                            {showDoublePointsStatus && (
+                                <motion.div
+                                    className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg p-2 border border-purple-500/30"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-lg">🎯</span>
+                                        <div className="text-white text-xs">
+                                            <span className="font-semibold">
+                                                Double Points Match power-up applied
+                                            </span> - Single use per slip
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
 
 
@@ -513,6 +597,31 @@ export function PredictionSlip({
                     doublePointsMatchId={doublePointsMatchId}
                 />
             </AnimatePresence>
+
+            {/* Low Balance Alert - Footer */}
+            {isLowBalance && (
+                <motion.div
+                    className="px-4 py-2 border-t border-slate-700/50 bg-slate-800/50"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                >
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm">⚠️</span>
+                            <span className={`text-xs font-medium ${getLowBalanceColor()}`}>
+                                {getLowBalanceMessage()}
+                            </span>
+                        </div>
+                        <a
+                            href={`/${lang}/matches/rewards`}
+                            className="text-xs text-blue-400 hover:text-blue-300 underline transition-colors"
+                        >
+                            Top up
+                        </a>
+                    </div>
+                </motion.div>
+            )}
         </motion.div>
     );
 }

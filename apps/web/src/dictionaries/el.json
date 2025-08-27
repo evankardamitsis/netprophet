@@ -98,6 +98,13 @@
     "safeBet": "Ασφαλής Προβλέψη",
     "tokens": "token",
     "winner": "Νικητής",
+    "powerUps": {
+      "safeSingleSlip": "Ασφαλής Προβλέψη",
+      "safeParlaySlip": "Ασφαλής Συνδυασμός",
+      "surviveOneWrongPick": "Επιβίωσε 1 λάθος",
+      "surviveOneWrongPickParlay": "Επιβίωσε 1 λάθος στον συνδυασμό",
+      "powerUpWillBeConsumed": "⚡ Το power-up θα καταναλωθεί όταν τοποθετηθεί η προβλέψη"
+    },
     "result": "Αποτέλεσμα",
     "tieBreak": "Tie-break",
     "games": "Παιχνίδια",

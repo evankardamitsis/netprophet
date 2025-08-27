@@ -7,6 +7,10 @@ import { Card, CardContent, Button } from '@netprophet/ui';
 import { useWallet } from '@/context/WalletContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { Dictionary } from '@/types/dictionary';
+import { useStripePayment } from '@/hooks/useStripePayment';
+import { useAuth } from '@/hooks/useAuth';
+import { useCoinPacks } from '@/hooks/useCoinPacks';
+import { toast } from 'sonner';
 
 // Icon components
 function ChevronUpIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -57,6 +61,18 @@ function MinusIcon({ className = "h-4 w-4" }: { className?: string }) {
     </svg>
 }
 
+function WarningIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+    </svg>
+}
+
+function CoinsIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+    </svg>
+}
+
 interface WalletProps {
     dict?: Dictionary;
     lang?: 'en' | 'el';
@@ -66,12 +82,20 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { wallet } = useWallet();
     const { predictions } = usePredictionSlip();
+    const { processPayment, isProcessing } = useStripePayment();
+    const { user } = useAuth();
+    const { coinPacks, loading: coinPacksLoading } = useCoinPacks();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     // Calculate pending bets from prediction slip
     const pendingBetAmount = predictions.reduce((total, item) => total + (item.betAmount || 0), 0);
     const availableBalance = wallet.balance - pendingBetAmount;
+
+    // Low balance thresholds
+    const isLowBalance = availableBalance <= 200;
+    const isVeryLowBalance = availableBalance < 100;
+    const isCriticalBalance = availableBalance < 50;
 
     useEffect(() => {
         if (!isOpen) return;
@@ -155,6 +179,47 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         return `${diffInDays}d ago`;
     };
 
+    const handleTopUp = async (packId: string) => {
+        if (!user) {
+            toast.error('Please sign in to purchase coins');
+            return;
+        }
+
+        try {
+            await processPayment(packId);
+        } catch (error) {
+            console.error('Top-up error:', error);
+        }
+    };
+
+    const getLowBalanceMessage = () => {
+        if (isCriticalBalance) {
+            return {
+                message: lang === 'el' ? 'Κρίσιμα χαμηλό υπόλοιπο!' : 'Critical low balance!',
+                color: 'text-red-400',
+                bgColor: 'bg-red-900/20',
+                borderColor: 'border-red-800'
+            };
+        } else if (isVeryLowBalance) {
+            return {
+                message: lang === 'el' ? 'Πολύ χαμηλό υπόλοιπο' : 'Very low balance',
+                color: 'text-orange-400',
+                bgColor: 'bg-orange-900/20',
+                borderColor: 'border-orange-800'
+            };
+        } else if (isLowBalance) {
+            return {
+                message: lang === 'el' ? 'Χαμηλό υπόλοιπο' : 'Low balance',
+                color: 'text-yellow-400',
+                bgColor: 'bg-yellow-900/20',
+                borderColor: 'border-yellow-800'
+            };
+        }
+        return null;
+    };
+
+    const lowBalanceInfo = getLowBalanceMessage();
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
@@ -162,13 +227,16 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                 className="flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-transparent "
                 aria-label="Wallet"
             >
-                <span className="font-bold text-yellow-300 text-sm">
+                <span className={`font-bold text-sm ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
                     {availableBalance} 🌕
                 </span>
                 {pendingBetAmount > 0 && (
                     <span className="text-xs px-1 py-0.5 rounded-full bg-blue-900 text-blue-300">
                         -{pendingBetAmount}
                     </span>
+                )}
+                {isLowBalance && (
+                    <WarningIcon className="h-5 w-5 text-red-400 drop-shadow-lg" />
                 )}
                 {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </button>
@@ -196,7 +264,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                 </span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <div className="text-lg font-bold text-yellow-300">
+                                <div className={`text-lg font-bold ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
                                     {availableBalance} 🌕
                                 </div>
                                 {wallet.dailyLoginStreak > 0 && (
@@ -211,6 +279,23 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                             <div className="text-xs text-gray-400">
                                 {dict?.wallet?.availableCoins || 'Available Coins'}
                             </div>
+
+                            {/* Low Balance Warning */}
+                            {lowBalanceInfo && (
+                                <div className={`mt-2 p-2 rounded-lg ${lowBalanceInfo.bgColor} border ${lowBalanceInfo.borderColor}`}>
+                                    <div className="flex items-center gap-2">
+                                        <WarningIcon className={`${lowBalanceInfo.color} h-4 w-4`} />
+                                        <div className="flex-1">
+                                            <div className={`text-sm font-medium ${lowBalanceInfo.color}`}>
+                                                {lowBalanceInfo.message}
+                                            </div>
+                                            <div className="text-xs text-gray-400">
+                                                {lang === 'el' ? 'Ήρθε η ώρα για να ανανεώσετε!' : 'It\'s time to top up!'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Pending Bets Indicator */}
                             {pendingBetAmount > 0 && (
@@ -229,6 +314,52 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Quick Top-up Section */}
+                        {isLowBalance && (
+                            <div className="p-4 border-b border-gray-700">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                                        <CoinsIcon className="h-4 w-4 text-yellow-400" />
+                                        {lang === 'el' ? 'Γρήγορη Ανανέωση' : 'Quick Top-up'}
+                                    </h4>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {coinPacksLoading ? (
+                                        <>
+                                            <Button disabled className="text-xs py-1.5 bg-gray-600 text-white">
+                                                Loading...
+                                            </Button>
+                                            <Button disabled className="text-xs py-1.5 bg-gray-600 text-white">
+                                                Loading...
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        coinPacks.slice(0, 2).map((pack, index) => (
+                                            <Button
+                                                key={pack.id}
+                                                onClick={() => handleTopUp(pack.id)}
+                                                disabled={isProcessing}
+                                                className={`text-xs py-1.5 text-white ${index === 0
+                                                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                                                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                                                    }`}
+                                            >
+                                                {isProcessing ? '...' : (
+                                                    <div className="flex flex-col items-center">
+                                                        <span>{pack.base_coins + pack.bonus_coins} 🌕</span>
+                                                        <span className="text-xs opacity-80">€{pack.price_euro.toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                            </Button>
+                                        ))
+                                    )}
+                                </div>
+                                <div className="mt-2 text-xs text-gray-400 text-center">
+                                    {lang === 'el' ? 'Κάντε κλικ για να αγοράσετε' : 'Click to purchase'}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Stats Grid */}
                         <div className="p-4 border-b border-gray-700">

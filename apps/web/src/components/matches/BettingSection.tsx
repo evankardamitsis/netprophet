@@ -7,6 +7,13 @@ import { useDictionary } from '@/context/DictionaryContext';
 import { calculateMultiplier, getMultiplierOptions, PlayerOdds } from '@/lib/predictionHelpers';
 import { Badge } from '@netprophet/ui';
 
+// Warning Icon Component
+function WarningIcon({ className = "h-4 w-4" }: { className?: string }) {
+    return <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+    </svg>
+}
+
 interface BettingSectionProps {
     predictionCount: number;
     onBetAmountChange: (amount: number) => void;
@@ -34,6 +41,11 @@ export function BettingSection({
     const { theme } = useTheme();
     const { wallet } = useWallet();
     const { dict, lang } = useDictionary();
+
+    // Low balance thresholds (matching Wallet component)
+    const isLowBalance = wallet.balance <= 200;
+    const isVeryLowBalance = wallet.balance < 100;
+    const isCriticalBalance = wallet.balance < 50;
 
     // Calculate potential winnings based on bet amount and multiplier
     const potentialWinnings = Math.round(betAmount * selectedMultiplier);
@@ -99,8 +111,11 @@ export function BettingSection({
                         ))}
                     </div>
                 </div>
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-gray-400 flex items-center gap-1">
                     {dict?.matches?.minMaxBalance?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()).replace('{max}', Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance).toString()).replace('{balance}', wallet.balance.toString()) || `Min: ${COIN_CONSTANTS.MIN_BET} 🌕 | Max: ${Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)} 🌕 | Balance: ${wallet.balance} 🌕`}
+                    {isLowBalance && (
+                        <WarningIcon className="h-3 w-3 text-red-400 drop-shadow-sm" />
+                    )}
                 </div>
             </div>
 

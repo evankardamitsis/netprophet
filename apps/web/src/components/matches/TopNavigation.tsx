@@ -10,6 +10,7 @@ import { Dictionary } from '@/types/dictionary';
 import Logo from '@/components/Logo';
 import { ProfilesService, fetchUserPowerUps, supabase, type UserPowerUp } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
+import { useWallet } from '@/context/WalletContext';
 
 // Icon components
 function ChevronDownIcon() {
@@ -51,6 +52,12 @@ function GlobeIcon() {
 function PowerUpIcon() {
     return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+}
+
+function InfoIcon() {
+    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
 }
 
@@ -103,6 +110,61 @@ export function TopNavigation({
     dict,
     lang = 'en'
 }: TopNavigationProps) {
+    const { wallet } = useWallet();
+
+    // Check if low balance notification was dismissed
+    const isLowBalanceNotificationDismissed = () => {
+        if (typeof window === 'undefined') return false;
+        const dismissed = localStorage.getItem('lowBalanceNotificationDismissed');
+        if (!dismissed) return false;
+
+        const dismissedTime = parseInt(dismissed);
+        const now = Date.now();
+        const oneDay = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        return (now - dismissedTime) < oneDay;
+    };
+
+    // Check if user has low balance
+    const isLowBalance = wallet.balance <= 200;
+    const isVeryLowBalance = wallet.balance < 100;
+    const isCriticalBalance = wallet.balance < 50;
+
+    // Show info icon if notification was dismissed and balance is still low
+    const showInfoIcon = isLowBalanceNotificationDismissed() && isLowBalance;
+
+    // Function to clear dismissal and show notification again
+    const showLowBalanceNotification = () => {
+        localStorage.removeItem('lowBalanceNotificationDismissed');
+        // Dispatch event to show notification immediately
+        window.dispatchEvent(new CustomEvent('showLowBalanceNotification'));
+    };
+
+    // Listen for notification dismissal events
+    useEffect(() => {
+        const handleNotificationDismissed = () => {
+            // Force re-render to show info icon immediately
+            setAccountDropdownOpen(false); // This will trigger a re-render
+        };
+
+        window.addEventListener('notificationDismissed', handleNotificationDismissed);
+        return () => {
+            window.removeEventListener('notificationDismissed', handleNotificationDismissed);
+        };
+    }, []);
+
+    // Force re-render when localStorage changes
+    useEffect(() => {
+        const handleStorageChange = () => {
+            // Force re-render when localStorage changes
+            setAccountDropdownOpen(false);
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
     // Add CSS for slow pulse animation
     useEffect(() => {
         const style = document.createElement('style');
@@ -322,6 +384,23 @@ export function TopNavigation({
                     <div className="block">
                         <Notifications />
                     </div>
+
+                    {/* Low Balance Info Icon */}
+                    {showInfoIcon && (
+                        <button
+                            onClick={showLowBalanceNotification}
+                            className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white focus:outline-none"
+                            title={isCriticalBalance
+                                ? 'Critical low balance - Click to view options'
+                                : isVeryLowBalance
+                                    ? 'Very low balance - Click to view options'
+                                    : 'Low balance - Click to view options'
+                            }
+                        >
+                            <InfoIcon />
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                        </button>
+                    )}
 
                     {/* Language Switcher - Hidden on mobile */}
                     <div className="relative hidden lg:block" ref={languageDropdownRef}>

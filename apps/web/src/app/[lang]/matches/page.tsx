@@ -7,7 +7,9 @@ import { MatchesGrid } from '@/components/matches/MatchesGrid';
 import { MatchDetail } from '@/components/matches/MatchDetail';
 import { Match } from '@/types/dashboard';
 import { WelcomeBonus } from '@/components/matches/WelcomeBonus';
+
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
+import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
 
 // Function to fetch synced matches
 async function fetchSyncedMatches(): Promise<Match[]> {
@@ -130,6 +132,11 @@ export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
+
+    // Get language from URL path
+    const lang = typeof window !== 'undefined'
+        ? window.location.pathname.startsWith('/el') ? 'el' : 'en'
+        : 'en';
 
     // Note: Removed resetSlipState() call as it was clearing predictions on every page navigation
     // The slip state should persist across page navigations
