@@ -442,10 +442,12 @@ export function PredictionSlip({
             animate={{
                 opacity: isCollapsed ? 0 : 1,
                 y: isCollapsed ? 32 : 0,
+                scale: isCollapsed ? 0.95 : 1,
             }}
             transition={{
                 type: "tween",
-                duration: 0.3
+                duration: 0.3,
+                ease: "easeInOut"
             }}
             style={{
                 transformOrigin: "bottom right",
@@ -457,16 +459,16 @@ export function PredictionSlip({
                     : undefined
             }}
         >
-            <div className="flex-shrink-0 p-4 border-b border-dashed border-slate-700 bg-slate-800 flex justify-between items-center">
+            <div className="flex-shrink-0 p-4 border-b border-dashed border-slate-700 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 flex justify-between items-center">
                 <h3 className="text-base font-bold text-yellow-300 tracking-wider uppercase">
                     {dict?.matches?.bettingSlip || 'Betting Slip'}
                 </h3>
                 {onToggleCollapse && (
                     <motion.button
                         onClick={onToggleCollapse}
-                        className="text-yellow-300 bg-slate-700 transition-colors duration-200 p-1 rounded-full hover:bg-slate-600"
+                        className="text-yellow-300 bg-gradient-to-r from-slate-600 to-slate-700 transition-all duration-200 p-2 rounded-lg hover:from-slate-500 hover:to-slate-600 hover:shadow-lg"
                         title={dict?.matches?.minimizeSlip || 'Minimize slip'}
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
                         <ChevronUpIcon />
@@ -610,10 +612,10 @@ export function PredictionSlip({
             {isLowBalance && (
                 <motion.div
                     className={`px-4 py-3 border-t ${isCriticalBalance
-                        ? 'bg-gradient-to-r from-red-900/80 to-red-800/80 border-red-600/50'
+                        ? 'bg-gradient-to-r from-red-500 via-red-600 to-red-700 border-red-400 shadow-lg'
                         : isVeryLowBalance
-                            ? 'bg-gradient-to-r from-orange-900/80 to-orange-800/80 border-orange-600/50'
-                            : 'bg-gradient-to-r from-blue-900/80 to-blue-800/80 border-blue-600/50'
+                            ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 border-orange-400 shadow-lg'
+                            : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400 shadow-lg'
                         }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -622,13 +624,13 @@ export function PredictionSlip({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <WarningIcon />
-                            <span className={`text-sm font-semibold ${getLowBalanceColor()}`}>
+                            <span className="text-sm font-semibold text-white">
                                 {getLowBalanceMessage()}
                             </span>
                         </div>
                         <a
                             href={`/${lang}/matches/rewards`}
-                            className="text-sm text-blue-300 hover:text-blue-200 underline transition-colors font-medium"
+                            className="text-sm text-white hover:text-yellow-200 underline transition-colors font-medium"
                         >
                             {lang === 'el' ? 'Ανανέωση' : 'Top up'}
                         </a>

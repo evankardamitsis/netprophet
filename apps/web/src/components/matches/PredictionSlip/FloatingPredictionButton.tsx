@@ -14,15 +14,16 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
     return (
         <motion.button
             onClick={onClick}
-            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold py-3 px-4 rounded-full shadow-2xl transform transition-all duration-200 hover:scale-110 active:scale-95 flex items-center space-x-2"
-            whileHover={{ scale: 1.1 }}
+            className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-500 hover:via-orange-600 hover:to-red-600 text-white font-bold py-3 px-4 rounded-lg shadow-2xl transform transition-all duration-200 border border-yellow-300/50 hover:border-yellow-200/70 flex items-center space-x-2"
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
         >
-            <BettingSlipIcon className="h-5 w-5" />
-            <div className="text-sm font-semibold">
+            <BettingSlipIcon className="h-5 w-5 text-white" />
+            <div className="text-sm font-semibold text-white">
                 {predictions.length} {predictions.length !== 1 ? (dict?.matches?.picks || 'picks') : (dict?.matches?.pick || 'pick')}
             </div>
         </motion.button>
