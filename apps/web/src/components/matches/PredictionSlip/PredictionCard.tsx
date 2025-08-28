@@ -77,10 +77,10 @@ export function PredictionCard({
                 <CardContent className="p-3">
                     <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                            <div className="text-xs font-semibold text-yellow-200">
+                            <div className="text-sm font-semibold text-yellow-200">
                                 {item.match.player1.name} vs {item.match.player2.name}
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">
+                            <div className="text-sm text-slate-400 mt-1">
                                 {item.match.tournament || (dict?.matches?.tournament || 'Tournament')}
                             </div>
                         </div>
@@ -95,7 +95,7 @@ export function PredictionCard({
                     </div>
 
                     <div className="flex justify-between items-center mb-2">
-                        <div className="text-xs">
+                        <div className="text-sm">
                             <span className="text-slate-300">{dict?.matches?.pick || 'Pick'}: </span>
                             <span className="font-semibold text-yellow-200">
                                 {formatPredictionDisplay(item.prediction)}
@@ -110,10 +110,10 @@ export function PredictionCard({
                                 <div className="flex items-center space-x-2">
                                     <span className="text-lg">🎯</span>
                                     <div>
-                                        <div className="text-white font-semibold text-xs">
+                                        <div className="text-white font-semibold text-sm">
                                             Double Points Match
                                         </div>
-                                        <div className="text-purple-300 text-xs">
+                                        <div className="text-purple-300 text-sm">
                                             {isUsingDoublePointsMatch
                                                 ? 'Double points applied to this match'
                                                 : 'Double points for this match'
@@ -138,7 +138,7 @@ export function PredictionCard({
                     <div className="flex justify-between items-center">
                         <div className="flex items-center justify-between w-full space-x-2">
                             <div className="flex flex-col space-y-1">
-                                <span className="text-xs text-slate-300">{dict?.matches?.stake || 'Stake'}</span>
+                                <span className="text-sm text-slate-300">{dict?.matches?.stake || 'Stake'}</span>
                                 <div className="flex items-center space-x-1">
                                     <input
                                         type="number"
@@ -148,26 +148,42 @@ export function PredictionCard({
                                             const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
                                             onUpdateBetAmount(item.matchId, value);
                                         }}
-                                        className="w-16 px-1.5 py-0.5 text-xs bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-16 px-1.5 py-0.5 text-sm bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                         placeholder="0"
                                     />
-                                    <span className="text-xs text-slate-400">🌕</span>
+                                    <span className="text-sm text-slate-400">🌕</span>
                                 </div>
-                                <div className="text-xs text-slate-500">
+                                <div className="text-sm text-slate-500">
                                     (min {COIN_CONSTANTS.MIN_BET})
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3">
                                 <div className="text-center">
-                                    <div className="text-xs text-slate-400">{dict?.matches?.odds || 'Odds'}</div>
-                                    <div className="text-xs font-bold text-purple-400">
+                                    <div className="text-sm text-slate-400">{dict?.matches?.odds || 'Odds'}</div>
+                                    <div className="text-sm font-bold text-purple-400">
                                         {(item.multiplier || 1).toFixed(2)}x
                                     </div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-xs text-slate-400">{dict?.matches?.potentialWin || 'Win'}</div>
-                                    <div className="text-xs font-bold text-green-400">
+                                    <div className="text-sm text-slate-400">{dict?.matches?.potentialWin || 'Win'}</div>
+                                    <div className="text-sm font-bold text-green-400">
                                         {formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} 🌕
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-sm text-slate-400">Points</div>
+                                    <div className="text-sm font-bold text-blue-400">
+                                        +{(() => {
+                                            const multiplier = item.multiplier || 1;
+                                            let points = 10; // Base points for winning
+
+                                            // Add high odds bonus if multiplier >= 2.0
+                                            if (multiplier >= 2.0) {
+                                                points += Math.floor(multiplier * 5);
+                                            }
+
+                                            return points;
+                                        })()}
                                     </div>
                                 </div>
                             </div>

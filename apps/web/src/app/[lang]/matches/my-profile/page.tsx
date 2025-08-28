@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useDictionary } from '@/context/DictionaryContext';
 import { BetsService, supabase } from '@netprophet/lib';
+import { useWallet } from '@/context/WalletContext';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -26,17 +27,9 @@ export default function MyProfilePage() {
     const [loadingStats, setLoadingStats] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    useEffect(() => {
-        if (!loading && !user) {
-            router.push(`/${lang}/auth/signin`);
-        } else if (user && !loading) {
-            loadProfileStats();
-            checkAdminStatus();
-        }
-    }, [user, loading, router, lang]);
 
     // Check if user is admin
-    const checkAdminStatus = async () => {
+    const checkAdminStatus = useCallback(async () => {
         try {
             const { data: profile } = await supabase
                 .from('profiles')
@@ -49,10 +42,10 @@ export default function MyProfilePage() {
             console.error('Failed to check admin status:', err);
             setIsAdmin(false);
         }
-    };
+    }, [user?.id]);
 
     // Load profile statistics
-    const loadProfileStats = async () => {
+    const loadProfileStats = useCallback(async () => {
         try {
             setLoadingStats(true);
             setError(null);
@@ -89,7 +82,16 @@ export default function MyProfilePage() {
         } finally {
             setLoadingStats(false);
         }
-    };
+    }, [user]);
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push(`/${lang}/auth/signin`);
+        } else if (user && !loading) {
+            loadProfileStats();
+            checkAdminStatus();
+        }
+    }, [user, loading, router, lang, loadProfileStats, checkAdminStatus]);
 
     const handleSignOut = async () => {
         await signOut();
@@ -211,7 +213,7 @@ export default function MyProfilePage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-purple-400">{profileStats.totalCoins.toLocaleString()} 🌕</div>
-                                        <div className="text-sm text-gray-300">{dict?.profile?.totalCoins || 'Total Coins'}</div>
+                                        <div className="text-sm text-gray-300">{dict?.profile?.totalWinnings || 'Total Winnings'}</div>
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-green-400">{profileStats.totalWins}</div>

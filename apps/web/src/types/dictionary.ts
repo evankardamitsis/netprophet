@@ -274,6 +274,7 @@ export interface Dictionary {
         winRate: string;
         dailyStreak: string;
         totalCoins: string;
+        totalWinnings: string;
         totalBets: string;
         profileInformation: string;
         netProphetUser: string;
