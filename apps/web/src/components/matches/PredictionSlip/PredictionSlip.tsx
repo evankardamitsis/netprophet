@@ -36,6 +36,7 @@ import { PowerUpSuggestions } from './PowerUpSuggestions';
 import { PredictionCard } from './PredictionCard';
 import { SubmitSection } from './SubmitSection';
 import { EmptyState } from './EmptyState';
+import { BetSuccessModal } from './BetSuccessModal';
 
 // Icon components
 function ChevronUpIcon() {
@@ -86,6 +87,9 @@ export function PredictionSlip({
     const [hasDoublePointsMatchPowerUp, setHasDoublePointsMatchPowerUp] = useState<boolean>(false);
     const [doublePointsMatchId, setDoublePointsMatchId] = useState<string | null>(null);
     const [showDoublePointsStatus, setShowDoublePointsStatus] = useState<boolean>(false);
+
+    // Success modal state
+    const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
     // Reset parlay mode if less than 2 predictions
     useEffect(() => {
@@ -297,6 +301,9 @@ export function PredictionSlip({
             setIsUsingSafeParlay(false);
             setIsUsingSafeSingle(false);
             setDoublePointsMatchId(null);
+
+            // Show success modal
+            setShowSuccessModal(true);
 
         } catch (error) {
             // Handle insufficient balance or other errors
@@ -637,6 +644,13 @@ export function PredictionSlip({
                     </div>
                 </motion.div>
             )}
+
+            {/* Success Modal */}
+            <BetSuccessModal
+                isOpen={showSuccessModal}
+                onClose={() => setShowSuccessModal(false)}
+                lang={lang}
+            />
         </motion.div>
     );
 }

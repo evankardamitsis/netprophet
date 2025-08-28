@@ -166,6 +166,9 @@ export interface Dictionary {
         invalidParlayBet?: string;
         errorPlacingParlayBet?: string;
         errorPlacingIndividualBet?: string;
+        betSuccessTitle?: string;
+        betSuccessMessage?: string;
+        viewMyPicks?: string;
         errorPlacingBetCheckBalance?: string;
         needSafeBetTokens?: string;
         parlayBetDescription?: string;
