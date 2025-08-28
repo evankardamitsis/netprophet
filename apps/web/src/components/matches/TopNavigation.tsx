@@ -61,6 +61,12 @@ function InfoIcon() {
     </svg>
 }
 
+function WalletIcon() {
+    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+    </svg>
+}
+
 // Animated Burger Icon Component
 function BurgerIcon({ isOpen }: { isOpen: boolean }) {
     return (
@@ -405,8 +411,14 @@ export function TopNavigation({
                 {/* Right Section - Wallet, Notifications, Language, Account */}
                 <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
                     {/* Wallet Component */}
-                    <div className="block">
-                        <Wallet dict={dict} lang={lang} />
+                    <div className="block relative group">
+                        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                            {dict?.navigation?.myWallet || 'My Wallet'}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <WalletIcon />
+                            <Wallet dict={dict} lang={lang} />
+                        </div>
                     </div>
 
                     {/* Notifications Component */}
@@ -414,11 +426,11 @@ export function TopNavigation({
                         <Notifications />
                     </div>
 
-                    {/* Low Balance Info Icon */}
+                    {/* Low Balance Info Icon - Hidden on mobile */}
                     {showInfoIcon && (
                         <button
                             onClick={showLowBalanceNotification}
-                            className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white focus:outline-none"
+                            className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full  items-center justify-center font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white focus:outline-none hidden sm:flex"
                             title={isCriticalBalance
                                 ? 'Critical low balance - Click to view options'
                                 : isVeryLowBalance
@@ -537,9 +549,11 @@ export function TopNavigation({
                                                                     {userPowerUp.power_up?.name || 'Power-up'}
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="text-gray-400 text-xs">
-                                                                        {userPowerUp.quantity}x
-                                                                    </span>
+                                                                    {userPowerUp.quantity > 1 && (
+                                                                        <span className="text-gray-400 text-xs">
+                                                                            {userPowerUp.quantity}x
+                                                                        </span>
+                                                                    )}
                                                                     {expiryText && (
                                                                         <span className="text-orange-400 text-xs font-medium">
                                                                             {expiryText}

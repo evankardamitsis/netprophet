@@ -227,16 +227,13 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                 className="flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-transparent "
                 aria-label="Wallet"
             >
-                <span className={`font-bold text-sm ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
+                <span className={`font-bold text-sm ${isLowBalance ? 'text-red-400' : 'text-yellow-300'}`}>
                     {availableBalance} 🌕
                 </span>
                 {pendingBetAmount > 0 && (
                     <span className="text-xs px-1 py-0.5 rounded-full bg-blue-900 text-blue-300">
                         -{pendingBetAmount}
                     </span>
-                )}
-                {isLowBalance && (
-                    <WarningIcon className="h-5 w-5 text-red-400 drop-shadow-lg" />
                 )}
                 {isOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </button>
@@ -248,12 +245,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="absolute right-0 mt-2 w-80 rounded-lg z-[9999] bg-[#23262F] border border-[#2A2D38] overflow-hidden"
-                        style={{
-                            boxShadow: '0 0 0 1px rgba(0,0,0,0.1), 0 10px 15px -3px rgba(0,0,0,0.3), 0 4px 6px -2px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1) inset',
-                            transform: 'translateZ(0)',
-                            filter: 'drop-shadow(0 10px 8px rgb(0 0 0 / 0.4))'
-                        }}
+                        className="absolute right-0 mt-2 w-80 rounded-lg shadow-lg z-50 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50"
                     >
                         {/* Header */}
                         <div className="p-4 border-b border-gray-700">

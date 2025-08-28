@@ -9,6 +9,7 @@ export interface Dictionary {
         myProfile: string;
         howItWorks: string;
         backToMatches: string;
+        myWallet?: string;
     };
     auth: {
         signIn: string;

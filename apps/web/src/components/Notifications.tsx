@@ -171,7 +171,7 @@ export function Notifications() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 text-white hover:bg-white/10 border-transparent"
             >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                         {unreadCount > 99 ? '99+' : unreadCount}
@@ -181,7 +181,7 @@ export function Notifications() {
 
             {/* Notifications Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                     <div className="p-4 border-b border-slate-700">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold">{dict?.notifications?.title || 'Notifications'}</h3>
