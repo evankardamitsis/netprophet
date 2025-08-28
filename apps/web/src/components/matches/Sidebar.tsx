@@ -118,7 +118,7 @@ function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionar
                 {liveMatches.map((match) => (
                     <div key={match.id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg border border-red-700/40">
                         <div className="flex-1">
-                            <div className="text-sm font-semibold text-yellow-200">
+                            <div className="text-sm font-semibold text-yellow-200 truncate">
                                 {match.player1.name.split(' ')[1] || match.player1.name} {dict?.sidebar?.versus || 'v'} {match.player2.name.split(' ')[1] || match.player2.name}
                             </div>
 

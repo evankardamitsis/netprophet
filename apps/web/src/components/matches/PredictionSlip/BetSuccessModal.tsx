@@ -15,6 +15,7 @@ interface BetSuccessModalProps {
 export function BetSuccessModal({ isOpen, onClose, lang }: BetSuccessModalProps) {
     const router = useRouter();
     const { dict } = useDictionary();
+
     const [confetti, setConfetti] = useState<Array<{ id: number; x: number; y: number; color: string; rotation: number; delay: number }>>([]);
 
     // Generate confetti when modal opens

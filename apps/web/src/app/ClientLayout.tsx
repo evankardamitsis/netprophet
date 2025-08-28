@@ -10,6 +10,8 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { Dictionary } from '@/types/dictionary';
 import { DictionaryProvider } from '@/context/DictionaryContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
+import { SuccessModalProvider, useSuccessModal } from '@/context/SuccessModalContext';
+import { BetSuccessModal } from '@/components/matches/PredictionSlip/BetSuccessModal';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -47,7 +49,7 @@ interface ClientLayoutProps {
     lang?: 'en' | 'el';
 }
 
-export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayoutProps) {
+function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps) {
     const { user, signOut, loading } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState<'matches' | 'leaderboard' | 'rewards'>('matches');
@@ -182,10 +184,35 @@ export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayo
 
                             {/* Global Low Balance Notification */}
                             <LowBalanceNotification lang={lang} />
+
+                            {/* Success Modal */}
+                            <SuccessModalContent lang={lang} />
                         </div>
                     </div>
                 </MatchSelectContext.Provider>
             </PredictionSlipCollapseContext.Provider>
         </DictionaryProvider>
+    );
+}
+
+function SuccessModalContent({ lang }: { lang: string }) {
+    const { showSuccessModal, setShowSuccessModal } = useSuccessModal();
+
+    return (
+        <BetSuccessModal
+            isOpen={showSuccessModal}
+            onClose={() => setShowSuccessModal(false)}
+            lang={lang}
+        />
+    );
+}
+
+export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayoutProps) {
+    return (
+        <SuccessModalProvider>
+            <ClientLayoutContent dict={dict} lang={lang}>
+                {children}
+            </ClientLayoutContent>
+        </SuccessModalProvider>
     );
 }

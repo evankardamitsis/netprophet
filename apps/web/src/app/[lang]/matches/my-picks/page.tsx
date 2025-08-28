@@ -14,6 +14,7 @@ import { PredictionHistory } from '@/components/matches/PredictionHistory';
 interface BetWithMatchDetails {
     id: string;
     matchTitle: string;
+    matchTitleShort: string;
     date: string;
     time: string;
     prediction: {
@@ -99,16 +100,25 @@ export default function MyPicksPage() {
 
                 const match = bet.match;
                 let matchTitle = 'Unknown Match';
+                let matchTitleShort = 'Unknown Match';
 
                 if (match && match.player_a && match.player_b) {
                     const playerAName = `${match.player_a.first_name} ${match.player_a.last_name}`;
                     const playerBName = `${match.player_b.first_name} ${match.player_b.last_name}`;
+
+                    // On mobile: first letter of first name + full last name
+                    const playerAShort = `${match.player_a.first_name.charAt(0)}. ${match.player_a.last_name}`;
+                    const playerBShort = `${match.player_b.first_name.charAt(0)}. ${match.player_b.last_name}`;
+
                     matchTitle = `${playerAName} vs ${playerBName}`;
+                    matchTitleShort = `${playerAShort} vs ${playerBShort}`;
                 } else if (bet.match_id) {
                     // If we have a match_id but no match data, show the match ID
                     matchTitle = `Match ${bet.match_id.slice(0, 8)}...`;
+                    matchTitleShort = `Match ${bet.match_id.slice(0, 8)}...`;
                 } else {
                     matchTitle = 'Unknown Match';
+                    matchTitleShort = 'Unknown Match';
                 }
 
                 const createdDate = new Date(bet.created_at);
@@ -122,6 +132,7 @@ export default function MyPicksPage() {
                 return {
                     id: bet.id,
                     matchTitle,
+                    matchTitleShort,
                     date,
                     time,
                     prediction: {
@@ -209,44 +220,40 @@ export default function MyPicksPage() {
                         {(() => {
                             const activeBets = bets.filter(bet => bet.status === 'active');
                             return activeBets.length > 0 ? (
-                                <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
-                                    <div className="grid gap-4">
+                                <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+                                    <div className="space-y-2">
                                         {activeBets.map((bet) => (
-                                            <div key={bet.id} className="bg-slate-700 rounded-lg p-4 border border-slate-600">
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div className="flex-1">
-                                                        <h3 className="font-semibold text-white text-lg mb-1">
-                                                            {bet.matchTitle}
-                                                        </h3>
-                                                        <p className="text-gray-300 text-sm">
+                                            <div key={bet.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 hover:bg-slate-650 transition-colors min-h-[80px]">
+                                                <div className="flex justify-between items-center h-full">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-3 mb-1">
+                                                            <h3 className="font-semibold text-white text-sm">
+                                                                <span className="md:hidden">{bet.matchTitleShort}</span>
+                                                                <span className="hidden md:inline truncate">{bet.matchTitle}</span>
+                                                            </h3>
+                                                        </div>
+                                                        <p className="text-gray-400 text-xs mb-1">
                                                             {new Date(bet.created_at).toLocaleDateString('en-GB', {
                                                                 day: 'numeric',
                                                                 month: 'short',
                                                                 year: 'numeric'
                                                             })}
                                                         </p>
+                                                        <p className="text-gray-300 text-xs">
+                                                            <span className="font-medium text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
+                                                        </p>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="text-green-400 font-bold text-lg">
+                                                    <div className="text-right ml-4 flex-shrink-0">
+                                                        <div className="text-green-400 font-bold text-sm">
                                                             {bet.betAmount} 🌕
                                                         </div>
-                                                        <div className="text-gray-400 text-sm">
+                                                        <div className="text-gray-400 text-xs">
                                                             {bet.multiplier}x
                                                         </div>
+                                                        <div className="text-gray-300 text-xs mt-1">
+                                                            {dict?.myPicks?.potential || 'Potential'}: <span className="text-green-400 font-medium">{bet.potentialWinnings} 🌕</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <div className="bg-slate-600 rounded p-3 mb-3">
-                                                    <p className="text-gray-300 text-sm">
-                                                        <span className="font-medium text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
-                                                    </p>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <div className="text-gray-300 text-sm">
-                                                        {dict?.myPicks?.potential || 'Potential'}: <span className="text-green-400 font-medium">{bet.potentialWinnings} 🌕</span>
-                                                    </div>
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300">
-                                                        Active
-                                                    </span>
                                                 </div>
                                             </div>
                                         ))}

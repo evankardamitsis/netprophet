@@ -344,10 +344,10 @@ export function TopNavigation({
 
                 {/* Center Section - Navigation Tabs (Hidden on mobile) */}
                 {showNavigationTabs && (
-                    <nav className="hidden lg:flex flex-1 justify-center gap-2 xl:gap-4">
+                    <nav className="hidden lg:flex flex-1 justify-center gap-1.5 xl:gap-3">
                         <button
                             onClick={() => router.push(`/${currentLang}/matches`)}
-                            className={`px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition text-sm xl:text-base ${pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}
@@ -356,7 +356,7 @@ export function TopNavigation({
                         </button>
                         <button
                             onClick={() => router.push(`/${currentLang}/matches/leaderboard`)}
-                            className={`px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition text-sm xl:text-base ${pathname === `/${currentLang}/matches/leaderboard`
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/leaderboard`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}
@@ -365,7 +365,7 @@ export function TopNavigation({
                         </button>
                         <button
                             onClick={() => router.push(`/${currentLang}/matches/my-picks`)}
-                            className={`px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition text-sm xl:text-base ${pathname === `/${currentLang}/matches/my-picks`
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/my-picks`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}
@@ -374,7 +374,7 @@ export function TopNavigation({
                         </button>
                         <button
                             onClick={() => router.push(`/${currentLang}/players`)}
-                            className={`px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition text-sm xl:text-base ${pathname === `/${currentLang}/players`
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/players`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}
@@ -383,7 +383,7 @@ export function TopNavigation({
                         </button>
                         <button
                             onClick={() => router.push(`/${currentLang}/matches/rewards`)}
-                            className={`px-2 xl:px-3 py-1 xl:py-2 rounded-lg font-semibold transition text-sm xl:text-base ${pathname === `/${currentLang}/matches/rewards`
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/rewards`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}

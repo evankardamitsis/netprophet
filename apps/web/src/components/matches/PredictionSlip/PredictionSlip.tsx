@@ -37,6 +37,7 @@ import { PredictionCard } from './PredictionCard';
 import { SubmitSection } from './SubmitSection';
 import { EmptyState } from './EmptyState';
 import { BetSuccessModal } from './BetSuccessModal';
+import { useSuccessModal } from '@/context/SuccessModalContext';
 
 // Icon components
 function ChevronUpIcon() {
@@ -88,8 +89,8 @@ export function PredictionSlip({
     const [doublePointsMatchId, setDoublePointsMatchId] = useState<string | null>(null);
     const [showDoublePointsStatus, setShowDoublePointsStatus] = useState<boolean>(false);
 
-    // Success modal state
-    const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
+    // Success modal state from context
+    const { showSuccessModal, setShowSuccessModal } = useSuccessModal();
 
     // Reset parlay mode if less than 2 predictions
     useEffect(() => {
@@ -294,16 +295,18 @@ export function PredictionSlip({
             // Call the original submit handler
             onSubmitPredictions();
 
-            // Clear the slip after successful placement
-            clearPredictions();
+            // Show success modal FIRST
+            setShowSuccessModal(true);
 
             // Reset safe slip power-up states
             setIsUsingSafeParlay(false);
             setIsUsingSafeSingle(false);
             setDoublePointsMatchId(null);
 
-            // Show success modal
-            setShowSuccessModal(true);
+            // Clear the slip after a longer delay to ensure modal is fully shown
+            setTimeout(() => {
+                clearPredictions();
+            }, 500);
 
         } catch (error) {
             // Handle insufficient balance or other errors
@@ -645,12 +648,6 @@ export function PredictionSlip({
                 </motion.div>
             )}
 
-            {/* Success Modal */}
-            <BetSuccessModal
-                isOpen={showSuccessModal}
-                onClose={() => setShowSuccessModal(false)}
-                lang={lang}
-            />
         </motion.div>
     );
 }

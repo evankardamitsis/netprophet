@@ -217,12 +217,12 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                     </span>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-0.5">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0 sm:gap-0.5 flex-1 min-w-0">
-                                            <div className="flex items-center gap-0 sm:gap-0.5">
-                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                            <div className="flex items-center gap-0 sm:gap-0.5 min-w-0">
+                                                <span className={`font-semibold text-xs sm:text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player1.name}
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
-                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                <span className={`font-semibold text-xs sm:text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
                                                 </span>
                                             </div>
@@ -268,12 +268,12 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                     </span>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0 sm:gap-0.5">
                                         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0 sm:gap-0.5 flex-1 min-w-0">
-                                            <div className="flex items-center gap-0 sm:gap-0.5">
-                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                            <div className="flex items-center gap-0 sm:gap-0.5 min-w-0">
+                                                <span className={`font-semibold text-xs sm:text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player1.name}
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-400 flex-shrink-0">{dict?.matches?.vs || dict?.sidebar?.versus || 'vs'}</span>
-                                                <span className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                                                <span className={`font-semibold text-xs sm:text-sm truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                                     {match.player2.name}
                                                 </span>
                                             </div>
