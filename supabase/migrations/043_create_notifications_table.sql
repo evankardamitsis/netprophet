@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS public.notifications (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-    type TEXT NOT NULL CHECK (type IN ('bet_won', 'bet_lost', 'bet_resolved', 'match_result', 'system')),
+    type TEXT NOT NULL CHECK (type IN ('bet_won', 'bet_lost', 'bet_resolved', 'match_result', 'match_cancelled', 'system')),
     title TEXT NOT NULL,
     message TEXT NOT NULL,
     data JSONB, -- Additional data like bet_id, match_id, winnings, etc.

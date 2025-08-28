@@ -20,7 +20,8 @@ import {
     Calculator,
     ChevronDown,
     ChevronRight,
-    Zap
+    Zap,
+    Bell
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -66,6 +67,7 @@ const menuItems: MenuItem[] = [
         ]
     },
     { href: '/logs', label: 'Logs', icon: FileText },
+    { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/odds-demo', label: 'Odds Demo', icon: Brain }
 ];
 
