@@ -36,8 +36,8 @@ interface PredictionOptions {
 }
 
 interface MatchDetails {
-    player1: { name: string; odds: number; wins: number; losses: number };
-    player2: { name: string; odds: number; wins: number; losses: number };
+    player1: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
+    player2: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
     round: string;
     surface: string;
     format: string; // Add format field
@@ -501,7 +501,12 @@ export function PredictionForm({
                                 : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                             }`}
                     >
-                        <div className="text-sm sm:text-base font-semibold truncate">{details.player1.name.split(' ')[1]}</div>
+                        <div className="text-sm sm:text-base font-semibold truncate">
+                            {details.player1.name.split(' ')[1]}
+                            {details.player1.ntrpRating && (
+                                <span className="text-sm text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
+                            )}
+                        </div>
                         <div className="text-xs text-gray-400">{details.player1.odds.toFixed(2)}x</div>
                     </button>
                     <button
@@ -514,7 +519,12 @@ export function PredictionForm({
                                 : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                             }`}
                     >
-                        <div className="text-sm sm:text-base font-semibold truncate">{details.player2.name.split(' ')[1]}</div>
+                        <div className="text-sm sm:text-base font-semibold truncate">
+                            {details.player2.name.split(' ')[1]}
+                            {details.player2.ntrpRating && (
+                                <span className="text-sm text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
+                            )}
+                        </div>
                         <div className="text-xs text-gray-400">{details.player2.odds.toFixed(2)}x</div>
                     </button>
                 </div>

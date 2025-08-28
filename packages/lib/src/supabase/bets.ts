@@ -210,6 +210,7 @@ export class BetsService {
     const { data, error } = await supabase
       .from('bets')
       .select('*')
+      .eq('user_id', sessionData.session.user.id)
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -224,7 +225,7 @@ export class BetsService {
   /**
    * Get bets with match details
    */
-  static async getBetsWithMatches(): Promise<BetWithMatch[]> {
+  static async getBetsWithMatches(page: number = 1, limit: number = 20): Promise<{ bets: BetWithMatch[], total: number }> {
     try {
       // Ensure we have a valid session before making the query
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
@@ -255,6 +256,20 @@ export class BetsService {
 
       console.log('User authenticated successfully:', user.id);
 
+      const offset = (page - 1) * limit;
+      
+      // Get total count first
+      const { count, error: countError } = await supabase
+        .from('bets')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', sessionData.session.user.id);
+
+      if (countError) {
+        console.error('Error fetching bet count:', countError);
+        throw new Error(`Failed to fetch bet count: ${countError.message}`);
+      }
+
+      // Get paginated bets
       const { data, error } = await supabase
         .from('bets')
         .select(`
@@ -275,14 +290,19 @@ export class BetsService {
             )
           )
         `)
-        .order('created_at', { ascending: false });
+        .eq('user_id', sessionData.session.user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (error) {
         console.error('Error fetching bets with matches:', error);
         throw new Error(`Failed to fetch bets: ${error.message}`);
       }
 
-      return (data || []) as unknown as BetWithMatch[];
+      return {
+        bets: (data || []) as unknown as BetWithMatch[],
+        total: count || 0
+      };
     } catch (error) {
       console.error('getBetsWithMatches error:', error);
       throw error;

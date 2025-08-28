@@ -63,9 +63,9 @@ export default function MyProfilePage() {
             }
 
             // Get user's bets to calculate statistics
-            const betsData = await BetsService.getBetsWithMatches();
+            const { bets: betsData, total } = await BetsService.getBetsWithMatches();
 
-            const totalBets = betsData.length;
+            const totalBets = total;
             const wonBets = betsData.filter(bet => bet.status === 'won').length;
             const lostBets = betsData.filter(bet => bet.status === 'lost').length;
             const totalCoins = betsData.reduce((sum, bet) => sum + (bet.status === 'won' ? bet.potential_winnings : 0), 0);

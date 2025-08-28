@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,6 +43,9 @@ export default function MyPicksPage() {
     const [bets, setBets] = useState<BetWithMatchDetails[]>([]);
     const [loadingBets, setLoadingBets] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalBets, setTotalBets] = useState(0);
+    const betsPerPage = 20;
 
     // Helper function to format prediction for display
     const formatPrediction = (prediction: any) => {
@@ -57,7 +60,7 @@ export default function MyPicksPage() {
     };
 
     // Load user bets
-    const loadBets = async () => {
+    const loadBets = useCallback(async () => {
         try {
             setLoadingBets(true);
             setError(null);
@@ -67,7 +70,8 @@ export default function MyPicksPage() {
                 throw new Error('User not authenticated');
             }
 
-            const betsData = await BetsService.getBetsWithMatches();
+            const { bets: betsData, total } = await BetsService.getBetsWithMatches(currentPage, betsPerPage);
+            setTotalBets(total);
 
             // Transform bets data to match the expected format
             const transformedBets: BetWithMatchDetails[] = betsData.map(bet => {
@@ -108,7 +112,7 @@ export default function MyPicksPage() {
                 }
 
                 const createdDate = new Date(bet.created_at);
-                const date = createdDate.toISOString().split('T')[0];
+                const date = createdDate.toLocaleDateString('en-GB');
                 const time = createdDate.toLocaleTimeString('en-GB', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -146,7 +150,7 @@ export default function MyPicksPage() {
         } finally {
             setLoadingBets(false);
         }
-    };
+    }, [user, currentPage, betsPerPage]);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -154,7 +158,7 @@ export default function MyPicksPage() {
         } else if (user && !loading) {
             loadBets();
         }
-    }, [user, loading, router, lang]);
+    }, [user, loading, router, lang, loadBets]);
 
     const handleSignOut = async () => {
         await signOut();
@@ -287,7 +291,39 @@ export default function MyPicksPage() {
                         <h2 className="text-md font-bold text-white mb-4">
                             {dict?.myPicks?.betHistory || 'Bet History'}
                         </h2>
-                        <BetHistoryTable bets={bets.filter(bet => bet.status !== 'active')} dict={dict} />
+                        {(() => {
+                            const resolvedBets = bets.filter(bet => bet.status !== 'active');
+                            const totalPages = Math.ceil(totalBets / betsPerPage);
+
+                            return (
+                                <>
+                                    <BetHistoryTable bets={resolvedBets} dict={dict} />
+                                    {totalPages > 1 && (
+                                        <div className="flex justify-center items-center gap-2 mt-6">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage === 1}
+                                                className="px-3 py-1 text-sm border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50"
+                                            >
+                                                Previous
+                                            </Button>
+                                            <span className="text-gray-300 text-sm px-4">
+                                                Page {currentPage} of {totalPages}
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="px-3 py-1 text-sm border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50"
+                                            >
+                                                Next
+                                            </Button>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
                 )}
             </div>

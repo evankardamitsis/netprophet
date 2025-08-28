@@ -60,6 +60,7 @@ export default function TournamentPage() {
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [activeTab, setActiveTab] = useState<string>('overview');
+    const [creatingMatch, setCreatingMatch] = useState(false);
 
 
 
@@ -139,18 +140,31 @@ export default function TournamentPage() {
 
     const handleCreateMatch = async (matchData: any) => {
         try {
+            setCreatingMatch(true);
+
             // Ensure the match is associated with this tournament
             const matchWithTournament = {
                 ...matchData,
                 tournament_id: tournamentId
             };
-            await createMatch(matchWithTournament);
+            const createdMatch = await createMatch(matchWithTournament);
             setShowMatchForm(false);
+
+            // Automatically calculate odds for the new match
+            try {
+                await calculateMatchOddsSecure([createdMatch.id]);
+                toast.success('Match created successfully with automatic odds calculation!');
+            } catch (oddsError) {
+                console.error('Failed to calculate odds automatically:', oddsError);
+                toast.success('Match created successfully! (Odds calculation failed - you can calculate odds manually later)');
+            }
+
             loadTournamentData();
-            toast.success('Match created successfully!');
         } catch (error) {
             console.error('Error creating match:', error);
             toast.error('Failed to create match');
+        } finally {
+            setCreatingMatch(false);
         }
     };
 
@@ -583,6 +597,7 @@ export default function TournamentPage() {
                     currentTournament={tournament}
                     categories={categories}
                     onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
+                    isSubmitting={creatingMatch}
                 />
 
                 <TournamentModal

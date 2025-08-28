@@ -12,9 +12,10 @@ interface MatchModalProps {
     currentTournament?: Tournament | null; // For read-only tournament display
     categories?: Array<{ id: string; name: string }>; // Tournament categories
     onSubmit: (data: any) => void;
+    isSubmitting?: boolean;
 }
 
-export function MatchModal({ isOpen, onClose, match, tournaments, currentTournament, categories, onSubmit }: MatchModalProps) {
+export function MatchModal({ isOpen, onClose, match, tournaments, currentTournament, categories, onSubmit, isSubmitting }: MatchModalProps) {
     const handleSubmit = (data: any): void => {
         onSubmit(data);
         onClose();
@@ -39,6 +40,7 @@ export function MatchModal({ isOpen, onClose, match, tournaments, currentTournam
                     categories={categories}
                     onSubmit={handleSubmit}
                     onCancel={handleCancel}
+                    isSubmitting={isSubmitting}
                 />
             </DialogContent>
         </Dialog>

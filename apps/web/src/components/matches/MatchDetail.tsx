@@ -71,13 +71,15 @@ const createMatchDetails = (match: Match) => {
             name: match.player1.name,
             odds: match.player1.odds,
             wins: match.player_a?.wins || 0,
-            losses: match.player_a?.losses || 0
+            losses: match.player_a?.losses || 0,
+            ntrpRating: match.player_a?.ntrp_rating
         },
         player2: {
             name: match.player2.name,
             odds: match.player2.odds,
             wins: match.player_b?.wins || 0,
-            losses: match.player_b?.losses || 0
+            losses: match.player_b?.losses || 0,
+            ntrpRating: match.player_b?.ntrp_rating
         },
         points: match.points,
         headToHead: `${match.player1.name} vs ${match.player2.name}`, // We can enhance this later with actual H2H data

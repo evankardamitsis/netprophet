@@ -37,9 +37,10 @@ interface MatchFormProps {
     categories?: Array<{ id: string; name: string }>;
     onSubmit: (data: any) => void;
     onCancel: () => void;
+    isSubmitting?: boolean;
 }
 
-export function MatchForm({ match, tournaments, currentTournament, categories, onSubmit, onCancel }: MatchFormProps) {
+export function MatchForm({ match, tournaments, currentTournament, categories, onSubmit, onCancel, isSubmitting }: MatchFormProps) {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(false);
     const [playersError, setPlayersError] = useState<string | null>(null);
@@ -427,13 +428,18 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
             </div>
 
             <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={onCancel} className="h-12 px-8 text-base">
+                <Button type="button" variant="outline" onClick={onCancel} className="h-12 px-8 text-base" disabled={isSubmitting}>
                     Cancel
                 </Button>
-                <Button type="submit" className="h-12 px-8 text-base">
-                    {match ? 'Update Match' : 'Create Match'}
+                <Button type="submit" className="h-12 px-8 text-base" disabled={isSubmitting}>
+                    {isSubmitting ? 'Creating Match...' : (match ? 'Update Match' : 'Create Match')}
                 </Button>
             </div>
+            {!match && (
+                <div className="text-xs text-gray-500 mt-2 text-center">
+                    Odds will be calculated automatically after match creation
+                </div>
+            )}
         </form>
     );
 } 
