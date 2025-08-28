@@ -6,8 +6,8 @@ import { CardTitle } from '@/components/ui/card';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
-import { TournamentFilter } from './TournamentFilter';
 import { useState, useMemo } from 'react';
+import { TournamentFilter } from './TournamentFilter';
 
 interface MatchesGridProps {
     matches?: Match[];
@@ -58,10 +58,37 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white flex items-center">
                                 <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
                                 {dict?.sidebar?.liveMatches || 'Live Matches'}
+                                <span className="ml-2 text-sm text-gray-400">({liveMatches.length})</span>
                             </h2>
-                            <span className="text-xs xs:text-sm text-gray-400">({liveMatches.length})</span>
+                            {/* Navigation arrows for live matches - only visible on large screens */}
+                            <div className="hidden lg:flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        const container = document.querySelector('.live-matches-container');
+                                        if (container) {
+                                            container.scrollBy({ left: -200, behavior: 'smooth' });
+                                        }
+                                    }}
+                                    className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-gray-300 hover:scale-110 hover:bg-slate-700/50 rounded-full"
+                                    aria-label="Scroll left"
+                                >
+                                    ←
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const container = document.querySelector('.live-matches-container');
+                                        if (container) {
+                                            container.scrollBy({ left: 200, behavior: 'smooth' });
+                                        }
+                                    }}
+                                    className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-gray-300 hover:scale-110 hover:bg-slate-700/50 rounded-full"
+                                    aria-label="Scroll right"
+                                >
+                                    →
+                                </button>
+                            </div>
                         </div>
-                        <div className={`${
+                        <div className={`live-matches-container ${
                             // Locked matches on small screens: horizontal carousel with peek
                             liveMatches.some(m => m.locked)
                                 ? 'flex gap-2 xs:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-2 xs:pb-3 pr-4 xs:pr-6'
@@ -209,18 +236,17 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                 {upcomingMatches.length > 0 && (
                     <div className="pb-3 xs:pb-4 sm:pb-5 md:pb-6">
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                            <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white">{dict?.sidebar?.upcoming || 'Upcoming Matches'}</h2>
-                            <span className="text-xs xs:text-sm text-gray-400">({upcomingMatches.length})</span>
+                            <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white">
+                                {dict?.sidebar?.upcoming || 'Upcoming Matches'}
+                                <span className="ml-2 text-sm text-gray-400">({upcomingMatches.length})</span>
+                            </h2>
                         </div>
                         <div className={`grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ${
-                            // Locked matches need fewer columns to ensure full text visibility
-                            upcomingMatches.some(m => m.locked)
-                                ? 'grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
-                                : // When both sidebar and prediction slip are open, max 2 columns
-                                sidebarOpen && !isSlipCollapsed
-                                    ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
-                                    : // All other states: max 3 columns
-                                    'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
+                            // When both sidebar and prediction slip are open, max 2 columns
+                            sidebarOpen && !isSlipCollapsed
+                                ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
+                                : // All other states: max 3 columns for consistent layout
+                                'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
                             }`}>
                             {upcomingMatches.map((match) => (
                                 <div

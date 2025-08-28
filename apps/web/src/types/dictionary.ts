@@ -126,6 +126,7 @@ export interface Dictionary {
         noPredictionsYet?: string;
         selectMatchesToAdd?: string;
         parlayMode?: string;
+        selectTournament?: string;
         predictionsReadyForParlay?: string;
         combineAllPredictions?: string;
         placeIndividualBets?: string;
