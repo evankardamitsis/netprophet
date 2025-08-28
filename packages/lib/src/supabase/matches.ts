@@ -312,22 +312,15 @@ export async function getMatchesByTournament(tournamentId: string) {
 // Match result management
 export async function updateMatchResult(id: string, result: {
     winner_id: string;
-    sets_a: number;
-    sets_b: number;
-    games_a: number;
-    games_b: number;
-    tiebreaks_a: number;
-    tiebreaks_b: number;
-    match_duration: number;
     status: 'finished';
 }) {
 
     const { data, error } = await supabase
         .from('matches')
         .update({
-            ...result,
-            processed: true,
-            played_at: new Date().toISOString()
+            winner_id: result.winner_id,
+            status: result.status,
+            processed: true
         })
         .eq('id', id)
         .select()
@@ -429,9 +422,7 @@ export async function calculateMatchOdds(playerAId: string, playerBId: string, s
 
     return {
         odds_a: Math.round(oddsA * 100) / 100,
-        odds_b: Math.round(oddsB * 100) / 100,
-        prob_a: Math.round(probA * 100) / 100,
-        prob_b: Math.round(probB * 100) / 100
+        odds_b: Math.round(oddsB * 100) / 100
     };
 } 
 

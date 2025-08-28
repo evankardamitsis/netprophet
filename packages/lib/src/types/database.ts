@@ -289,117 +289,63 @@ export type Database = {
       }
       matches: {
         Row: {
-          a_score: number | null
-          b_score: number | null
           category_id: string | null
-          court_number: number | null
           created_at: string | null
           format: string | null
-          games_a: number | null
-          games_b: number | null
           id: string
           lock_time: string | null
           locked: boolean | null
-          match_duration: number | null
-          match_notes: string | null
           odds_a: number | null
           odds_b: number | null
-          played_at: string | null
-          player_a: string | null
           player_a_id: string | null
-          player_b: string | null
           player_b_id: string | null
-          points_dog: number | null
-          points_fav: number | null
           points_value: number | null
-          prob_a: number | null
-          prob_b: number | null
           processed: boolean | null
           round: string | null
-          sets_a: number | null
-          sets_b: number | null
           start_time: string | null
           status: string
-          tiebreaks_a: number | null
-          tiebreaks_b: number | null
           tournament_id: string | null
           updated_at: string | null
           web_synced: boolean | null
           winner_id: string | null
         }
         Insert: {
-          a_score?: number | null
-          b_score?: number | null
           category_id?: string | null
-          court_number?: number | null
           created_at?: string | null
           format?: string | null
-          games_a?: number | null
-          games_b?: number | null
           id?: string
           lock_time?: string | null
           locked?: boolean | null
-          match_duration?: number | null
-          match_notes?: string | null
           odds_a?: number | null
           odds_b?: number | null
-          played_at?: string | null
-          player_a?: string | null
           player_a_id?: string | null
-          player_b?: string | null
           player_b_id?: string | null
-          points_dog?: number | null
-          points_fav?: number | null
           points_value?: number | null
-          prob_a?: number | null
-          prob_b?: number | null
           processed?: boolean | null
           round?: string | null
-          sets_a?: number | null
-          sets_b?: number | null
           start_time?: string | null
           status?: string
-          tiebreaks_a?: number | null
-          tiebreaks_b?: number | null
           tournament_id?: string | null
           updated_at?: string | null
           web_synced?: boolean | null
           winner_id?: string | null
         }
         Update: {
-          a_score?: number | null
-          b_score?: number | null
           category_id?: string | null
-          court_number?: number | null
           created_at?: string | null
           format?: string | null
-          games_a?: number | null
-          games_b?: number | null
           id?: string
           lock_time?: string | null
           locked?: boolean | null
-          match_duration?: number | null
-          match_notes?: string | null
           odds_a?: number | null
           odds_b?: number | null
-          played_at?: string | null
-          player_a?: string | null
           player_a_id?: string | null
-          player_b?: string | null
           player_b_id?: string | null
-          points_dog?: number | null
-          points_fav?: number | null
           points_value?: number | null
-          prob_a?: number | null
-          prob_b?: number | null
           processed?: boolean | null
           round?: string | null
-          sets_a?: number | null
-          sets_b?: number | null
           start_time?: string | null
           status?: string
-          tiebreaks_a?: number | null
-          tiebreaks_b?: number | null
           tournament_id?: string | null
           updated_at?: string | null
           web_synced?: boolean | null

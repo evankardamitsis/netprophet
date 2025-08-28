@@ -9,7 +9,6 @@ export const predictionSchema = z.object({
 export const matchSchema = z.object({
   player_a: z.string().uuid(),
   player_b: z.string().uuid(),
-  played_at: z.string().datetime(),
 });
 
 export const playerSchema = z.object({

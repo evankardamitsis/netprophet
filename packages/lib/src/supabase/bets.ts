@@ -10,8 +10,6 @@ type BetWithMatch = Bet & {
     player_a_id: string;
     player_b_id: string;
     start_time: string;
-    a_score: string | null;
-    b_score: string | null;
     player_a: {
       first_name: string;
       last_name: string;
@@ -278,8 +276,7 @@ export class BetsService {
             player_a_id,
             player_b_id,
             start_time,
-            a_score,
-            b_score,
+
             player_a:players!matches_player_a_id_fkey(
               first_name,
               last_name

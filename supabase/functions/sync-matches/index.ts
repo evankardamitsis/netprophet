@@ -70,8 +70,6 @@ serve(async (req) => {
         lock_time,
         odds_a,
         odds_b,
-        a_score,
-        b_score,
         tournaments (
           id,
           name,

@@ -51,8 +51,6 @@ function transformMatch(rawMatch: RawMatch): Match {
         lock_time: rawMatch.lock_time,
         odds_a: rawMatch.odds_a,
         odds_b: rawMatch.odds_b,
-        a_score: rawMatch.a_score,
-        b_score: rawMatch.b_score,
         points_value: rawMatch.points_value || 0,
         web_synced: rawMatch.web_synced || false,
         tournaments: Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0] : rawMatch.tournaments,
@@ -95,8 +93,6 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
             lock_time,
             odds_a,
             odds_b,
-            a_score,
-            b_score,
             points_value,
             web_synced,
             tournaments (

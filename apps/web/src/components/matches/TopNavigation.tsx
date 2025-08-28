@@ -390,6 +390,15 @@ export function TopNavigation({
                         >
                             {dict?.navigation?.rewards || 'Rewards'}
                         </button>
+                        <button
+                            onClick={() => router.push(`/${currentLang}/matches/results`)}
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/results`
+                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
+                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                }`}
+                        >
+                            {dict?.navigation?.results || 'Results'}
+                        </button>
                     </nav>
                 )}
 
@@ -639,6 +648,18 @@ export function TopNavigation({
                                         }`}
                                 >
                                     {dict?.navigation?.rewards || 'Rewards'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMobileMenuOpen(false);
+                                        router.push(`/${currentLang}/matches/results`);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/matches/results`
+                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
+                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                        }`}
+                                >
+                                    {dict?.navigation?.results || 'Results'}
                                 </button>
                             </div>
 

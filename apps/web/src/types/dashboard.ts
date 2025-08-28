@@ -41,8 +41,6 @@ export interface Match {
     lock_time: string | null;
     odds_a: number | null;
     odds_b: number | null;
-    a_score: number | null;
-    b_score: number | null;
     points_value: number;
     web_synced: boolean;
     locked: boolean | null;

@@ -29,7 +29,6 @@ export interface Match {
     tournament_id: string | null;
     category_id: string | null;
     round: string | null;
-    court_number: number | null;
     status: string;
     start_time: string | null;
     lock_time: string | null;

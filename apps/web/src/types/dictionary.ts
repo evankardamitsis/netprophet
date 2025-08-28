@@ -5,6 +5,7 @@ export interface Dictionary {
         myPicks: string;
         rewards: string;
         players: string;
+        results: string;
         myProfile: string;
         howItWorks: string;
         backToMatches: string;
@@ -304,8 +305,21 @@ export interface Dictionary {
         viewMyPicks: string;
         contactSupport: string;
         helpAndFaq: string;
-            signOut: string;
-  };
+        signOut: string;
+    };
+    results: {
+        title: string;
+        subtitle: string;
+        loadingResults: string;
+        tryAgain: string;
+        noResults: string;
+        goToMatches: string;
+        matches: string;
+        latestResults: string;
+        finished: string;
+        winner: string;
+        resultsPending: string;
+    };
   notifications: {
     title: string;
     clearAll: string;

@@ -5,9 +5,23 @@
     "myPicks": "My Picks",
     "rewards": "Rewards",
     "players": "Players",
+    "results": "Results",
     "myProfile": "My Profile",
     "howItWorks": "How It Works",
     "backToMatches": "← Back to Matches"
+  },
+  "results": {
+    "title": "Match Results",
+    "subtitle": "View the latest match results and tournament outcomes.",
+    "loadingResults": "Loading results...",
+    "tryAgain": "Try Again",
+    "noResults": "No results available yet.",
+    "goToMatches": "Go to Matches",
+    "matches": "matches",
+    "latestResults": "Latest results",
+    "finished": "Finished",
+    "winner": "Winner",
+    "resultsPending": "Results pending"
   },
   "auth": {
     "signIn": "Sign In",
