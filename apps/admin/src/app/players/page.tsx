@@ -244,7 +244,7 @@ export default function PlayersPage() {
                 const rows = results.data as any[];
                 try {
                     const parsed: Player[] = rows.map((row) => ({
-                        id: row.id || '',
+                        id: '', // Let the database generate UUID
                         firstName: row.firstName || '',
                         lastName: row.lastName || '',
                         ntrpRating: parseFloat(row.ntrpRating) || 0,
