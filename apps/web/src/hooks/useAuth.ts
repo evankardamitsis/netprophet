@@ -1,6 +1,6 @@
-import { supabase } from '@netprophet/lib';
-import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
+import { supabase } from "@netprophet/lib";
+import { useState, useEffect } from "react";
+import { User, Session } from "@supabase/supabase-js";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -11,16 +11,19 @@ export function useAuth() {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
         if (error) {
-          console.error('useAuth: Session error:', error);
+          console.error("useAuth: Session error:", error);
         } else if (session) {
           setSession(session);
           setUser(session.user);
         }
       } catch (error) {
-        console.error('useAuth: Error getting initial session:', error);
+        console.error("useAuth: Error getting initial session:", error);
       } finally {
         setLoading(false);
       }
@@ -29,8 +32,10 @@ export function useAuth() {
     getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('useAuth: Auth state change:', event, session?.user?.email);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("useAuth: Auth state change:", event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -43,9 +48,9 @@ export function useAuth() {
 
   const signIn = async (email: string) => {
     // Extract language from current path
-    const pathSegments = window.location.pathname.split('/');
-    const lang = pathSegments[1] || 'en';
-    
+    const pathSegments = window.location.pathname.split("/");
+    const lang = pathSegments[1] || "en";
+
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
@@ -57,29 +62,39 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
-      console.log('useAuth: Starting signOut...');
-      
+      console.log("useAuth: Starting signOut...");
+
       // Clear local state immediately
       setUser(null);
       setSession(null);
-      
+
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
-        console.error('useAuth: SignOut error:', error);
+        console.error("useAuth: SignOut error:", error);
         return { error };
       }
-      
-      console.log('useAuth: SignOut successful');
-      
+
+      console.log("useAuth: SignOut successful");
+
       // Clear any cached data
-      localStorage.removeItem('oauth_lang');
+      localStorage.removeItem("oauth_lang");
       sessionStorage.clear();
-      
+
+      // Clear any Supabase-related storage
+      if (typeof window !== "undefined") {
+        // Clear any remaining Supabase session data
+        Object.keys(localStorage).forEach((key) => {
+          if (key.startsWith("sb-")) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+
       return { error: null };
     } catch (error) {
-      console.error('useAuth: SignOut exception:', error);
+      console.error("useAuth: SignOut exception:", error);
       return { error };
     }
   };
@@ -91,4 +106,4 @@ export function useAuth() {
     signIn,
     signOut,
   };
-} 
+}
