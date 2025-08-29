@@ -299,7 +299,35 @@
     "picks": "Picks",
     "topScore": "Top Score",
     "bestStreak": "Best Streak",
-    "avgAccuracy": "Avg Accuracy"
+    "avgAccuracy": "Avg Accuracy",
+    "description": "Compete with other players and climb the leaderboard to win exciting prizes! Your ranking is based on your prediction accuracy, win streaks, and total points earned.",
+    "pointsCalculation": "Points are calculated based on:",
+    "pointsCalculationList": [
+      "Correct predictions earn points based on match difficulty",
+      "Win streaks provide bonus multipliers",
+      "Power-ups can double your points for specific matches",
+      "Daily login bonuses add extra points to your total"
+    ],
+    "prizes": "🏆 Prizes & Rewards",
+    "prizesDescription": "Top performers can win:",
+    "prizesList": [
+      "Exclusive power-ups and bonuses",
+      "Special tournament entries",
+      "Premium account features",
+      "Real-world rewards and recognition"
+    ],
+    "howToClimb": "How to climb the leaderboard:",
+    "howToClimbList": [
+      "Make accurate predictions consistently",
+      "Use power-ups strategically",
+      "Maintain win streaks for bonus multipliers",
+      "Log in daily for bonus points"
+    ],
+    "howItWorks": "How the Leaderboard Works",
+    "learnMore": "Learn More",
+    "learnAboutPoints": "Learn about points calculation, prizes, and strategies",
+    "completeGuide": "Complete guide to climbing the leaderboard",
+    "readyToCompete": "Ready to compete?"
   },
   "rewards": {
     "title": "Rewards",

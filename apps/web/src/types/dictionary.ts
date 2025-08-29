@@ -288,6 +288,19 @@ export interface Dictionary {
     topScore: string;
     bestStreak: string;
     avgAccuracy: string;
+    description: string;
+    pointsCalculation: string;
+    pointsCalculationList: string[];
+    prizes: string;
+    prizesDescription: string;
+    prizesList: string[];
+    howToClimb: string;
+    howToClimbList: string[];
+    howItWorks: string;
+    learnMore: string;
+    learnAboutPoints: string;
+    completeGuide: string;
+    readyToCompete: string;
   };
   rewards: {
     title: string;
