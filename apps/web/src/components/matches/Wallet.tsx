@@ -196,23 +196,23 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         if (isCriticalBalance) {
             return {
                 message: lang === 'el' ? 'Κρίσιμα χαμηλό υπόλοιπο!' : 'Critical low balance!',
-                color: 'text-red-400',
-                bgColor: 'bg-red-900/20',
-                borderColor: 'border-red-800'
+                color: 'text-red-100',
+                bgColor: 'bg-gradient-to-r from-red-900/80 via-red-800/60 to-red-900/80',
+                borderColor: 'border-red-700/50'
             };
         } else if (isVeryLowBalance) {
             return {
                 message: lang === 'el' ? 'Πολύ χαμηλό υπόλοιπο' : 'Very low balance',
-                color: 'text-orange-400',
-                bgColor: 'bg-orange-900/20',
-                borderColor: 'border-orange-800'
+                color: 'text-orange-100',
+                bgColor: 'bg-gradient-to-r from-orange-900/80 via-orange-800/60 to-orange-900/80',
+                borderColor: 'border-orange-700/50'
             };
         } else if (isLowBalance) {
             return {
                 message: lang === 'el' ? 'Χαμηλό υπόλοιπο' : 'Low balance',
-                color: 'text-yellow-400',
-                bgColor: 'bg-yellow-900/20',
-                borderColor: 'border-yellow-800'
+                color: 'text-yellow-100',
+                bgColor: 'bg-gradient-to-r from-yellow-900/80 via-yellow-800/60 to-yellow-900/80',
+                borderColor: 'border-yellow-700/50'
             };
         }
         return null;
@@ -234,17 +234,10 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                     {/* Balance Badge on top right */}
                     <div className="absolute -top-1.5 -right-4 bg-slate-800 border border-slate-600 rounded-full px-1.5 min-w-[16px] h-4 flex items-center justify-center">
                         <span className={`font-bold text-xs ${isLowBalance ? 'text-red-400' : 'text-yellow-300'}`}>
-                            {availableBalance}
+                            {wallet.balance}
                         </span>
                     </div>
-                    {/* Pending Bet Badge */}
-                    {pendingBetAmount > 0 && (
-                        <div className="absolute -bottom-1 -left-1 bg-blue-900 border border-blue-700 rounded-full px-1 min-w-[16px] h-4 flex items-center justify-center">
-                            <span className="text-xs text-blue-300">
-                                -{pendingBetAmount}
-                            </span>
-                        </div>
-                    )}
+
                 </div>
             </button>
 
@@ -263,9 +256,12 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                             <div className="p-4 border-b border-gray-700">
                                 <div className="flex items-center justify-between mb-2">
                                     <h3 className="font-semibold text-white">{dict?.wallet?.balance || 'My Wallet'}</h3>
-                                    <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
-                                        {dict?.wallet?.active || 'Active'}
-                                    </span>
+                                    <button
+                                        onClick={() => setIsOpen(false)}
+                                        className="text-xs px-2 py-1 rounded-full bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                                    >
+                                        ✕
+                                    </button>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className={`text-lg font-bold ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
@@ -393,7 +389,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                     <h4 className="text-sm font-semibold text-white">{dict?.wallet?.recentActivity || 'Recent Activity'}</h4>
                                     <Button
                                         className="p-0 h-6 bg-transparent hover:bg-gray-700"
-                                        onClick={() => router.push(`/${lang}/matches/my-picks`)}
+                                        onClick={() => router.push(`/${lang}/my-picks`)}
                                     >
                                         <HistoryIcon className="h-3 w-3 text-white" />
                                     </Button>

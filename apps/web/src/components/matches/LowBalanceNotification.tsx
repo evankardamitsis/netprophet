@@ -102,7 +102,7 @@ export function LowBalanceNotification({
                 message: lang === 'el'
                     ? 'Δεν μπορείτε να κάνετε στοιχήματα. Ώρα για να ανανεώσετε!'
                     : 'You cannot place bets. Top up now!',
-                bgGradient: 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
+                bgGradient: 'bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800',
                 icon: '🚨'
             };
         } else if (isVeryLowBalance) {
@@ -111,7 +111,7 @@ export function LowBalanceNotification({
                 message: lang === 'el'
                     ? 'Ανανεώστε για να συνεχίσετε να παίζετε άφοβα!'
                     : 'Top up to continue playing!',
-                bgGradient: 'bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700',
+                bgGradient: 'bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800',
                 icon: '⚠️'
             };
         } else {
@@ -120,7 +120,7 @@ export function LowBalanceNotification({
                 message: lang === 'el'
                     ? 'Σκεφτείτε να ανανεώσετε για καλύτερες ευκαιρίες!'
                     : 'Consider topping up for better opportunities!',
-                bgGradient: 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700',
+                bgGradient: 'bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800',
                 icon: '💡'
             };
         }
@@ -209,7 +209,7 @@ export function LowBalanceNotification({
                                         )}
                                     </div>
                                     <a
-                                        href={`/${lang}/matches/rewards`}
+                                        href={`/${lang}/rewards`}
                                         className="text-xs text-white/80 hover:text-white underline transition-colors ml-4"
                                     >
                                         {lang === 'el' ? 'Όλες οι επιλογές' : 'View all options'}

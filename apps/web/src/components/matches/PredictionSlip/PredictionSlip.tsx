@@ -99,6 +99,13 @@ export function PredictionSlip({
         }
     }, [predictions.length, isParlayMode]);
 
+    // Reset safe single power-up when switching to parlay mode
+    useEffect(() => {
+        if (isParlayMode && isUsingSafeSingle) {
+            setIsUsingSafeSingle(false);
+        }
+    }, [isParlayMode, isUsingSafeSingle]);
+
     // Check for power-ups
     useEffect(() => {
         const checkPowerUps = async () => {
@@ -217,7 +224,7 @@ export function PredictionSlip({
                 if (isUsingSafeParlay && user?.id && parlayBetResult && parlayBetResult.length > 0) {
                     try {
                         await applySafeSlipPowerUp(user.id, 'safeParlay', parlayBetResult[0].id);
-                        toast.success('Safe Parlay Slip power-up applied! 🛡️');
+                        toast.success(`${dict?.matches?.powerUps?.safeParlayApplied || 'Safe Parlay Slip power-up applied'}! 🛡️`);
                     } catch (powerUpError) {
                         console.error('Error using safe parlay power-up:', powerUpError);
                         // Don't fail the bet placement if power-up usage fails
@@ -228,7 +235,7 @@ export function PredictionSlip({
                 if (doublePointsMatchId && user?.id) {
                     try {
                         await applyDoublePointsMatchPowerUp(user.id, doublePointsMatchId);
-                        toast.success('Double Points Match power-up applied! 🎯');
+                        toast.success(`${dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double Points Match power-up applied'}! 🎯`);
                     } catch (powerUpError) {
                         console.error('Error using Double Points Match power-up:', powerUpError);
                         // Don't fail the bet placement if power-up usage fails
@@ -264,7 +271,7 @@ export function PredictionSlip({
                         if (isUsingSafeSingle && user?.id && predictions.indexOf(prediction) === 0) {
                             try {
                                 await applySafeSlipPowerUp(user.id, 'safeSingle', bet.id);
-                                toast.success('Safe Slip power-up applied! 🛡️');
+                                toast.success(`${dict?.matches?.powerUps?.safeSingleApplied || 'Safe Slip power-up applied'}! 🛡️`);
                             } catch (powerUpError) {
                                 console.error('Error using safe single power-up:', powerUpError);
                                 // Don't fail the bet placement if power-up usage fails
@@ -275,7 +282,7 @@ export function PredictionSlip({
                         if (doublePointsMatchId === prediction.matchId && user?.id) {
                             try {
                                 await applyDoublePointsMatchPowerUp(user.id, prediction.matchId);
-                                toast.success('Double Points Match power-up applied! 🎯');
+                                toast.success(`${dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double Points Match power-up applied'}! 🎯`);
                             } catch (powerUpError) {
                                 console.error('Error using Double Points Match power-up:', powerUpError);
                                 // Don't fail the bet placement if power-up usage fails
@@ -405,14 +412,14 @@ export function PredictionSlip({
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
     };
 
-    // Determine if any safe slip power-up is active
-    const isSafeSlipActive = isUsingSafeSingle || isUsingSafeParlay;
+    // Determine if any safe slip power-up is active for the current mode
+    const isSafeSlipActive = (isParlayMode && isUsingSafeParlay) || (!isParlayMode && isUsingSafeSingle);
 
     // Get the appropriate gradient class based on which power-up is active
     const getSafeSlipGradient = () => {
-        if (isUsingSafeSingle) {
+        if (isParlayMode && isUsingSafeParlay) {
             return 'shadow-emerald-500/30 shadow-lg';
-        } else if (isUsingSafeParlay) {
+        } else if (!isParlayMode && isUsingSafeSingle) {
             return 'shadow-emerald-500/30 shadow-lg';
         }
         return 'border-l border-border';
@@ -559,7 +566,7 @@ export function PredictionSlip({
                                         <span className="text-lg">🎯</span>
                                         <div className="text-white text-xs">
                                             <span className="font-semibold">
-                                                Double Points Match power-up applied
+                                                {dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double Points Match power-up applied'}
                                             </span> - Single use per slip
                                         </div>
                                     </div>
@@ -639,7 +646,7 @@ export function PredictionSlip({
                             </span>
                         </div>
                         <a
-                            href={`/${lang}/matches/rewards`}
+                            href={`/${lang}/rewards`}
                             className="text-sm text-white hover:text-yellow-200 underline transition-colors font-medium"
                         >
                             {lang === 'el' ? 'Ανανέωση' : 'Top up'}

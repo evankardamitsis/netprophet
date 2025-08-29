@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { WarningModal } from '@/components/ui/warning-modal';
 import Papa, { ParseError, ParseResult } from 'papaparse';
 import { Player } from '@netprophet/lib/types/player';
-import { bulkInsertPlayers, fetchPlayers, deletePlayer } from '@netprophet/lib/supabase/players';
+import { bulkInsertPlayers, fetchPlayers, fetchPlayersPaginated, deletePlayer } from '@netprophet/lib/supabase/players';
 import { supabase } from '@netprophet/lib';
 import {
     useReactTable,
@@ -45,19 +45,49 @@ export default function PlayersPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [rowSelection, setRowSelection] = useState({});
 
-    // Fetch players from Supabase on mount
-    useEffect(() => {
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+
+    // Fetch players from Supabase with pagination
+    const fetchPlayersData = useCallback(async (page: number = 1, searchTerm?: string) => {
         setLoading(true);
-        fetchPlayers()
-            .then((players) => {
-                setPlayers(players);
-            })
-            .catch((err) => {
-                console.error('Error fetching players:', err);
-                toast.error('Failed to load players: ' + (err?.message || err));
-            })
-            .finally(() => setLoading(false));
-    }, []);
+        try {
+            const currentSort = sorting.length > 0 ? sorting[0] : null;
+            const sortBy = currentSort?.id === 'firstName' ? 'first_name' :
+                currentSort?.id === 'lastName' ? 'last_name' :
+                    currentSort?.id === 'ntrpRating' ? 'ntrp_rating' :
+                        currentSort?.id === 'wins' ? 'wins' :
+                            currentSort?.id === 'losses' ? 'losses' :
+                                currentSort?.id === 'currentStreak' ? 'current_streak' :
+                                    currentSort?.id === 'age' ? 'age' : 'last_name';
+
+            const result = await fetchPlayersPaginated(
+                page,
+                pageSize,
+                sortBy,
+                currentSort?.desc ? 'desc' : 'asc',
+                searchTerm || globalFilter
+            );
+
+            setPlayers(result.players);
+            setTotalCount(result.totalCount);
+            setTotalPages(result.totalPages);
+            setCurrentPage(result.page);
+        } catch (err) {
+            console.error('Error fetching players:', err);
+            toast.error('Failed to load players: ' + (err instanceof Error ? err.message : String(err)));
+        } finally {
+            setLoading(false);
+        }
+    }, [sorting, pageSize, globalFilter]);
+
+    // Fetch players on mount and when dependencies change
+    useEffect(() => {
+        fetchPlayersData(1);
+    }, [fetchPlayersData]);
 
     const handleEdit = useCallback((player: Player) => {
         router.push(`/players/${player.id}`);
@@ -217,14 +247,24 @@ export default function PlayersPage() {
             columnFilters,
             rowSelection,
         },
-        onSortingChange: setSorting,
-        onGlobalFilterChange: setGlobalFilter,
+        onSortingChange: (updater) => {
+            setSorting(updater);
+            // Refetch data when sorting changes
+            setTimeout(() => fetchPlayersData(1), 0);
+        },
+        onGlobalFilterChange: (value) => {
+            setGlobalFilter(value);
+            // Refetch data when search changes
+            setTimeout(() => fetchPlayersData(1, value), 0);
+        },
         onColumnFiltersChange: setColumnFilters,
         onRowSelectionChange: setRowSelection,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        // Remove client-side pagination since we're using server-side
+        manualPagination: true,
+        pageCount: totalPages,
         globalFilterFn: (row, columnId, filterValue) => {
             const value = row.getValue<string>('firstName') + ' ' + row.getValue<string>('lastName');
             const normalizedValue = normalizeText(value);
@@ -286,9 +326,8 @@ export default function PlayersPage() {
             setImportModalOpen(false);
             setImportedPlayers([]);
             if (fileInputRef.current) fileInputRef.current.value = '';
-            // Refetch players from Supabase
-            const freshPlayers = await fetchPlayers();
-            setPlayers(freshPlayers);
+            // Refetch players with pagination
+            await fetchPlayersData(1);
             toast.success(`Successfully imported ${importedPlayers.length} players!`);
         } catch (err: any) {
             console.error('Import error:', err);
@@ -300,8 +339,8 @@ export default function PlayersPage() {
         if (deletingPlayer) {
             try {
                 await deletePlayer(deletingPlayer.id);
-                const freshPlayers = await fetchPlayers();
-                setPlayers(freshPlayers);
+                // Refetch players with pagination
+                await fetchPlayersData(currentPage);
                 setDeletingPlayer(null);
                 toast.success('Player deleted successfully!');
             } catch (error) {
@@ -461,7 +500,7 @@ export default function PlayersPage() {
                     <CardTitle className="flex items-center gap-2">
                         Λίστα Παικτών
                         <Badge variant="outline" className="text-sm">
-                            {players.length}
+                            {totalCount}
                         </Badge>
                     </CardTitle>
                 </CardHeader>
@@ -473,42 +512,66 @@ export default function PlayersPage() {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
                             className="max-w-xs"
                         />
-                        <div className="ml-auto flex gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.setPageIndex(0)}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                {'<<'}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                {'<'}
-                            </Button>
-                            <span className="px-2 text-sm">
-                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                            </span>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                {'>'}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                {'>>'}
-                            </Button>
+                        <div className="ml-auto flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600">
+                                    Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} players
+                                </span>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    {'<<'}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    {'<'}
+                                </Button>
+                                <span className="px-2 text-sm flex items-center">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(currentPage + 1)}
+                                    disabled={currentPage >= totalPages}
+                                >
+                                    {'>'}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(totalPages)}
+                                    disabled={currentPage >= totalPages}
+                                >
+                                    {'>>'}
+                                </Button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600">Page size:</span>
+                                <select
+                                    value={pageSize}
+                                    onChange={(e) => {
+                                        const newPageSize = parseInt(e.target.value);
+                                        setPageSize(newPageSize);
+                                        fetchPlayersData(1);
+                                    }}
+                                    className="border rounded px-2 py-1 text-sm"
+                                >
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                    <option value={100}>100</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div className="overflow-x-auto">

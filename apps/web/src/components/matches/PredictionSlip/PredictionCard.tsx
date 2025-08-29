@@ -111,12 +111,12 @@ export function PredictionCard({
                                     <span className="text-lg">🎯</span>
                                     <div>
                                         <div className="text-white font-semibold text-sm">
-                                            Double Points Match
+                                            {dict?.matches?.powerUps?.doublePointsMatch || 'Double Points Match'}
                                         </div>
                                         <div className="text-purple-300 text-sm">
                                             {isUsingDoublePointsMatch
-                                                ? 'Double points applied to this match'
-                                                : 'Double points for this match'
+                                                ? (dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double points applied to this match')
+                                                : (dict?.matches?.powerUps?.doublePointsMatch || 'Double points for this match')
                                             }
                                         </div>
                                     </div>

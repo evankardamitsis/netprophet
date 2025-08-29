@@ -42,7 +42,7 @@ export function BetSuccessModal({ isOpen, onClose, lang }: BetSuccessModalProps)
 
     const handleViewMyPicks = () => {
         onClose();
-        router.push(`/${lang}/matches/my-picks`);
+        router.push(`/${lang}/my-picks`);
     };
 
     return (

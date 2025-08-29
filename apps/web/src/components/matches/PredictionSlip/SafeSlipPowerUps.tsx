@@ -25,7 +25,9 @@ export function SafeSlipPowerUps({
     isParlayMode,
     dict
 }: SafeSlipPowerUpsProps) {
-    if (!hasSafeParlayPowerUp && !hasSafeSinglePowerUp) return null;
+    // Only show if there's a power-up available for the current mode
+    const hasRelevantPowerUp = (isParlayMode && hasSafeParlayPowerUp) || (!isParlayMode && hasSafeSinglePowerUp);
+    if (!hasRelevantPowerUp) return null;
 
     return (
         <motion.div
@@ -36,7 +38,7 @@ export function SafeSlipPowerUps({
         >
             <div className="space-y-2">
                 {/* Safe Single Slip */}
-                {hasSafeSinglePowerUp && predictionsCount >= 1 && (
+                {hasSafeSinglePowerUp && predictionsCount >= 1 && !isParlayMode && (
                     <div className="flex items-center justify-between bg-emerald-700/30 rounded-lg p-2">
                         <div className="flex items-center space-x-2">
                             <span className="text-white font-semibold text-sm">{dict.matches.powerUps.safeSingleSlip}</span>

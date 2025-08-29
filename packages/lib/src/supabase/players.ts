@@ -72,6 +72,52 @@ export async function fetchPlayers() {
   return mapped;
 }
 
+export async function fetchPlayersPaginated(
+  page: number = 1,
+  pageSize: number = 20,
+  sortBy?: string,
+  sortOrder: "asc" | "desc" = "asc",
+  searchTerm?: string
+) {
+  let query = supabase.from(TABLE).select("*", { count: "exact" });
+
+  // Add search filter if provided
+  if (searchTerm && searchTerm.trim()) {
+    const searchValue = searchTerm.trim();
+    query = query.or(
+      `first_name.ilike.%${searchValue}%,last_name.ilike.%${searchValue}%`
+    );
+  }
+
+  // Add sorting
+  if (sortBy) {
+    query = query.order(sortBy, { ascending: sortOrder === "asc" });
+  } else {
+    query = query.order("last_name", { ascending: true });
+  }
+
+  // Add pagination
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    console.error("[fetchPlayersPaginated] Supabase error:", error);
+    throw error;
+  }
+
+  const mapped = (data ?? []).map(mapPlayer);
+  return {
+    players: mapped,
+    totalCount: count || 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count || 0) / pageSize),
+  };
+}
+
 export async function fetchPlayerById(id: string) {
   const { data, error } = await supabase
     .from(TABLE)

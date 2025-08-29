@@ -43,12 +43,10 @@ export function PowerUpSuggestions({
         if (totalStake > 300 && !hasSafeSinglePowerUp) {
             suggestions.push({
                 id: 'safeSingle',
-                name: lang === 'el' ? 'Ασφαλής Σταχυοροφόρα' : 'Safe Slip',
+                name: dict?.matches?.powerUps?.safeSlip || 'Safe Slip',
                 cost: 900,
                 icon: '🛡️',
-                reason: lang === 'el'
-                    ? `Προστατέψτε την στοίχημα των ${totalStake} νομισμάτων!`
-                    : `Protect your ${totalStake} coin bet!`,
+                reason: dict?.matches?.powerUps?.protectBet?.replace('{stake}', totalStake.toString()) || `Protect your ${totalStake} coin bet!`,
                 gradient: 'from-green-500 to-emerald-600'
             });
         }
@@ -57,12 +55,10 @@ export function PowerUpSuggestions({
         if (isParlayMode && predictionsCount >= 3 && !hasSafeParlayPowerUp) {
             suggestions.push({
                 id: 'safeParlay',
-                name: lang === 'el' ? 'Ασφαλής Παράλληλη' : 'Safe Parlay',
+                name: dict?.matches?.powerUps?.safeParlay || 'Safe Parlay',
                 cost: 900,
                 icon: '🛡️',
-                reason: lang === 'el'
-                    ? `${predictionsCount} προβλέψεις - Προστατέψτε την παράλληλη!`
-                    : `${predictionsCount} predictions - Protect your parlay!`,
+                reason: dict?.matches?.powerUps?.protectParlay?.replace('{count}', predictionsCount.toString()) || `${predictionsCount} predictions - Protect your parlay!`,
                 gradient: 'from-blue-500 to-purple-600'
             });
         }
@@ -71,12 +67,10 @@ export function PowerUpSuggestions({
         if (isParlayMode && parlayOdds > 3.0 && !hasSafeParlayPowerUp) {
             suggestions.push({
                 id: 'safeParlay',
-                name: lang === 'el' ? 'Ασφαλής Παράλληλη' : 'Safe Parlay',
+                name: dict?.matches?.powerUps?.safeParlay || 'Safe Parlay',
                 cost: 900,
                 icon: '🛡️',
-                reason: lang === 'el'
-                    ? `Υψηλές αποδόσεις (${parlayOdds.toFixed(1)}x) - Προστατέψτε!`
-                    : `High odds (${parlayOdds.toFixed(1)}x) - Protect your bet!`,
+                reason: dict?.matches?.powerUps?.highOddsProtect?.replace('{odds}', parlayOdds.toFixed(1)) || `High odds (${parlayOdds.toFixed(1)}x) - Protect your bet!`,
                 gradient: 'from-orange-500 to-red-600'
             });
         }
@@ -85,12 +79,10 @@ export function PowerUpSuggestions({
         if (predictionsCount === 1 && totalStake > 200 && !hasDoublePointsMatchPowerUp) {
             suggestions.push({
                 id: 'doubleXP',
-                name: lang === 'el' ? 'Διπλά Πόντοι' : 'Double XP',
+                name: dict?.matches?.powerUps?.doubleXP || 'Double XP',
                 cost: 550,
                 icon: '🎯',
-                reason: lang === 'el'
-                    ? 'Διπλάστε τους πόντους για αυτόν τον αγώνα!'
-                    : 'Double your points for this match!',
+                reason: dict?.matches?.powerUps?.doublePointsForMatch || 'Double your points for this match!',
                 gradient: 'from-purple-500 to-pink-600'
             });
         }
@@ -102,15 +94,12 @@ export function PowerUpSuggestions({
 
     const handlePurchase = async (powerUpId: string, cost: number) => {
         if (!user) {
-            toast.error(lang === 'el' ? 'Παρακαλώ συνδεθείτε για να αγοράσετε power-ups' : 'Please sign in to purchase power-ups');
+            toast.error(dict?.matches?.powerUps?.pleaseSignIn || 'Please sign in to purchase power-ups');
             return;
         }
 
         if (wallet.balance < cost) {
-            toast.error(lang === 'el'
-                ? `Δεν έχετε αρκετά νομίσματα! Χρειάζεστε ${cost} νομίσματα.`
-                : `Not enough coins! You need ${cost} coins.`
-            );
+            toast.error(dict?.matches?.powerUps?.notEnoughCoins?.replace('{cost}', cost.toString()) || `Not enough coins! You need ${cost} coins.`);
             return;
         }
 
@@ -129,7 +118,7 @@ export function PowerUpSuggestions({
             }
         } catch (error) {
             console.error('Purchase failed:', error);
-            toast.error(lang === 'el' ? 'Η αγορά απέτυχε. Δοκιμάστε ξανά.' : 'Purchase failed. Please try again.');
+            toast.error(dict?.matches?.powerUps?.purchaseFailed || 'Purchase failed. Please try again.');
         }
     };
 
@@ -148,11 +137,11 @@ export function PowerUpSuggestions({
                 <div className="flex items-center space-x-2">
                     <span className="text-lg">💡</span>
                     <div className="text-white text-sm font-semibold">
-                        {lang === 'el' ? 'Προτάσεις Power-ups' : 'Power-up Suggestions'}
+                        {dict?.matches?.powerUps?.powerUpSuggestions || 'Power-up Suggestions'}
                     </div>
                 </div>
                 <span className="text-xs text-gray-400">
-                    {lang === 'el' ? 'Έξυπνες προτάσεις' : 'Smart suggestions'}
+                    {dict?.matches?.powerUps?.smartSuggestions || 'Smart suggestions'}
                 </span>
             </div>
 
@@ -180,19 +169,17 @@ export function PowerUpSuggestions({
                         </div>
                         <Button
                             onClick={() => handlePurchase(suggestion.id, suggestion.cost)}
-                            className="text-xs py-1 px-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                            className="text-xs py-1 px-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white flex items-center gap-1"
                         >
-                            {suggestion.cost} 🌕
+                            <span>{suggestion.cost}</span>
+                            <span>🌕</span>
                         </Button>
                     </motion.div>
                 ))}
             </div>
 
             <div className="mt-2 text-xs text-gray-400 text-center">
-                {lang === 'el'
-                    ? 'Βελτιώστε τις πιθανότητες σας με power-ups!'
-                    : 'Improve your chances with power-ups!'
-                }
+                {dict?.matches?.powerUps?.improveChances || 'Improve your chances with power-ups!'}
             </div>
         </motion.div>
     );

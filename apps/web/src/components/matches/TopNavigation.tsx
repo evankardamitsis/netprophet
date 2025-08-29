@@ -355,22 +355,13 @@ export function TopNavigation({
                             {dict?.navigation?.matches || 'Matches'}
                         </button>
                         <button
-                            onClick={() => router.push(`/${currentLang}/matches/leaderboard`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/leaderboard`
+                            onClick={() => router.push(`/${currentLang}/leaderboard`)}
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/leaderboard`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}
                         >
                             {dict?.navigation?.leaderboard || 'Leaderboard'}
-                        </button>
-                        <button
-                            onClick={() => router.push(`/${currentLang}/matches/my-picks`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/my-picks`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
-                        >
-                            {dict?.navigation?.myPicks || 'My Picks'}
                         </button>
                         <button
                             onClick={() => router.push(`/${currentLang}/players`)}
@@ -382,22 +373,31 @@ export function TopNavigation({
                             {dict?.navigation?.players || 'Players'}
                         </button>
                         <button
-                            onClick={() => router.push(`/${currentLang}/matches/rewards`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/rewards`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
-                        >
-                            {dict?.navigation?.rewards || 'Rewards'}
-                        </button>
-                        <button
-                            onClick={() => router.push(`/${currentLang}/matches/results`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches/results`
+                            onClick={() => router.push(`/${currentLang}/results`)}
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/results`
                                 ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                 : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                 }`}
                         >
                             {dict?.navigation?.results || 'Results'}
+                        </button>
+                        <button
+                            onClick={() => router.push(`/${currentLang}/my-picks`)}
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/my-picks`
+                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
+                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                }`}
+                        >
+                            {dict?.navigation?.myPicks || 'My Picks'}
+                        </button>
+                        <button
+                            onClick={() => router.push(`/${currentLang}/rewards`)}
+                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/rewards`
+                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
+                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                }`}
+                        >
+                            {dict?.navigation?.rewards || 'Rewards'}
                         </button>
                     </nav>
                 )}
@@ -565,7 +565,7 @@ export function TopNavigation({
 
                                 <button
                                     className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs sm:text-sm"
-                                    onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/matches/my-profile`); }}
+                                    onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/my-profile`); }}
                                 >
                                     <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
                                 </button>
@@ -611,26 +611,14 @@ export function TopNavigation({
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/matches/leaderboard`);
+                                        router.push(`/${currentLang}/leaderboard`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/matches/leaderboard`
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/leaderboard`
                                         ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                         : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                         }`}
                                 >
                                     {dict?.navigation?.leaderboard || 'Leaderboard'}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/matches/my-picks`);
-                                    }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/matches/my-picks`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
-                                >
-                                    {dict?.navigation?.myPicks || 'My Picks'}
                                 </button>
                                 <button
                                     onClick={() => {
@@ -647,26 +635,38 @@ export function TopNavigation({
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/matches/rewards`);
+                                        router.push(`/${currentLang}/results`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/matches/rewards`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
-                                >
-                                    {dict?.navigation?.rewards || 'Rewards'}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/matches/results`);
-                                    }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/matches/results`
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/results`
                                         ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
                                         : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
                                         }`}
                                 >
                                     {dict?.navigation?.results || 'Results'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMobileMenuOpen(false);
+                                        router.push(`/${currentLang}/my-picks`);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/my-picks`
+                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
+                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                        }`}
+                                >
+                                    {dict?.navigation?.myPicks || 'My Picks'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setMobileMenuOpen(false);
+                                        router.push(`/${currentLang}/rewards`);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/rewards`
+                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
+                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                        }`}
+                                >
+                                    {dict?.navigation?.rewards || 'Rewards'}
                                 </button>
                             </div>
 
@@ -678,7 +678,7 @@ export function TopNavigation({
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/matches/my-profile`);
+                                        router.push(`/${currentLang}/my-profile`);
                                     }}
                                     className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base flex items-center gap-2"
                                 >
