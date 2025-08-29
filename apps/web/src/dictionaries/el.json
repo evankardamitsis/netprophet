@@ -360,7 +360,7 @@
     "failedToRecordWin": "Αποτυχία καταγραφής νίκης. Δοκίμασε ξανά.",
     "failedToRecordLoss": "Αποτυχία καταγραφής απώλειας. Δοκίμασε ξανά.",
     "claimingDailyReward": "Δήλωση ημερήσιου βραβείου...",
-    "dailyRewardClaimed": "🎁 Ημερήσιο βραβείο δηλώθηκε! +{amount} 🌕 ({streak} ημέρες συνεχόμενα)",
+    "dailyRewardClaimed": "🎁 Ημερήσιο βραβείο δηλώθηκε! +{amount} 🌕 ({streak} ημέρες σερί)",
     "failedToClaimDailyReward": "Αποτυχία δήλωσης ημερήσιου βραβείου. Δοκίμασε ξανά.",
     "claimingWelcomeBonus": "Δήλωση μπόνους καλωσορίσματος...",
     "welcomeBonusClaimed": "🎉 Μπόνους καλωσορίσματος δηλώθηκε! +{amount} 🌕",
