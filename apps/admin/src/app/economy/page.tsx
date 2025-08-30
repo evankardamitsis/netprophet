@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { TrendingUp, TrendingDown, Users, Coins, DollarSign, Activity, Search, ArrowUpDown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { supabase } from '@netprophet/lib';
 
 
 
@@ -94,7 +95,17 @@ export default function EconomyPage() {
                 setLoading(true);
                 setError(null);
 
-                const response = await fetch(`/api/admin/economy-metrics?timePeriod=${timeFilter}`);
+                // Get the current session token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
+                    throw new Error('No authentication token available');
+                }
+
+                const response = await fetch(`/api/admin/economy-metrics?timePeriod=${timeFilter}`, {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                    },
+                });
                 const result = await response.json();
 
                 if (!response.ok) {

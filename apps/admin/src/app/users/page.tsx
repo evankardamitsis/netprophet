@@ -165,12 +165,18 @@ export default function UsersPage() {
         setEditSuccess(false);
         const { id, username, is_admin, suspended, balance } = editUser;
 
-
         try {
+            // Get the current session token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
+
             const response = await fetch('/api/admin/update-user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
                 },
                 body: JSON.stringify({ id, username, is_admin, suspended, balance }),
             });
@@ -210,10 +216,17 @@ export default function UsersPage() {
         setEditError(null);
 
         try {
+            // Get the current session token
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
+
             const response = await fetch('/api/admin/delete-user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
                 },
                 body: JSON.stringify({ id: editUser.id }),
             });
@@ -245,11 +258,14 @@ export default function UsersPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-                <p className="text-gray-600 mt-2">
-                    Manage user accounts and permissions
-                </p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+                    <p className="text-gray-600 mt-2">
+                        Manage user accounts and permissions
+                    </p>
+                </div>
+
             </div>
 
             <Card>

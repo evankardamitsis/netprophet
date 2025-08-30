@@ -58,20 +58,23 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
     }, [syncWalletWithDatabase, hasCheckedWelcomeBonus]);
 
     useEffect(() => {
-        // Check for daily login reward on component mount
+        // Check for daily login reward on component mount, but only if user has already received welcome bonus
         const checkDailyReward = async () => {
             try {
-                const reward = await checkDailyLogin();
-                if (reward > 0) {
-                    setDailyReward(reward);
-                    setShowDailyLogin(true);
+                // Only check daily login if user has already received welcome bonus AND it's not their first login
+                if (wallet.hasReceivedWelcomeBonus && wallet.dailyLoginStreak > 0) {
+                    const reward = await checkDailyLogin();
+                    if (reward > 0) {
+                        setDailyReward(reward);
+                        setShowDailyLogin(true);
+                    }
                 }
             } catch (error) {
                 console.error('Error checking daily login:', error);
             }
         };
         checkDailyReward();
-    }, []); // Empty dependency array to run only once on mount
+    }, [wallet.hasReceivedWelcomeBonus, wallet.dailyLoginStreak, checkDailyLogin]); // Add dependencies
 
     // Check welcome bonus status after wallet sync is complete
     useEffect(() => {
@@ -85,6 +88,8 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
         try {
             const bonus = await claimWelcomeBonus();
             setShowWelcomeBonus(false);
+            // Don't show daily login immediately after claiming welcome bonus
+            setShowDailyLogin(false);
             if (onClose) onClose();
         } catch (error) {
             console.error('Error claiming welcome bonus:', error);

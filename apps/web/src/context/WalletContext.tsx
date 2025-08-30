@@ -130,42 +130,59 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const syncWalletWithDatabase = useCallback(async () => {
         try {
+            console.log('🔍 DEBUG: Starting syncWalletWithDatabase...');
+            console.log('🔍 DEBUG: User:', user?.id);
+
             setIsWalletSyncing(true);
             if (!user) {
+                console.log('🔍 DEBUG: No user, skipping sync');
                 setIsWalletSyncing(false);
                 return;
             }
 
             // Get user profile from database
+            console.log('🔍 DEBUG: Fetching profile from database for user:', user.id);
             const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('balance, daily_login_streak, has_received_welcome_bonus')
                 .eq('id', user.id)
                 .single();
 
+            console.log('🔍 DEBUG: Profile query result:', { profile, error });
+
             if (error && error.code === 'PGRST116') {
                 // Profile doesn't exist - this should be handled by the signup process
-                console.error('Profile not found - user should have a profile after signup');
+                console.error('🔍 DEBUG: Profile not found - user should have a profile after signup');
                 toast.error(dict?.toast?.profileNotFound || 'Profile not found. Please contact support.');
                 return;
             } else if (error) {
-                console.error('Failed to load profile:', error);
+                console.error('🔍 DEBUG: Failed to load profile:', error);
                 return;
             } else if (profile) {
+                console.log('🔍 DEBUG: Profile loaded successfully:', {
+                    balance: profile.balance,
+                    daily_login_streak: profile.daily_login_streak,
+                    has_received_welcome_bonus: profile.has_received_welcome_bonus
+                });
+
                 // Update local wallet state with database values
                 setWallet(prevWallet => {
+                    console.log('🔍 DEBUG: Previous wallet state:', prevWallet);
+
                     const updatedWallet = {
                         ...prevWallet,
                         balance: profile.balance || 0, // Default to 0 if null
                         dailyLoginStreak: profile.daily_login_streak || 0,
                         hasReceivedWelcomeBonus: profile.has_received_welcome_bonus || false,
                     };
+
+                    console.log('🔍 DEBUG: Updated wallet state:', updatedWallet);
                     saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
                     return updatedWallet;
                 });
             }
         } catch (error) {
-            console.error('Failed to sync wallet with database:', error);
+            console.error('🔍 DEBUG: Failed to sync wallet with database:', error);
             toast.error(dict?.toast?.failedToSyncWallet || 'Failed to sync wallet with database');
         } finally {
             setIsWalletSyncing(false);
@@ -422,19 +439,45 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const claimWelcomeBonus = async (): Promise<number> => {
         let loadingToast: string | number | undefined;
         try {
+            console.log('🔍 DEBUG: Starting claimWelcomeBonus...');
+            console.log('🔍 DEBUG: Current wallet state:', wallet);
+            console.log('🔍 DEBUG: COIN_CONSTANTS.WELCOME_BONUS:', COIN_CONSTANTS.WELCOME_BONUS);
+
             loadingToast = toast.loading(dict?.toast?.claimingWelcomeBonus || 'Claiming welcome bonus...');
 
             const result = await WalletOperationsService.claimWelcomeBonus();
+            console.log('🔍 DEBUG: WalletOperationsService.claimWelcomeBonus result:', result);
 
             if (result.success) {
                 const bonusAmount = COIN_CONSTANTS.WELCOME_BONUS; // Use constant
+                console.log('🔍 DEBUG: Bonus amount from constant:', bonusAmount);
+                console.log('🔍 DEBUG: New balance from result:', result.data.newBalance);
 
                 // Update local wallet state
-                setWallet(prev => ({
-                    ...prev,
-                    balance: result.data.newBalance,
-                    hasReceivedWelcomeBonus: true,
-                }));
+                setWallet(prev => {
+                    console.log('🔍 DEBUG: Previous wallet state:', prev);
+                    const newState = {
+                        ...prev,
+                        balance: result.data.newBalance,
+                        hasReceivedWelcomeBonus: true,
+                    };
+                    console.log('🔍 DEBUG: New wallet state:', newState);
+                    return newState;
+                });
+
+                // Also update the database to ensure consistency
+                if (user) {
+                    try {
+                        console.log('🔍 DEBUG: Updating has_received_welcome_bonus in database for user:', user.id);
+                        await supabase
+                            .from('profiles')
+                            .update({ has_received_welcome_bonus: true })
+                            .eq('id', user.id);
+                        console.log('🔍 DEBUG: Database update successful');
+                    } catch (dbError) {
+                        console.error('Failed to update welcome bonus flag in database:', dbError);
+                    }
+                }
 
                 toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()), {
                     id: loadingToast,
@@ -442,6 +485,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
                 return bonusAmount;
             } else {
+                console.log('🔍 DEBUG: claimWelcomeBonus failed:', result.error);
                 toast.error((dict?.toast?.failedToClaimWelcomeBonus || 'Failed to claim welcome bonus: {error}').replace('{error}', result.error || 'Unknown error'), {
                     id: loadingToast,
                 });

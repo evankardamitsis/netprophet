@@ -5,9 +5,9 @@ interface RewardShopHeaderProps {
     onInfoClick?: () => void;
 }
 
-export function RewardShopHeader({ userPoints = 1250, onInfoClick }: RewardShopHeaderProps) {
+export function RewardShopHeader({ userPoints, onInfoClick }: RewardShopHeaderProps) {
     const { wallet } = useWallet();
-    const actualBalance = wallet?.balance ?? userPoints;
+    const actualBalance = wallet?.balance ?? userPoints ?? 0;
 
     return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 text-white">

@@ -20,7 +20,7 @@ interface RewardShopProps {
     sidebarOpen?: boolean;
 }
 
-export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: RewardShopProps) {
+export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardShopProps) {
     const { wallet, syncWalletWithDatabase } = useWallet();
     const searchParams = useSearchParams();
     const [showInfoModal, setShowInfoModal] = useState(false);
@@ -39,8 +39,8 @@ export function RewardShop({ userPoints = 1250, onRedeem, sidebarOpen = true }: 
         }
     }, [searchParams, syncWalletWithDatabase]);
 
-    // Use actual wallet balance if available, otherwise fall back to userPoints prop
-    const actualBalance = wallet?.balance ?? userPoints;
+    // Use actual wallet balance if available, otherwise fall back to userPoints prop or 0
+    const actualBalance = wallet?.balance ?? userPoints ?? 0;
 
     const handleRedeem = (reward: RewardItem) => {
         if (actualBalance >= reward.points) {
