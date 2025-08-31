@@ -82,7 +82,8 @@ const createMatchDetails = (match: Match) => {
             ntrpRating: match.player_b?.ntrp_rating
         },
         points: match.points,
-        headToHead: `${match.player1.name} vs ${match.player2.name}`, // We can enhance this later with actual H2H data
+        headToHead: `${match.player1.name} vs ${match.player2.name}`, // Will be updated with real data
+        headToHeadData: null, // Will be populated by useEffect
         surface: match.tournaments?.surface || 'Unknown',
         round: match.tournament_categories?.name || 'Unknown',
         format: match.tournaments?.matches_type || 'best-of-3' // Use the tournament's matches_type
@@ -102,7 +103,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     // Tab state
     const [activeTab, setActiveTab] = useState<'match' | 'outrights'>('match');
 
-
+    // Head-to-head data state
+    const [headToHeadData, setHeadToHeadData] = useState<any>(null);
 
     // Outrights state
     const [outrightsBetAmount, setOutrightsBetAmount] = useState<number>(0);
@@ -162,22 +164,65 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         }
     }, [match, predictions]);
 
+    // Fetch head-to-head data when match details are available
+    useEffect(() => {
+        const fetchHeadToHeadData = async () => {
+            if (match) {
+                try {
+                    const { supabase } = await import('@netprophet/lib');
+                    const { data, error } = await supabase.rpc('get_head_to_head_record', {
+                        p_player_1_id: match.player_a_id,
+                        p_player_2_id: match.player_b_id
+                    });
+
+                    if (!error && data && data.length > 0) {
+                        const h2hData = data[0];
+                        setHeadToHeadData(h2hData);
+                    }
+                } catch (error) {
+                    console.error('Error fetching head-to-head data:', error);
+                }
+            }
+        };
+
+        fetchHeadToHeadData();
+    }, [match]);
+
     // Dynamic calculations based on form predictions (must be before conditional returns)
     const details = match ? createMatchDetails(match) : null;
+
+    // Update details with real head-to-head data if available
+    const detailsWithH2H = details ? {
+        ...details,
+        headToHead: headToHeadData ? (() => {
+            const { player_a_wins, player_b_wins, total_matches } = headToHeadData;
+            if (total_matches > 0) {
+                if (player_a_wins > player_b_wins) {
+                    return `${details.player1.name} leads ${player_a_wins}-${player_b_wins}`;
+                } else if (player_b_wins > player_a_wins) {
+                    return `${details.player2.name} leads ${player_b_wins}-${player_a_wins}`;
+                } else {
+                    return `Tied ${player_a_wins}-${player_b_wins}`;
+                }
+            }
+            return `${details.player1.name} vs ${details.player2.name}`;
+        })() : details.headToHead,
+        headToHeadData: headToHeadData
+    } : null;
     const predictionCount = useMemo(() => getPredictionCount(formPredictions), [formPredictions]);
     const hasAnyPredictions = useMemo(() => hasPredictions(formPredictions), [formPredictions]);
 
     // Calculate dynamic multiplier based on selections
     const selectedMultiplier = useMemo(() => {
-        if (!formPredictions.winner || !details) return 1.0;
+        if (!formPredictions.winner || !detailsWithH2H) return 1.0;
 
         return calculateMultiplier(
             formPredictions.winner,
-            details.player1,
-            details.player2,
+            detailsWithH2H.player1,
+            detailsWithH2H.player2,
             predictionCount
         );
-    }, [formPredictions.winner, predictionCount, details]);
+    }, [formPredictions.winner, predictionCount, detailsWithH2H]);
 
     // Default bet amount (will be set in slip)
     const betAmount = 0;
@@ -202,7 +247,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         );
     }
 
-    if (!details) {
+    if (!detailsWithH2H) {
         return (
             <div className="flex-1 bg-[#0F0F0F] text-white">
                 <div className="text-center py-12 px-6">
@@ -287,13 +332,13 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
         // Filter scores based on set winner
         let availableScores = allSetScores;
-        if (setWinner === details.player1.name) {
+        if (setWinner === detailsWithH2H.player1.name) {
             // Player 1 wins - show scores where first number > second number
             availableScores = allSetScores.filter(score => {
                 const [first, second] = score.split('-').map(Number);
                 return first > second;
             });
-        } else if (setWinner === details.player2.name) {
+        } else if (setWinner === detailsWithH2H.player2.name) {
             // Player 2 wins - show scores where second number > first number
             availableScores = allSetScores.filter(score => {
                 const [first, second] = score.split('-').map(Number);
@@ -317,8 +362,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     };
 
     // Determine which sets to show based on tournament format
-    const isBestOf5 = details.format === 'best-of-5';
-    const isAmateurFormat = details.format === 'best-of-3-super-tiebreak';
+    const isBestOf5 = detailsWithH2H.format === 'best-of-5';
+    const isAmateurFormat = detailsWithH2H.format === 'best-of-3-super-tiebreak';
     const setsToShowFromResult = getSetsToShowFromResult(formPredictions.matchResult, isAmateurFormat);
 
     // Helper function to get set score value
@@ -367,7 +412,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         }
     };
 
-    const setWinnersFromResult = getSetWinnersFromResult(formPredictions.matchResult, formPredictions.winner, details.player1.name, details.player2.name);
+    const setWinnersFromResult = getSetWinnersFromResult(formPredictions.matchResult, formPredictions.winner, detailsWithH2H.player1.name, detailsWithH2H.player2.name);
 
     return (
         <div className="flex flex-col flex-1 min-h-0 w-full text-white">
@@ -387,155 +432,181 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 <p className="text-gray-400 text-xs">{dict?.matches?.loading || 'Monitor live tennis events and place your predictions'}</p>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="px-0 sm:px-4 pb-2">
-                <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
-                    <button
-                        onClick={() => setActiveTab('match')}
-                        className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'match'
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
-                            }`}
-                    >
-                        {dict?.matches?.matchTab || 'Match'}
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('outrights')}
-                        className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'outrights'
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
-                            }`}
-                    >
-                        {dict?.matches?.outrightsTab || 'Outrights'}
-                    </button>
-                </div>
-            </div>
-
-            {/* Tab Content */}
-            {activeTab === 'match' ? (
-                /* Match Tab Content */
-                <div className="px-0 sm:px-4 flex-1 flex flex-col lg:flex-row gap-0 sm:gap-4 min-h-0">
-                    {/* Left Column: MatchHeader - Full width on mobile, 20% on large screens */}
-                    <div className="w-full lg:w-1/5 flex-shrink-0">
+            {/* Main Content */}
+            <div className="px-0 sm:px-4 flex-1 flex flex-col lg:flex-row gap-0 sm:gap-4 min-h-0">
+                {/* Left Column: MatchHeader + Tabs - Full width on mobile, 20% on large screens */}
+                <div className="w-full lg:w-1/5 flex-shrink-0 flex flex-col">
+                    {/* MatchHeader */}
+                    <div className="mb-4">
                         <MatchHeader
                             match={match}
-                            details={details}
+                            details={detailsWithH2H}
                             player1Id={match.player_a_id}
                             player2Id={match.player_b_id}
                         />
                     </div>
 
-                    {/* Right Column: Prediction Form - Full width on mobile, 80% on large screens */}
-                    <div className="w-full lg:w-4/5 flex-1 min-h-0 flex flex-col mt-4">
-                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
-                            <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0 mt-4">
-                                <h2 className="text-base sm:text-lg font-bold text-white mb-1 px-4">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
-
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
-                                <div className="p-0 sm:p-4 pb-0 flex-1">
-                                    <PredictionForm
-                                        matchId={match.id}
-                                        formPredictions={formPredictions}
-                                        onPredictionChange={handlePredictionChange}
-                                        details={details}
-                                        isBestOf5={isBestOf5}
-                                        isAmateurFormat={isAmateurFormat}
-                                        setsToShowFromResult={setsToShowFromResult}
-                                        setWinnersFromResult={setWinnersFromResult}
-                                        renderSetScoreDropdown={renderSetScoreDropdown}
-                                        getSetScore={getSetScore}
-                                        setSetScore={setSetScore}
-                                        getSetWinner={getSetWinner}
-                                        setSetWinner={setSetWinner}
-                                        locked={match.locked || false}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
-                                <button
-                                    onClick={handleSubmitPredictions}
-                                    disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
-                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
-                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        : (hasAnyPredictions && hasFormChanged
-                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed')
-                                        }`}
-                                >
-                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
-                                </button>
-                            </div>
+                    {/* Tab Navigation - Only visible on large screens */}
+                    <div className="hidden lg:block">
+                        <div className="flex flex-col space-y-1 bg-slate-800/50 rounded-lg p-1">
+                            <button
+                                onClick={() => setActiveTab('match')}
+                                className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'match'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
+                                    }`}
+                            >
+                                {dict?.matches?.matchTab || 'Match'}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('outrights')}
+                                className={`py-2 px-3 rounded-md text-sm font-medium transition-colors ${activeTab === 'outrights'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
+                                    }`}
+                            >
+                                {dict?.matches?.outrightsTab || 'Outrights'}
+                            </button>
                         </div>
                     </div>
                 </div>
-            ) : (
-                /* Outrights Tab Content */
-                <div className="px-0 sm:px-4 flex-1 flex flex-col gap-0 sm:gap-4 min-h-0">
-                    {/* OutrightsForm - Full Width */}
-                    <div className="flex-1 min-h-0 flex flex-col">
-                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
-                            <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0">
-                                <h2 className="text-base sm:text-lg font-bold text-white mb-1">{dict?.matches?.outrights || 'Outrights'}</h2>
-                                <p className="text-gray-400 text-xs">{dict?.matches?.outrightsDescription || 'Predict the tournament winner and finals pair for big wins!'}</p>
-                            </div>
 
-                            <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
-                                <div className="p-0 sm:p-4 pb-0 flex-1">
-                                    <OutrightsForm
-                                        matchId={match.id}
-                                        selectedTournamentWinner={selectedTournamentWinner}
-                                        selectedFinalsPair={selectedFinalsPair}
-                                        onTournamentWinnerChange={handleTournamentWinnerChange}
-                                        onFinalsPairChange={handleFinalsPairChange}
-                                        tournament={details.tournament}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
-                                <button
-                                    onClick={() => {
-                                        // Handle outrights submission
-                                        const hasOutrightsPredictions = selectedTournamentWinner || selectedFinalsPair;
-                                        if (hasOutrightsPredictions) {
-                                            // Add to outrights predictions (separate from regular predictions)
-                                            addOutrightsPrediction({
-                                                matchId: match.id,
-                                                match,
-                                                prediction: {
-                                                    tournamentWinner: selectedTournamentWinner,
-                                                    finalsPair: selectedFinalsPair
-                                                },
-                                                points: match.points * 2, // Higher points for outrights
-                                                betAmount: 0, // Start with 0, user will set in slip
-                                                multiplier: outrightsMultiplier,
-                                                potentialWinnings: 0, // Will be calculated in slip based on bet amount
-                                                isOutrights: true
-                                            });
-                                            setIsPredictionSlipCollapsed(false);
-
-                                            // Reset form change flag after successful submission
-                                            setHasOutrightsFormChanged(false);
-                                        }
-                                    }}
-                                    disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged || match.locked || false}
-                                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
-                                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                        : ((selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged
-                                            ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                            : 'bg-gray-600 text-gray-400 cursor-not-allowed')
-                                        }`}
-                                >
-                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : ((selectedTournamentWinner || selectedFinalsPair) ? (hasOutrightsPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : 'Select at least one outright prediction')}
-                                </button>
-                            </div>
+                {/* Right Column: Tab Navigation (mobile) + Content - Full width on mobile, 80% on large screens */}
+                <div className="w-full lg:w-4/5 flex-1 min-h-0 flex flex-col">
+                    {/* Tab Navigation - Only visible on mobile */}
+                    <div className="lg:hidden px-0 sm:px-4 pb-2">
+                        <div className="flex space-x-1 bg-slate-800/50 rounded-lg p-1">
+                            <button
+                                onClick={() => setActiveTab('match')}
+                                className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'match'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
+                                    }`}
+                            >
+                                {dict?.matches?.matchTab || 'Match'}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('outrights')}
+                                className={`flex-1 py-2 px-3 sm:px-4 rounded-md text-sm font-medium transition-colors ${activeTab === 'outrights'
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
+                                    }`}
+                            >
+                                {dict?.matches?.outrightsTab || 'Outrights'}
+                            </button>
                         </div>
                     </div>
+
+                    {/* Tab Content */}
+                    {activeTab === 'match' ? (
+                        /* Match Tab Content */
+                        <div className="flex-1 min-h-0 flex flex-col">
+                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
+                                <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0 mt-4">
+                                    <h2 className="text-base sm:text-lg font-bold text-white mb-1 px-4">{dict?.matches?.makePredictions || 'Make your predictions'}</h2>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
+                                    <div className="p-0 sm:p-4 pb-0 flex-1">
+                                        <PredictionForm
+                                            matchId={match.id}
+                                            formPredictions={formPredictions}
+                                            onPredictionChange={handlePredictionChange}
+                                            details={detailsWithH2H}
+                                            isBestOf5={isBestOf5}
+                                            isAmateurFormat={isAmateurFormat}
+                                            setsToShowFromResult={setsToShowFromResult}
+                                            setWinnersFromResult={setWinnersFromResult}
+                                            renderSetScoreDropdown={renderSetScoreDropdown}
+                                            getSetScore={getSetScore}
+                                            setSetScore={setSetScore}
+                                            getSetWinner={getSetWinner}
+                                            setSetWinner={setSetWinner}
+                                            locked={match.locked || false}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
+                                    <button
+                                        onClick={handleSubmitPredictions}
+                                        disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
+                                        className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
+                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                            : (hasAnyPredictions && hasFormChanged
+                                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                                : 'bg-gray-600 text-gray-400 cursor-not-allowed')
+                                            }`}
+                                    >
+                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* Outrights Tab Content */
+                        <div className="flex-1 min-h-0 flex flex-col">
+                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden flex flex-col h-full relative">
+                                <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0">
+                                    <h2 className="text-base sm:text-lg font-bold text-white mb-1">{dict?.matches?.outrights || 'Outrights'}</h2>
+                                    <p className="text-gray-400 text-xs">{dict?.matches?.outrightsDescription || 'Predict the tournament winner and finals pair for big wins!'}</p>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
+                                    <div className="p-0 sm:p-4 pb-0 flex-1">
+                                        <OutrightsForm
+                                            matchId={match.id}
+                                            selectedTournamentWinner={selectedTournamentWinner}
+                                            selectedFinalsPair={selectedFinalsPair}
+                                            onTournamentWinnerChange={handleTournamentWinnerChange}
+                                            onFinalsPairChange={handleFinalsPairChange}
+                                            tournament={detailsWithH2H.tournament}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
+                                    <button
+                                        onClick={() => {
+                                            // Handle outrights submission
+                                            const hasOutrightsPredictions = selectedTournamentWinner || selectedFinalsPair;
+                                            if (hasOutrightsPredictions) {
+                                                // Add to outrights predictions (separate from regular predictions)
+                                                addOutrightsPrediction({
+                                                    matchId: match.id,
+                                                    match,
+                                                    prediction: {
+                                                        tournamentWinner: selectedTournamentWinner,
+                                                        finalsPair: selectedFinalsPair
+                                                    },
+                                                    points: match.points * 2, // Higher points for outrights
+                                                    betAmount: 0, // Start with 0, user will set in slip
+                                                    multiplier: outrightsMultiplier,
+                                                    potentialWinnings: 0, // Will be calculated in slip based on bet amount
+                                                    isOutrights: true
+                                                });
+                                                setIsPredictionSlipCollapsed(false);
+
+                                                // Reset form change flag after successful submission
+                                                setHasOutrightsFormChanged(false);
+                                            }
+                                        }}
+                                        disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged || match.locked || false}
+                                        className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
+                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                            : ((selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged
+                                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                                                : 'bg-gray-600 text-gray-400 cursor-not-allowed')
+                                            }`}
+                                    >
+                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : ((selectedTournamentWinner || selectedFinalsPair) ? (hasOutrightsPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : 'Select at least one outright prediction')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 }

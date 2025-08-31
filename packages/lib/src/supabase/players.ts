@@ -280,6 +280,19 @@ export async function updatePlayerStatsFromMatchResult(
     const loserRecentWins = loserRecentResults.filter((r) => r === "W").length;
     updatedLoser.seasonalForm = loserRecentWins / loserRecentResults.length;
 
+    // Update head-to-head record
+    try {
+      await supabase.rpc("update_head_to_head_record", {
+        p_player_a_id: winnerId,
+        p_player_b_id: loserId,
+        p_winner_id: winnerId,
+        p_match_date: matchDate,
+      });
+    } catch (h2hError) {
+      console.error("Error updating head-to-head record:", h2hError);
+      // Don't fail the entire update if head-to-head update fails
+    }
+
     // Update both players in database
     await Promise.all([
       updatePlayer(winnerId, updatedWinner),
@@ -421,6 +434,18 @@ export async function reversePlayerStatsFromMatchResult(
     const loserRecentWins = loserRecentResults.filter((r) => r === "W").length;
     updatedLoser.seasonalForm = loserRecentWins / loserRecentResults.length;
 
+    // Reverse head-to-head record
+    try {
+      await supabase.rpc("reverse_head_to_head_record", {
+        p_player_a_id: winnerId,
+        p_player_b_id: loserId,
+        p_previous_winner_id: winnerId,
+      });
+    } catch (h2hError) {
+      console.error("Error reversing head-to-head record:", h2hError);
+      // Don't fail the entire update if head-to-head update fails
+    }
+
     // Update both players in database
     await Promise.all([
       updatePlayer(winnerId, updatedWinner),
@@ -433,5 +458,42 @@ export async function reversePlayerStatsFromMatchResult(
   } catch (error) {
     console.error("Error reversing player stats from match result:", error);
     throw error;
+  }
+}
+
+/**
+ * Get head-to-head record between two players
+ */
+export async function getHeadToHeadRecord(
+  player1Id: string,
+  player2Id: string
+) {
+  try {
+    const { data, error } = await supabase.rpc("get_head_to_head_record", {
+      p_player_1_id: player1Id,
+      p_player_2_id: player2Id,
+    });
+
+    if (error) {
+      console.error("Error fetching head-to-head record:", error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    const record = data[0];
+
+    // Convert to the format expected by the odds calculation algorithm
+    return {
+      wins: record.player_a_wins,
+      losses: record.player_b_wins,
+      lastMatchResult: record.last_match_result === "A" ? "W" : "L",
+      lastMatchDate: record.last_match_date,
+    };
+  } catch (error) {
+    console.error("Error fetching head-to-head record:", error);
+    return null;
   }
 }

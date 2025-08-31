@@ -47,14 +47,24 @@ async function fetchSyncedMatches(): Promise<Match[]> {
                 first_name,
                 last_name,
                 ntrp_rating,
-                surface_preference
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
             ),
             player_b:players!matches_player_b_id_fkey (
                 id,
                 first_name,
                 last_name,
                 ntrp_rating,
-                surface_preference
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
             )
         `)
         .eq('web_synced', true)

@@ -197,7 +197,7 @@ export function SubmitSection({
                             : 'bg-slate-600 text-slate-400 cursor-not-allowed'
                             }`}
                     >
-                        {dict?.matches?.placeIndividualBets || 'Place Individual Bets'}
+                        {dict?.matches?.placeIndividualBets || 'Place your Predictions'}
                     </Button>
                 </>
             )}

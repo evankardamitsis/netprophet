@@ -13,6 +13,13 @@ interface MatchDetails {
     player1: { name: string; odds: number; wins: number; losses: number };
     player2: { name: string; odds: number; wins: number; losses: number };
     headToHead: string;
+    headToHeadData?: {
+        player_a_wins: number;
+        player_b_wins: number;
+        total_matches: number;
+        last_match_date?: string;
+        last_match_result?: string;
+    } | null;
     format: string;
 }
 
@@ -217,8 +224,18 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
                         </div>
                         <div className="text-xs text-gray-400">
-                            {dict?.matches?.headToHead || 'H2H'}: {translateHeadToHead(details.headToHead)}
+                            <span className="font-semibold text-purple-300">{dict?.matches?.headToHead || 'H2H'}:</span> {translateHeadToHead(details.headToHead)}
                         </div>
+                        {details.headToHeadData && details.headToHeadData.total_matches > 0 && (
+                            <div className="text-xs text-gray-400 bg-slate-700/30 rounded px-2 py-1">
+                                <span className="font-medium">{dict?.players?.totalMatches || 'Total matches'}: {details.headToHeadData.total_matches}</span>
+                                {details.headToHeadData.last_match_date && (
+                                    <span className="ml-2 text-gray-300">
+                                        • Last match: {new Date(details.headToHeadData.last_match_date).toLocaleDateString()}
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-3 lg:gap-4 text-xs">
                             <div className="text-left">
                                 <button

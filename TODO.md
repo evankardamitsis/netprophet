@@ -20,7 +20,7 @@
 
 ## Web App Features
 
-- [ ] **🔴 HIGH PRIORITY: Implement Head to Head update on each player after posting match results**
+- [x] **🔴 HIGH PRIORITY: Implement Head to Head update on each player after posting match results**
 - [ ] Add user profile management
 - [ ] Implement email preferences settings
 - [ ] Add push notifications
