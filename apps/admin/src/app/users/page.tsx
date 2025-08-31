@@ -65,13 +65,7 @@ export default function UsersPage() {
                 enableSorting: true,
                 enableColumnFilter: true,
             },
-            {
-                accessorKey: 'suspended',
-                header: 'Suspended',
-                cell: info => info.getValue() ? '🚫' : '',
-                enableSorting: true,
-                enableColumnFilter: true,
-            },
+
             {
                 accessorKey: 'balance',
                 header: 'Balance',
@@ -163,7 +157,7 @@ export default function UsersPage() {
         setEditLoading(true);
         setEditError(null);
         setEditSuccess(false);
-        const { id, username, is_admin, suspended, balance } = editUser;
+        const { id, username, is_admin, balance } = editUser;
 
         try {
             // Get the current session token
@@ -178,7 +172,7 @@ export default function UsersPage() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.access_token}`,
                 },
-                body: JSON.stringify({ id, username, is_admin, suspended, balance }),
+                body: JSON.stringify({ id, username, is_admin, balance }),
             });
 
             const result = await response.json();
@@ -189,7 +183,7 @@ export default function UsersPage() {
                 toast.error('Failed to update user: ' + result.error);
             } else {
                 setEditSuccess(true);
-                setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, username, is_admin, suspended, balance } : u)));
+                setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, username, is_admin, balance } : u)));
                 toast.success('User updated!');
                 setTimeout(() => setEditUser(null), 1000);
             }
@@ -400,14 +394,7 @@ export default function UsersPage() {
                                 />
                                 <span>{(editUser.is_admin || false) ? 'Yes' : 'No'}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <label className="block text-gray-700 font-medium">Suspended</label>
-                                <Switch
-                                    checked={!!editUser.suspended}
-                                    onCheckedChange={(checked: boolean) => handleEditChange('suspended', checked)}
-                                />
-                                <span>{editUser.suspended ? 'Yes' : 'No'}</span>
-                            </div>
+
                             <div>
                                 <label className="block text-gray-700 font-medium mb-1">Balance (🌕)</label>
                                 <Input

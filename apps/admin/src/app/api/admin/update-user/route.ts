@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log("Request body:", body);
 
-    const { id, username, is_admin, suspended, balance } = body;
+    const { id, username, is_admin, balance } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
       id,
       username,
       is_admin,
-      suspended,
       balance,
       adminUserId: currentUserId,
     });
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
       .update({
         username: username ?? "",
         is_admin,
-        suspended,
         balance,
       })
       .eq("id", id)
