@@ -1,13 +1,16 @@
 import { supabase } from "@netprophet/lib";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const isInitialized = useRef(false);
 
   useEffect(() => {
+    let mounted = true;
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -15,6 +18,8 @@ export function useAuth() {
           data: { session },
           error,
         } = await supabase.auth.getSession();
+
+        if (!mounted) return;
 
         if (error) {
           console.error("useAuth: Session error:", error);
@@ -25,23 +30,35 @@ export function useAuth() {
       } catch (error) {
         console.error("useAuth: Error getting initial session:", error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          isInitialized.current = true;
+        }
       }
     };
 
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes - only process meaningful events
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      // Skip INITIAL_SESSION events after initialization
+      if (event === "INITIAL_SESSION" && isInitialized.current) {
+        return;
+      }
+
       console.log("useAuth: Auth state change:", event, session?.user?.email);
+
+      if (!mounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

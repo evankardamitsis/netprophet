@@ -248,7 +248,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         };
 
         loadUserData();
-    }, [user, syncWalletWithDatabase, loadBetStats, loadTransactions]); // Include all dependencies
+    }, [user?.id]); // Only depend on user ID to prevent unnecessary re-runs
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {

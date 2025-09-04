@@ -14,20 +14,30 @@ export function TournamentFilter({ matches, onTournamentSelect, selectedTourname
     const { dict } = useDictionary();
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Extract unique tournaments from matches
-    const tournaments = useMemo(() => {
-        const uniqueTournaments = Array.from(new Set(matches.map(match => match.tournament)));
-        return uniqueTournaments.sort();
+    // Filter matches to only include live and upcoming ones
+    const activeMatches = useMemo(() => {
+        return matches.filter(match =>
+            match.status === 'live' ||
+            match.status === 'upcoming' ||
+            match.status === 'scheduled'
+            
+        );
     }, [matches]);
 
-    // Count matches per tournament
+    // Extract unique tournaments from active matches only
+    const tournaments = useMemo(() => {
+        const uniqueTournaments = Array.from(new Set(activeMatches.map(match => match.tournament)));
+        return uniqueTournaments.sort();
+    }, [activeMatches]);
+
+    // Count active matches per tournament
     const tournamentCounts = useMemo(() => {
         const counts: Record<string, number> = {};
-        matches.forEach(match => {
+        activeMatches.forEach(match => {
             counts[match.tournament] = (counts[match.tournament] || 0) + 1;
         });
         return counts;
-    }, [matches]);
+    }, [activeMatches]);
 
     // Carousel navigation functions
     const scrollLeft = () => {
@@ -88,7 +98,7 @@ export function TournamentFilter({ matches, onTournamentSelect, selectedTourname
                             }`}
                     >
                         All Tournaments
-                        <span className="ml-1.5 text-xs opacity-75">({matches.length})</span>
+                        <span className="ml-1.5 text-xs opacity-75">({activeMatches.length})</span>
                     </button>
 
                     {/* Individual tournament buttons */}
