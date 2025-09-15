@@ -96,7 +96,7 @@ export function useWallet() {
 }
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-    const { dict } = useDictionary();
+    const { dict, lang } = useDictionary();
     const { user } = useAuth();
     const [wallet, setWallet] = useState<UserWallet>(() => {
         const storedWallet = loadFromSessionStorage(SESSION_KEYS.WALLET, defaultWallet);
@@ -397,7 +397,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
                 // Show appropriate message based on whether reward was given
                 if (rewardAmount > 0) {
-                    toast.success((dict?.toast?.dailyRewardClaimed || '🎁 Daily reward claimed! +{amount} 🌕').replace('{amount}', rewardAmount.toString()), {
+                    // Handle pluralization for both languages
+                    let streakText: string;
+                    if (lang === 'el') {
+                        // Greek pluralization: 1 = "ημέρα", 2+ = "ημέρες"
+                        streakText = result.new_streak === 1 ? 'ημέρα' : 'ημέρες';
+                    } else {
+                        // English pluralization: 1 = "day", 2+ = "days"
+                        streakText = result.new_streak === 1 ? 'day' : 'days';
+                    }
+
+                    const message = (dict?.toast?.dailyRewardClaimed || '🎁 Daily reward claimed! +{amount} 🌕 ({streak} {streakText} streak)')
+                        .replace('{amount}', rewardAmount.toString())
+                        .replace('{streak}', result.new_streak.toString())
+                        .replace('{streakText}', streakText);
+                    toast.success(message, {
                         id: loadingToast,
                     });
                 } else {

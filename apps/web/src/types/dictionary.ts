@@ -15,6 +15,8 @@ export interface Dictionary {
     signIn: string;
     signOut: string;
     welcome: string;
+    passwordRequirements?: string;
+    passwordTooWeak?: string;
   };
   sidebar: {
     live: string;

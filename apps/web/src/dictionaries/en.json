@@ -27,7 +27,9 @@
   "auth": {
     "signIn": "Sign In",
     "signOut": "Sign Out",
-    "welcome": "Welcome"
+    "welcome": "Welcome",
+    "passwordRequirements": "Password must be at least 8 characters long and contain uppercase, lowercase, and numbers",
+    "passwordTooWeak": "Password is too weak. Please use a stronger password."
   },
   "matches": {
     "title": "Tennis Matches",
@@ -403,7 +405,7 @@
     "failedToRecordWin": "Failed to record win. Please try again.",
     "failedToRecordLoss": "Failed to record loss. Please try again.",
     "claimingDailyReward": "Claiming daily reward...",
-    "dailyRewardClaimed": "🎁 Daily reward claimed! +{amount} 🌕 ({streak} day streak)",
+    "dailyRewardClaimed": "🎁 Daily reward claimed! +{amount} 🌕 ({streak} {streakText} streak)",
     "failedToClaimDailyReward": "Failed to claim daily reward. Please try again.",
     "claimingWelcomeBonus": "Claiming welcome bonus...",
     "welcomeBonusClaimed": "🎉 Welcome bonus claimed! +{amount} 🌕",

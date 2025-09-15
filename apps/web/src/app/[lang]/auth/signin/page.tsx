@@ -6,6 +6,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui
 import { useRouter, useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Logo from '@/components/Logo';
+import { useDictionary } from '@/context/DictionaryContext';
 
 export default function AuthPage() {
     const [mode, setMode] = useState<'signin' | 'register'>('signin');
@@ -16,6 +17,7 @@ export default function AuthPage() {
     const router = useRouter();
     const params = useParams();
     const lang = params?.lang as 'en' | 'el' || 'el';
+    const { dict } = useDictionary();
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,8 +36,17 @@ export default function AuthPage() {
 
             } else {
                 const { error } = await supabase.auth.signUp({ email, password });
-                if (error) setMessage(error.message);
-                else setMessage('Check your email to confirm your account!');
+                if (error) {
+                    // Check if it's a password strength error and show a more user-friendly message
+                    if (error.message.includes('Password should be at least') ||
+                        error.message.includes('password') && error.message.includes('weak')) {
+                        setMessage(dict?.auth?.passwordTooWeak || 'Password is too weak. Please use a stronger password.');
+                    } else {
+                        setMessage(error.message);
+                    }
+                } else {
+                    setMessage('Check your email to confirm your account!');
+                }
             }
         } catch (err: any) {
             setMessage('An unexpected error occurred.');
@@ -154,6 +165,19 @@ export default function AuthPage() {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
+                                    {mode === 'register' && (
+                                        <div className="mt-2 text-xs text-slate-600 bg-slate-50 p-2 rounded border">
+                                            <p className="font-medium mb-1">
+                                                {lang === 'el' ? 'Απαιτήσεις κωδικού:' : 'Password requirements:'}
+                                            </p>
+                                            <ul className="space-y-1 text-slate-500">
+                                                <li>• {lang === 'el' ? 'Τουλάχιστον 8 χαρακτήρες' : 'At least 8 characters'}</li>
+                                                <li>• {lang === 'el' ? 'Κεφαλαία γράμματα (A-Z)' : 'Uppercase letters (A-Z)'}</li>
+                                                <li>• {lang === 'el' ? 'Πεζά γράμματα (a-z)' : 'Lowercase letters (a-z)'}</li>
+                                                <li>• {lang === 'el' ? 'Αριθμοί (0-9)' : 'Numbers (0-9)'}</li>
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                                 <Button
                                     type="submit"

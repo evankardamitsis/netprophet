@@ -3,25 +3,23 @@
 ## Authentication & Security
 
 - [x] **🔴 HIGH PRIORITY: Implement server-side admin authentication** - Added secure JWT token validation and admin privilege checks for all admin API routes
-- [ ] Add rate limiting for authentication attempts
-- [ ] Implement password strength requirements
-- [ ] Add two-factor authentication (2FA) for admin accounts
-- [ ] Audit and review RLS policies for all tables
-- [ ] Add session timeout configuration
+- [x] **Add rate limiting for authentication attempts** - Configured Supabase rate limits: 5 sign-in/sign-up attempts per 5 minutes, 10 OTP verifications per 5 minutes
+- [x] **Implement password strength requirements** - Set minimum 8 characters with uppercase, lowercase, and digits required
+- [ ] **Add two-factor authentication (2FA) for admin accounts** - 🔄 IN PROGRESS: Removed custom 2FA implementation. Ready to implement Supabase's built-in 2FA solution.
+- [x] **Audit and review RLS policies for all tables** - Created comprehensive RLS policy audit and fix scripts ensuring all tables have proper security policies
+- [x] **Add session timeout configuration** - Configured Supabase session timeouts: 24h maximum session, 2h inactivity timeout, 1h JWT expiry
 
 ## Admin Panel Improvements
 
 - [ ] Add bulk operations for user management
 - [ ] Implement audit logs for admin actions
 - [ ] Add data export functionality (CSV/JSON)
-- [ ] Create admin dashboard analytics
-- [ ] Add user activity monitoring
 - [ ] Implement admin role hierarchy (super admin, moderator, etc.)
 
 ## Web App Features
 
 - [x] **🔴 HIGH PRIORITY: Implement Head to Head update on each player after posting match results**
-- [ ] Add user profile management
+- [x ] Add user profile management
 - [ ] Implement email preferences settings
 - [ ] Add push notifications
 - [ ] Create user achievement system
@@ -33,7 +31,7 @@
 - [ ] Implement Redis caching for frequently accessed data
 - [ ] Add database query optimization
 - [ ] Implement lazy loading for large datasets
-- [ ] Add CDN for static assets
+- [x ] Add CDN for static assets
 - [ ] Optimize bundle sizes
 
 ## Mobile App
@@ -68,8 +66,8 @@
 
 ## Bug Fixes & Technical Debt
 
-- [ ] **🔴 HIGH PRIORITY: INVESTIGATE: Admin app auth re-rendering issue** - Check if the problem is with routing or database queries causing entire pages to re-render
-- [ ] **🔴 HIGH PRIORITY: INVESTIGATE: Web app auth performance** - Multiple INITIAL_SESSION auth state changes causing wallet sync to run multiple times, causing performance issues
+- [x] **🔴 HIGH PRIORITY: INVESTIGATE: Admin app auth re-rendering issue** - Fixed by optimizing useAuth hook to skip INITIAL_SESSION events after initialization, removing unnecessary loading state changes, and only processing meaningful auth state changes
+- [x] **🔴 HIGH PRIORITY: INVESTIGATE: Web app auth performance** - Fixed by optimizing useAuth hook and WalletContext to prevent unnecessary wallet syncs on INITIAL_SESSION events
 - [ ] Fix TypeScript version compatibility warnings
 - [ ] Resolve ESLint warnings in admin components
 - [ ] Optimize database indexes
