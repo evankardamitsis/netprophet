@@ -38,6 +38,7 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
     const [showDailyLogin, setShowDailyLogin] = useState(false);
     const [dailyReward, setDailyReward] = useState(0);
     const [hasCheckedWelcomeBonus, setHasCheckedWelcomeBonus] = useState(false);
+    const [hasCheckedDailyLogin, setHasCheckedDailyLogin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -61,8 +62,9 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
         // Check for daily login reward on component mount, but only if user has already received welcome bonus
         const checkDailyReward = async () => {
             try {
-                // Only check daily login if user has already received welcome bonus AND it's not their first login
-                if (wallet.hasReceivedWelcomeBonus && wallet.dailyLoginStreak > 0) {
+                // Only check daily login if user has already received welcome bonus AND it's not their first login AND we haven't checked yet
+                if (wallet.hasReceivedWelcomeBonus && wallet.dailyLoginStreak > 0 && !hasCheckedDailyLogin) {
+                    setHasCheckedDailyLogin(true); // Mark as checked to prevent multiple calls
                     const reward = await checkDailyLogin();
                     if (reward > 0) {
                         setDailyReward(reward);
@@ -74,7 +76,7 @@ export function WelcomeBonus({ onClose }: WelcomeBonusProps) {
             }
         };
         checkDailyReward();
-    }, [wallet.hasReceivedWelcomeBonus, wallet.dailyLoginStreak, checkDailyLogin]); // Add dependencies
+    }, [wallet.hasReceivedWelcomeBonus, wallet.dailyLoginStreak, hasCheckedDailyLogin]); // Added hasCheckedDailyLogin to dependencies
 
     // Check welcome bonus status after wallet sync is complete
     useEffect(() => {

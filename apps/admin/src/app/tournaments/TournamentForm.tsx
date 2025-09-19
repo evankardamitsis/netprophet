@@ -26,6 +26,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
         location: '',
         prize_pool: '',
         entry_fee: '0',
+        buy_in_fee: '0',
         max_participants: '',
         tournament_type: 'singles',
         format: 'knockout',
@@ -44,6 +45,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 location: tournament.location || '',
                 prize_pool: tournament.prize_pool?.toString() || '',
                 entry_fee: tournament.entry_fee?.toString() || '',
+                buy_in_fee: tournament.buy_in_fee?.toString() || '0',
                 max_participants: tournament.max_participants?.toString() || '',
                 tournament_type: tournament.tournament_type,
                 format: tournament.format,
@@ -55,12 +57,33 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Validate and convert numeric fields
+        const buyInFee = formData.buy_in_fee === '' ? 0 : parseInt(formData.buy_in_fee, 10);
+        const entryFee = formData.entry_fee === '' ? 0 : parseFloat(formData.entry_fee);
+        const prizePool = formData.prize_pool === '' ? null : parseFloat(formData.prize_pool);
+        const maxParticipants = formData.max_participants === '' ? null : parseInt(formData.max_participants, 10);
+
+        // Validate that buy_in_fee is a valid non-negative integer
+        if (isNaN(buyInFee) || buyInFee < 0 || !Number.isInteger(buyInFee)) {
+            alert('Buy-in fee must be a valid non-negative integer');
+            return;
+        }
+
+        // Validate matches_type
+        const validMatchesTypes = ['best-of-3', 'best-of-5', 'best-of-3-super-tiebreak'];
+        if (!formData.matches_type || !validMatchesTypes.includes(formData.matches_type)) {
+            alert('Please select a valid matches type');
+            return;
+        }
+
         const submitData = {
             ...formData,
-            prize_pool: formData.prize_pool ? parseFloat(formData.prize_pool) : null,
-            entry_fee: parseFloat(formData.entry_fee),
-            max_participants: formData.max_participants ? parseInt(formData.max_participants) : null
+            prize_pool: prizePool,
+            entry_fee: entryFee,
+            buy_in_fee: buyInFee,
+            max_participants: maxParticipants
         };
+
 
         onSubmit(submitData);
     };
@@ -226,6 +249,22 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                         step="0.01"
                         className="h-12 text-base"
                     />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="buy_in_fee" className="text-base font-semibold">Buy-in Fee (Coins)</Label>
+                    <Input
+                        id="buy_in_fee"
+                        type="number"
+                        value={formData.buy_in_fee}
+                        onChange={(e) => handleInputChange('buy_in_fee', e.target.value)}
+                        placeholder="0"
+                        min="0"
+                        step="1"
+                        className="h-12 text-base"
+                        required
+                    />
+                    <p className="text-sm text-gray-500">Coins required to place predictions on tournament matches. Set to 0 for free tournament.</p>
                 </div>
 
                 <div className="space-y-2">

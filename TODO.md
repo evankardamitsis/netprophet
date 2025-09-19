@@ -11,7 +11,6 @@
 
 ## Admin Panel Improvements
 
-- [ ] Add bulk operations for user management
 - [ ] Implement audit logs for admin actions
 - [ ] Add data export functionality (CSV/JSON)
 - [ ] Implement admin role hierarchy (super admin, moderator, etc.)

@@ -10,6 +10,7 @@ export interface Tournament {
   location: string | null;
   prize_pool: number | null;
   entry_fee: number | null;
+  buy_in_fee: number | null;
   max_participants: number | null;
   current_participants: number | null;
   tournament_type: string;
@@ -261,6 +262,7 @@ export interface TournamentFormData {
   location: string;
   prize_pool: string;
   entry_fee: string;
+  buy_in_fee: string;
   max_participants: string;
   tournament_type: string;
   format: string;

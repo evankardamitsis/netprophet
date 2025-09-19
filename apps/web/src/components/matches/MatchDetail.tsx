@@ -29,6 +29,7 @@ import {
     calculateMultiplier
 } from '@/lib/predictionHelpers';
 import { BettingSection } from './BettingSection';
+import { TournamentAccessModal } from './TournamentAccessModal';
 
 
 interface MatchDetailProps {
@@ -116,6 +117,10 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const [hasFormChanged, setHasFormChanged] = useState<boolean>(false);
     const [hasOutrightsFormChanged, setHasOutrightsFormChanged] = useState<boolean>(false);
 
+    // Tournament access state
+    const [showTournamentAccessModal, setShowTournamentAccessModal] = useState<boolean>(false);
+    const [hasTournamentAccess, setHasTournamentAccess] = useState<boolean>(true); // Default to true, check in background
+
     // Wrapper functions for outrights state setters that track changes
     const handleTournamentWinnerChange = (winner: string) => {
         setSelectedTournamentWinner(winner);
@@ -188,27 +193,63 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         fetchHeadToHeadData();
     }, [match]);
 
+    // Check tournament access when match changes (in background)
+    useEffect(() => {
+        const checkTournamentAccess = async () => {
+            if (match?.tournament_id) {
+                try {
+                    const { TournamentPurchaseService } = await import('@netprophet/lib');
+                    const result = await TournamentPurchaseService.checkTournamentAccess(match.tournament_id);
+
+                    if (result.hasAccess) {
+                        // User has access - show match normally
+                        setHasTournamentAccess(true);
+                        setShowTournamentAccessModal(false);
+                    } else if (result.needsPurchase && result.buyInFee > 0) {
+                        // User doesn't have access AND tournament requires purchase - show modal
+                        setHasTournamentAccess(false);
+                        setShowTournamentAccessModal(true);
+                    } else {
+                        // User doesn't have access but tournament is free - show match normally
+                        setHasTournamentAccess(true);
+                        setShowTournamentAccessModal(false);
+                    }
+                } catch (error) {
+                    console.error('Error checking tournament access:', error);
+                    // If there's an error, allow access by default
+                    setHasTournamentAccess(true);
+                }
+            }
+        };
+
+        checkTournamentAccess();
+    }, [match?.tournament_id]);
+
     // Dynamic calculations based on form predictions (must be before conditional returns)
     const details = match ? createMatchDetails(match) : null;
 
     // Update details with real head-to-head data if available
-    const detailsWithH2H = details ? {
-        ...details,
-        headToHead: headToHeadData ? (() => {
-            const { player_a_wins, player_b_wins, total_matches } = headToHeadData;
-            if (total_matches > 0) {
-                if (player_a_wins > player_b_wins) {
-                    return `${details.player1.name} leads ${player_a_wins}-${player_b_wins}`;
-                } else if (player_b_wins > player_a_wins) {
-                    return `${details.player2.name} leads ${player_b_wins}-${player_a_wins}`;
-                } else {
-                    return `Tied ${player_a_wins}-${player_b_wins}`;
+    const detailsWithH2H = useMemo(() => {
+        if (!details) return null;
+
+        return {
+            ...details,
+            headToHead: headToHeadData ? (() => {
+                const { player_a_wins, player_b_wins, total_matches } = headToHeadData;
+                if (total_matches > 0) {
+                    if (player_a_wins > player_b_wins) {
+                        return `${details.player1.name} leads ${player_a_wins}-${player_b_wins}`;
+                    } else if (player_b_wins > player_a_wins) {
+                        return `${details.player2.name} leads ${player_b_wins}-${player_a_wins}`;
+                    } else {
+                        return `Tied ${player_a_wins}-${player_b_wins}`;
+                    }
                 }
-            }
-            return `${details.player1.name} vs ${details.player2.name}`;
-        })() : details.headToHead,
-        headToHeadData: headToHeadData
-    } : null;
+                return `${details.player1.name} vs ${details.player2.name}`;
+            })() : details.headToHead,
+            headToHeadData: headToHeadData
+        };
+    }, [details, headToHeadData]);
     const predictionCount = useMemo(() => getPredictionCount(formPredictions), [formPredictions]);
     const hasAnyPredictions = useMemo(() => hasPredictions(formPredictions), [formPredictions]);
 
@@ -257,6 +298,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
             </div>
         );
     }
+
+
 
     const handlePredictionChange = (type: keyof PredictionOptions, value: string) => {
         setFormPredictions(prev => {
@@ -607,6 +650,23 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                     )}
                 </div>
             </div>
+            {
+                showTournamentAccessModal && match?.tournament_id && (
+                    <TournamentAccessModal
+                        tournamentId={match.tournament_id!}
+                        tournamentName={match.tournament || 'Tournament'}
+                        onAccessGranted={() => {
+                            setHasTournamentAccess(true);
+                            setShowTournamentAccessModal(false);
+                        }}
+                        onClose={() => {
+                            setShowTournamentAccessModal(false);
+                            onBack(); // Go back to matches list if user cancels
+                        }}
+                    />
+                )
+            }
         </div>
     );
 }
+
