@@ -27,7 +27,7 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
-                    <div className="flex items-center">
+                    <div className="flex items-center flex-shrink-0">
                         <div
                             className="cursor-pointer"
                             onClick={() => router.push(`/${lang}`)}
@@ -37,15 +37,15 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                     </div>
 
                     {/* Right side - Language switch and Start Now button */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
                         {/* Language Switch */}
                         <div className="relative">
                             <button
                                 onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
-                                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                                className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
                             >
-                                <span>{lang === 'el' ? '🇬🇷' : '🇺🇸'}</span>
-                                <span>{lang === 'el' ? 'Ελληνικά' : 'English'}</span>
+                                <span className="text-sm sm:text-base">{lang === 'el' ? '🇬🇷' : '🇺🇸'}</span>
+                                <span className="hidden xs:inline">{lang === 'el' ? 'Ελληνικά' : 'English'}</span>
                                 <svg
                                     className={`w-4 h-4 transition-transform ${isLanguageMenuOpen ? 'rotate-180' : ''}`}
                                     fill="none"
@@ -58,7 +58,7 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
 
                             {/* Language Dropdown */}
                             {isLanguageMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                                <div className="absolute right-0 mt-2 w-40 sm:w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
                                     <button
                                         onClick={() => {
                                             handleLanguageChange('el');
@@ -99,9 +99,10 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                         {showStartButton && (
                             <Button
                                 onClick={() => router.push(`/${lang}/auth/signin`)}
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2"
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-3 sm:px-6 py-2 text-xs sm:text-sm font-medium"
                             >
-                                {lang === 'el' ? 'Ξεκίνα τώρα δωρεάν' : 'Start Now'}
+                                <span className="hidden sm:inline">{lang === 'el' ? 'Ξεκίνα τώρα' : 'Start Now'}</span>
+                                <span className="sm:hidden">{lang === 'el' ? 'Ξεκίνα' : 'Start'}</span>
                             </Button>
                         )}
                     </div>

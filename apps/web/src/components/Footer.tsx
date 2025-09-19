@@ -58,7 +58,7 @@ export default function Footer({ lang, dict }: FooterProps) {
                 <div className="border-t border-slate-800 pt-8">
                     <div className="flex justify-center">
                         <div className="text-slate-400 text-sm">
-                            © 2024 NetProphet. All rights reserved.
+                            © 2025 NetProphet. All rights reserved.
                         </div>
                     </div>
                 </div>
