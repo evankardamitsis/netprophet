@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@netprophet/ui';
 import { TournamentPurchaseService, TournamentAccessResult } from '@netprophet/lib';
 import { useWallet } from '@/context/WalletContext';
 import { useTheme } from '../Providers';
+import { useDictionary } from '@/context/DictionaryContext';
 import { Lock, Coins, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,6 +27,7 @@ export function TournamentAccessModal({
 }: TournamentAccessModalProps) {
     const { wallet, syncWalletWithDatabase } = useWallet();
     const { theme } = useTheme();
+    const { dict } = useDictionary();
     const [accessResult, setAccessResult] = useState<TournamentAccessResult | null>(null);
     const [loading, setLoading] = useState(true);
     const [purchasing, setPurchasing] = useState(false);
@@ -52,6 +54,20 @@ export function TournamentAccessModal({
 
         try {
             setPurchasing(true);
+
+            // Check if user has tournament pass and use it first
+            if (wallet.hasTournamentPass && !wallet.tournamentPassUsed) {
+                // eslint-disable-next-line react-hooks/rules-of-hooks
+                const passResult = await TournamentPurchaseService.useTournamentPass(tournamentId);
+                if (passResult.success) {
+                    toast.success('Tournament pass used successfully!');
+                    await syncWalletWithDatabase();
+                    onAccessGranted();
+                    return;
+                }
+            }
+
+            // If no pass or pass failed, try to purchase
             const result = await TournamentPurchaseService.purchaseTournamentAccess(tournamentId);
 
             if (result.success) {
@@ -76,7 +92,7 @@ export function TournamentAccessModal({
                     <CardContent className="p-6">
                         <div className="text-center">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                            <p className="text-gray-600">Checking tournament access...</p>
+                            <p className="text-gray-600">{dict?.tournamentAccess?.checkingAccess || 'Checking tournament access...'}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -100,38 +116,51 @@ export function TournamentAccessModal({
                 <CardHeader>
                     <CardTitle className="text-center flex items-center justify-center gap-2">
                         <Lock className="h-5 w-5" />
-                        Tournament Access Required
+                        {dict?.tournamentAccess?.title || 'Tournament Access Required'}
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                     <div className="text-center">
-                        <h3 className="text-lg font-semibold mb-2">{tournamentName}</h3>
-                        <p className="text-gray-600 text-sm">
+                        <h3 className="text-lg font-semibold text-purple-400 mb-2">{tournamentName}</h3>
+                        <p className="text-gray-400 text-sm leading-relaxed">
                             {accessResult.needsPurchase
-                                ? `This tournament requires a ${accessResult.buyInFee} coin entry fee to place predictions.`
-                                : 'You do not have access to this tournament.'
+                                ? (dict?.tournamentAccess?.description?.replace('{buyInFee}', accessResult.buyInFee.toString()) || `This tournament requires a ${accessResult.buyInFee} coin entry fee to place predictions.`)
+                                : (dict?.tournamentAccess?.descriptionFree || 'You do not have access to this tournament.')
                             }
                         </p>
                     </div>
 
                     {accessResult.needsPurchase && (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <div className="flex items-center gap-2">
-                                    <Coins className="h-5 w-5 text-yellow-500" />
-                                    <span className="font-medium">Entry Fee</span>
+                        <div className="space-y-3">
+                            {/* Tournament Pass Info */}
+                            {wallet.hasTournamentPass && !wallet.tournamentPassUsed && (
+                                <div className="flex items-center justify-between p-4 bg-purple-700/30 dark:bg-purple-800/50 rounded-lg border border-purple-600/30">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-purple-400">🎫</div>
+                                        <span className="font-semibold text-white">Tournament Pass Available</span>
+                                    </div>
+                                    <Badge variant="outline" className="text-purple-400 border-purple-400">
+                                        Free Access
+                                    </Badge>
                                 </div>
-                                <Badge variant="secondary" className="text-lg">
+                            )}
+
+                            <div className="flex items-center justify-between p-4 bg-slate-700/30 dark:bg-slate-800/50 rounded-lg border border-slate-600/30">
+                                <div className="flex items-center gap-3">
+                                    <Coins className="h-5 w-5 text-yellow-500" />
+                                    <span className="font-semibold text-white">{dict?.tournamentAccess?.entryFee || 'Entry Fee'}</span>
+                                </div>
+                                <Badge variant="secondary" className="text-lg font-bold">
                                     {accessResult.buyInFee} 🌕
                                 </Badge>
                             </div>
 
-                            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <div className="flex items-center gap-2">
-                                    <Coins className="h-5 w-5 text-blue-500" />
-                                    <span className="font-medium">Your Balance</span>
+                            <div className="flex items-center justify-between p-4 bg-slate-700/30 dark:bg-slate-800/50 rounded-lg border border-slate-600/30">
+                                <div className="flex items-center gap-3">
+                                    <Coins className="h-5 w-5 text-blue-400" />
+                                    <span className="font-semibold text-white">{dict?.tournamentAccess?.yourBalance || 'Your Balance'}</span>
                                 </div>
-                                <Badge variant="outline" className="text-lg">
+                                <Badge variant="outline" className="text-lg font-bold">
                                     {wallet.balance} 🌕
                                 </Badge>
                             </div>
@@ -140,7 +169,7 @@ export function TournamentAccessModal({
                                 <Alert variant="destructive">
                                     <XCircle className="h-4 w-4" />
                                     <AlertDescription>
-                                        Insufficient balance. You need {accessResult.buyInFee - wallet.balance} more coins.
+                                        {dict?.tournamentAccess?.insufficientBalance?.replace('{neededCoins}', (accessResult.buyInFee - wallet.balance).toString()) || `Insufficient balance. You need ${accessResult.buyInFee - wallet.balance} more coins.`}
                                     </AlertDescription>
                                 </Alert>
                             )}
@@ -149,7 +178,7 @@ export function TournamentAccessModal({
                                 <Alert>
                                     <CheckCircle className="h-4 w-4" />
                                     <AlertDescription>
-                                        You have sufficient balance to purchase access.
+                                        {dict?.tournamentAccess?.sufficientBalance || 'You have sufficient balance to purchase access.'}
                                     </AlertDescription>
                                 </Alert>
                             )}
@@ -160,18 +189,25 @@ export function TournamentAccessModal({
                         <Button
                             variant="outline"
                             onClick={onClose}
-                            className="flex-1"
+                            className="flex-1 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                             disabled={purchasing}
                         >
-                            Cancel
+                            {dict?.tournamentAccess?.cancel || 'Cancel'}
                         </Button>
-                        {accessResult.needsPurchase && wallet.balance >= accessResult.buyInFee && (
+                        {accessResult.needsPurchase && (
                             <Button
                                 onClick={handlePurchaseAccess}
                                 disabled={purchasing}
                                 className="flex-1"
                             >
-                                {purchasing ? 'Purchasing...' : `Pay ${accessResult.buyInFee} 🌕`}
+                                {purchasing
+                                    ? (dict?.tournamentAccess?.purchasing || 'Processing...')
+                                    : (wallet.hasTournamentPass && !wallet.tournamentPassUsed)
+                                        ? (dict?.tournamentAccess?.usePass || 'Use Tournament Pass')
+                                        : (wallet.balance >= accessResult.buyInFee)
+                                            ? (dict?.tournamentAccess?.payButton?.replace('{buyInFee}', accessResult.buyInFee.toString()) || `Pay ${accessResult.buyInFee} 🌕`)
+                                            : (dict?.tournamentAccess?.insufficientFunds || 'Insufficient Funds')
+                                }
                             </Button>
                         )}
                     </div>

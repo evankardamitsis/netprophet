@@ -471,5 +471,22 @@
     "yes": "Yes",
     "no": "No",
     "ago": "ago"
+  },
+  "tournamentAccess": {
+    "title": "Tournament Access Required",
+    "description": "This tournament requires a {buyInFee} coin entry fee to place predictions.",
+    "descriptionFree": "You do not have access to this tournament.",
+    "entryFee": "Entry Fee",
+    "yourBalance": "Your Balance",
+    "insufficientBalance": "Insufficient balance. You need {neededCoins} more coins.",
+    "sufficientBalance": "You have sufficient balance to purchase access.",
+    "cancel": "Cancel",
+    "purchasing": "Purchasing...",
+    "payButton": "Pay {buyInFee} 🌕",
+    "checkingAccess": "Checking tournament access...",
+    "checkingAccessTitle": "Checking Tournament Access",
+    "checkingAccessDescription": "Verifying your access to this tournament...",
+    "usePass": "Use Tournament Pass",
+    "insufficientFunds": "Insufficient Funds"
   }
 }

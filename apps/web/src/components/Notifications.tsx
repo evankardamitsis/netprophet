@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Bell, Check, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Bell, Check, Trash2, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { NotificationsService } from '@netprophet/lib';
+import { NotificationsService, WelcomeBonusNotificationService } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useWallet } from '@/context/WalletContext';
 
 interface Notification {
     id: string;
@@ -26,11 +27,34 @@ interface Notification {
 export function Notifications() {
     const { user } = useAuth();
     const { dict } = useDictionary();
+    const { claimWelcomeBonus, syncWalletWithDatabase } = useWallet();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [claimingWelcomeBonus, setClaimingWelcomeBonus] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const loadNotifications = useCallback(async () => {
+        try {
+            setLoading(true);
+            const data = await NotificationsService.getNotifications();
+            setNotifications(data);
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const loadUnreadCount = useCallback(async () => {
+        try {
+            const count = await NotificationsService.getUnreadCount();
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Error loading unread count:', error);
+        }
+    }, []);
 
     useEffect(() => {
         if (!user) return; // Don't load notifications if user is not authenticated
@@ -59,7 +83,7 @@ export function Notifications() {
             }
             clearInterval(interval);
         };
-    }, [user]);
+    }, [user, loadNotifications, loadUnreadCount]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -77,26 +101,21 @@ export function Notifications() {
         };
     }, [isOpen]);
 
-    const loadNotifications = async () => {
-        try {
-            setLoading(true);
-            const data = await NotificationsService.getNotifications();
-            setNotifications(data);
-        } catch (error) {
-            console.error('Error loading notifications:', error);
-        } finally {
-            setLoading(false);
+    // Refresh notifications function that can be called externally
+    const refreshNotifications = useCallback(() => {
+        if (user) {
+            loadNotifications();
+            loadUnreadCount();
         }
-    };
+    }, [user, loadNotifications, loadUnreadCount]);
 
-    const loadUnreadCount = async () => {
-        try {
-            const count = await NotificationsService.getUnreadCount();
-            setUnreadCount(count);
-        } catch (error) {
-            console.error('Error loading unread count:', error);
-        }
-    };
+    // Expose refresh function globally so WelcomeBonus can call it
+    useEffect(() => {
+        (window as any).refreshNotifications = refreshNotifications;
+        return () => {
+            delete (window as any).refreshNotifications;
+        };
+    }, [refreshNotifications]);
 
     const markAsRead = async (notificationId: string) => {
         try {
@@ -137,6 +156,29 @@ export function Notifications() {
         } catch (error) {
             console.error('Error deleting notification:', error);
             toast.error(dict?.notifications?.failedToDelete || 'Failed to delete notification');
+        }
+    };
+
+    const handleWelcomeBonusClaim = async (notificationId: string) => {
+        try {
+            setClaimingWelcomeBonus(true);
+            const bonusAmount = await claimWelcomeBonus();
+
+            // Always delete the notification after attempting to claim
+            // This handles both successful claims and cases where user already claimed
+            await deleteNotification(notificationId);
+
+            if (bonusAmount > 0) {
+                toast.success(`Welcome bonus claimed! +${bonusAmount} coins and tournament pass!`);
+            } else {
+                // User already claimed the bonus, but we still remove the notification
+                toast.success('Welcome bonus already claimed!');
+            }
+        } catch (error) {
+            console.error('Error claiming welcome bonus:', error);
+            toast.error('Failed to claim welcome bonus');
+        } finally {
+            setClaimingWelcomeBonus(false);
         }
     };
 
@@ -231,7 +273,10 @@ export function Notifications() {
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
-                                                <h4 className="font-medium text-white">{notification.title}</h4>
+                                                <div className="flex items-center gap-2">
+                                                    {notification.type === 'welcome_bonus' && <Gift className="h-4 w-4 text-yellow-400" />}
+                                                    <h4 className="font-medium text-white">{notification.title}</h4>
+                                                </div>
                                                 <p className="text-sm text-gray-300 mt-1">{notification.message}</p>
                                                 {notification.data?.winnings && (
                                                     <p className="text-sm text-green-400 mt-1">
@@ -239,9 +284,22 @@ export function Notifications() {
                                                     </p>
                                                 )}
                                                 <p className="text-xs text-gray-400 mt-2">{formatTimeAgo(notification.created_at)}</p>
+
+                                                {/* Welcome Bonus Action Button */}
+                                                {notification.type === 'welcome_bonus' && !notification.read_at && (
+                                                    <div className="mt-3">
+                                                        <Button
+                                                            onClick={() => handleWelcomeBonusClaim(notification.id)}
+                                                            disabled={claimingWelcomeBonus}
+                                                            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-sm py-2"
+                                                        >
+                                                            {claimingWelcomeBonus ? 'Claiming...' : 'Claim Welcome Bonus'}
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex gap-1 ml-2">
-                                                {!notification.read_at && (
+                                                {!notification.read_at && notification.type !== 'welcome_bonus' && (
                                                     <Button
                                                         variant="outline"
                                                         onClick={() => markAsRead(notification.id)}

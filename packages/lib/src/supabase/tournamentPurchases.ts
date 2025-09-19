@@ -43,10 +43,13 @@ export class TournamentPurchaseService {
         };
       }
 
-      const { data, error } = await supabase.rpc("user_has_tournament_access", {
-        p_user_id: user.id,
-        p_tournament_id: tournamentId,
-      });
+      const { data, error } = await supabase.rpc(
+        "check_tournament_access_with_pass",
+        {
+          p_user_id: user.id,
+          p_tournament_id: tournamentId,
+        }
+      );
 
       if (error) {
         console.error("Error checking tournament access:", error);
@@ -58,30 +61,42 @@ export class TournamentPurchaseService {
         };
       }
 
-      // Get tournament details to show buy-in fee
-      const { data: tournament } = await supabase
-        .from("tournaments")
-        .select("buy_in_fee, name")
-        .eq("id", tournamentId)
-        .single();
+      const accessResult = data?.[0];
+      if (!accessResult) {
+        return {
+          hasAccess: false,
+          needsPurchase: false,
+          buyInFee: 0,
+          message: "No access information found",
+        };
+      }
 
-      const buyInFee = tournament?.buy_in_fee || 0;
-
-      if (data) {
+      if (accessResult.has_access) {
         return {
           hasAccess: true,
           needsPurchase: false,
-          buyInFee,
-          message: "Access granted",
+          buyInFee: accessResult.buy_in_fee,
+          message:
+            accessResult.access_type === "pass"
+              ? "Access via tournament pass"
+              : "Access granted",
+        };
+      } else if (accessResult.access_type === "pass_available") {
+        // User has unused tournament pass - show purchase modal with pass option
+        return {
+          hasAccess: false,
+          needsPurchase: true,
+          buyInFee: accessResult.buy_in_fee,
+          message: `Tournament requires ${accessResult.buy_in_fee} coins entry fee or use your tournament pass`,
         };
       } else {
         return {
           hasAccess: false,
-          needsPurchase: buyInFee > 0,
-          buyInFee,
+          needsPurchase: accessResult.buy_in_fee > 0,
+          buyInFee: accessResult.buy_in_fee,
           message:
-            buyInFee > 0
-              ? `Tournament requires ${buyInFee} coins entry fee`
+            accessResult.buy_in_fee > 0
+              ? `Tournament requires ${accessResult.buy_in_fee} coins entry fee`
               : "Tournament access denied",
         };
       }
@@ -136,6 +151,85 @@ export class TournamentPurchaseService {
       };
     } catch (error) {
       console.error("Error purchasing tournament access:", error);
+      return {
+        success: false,
+        message: "An unexpected error occurred",
+      };
+    }
+  }
+
+  /**
+   * Get count of users who have purchased access to a tournament
+   */
+  static async getTournamentPurchaseCount(
+    tournamentId: string
+  ): Promise<{ count: number; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc(
+        "get_tournament_purchase_count",
+        { p_tournament_id: tournamentId }
+      );
+
+      if (error) {
+        console.error("Error getting tournament purchase count:", error);
+        return { count: 0, error: error.message };
+      }
+
+      const count = data || 0;
+      return { count };
+    } catch (error) {
+      console.error("Error getting tournament purchase count:", error);
+      return { count: 0, error: "An unexpected error occurred" };
+    }
+  }
+
+  /**
+   * Use tournament pass for tournament access
+   */
+  static async useTournamentPass(
+    tournamentId: string
+  ): Promise<TournamentPurchaseResult> {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return {
+          success: false,
+          message: "User not authenticated",
+        };
+      }
+
+      const { data, error } = await supabase.rpc(
+        "use_tournament_pass_for_tournament",
+        {
+          p_user_id: user.id,
+          p_tournament_id: tournamentId,
+        }
+      );
+
+      if (error) {
+        console.error("Error using tournament pass:", error);
+        return {
+          success: false,
+          message: error.message || "Failed to use tournament pass",
+        };
+      }
+
+      if (data) {
+        return {
+          success: true,
+          message: "Tournament pass used successfully",
+        };
+      } else {
+        return {
+          success: false,
+          message: "Tournament pass not available or already used",
+        };
+      }
+    } catch (error) {
+      console.error("Error using tournament pass:", error);
       return {
         success: false,
         message: "An unexpected error occurred",

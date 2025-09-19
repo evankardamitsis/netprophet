@@ -469,11 +469,11 @@ export function TopNavigation({
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setAccountDropdownOpen((open) => !open)}
-                            className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none transition-all duration-300 ${totalActivePowerUps > 0
+                            className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none transition-all duration-300 ${(totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed))
                                 ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-lg shadow-purple-500/50 ring-2 ring-purple-400/30'
                                 : 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-sm shadow-purple-500/30'
                                 }`}
-                            style={totalActivePowerUps > 0 ? {
+                            style={(totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed)) ? {
                                 animation: 'slowPulse 2s ease-in-out infinite'
                             } : {}}
                             aria-label="Account menu"
@@ -484,6 +484,13 @@ export function TopNavigation({
                             {totalActivePowerUps > 0 && (
                                 <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-yellow-400 to-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/30 shadow-orange-400/60 ring-1 ring-orange-300/50">
                                     <PowerUpIcon />
+                                </div>
+                            )}
+
+                            {/* Tournament Pass Badge */}
+                            {!totalActivePowerUps && wallet.hasTournamentPass && !wallet.tournamentPassUsed && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold border-2 border-white/30 shadow-purple-400/60 ring-1 ring-purple-300/50">
+                                    🎫
                                 </div>
                             )}
                         </button>
@@ -558,6 +565,22 @@ export function TopNavigation({
                                                     </div>
                                                 );
                                             })}
+                                        </div>
+                                        <div className="border-t border-slate-700/50 my-2" />
+                                    </>
+                                )}
+
+                                {/* Tournament Pass section */}
+                                {wallet.hasTournamentPass && !wallet.tournamentPassUsed && (
+                                    <>
+                                        <div className="px-4 py-2 border-b border-slate-700/50">
+                                            <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                                                <span className="text-lg">🎫</span>
+                                                <span>Tournament Pass</span>
+                                                <span className="ml-auto bg-purple-600/20 px-2 py-1 rounded-full text-xs">
+                                                    Available
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="border-t border-slate-700/50 my-2" />
                                     </>

@@ -473,5 +473,22 @@
     "yes": "Ναι",
     "no": "Όχι",
     "ago": "πριν"
+  },
+  "tournamentAccess": {
+    "title": "Απαιτείται Πρόσβαση στο Τουρνουά",
+    "description": "Αυτό το τουρνουά απαιτεί buy-in {buyInFee} νομισμάτων για να κάνεις προβλέψεις.",
+    "descriptionFree": "Δεν έχεις πρόσβαση σε αυτό το τουρνουά.",
+    "entryFee": "Αμοιβή Εισόδου",
+    "yourBalance": "Το Υπόλοιπό σου",
+    "insufficientBalance": "Ανεπαρκές υπόλοιπο. Χρειάζεσαι {neededCoins} περισσότερα νομίσματα.",
+    "sufficientBalance": "Έχεις επαρκές υπόλοιπο για να αγοράσεις πρόσβαση.",
+    "cancel": "Ακύρωση",
+    "purchasing": "Αγοράζω...",
+    "payButton": "Πλήρωσε {buyInFee} 🌕",
+    "checkingAccess": "Ελέγχω πρόσβαση στο τουρνουά...",
+    "checkingAccessTitle": "Έλεγχος Πρόσβασης στο Τουρνουά",
+    "checkingAccessDescription": "Επαληθεύω την πρόσβασή σου σε αυτό το τουρνουά...",
+    "usePass": "Δωρεάν Πρόσβαση",
+    "insufficientFunds": "Ανεπαρκή Νομίσματα"
   }
 }

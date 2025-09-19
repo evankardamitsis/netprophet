@@ -33,6 +33,8 @@ export interface UserWallet {
     referralBonusEarned: number;
     leaderboardPrizesEarned: number;
     hasReceivedWelcomeBonus: boolean;
+    hasTournamentPass: boolean;
+    tournamentPassUsed: boolean;
 }
 
 interface WalletContextType {
@@ -72,6 +74,8 @@ const defaultWallet: UserWallet = {
     referralBonusEarned: 0,
     leaderboardPrizesEarned: 0,
     hasReceivedWelcomeBonus: false,
+    hasTournamentPass: false,
+    tournamentPassUsed: false,
 };
 
 export const COIN_CONSTANTS = {
@@ -112,6 +116,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             leaderboardPrizesEarned: storedWallet.leaderboardPrizesEarned ?? 0,
             dailyLoginStreak: storedWallet.dailyLoginStreak ?? 0,
             hasReceivedWelcomeBonus: storedWallet.hasReceivedWelcomeBonus ?? false,
+            hasTournamentPass: storedWallet.hasTournamentPass ?? false,
+            tournamentPassUsed: storedWallet.tournamentPassUsed ?? false,
         };
 
         // Convert timestamp strings back to Date objects
@@ -139,7 +145,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             // Get user profile from database
             const { data: profile, error } = await supabase
                 .from('profiles')
-                .select('balance, daily_login_streak, has_received_welcome_bonus')
+                .select('balance, daily_login_streak, has_received_welcome_bonus, has_tournament_pass, tournament_pass_used')
                 .eq('id', user.id)
                 .single();
 
@@ -159,6 +165,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                         balance: profile.balance || 0, // Default to 0 if null
                         dailyLoginStreak: profile.daily_login_streak || 0,
                         hasReceivedWelcomeBonus: profile.has_received_welcome_bonus || false,
+                        hasTournamentPass: profile.has_tournament_pass || false,
+                        tournamentPassUsed: profile.tournament_pass_used || false,
                     };
 
                     saveToSessionStorage(SESSION_KEYS.WALLET, updatedWallet);
@@ -248,7 +256,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         };
 
         loadUserData();
-    }, [user?.id]); // Only depend on user ID to prevent unnecessary re-runs
+    }, [user, loadBetStats, loadTransactions, syncWalletWithDatabase]); // Include all dependencies
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {
@@ -450,6 +458,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                         ...prev,
                         balance: result.data.newBalance,
                         hasReceivedWelcomeBonus: true,
+                        hasTournamentPass: true, // Grant tournament pass with welcome bonus
                     };
                     return newState;
                 });
@@ -459,7 +468,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     try {
                         await supabase
                             .from('profiles')
-                            .update({ has_received_welcome_bonus: true })
+                            .update({
+                                has_received_welcome_bonus: true,
+                                has_tournament_pass: true,
+                                tournament_pass_used: false
+                            })
                             .eq('id', user.id);
                     } catch (dbError) {
                         console.error('Failed to update welcome bonus flag in database:', dbError);

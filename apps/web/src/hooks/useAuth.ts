@@ -48,8 +48,6 @@ export function useAuth() {
         return;
       }
 
-      console.log("useAuth: Auth state change:", event, session?.user?.email);
-
       if (!mounted) return;
 
       setSession(session);
@@ -79,8 +77,6 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
-      console.log("useAuth: Starting signOut...");
-
       // Clear local state immediately
       setUser(null);
       setSession(null);
@@ -92,8 +88,6 @@ export function useAuth() {
         console.error("useAuth: SignOut error:", error);
         return { error };
       }
-
-      console.log("useAuth: SignOut successful");
 
       // Clear any cached data
       localStorage.removeItem("oauth_lang");

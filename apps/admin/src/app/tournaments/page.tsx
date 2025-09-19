@@ -16,7 +16,8 @@ import {
     createTournament,
     updateTournament,
     deleteTournament,
-    getTournamentWithDetails
+    getTournamentWithDetails,
+    TournamentPurchaseService
 } from '@netprophet/lib';
 import { Plus, Edit, Trash2, Eye, Calendar, MapPin, Trophy, Users, MoreHorizontal } from 'lucide-react';
 import { TournamentModal } from './TournamentModal';
@@ -32,6 +33,7 @@ export default function TournamentsPage() {
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
     const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
     const [showDetails, setShowDetails] = useState(false);
+    const [purchaseCounts, setPurchaseCounts] = useState<Record<string, number>>({});
     const router = useRouter();
 
     useEffect(() => {
@@ -43,11 +45,32 @@ export default function TournamentsPage() {
             setLoading(true);
             const tournamentsData = await getTournaments();
             setTournaments(tournamentsData);
+
+            // Load purchase counts for each tournament
+            await loadPurchaseCounts(tournamentsData);
         } catch (error) {
             console.error('Error loading tournaments:', error);
             toast.error('Failed to load tournaments');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadPurchaseCounts = async (tournamentsData: Tournament[]) => {
+        try {
+            const counts: Record<string, number> = {};
+
+            // Load purchase counts for all tournaments in parallel
+            await Promise.all(
+                tournamentsData.map(async (tournament) => {
+                    const result = await TournamentPurchaseService.getTournamentPurchaseCount(tournament.id);
+                    counts[tournament.id] = result.count;
+                })
+            );
+
+            setPurchaseCounts(counts);
+        } catch (error) {
+            console.error('Error loading purchase counts:', error);
         }
     };
 
@@ -264,6 +287,20 @@ export default function TournamentsPage() {
                                         <span className="font-medium">
                                             {tournament.current_participants}
                                             {tournament.max_participants && `/${tournament.max_participants}`} participants
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                                        <Trophy className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">
+                                            Buy-in: {tournament.buy_in_fee || 0} 🌕
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                                        <Users className="h-4 w-4 text-gray-500" />
+                                        <span className="font-medium">
+                                            {purchaseCounts[tournament.id] || 0} users purchased access
                                         </span>
                                     </div>
                                 </div>

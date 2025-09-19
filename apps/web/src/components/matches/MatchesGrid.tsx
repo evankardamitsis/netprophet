@@ -173,7 +173,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                             }`}>
                                                             {dict?.sidebar?.live || 'LIVE'}
                                                         </div>
-                                                        <span className="text-gray-400 text-xs xs:text-sm truncate max-w-[200px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
+                                                        <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
                                                     </div>
                                                     <div className="text-right">
                                                         <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
@@ -320,7 +320,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                             }`}>
                                                             {match.locked ? 'LOCKED' : (dict?.sidebar?.upcoming || 'UPCOMING')}
                                                         </div>
-                                                        <span className="text-gray-400 text-xs xs:text-sm truncate max-w-[200px] xs:max-w-[200px] sm:max-w-[200px] md:max-w-[200px]">{match.tournament}</span>
+                                                        <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[200px] sm:max-w-[200px] md:max-w-[200px]">{match.tournament}</span>
                                                     </div>
                                                     <div className="text-right">
                                                         <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>

@@ -47,6 +47,8 @@ export { MatchResultsService } from "./supabase/matchResults";
 export type { MatchResultWithDetails } from "./supabase/matchResults";
 export { NotificationsService } from "./supabase/notifications";
 export type { NotificationWithData } from "./supabase/notifications";
+export { WelcomeBonusNotificationService } from "./supabase/welcomeBonusNotifications";
+export type { WelcomeBonusNotification } from "./supabase/welcomeBonusNotifications";
 export { TransactionsService } from "./supabase/transactions";
 export type { TransactionWithDetails } from "./supabase/transactions";
 export { ProfilesService } from "./supabase/profiles";

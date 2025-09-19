@@ -238,7 +238,7 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                         <span className="truncate">{match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
-                                        <span className="truncate">{match.tournament}</span>
+                                        <span className="truncate font-bold">{match.tournament}</span>
                                         <span>{match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
@@ -289,7 +289,7 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                         <span className="truncate">{match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
-                                        <span className="truncate">{match.tournament}</span>
+                                        <span className="truncate font-bold">{match.tournament}</span>
                                         <span>{match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">

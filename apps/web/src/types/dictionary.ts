@@ -458,4 +458,21 @@ export interface Dictionary {
     no: string;
     ago: string;
   };
+  tournamentAccess: {
+    title: string;
+    description: string;
+    descriptionFree: string;
+    entryFee: string;
+    yourBalance: string;
+    insufficientBalance: string;
+    sufficientBalance: string;
+    cancel: string;
+    purchasing: string;
+    payButton: string;
+    checkingAccess: string;
+    checkingAccessTitle: string;
+    checkingAccessDescription: string;
+    usePass: string;
+    insufficientFunds: string;
+  };
 }
