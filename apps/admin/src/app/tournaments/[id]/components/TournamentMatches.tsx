@@ -36,11 +36,11 @@ export function TournamentMatches({
     const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Tournament Matches</h2>
-                    <p className="text-gray-600 mt-1">Manage all matches for this tournament</p>
+        <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <div className="min-w-0 flex-1">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Tournament Matches</h2>
+                    <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all matches for this tournament</p>
                 </div>
             </div>
 
@@ -59,19 +59,19 @@ export function TournamentMatches({
                     onSelectionChange={setSelectedMatches}
                 />
             ) : (
-                <div className="text-center py-12">
-                    <div className="h-16 w-16 text-gray-400 mx-auto mb-6 flex items-center justify-center">
-                        <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center py-8 sm:py-12">
+                    <div className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4 sm:mb-6 flex items-center justify-center">
+                        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-medium text-gray-900 mb-3">No matches found</h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2 sm:mb-3">No matches found</h3>
+                    <p className="text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base px-4">
                         Add matches to this tournament to get started. Each match will be associated with this tournament.
                     </p>
                     <Button
                         onClick={onAddMatch}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
                     >
                         Add First Match
                     </Button>

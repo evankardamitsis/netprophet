@@ -180,36 +180,88 @@ export default function BetManagement({ }: BetManagementProps) {
                     {activeBets.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">No active bets</div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Match</TableHead>
-                                    <TableHead>Prediction</TableHead>
-                                    <TableHead>Bet Amount</TableHead>
-                                    <TableHead>Multiplier</TableHead>
-                                    <TableHead>Potential Win</TableHead>
-                                    <TableHead>Created</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>User</TableHead>
+                                            <TableHead>Match</TableHead>
+                                            <TableHead>Prediction</TableHead>
+                                            <TableHead>Bet Amount</TableHead>
+                                            <TableHead>Multiplier</TableHead>
+                                            <TableHead>Potential Win</TableHead>
+                                            <TableHead>Created</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {activeBets.map((bet) => (
+                                            <TableRow key={bet.id}>
+                                                <TableCell className="font-medium">{getUserDisplayName(bet.user_id)}</TableCell>
+                                                <TableCell>
+                                                    {bet.description || 'Match details not available'}
+                                                </TableCell>
+                                                <TableCell className="max-w-xs truncate">
+                                                    {formatPrediction(bet.prediction)}
+                                                </TableCell>
+                                                <TableCell>{bet.bet_amount} 🌕</TableCell>
+                                                <TableCell>{bet.multiplier}x</TableCell>
+                                                <TableCell>{bet.potential_winnings} 🌕</TableCell>
+                                                <TableCell>{formatDate(bet.created_at)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="lg:hidden space-y-3">
                                 {activeBets.map((bet) => (
-                                    <TableRow key={bet.id}>
-                                        <TableCell className="font-medium">{getUserDisplayName(bet.user_id)}</TableCell>
-                                        <TableCell>
-                                            {bet.description || 'Match details not available'}
-                                        </TableCell>
-                                        <TableCell className="max-w-xs truncate">
-                                            {formatPrediction(bet.prediction)}
-                                        </TableCell>
-                                        <TableCell>{bet.bet_amount} 🌕</TableCell>
-                                        <TableCell>{bet.multiplier}x</TableCell>
-                                        <TableCell>{bet.potential_winnings} 🌕</TableCell>
-                                        <TableCell>{formatDate(bet.created_at)}</TableCell>
-                                    </TableRow>
+                                    <div key={bet.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                                        {/* User and Bet Info */}
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-lg text-gray-900 truncate">
+                                                    {getUserDisplayName(bet.user_id)}
+                                                </h3>
+                                                <div className="text-sm text-gray-600 truncate">
+                                                    {bet.description || 'Match details not available'}
+                                                </div>
+                                            </div>
+                                            <div className="text-right ml-2">
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {bet.bet_amount} 🌕
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {bet.multiplier}x multiplier
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Prediction */}
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                            <div className="text-xs font-medium text-blue-800 mb-1">Prediction</div>
+                                            <div className="text-sm text-blue-900">
+                                                {formatPrediction(bet.prediction)}
+                                            </div>
+                                        </div>
+
+                                        {/* Bet Details */}
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Potential Win:</span>
+                                                <span className="font-medium text-green-600">{bet.potential_winnings} 🌕</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Created:</span>
+                                                <span className="font-medium">{formatDate(bet.created_at)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
@@ -223,32 +275,75 @@ export default function BetManagement({ }: BetManagementProps) {
                     {resolvedBets.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">No resolved bets</div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Match</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Bet Amount</TableHead>
-                                    <TableHead>Winnings Paid</TableHead>
-                                    <TableHead>Resolved</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <>
+                            {/* Desktop Table View */}
+                            <div className="hidden lg:block overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>User</TableHead>
+                                            <TableHead>Match</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Bet Amount</TableHead>
+                                            <TableHead>Winnings Paid</TableHead>
+                                            <TableHead>Resolved</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {resolvedBets.map((bet) => (
+                                            <TableRow key={bet.id}>
+                                                <TableCell className="font-medium">{getUserDisplayName(bet.user_id)}</TableCell>
+                                                <TableCell>
+                                                    {bet.description || 'Match details not available'}
+                                                </TableCell>
+                                                <TableCell>{getStatusBadge(bet.status)}</TableCell>
+                                                <TableCell>{bet.bet_amount} 🌕</TableCell>
+                                                <TableCell>{bet.winnings_paid} 🌕</TableCell>
+                                                <TableCell>{bet.resolved_at ? formatDate(bet.resolved_at) : 'N/A'}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            {/* Mobile Card View */}
+                            <div className="lg:hidden space-y-3">
                                 {resolvedBets.map((bet) => (
-                                    <TableRow key={bet.id}>
-                                        <TableCell className="font-medium">{getUserDisplayName(bet.user_id)}</TableCell>
-                                        <TableCell>
-                                            {bet.description || 'Match details not available'}
-                                        </TableCell>
-                                        <TableCell>{getStatusBadge(bet.status)}</TableCell>
-                                        <TableCell>{bet.bet_amount} 🌕</TableCell>
-                                        <TableCell>{bet.winnings_paid} 🌕</TableCell>
-                                        <TableCell>{bet.resolved_at ? formatDate(bet.resolved_at) : 'N/A'}</TableCell>
-                                    </TableRow>
+                                    <div key={bet.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                                        {/* User and Match Info */}
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-lg text-gray-900 truncate">
+                                                    {getUserDisplayName(bet.user_id)}
+                                                </h3>
+                                                <div className="text-sm text-gray-600 truncate">
+                                                    {bet.description || 'Match details not available'}
+                                                </div>
+                                            </div>
+                                            <div className="text-right ml-2">
+                                                {getStatusBadge(bet.status)}
+                                            </div>
+                                        </div>
+
+                                        {/* Bet Details */}
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Bet Amount:</span>
+                                                <span className="font-medium">{bet.bet_amount} 🌕</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-500">Winnings:</span>
+                                                <span className="font-medium text-green-600">{bet.winnings_paid} 🌕</span>
+                                            </div>
+                                            <div className="flex justify-between col-span-2">
+                                                <span className="text-gray-500">Resolved:</span>
+                                                <span className="font-medium">{bet.resolved_at ? formatDate(bet.resolved_at) : 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 ))}
-                            </TableBody>
-                        </Table>
+                            </div>
+                        </>
                     )}
                 </CardContent>
             </Card>

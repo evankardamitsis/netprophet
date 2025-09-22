@@ -312,7 +312,8 @@ export default function UsersPage() {
                             </Button>
                         </div>
                     </div>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <table className="min-w-full text-sm border">
                             <thead>
                                 {table.getHeaderGroups().map(headerGroup => (
@@ -357,6 +358,79 @@ export default function UsersPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3">
+                        {table.getRowModel().rows.map(row => {
+                            const user = row.original;
+
+                            return (
+                                <div
+                                    key={row.id}
+                                    className="bg-white border border-gray-200 rounded-lg p-4 space-y-3"
+                                >
+                                    {/* User Info */}
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-lg text-gray-900 truncate">
+                                                {user.email}
+                                            </h3>
+                                            {user.username && (
+                                                <div className="text-sm text-gray-600 truncate">
+                                                    @{user.username}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center space-x-2 ml-2">
+                                            {user.is_admin && (
+                                                <Badge variant="destructive" className="text-xs">
+                                                    Admin
+                                                </Badge>
+                                            )}
+
+                                        </div>
+                                    </div>
+
+                                    {/* User Stats */}
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Balance:</span>
+                                            <span className="font-medium">{user.balance || 0} 🌕</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Created:</span>
+                                            <span className="font-medium">
+                                                {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex space-x-2 pt-2 border-t border-gray-100">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setEditUser(user)}
+                                            className="flex-1 text-xs"
+                                        >
+                                            ✏️ Edit
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                setEditUser(user);
+                                                handleDelete();
+                                            }}
+                                            className="flex-1 text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            🗑️ Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </CardContent>
             </Card>

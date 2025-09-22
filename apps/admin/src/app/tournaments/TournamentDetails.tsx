@@ -160,31 +160,31 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-                <div className="p-6 border-b">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">{tournament.name}</h2>
-                            <div className="flex items-center gap-2 mt-2">
-                                <Badge className={getStatusColor(tournament.status)}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+            <div className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+                <div className="p-4 sm:p-6 border-b">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{tournament.name}</h2>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
+                                <Badge className={`${getStatusColor(tournament.status)} w-fit`}>
                                     {tournament.status}
                                 </Badge>
-                                <Badge className={getSurfaceColor(tournament.surface)}>
+                                <Badge className={`${getSurfaceColor(tournament.surface)} w-fit`}>
                                     {tournament.surface}
                                 </Badge>
                             </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={onClose}>
+                        <Button variant="ghost" size="sm" onClick={onClose} className="self-start sm:self-auto">
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
 
-                <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="p-4 sm:p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
                         <Card>
-                            <CardContent className="p-4">
+                            <CardContent className="p-3 sm:p-4">
                                 <div className="flex items-center gap-2 text-gray-600 mb-2">
                                     <Calendar className="h-4 w-4" />
                                     <span className="text-sm font-medium">Dates</span>
@@ -197,7 +197,7 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
 
                         {tournament.location && (
                             <Card>
-                                <CardContent className="p-4">
+                                <CardContent className="p-3 sm:p-4">
                                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                                         <MapPin className="h-4 w-4" />
                                         <span className="text-sm font-medium">Location</span>
@@ -208,7 +208,7 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                         )}
 
                         <Card>
-                            <CardContent className="p-4">
+                            <CardContent className="p-3 sm:p-4">
                                 <div className="flex items-center gap-2 text-gray-600 mb-2">
                                     <Users className="h-4 w-4" />
                                     <span className="text-sm font-medium">Participants</span>
@@ -222,28 +222,29 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                     </div>
 
                     {tournament.description && (
-                        <Card className="mb-6">
-                            <CardContent className="p-4">
-                                <p className="text-gray-700">{tournament.description}</p>
+                        <Card className="mb-4 sm:mb-6">
+                            <CardContent className="p-3 sm:p-4">
+                                <p className="text-gray-700 text-sm sm:text-base">{tournament.description}</p>
                             </CardContent>
                         </Card>
                     )}
 
                     <Tabs defaultValue="categories" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="categories">Categories</TabsTrigger>
-                            <TabsTrigger value="participants">Participants</TabsTrigger>
+                            <TabsTrigger value="categories" className="text-xs sm:text-sm">Categories</TabsTrigger>
+                            <TabsTrigger value="participants" className="text-xs sm:text-sm">Participants</TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="categories" className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">Tournament Categories</h3>
+                        <TabsContent value="categories" className="space-y-3 sm:space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                                <h3 className="text-base sm:text-lg font-semibold">Tournament Categories</h3>
                                 <Button
                                     onClick={() => setShowCategoryForm(true)}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 w-full sm:w-auto"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    Add Category
+                                    <span className="sm:hidden">Add Category</span>
+                                    <span className="hidden sm:inline">Add Category</span>
                                 </Button>
                             </div>
 
@@ -258,12 +259,12 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                                 />
                             )}
 
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                                 {categories.map((category) => (
                                     <Card key={category.id}>
-                                        <CardHeader className="pb-3">
+                                        <CardHeader className="pb-2 sm:pb-3">
                                             <div className="flex items-start justify-between">
-                                                <CardTitle className="text-base">{category.name}</CardTitle>
+                                                <CardTitle className="text-sm sm:text-base">{category.name}</CardTitle>
                                                 <div className="flex items-center gap-1">
                                                     <Button
                                                         variant="ghost"
@@ -286,11 +287,11 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                                             </div>
                                         </CardHeader>
                                         <CardContent className="pt-0">
-                                            <div className="space-y-2 text-sm">
+                                            <div className="space-y-2 text-xs sm:text-sm">
                                                 {category.description && (
                                                     <p className="text-gray-600">{category.description}</p>
                                                 )}
-                                                <div className="flex justify-between">
+                                                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
                                                     <span>Participants: {category.current_participants}</span>
                                                     <span className="text-green-600">
                                                         ${category.entry_fee} entry
@@ -309,22 +310,23 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
 
                             {categories.length === 0 && (
                                 <Card>
-                                    <CardContent className="p-8 text-center">
-                                        <p className="text-gray-500">No categories created yet</p>
+                                    <CardContent className="p-6 sm:p-8 text-center">
+                                        <p className="text-gray-500 text-sm sm:text-base">No categories created yet</p>
                                     </CardContent>
                                 </Card>
                             )}
                         </TabsContent>
 
-                        <TabsContent value="participants" className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-semibold">Tournament Participants</h3>
+                        <TabsContent value="participants" className="space-y-3 sm:space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                                <h3 className="text-base sm:text-lg font-semibold">Tournament Participants</h3>
                                 <Button
                                     onClick={() => setShowParticipantForm(true)}
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 w-full sm:w-auto"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    Add Participant
+                                    <span className="sm:hidden">Add Participant</span>
+                                    <span className="hidden sm:inline">Add Participant</span>
                                 </Button>
                             </div>
 
@@ -344,25 +346,25 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                             <div className="space-y-2">
                                 {participants.map((participant) => (
                                     <Card key={participant.id}>
-                                        <CardContent className="p-4">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div>
-                                                        <p className="font-medium">
+                                        <CardContent className="p-3 sm:p-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm sm:text-base truncate">
                                                             {participant.players?.first_name} {participant.players?.last_name}
                                                         </p>
-                                                        <p className="text-sm text-gray-600">
+                                                        <p className="text-xs sm:text-sm text-gray-600">
                                                             NTRP: {participant.players?.ntrp_rating} | Age: {participant.players?.age}
                                                         </p>
                                                     </div>
                                                     {participant.tournament_categories && (
-                                                        <Badge variant="outline">
+                                                        <Badge variant="outline" className="w-fit text-xs">
                                                             {participant.tournament_categories.name}
                                                         </Badge>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <Badge className={getStatusColor(participant.status)}>
+                                                    <Badge className={`${getStatusColor(participant.status)} text-xs`}>
                                                         {participant.status}
                                                     </Badge>
                                                     <Button
@@ -391,8 +393,8 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
 
                             {participants.length === 0 && (
                                 <Card>
-                                    <CardContent className="p-8 text-center">
-                                        <p className="text-gray-500">No participants registered yet</p>
+                                    <CardContent className="p-6 sm:p-8 text-center">
+                                        <p className="text-gray-500 text-sm sm:text-base">No participants registered yet</p>
                                     </CardContent>
                                 </Card>
                             )}

@@ -30,7 +30,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
         max_participants: '',
         tournament_type: 'singles',
         format: 'knockout',
-        matches_type: 'best-of-3'
+        matches_type: tournament?.matches_type || 'best-of-3'
     });
 
     useEffect(() => {
@@ -53,6 +53,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
             });
         }
     }, [tournament]);
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,8 +94,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="name" className="text-base font-semibold">Tournament Name *</Label>
                     <Input
@@ -149,8 +150,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 <div className="space-y-2">
                     <Label htmlFor="surface" className="text-base font-semibold">Surface</Label>
                     <Select
-                        key={tournament?.id || 'new'}
-                        defaultValue={formData.surface || ''}
+                        value={formData.surface || ''}
                         onValueChange={(value) => handleInputChange('surface', value)}
                     >
                         <SelectTrigger className="h-12 text-base">
@@ -208,8 +208,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 <div className="space-y-2">
                     <Label htmlFor="matches_type" className="text-base font-semibold">Matches Type</Label>
                     <Select
-                        key={tournament?.id || 'new'}
-                        value={formData.matches_type}
+                        key={`matches-type-${tournament?.id || 'new'}-${formData.matches_type}`}
+                        value={formData.matches_type || tournament?.matches_type || 'best-of-3'}
                         onValueChange={(value) => handleInputChange('matches_type', value)}
                     >
                         <SelectTrigger className="h-12 text-base">
@@ -293,11 +293,11 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 />
             </div>
 
-            <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={onCancel} className="h-12 px-8 text-base">
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6">
+                <Button type="button" variant="outline" onClick={onCancel} className="h-12 px-6 sm:px-8 text-base w-full sm:w-auto">
                     Cancel
                 </Button>
-                <Button type="submit" className="h-12 px-8 text-base">
+                <Button type="submit" className="h-12 px-6 sm:px-8 text-base w-full sm:w-auto">
                     {tournament ? 'Update Tournament' : 'Create Tournament'}
                 </Button>
             </div>

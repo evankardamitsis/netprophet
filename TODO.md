@@ -14,6 +14,7 @@
 - [ ] Implement audit logs for admin actions
 - [ ] Add data export functionality (CSV/JSON)
 - [ ] Implement admin role hierarchy (super admin, moderator, etc.)
+- [ ] Improve mobile responsiveness
 
 ## Web App Features
 

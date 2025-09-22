@@ -505,56 +505,15 @@ export default function PlayersPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="mb-4 flex items-center gap-4">
-                        <Input
-                            placeholder="Search by name..."
-                            value={globalFilter}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
-                            className="max-w-xs"
-                        />
-                        <div className="ml-auto flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-600">
-                                    Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} players
-                                </span>
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    {'<<'}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(currentPage - 1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    {'<'}
-                                </Button>
-                                <span className="px-2 text-sm flex items-center">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(currentPage + 1)}
-                                    disabled={currentPage >= totalPages}
-                                >
-                                    {'>'}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(totalPages)}
-                                    disabled={currentPage >= totalPages}
-                                >
-                                    {'>>'}
-                                </Button>
-                            </div>
+                    <div className="mb-4 space-y-4">
+                        {/* Search and Page Size - Mobile First */}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <Input
+                                placeholder="Search by name..."
+                                value={globalFilter}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
+                                className="w-full sm:max-w-xs"
+                            />
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-600">Page size:</span>
                                 <select
@@ -573,8 +532,57 @@ export default function PlayersPage() {
                                 </select>
                             </div>
                         </div>
+
+                        {/* Pagination Info and Controls */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="text-sm text-gray-600">
+                                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} players
+                            </div>
+
+                            {/* Pagination Controls */}
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(1)}
+                                    disabled={currentPage === 1}
+                                    className="hidden sm:flex"
+                                >
+                                    {'<<'}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    {'<'}
+                                </Button>
+                                <span className="px-2 text-sm flex items-center whitespace-nowrap">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(currentPage + 1)}
+                                    disabled={currentPage >= totalPages}
+                                >
+                                    {'>'}
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => fetchPlayersData(totalPages)}
+                                    disabled={currentPage >= totalPages}
+                                    className="hidden sm:flex"
+                                >
+                                    {'>>'}
+                                </Button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <table className="min-w-full text-sm border">
                             <thead>
                                 {table.getHeaderGroups().map(headerGroup => (
@@ -627,6 +635,97 @@ export default function PlayersPage() {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-3">
+                        {table.getRowModel().rows.map(row => {
+                            const player = row.original;
+                            const winRate = player.wins + player.losses > 0 ? ((player.wins / (player.wins + player.losses)) * 100).toFixed(1) : '0.0';
+
+                            return (
+                                <div
+                                    key={row.id}
+                                    className="bg-white border border-gray-200 rounded-lg p-4 space-y-3 cursor-pointer hover:shadow-md transition-shadow"
+                                    onClick={e => {
+                                        // Prevent navigation if clicking on a button or input
+                                        if ((e.target as HTMLElement).closest('button,input')) return;
+                                        router.push(`/players/${player.id}`);
+                                    }}
+                                >
+                                    {/* Player Name and NTRP */}
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="font-semibold text-lg text-gray-900">
+                                                {player.firstName} {player.lastName}
+                                            </h3>
+                                            <div className="text-sm text-gray-600">
+                                                NTRP: {player.ntrpRating}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-medium text-gray-900">
+                                                {winRate}% Win Rate
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {player.wins}W - {player.losses}L
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Surface:</span>
+                                            <span className="font-medium">{player.surfacePreference}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Age:</span>
+                                            <span className="font-medium">{player.age}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Streak:</span>
+                                            <span className="font-medium">
+                                                {player.currentStreak} {player.streakType}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Last 5:</span>
+                                            <span className="font-medium">
+                                                {player.last5.slice(0, 3).join(', ')}
+                                                {player.last5.length > 3 && '...'}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex space-x-2 pt-2 border-t border-gray-100">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEdit(player);
+                                            }}
+                                            className="flex-1 text-xs"
+                                        >
+                                            ✏️ Edit
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(player);
+                                            }}
+                                            className="flex-1 text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            🗑️ Delete
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </CardContent>
             </Card>

@@ -168,16 +168,16 @@ export default function TournamentsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Tournament Management</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tournament Management</h1>
                     <p className="text-gray-600 mt-2">
                         Create and manage tournaments
                     </p>
                 </div>
                 <Button
                     onClick={() => setShowTournamentForm(true)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 w-full sm:w-auto"
                 >
                     <Plus className="h-4 w-4" />
                     Create Tournament
@@ -204,16 +204,16 @@ export default function TournamentsPage() {
                 />
             )}
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {tournaments.map((tournament) => (
                     <Card key={tournament.id} className="group hover:shadow-xl transition-all duration-200 border-0 shadow-md">
                         <CardHeader className="pb-3">
                             <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                    <CardTitle className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                                <div className="flex-1 min-w-0">
+                                    <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors break-words">
                                         {tournament.name}
                                     </CardTitle>
-                                    <div className="flex items-center gap-2 mb-3">
+                                    <div className="flex flex-wrap items-center gap-2 mb-3">
                                         <Badge className={`${getStatusColor(tournament.status)} text-xs font-medium px-2 py-1`}>
                                             {tournament.status}
                                         </Badge>
@@ -227,7 +227,7 @@ export default function TournamentsPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="h-8 w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                                         >
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
@@ -268,37 +268,37 @@ export default function TournamentsPage() {
                                 )}
 
                                 <div className="space-y-3">
-                                    <div className="flex items-center gap-3 text-sm text-gray-700">
-                                        <Calendar className="h-4 w-4 text-gray-500" />
-                                        <span className="font-medium">
+                                    <div className="flex items-start gap-3 text-sm text-gray-700">
+                                        <Calendar className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                        <span className="font-medium break-words">
                                             {tournament.start_date} - {tournament.end_date}
                                         </span>
                                     </div>
 
                                     {tournament.location && (
-                                        <div className="flex items-center gap-3 text-sm text-gray-700">
-                                            <MapPin className="h-4 w-4 text-gray-500" />
-                                            <span className="font-medium">{tournament.location}</span>
+                                        <div className="flex items-start gap-3 text-sm text-gray-700">
+                                            <MapPin className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                            <span className="font-medium break-words">{tournament.location}</span>
                                         </div>
                                     )}
 
-                                    <div className="flex items-center gap-3 text-sm text-gray-700">
-                                        <Users className="h-4 w-4 text-gray-500" />
+                                    <div className="flex items-start gap-3 text-sm text-gray-700">
+                                        <Users className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
                                         <span className="font-medium">
                                             {tournament.current_participants}
                                             {tournament.max_participants && `/${tournament.max_participants}`} participants
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-3 text-sm text-gray-700">
-                                        <Trophy className="h-4 w-4 text-gray-500" />
+                                    <div className="flex items-start gap-3 text-sm text-gray-700">
+                                        <Trophy className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
                                         <span className="font-medium">
                                             Buy-in: {tournament.buy_in_fee || 0} 🌕
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-3 text-sm text-gray-700">
-                                        <Users className="h-4 w-4 text-gray-500" />
+                                    <div className="flex items-start gap-3 text-sm text-gray-700">
+                                        <Users className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
                                         <span className="font-medium">
                                             {purchaseCounts[tournament.id] || 0} users purchased access
                                         </span>

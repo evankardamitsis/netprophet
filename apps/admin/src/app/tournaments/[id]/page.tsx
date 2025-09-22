@@ -349,7 +349,7 @@ export default function TournamentPage() {
         return (
             <div className="min-h-screen bg-gray-50">
                 <div className="bg-white border-b border-gray-200">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
                         <div className="flex items-center gap-4">
                             <Button variant="ghost" onClick={() => router.push('/tournaments')}>
                                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -358,9 +358,9 @@ export default function TournamentPage() {
                         </div>
                     </div>
                 </div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
                     <Card>
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 sm:p-6">
                             <div className="animate-pulse space-y-4">
                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
                                 <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -377,7 +377,7 @@ export default function TournamentPage() {
         return (
             <div className="min-h-screen bg-gray-50">
                 <div className="bg-white border-b border-gray-200">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
                         <div className="flex items-center gap-4">
                             <Button variant="ghost" onClick={() => router.push('/tournaments')}>
                                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -386,9 +386,9 @@ export default function TournamentPage() {
                         </div>
                     </div>
                 </div>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
                     <Card>
-                        <CardContent className="p-12 text-center">
+                        <CardContent className="p-6 sm:p-12 text-center">
                             <h3 className="text-lg font-medium text-gray-900 mb-2">Tournament not found</h3>
                             <p className="text-gray-600 mb-4">
                                 The tournament you&apos;re looking for doesn&apos;t exist
@@ -407,51 +407,59 @@ export default function TournamentPage() {
         <div className="min-h-screen bg-gray-50">
             {/* Header Section */}
             <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
                     {/* Back Button Row */}
                     <div className="mb-4">
                         <Button
                             variant="ghost"
                             onClick={() => router.push('/tournaments')}
-                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 w-full sm:w-auto"
                         >
                             <ArrowLeft className="h-4 w-4" />
+                            <span className="sm:hidden">Back</span>
                             <span className="hidden sm:inline">Back to Tournaments</span>
                         </Button>
                     </div>
 
                     {/* Tournament Title and Actions Row */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <div className="flex items-center gap-3">
-                                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{tournament.name}</h1>
-                                    <Badge className={`${getSurfaceColor(tournament.surface)} text-sm font-medium px-3 py-1`}>
-                                        {tournament.surface}
+                    <div className="flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{tournament?.name}</h1>
+                                    <Badge className={`${getSurfaceColor(tournament?.surface || '')} text-sm font-medium px-3 py-1 w-fit`}>
+                                        {tournament?.surface}
                                     </Badge>
                                 </div>
                                 <p className="text-sm text-gray-600 mt-1">Tournament Management</p>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button
-                                onClick={() => setShowMatchForm(true)}
-                                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">Add Match</span>
-                            </Button>
-                            <Button
-                                onClick={handleRunMatchAutomation}
-                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                            >
-                                <Clock className="h-4 w-4" />
-                                <span className="hidden sm:inline">Run Automation</span>
-                            </Button>
+
+                        {/* Action Buttons - Mobile Optimized */}
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={() => setShowMatchForm(true)}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span className="sm:hidden">Add Match</span>
+                                    <span className="hidden sm:inline">Add Match</span>
+                                </Button>
+                                <Button
+                                    onClick={handleRunMatchAutomation}
+                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                                >
+                                    <Clock className="h-4 w-4" />
+                                    <span className="sm:hidden">Automation</span>
+                                    <span className="hidden sm:inline">Run Automation</span>
+                                </Button>
+                            </div>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="border-gray-300">
+                                    <Button variant="outline" className="border-gray-300 w-full sm:w-auto">
                                         <Settings className="h-4 w-4 mr-2" />
+                                        <span className="sm:hidden">Settings</span>
                                         <span className="hidden sm:inline">Settings</span>
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -489,39 +497,39 @@ export default function TournamentPage() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
 
 
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg mb-8">
-                        <TabsTrigger value="overview" className="flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
+                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-100 p-1 rounded-lg mb-4 sm:mb-6 lg:mb-8">
+                        <TabsTrigger value="overview" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
+                            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="hidden sm:inline">Overview</span>
                         </TabsTrigger>
-                        <TabsTrigger value="matches" className="flex items-center gap-2">
-                            <Trophy className="h-4 w-4" />
+                        <TabsTrigger value="matches" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
+                            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="hidden sm:inline">Matches</span>
                             {matches.length > 0 && (
-                                <Badge variant="secondary" className="ml-1">
+                                <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                                     {matches.length}
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="categories" className="flex items-center gap-2">
-                            <Tag className="h-4 w-4" />
+                        <TabsTrigger value="categories" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
+                            <Tag className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="hidden sm:inline">Categories</span>
                             {categories.length > 0 && (
-                                <Badge variant="secondary" className="ml-1">
+                                <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                                     {categories.length}
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="participants" className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
+                        <TabsTrigger value="participants" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
+                            <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                             <span className="hidden sm:inline">Participants</span>
                             {participants.length > 0 && (
-                                <Badge variant="secondary" className="ml-1">
+                                <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0">
                                     {participants.length}
                                 </Badge>
                             )}
@@ -529,15 +537,17 @@ export default function TournamentPage() {
                     </TabsList>
 
                     <TabsContent value="overview" className="mt-6">
-                        <TournamentOverview
-                            tournament={tournament}
-                            matches={matches}
-                            participants={participants}
-                            onAddMatch={() => setShowMatchForm(true)}
-                            onViewAllMatches={() => { }}
-                            getStatusColor={getStatusColor}
-                            getSurfaceColor={getSurfaceColor}
-                        />
+                        {tournament && (
+                            <TournamentOverview
+                                tournament={tournament}
+                                matches={matches}
+                                participants={participants}
+                                onAddMatch={() => setShowMatchForm(true)}
+                                onViewAllMatches={() => { }}
+                                getStatusColor={getStatusColor}
+                                getSurfaceColor={getSurfaceColor}
+                            />
+                        )}
                     </TabsContent>
 
                     <TabsContent value="matches" className="mt-6">
@@ -586,19 +596,21 @@ export default function TournamentPage() {
                 </Tabs>
 
                 {/* Modals */}
-                <MatchModal
-                    isOpen={showMatchForm}
-                    onClose={() => {
-                        setShowMatchForm(false);
-                        setEditingMatch(null);
-                    }}
-                    match={editingMatch}
-                    tournaments={[tournament]}
-                    currentTournament={tournament}
-                    categories={categories}
-                    onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
-                    isSubmitting={creatingMatch}
-                />
+                {tournament && (
+                    <MatchModal
+                        isOpen={showMatchForm}
+                        onClose={() => {
+                            setShowMatchForm(false);
+                            setEditingMatch(null);
+                        }}
+                        match={editingMatch}
+                        tournaments={[tournament]}
+                        currentTournament={tournament}
+                        categories={categories}
+                        onSubmit={editingMatch ? handleUpdateMatch : handleCreateMatch}
+                        isSubmitting={creatingMatch}
+                    />
+                )}
 
                 <TournamentModal
                     isOpen={showTournamentForm}
@@ -636,4 +648,4 @@ export default function TournamentPage() {
             </div>
         </div>
     );
-} 
+}

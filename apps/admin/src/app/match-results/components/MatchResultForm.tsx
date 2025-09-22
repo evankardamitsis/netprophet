@@ -117,12 +117,12 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Match Winner */}
             <div className="space-y-2">
-                <Label>Match Winner *</Label>
+                <Label className="text-sm sm:text-base">Match Winner *</Label>
                 <Select value={formData.winner_id} onValueChange={handleMatchWinnerChange}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder="Select winner" />
                     </SelectTrigger>
                     <SelectContent>
@@ -138,9 +138,9 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
 
             {/* Match Result */}
             <div className="space-y-2">
-                <Label>Match Result *</Label>
+                <Label className="text-sm sm:text-base">Match Result *</Label>
                 <Select value={formData.match_result} onValueChange={handleMatchResultChange}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10 sm:h-11">
                         <SelectValue placeholder="Select match result" />
                     </SelectTrigger>
                     <SelectContent>
@@ -174,23 +174,23 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
 
             {/* Set Scores */}
             <div className="space-y-4">
-                <Label>Set Scores</Label>
-                <div className="space-y-4">
+                <Label className="text-sm sm:text-base">Set Scores</Label>
+                <div className="space-y-3 sm:space-y-4">
                     {[1, 2, 3, 4, 5].map((setNum) => {
                         if (isAmateurFormat && setNum === 3) return null;
                         if (!isBestOf5 && setNum > 3) return null;
 
                         return (
-                            <div key={setNum} className="border rounded-lg p-4 space-y-3">
+                            <div key={setNum} className="border rounded-lg p-3 sm:p-4 space-y-3">
                                 <Label className="text-sm font-medium">Set {setNum}</Label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="space-y-2">
                                         <Label className="text-xs text-muted-foreground">Score</Label>
                                         <Select
                                             value={formData[`set${setNum}_score`]}
                                             onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_score`]: value })}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="h-9 sm:h-10">
                                                 <SelectValue placeholder="Select score" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -208,7 +208,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                             value={formData[`set${setNum}_winner_id`]}
                                             onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_winner_id`]: value })}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="h-9 sm:h-10">
                                                 <SelectValue placeholder="Select winner" />
                                             </SelectTrigger>
                                             <SelectContent>
@@ -230,14 +230,14 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
 
             {/* Tiebreak Scores */}
             <div className="space-y-4">
-                <Label>Tiebreak Scores</Label>
-                <div className="space-y-4">
+                <Label className="text-sm sm:text-base">Tiebreak Scores</Label>
+                <div className="space-y-3 sm:space-y-4">
                     {[1, 2, 3, 4, 5].map((setNum) => {
                         if (isAmateurFormat && setNum === 3) return null;
                         if (!isBestOf5 && setNum > 3) return null;
 
                         return (
-                            <div key={setNum} className="border rounded-lg p-4 space-y-3">
+                            <div key={setNum} className="border rounded-lg p-3 sm:p-4 space-y-3">
                                 <Label className="text-sm font-medium">Set {setNum} Tiebreak</Label>
                                 <div className="space-y-2">
                                     <Label className="text-xs text-muted-foreground">Tiebreak Score</Label>
@@ -245,7 +245,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                         value={formData[`set${setNum}_tiebreak_score`]}
                                         onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_tiebreak_score`]: value })}
                                     >
-                                        <SelectTrigger>
+                                        <SelectTrigger className="h-9 sm:h-10">
                                             <SelectValue placeholder="Select tiebreak score" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -276,14 +276,14 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
             {/* Super Tiebreak (for amateur format) */}
             {isAmateurFormat && (
                 <div className="space-y-4">
-                    <Label>Super Tiebreak</Label>
+                    <Label className="text-sm sm:text-base">Super Tiebreak</Label>
                     <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground">Super Tiebreak Score</Label>
                         <Select
                             value={formData.super_tiebreak_score}
                             onValueChange={(value) => setFormData({ ...formData, super_tiebreak_score: value })}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className="h-9 sm:h-10">
                                 <SelectValue placeholder="Select super tiebreak score" />
                             </SelectTrigger>
                             <SelectContent>
@@ -320,11 +320,11 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
             )}
 
             {/* Submit Button */}
-            <div className="flex justify-end gap-4 pt-6">
-                <Button type="button" variant="outline" onClick={() => window.history.back()}>
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6">
+                <Button type="button" variant="outline" onClick={() => window.history.back()} className="w-full sm:w-auto">
                     Cancel
                 </Button>
-                <Button onClick={onSubmit}>
+                <Button onClick={onSubmit} className="w-full sm:w-auto">
                     {submitLabel}
                 </Button>
             </div>

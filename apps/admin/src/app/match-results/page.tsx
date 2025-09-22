@@ -341,11 +341,11 @@ export default function MatchResultsPage() {
     });
 
     return (
-        <div className="container mx-auto py-6 space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Match Results</h1>
-                <div className="flex gap-2">
-                    <Button onClick={() => loadData()}>
+        <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl sm:text-3xl font-bold">Match Results</h1>
+                <div className="flex gap-2 w-full sm:w-auto">
+                    <Button onClick={() => loadData()} className="w-full sm:w-auto">
                         Refresh
                     </Button>
                 </div>
@@ -373,9 +373,9 @@ export default function MatchResultsPage() {
 
             {/* Add Result Dialog */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Add Match Result</DialogTitle>
+                        <DialogTitle className="text-lg sm:text-xl">Add Match Result</DialogTitle>
                     </DialogHeader>
                     <MatchResultForm
                         formData={formData}
@@ -389,9 +389,9 @@ export default function MatchResultsPage() {
 
             {/* Edit Result Dialog */}
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Edit Match Result</DialogTitle>
+                        <DialogTitle className="text-lg sm:text-xl">Edit Match Result</DialogTitle>
                     </DialogHeader>
                     <MatchResultForm
                         formData={formData}

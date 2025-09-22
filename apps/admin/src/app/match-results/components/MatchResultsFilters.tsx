@@ -33,15 +33,15 @@ export function MatchResultsFilters({
     dates
 }: MatchResultsFiltersProps) {
     return (
-        <Card className="mb-6">
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Filter className="h-5 w-5" />
+        <Card className="mb-4 sm:mb-6">
+            <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
                     Filters
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     {/* Search */}
                     <div className="space-y-2">
                         <Label className="flex items-center gap-2">

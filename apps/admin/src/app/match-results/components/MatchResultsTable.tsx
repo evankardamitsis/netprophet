@@ -131,108 +131,210 @@ export function MatchResultsTable({
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {groupedMatches.map(([date, dateMatches]) => (
                 <Card key={date}>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5" />
-                            {date === 'No Date' ? 'No Date Set' : new Date(date).toLocaleDateString('en-US', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            })}
-                            <Badge variant="secondary">{dateMatches.length} match{dateMatches.length !== 1 ? 'es' : ''}</Badge>
+                    <CardHeader className="pb-3 sm:pb-6">
+                        <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-base sm:text-lg">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+                                {date === 'No Date' ? 'No Date Set' : new Date(date).toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                })}
+                            </div>
+                            <Badge variant="secondary" className="w-fit">{dateMatches.length} match{dateMatches.length !== 1 ? 'es' : ''}</Badge>
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Players</TableHead>
-                                    <TableHead>Tournament</TableHead>
-                                    <TableHead>Format</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Results</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {dateMatches.map((match) => {
-                                    const result = getResult(match.id);
-                                    const hasExistingResult = hasResult(match.id);
+                    <CardContent className="p-0 sm:p-6">
+                        {/* Desktop Table View */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="min-w-[200px]">Players</TableHead>
+                                        <TableHead className="min-w-[150px]">Tournament</TableHead>
+                                        <TableHead className="min-w-[120px]">Format</TableHead>
+                                        <TableHead className="min-w-[100px]">Status</TableHead>
+                                        <TableHead className="min-w-[150px]">Results</TableHead>
+                                        <TableHead className="min-w-[120px]">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {dateMatches.map((match) => {
+                                        const result = getResult(match.id);
+                                        const hasExistingResult = hasResult(match.id);
 
-                                    return (
-                                        <TableRow key={match.id}>
-                                            <TableCell>
-                                                <div className="font-medium">
-                                                    {match.player_a.first_name} {match.player_a.last_name}
-                                                </div>
-                                                <div className="text-sm text-muted-foreground">vs</div>
-                                                <div className="font-medium">
-                                                    {match.player_b.first_name} {match.player_b.last_name}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="font-medium">{match.tournaments?.name || 'N/A'}</div>
-                                            </TableCell>
-                                            <TableCell>
+                                        return (
+                                            <TableRow key={match.id}>
+                                                <TableCell className="min-w-[200px]">
+                                                    <div className="font-medium text-sm sm:text-base">
+                                                        {match.player_a.first_name} {match.player_a.last_name}
+                                                    </div>
+                                                    <div className="text-xs sm:text-sm text-muted-foreground">vs</div>
+                                                    <div className="font-medium text-sm sm:text-base">
+                                                        {match.player_b.first_name} {match.player_b.last_name}
+                                                    </div>
+                                                    {/* Show tournament on mobile */}
+                                                    <div className="sm:hidden mt-2">
+                                                        <div className="text-xs text-muted-foreground">Tournament:</div>
+                                                        <div className="text-sm font-medium">{match.tournaments?.name || 'N/A'}</div>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell">
+                                                    <div className="font-medium">{match.tournaments?.name || 'N/A'}</div>
+                                                </TableCell>
+                                                <TableCell className="hidden lg:table-cell">
+                                                    <Badge variant="outline" className="text-xs">
+                                                        {match.tournaments?.matches_type || 'N/A'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="min-w-[100px]">
+                                                    <Badge className={`text-xs ${getStatusColor(match.status)}`}>
+                                                        {match.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="min-w-[150px]">
+                                                    {hasExistingResult ? (
+                                                        <div className="space-y-1">
+                                                            <div className="text-xs sm:text-sm font-medium">
+                                                                Winner: {result?.winner?.first_name} {result?.winner?.last_name}
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                {result?.match_result}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {result && getDetailedScore(result)}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs sm:text-sm text-muted-foreground">No results</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="min-w-[120px]">
+                                                    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                                                        {hasExistingResult ? (
+                                                            <>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => onEditResult(result!)}
+                                                                    className="text-xs sm:text-sm"
+                                                                >
+                                                                    Edit
+                                                                </Button>
+                                                            </>
+                                                        ) : (
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => onAddResult(match)}
+                                                                disabled={match.status !== 'finished'}
+                                                                title={match.status !== 'finished' ? `Match status is "${match.status}" - change to "finished" to add results` : 'Add match results'}
+                                                                className="text-xs sm:text-sm"
+                                                            >
+                                                                Add Results
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="lg:hidden space-y-3 p-4">
+                            {dateMatches.map((match) => {
+                                const result = getResult(match.id);
+                                const hasExistingResult = hasResult(match.id);
+
+                                return (
+                                    <div key={match.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                                        {/* Players */}
+                                        <div className="space-y-1">
+                                            <div className="font-medium text-sm text-gray-900">
+                                                {match.player_a.first_name} {match.player_a.last_name}
+                                            </div>
+                                            <div className="text-xs text-gray-500 text-center">vs</div>
+                                            <div className="font-medium text-sm text-gray-900">
+                                                {match.player_b.first_name} {match.player_b.last_name}
+                                            </div>
+                                        </div>
+
+                                        {/* Tournament and Format */}
+                                        <div className="flex flex-col space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Tournament:</span>
+                                                <span className="text-sm font-medium">{match.tournaments?.name || 'N/A'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs text-gray-500">Format:</span>
                                                 <Badge variant="outline" className="text-xs">
                                                     {match.tournaments?.matches_type || 'N/A'}
                                                 </Badge>
-                                            </TableCell>
-                                            <TableCell>
+                                            </div>
+                                        </div>
+
+                                        {/* Status and Results */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-2">
+                                                <span className="text-xs text-gray-500">Status:</span>
                                                 <Badge className={`text-xs ${getStatusColor(match.status)}`}>
                                                     {match.status}
                                                 </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {hasExistingResult ? (
-                                                    <div className="space-y-1">
-                                                        <div className="text-sm font-medium">
-                                                            Winner: {result?.winner?.first_name} {result?.winner?.last_name}
-                                                        </div>
-                                                        <div className="text-xs text-muted-foreground">
-                                                            {result?.match_result}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">
-                                                            {result && getDetailedScore(result)}
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-sm text-muted-foreground">No results</span>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-2">
-                                                    {hasExistingResult ? (
-                                                        <>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => onEditResult(result!)}
-                                                            >
-                                                                Edit
-                                                            </Button>
-                                                        </>
-                                                    ) : (
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => onAddResult(match)}
-                                                            disabled={match.status !== 'finished'}
-                                                            title={match.status !== 'finished' ? `Match status is "${match.status}" - change to "finished" to add results` : 'Add match results'}
-                                                        >
-                                                            Add Results
-                                                        </Button>
-                                                    )}
+                                            </div>
+                                        </div>
+
+                                        {/* Results */}
+                                        {hasExistingResult ? (
+                                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
+                                                <div className="text-xs font-medium text-green-800">Match Result</div>
+                                                <div className="text-sm font-medium text-green-900">
+                                                    Winner: {result?.winner?.first_name} {result?.winner?.last_name}
                                                 </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
+                                                <div className="text-xs text-green-700">
+                                                    {result?.match_result}
+                                                </div>
+                                                <div className="text-xs text-green-600">
+                                                    {result && getDetailedScore(result)}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                                <div className="text-xs text-gray-500">No results yet</div>
+                                            </div>
+                                        )}
+
+                                        {/* Actions */}
+                                        <div className="flex space-x-2 pt-2">
+                                            {hasExistingResult ? (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => onEditResult(result!)}
+                                                    className="flex-1 text-xs"
+                                                >
+                                                    Edit Result
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => onAddResult(match)}
+                                                    disabled={match.status !== 'finished'}
+                                                    className="flex-1 text-xs"
+                                                >
+                                                    Add Results
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </CardContent>
                 </Card>
             ))}

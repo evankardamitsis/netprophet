@@ -28,13 +28,13 @@ export function TournamentModal({ isOpen, onClose, tournament, onSubmit }: Tourn
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="!max-w-[95vw] !w-[800px] !max-h-[95vh] overflow-y-auto sm:!max-w-[95vw]">
+            <DialogContent className="!max-w-[95vw] !w-[95vw] sm:!w-[800px] !max-h-[95vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-semibold">
+                    <DialogTitle className="text-lg sm:text-xl font-semibold">
                         {tournament ? 'Edit Tournament' : 'Create New Tournament'}
                     </DialogTitle>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="py-2 sm:py-4">
                     <TournamentForm
                         tournament={tournament}
                         onSubmit={handleSubmit}
