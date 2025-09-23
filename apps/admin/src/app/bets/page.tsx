@@ -54,6 +54,48 @@ export default function BetManagement({ }: BetManagementProps) {
         }
     };
 
+    const loadParlays = async () => {
+        try {
+            setLoading(true);
+            const { data: parlays, error: parlayError } = await supabase
+                .from('parlay_analytics')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (parlayError) {
+                console.error('Error fetching parlays:', parlayError);
+                throw new Error('Failed to load parlays');
+            }
+
+            // Get unique user IDs from parlays
+            const userIds = [...new Set(parlays?.map(parlay => parlay.user_id) || [])];
+
+            // Fetch user profiles
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, username, email')
+                .in('id', userIds);
+
+            if (profilesError) {
+                console.error('Error fetching user profiles:', profilesError);
+            } else {
+                const profilesMap = profiles?.reduce((acc, profile) => {
+                    acc[profile.id] = profile;
+                    return acc;
+                }, {} as { [key: string]: any }) || {};
+                setUserProfiles(profilesMap);
+            }
+
+            setError(null);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to load parlays';
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
 
     const getStatusBadge = (status: string) => {

@@ -33,7 +33,8 @@ BEGIN
             ELSE 0
         END +
         CASE 
-            WHEN status = 'won' AND is_parlay = true AND parlay_final_odds > 1.0 THEN FLOOR(parlay_final_odds * 10) -- Bonus for parlay wins
+            WHEN status = 'won' AND is_parlay = true AND parlay_id IS NOT NULL THEN 
+                (SELECT FLOOR(final_odds * 10) FROM parlays WHERE id = parlay_id AND final_odds > 1.0) -- Bonus for parlay wins
             ELSE 0
         END
     ), 0)

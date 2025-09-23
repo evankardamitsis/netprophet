@@ -28,29 +28,36 @@ END as win_rate
 FROM public.bets
 GROUP BY user_id;
 
--- Recreate parlay_stats view with SECURITY INVOKER
+-- Recreate parlay_stats view with SECURITY INVOKER (updated for new parlay structure)
 CREATE OR REPLACE VIEW public.parlay_stats
 WITH
 (security_invoker = true) AS
 SELECT
-    user_id,
-    COUNT(DISTINCT parlay_id) as total_parlays,
-    COUNT(DISTINCT CASE WHEN status = 'won' THEN parlay_id END) as won_parlays,
-    COUNT(DISTINCT CASE WHEN status = 'lost' THEN parlay_id END) as lost_parlays,
-    COUNT(DISTINCT CASE WHEN status = 'active' THEN parlay_id END) as active_parlays,
-    AVG(parlay_total_picks) as avg_parlay_picks,
-    MAX(parlay_total_picks) as max_parlay_picks,
-    SUM(CASE WHEN status = 'won' THEN winnings_paid ELSE 0 END) as total_parlay_winnings,
-    SUM(CASE WHEN status = 'lost' THEN bet_amount ELSE 0 END) as total_parlay_losses,
+    p.user_id,
+    COUNT(*) as total_parlays,
+    COUNT(CASE WHEN p.status = 'won' THEN 1 END) as won_parlays,
+    COUNT(CASE WHEN p.status = 'lost' THEN 1 END) as lost_parlays,
+    COUNT(CASE WHEN p.status = 'active' THEN 1 END) as active_parlays,
+    AVG(bet_count) as avg_parlay_picks,
+    MAX(bet_count) as max_parlay_picks,
+    SUM(CASE WHEN p.status = 'won' THEN p.total_winnings ELSE 0 END) as total_parlay_winnings,
+    SUM(CASE WHEN p.status = 'lost' THEN p.total_stake ELSE 0 END) as total_parlay_losses,
     CASE 
-        WHEN COUNT(DISTINCT parlay_id) > 0 THEN 
-            ROUND((COUNT(DISTINCT CASE WHEN status = 'won' THEN parlay_id END)::DECIMAL / COUNT(DISTINCT parlay_id)) * 100, 2
+        WHEN COUNT(*) > 0 THEN 
+            ROUND((COUNT(CASE WHEN p.status = 'won' THEN 1 END)::DECIMAL / COUNT(*)) * 100, 2
 )
         ELSE 0
 END as parlay_win_rate
+FROM public.parlays p
+LEFT JOIN
+(
+    SELECT parlay_id, COUNT(*) as bet_count
 FROM public.bets
 WHERE is_parlay = true
-GROUP BY user_id;
+GROUP BY parlay_id
+)
+b ON p.id = b.parlay_id
+GROUP BY p.user_id;
 
 -- Recreate safe_bet_token_stats view with SECURITY INVOKER
 CREATE OR REPLACE VIEW public.safe_bet_token_stats
