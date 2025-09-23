@@ -146,10 +146,6 @@ export async function getTournamentParticipants(tournamentId: string) {
                 ntrp_rating,
                 age,
                 surface_preference
-            ),
-            tournament_categories (
-                id,
-                name
             )
         `
     )
@@ -173,10 +169,6 @@ export async function getTournamentParticipant(id: string) {
                 ntrp_rating,
                 age,
                 surface_preference
-            ),
-            tournament_categories (
-                id,
-                name
             )
         `
     )
@@ -298,10 +290,6 @@ export async function getTournamentWithDetails(id: string) {
                     ntrp_rating,
                     age,
                     surface_preference
-                ),
-                tournament_categories (
-                    id,
-                    name
                 )
             )
         `

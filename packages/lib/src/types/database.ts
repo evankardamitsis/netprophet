@@ -301,7 +301,14 @@ export type Database = {
           player_b_id: string | null;
           points_value: number | null;
           processed: boolean | null;
-          round: string | null;
+          round:
+            | "Round of 64"
+            | "Round of 32"
+            | "Round of 16"
+            | "Quarterfinals"
+            | "Semifinals"
+            | "Finals"
+            | null;
           start_time: string | null;
           status: string;
           tournament_id: string | null;
@@ -322,7 +329,14 @@ export type Database = {
           player_b_id?: string | null;
           points_value?: number | null;
           processed?: boolean | null;
-          round?: string | null;
+          round?:
+            | "Round of 64"
+            | "Round of 32"
+            | "Round of 16"
+            | "Quarterfinals"
+            | "Semifinals"
+            | "Finals"
+            | null;
           start_time?: string | null;
           status?: string;
           tournament_id?: string | null;
@@ -343,7 +357,14 @@ export type Database = {
           player_b_id?: string | null;
           points_value?: number | null;
           processed?: boolean | null;
-          round?: string | null;
+          round?:
+            | "Round of 64"
+            | "Round of 32"
+            | "Round of 16"
+            | "Quarterfinals"
+            | "Semifinals"
+            | "Finals"
+            | null;
           start_time?: string | null;
           status?: string;
           tournament_id?: string | null;

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Users, Trophy, Calendar } from 'lucide-react';
 import { TournamentParticipant } from '@/types';
+import { getStatusColor } from '../utils/tournamentHelpers';
 
 interface ParticipantsTableProps {
     participants: TournamentParticipant[];
@@ -13,20 +14,6 @@ interface ParticipantsTableProps {
 }
 
 export function ParticipantsTable({ participants, tournamentName, matches }: ParticipantsTableProps) {
-    const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'registered':
-                return 'bg-blue-100 text-blue-800';
-            case 'confirmed':
-                return 'bg-green-100 text-green-800';
-            case 'withdrawn':
-                return 'bg-red-100 text-red-800';
-            case 'disqualified':
-                return 'bg-gray-100 text-gray-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
 
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'N/A';
@@ -66,10 +53,8 @@ export function ParticipantsTable({ participants, tournamentName, matches }: Par
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="font-semibold">Player</TableHead>
-                                    <TableHead className="font-semibold">Category</TableHead>
                                     <TableHead className="font-semibold">NTRP Rating</TableHead>
                                     <TableHead className="font-semibold">Age</TableHead>
-                                    <TableHead className="font-semibold">Status</TableHead>
                                     <TableHead className="font-semibold">Registration Date</TableHead>
                                     <TableHead className="font-semibold">Matches Played</TableHead>
                                 </TableRow>
@@ -83,18 +68,10 @@ export function ParticipantsTable({ participants, tournamentName, matches }: Par
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {participant.tournament_categories?.name || 'N/A'}
-                                        </TableCell>
-                                        <TableCell>
                                             {participant.players?.ntrp_rating || 'N/A'}
                                         </TableCell>
                                         <TableCell>
                                             {participant.players?.age || 'N/A'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={`${getStatusColor(participant.status)} text-xs`}>
-                                                {participant.status}
-                                            </Badge>
                                         </TableCell>
                                         <TableCell>
                                             {formatDate(participant.registration_date)}

@@ -125,11 +125,18 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             <>
                                                 {/* Header with tournament info */}
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center space-x-2">
-                                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                                                        <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
-                                                            {match.tournament}
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                                                            <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
+                                                                {match.tournament}
+                                                            </div>
                                                         </div>
+                                                        {match.round && (
+                                                            <div className="text-xs text-slate-400 font-medium ml-4">
+                                                                {match.round}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="text-xs text-slate-400 font-medium">{match.time}</div>
                                                 </div>
@@ -165,19 +172,28 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             // Full layout for active matches
                                             <>
                                                 {/* Match Header */}
-                                                <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                                                    <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
-                                                        <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
-                                                            ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
-                                                            : 'bg-red-500/20 text-red-400 border-red-500/30'
-                                                            }`}>
-                                                            {dict?.sidebar?.live || 'LIVE'}
+                                                <div className="mb-2 xs:mb-3 sm:mb-4">
+                                                    <div className="flex items-start justify-between mb-1">
+                                                        <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
+                                                            <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
+                                                                ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
+                                                                : 'bg-red-500/20 text-red-400 border-red-500/30'
+                                                                }`}>
+                                                                {dict?.sidebar?.live || 'LIVE'}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
+                                                                {match.round && (
+                                                                    <span className="text-gray-500 text-xs font-medium">
+                                                                        {match.round}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
-                                                        <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
+                                                        <div className="text-right">
+                                                            <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
+                                                            <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -272,11 +288,18 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             <>
                                                 {/* Header with tournament info */}
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center space-x-2">
-                                                        <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                                                        <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
-                                                            {match.tournament}
+                                                    <div className="flex flex-col">
+                                                        <div className="flex items-center space-x-2">
+                                                            <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                                                            <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
+                                                                {match.tournament}
+                                                            </div>
                                                         </div>
+                                                        {match.round && (
+                                                            <div className="text-xs text-slate-400 font-medium ml-4">
+                                                                {match.round}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div className="text-xs text-slate-400 font-medium">{match.time}</div>
                                                 </div>
@@ -312,19 +335,28 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             // Full layout for active matches
                                             <>
                                                 {/* Match Header */}
-                                                <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                                                    <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
-                                                        <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
-                                                            ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
-                                                            : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                                                            }`}>
-                                                            {match.locked ? 'LOCKED' : (dict?.sidebar?.upcoming || 'UPCOMING')}
+                                                <div className="mb-2 xs:mb-3 sm:mb-4">
+                                                    <div className="flex items-start justify-between mb-1">
+                                                        <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
+                                                            <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
+                                                                ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
+                                                                : 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                                                                }`}>
+                                                                {match.locked ? 'LOCKED' : (dict?.sidebar?.upcoming || 'UPCOMING')}
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[200px] sm:max-w-[200px] md:max-w-[200px]">{match.tournament}</span>
+                                                                {match.round && (
+                                                                    <span className="text-gray-500 text-xs font-medium">
+                                                                        {match.round}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                        <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[200px] sm:max-w-[200px] md:max-w-[200px]">{match.tournament}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
-                                                        <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
+                                                        <div className="text-right">
+                                                            <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
+                                                            <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
+                                                        </div>
                                                     </div>
                                                 </div>
 

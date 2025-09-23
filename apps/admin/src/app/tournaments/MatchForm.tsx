@@ -22,7 +22,7 @@ const matchFormSchema = z.object({
     player_b_id: z.string().min(1, 'Player B is required'),
     tournament_id: z.string().optional(),
     category_id: z.string().optional(),
-    round: z.string().optional(),
+    round: z.enum(['Round of 64', 'Round of 32', 'Round of 16', 'Quarterfinals', 'Semifinals', 'Finals']).optional(),
     status: z.enum(['upcoming', 'live', 'finished', 'cancelled']),
     start_time: z.string().min(1, 'Start time is required'),
     lock_time: z.string().optional(),
@@ -73,7 +73,7 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
                 player_b_id: match.player_b_id || match.player_b?.id || '',
                 tournament_id: match.tournament_id || '',
                 category_id: match.category_id || '',
-                round: match.round || '',
+                round: match.round || undefined,
                 status: match.status as 'upcoming' | 'live' | 'finished' | 'cancelled',
                 start_time: match.start_time ? new Date(match.start_time).toISOString().slice(0, 16) : '',
                 lock_time: match.lock_time ? new Date(match.lock_time).toISOString().slice(0, 16) : '',
@@ -85,7 +85,7 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
                 player_b_id: '',
                 tournament_id: currentTournament.id,
                 category_id: '',
-                round: '',
+                round: undefined,
                 status: 'upcoming',
                 start_time: '',
                 lock_time: '',
@@ -97,7 +97,7 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
                 player_b_id: '',
                 tournament_id: '',
                 category_id: '',
-                round: '',
+                round: undefined,
                 status: 'upcoming',
                 start_time: '',
                 lock_time: '',
@@ -320,12 +320,22 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
 
                 <div className="space-y-3">
                     <Label htmlFor="round" className="text-base font-semibold">Round</Label>
-                    <Input
-                        id="round"
-                        {...form.register('round')}
-                        placeholder="e.g., Final, Semi-Final, Quarter-Final"
-                        className="h-12 text-base"
-                    />
+                    <Select
+                        value={form.watch('round') || ''}
+                        onValueChange={(value) => form.setValue('round', value as 'Round of 64' | 'Round of 32' | 'Round of 16' | 'Quarterfinals' | 'Semifinals' | 'Finals')}
+                    >
+                        <SelectTrigger className="h-12 text-base">
+                            <SelectValue placeholder="Select round" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Round of 64">Round of 64</SelectItem>
+                            <SelectItem value="Round of 32">Round of 32</SelectItem>
+                            <SelectItem value="Round of 16">Round of 16</SelectItem>
+                            <SelectItem value="Quarterfinals">Quarterfinals</SelectItem>
+                            <SelectItem value="Semifinals">Semifinals</SelectItem>
+                            <SelectItem value="Finals">Finals</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className="space-y-3">

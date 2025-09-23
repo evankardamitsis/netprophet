@@ -29,11 +29,17 @@ export interface Match {
   player_b_id: string | null;
   tournament_id: string | null;
   category_id: string | null;
-  round: string | null;
+  round:
+    | "Round of 64"
+    | "Round of 32"
+    | "Round of 16"
+    | "Quarterfinals"
+    | "Semifinals"
+    | "Finals"
+    | null;
   status: string;
   start_time: string | null;
   lock_time: string | null;
-  points_value: number | null;
   odds_a: number | null;
   odds_b: number | null;
   winner_id: string | null;
@@ -89,13 +95,10 @@ export interface Category {
 export interface TournamentParticipant {
   id: string;
   tournament_id: string;
-  category_id: string | null;
   player_id: string;
   registration_date: string | null;
-  status: string;
   seed_position: number | null;
   final_position: number | null;
-  points_earned: number | null;
   players?: {
     id: string;
     first_name: string;
@@ -103,10 +106,6 @@ export interface TournamentParticipant {
     ntrp_rating: number;
     age: number;
     surface_preference: string;
-  } | null;
-  tournament_categories?: {
-    id: string;
-    name: string;
   } | null;
 }
 
@@ -139,11 +138,8 @@ export interface Player {
 export interface Participant {
   id: string;
   player_id: string;
-  category_id: string | null;
-  status: string;
   seed_position: number | null;
   final_position: number | null;
-  points_earned: number;
 }
 
 // Profile Types

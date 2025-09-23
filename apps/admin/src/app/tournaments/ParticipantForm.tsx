@@ -25,22 +25,16 @@ export function ParticipantForm({
 }: ParticipantFormProps) {
     const [formData, setFormData] = useState({
         player_id: '',
-        category_id: '',
-        status: 'registered',
         seed_position: '',
-        final_position: '',
-        points_earned: '0'
+        final_position: ''
     });
 
     useEffect(() => {
         if (participant) {
             setFormData({
                 player_id: participant.player_id,
-                category_id: participant.category_id || 'none',
-                status: participant.status,
                 seed_position: participant.seed_position?.toString() || '',
-                final_position: participant.final_position?.toString() || '',
-                points_earned: participant.points_earned.toString()
+                final_position: participant.final_position?.toString() || ''
             });
         }
     }, [participant]);
@@ -50,10 +44,8 @@ export function ParticipantForm({
 
         const submitData = {
             ...formData,
-            category_id: formData.category_id === 'none' ? null : formData.category_id,
             seed_position: formData.seed_position ? parseInt(formData.seed_position) : null,
-            final_position: formData.final_position ? parseInt(formData.final_position) : null,
-            points_earned: parseInt(formData.points_earned)
+            final_position: formData.final_position ? parseInt(formData.final_position) : null
         };
 
         onSubmit(submitData);
@@ -97,40 +89,6 @@ export function ParticipantForm({
                             </Select>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="category_id">Category</Label>
-                            <Select
-                                value={formData.category_id}
-                                onValueChange={(value) => handleInputChange('category_id', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category (optional)" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No Category</SelectItem>
-                                    {categories.map((category) => (
-                                        <SelectItem key={category.id} value={category.id}>
-                                            {category.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
-                            <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="registered">Registered</SelectItem>
-                                    <SelectItem value="confirmed">Confirmed</SelectItem>
-                                    <SelectItem value="withdrawn">Withdrawn</SelectItem>
-                                    <SelectItem value="disqualified">Disqualified</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="seed_position">Seed Position</Label>
@@ -156,17 +114,6 @@ export function ParticipantForm({
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="points_earned">Points Earned</Label>
-                            <Input
-                                id="points_earned"
-                                type="number"
-                                value={formData.points_earned}
-                                onChange={(e) => handleInputChange('points_earned', e.target.value)}
-                                placeholder="0"
-                                min="0"
-                            />
-                        </div>
                     </div>
 
                     {formData.player_id && (

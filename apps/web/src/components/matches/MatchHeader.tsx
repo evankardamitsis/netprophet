@@ -101,7 +101,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex-1 min-w-0">
                             <h3 className="text-xs font-semibold text-white truncate mb-0.5">{details.tournament}</h3>
-                            <p className="text-xs text-gray-400 truncate">{details.round} • {details.surface}</p>
+                            <p className="text-xs text-gray-400 truncate">{details.round ? `${details.round} • ${details.surface}` : details.surface}</p>
                         </div>
                         <div className="flex items-center gap-1 ml-2">
                             <button
@@ -161,7 +161,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                     <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                             <h3 className="text-sm font-semibold text-white mb-1 leading-tight">{details.tournament}</h3>
-                            <p className="text-xs text-gray-400 leading-tight">{details.round} • {details.surface}</p>
+                            <p className="text-xs text-gray-400 leading-tight">{details.round ? `${details.round} • ${details.surface}` : details.surface}</p>
                         </div>
                         <div className="flex items-center gap-1 ml-3">
                             <button

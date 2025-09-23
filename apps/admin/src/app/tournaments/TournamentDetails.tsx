@@ -357,16 +357,8 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                                                             NTRP: {participant.players?.ntrp_rating} | Age: {participant.players?.age}
                                                         </p>
                                                     </div>
-                                                    {participant.tournament_categories && (
-                                                        <Badge variant="outline" className="w-fit text-xs">
-                                                            {participant.tournament_categories.name}
-                                                        </Badge>
-                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <Badge className={`${getStatusColor(participant.status)} text-xs`}>
-                                                        {participant.status}
-                                                    </Badge>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"

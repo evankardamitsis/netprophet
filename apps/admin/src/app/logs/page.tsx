@@ -469,11 +469,12 @@ export default function LogsPage() {
 
     const exportLogs = () => {
         const csvContent = [
-            ['Type', 'Timestamp', 'User', 'Description', 'Amount', 'Status'],
+            ['Type', 'Timestamp', 'User Email', 'User ID', 'Description', 'Amount', 'Status'],
             ...filteredLogs.map(log => [
                 log.type,
                 log.timestamp ? format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss') : '',
                 log.user_email || '',
+                log.user_id || '',
                 log.description,
                 log.amount?.toString() || '',
                 log.status || ''
@@ -657,6 +658,11 @@ export default function LogsPage() {
                                             </div>
                                             <div className="text-sm text-gray-500">
                                                 {log.user_email && `by ${log.user_email}`}
+                                                {log.user_id && (
+                                                    <div className="text-xs text-gray-400 font-mono">
+                                                        ID: {log.user_id}
+                                                    </div>
+                                                )}
                                                 {log.user_email && log.timestamp && ' • '}
                                                 {log.timestamp && format(new Date(log.timestamp), 'MMM d, yyyy HH:mm')}
                                             </div>

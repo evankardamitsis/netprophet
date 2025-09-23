@@ -86,7 +86,7 @@ const createMatchDetails = (match: Match) => {
         headToHead: `${match.player1.name} vs ${match.player2.name}`, // Will be updated with real data
         headToHeadData: null, // Will be populated by useEffect
         surface: match.tournaments?.surface || 'Unknown',
-        round: match.tournament_categories?.name || 'Unknown',
+        round: match.round || '',
         format: match.tournaments?.matches_type || 'best-of-3' // Use the tournament's matches_type
     };
 };

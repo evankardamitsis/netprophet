@@ -47,11 +47,11 @@ function transformMatch(rawMatch: RawMatch): Match {
         player_b_id: rawMatch.player_b_id,
         winner_id: rawMatch.winner_id,
         status: rawMatch.status,
+        round: rawMatch.round,
         start_time: rawMatch.start_time,
         lock_time: rawMatch.lock_time,
         odds_a: rawMatch.odds_a,
         odds_b: rawMatch.odds_b,
-        points_value: rawMatch.points_value || 0,
         web_synced: rawMatch.web_synced || false,
         tournaments: Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0] : rawMatch.tournaments,
         tournament_categories: Array.isArray(rawMatch.tournament_categories) ? rawMatch.tournament_categories[0] : rawMatch.tournament_categories,
@@ -69,7 +69,7 @@ function transformMatch(rawMatch: RawMatch): Match {
         },
         time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
         status_display,
-        points: rawMatch.points_value || 0,
+        points: 0, // Points are calculated dynamically
         locked: rawMatch.locked || (lockTime <= now),
         updated_at: rawMatch.updated_at,
         startTime,
@@ -89,11 +89,11 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
             player_b_id,
             winner_id,
             status,
+            round,
             start_time,
             lock_time,
             odds_a,
             odds_b,
-            points_value,
             web_synced,
             tournaments (
                 id,
@@ -238,7 +238,12 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                         <span className="truncate">{match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
-                                        <span className="truncate font-bold">{match.tournament}</span>
+                                        <div className="flex flex-col">
+                                            <span className="truncate font-bold">{match.tournament}</span>
+                                            {match.round && (
+                                                <span className="text-xs text-gray-400">{match.round}</span>
+                                            )}
+                                        </div>
                                         <span>{match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
@@ -289,7 +294,12 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                                         <span className="truncate">{match.player1.odds.toFixed(2)} | {match.player2.odds.toFixed(2)}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-gray-500 gap-0 sm:gap-0.5">
-                                        <span className="truncate font-bold">{match.tournament}</span>
+                                        <div className="flex flex-col">
+                                            <span className="truncate font-bold">{match.tournament}</span>
+                                            {match.round && (
+                                                <span className="text-xs text-gray-400">{match.round}</span>
+                                            )}
+                                        </div>
                                         <span>{match.time} • {new Date(match.startTime).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs gap-0 sm:gap-0.5">
