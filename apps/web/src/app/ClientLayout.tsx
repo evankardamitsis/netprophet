@@ -207,7 +207,7 @@ function SuccessModalContent({ lang }: { lang: string }) {
     );
 }
 
-export default function ClientLayout({ children, dict, lang = 'en' }: ClientLayoutProps) {
+export default function ClientLayout({ children, dict, lang = 'el' }: ClientLayoutProps) {
     return (
         <SuccessModalProvider>
             <ClientLayoutContent dict={dict} lang={lang}>
