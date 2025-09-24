@@ -5,11 +5,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase, MATCH_STATUSES } from '@netprophet/lib';
 import { MatchesGrid } from '@/components/matches/MatchesGrid';
 import { MatchDetail } from '@/components/matches/MatchDetail';
+import { PromotionalHero } from '@/components/matches/PromotionalHero';
 import { Match } from '@/types/dashboard';
 import { WelcomeBonus } from '@/components/matches/WelcomeBonus';
 
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
+
 
 // Function to fetch synced matches
 async function fetchSyncedMatches(): Promise<Match[]> {
@@ -139,6 +141,19 @@ export default function DashboardPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
 
+    // Get featured matches (top 3 upcoming matches with highest odds)
+    const getFeaturedMatches = (matches: Match[]): Match[] => {
+        return matches
+            .filter(match => match.status === 'upcoming' && !match.isLocked)
+            .sort((a, b) => {
+                // Sort by highest combined odds
+                const aOdds = (a.player1.odds + a.player2.odds) / 2;
+                const bOdds = (b.player1.odds + b.player2.odds) / 2;
+                return bOdds - aOdds;
+            })
+            .slice(0, 3);
+    };
+
     // Get language from URL path
     const lang = typeof window !== 'undefined'
         ? window.location.pathname.startsWith('/el') ? 'el' : 'en'
@@ -192,8 +207,10 @@ export default function DashboardPage() {
         );
     }
 
+    const featuredMatches = getFeaturedMatches(matches);
+
     return (
-        <div className="h-full flex flex-col overflow-hidden">
+        <div className="min-h-full">
             <WelcomeBonus />
             {selectedMatch ? (
                 <MatchDetail
@@ -203,14 +220,26 @@ export default function DashboardPage() {
                     sidebarOpen={sidebarOpen}
                 />
             ) : (
-                <div className="flex-1 overflow-hidden">
+                <>
+                    {/* Promotional Hero Section */}
+                    {featuredMatches.length > 0 && (
+                        <div className="px-4 sm:px-6 lg:px-8 pt-4 pb-6">
+                            <PromotionalHero
+                                featuredMatches={featuredMatches}
+                                onSelectMatch={handleSelectMatch}
+                                lang={lang}
+                            />
+                        </div>
+                    )}
+
+                    {/* Regular Matches Grid */}
                     <MatchesGrid
                         matches={matches}
                         onSelectMatch={handleSelectMatch}
                         sidebarOpen={sidebarOpen}
                         slipCollapsed={slipCollapsed}
                     />
-                </div>
+                </>
             )}
         </div>
     );

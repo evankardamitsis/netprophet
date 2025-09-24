@@ -35,9 +35,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
     const upcomingMatches = filteredMatches.filter(match => match.status_display === 'upcoming');
 
     return (
-        <div className="flex flex-col h-full w-full text-white">
+        <div className="flex flex-col w-full text-white">
             {/* Header Section */}
-            <div className="p-3 xs:p-4 sm:p-5 md:p-6 pb-2 xs:pb-3 sm:pb-4 flex-shrink-0">
+            <div className="p-3 xs:p-4 sm:p-5 md:p-6 pb-2 xs:pb-3 sm:pb-4">
                 <h1 className="text-2xl font-bold text-white mb-1 xs:mb-2">{dict?.matches?.title || 'Tennis Matches'}</h1>
                 <p className="text-gray-400">{dict?.matches?.loading || 'Monitor tennis games and place your predictions'}</p>
             </div>
@@ -49,8 +49,8 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                 selectedTournament={selectedTournament}
             />
 
-            {/* Content Section - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-3 xs:px-4 sm:px-5 md:px-6">
+            {/* Content Section - Natural Flow */}
+            <div className="px-3 xs:px-4 sm:px-5 md:px-6">
                 {/* Live Matches Section */}
                 {liveMatches.length > 0 && (
                     <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-4 lg:mt-6">
