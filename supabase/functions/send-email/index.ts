@@ -151,7 +151,6 @@ class ResendService {
 
     if (!response.ok) {
       const error = await response.text();
-      console.error("Resend API error:", error);
       throw new Error(`Failed to send email via Resend: ${error}`);
     }
 
@@ -166,11 +165,8 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Email function called with method:", req.method);
-
     // Parse request body
     const emailData: EmailData = await req.json();
-    console.log("Email data received:", JSON.stringify(emailData, null, 2));
 
     const { to, template, variables = {}, language = "en", type } = emailData;
 
@@ -206,7 +202,6 @@ serve(async (req) => {
       if (token === supabaseServiceKey) {
         // Service role key - admin access
         isAdmin = true;
-        console.log("Using service role key - admin access granted");
       } else {
         // User JWT token
         const {
@@ -214,7 +209,6 @@ serve(async (req) => {
           error: userError,
         } = await supabase.auth.getUser(token);
         if (userError) {
-          console.error("User auth error:", userError);
           return new Response(
             JSON.stringify({
               success: false,
@@ -227,7 +221,6 @@ serve(async (req) => {
           );
         }
         user = userData;
-        console.log("User authenticated:", user?.id);
 
         // Check if user is admin
         if (user) {
@@ -238,7 +231,6 @@ serve(async (req) => {
             .single();
 
           isAdmin = profile?.is_admin || false;
-          console.log("User admin status:", isAdmin);
         }
       }
     }
@@ -289,14 +281,11 @@ serve(async (req) => {
       );
     }
 
-    console.log("Template found:", emailTemplate.name);
-
     // Render template with variables
     const renderedEmail = templateService.renderTemplate(
       emailTemplate,
       variables
     );
-    console.log("Template rendered successfully");
 
     // Send email via Resend
     const emailResult = await resendService.sendEmail(
@@ -305,7 +294,6 @@ serve(async (req) => {
       renderedEmail.html,
       renderedEmail.text
     );
-    console.log("Email sent successfully:", emailResult);
 
     // Log email to database
     await templateService.logEmail(
@@ -317,7 +305,6 @@ serve(async (req) => {
       variables,
       "sent"
     );
-    console.log("Email logged to database");
 
     return new Response(
       JSON.stringify({
@@ -330,8 +317,6 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error in email function:", error);
-
     return new Response(
       JSON.stringify({
         success: false,

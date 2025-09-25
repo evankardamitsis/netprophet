@@ -226,7 +226,7 @@ export default function EmailTestPage() {
                                 </p>
                                 {result.success && (
                                     <p className="text-xs text-green-600 mt-2">
-                                        Check the recipient's inbox for the test email.
+                                        Check the recipient&apos;s inbox for the test email.
                                     </p>
                                 )}
                             </div>

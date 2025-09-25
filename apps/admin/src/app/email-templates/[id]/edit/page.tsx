@@ -315,10 +315,10 @@ export default function EditEmailTemplatePage({ params }: { params: { id: string
                         <CardHeader>
                             <CardTitle className="flex items-center justify-between">
                                 Template Variables
-                <Button onClick={addVariable} size="sm">
-                  <Variable className="w-4 h-4 mr-2" />
-                  Add Variable
-                </Button>
+                                <Button onClick={addVariable} size="sm">
+                                    <Variable className="w-4 h-4 mr-2" />
+                                    Add Variable
+                                </Button>
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
