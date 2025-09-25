@@ -54,9 +54,7 @@ export class PromotionalEmailService {
     return matches
       .filter(
         (match) =>
-          match.status === "upcoming" &&
-          match.featured === true &&
-          new Date(match.time) > new Date() // Only future matches
+          match.status === "upcoming" && new Date(match.time) > new Date() // Only future matches
       )
       .slice(0, 3); // Limit to 3 featured matches
   }
