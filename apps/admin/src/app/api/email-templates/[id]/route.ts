@@ -8,13 +8,14 @@ const supabase = createClient(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const { data, error } = await supabase
       .from("email_templates")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .single();
 
     if (error) {
@@ -43,7 +44,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await request.json();
@@ -65,6 +66,7 @@ export async function PUT(
       );
     }
 
+    const resolvedParams = await params;
     // Update template
     const { data, error } = await supabase
       .from("email_templates")
@@ -79,7 +81,7 @@ export async function PUT(
         is_active: body.is_active !== undefined ? body.is_active : true,
         version: body.version || 1,
       })
-      .eq("id", params.id)
+      .eq("id", resolvedParams.id)
       .select()
       .single();
 
@@ -103,14 +105,15 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     // Soft delete by setting is_active to false
     const { error } = await supabase
       .from("email_templates")
       .update({ is_active: false })
-      .eq("id", params.id);
+      .eq("id", resolvedParams.id);
 
     if (error) {
       console.error("Error deleting email template:", error);
