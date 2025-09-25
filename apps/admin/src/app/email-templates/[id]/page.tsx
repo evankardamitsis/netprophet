@@ -25,7 +25,7 @@ interface EmailTemplate {
     updated_at: string;
 }
 
-export default function ViewEmailTemplatePage({ params }: { params: { id: string } }) {
+export default function ViewEmailTemplatePage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
     const [template, setTemplate] = useState<EmailTemplate | null>(null);
     const [loading, setLoading] = useState(true);
@@ -33,13 +33,17 @@ export default function ViewEmailTemplatePage({ params }: { params: { id: string
     const [previewData, setPreviewData] = useState<Record<string, any>>({});
 
     useEffect(() => {
-        fetchTemplate();
-    }, [params.id]);
+        const loadTemplate = async () => {
+            const resolvedParams = await params;
+            await fetchTemplate(resolvedParams.id);
+        };
+        loadTemplate();
+    }, [params]);
 
-    const fetchTemplate = async () => {
+    const fetchTemplate = async (id: string) => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/email-templates/${params.id}`);
+            const response = await fetch(`/api/email-templates/${id}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch template');
             }
@@ -59,7 +63,8 @@ export default function ViewEmailTemplatePage({ params }: { params: { id: string
         }
 
         try {
-            const response = await fetch(`/api/email-templates/${params.id}`, {
+            const resolvedParams = await params;
+            const response = await fetch(`/api/email-templates/${resolvedParams.id}`, {
                 method: 'DELETE',
             });
 
