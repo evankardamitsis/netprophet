@@ -7,6 +7,7 @@ import { DailyRewardsService, WalletOperationsService, supabase, DAILY_REWARDS_C
 import { toast } from 'sonner';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useEmail } from '@/hooks/useEmail';
 
 export interface Transaction {
     id: string;
@@ -102,6 +103,7 @@ export function useWallet() {
 export function WalletProvider({ children }: { children: React.ReactNode }) {
     const { dict, lang } = useDictionary();
     const { user } = useAuth();
+    const { sendWinningsEmail } = useEmail();
     const [wallet, setWallet] = useState<UserWallet>(() => {
         const storedWallet = loadFromSessionStorage(SESSION_KEYS.WALLET, defaultWallet);
 
@@ -341,6 +343,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     ...prev,
                     balance: result.data.newBalance,
                 }));
+
+                // Send winnings notification email
+                if (user?.email) {
+                    try {
+                        await sendWinningsEmail(
+                            user.email,
+                            description,
+                            `${stake} 🌕 bet with ${odds.toFixed(2)}x odds`,
+                            winnings,
+                            lang as 'en' | 'el'
+                        );
+                    } catch (emailError) {
+                        console.error('Failed to send winnings email:', emailError);
+                        // Don't show error to user, just log it
+                    }
+                }
 
                 toast.success((dict?.toast?.congratulationsWon || '🎉 Congratulations! You won {amount} 🌕!').replace('{amount}', winnings.toString()), {
                     id: loadingToast,

@@ -84,3 +84,22 @@ export {
 
 // Power-ups
 export * from "./supabase/powerUps";
+
+// Email Service
+export { EmailService, emailService } from "./supabase/emailService";
+export type { EmailData, EmailLog } from "./supabase/emailService";
+
+// Two-factor authentication
+export { TwoFactorAuthService } from "./supabase/twoFactorAuth";
+export type { TwoFactorCode } from "./supabase/twoFactorAuth";
+
+// Email Template Service
+export {
+  EmailTemplateService,
+  emailTemplateService,
+} from "./supabase/emailTemplateService";
+export type {
+  EmailTemplate,
+  EmailTemplateVariable,
+  EmailTemplateVersion,
+} from "./supabase/emailTemplateService";

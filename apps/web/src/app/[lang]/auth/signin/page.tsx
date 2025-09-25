@@ -7,6 +7,8 @@ import { useRouter, useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useAuth } from '@/hooks/useAuth';
+import { TwoFactorVerification } from '@/components/auth/TwoFactorVerification';
 
 export default function AuthPage() {
     const [mode, setMode] = useState<'signin' | 'register'>('signin');
@@ -18,6 +20,7 @@ export default function AuthPage() {
     const params = useParams();
     const lang = params?.lang as 'en' | 'el' || 'el';
     const { dict } = useDictionary();
+    const { requiresTwoFactor, pendingUser, signInWithPassword, verifyTwoFactor, cancelTwoFactor } = useAuth();
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,9 +33,16 @@ export default function AuthPage() {
             }
 
             if (mode === 'signin') {
-                const { error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) setMessage(error.message);
-                else router.push(`/${lang}/matches`);
+                const result = await signInWithPassword(email, password);
+                if (result.error) {
+                    setMessage(typeof result.error === 'string' ? result.error : result.error.message);
+                } else if (result.requiresTwoFactor) {
+                    // 2FA required, the TwoFactorVerification component will be shown
+                    setMessage('');
+                } else {
+                    // No 2FA required, proceed to matches
+                    router.push(`/${lang}/matches`);
+                }
 
             } else {
                 const { error } = await supabase.auth.signUp({ email, password });
@@ -81,6 +91,18 @@ export default function AuthPage() {
             setLoading(false);
         }
     };
+
+    // Show 2FA verification if required
+    if (requiresTwoFactor && pendingUser) {
+        return (
+            <TwoFactorVerification
+                userId={pendingUser.id}
+                userEmail={pendingUser.email || ''}
+                onVerificationSuccess={() => router.push(`/${lang}/matches`)}
+                onCancel={cancelTwoFactor}
+            />
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-indigo-200">

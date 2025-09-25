@@ -21,7 +21,10 @@ import {
     ChevronDown,
     ChevronRight,
     Zap,
-    Bell
+    Bell,
+    Mail,
+    Settings,
+    Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -64,6 +67,16 @@ const menuItems: MenuItem[] = [
         children: [
             { href: '/economy', label: 'Monitoring', icon: TrendingUp },
             { href: '/economy/calculator', label: 'Calculator', icon: Calculator }
+        ]
+    },
+    {
+        href: '/email-templates',
+        label: 'Email Management',
+        icon: Mail,
+        children: [
+            { href: '/email-templates', label: 'Templates', icon: Settings },
+            { href: '/email-templates/new', label: 'New Template', icon: Mail },
+            { href: '/email-test', label: 'Test Emails', icon: Eye }
         ]
     },
     { href: '/logs', label: 'Logs', icon: FileText },
