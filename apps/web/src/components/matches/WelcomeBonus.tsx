@@ -66,8 +66,8 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
         // Check for daily login reward on component mount, but only if user has already received welcome bonus
         const checkDailyReward = async () => {
             try {
-                // Only check daily login if user has already received welcome bonus AND it's not their first login AND we haven't checked yet
-                if (wallet.hasReceivedWelcomeBonus && wallet.dailyLoginStreak > 0 && !hasCheckedDailyLogin) {
+                // Only check daily login if user has already received welcome bonus AND we haven't checked yet
+                if (wallet.hasReceivedWelcomeBonus && !hasCheckedDailyLogin) {
                     setHasCheckedDailyLogin(true); // Mark as checked to prevent multiple calls
                     const reward = await checkDailyLogin();
                     if (reward > 0) {

@@ -11,7 +11,6 @@ import { WelcomeBonus } from '@/components/matches/WelcomeBonus';
 
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
-import { usePromotionalEmails } from '@/hooks/usePromotionalEmails';
 import { useAuth } from '@/hooks/useAuth';
 
 
@@ -143,7 +142,6 @@ export default function DashboardPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
     const { user } = useAuth();
-    const { checkAndSendPromotionalEmail } = usePromotionalEmails();
 
     // Get featured matches (top 3 upcoming matches with highest odds)
     const getFeaturedMatches = (matches: Match[]): Match[] => {
@@ -173,17 +171,6 @@ export default function DashboardPage() {
         refetchInterval: 30000, // Refetch every 30 seconds
     });
 
-    // Send promotional emails when matches are loaded and user is authenticated
-    useEffect(() => {
-        if (matches.length > 0 && user) {
-            // Add a small delay to avoid sending emails immediately on page load
-            const timer = setTimeout(() => {
-                checkAndSendPromotionalEmail(matches);
-            }, 5000); // 5 second delay
-
-            return () => clearTimeout(timer);
-        }
-    }, [matches, user, checkAndSendPromotionalEmail]);
 
 
 

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { emailService, EmailLog } from '@netprophet/lib';
-import { EmailTester } from './EmailTester';
 
 interface EmailStats {
     total_sent: number;
@@ -59,8 +58,6 @@ export function EmailManager() {
                 <h1 className="text-2xl font-bold text-white">Email Management</h1>
             </div>
 
-            {/* Email Tester Component */}
-            <EmailTester />
 
             {/* Email Statistics */}
             {emailStats && (

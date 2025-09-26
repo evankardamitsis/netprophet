@@ -1,74 +1,74 @@
 -- Create email_templates table
 CREATE TABLE email_templates
 (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  -- '2fa', 'promotional', 'winnings', 'admin'
+  language VARCHAR(5) NOT NULL,
+  -- 'en', 'el'
+  subject VARCHAR(200) NOT NULL,
+  html_content TEXT NOT NULL,
+  text_content TEXT,
+  variables JSONB DEFAULT '{}',
+  -- Template variables like {{code}}, {{user_name}}, etc.
+  is_active BOOLEAN DEFAULT true,
+  version INTEGER DEFAULT 1,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMP
+  WITH TIME ZONE DEFAULT NOW
+  (),
+  updated_at TIMESTAMP
+  WITH TIME ZONE DEFAULT NOW
+  (),
+  UNIQUE
+  (type, language, version)
+);
+
+  -- Create email_template_versions table for version history
+  CREATE TABLE email_template_versions
+  (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    type VARCHAR(50) NOT NULL,
-    -- '2fa', 'promotional', 'winnings', 'admin'
-    language VARCHAR(5) NOT NULL,
-    -- 'en', 'el'
+    template_id UUID REFERENCES email_templates(id) ON DELETE CASCADE,
+    version INTEGER NOT NULL,
     subject VARCHAR(200) NOT NULL,
     html_content TEXT NOT NULL,
     text_content TEXT,
     variables JSONB DEFAULT '{}',
-    -- Template variables like {{code}}, {{user_name}}, etc.
-    is_active BOOLEAN DEFAULT true,
-    version INTEGER DEFAULT 1,
     created_by UUID REFERENCES auth.users(id),
     created_at TIMESTAMP
     WITH TIME ZONE DEFAULT NOW
-    (),
-  updated_at TIMESTAMP
-    WITH TIME ZONE DEFAULT NOW
-    (),
-  UNIQUE
-    (type, language, version)
+    ()
 );
 
-    -- Create email_template_versions table for version history
-    CREATE TABLE email_template_versions
+    -- Create email_template_variables table for variable definitions
+    CREATE TABLE email_template_variables
     (
-        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        template_id UUID REFERENCES email_templates(id) ON DELETE CASCADE,
-        version INTEGER NOT NULL,
-        subject VARCHAR(200) NOT NULL,
-        html_content TEXT NOT NULL,
-        text_content TEXT,
-        variables JSONB DEFAULT '{}',
-        created_by UUID REFERENCES auth.users(id),
-        created_at TIMESTAMP
-        WITH TIME ZONE DEFAULT NOW
-        ()
+      id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      template_id UUID REFERENCES email_templates(id) ON DELETE CASCADE,
+      variable_name VARCHAR(50) NOT NULL,
+      -- e.g., 'code', 'user_name', 'amount'
+      display_name VARCHAR(100) NOT NULL,
+      -- e.g., 'Verification Code', 'User Name'
+      description TEXT,
+      variable_type VARCHAR(20) DEFAULT 'text',
+      -- 'text', 'number', 'date', 'currency'
+      is_required BOOLEAN DEFAULT false,
+      default_value TEXT,
+      validation_rules JSONB DEFAULT '{}',
+      -- e.g., {"min_length": 6, "max_length": 6, "pattern": "^[0-9]+$"}
+      created_at TIMESTAMP
+      WITH TIME ZONE DEFAULT NOW
+      ()
 );
 
-        -- Create email_template_variables table for variable definitions
-        CREATE TABLE email_template_variables
-        (
-            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-            template_id UUID REFERENCES email_templates(id) ON DELETE CASCADE,
-            variable_name VARCHAR(50) NOT NULL,
-            -- e.g., 'code', 'user_name', 'amount'
-            display_name VARCHAR(100) NOT NULL,
-            -- e.g., 'Verification Code', 'User Name'
-            description TEXT,
-            variable_type VARCHAR(20) DEFAULT 'text',
-            -- 'text', 'number', 'date', 'currency'
-            is_required BOOLEAN DEFAULT false,
-            default_value TEXT,
-            validation_rules JSONB DEFAULT '{}',
-            -- e.g., {"min_length": 6, "max_length": 6, "pattern": "^[0-9]+$"}
-            created_at TIMESTAMP
-            WITH TIME ZONE DEFAULT NOW
-            ()
-);
-
-            -- Insert default email templates
-            INSERT INTO email_templates
-                (name, type, language, subject, html_content, text_content, variables)
-            VALUES
-                -- 2FA English Template
-                ('2FA Verification - English', '2fa', 'en', '🔐 Your NetProphet Verification Code',
-                    '<!DOCTYPE html>
+      -- Insert default email templates
+      INSERT INTO email_templates
+        (name, type, language, subject, html_content, text_content, variables)
+      VALUES
+        -- 2FA English Template
+        ('2FA Verification - English', '2fa', 'en', '🔐 Your NetProphet Verification Code',
+          '<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -120,12 +120,12 @@ CREATE TABLE email_templates
   </div>
 </body>
 </html>',
-                    'NetProphet Verification Code\n\nYour verification code is: {{code}}\n\nThis code will expire in {{expiry_minutes}} minutes.\n\nIf you didn''t request this code, please ignore this email.\n\n© {{current_year}} {{company_name}}. {{footer_rights}}',
-                    '{"logo_url": "https://netprophetapp.com/net-prophet-logo-with-icon.png", "platform_description": "Tennis Prediction Platform", "verification_title": "Verification Code", "verification_description": "Enter this code to complete your authentication", "instructions_title": "How to use this code", "instructions_text": "Copy the code above and paste it into the verification field on NetProphet to complete your login.", "security_notice": "This code will expire in 10 minutes. Never share this code with anyone. NetProphet will never ask for your verification code.", "current_year": "2024", "company_name": "NetProphet", "footer_rights": "All rights reserved", "footer_tagline": "Made with ❤️ for tennis enthusiasts", "expiry_minutes": "10"}'),
+          'NetProphet Verification Code\n\nYour verification code is: {{code}}\n\nThis code will expire in {{expiry_minutes}} minutes.\n\nIf you didn''t request this code, please ignore this email.\n\n© {{current_year}} {{company_name}}. {{footer_rights}}',
+          '{"logo_url": "https://netprophet.vercel.app/net-prophet-logo-with-icon.png", "platform_description": "Tennis Prediction Platform", "verification_title": "Verification Code", "verification_description": "Enter this code to complete your authentication", "instructions_title": "How to use this code", "instructions_text": "Copy the code above and paste it into the verification field on NetProphet to complete your login.", "security_notice": "This code will expire in 10 minutes. Never share this code with anyone. NetProphet will never ask for your verification code.", "current_year": "2024", "company_name": "NetProphet", "footer_rights": "All rights reserved", "footer_tagline": "Made with ❤️ for tennis enthusiasts", "expiry_minutes": "10"}'),
 
-                -- 2FA Greek Template
-                ('2FA Verification - Greek', '2fa', 'el', '🔐 Ο Κωδικός Επαλήθευσης σας στο NetProphet',
-                    '<!DOCTYPE html>
+        -- 2FA Greek Template
+        ('2FA Verification - Greek', '2fa', 'el', '🔐 Ο Κωδικός Επαλήθευσης σας στο NetProphet',
+          '<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -177,177 +177,177 @@ CREATE TABLE email_templates
   </div>
 </body>
 </html>',
-                    'NetProphet Κωδικός Επαλήθευσης\n\nΟ κωδικός επαλήθευσης σας είναι: {{code}}\n\nΑυτός ο κωδικός θα λήξει σε {{expiry_minutes}} λεπτά.\n\nΕάν δεν ζητήσατε αυτόν τον κωδικό, παρακαλώ αγνοήστε αυτό το email.\n\n© {{current_year}} {{company_name}}. {{footer_rights}}',
-                    '{"logo_url": "https://netprophetapp.com/net-prophet-logo-with-icon.png", "platform_description": "Πλατφόρμα Προβλέψεων Τένις", "verification_title": "Κωδικός Επαλήθευσης", "verification_description": "Εισάγετε αυτόν τον κωδικό για να ολοκληρώσετε την πιστοποίησή σας", "instructions_title": "Πώς να χρησιμοποιήσετε αυτόν τον κωδικό", "instructions_text": "Αντιγράψτε τον κωδικό παραπάνω και επικολλήστε τον στο πεδίο επαλήθευσης στο NetProphet για να ολοκληρώσετε την είσοδό σας.", "security_notice": "Αυτός ο κωδικός θα λήξει σε 10 λεπτά. Ποτέ μη μοιράζεστε αυτόν τον κωδικό με κανέναν. Το NetProphet δεν θα ζητήσει ποτέ τον κωδικό επαλήθευσής σας.", "current_year": "2024", "company_name": "NetProphet", "footer_rights": "Όλα τα δικαιώματα διατηρούνται", "footer_tagline": "Φτιαγμένο με ❤️ για τους λάτρεις του τένις", "expiry_minutes": "10"}');
+          'NetProphet Κωδικός Επαλήθευσης\n\nΟ κωδικός επαλήθευσης σας είναι: {{code}}\n\nΑυτός ο κωδικός θα λήξει σε {{expiry_minutes}} λεπτά.\n\nΕάν δεν ζητήσατε αυτόν τον κωδικό, παρακαλώ αγνοήστε αυτό το email.\n\n© {{current_year}} {{company_name}}. {{footer_rights}}',
+          '{"logo_url": "https://netprophet.vercel.app/net-prophet-logo-with-icon.png", "platform_description": "Πλατφόρμα Προβλέψεων Τένις", "verification_title": "Κωδικός Επαλήθευσης", "verification_description": "Εισάγετε αυτόν τον κωδικό για να ολοκληρώσετε την πιστοποίησή σας", "instructions_title": "Πώς να χρησιμοποιήσετε αυτόν τον κωδικό", "instructions_text": "Αντιγράψτε τον κωδικό παραπάνω και επικολλήστε τον στο πεδίο επαλήθευσης στο NetProphet για να ολοκληρώσετε την είσοδό σας.", "security_notice": "Αυτός ο κωδικός θα λήξει σε 10 λεπτά. Ποτέ μη μοιράζεστε αυτόν τον κωδικό με κανέναν. Το NetProphet δεν θα ζητήσει ποτέ τον κωδικό επαλήθευσής σας.", "current_year": "2024", "company_name": "NetProphet", "footer_rights": "Όλα τα δικαιώματα διατηρούνται", "footer_tagline": "Φτιαγμένο με ❤️ για τους λάτρεις του τένις", "expiry_minutes": "10"}');
 
-            -- Insert template variables for 2FA templates
-            INSERT INTO email_template_variables
-                (template_id, variable_name, display_name, description, variable_type, is_required, default_value, validation_rules)
-            VALUES
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'code', 'Verification Code', '6-digit verification code', 'text', true, '', '{"min_length": 6, "max_length": 6, "pattern": "^[0-9]+$"}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'logo_url', 'Logo URL', 'URL to the NetProphet logo image', 'text', true, 'https://netprophetapp.com/net-prophet-logo-with-icon.png', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'platform_description', 'Platform Description', 'Description of the platform', 'text', false, 'Tennis Prediction Platform', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'verification_title', 'Verification Title', 'Title for verification section', 'text', false, 'Verification Code', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'verification_description', 'Verification Description', 'Description for verification section', 'text', false, 'Enter this code to complete your authentication', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'instructions_title', 'Instructions Title', 'Title for instructions section', 'text', false, 'How to use this code', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'instructions_text', 'Instructions Text', 'Instructions text', 'text', false, 'Copy the code above and paste it into the verification field on NetProphet to complete your login.', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'security_notice', 'Security Notice', 'Security notice text', 'text', false, 'This code will expire in 10 minutes. Never share this code with anyone. NetProphet will never ask for your verification code.', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'current_year', 'Current Year', 'Current year for footer', 'text', false, '2024', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'company_name', 'Company Name', 'Company name for footer', 'text', false, 'NetProphet', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'footer_rights', 'Footer Rights', 'Rights text for footer', 'text', false, 'All rights reserved', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'footer_tagline', 'Footer Tagline', 'Tagline for footer', 'text', false, 'Made with ❤️ for tennis enthusiasts', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'en'), 'expiry_minutes', 'Expiry Minutes', 'Number of minutes until code expires', 'number', false, '10', '{}');
+      -- Insert template variables for 2FA templates
+      INSERT INTO email_template_variables
+        (template_id, variable_name, display_name, description, variable_type, is_required, default_value, validation_rules)
+      VALUES
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'code', 'Verification Code', '6-digit verification code', 'text', true, '', '{"min_length": 6, "max_length": 6, "pattern": "^[0-9]+$"}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'logo_url', 'Logo URL', 'URL to the NetProphet logo image', 'text', true, 'https://netprophetapp.com/net-prophet-logo-with-icon.png', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'platform_description', 'Platform Description', 'Description of the platform', 'text', false, 'Tennis Prediction Platform', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'verification_title', 'Verification Title', 'Title for verification section', 'text', false, 'Verification Code', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'verification_description', 'Verification Description', 'Description for verification section', 'text', false, 'Enter this code to complete your authentication', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'instructions_title', 'Instructions Title', 'Title for instructions section', 'text', false, 'How to use this code', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'instructions_text', 'Instructions Text', 'Instructions text', 'text', false, 'Copy the code above and paste it into the verification field on NetProphet to complete your login.', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'security_notice', 'Security Notice', 'Security notice text', 'text', false, 'This code will expire in 10 minutes. Never share this code with anyone. NetProphet will never ask for your verification code.', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'current_year', 'Current Year', 'Current year for footer', 'text', false, '2024', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'company_name', 'Company Name', 'Company name for footer', 'text', false, 'NetProphet', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'footer_rights', 'Footer Rights', 'Rights text for footer', 'text', false, 'All rights reserved', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'footer_tagline', 'Footer Tagline', 'Tagline for footer', 'text', false, 'Made with ❤️ for tennis enthusiasts', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'en'), 'expiry_minutes', 'Expiry Minutes', 'Number of minutes until code expires', 'number', false, '10', '{}');
 
-            -- Insert template variables for Greek 2FA template
-            INSERT INTO email_template_variables
-                (template_id, variable_name, display_name, description, variable_type, is_required, default_value, validation_rules)
-            VALUES
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'code', 'Κωδικός Επαλήθευσης', '6-ψηφιος κωδικός επαλήθευσης', 'text', true, '', '{"min_length": 6, "max_length": 6, "pattern": "^[0-9]+$"}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'logo_url', 'URL Λογότυπου', 'URL για την εικόνα του λογότυπου NetProphet', 'text', true, 'https://netprophetapp.com/net-prophet-logo-with-icon.png', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'platform_description', 'Περιγραφή Πλατφόρμας', 'Περιγραφή της πλατφόρμας', 'text', false, 'Πλατφόρμα Προβλέψεων Τένις', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'verification_title', 'Τίτλος Επαλήθευσης', 'Τίτλος για την ενότητα επαλήθευσης', 'text', false, 'Κωδικός Επαλήθευσης', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'verification_description', 'Περιγραφή Επαλήθευσης', 'Περιγραφή για την ενότητα επαλήθευσης', 'text', false, 'Εισάγετε αυτόν τον κωδικό για να ολοκληρώσετε την πιστοποίησή σας', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'instructions_title', 'Τίτλος Οδηγιών', 'Τίτλος για την ενότητα οδηγιών', 'text', false, 'Πώς να χρησιμοποιήσετε αυτόν τον κωδικό', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'instructions_text', 'Κείμενο Οδηγιών', 'Κείμενο οδηγιών', 'text', false, 'Αντιγράψτε τον κωδικό παραπάνω και επικολλήστε τον στο πεδίο επαλήθευσης στο NetProphet για να ολοκληρώσετε την είσοδό σας.', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'security_notice', 'Ειδοποίηση Ασφαλείας', 'Κείμενο ειδοποίησης ασφαλείας', 'text', false, 'Αυτός ο κωδικός θα λήξει σε 10 λεπτά. Ποτέ μη μοιράζεστε αυτόν τον κωδικό με κανέναν. Το NetProphet δεν θα ζητήσει ποτέ τον κωδικό επαλήθευσής σας.', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'current_year', 'Τρέχον Έτος', 'Τρέχον έτος για το footer', 'text', false, '2024', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'company_name', 'Όνομα Εταιρείας', 'Όνομα εταιρείας για το footer', 'text', false, 'NetProphet', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'footer_rights', 'Δικαιώματα Footer', 'Κείμενο δικαιωμάτων για το footer', 'text', false, 'Όλα τα δικαιώματα διατηρούνται', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'footer_tagline', 'Tagline Footer', 'Tagline για το footer', 'text', false, 'Φτιαγμένο με ❤️ για τους λάτρεις του τένις', '{}'),
-                ((SELECT id
-                    FROM email_templates
-                    WHERE type = '2fa' AND language = 'el'), 'expiry_minutes', 'Λεπτά Λήξης', 'Αριθμός λεπτών μέχρι τη λήξη του κωδικού', 'number', false, '10', '{}');
+      -- Insert template variables for Greek 2FA template
+      INSERT INTO email_template_variables
+        (template_id, variable_name, display_name, description, variable_type, is_required, default_value, validation_rules)
+      VALUES
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'code', 'Κωδικός Επαλήθευσης', '6-ψηφιος κωδικός επαλήθευσης', 'text', true, '', '{"min_length": 6, "max_length": 6, "pattern": "^[0-9]+$"}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'logo_url', 'URL Λογότυπου', 'URL για την εικόνα του λογότυπου NetProphet', 'text', true, 'https://netprophetapp.com/net-prophet-logo-with-icon.png', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'platform_description', 'Περιγραφή Πλατφόρμας', 'Περιγραφή της πλατφόρμας', 'text', false, 'Πλατφόρμα Προβλέψεων Τένις', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'verification_title', 'Τίτλος Επαλήθευσης', 'Τίτλος για την ενότητα επαλήθευσης', 'text', false, 'Κωδικός Επαλήθευσης', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'verification_description', 'Περιγραφή Επαλήθευσης', 'Περιγραφή για την ενότητα επαλήθευσης', 'text', false, 'Εισάγετε αυτόν τον κωδικό για να ολοκληρώσετε την πιστοποίησή σας', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'instructions_title', 'Τίτλος Οδηγιών', 'Τίτλος για την ενότητα οδηγιών', 'text', false, 'Πώς να χρησιμοποιήσετε αυτόν τον κωδικό', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'instructions_text', 'Κείμενο Οδηγιών', 'Κείμενο οδηγιών', 'text', false, 'Αντιγράψτε τον κωδικό παραπάνω και επικολλήστε τον στο πεδίο επαλήθευσης στο NetProphet για να ολοκληρώσετε την είσοδό σας.', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'security_notice', 'Ειδοποίηση Ασφαλείας', 'Κείμενο ειδοποίησης ασφαλείας', 'text', false, 'Αυτός ο κωδικός θα λήξει σε 10 λεπτά. Ποτέ μη μοιράζεστε αυτόν τον κωδικό με κανέναν. Το NetProphet δεν θα ζητήσει ποτέ τον κωδικό επαλήθευσής σας.', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'current_year', 'Τρέχον Έτος', 'Τρέχον έτος για το footer', 'text', false, '2024', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'company_name', 'Όνομα Εταιρείας', 'Όνομα εταιρείας για το footer', 'text', false, 'NetProphet', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'footer_rights', 'Δικαιώματα Footer', 'Κείμενο δικαιωμάτων για το footer', 'text', false, 'Όλα τα δικαιώματα διατηρούνται', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'footer_tagline', 'Tagline Footer', 'Tagline για το footer', 'text', false, 'Φτιαγμένο με ❤️ για τους λάτρεις του τένις', '{}'),
+        ((SELECT id
+          FROM email_templates
+          WHERE type = '2fa' AND language = 'el'), 'expiry_minutes', 'Λεπτά Λήξης', 'Αριθμός λεπτών μέχρι τη λήξη του κωδικού', 'number', false, '10', '{}');
 
-            -- Create RLS policies
-            ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
-            ALTER TABLE email_template_versions ENABLE ROW LEVEL SECURITY;
-            ALTER TABLE email_template_variables ENABLE ROW LEVEL SECURITY;
+      -- Create RLS policies
+      ALTER TABLE email_templates ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE email_template_versions ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE email_template_variables ENABLE ROW LEVEL SECURITY;
 
-            -- Allow authenticated users to read templates
-            CREATE POLICY "Allow authenticated users to read email templates" ON email_templates
+      -- Allow authenticated users to read templates
+      CREATE POLICY "Allow authenticated users to read email templates" ON email_templates
   FOR
-            SELECT USING (auth.role() = 'authenticated');
+      SELECT USING (auth.role() = 'authenticated');
 
-            -- Allow admins to manage templates
-            CREATE POLICY "Allow admins to manage email templates" ON email_templates
+      -- Allow admins to manage templates
+      CREATE POLICY "Allow admins to manage email templates" ON email_templates
   FOR ALL USING
-            (
+      (
     EXISTS
-            (
+      (
       SELECT 1
-            FROM profiles
-            WHERE profiles.id = auth.uid()
-                AND profiles.is_admin = true
+      FROM profiles
+      WHERE profiles.id = auth.uid()
+        AND profiles.is_admin = true
     )
-            );
+      );
 
-            -- Allow authenticated users to read template versions
-            CREATE POLICY "Allow authenticated users to read template versions" ON email_template_versions
+      -- Allow authenticated users to read template versions
+      CREATE POLICY "Allow authenticated users to read template versions" ON email_template_versions
   FOR
-            SELECT USING (auth.role() = 'authenticated');
+      SELECT USING (auth.role() = 'authenticated');
 
-            -- Allow admins to manage template versions
-            CREATE POLICY "Allow admins to manage template versions" ON email_template_versions
+      -- Allow admins to manage template versions
+      CREATE POLICY "Allow admins to manage template versions" ON email_template_versions
   FOR ALL USING
-            (
+      (
     EXISTS
-            (
+      (
       SELECT 1
-            FROM profiles
-            WHERE profiles.id = auth.uid()
-                AND profiles.is_admin = true
+      FROM profiles
+      WHERE profiles.id = auth.uid()
+        AND profiles.is_admin = true
     )
-            );
+      );
 
-            -- Allow authenticated users to read template variables
-            CREATE POLICY "Allow authenticated users to read template variables" ON email_template_variables
+      -- Allow authenticated users to read template variables
+      CREATE POLICY "Allow authenticated users to read template variables" ON email_template_variables
   FOR
-            SELECT USING (auth.role() = 'authenticated');
+      SELECT USING (auth.role() = 'authenticated');
 
-            -- Allow admins to manage template variables
-            CREATE POLICY "Allow admins to manage template variables" ON email_template_variables
+      -- Allow admins to manage template variables
+      CREATE POLICY "Allow admins to manage template variables" ON email_template_variables
   FOR ALL USING
-            (
+      (
     EXISTS
-            (
+      (
       SELECT 1
-            FROM profiles
-            WHERE profiles.id = auth.uid()
-                AND profiles.is_admin = true
+      FROM profiles
+      WHERE profiles.id = auth.uid()
+        AND profiles.is_admin = true
     )
-            );
+      );
 
-            -- Create indexes for better performance
-            CREATE INDEX idx_email_templates_type_language ON email_templates(type, language);
-            CREATE INDEX idx_email_templates_active ON email_templates(is_active) WHERE is_active = true;
-            CREATE INDEX idx_email_template_versions_template_id ON email_template_versions(template_id);
-            CREATE INDEX idx_email_template_variables_template_id ON email_template_variables(template_id);
+      -- Create indexes for better performance
+      CREATE INDEX idx_email_templates_type_language ON email_templates(type, language);
+      CREATE INDEX idx_email_templates_active ON email_templates(is_active) WHERE is_active = true;
+      CREATE INDEX idx_email_template_versions_template_id ON email_template_versions(template_id);
+      CREATE INDEX idx_email_template_variables_template_id ON email_template_variables(template_id);
 
-            -- Create function to update updated_at timestamp
-            CREATE OR REPLACE FUNCTION update_email_template_updated_at
-            ()
+      -- Create function to update updated_at timestamp
+      CREATE OR REPLACE FUNCTION update_email_template_updated_at
+      ()
 RETURNS TRIGGER AS $$
-            BEGIN
+      BEGIN
   NEW.updated_at = NOW
-            ();
-            RETURN NEW;
-            END;
+      ();
+      RETURN NEW;
+      END;
 $$ LANGUAGE plpgsql;
 
-            -- Create trigger to automatically update updated_at
-            CREATE TRIGGER update_email_templates_updated_at
+      -- Create trigger to automatically update updated_at
+      CREATE TRIGGER update_email_templates_updated_at
   BEFORE
-            UPDATE ON email_templates
+      UPDATE ON email_templates
   FOR EACH ROW
-            EXECUTE FUNCTION update_email_template_updated_at
-            ();
+      EXECUTE FUNCTION update_email_template_updated_at
+      ();

@@ -9,6 +9,14 @@
 - [x] **Audit and review RLS policies for all tables** - Created comprehensive RLS policy audit and fix scripts ensuring all tables have proper security policies
 - [x] **Add session timeout configuration** - Configured Supabase session timeouts: 24h maximum session, 2h inactivity timeout, 1h JWT expiry
 
+## 🔴 CRITICAL ISSUES
+
+- [ ] **🔴 CRITICAL: Fix daily login streak functionality** - Investigate why daily login streak rewards are not working properly
+- [ ] **🔴 CRITICAL: Complete transactional email system** - Finish implementing and testing all transactional emails (2FA, winnings, notifications)
+- [ ] **🔴 CRITICAL: Set up promotional email system** - Implement promotional email campaigns and user segmentation
+- [ ] **🔴 CRITICAL: Implement hidden players feature** - Set up system for hiding/showing players in match listings
+- [ ] **🔴 CRITICAL: Add player profile claim system** - Allow users to claim and customize their profile with name/surname after registration
+
 ## Admin Panel Improvements
 
 - [ ] Implement audit logs for admin actions
