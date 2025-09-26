@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
 // Force dynamic rendering to avoid build-time context issues
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,8 @@ import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function AuthPage() {
+// Component that uses useSearchParams - wrapped in Suspense
+function AuthFormWithSearchParams() {
     const [mode, setMode] = useState<'signin' | 'register'>('signin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -410,5 +411,21 @@ export default function AuthPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+// Main export with Suspense boundary
+export default function AuthPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-indigo-200 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+                    <p className="text-slate-600">Loading...</p>
+                </div>
+            </div>
+        }>
+            <AuthFormWithSearchParams />
+        </Suspense>
     );
 } 
