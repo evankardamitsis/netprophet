@@ -25,8 +25,7 @@ const demoPlayers: PlayerOddsData[] = [
         surfaceWinRates: {
             hardCourt: 0.75,
             clayCourt: 0.45,
-            grassCourt: 0.60,
-            indoor: 0.70
+            grassCourt: 0.60
         },
         aggressiveness: 7,
         stamina: 8,
@@ -36,7 +35,6 @@ const demoPlayers: PlayerOddsData[] = [
         club: 'Ολυμπιακός',
         notes: 'Strong baseline player',
         lastMatchDate: '2024-01-15',
-        fatigueLevel: 2,
         injuryStatus: 'healthy',
         seasonalForm: 0.68
     },
@@ -54,8 +52,7 @@ const demoPlayers: PlayerOddsData[] = [
         surfaceWinRates: {
             hardCourt: 0.40,
             clayCourt: 0.80,
-            grassCourt: 0.35,
-            indoor: 0.45
+            grassCourt: 0.35
         },
         aggressiveness: 5,
         stamina: 7,
@@ -65,7 +62,6 @@ const demoPlayers: PlayerOddsData[] = [
         club: 'Παναθηναϊκός',
         notes: 'Consistent player',
         lastMatchDate: '2024-01-12',
-        fatigueLevel: 4,
         injuryStatus: 'healthy',
         seasonalForm: 0.55
     },
@@ -83,8 +79,7 @@ const demoPlayers: PlayerOddsData[] = [
         surfaceWinRates: {
             hardCourt: 0.85,
             clayCourt: 0.70,
-            grassCourt: 0.90,
-            indoor: 0.80
+            grassCourt: 0.90
         },
         aggressiveness: 9,
         stamina: 9,
@@ -94,7 +89,6 @@ const demoPlayers: PlayerOddsData[] = [
         club: 'ΑΕΚ',
         notes: 'Top player',
         lastMatchDate: '2024-01-14',
-        fatigueLevel: 1,
         injuryStatus: 'healthy',
         seasonalForm: 0.82
     }
@@ -285,7 +279,6 @@ export default function OddsDemoPage() {
                                 <div>Last 5: {getLast5Display(player1.last5)}</div>
                                 <div>Streak: {player1.currentStreak} {player1.streakType}</div>
                                 <div>Age: {player1.age}</div>
-                                <div>Fatigue: {player1.fatigueLevel || 0}/10</div>
                                 <div>Season: {((player1.seasonalForm || 0) * 100).toFixed(0)}%</div>
                             </div>
                             {player1.surfaceWinRates && (
@@ -295,7 +288,6 @@ export default function OddsDemoPage() {
                                         <div>Hard: {((player1.surfaceWinRates.hardCourt || 0) * 100).toFixed(0)}%</div>
                                         <div>Clay: {((player1.surfaceWinRates.clayCourt || 0) * 100).toFixed(0)}%</div>
                                         <div>Grass: {((player1.surfaceWinRates.grassCourt || 0) * 100).toFixed(0)}%</div>
-                                        <div>Indoor: {((player1.surfaceWinRates.indoor || 0) * 100).toFixed(0)}%</div>
                                     </div>
                                 </div>
                             )}
@@ -408,7 +400,6 @@ export default function OddsDemoPage() {
                                 <div>Last 5: {getLast5Display(player2.last5)}</div>
                                 <div>Streak: {player2.currentStreak} {player2.streakType}</div>
                                 <div>Age: {player2.age}</div>
-                                <div>Fatigue: {player2.fatigueLevel || 0}/10</div>
                                 <div>Season: {((player2.seasonalForm || 0) * 100).toFixed(0)}%</div>
                             </div>
                             {player2.surfaceWinRates && (
@@ -418,7 +409,6 @@ export default function OddsDemoPage() {
                                         <div>Hard: {((player2.surfaceWinRates.hardCourt || 0) * 100).toFixed(0)}%</div>
                                         <div>Clay: {((player2.surfaceWinRates.clayCourt || 0) * 100).toFixed(0)}%</div>
                                         <div>Grass: {((player2.surfaceWinRates.grassCourt || 0) * 100).toFixed(0)}%</div>
-                                        <div>Indoor: {((player2.surfaceWinRates.indoor || 0) * 100).toFixed(0)}%</div>
                                     </div>
                                 </div>
                             )}
