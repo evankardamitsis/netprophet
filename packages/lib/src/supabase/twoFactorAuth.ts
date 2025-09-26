@@ -1,4 +1,5 @@
 import { supabase } from "./client";
+import { emailService } from "./emailService";
 
 export interface TwoFactorCode {
   id: string;
@@ -18,10 +19,12 @@ export class TwoFactorAuthService {
   }
 
   /**
-   * Create a 2FA code for a user
+   * Create a 2FA code for a user and automatically send email
    */
   static async createCode(
-    userId: string
+    userId: string,
+    userEmail?: string,
+    language: "en" | "el" = "en"
   ): Promise<{ success: boolean; code?: string; error?: string }> {
     try {
       const code = this.generateCode();
@@ -41,6 +44,23 @@ export class TwoFactorAuthService {
       if (error) {
         console.error("Error creating 2FA code:", error);
         return { success: false, error: error.message };
+      }
+
+      // Automatically send 2FA email if userEmail is provided
+      if (userEmail) {
+        try {
+          const emailSent = await emailService.send2FAEmail(
+            userEmail,
+            code,
+            language
+          );
+          if (!emailSent) {
+            console.warn("2FA code created but email failed to send");
+          }
+        } catch (emailError) {
+          console.error("Error sending 2FA email:", emailError);
+          // Don't fail the code creation if email fails
+        }
       }
 
       return { success: true, code };

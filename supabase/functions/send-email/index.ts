@@ -237,19 +237,9 @@ serve(async (req) => {
 
     // Check permissions based on email type
     if (type === "2fa") {
-      // 2FA emails can be sent by any authenticated user
-      if (!user && !isAdmin) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Authentication required for 2FA emails",
-          }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
+      // 2FA emails can be sent without full authentication
+      // This is needed during the 2FA flow when user is not fully authenticated yet
+      console.log("Sending 2FA email to:", to);
     } else {
       // Other email types require admin privileges
       if (!isAdmin) {

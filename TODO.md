@@ -5,17 +5,20 @@
 - [x] **🔴 HIGH PRIORITY: Implement server-side admin authentication** - Added secure JWT token validation and admin privilege checks for all admin API routes
 - [x] **Add rate limiting for authentication attempts** - Configured Supabase rate limits: 5 sign-in/sign-up attempts per 5 minutes, 10 OTP verifications per 5 minutes
 - [x] **Implement password strength requirements** - Set minimum 8 characters with uppercase, lowercase, and digits required
-- [ ] **Add two-factor authentication (2FA) for admin accounts** - 🔄 IN PROGRESS: Removed custom 2FA implementation. Ready to implement Supabase's built-in 2FA solution.
+- [x] **Add two-factor authentication (2FA) for all users** - ✅ COMPLETED: Enabled 2FA by default for all new users, updated profile creation trigger to automatically enable 2FA for all signups
 - [x] **Audit and review RLS policies for all tables** - Created comprehensive RLS policy audit and fix scripts ensuring all tables have proper security policies
 - [x] **Add session timeout configuration** - Configured Supabase session timeouts: 24h maximum session, 2h inactivity timeout, 1h JWT expiry
 
 ## 🔴 CRITICAL ISSUES
 
-- [ ] **🔴 CRITICAL: Fix daily login streak functionality** - Investigate why daily login streak rewards are not working properly
-- [ ] **🔴 CRITICAL: Complete transactional email system** - Finish implementing and testing all transactional emails (2FA, winnings, notifications)
+- [x] **🔴 CRITICAL: Fix daily login streak functionality** - ✅ COMPLETED: Fixed database functions to always give 30 coins daily, removed streak requirement for daily rewards, fixed frontend logic to allow all users to claim rewards
+- [x] **🔴 CRITICAL: Complete transactional email system** - ✅ COMPLETED: Fixed logo loading with SVG text fallback, created all missing email templates (winnings, welcome, promotional), implemented complete transactional email system
 - [ ] **🔴 CRITICAL: Set up promotional email system** - Implement promotional email campaigns and user segmentation
 - [ ] **🔴 CRITICAL: Implement hidden players feature** - Set up system for hiding/showing players in match listings
 - [ ] **🔴 CRITICAL: Add player profile claim system** - Allow users to claim and customize their profile with name/surname after registration
+- [ ] **🔴 CRITICAL: Fix PromotionalHero component disappearing** - PromotionalHero.tsx disappears when there are no upcoming matches, should show promotional content instead
+- [ ] **🔴 CRITICAL: Add "My Predictions" feature** - Allow users to view and track their prediction history
+- [ ] **🔴 CRITICAL: Disable live matches sidebar link** - Remove or disable the live matches link from the sidebar navigation
 
 ## Admin Panel Improvements
 

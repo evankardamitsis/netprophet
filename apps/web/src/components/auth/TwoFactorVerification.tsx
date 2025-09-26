@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@netprophet/ui';
 import { TwoFactorAuthService } from '@netprophet/lib';
-import { useEmail } from '@/hooks/useEmail';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useEmail } from '@/hooks/useEmail';
 
 interface TwoFactorVerificationProps {
     userId: string;
@@ -26,8 +26,8 @@ export function TwoFactorVerification({
     const [resendLoading, setResendLoading] = useState(false);
     const [timeLeft, setTimeLeft] = useState(0);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const { send2FAEmail } = useEmail();
     const { dict, lang } = useDictionary();
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Timer for resend functionality
     useEffect(() => {
@@ -36,6 +36,28 @@ export function TwoFactorVerification({
             return () => clearTimeout(timer);
         }
     }, [timeLeft]);
+
+    // Auto-cancel 2FA after 10 minutes of inactivity
+    useEffect(() => {
+        timeoutRef.current = setTimeout(() => {
+            onCancel();
+        }, 10 * 60 * 1000); // 10 minutes
+
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, [onCancel]);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleInputChange = (index: number, value: string) => {
         if (value.length > 1) return; // Prevent multiple characters
@@ -50,6 +72,18 @@ export function TwoFactorVerification({
         }
 
         setError('');
+
+        // Auto-verify if all 6 digits are entered - use the updated code
+        const updatedCode = [...newCode];
+        if (updatedCode.length === 6 && updatedCode.every(digit => digit !== '')) {
+            setTimeout(() => {
+                // Use the updated code directly instead of relying on state
+                const fullCode = updatedCode.join('');
+                if (fullCode.length === 6) {
+                    handleVerifyWithCode(fullCode);
+                }
+            }, 150); // Slightly longer delay to ensure state is updated
+        }
     };
 
     const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
@@ -65,11 +99,15 @@ export function TwoFactorVerification({
             const newCode = pastedData.split('');
             setCode(newCode);
             inputRefs.current[5]?.focus();
+
+            // Auto-verify if all 6 digits are pasted - use the pasted data directly
+            setTimeout(() => {
+                handleVerifyWithCode(pastedData);
+            }, 150);
         }
     };
 
-    const handleVerify = async () => {
-        const fullCode = code.join('');
+    const handleVerifyWithCode = async (fullCode: string) => {
         if (fullCode.length !== 6) {
             setError('Please enter the complete 6-digit code');
             return;
@@ -77,11 +115,17 @@ export function TwoFactorVerification({
 
         setLoading(true);
         setError('');
+        setMessage('Verifying code...');
 
         try {
             const result = await TwoFactorAuthService.verifyCode(userId, fullCode);
 
             if (result.success) {
+                // Clear the timeout since verification was successful
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current);
+                    timeoutRef.current = null;
+                }
                 setMessage('Verification successful!');
                 setTimeout(() => {
                     onVerificationSuccess();
@@ -99,19 +143,25 @@ export function TwoFactorVerification({
         }
     };
 
+    const handleVerify = async () => {
+        const fullCode = code.join('');
+        await handleVerifyWithCode(fullCode);
+    };
+
     const handleResendCode = async () => {
         setResendLoading(true);
         setError('');
         setMessage('');
 
         try {
-            // Generate new code
-            const codeResult = await TwoFactorAuthService.createCode(userId);
+            // Generate new code and automatically send email
+            const codeResult = await TwoFactorAuthService.createCode(
+                userId,
+                userEmail,
+                lang as 'en' | 'el'
+            );
 
-            if (codeResult.success && codeResult.code) {
-                // Send email with new code
-                await send2FAEmail(userEmail, codeResult.code, lang as 'en' | 'el');
-
+            if (codeResult.success) {
                 setMessage('New verification code sent to your email');
                 setTimeLeft(60); // 60 second cooldown
                 setCode(['', '', '', '', '', '']);

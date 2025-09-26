@@ -26,8 +26,25 @@ export function useAuth() {
         if (error) {
           console.error("useAuth: Session error:", error);
         } else if (session) {
-          setSession(session);
-          setUser(session.user);
+          // Check if user has 2FA enabled before setting user
+          try {
+            const is2FAEnabled = await TwoFactorAuthService.isTwoFactorEnabled(
+              session.user.id
+            );
+            if (!is2FAEnabled) {
+              setSession(session);
+              setUser(session.user);
+            } else {
+              // User has 2FA enabled, don't set user until 2FA is completed
+              setSession(null);
+              setUser(null);
+            }
+          } catch (error) {
+            console.error("useAuth: Error checking 2FA status:", error);
+            // If we can't check 2FA status, assume no 2FA and set user
+            setSession(session);
+            setUser(session.user);
+          }
         }
       } catch (error) {
         console.error("useAuth: Error getting initial session:", error);
@@ -52,6 +69,14 @@ export function useAuth() {
 
       if (!mounted) return;
 
+      // Don't set user/session if 2FA is required and not completed
+      if (requiresTwoFactor) {
+        // Ensure user and session are cleared during 2FA flow
+        setUser(null);
+        setSession(null);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -61,7 +86,7 @@ export function useAuth() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [requiresTwoFactor]);
 
   const signIn = async (email: string) => {
     // Extract language from current path
@@ -133,13 +158,18 @@ export function useAuth() {
           // Store pending user and require 2FA
           setPendingUser(data.user);
           setRequiresTwoFactor(true);
+          // Clear user/session since 2FA is required - user is NOT logged in yet
+          setUser(null);
+          setSession(null);
 
-          // Generate and send 2FA code
+          // Generate and automatically send 2FA code via email
           const codeResult = await TwoFactorAuthService.createCode(
-            data.user.id
+            data.user.id,
+            data.user.email,
+            "en" // Default to English, could be made dynamic based on user preference
           );
           if (codeResult.success) {
-            // The code will be sent via email in the 2FA component
+            // The code has been automatically sent via email
             return { success: true, requiresTwoFactor: true };
           } else {
             return {
@@ -174,10 +204,12 @@ export function useAuth() {
 
       if (result.success) {
         // 2FA successful, complete the authentication
-        setUser(pendingUser);
-        setSession(null); // Will be set by auth state change
         setRequiresTwoFactor(false);
         setPendingUser(null);
+
+        // The user should already be authenticated in Supabase
+        // Just update our local state
+        setUser(pendingUser);
 
         // Get the current session
         const {
@@ -195,11 +227,11 @@ export function useAuth() {
     }
   };
 
-  const cancelTwoFactor = () => {
+  const cancelTwoFactor = async () => {
+    // Sign out the user if they cancel 2FA
+    await signOut();
     setRequiresTwoFactor(false);
     setPendingUser(null);
-    // Sign out the user
-    supabase.auth.signOut();
   };
 
   const resendTwoFactorCode = async () => {

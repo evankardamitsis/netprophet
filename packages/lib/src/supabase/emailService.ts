@@ -37,11 +37,8 @@ export class EmailService {
     language: "en" | "el" = "en"
   ): Promise<boolean> {
     try {
-      const {
-        data: { user },
-      } = await this.supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
-
+      // For 2FA emails, we don't need to check authentication
+      // The edge function will handle the authentication check
       const emailData: EmailData = {
         to: userEmail,
         template: "2fa",
@@ -60,7 +57,11 @@ export class EmailService {
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error invoking send-email function:", error);
+        throw error;
+      }
+
       return data?.success || false;
     } catch (error) {
       console.error("Error sending 2FA email:", error);

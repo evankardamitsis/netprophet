@@ -102,7 +102,7 @@ export function useWallet() {
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
     const { dict, lang } = useDictionary();
-    const { user } = useAuth();
+    const { user, requiresTwoFactor } = useAuth();
     const { sendWinningsEmail } = useEmail();
     const [wallet, setWallet] = useState<UserWallet>(() => {
         const storedWallet = loadFromSessionStorage(SESSION_KEYS.WALLET, defaultWallet);
@@ -245,6 +245,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             return;
         }
 
+        // Don't load data if 2FA is required (user is not fully authenticated yet)
+        if (requiresTwoFactor) {
+            return;
+        }
+
+        // Additional safety check: Don't load data if we're on auth pages
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/auth/')) {
+            return;
+        }
+
         // Load data for authenticated users
         const loadUserData = async () => {
             try {
@@ -258,7 +269,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         };
 
         loadUserData();
-    }, [user, loadBetStats, loadTransactions, syncWalletWithDatabase]); // Include all dependencies
+    }, [user, requiresTwoFactor, loadBetStats, loadTransactions, syncWalletWithDatabase]); // Include all dependencies
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {

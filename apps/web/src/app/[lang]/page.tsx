@@ -10,7 +10,6 @@ export default async function HomePage({
     console.log('🔍 Loading dictionary for lang:', lang);
 
     const dict = getDictionary(lang);
-    console.log('📚 Dictionary loaded:', dict);
 
     return <HomePageClient dict={dict} lang={lang} />;
 } 
