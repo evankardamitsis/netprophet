@@ -348,6 +348,53 @@ export interface Dictionary {
     helpAndFaq: string;
     signOut: string;
   };
+  profileSetup: {
+    title: string;
+    description: string;
+    skip: string;
+    skipForNow: string;
+    continue: string;
+    processing: string;
+    tryAgain: string;
+    form: {
+      title: string;
+      description: string;
+      firstName: string;
+      lastName: string;
+      firstNamePlaceholder: string;
+      lastNamePlaceholder: string;
+      termsLabel: string;
+      termsDescription: string;
+      errors: {
+        firstNameRequired: string;
+        lastNameRequired: string;
+        termsRequired: string;
+      };
+    };
+    result: {
+      playerFound: string;
+      playerFoundDescription: string;
+      claimProfile: string;
+      claimDescription: string;
+      termsLabel: string;
+      termsDescription: string;
+      noPlayerFound: string;
+      noPlayerFoundDescription: string;
+      createProfile: string;
+      createDescription: string;
+      playerName: string;
+      playerDetails: string;
+      yourName: string;
+      nameUsageDescription: string;
+    };
+    success: {
+      title: string;
+      description: string;
+      claimedMessage: string;
+      requestedMessage: string;
+      continueButton: string;
+    };
+  };
   results: {
     title: string;
     subtitle: string;

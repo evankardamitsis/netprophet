@@ -24,6 +24,53 @@
     "winner": "Winner",
     "resultsPending": "Results pending"
   },
+  "profileSetup": {
+    "title": "Complete Your Profile",
+    "description": "To participate in matches as a player, please complete your profile setup.",
+    "skip": "Skip",
+    "skipForNow": "Skip for Now",
+    "continue": "Continue",
+    "processing": "Processing...",
+    "tryAgain": "Try Again",
+    "form": {
+      "title": "Complete Your Profile",
+      "description": "If you are also a player, share your name and surname to activate your profile in the game.",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastNamePlaceholder": "Enter your last name",
+      "termsLabel": "I accept the terms and conditions",
+      "termsDescription": "By providing your name, you allow us to match you with existing player profiles in our database.",
+      "errors": {
+        "firstNameRequired": "First name is required",
+        "lastNameRequired": "Last name is required",
+        "termsRequired": "You must accept the terms and conditions"
+      }
+    },
+    "result": {
+      "playerFound": "Player Profile Found",
+      "playerFoundDescription": "We found a player profile that matches your name. You can claim this profile to participate in matches.",
+      "claimProfile": "Claim Profile",
+      "claimDescription": "By claiming this profile, you will be able to participate in matches and tournaments as this player.",
+      "termsLabel": "I accept the terms and conditions",
+      "termsDescription": "By claiming this profile, you agree to participate in matches and tournaments as this player.",
+      "noPlayerFound": "No Player Profile Found",
+      "noPlayerFoundDescription": "We couldn't find a player profile that matches your name. You can request to create a new player profile.",
+      "createProfile": "Create My Profile",
+      "createDescription": "You can request to create a new player profile. An admin will review and approve your request.",
+      "playerName": "Player Name",
+      "playerDetails": "Player Details",
+      "yourName": "Your Name",
+      "nameUsageDescription": "This name will be used to create your player profile."
+    },
+    "success": {
+      "title": "Profile Setup Complete!",
+      "description": "Your profile has been successfully set up.",
+      "claimedMessage": "You have successfully claimed your player profile and can now participate in matches.",
+      "requestedMessage": "Your profile creation request has been submitted. An admin will review and approve it.",
+      "continueButton": "Continue to App"
+    }
+  },
   "auth": {
     "signIn": "Sign In",
     "signOut": "Sign Out",

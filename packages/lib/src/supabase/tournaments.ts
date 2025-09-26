@@ -261,6 +261,7 @@ export async function getAvailablePlayers(tournamentId: string) {
   let query = supabase
     .from("players")
     .select("id, first_name, last_name, ntrp_rating, age, surface_preference")
+    .eq("is_active", true)
     .order("first_name, last_name");
 
   // Only apply the not.in filter if there are registered players

@@ -359,6 +359,7 @@ export async function getAvailablePlayersForMatch(
   let query = supabase
     .from("players")
     .select("id, first_name, last_name, ntrp_rating, age, surface_preference")
+    .eq("is_active", true)
     .order("first_name, last_name");
 
   // If tournament is specified, only show players registered for that tournament

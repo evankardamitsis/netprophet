@@ -28,8 +28,7 @@ const mockPlayer: Player = {
     surfaceWinRates: {
         hardCourt: 0.75,
         clayCourt: 0.45,
-        grassCourt: 0.60,
-        indoor: 0.70
+        grassCourt: 0.60
     },
     aggressiveness: 7,
     stamina: 8,
@@ -38,7 +37,6 @@ const mockPlayer: Player = {
     hand: 'right',
     notes: 'Strong baseline player',
     lastMatchDate: '2024-01-15',
-    fatigueLevel: 2,
     injuryStatus: 'healthy',
     seasonalForm: 0.68
 };
@@ -76,7 +74,6 @@ export default function PlayerEditPage() {
                     hardCourt: 0.5,
                     clayCourt: 0.5,
                     grassCourt: 0.5,
-                    indoor: 0.5
                 },
                 aggressiveness: 5,
                 stamina: 5,
@@ -85,7 +82,6 @@ export default function PlayerEditPage() {
                 hand: 'right',
                 notes: '',
                 lastMatchDate: '',
-                fatigueLevel: 0,
                 injuryStatus: 'healthy',
                 seasonalForm: 0.5
             });
@@ -116,7 +112,6 @@ export default function PlayerEditPage() {
                 hand: player.hand,
                 notes: player.notes,
                 last_match_date: player.lastMatchDate,
-                fatigue_level: player.fatigueLevel,
                 injury_status: player.injuryStatus,
                 seasonal_form: player.seasonalForm,
             };
@@ -141,7 +136,7 @@ export default function PlayerEditPage() {
         setPlayer(prev => ({ ...prev, [field]: value }));
     };
 
-    const updateSurfaceWinRate = (surface: 'hardCourt' | 'clayCourt' | 'grassCourt' | 'indoor', value: number) => {
+    const updateSurfaceWinRate = (surface: 'hardCourt' | 'clayCourt' | 'grassCourt', value: number) => {
         setPlayer(prev => ({
             ...prev,
             surfaceWinRates: {
@@ -424,17 +419,6 @@ export default function PlayerEditPage() {
                             />
                         </div>
 
-                        <div>
-                            <Label htmlFor="fatigueLevel">Επίπεδο Κούρασης (0-10)</Label>
-                            <Input
-                                id="fatigueLevel"
-                                type="number"
-                                min="0"
-                                max="10"
-                                value={player.fatigueLevel || 0}
-                                onChange={(e) => updatePlayerField('fatigueLevel', parseInt(e.target.value) || 0)}
-                            />
-                        </div>
 
                         <div>
                             <Label htmlFor="injuryStatus">Κατάσταση Τραυματισμού</Label>
@@ -465,7 +449,7 @@ export default function PlayerEditPage() {
                             <Label htmlFor="surfacePreference">Προτιμώμενη Επιφάνεια</Label>
                             <Select
                                 value={player.surfacePreference}
-                                onValueChange={(value: "Hard Court" | "Clay Court" | "Grass Court" | "Indoor") =>
+                                onValueChange={(value: "Hard Court" | "Clay Court" | "Grass Court") =>
                                     updatePlayerField('surfacePreference', value)
                                 }
                             >
@@ -476,7 +460,6 @@ export default function PlayerEditPage() {
                                     <SelectItem value="Hard Court">Hard Court</SelectItem>
                                     <SelectItem value="Clay Court">Clay Court</SelectItem>
                                     <SelectItem value="Grass Court">Grass Court</SelectItem>
-                                    <SelectItem value="Indoor">Indoor</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -487,11 +470,23 @@ export default function PlayerEditPage() {
                                 <Input
                                     id="hardCourtWinRate"
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.hardCourt || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('hardCourt', parseFloat(e.target.value) || 0.5)}
+                                    max="100"
+                                    placeholder="50"
+                                    value={player.surfaceWinRates?.hardCourt ? Math.round(player.surfaceWinRates.hardCourt * 100) : ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            // Allow empty field
+                                            return;
+                                        }
+                                        const percentage = parseFloat(value);
+                                        if (!isNaN(percentage)) {
+                                            const decimal = Math.max(0, Math.min(100, percentage)) / 100;
+                                            updateSurfaceWinRate('hardCourt', decimal);
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -500,11 +495,23 @@ export default function PlayerEditPage() {
                                 <Input
                                     id="clayCourtWinRate"
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.clayCourt || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('clayCourt', parseFloat(e.target.value) || 0.5)}
+                                    max="100"
+                                    placeholder="50"
+                                    value={player.surfaceWinRates?.clayCourt ? Math.round(player.surfaceWinRates.clayCourt * 100) : ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            // Allow empty field
+                                            return;
+                                        }
+                                        const percentage = parseFloat(value);
+                                        if (!isNaN(percentage)) {
+                                            const decimal = Math.max(0, Math.min(100, percentage)) / 100;
+                                            updateSurfaceWinRate('clayCourt', decimal);
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -513,26 +520,26 @@ export default function PlayerEditPage() {
                                 <Input
                                     id="grassCourtWinRate"
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.grassCourt || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('grassCourt', parseFloat(e.target.value) || 0.5)}
+                                    max="100"
+                                    placeholder="50"
+                                    value={player.surfaceWinRates?.grassCourt ? Math.round(player.surfaceWinRates.grassCourt * 100) : ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            // Allow empty field
+                                            return;
+                                        }
+                                        const percentage = parseFloat(value);
+                                        if (!isNaN(percentage)) {
+                                            const decimal = Math.max(0, Math.min(100, percentage)) / 100;
+                                            updateSurfaceWinRate('grassCourt', decimal);
+                                        }
+                                    }}
                                 />
                             </div>
 
-                            <div>
-                                <Label htmlFor="indoorWinRate">Indoor Win Rate (%)</Label>
-                                <Input
-                                    id="indoorWinRate"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.indoor || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('indoor', parseFloat(e.target.value) || 0.5)}
-                                />
-                            </div>
                         </div>
                     </CardContent>
                 </Card>

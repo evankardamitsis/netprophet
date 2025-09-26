@@ -14,7 +14,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Match, Tournament, Player } from '@/types';
-import { fetchPlayers } from '@netprophet/lib/supabase/players';
+import { fetchActivePlayers } from '@netprophet/lib/supabase/players';
 
 // Zod schema for form validation
 const matchFormSchema = z.object({
@@ -120,7 +120,7 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
             try {
                 setLoading(true);
                 setPlayersError(null);
-                const playersData = await fetchPlayers();
+                const playersData = await fetchActivePlayers();
                 setPlayers(playersData);
             } catch (error) {
                 console.error('Error loading players:', error);

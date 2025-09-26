@@ -46,8 +46,32 @@ export default function AuthCallbackPage() {
                 localStorage.removeItem('oauth_lang');
 
                 // Small delay to ensure session is fully persisted
-                setTimeout(() => {
-                    router.push(`/${lang}/matches`);
+                setTimeout(async () => {
+                    // Check if user needs profile setup
+                    try {
+                        const { data: profile, error: profileError } = await supabase
+                            .from("profiles")
+                            .select("first_name, last_name, terms_accepted, profile_claim_status")
+                            .eq("id", session.user.id)
+                            .single();
+
+                        if (!profileError && profile) {
+                            const needsSetup = !profile.first_name ||
+                                !profile.last_name ||
+                                !profile.terms_accepted ||
+                                profile.profile_claim_status === "pending";
+
+                            if (needsSetup) {
+                                router.push(`/${lang}/auth/profile-setup`);
+                                return;
+                            }
+                        }
+
+                        router.push(`/${lang}/matches`);
+                    } catch (err) {
+                        // If profile check fails, redirect to matches anyway
+                        router.push(`/${lang}/matches`);
+                    }
                 }, 100);
             } else if (event === 'SIGNED_OUT') {
                 setError('Authentication was cancelled or failed');
@@ -81,7 +105,32 @@ export default function AuthCallbackPage() {
                     if (session) {
                         const pathSegments = window.location.pathname.split('/');
                         const lang = pathSegments[1] || 'en';
-                        router.push(`/${lang}/matches`);
+
+                        // Check if user needs profile setup
+                        try {
+                            const { data: profile, error: profileError } = await supabase
+                                .from("profiles")
+                                .select("first_name, last_name, terms_accepted, profile_claim_status")
+                                .eq("id", session.user.id)
+                                .single();
+
+                            if (!profileError && profile) {
+                                const needsSetup = !profile.first_name ||
+                                    !profile.last_name ||
+                                    !profile.terms_accepted ||
+                                    profile.profile_claim_status === "pending";
+
+                                if (needsSetup) {
+                                    router.push(`/${lang}/auth/profile-setup`);
+                                    return;
+                                }
+                            }
+
+                            router.push(`/${lang}/matches`);
+                        } catch (err) {
+                            // If profile check fails, redirect to matches anyway
+                            router.push(`/${lang}/matches`);
+                        }
                     } else {
                         setError('No authentication data found. Please try signing in again.');
                         setLoading(false);

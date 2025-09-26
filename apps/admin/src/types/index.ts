@@ -129,7 +129,6 @@ export interface Player {
   hand: string;
   notes?: string;
   lastMatchDate?: string;
-  fatigueLevel?: number;
   injuryStatus?: string;
   seasonalForm?: any;
 }

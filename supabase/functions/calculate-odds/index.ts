@@ -23,7 +23,6 @@ interface PlayerOddsData {
     hardCourt?: number;
     clayCourt?: number;
     grassCourt?: number;
-    indoor?: number;
   };
   aggressiveness: number;
   stamina: number;
@@ -33,7 +32,6 @@ interface PlayerOddsData {
   club: string;
   notes?: string;
   lastMatchDate?: string;
-  fatigueLevel?: number;
   injuryStatus?: "healthy" | "minor" | "major";
   seasonalForm?: number;
   headToHeadRecord?: {
@@ -46,7 +44,7 @@ interface PlayerOddsData {
 }
 
 interface MatchContext {
-  surface: "Hard Court" | "Clay Court" | "Grass Court" | "Indoor";
+  surface: "Hard Court" | "Clay Court" | "Grass Court";
 }
 
 interface OddsResult {
@@ -62,7 +60,6 @@ interface OddsResult {
     experienceAdvantage: number;
     momentumAdvantage: number;
     headToHeadAdvantage: number;
-    fatigueAdvantage: number;
   };
   recommendations: string[];
 }
@@ -92,7 +89,6 @@ function calculateOdds(
   player1Score += factors.headToHeadAdvantage * 0.2; // Increased from 0.12 to 0.20
   player1Score += factors.experienceAdvantage * 0.05; // Reduced from 0.06 to 0.05
   player1Score += factors.momentumAdvantage * 0.03; // Reduced from 0.04 to 0.03
-  player1Score += factors.fatigueAdvantage * 0.02; // Kept the same
 
   // Add uncertainty factor to prevent extreme results
   const uncertaintyFactor = 0.05; // 5% uncertainty
@@ -152,7 +148,6 @@ function calculateFactors(
       player2,
       h2hRecord
     ),
-    fatigueAdvantage: calculateFatigueAdvantage(player1, player2),
   };
 }
 
@@ -235,8 +230,6 @@ function calculateSurfaceAdvantage(
         return player.surfaceWinRates.clayCourt || 0.5;
       case "Grass Court":
         return player.surfaceWinRates.grassCourt || 0.5;
-      case "Indoor":
-        return player.surfaceWinRates.indoor || 0.5;
       default:
         return 0.5;
     }
@@ -275,17 +268,6 @@ function calculateHeadToHeadAdvantage(
   }
   const h2hAdvantage = (p1H2HWinRate - 0.5) * 2.0 + recentBonus; // Increased from 1.5 to 2.0
   return Math.tanh(h2hAdvantage);
-}
-
-function calculateFatigueAdvantage(
-  player1: PlayerOddsData,
-  player2: PlayerOddsData
-): number {
-  const p1Fatigue = player1.fatigueLevel || 0;
-  const p2Fatigue = player2.fatigueLevel || 0;
-
-  const fatigueDiff = p2Fatigue - p1Fatigue;
-  return Math.tanh(fatigueDiff * 0.1);
 }
 
 function calculateExperienceAdvantage(
@@ -408,14 +390,6 @@ function generateRecommendations(
     recommendations.push(
       `${inForm.firstName} in good form (${recentWins}/5 recent wins)`
     );
-  }
-
-  if (Math.abs(factors.fatigueAdvantage) > 0.05) {
-    const fresher = factors.fatigueAdvantage > 0 ? player1 : player2;
-    const fatigue = fresher.fatigueLevel || 0;
-    if (fatigue < 3) {
-      recommendations.push(`${fresher.firstName} appears well-rested`);
-    }
   }
 
   return recommendations.slice(0, 3);
@@ -595,8 +569,7 @@ serve(async (req) => {
           surface: match.tournaments.surface as
             | "Hard Court"
             | "Clay Court"
-            | "Grass Court"
-            | "Indoor",
+            | "Grass Court",
         };
 
         // Fetch head-to-head record

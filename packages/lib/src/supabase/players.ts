@@ -23,9 +23,13 @@ function mapPlayer(row: any): Player {
     hand: row.hand,
     notes: row.notes,
     lastMatchDate: row.last_match_date,
-    fatigueLevel: row.fatigue_level,
     injuryStatus: row.injury_status,
     seasonalForm: row.seasonal_form,
+    isActive: row.is_active,
+    isHidden: row.is_hidden,
+    isDemoPlayer: row.is_demo_player,
+    claimedByUserId: row.claimed_by_user_id,
+    claimedAt: row.claimed_at,
   };
 }
 
@@ -49,9 +53,13 @@ function toDbPlayer(player: Partial<Player>): any {
     hand: player.hand,
     notes: player.notes,
     last_match_date: player.lastMatchDate,
-    fatigue_level: player.fatigueLevel,
     injury_status: player.injuryStatus,
     seasonal_form: player.seasonalForm,
+    is_active: player.isActive,
+    is_hidden: player.isHidden,
+    is_demo_player: player.isDemoPlayer,
+    claimed_by_user_id: player.claimedByUserId,
+    claimed_at: player.claimedAt,
   };
 
   // Only include id if it's not empty (let DB generate UUID if empty)
@@ -166,6 +174,29 @@ export async function updatePlayer(id: string, updates: Partial<Player>) {
 export async function deletePlayer(id: string) {
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
   if (error) throw error;
+}
+
+export async function updatePlayerStatus(id: string, isActive: boolean) {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({ is_active: isActive })
+    .eq("id", id)
+    .select();
+  if (error) throw error;
+  return data?.[0] as unknown as Player;
+}
+
+export async function fetchActivePlayers() {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("is_active", true);
+  if (error) {
+    console.error("[fetchActivePlayers] Supabase error:", error);
+    throw error;
+  }
+  const mapped = (data ?? []).map(mapPlayer);
+  return mapped;
 }
 
 /**

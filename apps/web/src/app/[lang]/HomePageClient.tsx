@@ -8,6 +8,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileClaim } from '@/hooks/useProfileClaim';
 
 interface Dictionary {
     navigation: {
@@ -50,6 +51,7 @@ interface HomePageClientProps {
 export default function HomePageClient({ dict, lang }: HomePageClientProps) {
     const router = useRouter();
     const { user } = useAuth();
+    const { needsProfileSetup, loading: profileLoading } = useProfileClaim(user?.id || null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -77,8 +79,8 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
         const checkAuth = async () => {
             try {
                 if (user) {
-                    // Use window.location for immediate redirect to avoid potential routing issues
-                    window.location.href = `/${lang}/matches`;
+                    // Redirect to matches page (profile setup will be handled separately)
+                    router.push(`/${lang}/matches`);
                     return;
                 }
 
@@ -92,7 +94,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
         const timer = setTimeout(checkAuth, 300);
 
         return () => clearTimeout(timer);
-    }, [router, lang, user]);
+    }, [router, lang, user, needsProfileSetup]);
 
     if (loading) {
         return (
@@ -133,7 +135,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                                 <Button
-                                    onClick={() => router.push(`/${lang}/auth/signin`)}
+                                    onClick={() => router.push(`/${lang}/auth/signin?tab=register`)}
                                     size="lg"
                                     className="text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg font-medium"
                                 >
@@ -486,7 +488,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </div>
 
                             <Button
-                                onClick={() => router.push(`/${lang}/auth/signin`)}
+                                onClick={() => router.push(`/${lang}/auth/signin?tab=register`)}
                                 size="lg"
                                 className="text-xl px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-xl"
                             >

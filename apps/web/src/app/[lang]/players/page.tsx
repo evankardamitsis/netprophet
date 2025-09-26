@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Player } from '@netprophet/lib';
-import { fetchPlayers } from '@netprophet/lib';
+import { fetchActivePlayers } from '@netprophet/lib';
 import { PlayerCard } from '@/components/players/PlayerCard';
 import { useDictionary } from '@/context/DictionaryContext';
 import { Card, CardContent } from '@netprophet/ui';
@@ -19,7 +19,7 @@ export default function PlayersPage() {
         const loadPlayers = async () => {
             try {
                 setLoading(true);
-                const fetchedPlayers = await fetchPlayers();
+                const fetchedPlayers = await fetchActivePlayers();
                 setPlayers(fetchedPlayers);
             } catch (error) {
                 console.error('Error loading players:', error);

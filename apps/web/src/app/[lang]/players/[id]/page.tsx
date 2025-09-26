@@ -290,14 +290,6 @@ export default function PlayerDetailPage() {
                                     </div>
                                 )}
 
-                                {player.fatigueLevel !== undefined && (
-                                    <div>
-                                        <div className="text-xs sm:text-sm text-gray-400 mb-1">
-                                            {dict?.players?.fatigueLevel || 'Fatigue Level'}
-                                        </div>
-                                        <div className="text-sm sm:text-base text-white">{player.fatigueLevel}/10</div>
-                                    </div>
-                                )}
                             </div>
                         </CardContent>
                     </Card>

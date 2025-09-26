@@ -29,8 +29,7 @@ export default function NewPlayerPage() {
         surfaceWinRates: {
             hardCourt: 0.5,
             clayCourt: 0.5,
-            grassCourt: 0.5,
-            indoor: 0.5
+            grassCourt: 0.5
         },
         aggressiveness: 5,
         stamina: 5,
@@ -39,7 +38,6 @@ export default function NewPlayerPage() {
         hand: 'right',
         notes: '',
         lastMatchDate: '',
-        fatigueLevel: 0,
         injuryStatus: 'healthy',
         seasonalForm: 0.5
     });
@@ -63,7 +61,7 @@ export default function NewPlayerPage() {
         setPlayer(prev => ({ ...prev, [field]: value }));
     };
 
-    const updateSurfaceWinRate = (surface: 'hardCourt' | 'clayCourt' | 'grassCourt' | 'indoor', value: number) => {
+    const updateSurfaceWinRate = (surface: 'hardCourt' | 'clayCourt' | 'grassCourt', value: number) => {
         setPlayer(prev => ({
             ...prev,
             surfaceWinRates: {
@@ -346,17 +344,6 @@ export default function NewPlayerPage() {
                             />
                         </div>
 
-                        <div>
-                            <Label htmlFor="fatigueLevel">Επίπεδο Κούρασης (0-10)</Label>
-                            <Input
-                                id="fatigueLevel"
-                                type="number"
-                                min="0"
-                                max="10"
-                                value={player.fatigueLevel || 0}
-                                onChange={(e) => updatePlayer('fatigueLevel', parseInt(e.target.value) || 0)}
-                            />
-                        </div>
 
                         <div>
                             <Label htmlFor="injuryStatus">Κατάσταση Τραυματισμού</Label>
@@ -396,7 +383,6 @@ export default function NewPlayerPage() {
                                     <SelectItem value="Hard Court">Hard Court</SelectItem>
                                     <SelectItem value="Clay Court">Clay Court</SelectItem>
                                     <SelectItem value="Grass Court">Grass Court</SelectItem>
-                                    <SelectItem value="Indoor">Indoor</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -407,11 +393,23 @@ export default function NewPlayerPage() {
                                 <Input
                                     id="hardCourtWinRate"
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.hardCourt || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('hardCourt', parseFloat(e.target.value) || 0.5)}
+                                    max="100"
+                                    placeholder="50"
+                                    value={player.surfaceWinRates?.hardCourt ? Math.round(player.surfaceWinRates.hardCourt * 100) : ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            // Allow empty field
+                                            return;
+                                        }
+                                        const percentage = parseFloat(value);
+                                        if (!isNaN(percentage)) {
+                                            const decimal = Math.max(0, Math.min(100, percentage)) / 100;
+                                            updateSurfaceWinRate('hardCourt', decimal);
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -420,11 +418,23 @@ export default function NewPlayerPage() {
                                 <Input
                                     id="clayCourtWinRate"
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.clayCourt || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('clayCourt', parseFloat(e.target.value) || 0.5)}
+                                    max="100"
+                                    placeholder="50"
+                                    value={player.surfaceWinRates?.clayCourt ? Math.round(player.surfaceWinRates.clayCourt * 100) : ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            // Allow empty field
+                                            return;
+                                        }
+                                        const percentage = parseFloat(value);
+                                        if (!isNaN(percentage)) {
+                                            const decimal = Math.max(0, Math.min(100, percentage)) / 100;
+                                            updateSurfaceWinRate('clayCourt', decimal);
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -433,26 +443,26 @@ export default function NewPlayerPage() {
                                 <Input
                                     id="grassCourtWinRate"
                                     type="number"
-                                    step="0.01"
+                                    step="1"
                                     min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.grassCourt || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('grassCourt', parseFloat(e.target.value) || 0.5)}
+                                    max="100"
+                                    placeholder="50"
+                                    value={player.surfaceWinRates?.grassCourt ? Math.round(player.surfaceWinRates.grassCourt * 100) : ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            // Allow empty field
+                                            return;
+                                        }
+                                        const percentage = parseFloat(value);
+                                        if (!isNaN(percentage)) {
+                                            const decimal = Math.max(0, Math.min(100, percentage)) / 100;
+                                            updateSurfaceWinRate('grassCourt', decimal);
+                                        }
+                                    }}
                                 />
                             </div>
 
-                            <div>
-                                <Label htmlFor="indoorWinRate">Indoor Win Rate (%)</Label>
-                                <Input
-                                    id="indoorWinRate"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    max="1"
-                                    value={player.surfaceWinRates?.indoor || 0.5}
-                                    onChange={(e) => updateSurfaceWinRate('indoor', parseFloat(e.target.value) || 0.5)}
-                                />
-                            </div>
                         </div>
                     </CardContent>
                 </Card>

@@ -57,11 +57,13 @@ export type { Profile } from "./supabase/profiles";
 // Player management
 export {
   fetchPlayers,
+  fetchActivePlayers,
   fetchPlayerById,
   insertPlayer,
   bulkInsertPlayers,
   updatePlayer,
   deletePlayer,
+  updatePlayerStatus,
   updatePlayerStatsFromMatchResult,
   reversePlayerStatsFromMatchResult,
 } from "./supabase/players";

@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { WarningModal } from '@/components/ui/warning-modal';
 import Papa, { ParseError, ParseResult } from 'papaparse';
 import { Player } from '@netprophet/lib/types/player';
-import { bulkInsertPlayers, fetchPlayers, fetchPlayersPaginated, deletePlayer } from '@netprophet/lib/supabase/players';
+import { bulkInsertPlayers, fetchPlayers, fetchPlayersPaginated, deletePlayer, updatePlayerStatus } from '@netprophet/lib/supabase/players';
 import { supabase } from '@netprophet/lib';
 import {
     useReactTable,
@@ -97,6 +97,18 @@ export default function PlayersPage() {
         setDeletingPlayer(player);
         setIsDeleteModalOpen(true);
     }, []);
+
+    const handleToggleStatus = useCallback(async (player: Player) => {
+        try {
+            await updatePlayerStatus(player.id, !player.isActive);
+            // Refetch players with pagination
+            await fetchPlayersData(currentPage);
+            toast.success(`Player ${!player.isActive ? 'activated' : 'deactivated'} successfully!`);
+        } catch (error) {
+            console.error('Error toggling player status:', error);
+            toast.error('Failed to update player status');
+        }
+    }, [currentPage, fetchPlayersData]);
 
     const columns = useMemo<ColumnDef<Player, any>[]>(
         () => [
@@ -208,6 +220,35 @@ export default function PlayersPage() {
                 enableSorting: true,
             },
             {
+                accessorKey: 'isActive',
+                header: 'Κατάσταση',
+                cell: ({ row }) => {
+                    const isActive = row.original.isActive;
+                    return (
+                        <div className="flex items-center space-x-2">
+                            <Badge
+                                variant={isActive ? "default" : "secondary"}
+                                className={isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                            >
+                                {isActive ? 'Ενεργός' : 'Ανενεργός'}
+                            </Badge>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleStatus(row.original);
+                                }}
+                                className="text-xs"
+                            >
+                                {isActive ? 'Απενεργοποίηση' : 'Ενεργοποίηση'}
+                            </Button>
+                        </div>
+                    );
+                },
+                enableSorting: true,
+            },
+            {
                 id: 'actions',
                 header: 'Ενέργειες',
                 cell: ({ row }) => (
@@ -235,7 +276,7 @@ export default function PlayersPage() {
                 enableSorting: false,
             },
         ],
-        [handleEdit, handleDelete]
+        [handleEdit, handleDelete, handleToggleStatus]
     );
 
     const table = useReactTable({
@@ -695,6 +736,28 @@ export default function PlayersPage() {
                                                 {player.last5.slice(0, 3).join(', ')}
                                                 {player.last5.length > 3 && '...'}
                                             </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-500">Status:</span>
+                                            <div className="flex items-center space-x-2">
+                                                <Badge
+                                                    variant={player.isActive ? "default" : "secondary"}
+                                                    className={player.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                                                >
+                                                    {player.isActive ? 'Ενεργός' : 'Ανενεργός'}
+                                                </Badge>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleToggleStatus(player);
+                                                    }}
+                                                    className="text-xs"
+                                                >
+                                                    {player.isActive ? 'Απενεργοποίηση' : 'Ενεργοποίηση'}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </div>
 

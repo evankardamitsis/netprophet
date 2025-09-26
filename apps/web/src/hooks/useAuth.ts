@@ -10,6 +10,31 @@ export function useAuth() {
   const [pendingUser, setPendingUser] = useState<User | null>(null);
   const isInitialized = useRef(false);
 
+  // Function to check for automatic player lookup
+  const checkPlayerLookup = async (userId: string) => {
+    try {
+      const { data, error } = await supabase.rpc(
+        "check_and_claim_player_for_user",
+        {
+          user_id: userId,
+        }
+      );
+
+      if (error) {
+        console.error("Player lookup error:", error);
+        return;
+      }
+
+      if (data?.success && data?.status === "auto_claimed") {
+        console.log("Player automatically claimed:", data);
+        // Optionally refresh the page or update UI
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error checking player lookup:", error);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -26,22 +51,8 @@ export function useAuth() {
         if (error) {
           console.error("useAuth: Session error:", error);
         } else if (session) {
-          // Check if user has 2FA enabled before setting user
-          try {
-            const is2FAEnabled = await TwoFactorAuthService.isTwoFactorEnabled(
-              session.user.id
-            );
-            if (!is2FAEnabled) {
-              setSession(session);
-              setUser(session.user);
-            } else {
-              // User has 2FA enabled, don't set user until 2FA is completed
-              setSession(null);
-              setUser(null);
-            }
-          } catch (error) {
-            console.error("useAuth: Error checking 2FA status:", error);
-            // If we can't check 2FA status, assume no 2FA and set user
+          // Only check 2FA if we're not already in a 2FA flow
+          if (!requiresTwoFactor) {
             setSession(session);
             setUser(session.user);
           }
@@ -69,16 +80,29 @@ export function useAuth() {
 
       if (!mounted) return;
 
-      // Don't set user/session if 2FA is required and not completed
-      if (requiresTwoFactor) {
-        // Ensure user and session are cleared during 2FA flow
+      // Handle different auth events
+      if (event === "SIGNED_IN" && session) {
+        // Only clear user/session if 2FA is required
+        if (requiresTwoFactor) {
+          setUser(null);
+          setSession(null);
+          return;
+        }
+        // Normal sign in - set user and session
+        setSession(session);
+        setUser(session.user);
+
+        // Check for automatic player lookup after successful login
+        checkPlayerLookup(session.user.id);
+      } else if (event === "SIGNED_OUT") {
         setUser(null);
         setSession(null);
-        return;
+      } else if (event === "TOKEN_REFRESHED" && session && !requiresTwoFactor) {
+        // Token refresh - only update if not in 2FA flow
+        setSession(session);
+        setUser(session.user);
       }
 
-      setSession(session);
-      setUser(session?.user ?? null);
       setLoading(false);
     });
 
