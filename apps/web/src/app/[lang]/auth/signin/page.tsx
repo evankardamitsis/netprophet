@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+// Force dynamic rendering to avoid build-time context issues
+export const dynamic = 'force-dynamic';
 import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';

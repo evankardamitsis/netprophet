@@ -33,7 +33,7 @@ export function PromotionalHero({
     // Promotional content items - Mixed layout
     const promotionalItems = [
         // Featured Match 1
-        ...(featuredMatches[0] ? [{
+        ...(featuredMatches && featuredMatches[0] ? [{
             type: 'match',
             id: featuredMatches[0].id,
             title: featuredMatches[0].tournament || 'Tournament',
@@ -64,7 +64,7 @@ export function PromotionalHero({
             secondaryActionText: ''
         },
         // Featured Match 2
-        ...(featuredMatches[1] ? [{
+        ...(featuredMatches && featuredMatches[1] ? [{
             type: 'match',
             id: featuredMatches[1].id,
             title: featuredMatches[1].tournament || 'Tournament',
@@ -95,7 +95,7 @@ export function PromotionalHero({
             secondaryActionText: ''
         },
         // Featured Match 3
-        ...(featuredMatches[2] ? [{
+        ...(featuredMatches && featuredMatches[2] ? [{
             type: 'match',
             id: featuredMatches[2].id,
             title: featuredMatches[2].tournament || 'Tournament',
@@ -111,17 +111,31 @@ export function PromotionalHero({
             secondaryAction: null,
             secondaryActionText: ''
         }] : []),
-        // Tournament results - Tennis themed
+        // All Tournament Results - Enhanced promotion
         {
             type: 'promo',
-            id: 'tournament-results',
-            title: lang === 'el' ? 'Αποτελέσματα' : 'Tournament Results',
-            subtitle: lang === 'el' ? 'Δες τα τελευταία αποτελέσματα' : 'View Latest Results',
-            time: lang === 'el' ? 'Ενημερωμένα' : 'Updated',
+            id: 'all-tournament-results',
+            title: lang === 'el' ? 'Όλα τα Αποτελέσματα' : 'All Tournament Results',
+            subtitle: lang === 'el' ? 'Εξερεύνησε όλες τις διοργανώσεις' : 'Explore All Tournaments',
+            time: lang === 'el' ? 'Πλήρης Ιστορικό' : 'Complete History',
             players: [],
             image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHM4ZzlyODZ2ZjZmNDJxMGRxYXAyY2liemUzdThnODJpaGVhbXc3OSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/tDQlA2505j56E2YEv8/giphy.gif', // Tennis tournament results animation
             action: () => router.push(`/${lang}/tournaments`),
-            actionText: lang === 'el' ? 'Δες Αποτελέσματα' : 'View Results',
+            actionText: lang === 'el' ? 'Όλα τα Αποτελέσματα' : 'All Results',
+            secondaryAction: null,
+            secondaryActionText: ''
+        },
+        // Player Statistics - Tennis themed
+        {
+            type: 'promo',
+            id: 'player-stats',
+            title: lang === 'el' ? 'Στατιστικά Παικτών' : 'Player Statistics',
+            subtitle: lang === 'el' ? 'Ανάλυση απόδοσης παικτών' : 'Player Performance Analysis',
+            time: lang === 'el' ? 'Λεπτομερή Στατιστικά' : 'Detailed Stats',
+            players: [],
+            image: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDRtc3JqNzd3MjFsa25meW4wNXh1Y3BsYXUyaXU4ZmQ0OXRqcHF5OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7Oifk90VrCdNe/giphy.gif', // Tennis stats animation
+            action: () => router.push(`/${lang}/players`),
+            actionText: lang === 'el' ? 'Δες Στατιστικά' : 'View Stats',
             secondaryAction: null,
             secondaryActionText: ''
         }
@@ -213,9 +227,7 @@ export function PromotionalHero({
         };
     }, [isPaused, promotionalItems.length, cardsPerView]);
 
-    if (!featuredMatches || featuredMatches.length === 0) {
-        return null;
-    }
+    // Remove early return to keep promo content visible even without featured matches
 
     return (
         <div className="w-full mb-8">
