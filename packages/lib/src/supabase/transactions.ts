@@ -1,8 +1,8 @@
-import { supabase } from './client';
-import type { Database } from '../types/database';
+import { supabase } from "./client";
+import type { Database } from "../types/database";
 
-type Transaction = Database['public']['Tables']['transactions']['Row'];
-type TransactionInsert = Database['public']['Tables']['transactions']['Insert'];
+type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
+type TransactionInsert = Database["public"]["Tables"]["transactions"]["Insert"];
 
 export interface TransactionWithDetails extends Transaction {
   // Add any additional fields if needed
@@ -12,15 +12,27 @@ export class TransactionsService {
   /**
    * Get recent transactions for the current user
    */
-  static async getRecentTransactions(limit: number = 10): Promise<TransactionWithDetails[]> {
+  static async getRecentTransactions(
+    limit: number = 10
+  ): Promise<TransactionWithDetails[]> {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
     const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) {
-      console.error('Error fetching transactions:', error);
+      console.error("Error fetching transactions:", error);
       throw new Error(`Failed to fetch transactions: ${error.message}`);
     }
 
@@ -36,12 +48,22 @@ export class TransactionsService {
     totalLosses: number;
     totalBets: number;
   }> {
+    // Get the current user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
     const { data, error } = await supabase
-      .from('transactions')
-      .select('type, amount');
+      .from("transactions")
+      .select("type, amount")
+      .eq("user_id", user.id);
 
     if (error) {
-      console.error('Error fetching transaction stats:', error);
+      console.error("Error fetching transaction stats:", error);
       return {
         totalTransactions: 0,
         totalWinnings: 0,
@@ -53,13 +75,13 @@ export class TransactionsService {
     const transactions = data || [];
     const totalTransactions = transactions.length;
     const totalWinnings = transactions
-      .filter(t => t.type === 'win')
+      .filter((t) => t.type === "win")
       .reduce((sum, t) => sum + t.amount, 0);
     const totalLosses = transactions
-      .filter(t => t.type === 'loss')
+      .filter((t) => t.type === "loss")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     const totalBets = transactions
-      .filter(t => t.type === 'bet')
+      .filter((t) => t.type === "bet")
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
     return {
@@ -73,15 +95,17 @@ export class TransactionsService {
   /**
    * Create a new transaction
    */
-  static async createTransaction(transactionData: Omit<TransactionInsert, 'user_id'>): Promise<Transaction> {
+  static async createTransaction(
+    transactionData: Omit<TransactionInsert, "user_id">
+  ): Promise<Transaction> {
     const { data, error } = await supabase
-      .from('transactions')
+      .from("transactions")
       .insert(transactionData)
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating transaction:', error);
+      console.error("Error creating transaction:", error);
       throw new Error(`Failed to create transaction: ${error.message}`);
     }
 

@@ -452,6 +452,7 @@ export class BetsService {
     const { data, error } = await supabase
       .from("bets")
       .select("*")
+      .eq("user_id", sessionData.session.user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
