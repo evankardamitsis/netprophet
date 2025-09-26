@@ -52,11 +52,8 @@ export function useEmail(): EmailHook {
       setError(null);
 
       try {
-        const result = await emailService.send2FAEmail(
-          userEmail,
-          verificationCode,
-          language
-        );
+        // 2FA email functionality removed - using Supabase native features
+        const result = false;
         if (!result) {
           setError("Failed to send 2FA email");
           return false;

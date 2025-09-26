@@ -17,7 +17,7 @@ interface TestResult {
 
 export default function EmailTestPage() {
     const [email, setEmail] = useState('');
-    const [template, setTemplate] = useState('2fa');
+    const [template, setTemplate] = useState('promotional');
     const [language, setLanguage] = useState('en');
     const [variables, setVariables] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -72,12 +72,6 @@ export default function EmailTestPage() {
 
     const getVariableExamples = () => {
         switch (template) {
-            case '2fa':
-                return JSON.stringify({
-                    code: '123456',
-                    user_email: email,
-                    expiry_minutes: '10'
-                }, null, 2);
             case 'promotional':
                 return JSON.stringify({
                     featuredMatches: [
@@ -144,7 +138,6 @@ export default function EmailTestPage() {
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="2fa">2FA Verification</SelectItem>
                                     <SelectItem value="promotional">Promotional</SelectItem>
                                     <SelectItem value="winnings">Winnings</SelectItem>
                                     <SelectItem value="admin">Admin Alert</SelectItem>
@@ -247,13 +240,6 @@ export default function EmailTestPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <h4 className="font-medium text-gray-900 mb-2">2FA Template</h4>
-                            <p className="text-gray-600">Used for two-factor authentication verification codes.</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Variables: code, user_email, expiry_minutes
-                            </p>
-                        </div>
                         <div>
                             <h4 className="font-medium text-gray-900 mb-2">Promotional Template</h4>
                             <p className="text-gray-600">Used for marketing and promotional content.</p>

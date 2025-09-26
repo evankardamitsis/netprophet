@@ -172,7 +172,6 @@ export default function EmailTemplatesPage() {
             <Tabs defaultValue="all" className="space-y-6">
                 <TabsList>
                     <TabsTrigger value="all">All Templates ({templates.length})</TabsTrigger>
-                    <TabsTrigger value="2fa">2FA ({templates.filter(t => t.type === '2fa').length})</TabsTrigger>
                     <TabsTrigger value="promotional">Promotional ({templates.filter(t => t.type === 'promotional').length})</TabsTrigger>
                     <TabsTrigger value="winnings">Winnings ({templates.filter(t => t.type === 'winnings').length})</TabsTrigger>
                     <TabsTrigger value="admin">Admin ({templates.filter(t => t.type === 'admin').length})</TabsTrigger>

@@ -95,6 +95,46 @@ export default function PlayerDetailPage() {
         }
     };
 
+    const getSurfaceTitle = (surface: string) => {
+        const surfaceLower = surface.toLowerCase().trim();
+        switch (surfaceLower) {
+            case 'hard':
+            case 'hard court':
+            case 'hardcourt':
+                return 'The Hardcourt Powerhouse';
+            case 'clay':
+            case 'clay court':
+            case 'claycourt':
+                return 'The Clay Specialist';
+            case 'grass':
+            case 'grass court':
+            case 'grasscourt':
+                return 'The Green Finesse';
+            default:
+                return 'The Tennis Player';
+        }
+    };
+
+    const getSurfaceTitleColor = (surface: string) => {
+        const surfaceLower = surface.toLowerCase().trim();
+        switch (surfaceLower) {
+            case 'hard':
+            case 'hard court':
+            case 'hardcourt':
+                return 'bg-blue-500/20 text-blue-300 border border-blue-500/30';
+            case 'clay':
+            case 'clay court':
+            case 'claycourt':
+                return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+            case 'grass':
+            case 'grass court':
+            case 'grasscourt':
+                return 'bg-green-500/20 text-green-300 border border-green-500/30';
+            default:
+                return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+        }
+    };
+
     return (
         <div className="container mx-auto px-4 py-8">
             {/* Back Button */}
@@ -118,7 +158,13 @@ export default function PlayerDetailPage() {
                             <span className="capitalize">{dict?.players?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.players?.handed || 'handed'}</span>
                             <span className="hidden sm:inline">•</span>
                             <span className={`font-bold ${getNTRPColor(player.ntrpRating)}`}>
-                                NTRP {player.ntrpRating}
+                                NTRP {player.ntrpRating.toFixed(1)}
+                            </span>
+                        </div>
+                        {/* Surface Title */}
+                        <div className="mt-2">
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${getSurfaceTitleColor(player.surfacePreference)}`}>
+                                {getSurfaceTitle(player.surfacePreference)}
                             </span>
                         </div>
                     </div>
@@ -185,6 +231,104 @@ export default function PlayerDetailPage() {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Surface Statistics */}
+            <div className="mb-6 sm:mb-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
+                    {dict?.players?.surfaceStats || 'Surface Statistics'}
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                    {/* Hard Court Stats */}
+                    <Card className="bg-slate-900/50 border-slate-700">
+                        <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-lg font-semibold text-white">Hard Court</h3>
+                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Win Rate:</span>
+                                    <span className="text-white font-semibold">
+                                        {player.hardWinRate ? `${player.hardWinRate}%` : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Record:</span>
+                                    <span className="text-white">
+                                        {player.hardWins || 0}-{player.hardLosses || 0}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Matches:</span>
+                                    <span className="text-white">
+                                        {player.hardMatches || 0}
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Clay Court Stats */}
+                    <Card className="bg-slate-900/50 border-slate-700">
+                        <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-lg font-semibold text-white">Clay Court</h3>
+                                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Win Rate:</span>
+                                    <span className="text-white font-semibold">
+                                        {player.clayWinRate ? `${player.clayWinRate}%` : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Record:</span>
+                                    <span className="text-white">
+                                        {player.clayWins || 0}-{player.clayLosses || 0}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Matches:</span>
+                                    <span className="text-white">
+                                        {player.clayMatches || 0}
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Grass Court Stats */}
+                    <Card className="bg-slate-900/50 border-slate-700">
+                        <CardContent className="p-4 sm:p-6">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-lg font-semibold text-white">Grass Court</h3>
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            </div>
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Win Rate:</span>
+                                    <span className="text-white font-semibold">
+                                        {player.grassWinRate ? `${player.grassWinRate}%` : 'N/A'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Record:</span>
+                                    <span className="text-white">
+                                        {player.grassWins || 0}-{player.grassLosses || 0}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">Matches:</span>
+                                    <span className="text-white">
+                                        {player.grassMatches || 0}
+                                    </span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
 
             {/* Detailed Stats */}
@@ -262,7 +406,7 @@ export default function PlayerDetailPage() {
             </div>
 
             {/* Additional Info */}
-            {(player.notes || player.injuryStatus || player.fatigueLevel !== undefined) && (
+            {(player.notes || player.injuryStatus !== undefined) && (
                 <div className="mt-6 sm:mt-8">
                     <Card className="bg-slate-900/50 border-slate-700">
                         <CardContent className="p-4 sm:p-6">

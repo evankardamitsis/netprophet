@@ -18,7 +18,7 @@ interface EmailData {
   template: string;
   variables?: Record<string, any>;
   language?: "en" | "el";
-  type: "promotional" | "notification" | "admin" | "2fa";
+  type: "promotional" | "notification" | "admin";
 }
 
 interface EmailTemplate {
@@ -235,25 +235,18 @@ serve(async (req) => {
       }
     }
 
-    // Check permissions based on email type
-    if (type === "2fa") {
-      // 2FA emails can be sent without full authentication
-      // This is needed during the 2FA flow when user is not fully authenticated yet
-      console.log("Sending 2FA email to:", to);
-    } else {
-      // Other email types require admin privileges
-      if (!isAdmin) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "Admin privileges required for this email type",
-          }),
-          {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
+    // Check permissions - all email types require admin privileges
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Admin privileges required for this email type",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Get template from database

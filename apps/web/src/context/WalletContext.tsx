@@ -102,7 +102,7 @@ export function useWallet() {
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
     const { dict, lang } = useDictionary();
-    const { user, requiresTwoFactor } = useAuth();
+    const { user } = useAuth();
     const { sendWinningsEmail } = useEmail();
     const [wallet, setWallet] = useState<UserWallet>(() => {
         const storedWallet = loadFromSessionStorage(SESSION_KEYS.WALLET, defaultWallet);
@@ -142,6 +142,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             if (!user) {
                 setIsWalletSyncing(false);
                 return;
+            }
+
+            // Clear any cached data first to ensure fresh data
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem(SESSION_KEYS.WALLET);
             }
 
             // Get user profile from database
@@ -210,7 +215,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     const loadTransactions = useCallback(async () => {
         try {
+            // Ensure user is authenticated before fetching transactions
+            if (!user) {
+                console.warn('User not authenticated. Cannot load transactions.');
+                return;
+            }
+
             const transactions = await TransactionsService.getRecentTransactions(10);
+            console.log('Loaded transactions for user:', user.id, transactions);
 
             if (transactions && transactions.length > 0) {
                 // Convert database transactions to local Transaction format
@@ -235,18 +247,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             console.error('Failed to load transactions:', error);
             toast.error(dict?.toast?.failedToLoadTransactions || 'Failed to load transactions');
         }
-    }, [dict?.toast?.failedToLoadTransactions]);
+    }, [dict?.toast?.failedToLoadTransactions, user]);
+
 
     // Load bet statistics and transactions from database on mount
     useEffect(() => {
         if (!user) {
             // For unauthenticated users, just load the default wallet state
             setWallet(defaultWallet);
-            return;
-        }
-
-        // Don't load data if 2FA is required (user is not fully authenticated yet)
-        if (requiresTwoFactor) {
             return;
         }
 
@@ -269,7 +277,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         };
 
         loadUserData();
-    }, [user, requiresTwoFactor, loadBetStats, loadTransactions, syncWalletWithDatabase]); // Include all dependencies
+    }, [user, loadBetStats, loadTransactions, syncWalletWithDatabase]); // Include all dependencies
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {

@@ -14,11 +14,10 @@
 - [x] **🔴 CRITICAL: Fix daily login streak functionality** - ✅ COMPLETED: Fixed database functions to always give 30 coins daily, removed streak requirement for daily rewards, fixed frontend logic to allow all users to claim rewards
 - [x] **🔴 CRITICAL: Complete transactional email system** - ✅ COMPLETED: Fixed logo loading with SVG text fallback, created all missing email templates (winnings, welcome, promotional), implemented complete transactional email system
 - [ ] **🔴 CRITICAL: Set up promotional email system** - Implement promotional email campaigns and user segmentation
-- [ ] **🔴 CRITICAL: Implement hidden players feature** - Set up system for hiding/showing players in match listings
-- [ ] **🔴 CRITICAL: Add player profile claim system** - Allow users to claim and customize their profile with name/surname after registration
+- [x] **🔴 CRITICAL: Implement hidden players feature** - ✅ COMPLETED: Set up system for hiding/showing players in match listings with active/inactive status
+- [x] **🔴 CRITICAL: Add player profile claim system** - ✅ COMPLETED: Allow users to claim and customize their profile with name/surname after registration, including Greeklish name matching
 - [ ] **🔴 CRITICAL: Fix PromotionalHero component disappearing** - PromotionalHero.tsx disappears when there are no upcoming matches, should show promotional content instead
-- [ ] **🔴 CRITICAL: Add "My Predictions" feature** - Allow users to view and track their prediction history
-- [ ] **🔴 CRITICAL: Disable live matches sidebar link** - Remove or disable the live matches link from the sidebar navigation
+- [x] **🔴 CRITICAL: Add "My Predictions" feature** - ✅ COMPLETED: Allow users to view and track their prediction history
 
 ## Admin Panel Improvements
 

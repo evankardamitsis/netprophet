@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/useAuth';
+import { useDictionary } from '@/context/DictionaryContext';
 import { createClient } from '@supabase/supabase-js';
 
 export type CoinPack = {
@@ -27,6 +28,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
     const [loading, setLoading] = useState(true);
     const { isProcessing, processPayment } = useStripePayment();
     const { user } = useAuth();
+    const { dict } = useDictionary();
 
     // Fetch coin packs from database
     useEffect(() => {
@@ -68,18 +70,18 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
             {/* Header */}
             <div className="text-center space-y-3">
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-                    Coin Top-Up Packs
+                    {dict.rewards.coinTopUpPacks}
                 </h3>
-                <p className="text-gray-400 text-md">Purchase coins to unlock powerful upgrades and boost your prediction performance</p>
+                <p className="text-gray-400 text-md">{dict.rewards.coinTopUpDescription}</p>
             </div>
 
             {loading ? (
                 <div className="text-center py-8">
-                    <div className="text-white/60">Loading coin packs...</div>
+                    <div className="text-white/60">{dict.rewards.loadingCoinPacks}</div>
                 </div>
             ) : coinPacks.length === 0 ? (
                 <div className="text-center py-8">
-                    <div className="text-white/60">No coin packs available at the moment.</div>
+                    <div className="text-white/60">{dict.rewards.noCoinPacks}</div>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-4">
@@ -105,7 +107,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
 
                                 {isBestValue && (
                                     <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-400 to-orange-500 text-white px-3 py-1 text-xs font-bold rounded-bl-xl shadow-lg">
-                                        ⭐ BEST VALUE
+                                        {dict.rewards.bestValue}
                                     </div>
                                 )}
                                 {pack.bonusCoins > 0 && (
@@ -129,7 +131,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                             <span className="text-base md:text-xl font-bold text-white">{pack.baseCoins.toLocaleString()}</span>
                                         </div>
                                         <div className="text-xs md:text-base font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                                            {totalCoins.toLocaleString()} Total
+                                            {totalCoins.toLocaleString()} {dict.rewards.total}
                                         </div>
                                     </div>
                                     <Button
@@ -154,7 +156,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                             : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-purple-500/25'
                                             } hover:scale-105 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed`}
                                     >
-                                        {!user ? 'Sign In to Buy' : isProcessing ? 'Processing...' : 'Buy Now'}
+                                        {!user ? dict.rewards.signInToBuy : isProcessing ? dict.rewards.processing : dict.rewards.buyNow}
                                     </Button>
                                 </CardContent>
                             </Card>

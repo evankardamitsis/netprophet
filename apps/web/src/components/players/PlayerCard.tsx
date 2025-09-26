@@ -68,7 +68,7 @@ export function PlayerCard({ player, className = '' }: PlayerCardProps) {
                         {player.firstName} {player.lastName}
                     </h3>
                     <div className={`text-sm font-bold ${getNTRPColor(player.ntrpRating)}`}>
-                        NTRP {player.ntrpRating}
+                        NTRP {player.ntrpRating.toFixed(1)}
                     </div>
                 </div>
 

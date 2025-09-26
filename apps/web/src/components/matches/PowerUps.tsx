@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { useWallet } from '@/context/WalletContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useDictionary } from '@/context/DictionaryContext';
 import { toast } from 'sonner';
 import { fetchPowerUps, purchasePowerUp, type PowerUp as DBPowerUp } from '@netprophet/lib';
 
@@ -29,6 +30,7 @@ interface PowerUpsProps {
 export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
     const { wallet, syncWalletWithDatabase } = useWallet();
     const { user } = useAuth();
+    const { dict } = useDictionary();
     const [purchasing, setPurchasing] = useState<string | null>(null);
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
@@ -53,7 +55,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                 setPowerUps(transformedPowerUps);
             } catch (error) {
                 console.error('Error loading power-ups:', error);
-                toast.error('Failed to load power-ups', {
+                toast.error(dict.rewards.failedToLoadPowerUps, {
                     duration: 4000,
                     position: 'bottom-right'
                 });
@@ -63,11 +65,11 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
         };
 
         loadPowerUps();
-    }, []);
+    }, [dict.rewards.failedToLoadPowerUps]);
 
     const handlePurchase = async (powerUp: PowerUp) => {
         if (!user) {
-            toast.error('Please sign in to purchase power-ups', {
+            toast.error(dict.rewards.pleaseSignIn, {
                 duration: 4000,
                 position: 'bottom-right'
             });
@@ -75,7 +77,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
         }
 
         if (!wallet) {
-            toast.error('Wallet not available', {
+            toast.error(dict.rewards.walletNotAvailable, {
                 duration: 4000,
                 position: 'bottom-right'
             });
@@ -83,7 +85,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
         }
 
         if (wallet.balance < powerUp.cost) {
-            toast.error(`Not enough coins! You need ${powerUp.cost} coins.`, {
+            toast.error(dict.rewards.notEnoughCoinsMessage.replace('{cost}', powerUp.cost.toString()), {
                 duration: 4000,
                 position: 'bottom-right'
             });
@@ -114,7 +116,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
 
         } catch (error) {
             console.error('Purchase failed:', error);
-            toast.error('Purchase failed. Please try again.', {
+            toast.error(dict.rewards.purchaseFailed, {
                 duration: 4000,
                 position: 'bottom-right'
             });
@@ -144,13 +146,13 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                 <div className="text-center space-y-3">
                     <div className="flex items-center justify-center gap-3">
                         <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            Power Ups
+                            {dict.rewards.powerUps}
                         </h2>
                     </div>
-                    <p className="text-gray-400 text-md">Boost your prediction performance with powerful upgrades</p>
+                    <p className="text-gray-400 text-md">{dict.rewards.powerUpsDescription}</p>
                 </div>
                 <div className="text-center py-8">
-                    <div className="text-white/60">Loading power-ups...</div>
+                    <div className="text-white/60">{dict.rewards.loadingPowerUps}</div>
                 </div>
             </div>
         );
@@ -163,19 +165,19 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                 <div className="text-center space-y-3">
                     <div className="flex items-center justify-center gap-3">
                         <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            Power Ups
+                            {dict.rewards.powerUps}
                         </h2>
                         <button
                             onClick={() => setShowInfoModal(true)}
                             className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-slate-700/50"
-                            title="How Power Ups Work"
+                            title={dict.rewards.howPowerUpsWork}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </button>
                     </div>
-                    <p className="text-gray-400 text-md">Boost your prediction performance with powerful upgrades</p>
+                    <p className="text-gray-400 text-md">{dict.rewards.powerUpsDescription}</p>
                 </div>
 
                 {/* Power Ups Grid */}
@@ -237,7 +239,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
 
                                             {!affordable && (
                                                 <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
-                                                    Need {powerUp.cost - (wallet?.balance || 0)} more
+                                                    {dict.rewards.needMore.replace('{amount}', (powerUp.cost - (wallet?.balance || 0)).toString())}
                                                 </div>
                                             )}
                                         </div>
@@ -260,16 +262,16 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                                         `}
                                     >
                                         {!user ? (
-                                            <span>Sign In to Buy</span>
+                                            <span>{dict.rewards.signInToBuy}</span>
                                         ) : isPurchasing ? (
                                             <div className="flex items-center gap-3">
                                                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                                                <span>Purchasing...</span>
+                                                <span>{dict.rewards.purchasing}</span>
                                             </div>
                                         ) : affordable ? (
-                                            <span>Purchase</span>
+                                            <span>{dict.rewards.purchase}</span>
                                         ) : (
-                                            <span>Not Enough Coins</span>
+                                            <span className="text-xs">{dict.rewards.notEnoughCoins}</span>
                                         )}
                                     </Button>
                                 </CardContent>
@@ -291,7 +293,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                                How Power Ups Work
+                                {dict.rewards.howPowerUpsWork}
                             </h3>
                             <button
                                 onClick={() => setShowInfoModal(false)}
@@ -307,30 +309,30 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>🛡</span>
-                                    Safe Slips
+                                    {dict.rewards.safeSlips}
                                 </h4>
-                                <p className="text-gray-300">Protect your predictions from one wrong pick. Perfect for risky parlays or uncertain matches.</p>
+                                <p className="text-gray-300">{dict.rewards.safeSlipsDescription}</p>
                             </div>
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>🔥</span>
-                                    Streak Multiplier
+                                    {dict.rewards.streakMultiplier}
                                 </h4>
-                                <p className="text-gray-300">Boost your streak points by 50% for 3 days. Great for climbing the leaderboard faster.</p>
+                                <p className="text-gray-300">{dict.rewards.streakMultiplierDescription}</p>
                             </div>
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>🎯</span>
-                                    Double XP Match
+                                    {dict.rewards.doubleXPMatch}
                                 </h4>
-                                <p className="text-gray-300">Double your points from a specific match. Use strategically on high-stakes matches.</p>
+                                <p className="text-gray-300">{dict.rewards.doubleXPMatchDescription}</p>
                             </div>
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>💡</span>
-                                    Pro Tips
+                                    {dict.rewards.proTips}
                                 </h4>
-                                <p className="text-gray-300">Power ups are consumed when used. Choose wisely and save them for important moments!</p>
+                                <p className="text-gray-300">{dict.rewards.proTipsDescription}</p>
                             </div>
                         </div>
 
@@ -343,7 +345,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                                 }}
                                 className="p-2 hover:scale-105 transition-transform"
                             >
-                                Got it!
+                                {dict.rewards.gotIt}
                             </Button>
                         </div>
                     </div>

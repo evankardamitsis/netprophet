@@ -15,6 +15,7 @@ export default function MyProfilePage() {
     const lang = params?.lang;
     const { user, signOut, loading } = useAuth();
     const { dict } = useDictionary();
+    const { wallet } = useWallet();
     const [profileStats, setProfileStats] = useState({
         totalCoins: 0,
         totalWins: 0,
@@ -55,22 +56,18 @@ export default function MyProfilePage() {
                 throw new Error('User not authenticated');
             }
 
-            // Get user's bets to calculate statistics
-            const { bets: betsData, total } = await BetsService.getBetsWithMatches();
-
-            const totalBets = total;
-            const wonBets = betsData.filter(bet => bet.status === 'won').length;
-            const lostBets = betsData.filter(bet => bet.status === 'lost').length;
-            const totalCoins = betsData.reduce((sum, bet) => sum + (bet.status === 'won' ? bet.potential_winnings : 0), 0);
-            const winRate = totalBets > 0 ? Math.round((wonBets / totalBets) * 100) : 0;
-
-            // Calculate daily streak (simplified - you might want to implement this based on your logic)
-            const dailyStreak = 0; // TODO: Implement based on your daily login logic
+            // Use wallet data for statistics (more accurate and already filtered)
+            const totalCoins = wallet.totalWinnings || 0;
+            const totalWins = wallet.wonBets || 0;
+            const totalLosses = wallet.lostBets || 0;
+            const totalBets = wallet.totalBets || 0;
+            const winRate = totalBets > 0 ? Math.round((totalWins / totalBets) * 100) : 0;
+            const dailyStreak = wallet.dailyLoginStreak || 0;
 
             setProfileStats({
                 totalCoins,
-                totalWins: wonBets,
-                totalLosses: lostBets,
+                totalWins,
+                totalLosses,
                 winRate,
                 dailyStreak,
                 totalBets,
@@ -82,16 +79,19 @@ export default function MyProfilePage() {
         } finally {
             setLoadingStats(false);
         }
-    }, [user]);
+    }, [user, wallet]);
 
     useEffect(() => {
         if (!loading && !user) {
             router.push(`/${lang}/auth/signin`);
         } else if (user && !loading) {
-            loadProfileStats();
+            // Wait for wallet data to be loaded before showing stats
+            if (wallet.totalBets !== undefined) {
+                loadProfileStats();
+            }
             checkAdminStatus();
         }
-    }, [user, loading, router, lang, loadProfileStats, checkAdminStatus]);
+    }, [user, loading, router, lang, loadProfileStats, checkAdminStatus, wallet]);
 
     const handleSignOut = async () => {
         await signOut();

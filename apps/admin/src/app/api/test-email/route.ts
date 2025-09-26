@@ -29,13 +29,11 @@ export async function POST(request: NextRequest) {
     const emailData = {
       to: email,
       type:
-        template === "2fa"
-          ? "2fa"
-          : template === "promotional"
-            ? "promotional"
-            : template === "winnings"
-              ? "notification"
-              : "admin",
+        template === "promotional"
+          ? "promotional"
+          : template === "winnings"
+            ? "notification"
+            : "admin",
       language: language || "en",
       template: template,
       variables: variables || {},

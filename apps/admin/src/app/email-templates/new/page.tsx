@@ -129,7 +129,6 @@ export default function NewEmailTemplatePage() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="2fa">2FA Verification</SelectItem>
                                             <SelectItem value="promotional">Promotional</SelectItem>
                                             <SelectItem value="winnings">Winnings</SelectItem>
                                             <SelectItem value="admin">Admin</SelectItem>

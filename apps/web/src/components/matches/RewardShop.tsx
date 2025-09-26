@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useWallet } from '@/context/WalletContext';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { useDictionary } from '@/context/DictionaryContext';
 import {
     RewardShopHeader,
     CoinTopUpSection,
@@ -24,6 +25,7 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
     const { wallet, syncWalletWithDatabase } = useWallet();
     const searchParams = useSearchParams();
     const [showInfoModal, setShowInfoModal] = useState(false);
+    const { dict } = useDictionary();
 
     // Handle payment success/cancel
     useEffect(() => {
@@ -32,12 +34,12 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
         const sessionId = searchParams.get('session_id');
 
         if (success === 'true' && sessionId) {
-            toast.success('Payment successful! Your coins have been added to your account.');
+            toast.success(dict.rewards.paymentSuccessful);
             syncWalletWithDatabase(); // Refresh wallet to show updated balance
         } else if (canceled === 'true') {
-            toast.error('Payment was canceled.');
+            toast.error(dict.rewards.paymentCanceled);
         }
-    }, [searchParams, syncWalletWithDatabase]);
+    }, [searchParams, syncWalletWithDatabase, dict.rewards.paymentSuccessful, dict.rewards.paymentCanceled]);
 
     // Use actual wallet balance if available, otherwise fall back to userPoints prop or 0
     const actualBalance = wallet?.balance ?? userPoints ?? 0;
@@ -45,20 +47,16 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
     const handleRedeem = (reward: RewardItem) => {
         if (actualBalance >= reward.points) {
             onRedeem?.(reward);
-            console.log(`Redeemed: ${reward.title}`);
+            console.log(`${dict.rewards.redeemed}: ${reward.title}`);
         } else {
-            console.log('Not enough points!');
+            console.log(dict.rewards.notEnoughPoints);
         }
     };
 
     const handlePowerUpPurchase = (powerUp: PowerUp) => {
         console.log(`Power-up purchased: ${powerUp.name}`);
-        // TODO: Implement power-up purchase logic
-        // This would typically involve:
-        // 1. Call API to purchase power-up
-        // 2. Deduct coins from wallet
-        // 3. Add power-up to user's inventory
-        // 4. Refresh wallet balance
+        // Power-up purchase logic is handled in the PowerUps component
+        // This function is called after successful purchase to refresh wallet
         syncWalletWithDatabase();
     };
 
@@ -85,7 +83,7 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
                     >
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                                How the Reward Shop Works
+                                {dict.rewards.howItWorks}
                             </h3>
                             <button
                                 onClick={() => setShowInfoModal(false)}
@@ -101,30 +99,30 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>🌕</span>
-                                    Earn Coins
+                                    {dict.rewards.earnCoins}
                                 </h4>
-                                <p className="text-gray-300">Make accurate predictions to earn coins. The more correct picks, the more coins you get!</p>
+                                <p className="text-gray-300">{dict.rewards.earnCoinsDescription}</p>
                             </div>
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>🎯</span>
-                                    Redeem Coins
+                                    {dict.rewards.redeemCoins}
                                 </h4>
-                                <p className="text-gray-300">Use your coins to unlock premium features, exclusive merchandise, and special experiences.</p>
+                                <p className="text-gray-300">{dict.rewards.redeemCoinsDescription}</p>
                             </div>
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>⭐</span>
-                                    Rarity System
+                                    {dict.rewards.raritySystem}
                                 </h4>
-                                <p className="text-gray-300">Items come in different rarities: Common, Rare, Epic, and Legendary. Rarer items offer better value!</p>
+                                <p className="text-gray-300">{dict.rewards.raritySystemDescription}</p>
                             </div>
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                                     <span>🔥</span>
-                                    Limited Time
+                                    {dict.rewards.limitedTime}
                                 </h4>
-                                <p className="text-gray-300">Some items are featured or discounted for a limited time. Don&apos;t miss out on great deals!</p>
+                                <p className="text-gray-300">{dict.rewards.limitedTimeDescription}</p>
                             </div>
                         </div>
 
@@ -133,7 +131,7 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
                                 onClick={() => setShowInfoModal(false)}
                                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
                             >
-                                Got it!
+                                {dict.rewards.gotIt}
                             </Button>
                         </div>
                     </div>
