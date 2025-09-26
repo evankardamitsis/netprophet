@@ -15,6 +15,19 @@ export interface Player {
     clayCourt?: number; // 0-1
     grassCourt?: number; // 0-1
   };
+  // Surface-specific statistics
+  hardWins?: number;
+  hardLosses?: number;
+  hardMatches?: number;
+  hardWinRate?: number;
+  clayWins?: number;
+  clayLosses?: number;
+  clayMatches?: number;
+  clayWinRate?: number;
+  grassWins?: number;
+  grassLosses?: number;
+  grassMatches?: number;
+  grassWinRate?: number;
   aggressiveness: number; // 1-10
   stamina: number; // 1-10
   consistency: number; // 1-10

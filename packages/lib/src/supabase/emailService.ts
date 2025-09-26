@@ -29,47 +29,6 @@ export class EmailService {
   }
 
   /**
-   * Send 2FA verification code via email
-   */
-  async send2FAEmail(
-    userEmail: string,
-    verificationCode: string,
-    language: "en" | "el" = "en"
-  ): Promise<boolean> {
-    try {
-      // For 2FA emails, we don't need to check authentication
-      // The edge function will handle the authentication check
-      const emailData: EmailData = {
-        to: userEmail,
-        template: "2fa",
-        type: "2fa",
-        language,
-        variables: {
-          code: verificationCode,
-          user_email: userEmail,
-        },
-      };
-
-      const { data, error } = await this.supabase.functions.invoke(
-        "send-email",
-        {
-          body: emailData,
-        }
-      );
-
-      if (error) {
-        console.error("Error invoking send-email function:", error);
-        throw error;
-      }
-
-      return data?.success || false;
-    } catch (error) {
-      console.error("Error sending 2FA email:", error);
-      return false;
-    }
-  }
-
-  /**
    * Send winnings notification email
    */
   async sendWinningsEmail(
