@@ -223,7 +223,7 @@ export function Notifications() {
 
             {/* Notifications Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
+                <div className="absolute right-0 mt-2 w-96 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
                     <div className="p-4 border-b border-slate-700">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold">{dict?.notifications?.title || 'Notifications'}</h3>

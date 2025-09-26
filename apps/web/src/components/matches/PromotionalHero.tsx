@@ -230,7 +230,7 @@ export function PromotionalHero({
     // Remove early return to keep promo content visible even without featured matches
 
     return (
-        <div className="w-full mb-8">
+        <div className="w-full mb-8 relative z-0">
             {/* Navigation arrows - right aligned */}
             {promotionalItems.length > cardsPerView && (
                 <div className="flex justify-end mb-4">
