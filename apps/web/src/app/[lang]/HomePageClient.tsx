@@ -123,8 +123,8 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </h1>
                             <p className="text-lg sm:text-xl md:text-2xl text-slate-300 mb-6 sm:mb-8 leading-relaxed">
                                 {lang === 'el'
-                                    ? 'Η πιο προηγμένη πλατφόρμα πρόβλεψης τένις με πραγματικούς παίκτες, τουρνουά, power-ups και συστήματα ανταμοιβών.'
-                                    : 'The most advanced tennis prediction platform with real players, tournaments, power-ups and reward systems.'
+                                    ? 'Η πιο προηγμένη πλατφόρμα πρόβλεψης ερασιτεχνικού τένις με πραγματικούς παίκτες, τουρνουά, power-ups και συστήματα ανταμοιβών.'
+                                    : 'The most advanced tennis prediction platform with amateur players, tournaments, power-ups and reward systems.'
                                 }
                             </p>
                             <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8 justify-center lg:justify-start">

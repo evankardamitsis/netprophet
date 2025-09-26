@@ -1,18 +1,21 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 interface FooterDisclaimerProps {
     lang?: 'en' | 'el';
 }
 
 export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
+    const router = useRouter();
+
     const translations = {
         en: {
-            disclaimer: 'NetProphet is a points-only prediction game. No real-money betting.',
+            disclaimer: 'NetProphet is a points-only prediction game. No real-money betting. No real-money rewards.',
             privacy: 'Privacy Policy',
             terms: 'Terms of Service',
         },
         el: {
-            disclaimer: 'Το NetProphet είναι παιχνίδι προβλέψεων μόνο με πόντους. Δεν υπάρχει στοίχημα με πραγματικά χρήματα.',
+            disclaimer: 'Το NetProphet είναι παιχνίδι προβλέψεων μόνο με ψηφιακά νομίσματα. Δεν υπάρχει στοίχημα με πραγματικά χρήματα.',
             privacy: 'Πολιτική Απορρήτου',
             terms: 'Όροι Χρήσης'
         }
@@ -31,18 +34,18 @@ export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
                     </div>
 
                     <div className="flex items-center space-x-6 text-sm text-gray-400">
-                        <a
-                            href="/privacy"
+                        <button
+                            onClick={() => router.push(`/${lang}/privacy`)}
                             className="hover:text-white transition-colors"
                         >
                             {t.privacy}
-                        </a>
-                        <a
-                            href="/terms"
+                        </button>
+                        <button
+                            onClick={() => router.push(`/${lang}/terms`)}
                             className="hover:text-white transition-colors"
                         >
                             {t.terms}
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
