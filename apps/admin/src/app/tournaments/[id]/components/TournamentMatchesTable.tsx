@@ -281,6 +281,33 @@ export function TournamentMatchesTable({
             },
         },
         {
+            accessorKey: "odds",
+            header: "Odds",
+            cell: ({ row }) => {
+                const match = row.original;
+                if (!match.odds_a || !match.odds_b) {
+                    return (
+                        <div className="text-red-500 text-sm font-medium">
+                            Not calculated
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="text-sm space-y-1">
+                        <div className="flex justify-between gap-2">
+                            <span className="font-medium">A:</span>
+                            <span className="text-green-600">{match.odds_a.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between gap-2">
+                            <span className="font-medium">B:</span>
+                            <span className="text-green-600">{match.odds_b.toFixed(2)}</span>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
             accessorKey: "locked",
             header: "Lock Status",
             cell: ({ row }) => {
@@ -367,33 +394,6 @@ export function TournamentMatchesTable({
                 } catch {
                     return <div className="text-gray-400">-</div>;
                 }
-            },
-        },
-        {
-            accessorKey: "odds",
-            header: "Odds",
-            cell: ({ row }) => {
-                const match = row.original;
-                if (!match.odds_a || !match.odds_b) {
-                    return (
-                        <div className="text-red-500 text-sm font-medium">
-                            Not calculated
-                        </div>
-                    );
-                }
-
-                return (
-                    <div className="text-sm space-y-1">
-                        <div className="flex justify-between gap-2">
-                            <span className="font-medium">A:</span>
-                            <span className="text-green-600">{match.odds_a.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between gap-2">
-                            <span className="font-medium">B:</span>
-                            <span className="text-green-600">{match.odds_b.toFixed(2)}</span>
-                        </div>
-                    </div>
-                );
             },
         },
         {

@@ -79,24 +79,39 @@ function calculateOdds(
 ): OddsResult {
   const factors = calculateFactors(player1, player2, context, h2hRecord);
 
-  // Calculate base probability from factors with conservative weights
+  // Calculate base probability from factors with NTRP-heavy weighting
   let player1Score = 0.5; // Start at 50%
 
-  // Apply factor adjustments with increased NTRP and H2H weights
-  player1Score += factors.ntrpAdvantage * 0.25; // Increased from 0.18 to 0.25
-  player1Score += factors.formAdvantage * 0.1; // Reduced from 0.12 to 0.10
-  player1Score += factors.surfaceAdvantage * 0.08; // Reduced from 0.10 to 0.08
-  player1Score += factors.headToHeadAdvantage * 0.2; // Increased from 0.12 to 0.20
-  player1Score += factors.experienceAdvantage * 0.05; // Reduced from 0.06 to 0.05
-  player1Score += factors.momentumAdvantage * 0.03; // Reduced from 0.04 to 0.03
+  // Apply factor adjustments with balanced NTRP weighting
+  player1Score += factors.ntrpAdvantage * 0.3; // Balanced NTRP weight
+  player1Score += factors.formAdvantage * 0.15; // Increased back
+  player1Score += factors.surfaceAdvantage * 0.1; // Increased back
+  player1Score += factors.headToHeadAdvantage * 0.15; // Increased back
+  player1Score += factors.experienceAdvantage * 0.08; // Increased back
+  player1Score += factors.momentumAdvantage * 0.05; // Increased back
 
   // Add uncertainty factor to prevent extreme results
   const uncertaintyFactor = 0.05; // 5% uncertainty
   const randomFactor = (Math.random() - 0.5) * uncertaintyFactor;
   player1Score += randomFactor;
 
-  // Tighter bounds: 15% to 85% (more realistic than 5% to 95%)
-  player1Score = Math.max(0.15, Math.min(0.85, player1Score));
+  // More conservative bounds for realistic odds
+  const ntrpDiff = Math.abs(player1.ntrpRating - player2.ntrpRating);
+  const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
+
+  let minBound = 0.2; // 20%
+  let maxBound = 0.8; // 80%
+
+  // Only allow more extreme results for very large differences at high levels
+  if (ntrpDiff >= 1.5 && baseRating >= 4.5) {
+    minBound = 0.1; // 10%
+    maxBound = 0.9; // 90%
+  } else if (ntrpDiff >= 1.0 && baseRating >= 4.0) {
+    minBound = 0.15; // 15%
+    maxBound = 0.85; // 85%
+  }
+
+  player1Score = Math.max(minBound, Math.min(maxBound, player1Score));
 
   const player2Score = 1 - player1Score;
 
@@ -157,9 +172,34 @@ function calculateNTRPAdvantage(
 ): number {
   const ntrpDiff = player1.ntrpRating - player2.ntrpRating;
   const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
-  const scalingFactor = baseRating < 4.0 ? 1.0 : baseRating < 5.0 ? 0.8 : 0.6;
-  const scaledDiff = ntrpDiff * scalingFactor;
-  return Math.tanh(scaledDiff * 0.8); // Increased from 0.6 to 0.8 for stronger NTRP impact
+
+  // Level-aware scaling: higher ratings mean differences matter more
+  let levelMultiplier;
+  if (baseRating >= 4.5) {
+    levelMultiplier = 1.0; // Full impact at high levels (4.5+)
+  } else if (baseRating >= 4.0) {
+    levelMultiplier = 0.8; // Reduced impact at mid-high levels (4.0-4.5)
+  } else if (baseRating >= 3.5) {
+    levelMultiplier = 0.6; // Further reduced at mid levels (3.5-4.0)
+  } else {
+    levelMultiplier = 0.4; // Lowest impact at beginner levels (<3.5)
+  }
+
+  // Incremental difference scaling
+  let diffMultiplier;
+  if (Math.abs(ntrpDiff) >= 1.5) {
+    diffMultiplier = 1.2; // Very big advantage for 1.5+ differences
+  } else if (Math.abs(ntrpDiff) >= 1.0) {
+    diffMultiplier = 1.0; // Significant advantage for 1.0+ differences
+  } else if (Math.abs(ntrpDiff) >= 0.5) {
+    diffMultiplier = 0.8; // Moderate advantage for 0.5+ differences
+  } else {
+    diffMultiplier = 0.6; // Small advantage for <0.5 differences
+  }
+
+  // Apply combined scaling
+  const scaledDiff = ntrpDiff * levelMultiplier * diffMultiplier;
+  return Math.tanh(scaledDiff * 0.8); // Moderate sigmoid scaling
 }
 
 function calculateFormAdvantage(
@@ -360,11 +400,14 @@ function generateRecommendations(
     }
   }
 
-  if (Math.abs(factors.ntrpAdvantage) > 0.15) {
+  if (Math.abs(factors.ntrpAdvantage) > 0.1) {
+    // Reduced threshold since NTRP is now more significant
     const stronger = factors.ntrpAdvantage > 0 ? player1 : player2;
     const strongerRating = stronger.ntrpRating;
+    const weaker = factors.ntrpAdvantage > 0 ? player2 : player1;
+    const weakerRating = weaker.ntrpRating;
     recommendations.push(
-      `${stronger.firstName} has NTRP advantage (${strongerRating})`
+      `${stronger.firstName} has significant NTRP advantage (${strongerRating} vs ${weakerRating})`
     );
   }
 
@@ -597,15 +640,28 @@ serve(async (req) => {
           // Continue without head-to-head data if there's an error
         }
 
+        // Determine which player should be player1 (higher NTRP) and player2 (lower NTRP)
+        const player1IsHigherRated = playerA.ntrp_rating >= playerB.ntrp_rating;
+        const player1 = player1IsHigherRated ? playerA : playerB;
+        const player2 = player1IsHigherRated ? playerB : playerA;
+
         // Calculate odds using embedded algorithm with head-to-head data
-        const oddsResult = calculateOdds(playerA, playerB, context, h2hRecord);
+        const oddsResult = calculateOdds(player1, player2, context, h2hRecord);
+
+        // Map the calculated odds back to the correct players (A and B)
+        const odds_a = player1IsHigherRated
+          ? oddsResult.player1Odds
+          : oddsResult.player2Odds;
+        const odds_b = player1IsHigherRated
+          ? oddsResult.player2Odds
+          : oddsResult.player1Odds;
 
         // Update the match with calculated odds
         const { error: updateError } = await supabaseClient
           .from("matches")
           .update({
-            odds_a: oddsResult.player1Odds,
-            odds_b: oddsResult.player2Odds,
+            odds_a: odds_a,
+            odds_b: odds_b,
           })
           .eq("id", matchId);
 

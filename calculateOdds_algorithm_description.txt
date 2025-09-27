@@ -16,13 +16,15 @@ CORE ALGORITHM STRUCTURE
 2. FACTOR CALCULATION
    The algorithm calculates 7 key factors that influence match outcomes:
 
-   a) NTRP Rating Advantage (Weight: 18%)
+   a) NTRP Rating Advantage (Weight: 30%)
       - Compares player NTRP ratings (1.0-7.0 scale)
-      - Uses non-linear scaling where differences matter more at lower levels
-      - Applies sigmoid-like function (tanh) for better scaling
-      - Scaling factor: 1.0 for <4.0, 0.8 for 4.0-5.0, 0.6 for >5.0
+      - Level-aware scaling: higher ratings mean differences matter more
+      - Level multipliers: 4.5+ (1.0x), 4.0-4.5 (0.8x), 3.5-4.0 (0.6x), <3.5 (0.4x)
+      - Incremental difference scaling: 1.5+ (1.2x), 1.0+ (1.0x), 0.5+ (0.8x), <0.5 (0.6x)
+      - Combined scaling: ntrp_diff * level_multiplier * diff_multiplier
+      - Applies moderate sigmoid function (tanh) with 0.8 multiplier
 
-   b) Form Advantage (Weight: 12%)
+   b) Form Advantage (Weight: 15%)
       - Combines overall win rate with recent form
       - Uses Bayesian average for players with <10 matches
       - Recent form weighted: [40%, 25%, 20%, 10%, 5%] for last 5 matches
@@ -34,17 +36,17 @@ CORE ALGORITHM STRUCTURE
       - Supports Hard Court, Clay Court, Grass Court, Indoor
       - Surface advantage = (p1_surface_rate - p2_surface_rate) * 0.3
 
-   d) Head-to-Head Advantage (Weight: 12%)
+   d) Head-to-Head Advantage (Weight: 15%)
       - Uses historical match results between players
       - Recent matches (<180 days) get 5% bonus/penalty
       - H2H advantage = (win_rate - 0.5) * 1.5 + recent_bonus
 
-   e) Experience Advantage (Weight: 6%)
+   e) Experience Advantage (Weight: 8%)
       - Combines age (30%) and match count (70%)
       - Experience = age * 0.3 + total_matches * 0.7
       - Advantage = tanh(experience_diff * 0.005)
 
-   f) Momentum Advantage (Weight: 4%)
+   f) Momentum Advantage (Weight: 5%)
       - Based on current winning/losing streaks
       - Uses square root scaling for diminishing returns
       - Momentum = sqrt(streak_length) * (winning ? 1 : -1)
@@ -57,9 +59,12 @@ CORE ALGORITHM STRUCTURE
 
 3. PROBABILITY CALCULATION
    - Starts with 50% base probability for player 1
-   - Applies weighted factor adjustments
+   - Applies weighted factor adjustments with balanced NTRP weighting
    - Adds 5% uncertainty factor (random ±2.5%)
-   - Clamps result between 15% and 85% (realistic bounds)
+   - Conservative bounds with level-aware extremes:
+     * Default: 20% to 80% (realistic range)
+     * 1.0+ difference at 4.0+ levels: 15% to 85% (moderate extreme)
+     * 1.5+ difference at 4.5+ levels: 10% to 90% (most extreme)
    - Player 2 probability = 1 - player 1 probability
 
 4. ODDS CONVERSION
@@ -90,9 +95,12 @@ DETAILED FACTOR CALCULATIONS
 ----------------------------
 
 NTRP ADVANTAGE:
-- Formula: tanh(ntrp_diff * scaling_factor * 0.6)
-- Scaling factors based on minimum rating level
-- Non-linear scaling accounts for skill level differences
+- Level-aware scaling: higher ratings mean differences matter more
+- Level multipliers: 4.5+ (1.0x), 4.0-4.5 (0.8x), 3.5-4.0 (0.6x), <3.5 (0.4x)
+- Incremental difference scaling: 1.5+ (1.2x), 1.0+ (1.0x), 0.5+ (0.8x), <0.5 (0.6x)
+- Combined scaling: ntrp_diff * level_multiplier * diff_multiplier
+- Moderate sigmoid function: tanh(scaled_diff * 0.8)
+- Creates realistic incremental differences based on skill level
 
 FORM ADVANTAGE:
 - Bayesian average: (wins + 5) / (total_matches + 10) for <10 matches
@@ -140,10 +148,11 @@ calculateExpectedValue(odds, stake, probability):
 ALGORITHM CHARACTERISTICS
 -------------------------
 
-1. CONSERVATIVE APPROACH:
-   - Realistic probability bounds (15%-85%)
-   - Uncertainty factor prevents overconfidence
-   - Conservative factor weights
+1. BALANCED NTRP APPROACH:
+   - Level-aware scaling: differences matter more at higher skill levels
+   - Conservative bounds with incremental differences
+   - Balanced NTRP weighting (30%) with restored other factors
+   - Realistic incremental advantages based on skill level
 
 2. DATA-DRIVEN:
    - Uses actual match results and statistics
@@ -156,8 +165,8 @@ ALGORITHM CHARACTERISTICS
    - Confidence reflects data quality
 
 4. TRANSPARENT:
-   - All factors are clearly defined
-   - Recommendations explain key advantages
+   - All factors are clearly defined with updated weights
+   - Recommendations explain key advantages including "significant NTRP advantage"
    - Confidence levels indicate reliability
 
 5. PROFITABLE:

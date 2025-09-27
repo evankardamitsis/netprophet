@@ -394,63 +394,6 @@ export async function getAvailablePlayersForMatch(
   return data;
 }
 
-export async function calculateMatchOdds(
-  playerAId: string,
-  playerBId: string,
-  surface?: string
-) {
-  // This is a simplified odds calculation - in a real system, this would be more sophisticated
-
-  const { data: playerA } = await supabase
-    .from("players")
-    .select("ntrp_rating, surface_win_rates, surface_preference")
-    .eq("id", playerAId)
-    .single();
-
-  const { data: playerB } = await supabase
-    .from("players")
-    .select("ntrp_rating, surface_win_rates, surface_preference")
-    .eq("id", playerBId)
-    .single();
-
-  if (!playerA || !playerB) {
-    throw new Error("One or both players not found");
-  }
-
-  // Simple rating-based calculation
-  const ratingDiff = playerA.ntrp_rating - playerB.ntrp_rating;
-  const baseProbA = 1 / (1 + Math.exp(-ratingDiff / 100));
-  const baseProbB = 1 - baseProbA;
-
-  // Apply surface preference bonus
-  const surfaceBonus = 0.1; // 10% bonus for surface preference
-  let probA = baseProbA;
-  let probB = baseProbB;
-
-  if (surface && playerA.surface_preference === surface) {
-    probA += surfaceBonus;
-    probB -= surfaceBonus;
-  } else if (surface && playerB.surface_preference === surface) {
-    probB += surfaceBonus;
-    probA -= surfaceBonus;
-  }
-
-  // Normalize probabilities
-  const total = probA + probB;
-  probA /= total;
-  probB /= total;
-
-  // Convert to odds (with bookmaker margin)
-  const margin = 0.05; // 5% margin
-  const oddsA = (1 / probA) * (1 - margin);
-  const oddsB = (1 / probB) * (1 - margin);
-
-  return {
-    odds_a: Math.round(oddsA * 100) / 100,
-    odds_b: Math.round(oddsB * 100) / 100,
-  };
-}
-
 export async function calculateMatchOddsSecure(matchIds: string[]) {
   const {
     data: { session },

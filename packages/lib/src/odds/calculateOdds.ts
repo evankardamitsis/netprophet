@@ -93,24 +93,38 @@ export function calculateOdds(
 
   const factors = calculateFactors(player1, player2, context, h2hRecord);
 
-  // Calculate base probability from factors with more conservative weights
+  // Calculate base probability from factors with NTRP-heavy weighting
   let player1Score = 0.5; // Start at 50%
 
-  // Apply factor adjustments with slightly increased NTRP weight
-  player1Score += factors.ntrpAdvantage * 0.18; // Increased from 0.15
-  player1Score += factors.formAdvantage * 0.12;
-  player1Score += factors.surfaceAdvantage * 0.1;
-  player1Score += factors.headToHeadAdvantage * 0.12;
-  player1Score += factors.experienceAdvantage * 0.06;
-  player1Score += factors.momentumAdvantage * 0.04;
+  // Apply factor adjustments with significantly increased NTRP weight
+  player1Score += factors.ntrpAdvantage * 0.35; // Significantly increased from 0.18
+  player1Score += factors.formAdvantage * 0.1; // Reduced to make room for NTRP
+  player1Score += factors.surfaceAdvantage * 0.08; // Reduced
+  player1Score += factors.headToHeadAdvantage * 0.1; // Reduced
+  player1Score += factors.experienceAdvantage * 0.05; // Reduced
+  player1Score += factors.momentumAdvantage * 0.03; // Reduced
 
   // Add uncertainty factor to prevent extreme results
   const uncertaintyFactor = 0.05; // 5% uncertainty
   const randomFactor = (Math.random() - 0.5) * uncertaintyFactor;
   player1Score += randomFactor;
 
-  // Tighter bounds: 15% to 85% (more realistic than 5% to 95%)
-  player1Score = Math.max(0.15, Math.min(0.85, player1Score));
+  // Dynamic bounds based on NTRP difference - allow more extreme results for significant rating gaps
+  const ntrpDiff = Math.abs(player1.ntrpRating - player2.ntrpRating);
+  let minBound = 0.15;
+  let maxBound = 0.85;
+
+  if (ntrpDiff >= 0.5) {
+    // For significant NTRP differences, allow more extreme probabilities
+    minBound = 0.1; // 10%
+    maxBound = 0.9; // 90%
+  } else if (ntrpDiff >= 1.0) {
+    // For very large differences (1.0+), allow even more extreme results
+    minBound = 0.05; // 5%
+    maxBound = 0.95; // 95%
+  }
+
+  player1Score = Math.max(minBound, Math.min(maxBound, player1Score));
 
   const player2Score = 1 - player1Score;
 
@@ -200,13 +214,21 @@ function calculateNTRPAdvantage(
 ): number {
   const ntrpDiff = player1.ntrpRating - player2.ntrpRating;
 
-  // Non-linear scaling: differences matter more at lower levels
-  const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
-  const scalingFactor = baseRating < 4.0 ? 1.0 : baseRating < 5.0 ? 0.8 : 0.6; // Slightly increased from previous
+  // Enhanced scaling for significant NTRP differences
+  // For differences >= 0.5, apply much stronger weighting
+  if (Math.abs(ntrpDiff) >= 0.5) {
+    // For significant differences (0.5+), use linear scaling with high multiplier
+    const significantDiffMultiplier = ntrpDiff >= 0 ? 1.5 : -1.5;
+    return Math.max(-0.8, Math.min(0.8, ntrpDiff * significantDiffMultiplier));
+  }
 
-  // Apply sigmoid-like function for better scaling
+  // For smaller differences (< 0.5), use the existing non-linear scaling
+  const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
+  const scalingFactor = baseRating < 4.0 ? 1.2 : baseRating < 5.0 ? 1.0 : 0.8; // Increased scaling
+
+  // Apply enhanced sigmoid-like function
   const scaledDiff = ntrpDiff * scalingFactor;
-  return Math.tanh(scaledDiff * 0.6); // Increased from 0.4
+  return Math.tanh(scaledDiff * 0.8); // Increased from 0.6
 }
 
 function calculateFormAdvantage(
