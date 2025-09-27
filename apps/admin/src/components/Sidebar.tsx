@@ -81,6 +81,7 @@ const menuItems: MenuItem[] = [
     },
     { href: '/logs', label: 'Logs', icon: FileText },
     { href: '/notifications', label: 'Notifications', icon: Bell },
+    { href: '/admin-notifications', label: 'Admin Notifications', icon: Bell },
     { href: '/odds-demo', label: 'Odds Demo', icon: Brain }
 ];
 

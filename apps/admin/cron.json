@@ -1,0 +1,10 @@
+{
+  "cron": [
+    {
+      "name": "process-admin-emails",
+      "schedule": "*/5 * * * *",
+      "endpoint": "/api/cron/process-emails",
+      "description": "Process pending admin emails every 5 minutes"
+    }
+  ]
+}
