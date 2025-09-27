@@ -173,6 +173,13 @@ function calculateNTRPAdvantage(
   const ntrpDiff = player1.ntrpRating - player2.ntrpRating;
   const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
 
+  // Special case: when players have the same NTRP rating, make odds very close
+  if (Math.abs(ntrpDiff) < 0.01) {
+    // For identical ratings, apply minimal advantage based on other factors
+    // This ensures odds stay very close (around 1.9-2.1 range)
+    return Math.tanh(ntrpDiff * 0.1); // Very small impact
+  }
+
   // Level-aware scaling: higher ratings mean differences matter more
   let levelMultiplier;
   if (baseRating >= 4.5) {
@@ -185,7 +192,7 @@ function calculateNTRPAdvantage(
     levelMultiplier = 0.4; // Lowest impact at beginner levels (<3.5)
   }
 
-  // Incremental difference scaling
+  // Incremental difference scaling with special handling for small differences
   let diffMultiplier;
   if (Math.abs(ntrpDiff) >= 1.5) {
     diffMultiplier = 1.2; // Very big advantage for 1.5+ differences
@@ -194,7 +201,8 @@ function calculateNTRPAdvantage(
   } else if (Math.abs(ntrpDiff) >= 0.5) {
     diffMultiplier = 0.8; // Moderate advantage for 0.5+ differences
   } else {
-    diffMultiplier = 0.6; // Small advantage for <0.5 differences
+    // For very small differences (0.0-0.5), use much smaller multiplier
+    diffMultiplier = 0.2; // Much smaller advantage for <0.5 differences
   }
 
   // Apply combined scaling
