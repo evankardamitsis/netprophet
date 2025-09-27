@@ -106,7 +106,7 @@ export function SearchableSelect({
                             />
                         </div>
                     </div>
-                    <div className="max-h-60 overflow-y-auto">
+                    <div className="max-h-80 overflow-y-auto custom-scrollbar">
                         {loading ? (
                             <div className="flex items-center justify-center py-4">
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>

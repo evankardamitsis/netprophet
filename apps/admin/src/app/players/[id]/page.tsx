@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@netprophet/lib/types/player';
-import { insertPlayer, updatePlayer, fetchPlayers } from '@netprophet/lib/supabase/players';
+import { insertPlayer, updatePlayer, fetchPlayerById, fetchPlayers } from '@netprophet/lib/supabase/players';
 import { toast } from 'sonner';
 
 // Mock data for demo
@@ -49,13 +49,18 @@ export default function PlayerEditPage() {
 
     const [player, setPlayer] = useState<Player>(mockPlayer);
     const [loading, setLoading] = useState(false);
+    const [initialLoading, setInitialLoading] = useState(!isNew);
 
     useEffect(() => {
         if (!isNew) {
-            // Fetch player data from Supabase
-            fetchPlayers().then((players: Player[]) => {
-                const found = players.find((p: Player) => p.id === playerId);
-                if (found) setPlayer(found);
+            // Fetch specific player data from Supabase
+            fetchPlayerById(playerId).then((player: Player) => {
+                setPlayer(player);
+                setInitialLoading(false);
+            }).catch((error) => {
+                console.error('Error fetching player:', error);
+                toast.error('Failed to load player data');
+                setInitialLoading(false);
             });
         } else {
             // Initialize new player with defaults
@@ -92,41 +97,20 @@ export default function PlayerEditPage() {
         console.log('Save clicked', player);
         setLoading(true);
         try {
-            // Map camelCase to snake_case for DB
-            const playerDb = {
-                id: player.id,
-                first_name: player.firstName,
-                last_name: player.lastName,
-                ntrp_rating: player.ntrpRating,
-                wins: player.wins,
-                losses: player.losses,
-                last5: player.last5,
-                current_streak: player.currentStreak,
-                streak_type: player.streakType,
-                surface_preference: player.surfacePreference,
-                surface_win_rates: player.surfaceWinRates,
-                aggressiveness: player.aggressiveness,
-                stamina: player.stamina,
-                consistency: player.consistency,
-                age: player.age,
-                hand: player.hand,
-                notes: player.notes,
-                last_match_date: player.lastMatchDate,
-                injury_status: player.injuryStatus,
-                seasonal_form: player.seasonalForm,
-            };
-
             if (isNew) {
-                await insertPlayer(playerDb as any);
+                const result = await insertPlayer(player);
+                console.log('Player created successfully:', result);
                 toast.success('Player created!');
             } else {
-                await updatePlayer(player.id, playerDb as any);
+                console.log('Updating player with ID:', player.id);
+                const result = await updatePlayer(player.id, player);
+                console.log('Player updated successfully:', result);
                 toast.success('Player updated!');
             }
             router.push('/players');
         } catch (error) {
             console.error('Error saving player:', error);
-            toast.error('Failed to save player');
+            toast.error('Failed to save player: ' + (error instanceof Error ? error.message : 'Unknown error'));
         } finally {
             setLoading(false);
         }
@@ -156,6 +140,17 @@ export default function PlayerEditPage() {
         const total = wins + losses;
         return total > 0 ? Math.round((wins / total) * 100) : 0;
     };
+
+    if (initialLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading player data...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
