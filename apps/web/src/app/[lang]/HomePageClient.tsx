@@ -184,115 +184,129 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
             </section>
 
             {/* Features Section */}
-            <section className="py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/20"></div>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             {lang === 'el' ? 'Απλό, σαν να σερβίρεις πρώτο game' : 'Simple, like serving first game'}
                         </h2>
-                        <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                        <p className="text-xl text-slate-300 max-w-3xl mx-auto">
                             {lang === 'el' ? 'Μόλις 4 βήματα για να γίνεις Net Prophet με πραγματικούς αγώνες' : 'Just 4 steps to become a Net Prophet with real matches'}
                         </p>
                     </div>
 
                     <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-                        <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-blue-50 to-blue-100">
-                            <CardHeader>
-                                <div className="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">🎾</span>
-                                </div>
-                                <CardTitle className="text-xl text-blue-900">
-                                    {lang === 'el' ? 'Διάλεξε αγώνες' : 'Choose matches'}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-blue-700">
-                                    {lang === 'el'
-                                        ? 'Επίλεξε από πραγματικούς, ερασιτεχνικούς αγώνες'
-                                        : 'Choose from real, amateur matches'
-                                    }
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <div className="group relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                            <Card className="relative text-center shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-400/30 hover:border-blue-400/50 hover:scale-105">
+                                <CardHeader>
+                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                        <span className="text-2xl">🎾</span>
+                                    </div>
+                                    <CardTitle className="text-xl text-white">
+                                        {lang === 'el' ? 'Διάλεξε αγώνες' : 'Choose matches'}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-blue-100">
+                                        {lang === 'el'
+                                            ? 'Επίλεξε από πραγματικούς, ερασιτεχνικούς αγώνες'
+                                            : 'Choose from real, amateur matches'
+                                        }
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                        <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-green-50 to-green-100">
-                            <CardHeader>
-                                <div className="w-16 h-16 bg-green-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">📊</span>
-                                </div>
-                                <CardTitle className="text-xl text-green-900">
-                                    {lang === 'el' ? 'Κάνε τις προβλέψεις σου' : 'Make your predictions'}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-green-700">
-                                    {lang === 'el'
-                                        ? 'Πρόβλεψε νικητή, score, tie-breaks και επιπλέον στατιστικά'
-                                        : 'Predict winner, score, tie-breaks and additional statistics'
-                                    }
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <div className="group relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                            <Card className="relative text-center shadow-2xl hover:shadow-green-500/25 transition-all duration-300 bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 hover:border-green-400/50 hover:scale-105">
+                                <CardHeader>
+                                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                        <span className="text-2xl">📊</span>
+                                    </div>
+                                    <CardTitle className="text-xl text-white">
+                                        {lang === 'el' ? 'Κάνε τις προβλέψεις σου' : 'Make your predictions'}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-green-100">
+                                        {lang === 'el'
+                                            ? 'Πρόβλεψε νικητή, score, tie-breaks και επιπλέον στατιστικά'
+                                            : 'Predict winner, score, tie-breaks and additional statistics'
+                                        }
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                        <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-purple-50 to-purple-100">
-                            <CardHeader>
-                                <div className="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">🔥</span>
-                                </div>
-                                <CardTitle className="text-xl text-purple-900">
-                                    {lang === 'el' ? 'Μάζεψε Νομίσματα' : 'Earn Coins'}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-purple-700">
-                                    {lang === 'el'
-                                        ? 'Κέρδισε νομίσματα για κάθε σωστή πρόβλεψη και δημιούργησε streaks'
-                                        : 'Earn coins for every correct prediction and build streaks'
-                                    }
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <div className="group relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                            <Card className="relative text-center shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-400/30 hover:border-purple-400/50 hover:scale-105">
+                                <CardHeader>
+                                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                        <span className="text-2xl">🔥</span>
+                                    </div>
+                                    <CardTitle className="text-xl text-white">
+                                        {lang === 'el' ? 'Μάζεψε Νομίσματα' : 'Earn Coins'}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-purple-100">
+                                        {lang === 'el'
+                                            ? 'Κέρδισε νομίσματα για κάθε σωστή πρόβλεψη και δημιούργησε streaks'
+                                            : 'Earn coins for every correct prediction and build streaks'
+                                        }
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                        <Card className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-orange-50 to-orange-100">
-                            <CardHeader>
-                                <div className="w-16 h-16 bg-orange-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-2xl">🏆</span>
-                                </div>
-                                <CardTitle className="text-xl text-orange-900">
-                                    {lang === 'el' ? 'Ανέβα στο leaderboard' : 'Climb the leaderboard'}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-orange-700">
-                                    {lang === 'el'
-                                        ? 'Δείξε σε όλους ποιος είναι ο καλύτερος Net Prophet'
-                                        : 'Show everyone who is the best Net Prophet'
-                                    }
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <div className="group relative">
+                            <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                            <Card className="relative text-center shadow-2xl hover:shadow-orange-500/25 transition-all duration-300 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 backdrop-blur-sm border border-orange-400/30 hover:border-orange-400/50 hover:scale-105">
+                                <CardHeader>
+                                    <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                        <span className="text-2xl">🏆</span>
+                                    </div>
+                                    <CardTitle className="text-xl text-white">
+                                        {lang === 'el' ? 'Ανέβα στο leaderboard' : 'Climb the leaderboard'}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-orange-100">
+                                        {lang === 'el'
+                                            ? 'Δείξε σε όλους ποιος είναι ο καλύτερος Net Prophet'
+                                            : 'Show everyone who is the best Net Prophet'
+                                        }
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* Advanced Features Section */}
-            <section className="py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-20 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/10"></div>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             {lang === 'el' ? 'Προηγμένες Λειτουργίες' : 'Advanced Features'}
                         </h2>
-                        <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                        <p className="text-xl text-slate-300 max-w-3xl mx-auto">
                             {lang === 'el' ? 'Ανακαλύψτε όλες τις δυνατότητες που κάνουν το NetProphet μοναδικό' : 'Discover all the features that make NetProphet unique'}
                         </p>
                     </div>
 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-12 sm:mb-16">
                         <div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-6">
+                            <h3 className="text-2xl font-bold text-white mb-6">
                                 {lang === 'el' ? '👥 Πραγματικοί Παίκτες & Στατιστικά' : '👥 Real Players & Statistics'}
                             </h3>
-                            <p className="text-slate-700 mb-6">
+                            <p className="text-slate-300 mb-6">
                                 {lang === 'el'
                                     ? 'Κάθε παίκτης έχει πλήρη στατιστικά: NTRP rating, head-to-head records, ιστορικό αποτελεσμάτων. Οι αποδόσεις υπολογίζονται με βάση πραγματικά δεδομένα.'
                                     : 'Every player has complete statistics: NTRP rating, head-to-head records, match history. Odds are calculated based on real data.'
@@ -300,64 +314,64 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </p>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'NTRP Ratings & Win/Loss Records' : 'NTRP Ratings & Win/Loss Records'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'NTRP Ratings & Win/Loss Records' : 'NTRP Ratings & Win/Loss Records'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Head-to-Head Statistics' : 'Head-to-Head Statistics'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Head-to-Head Statistics' : 'Head-to-Head Statistics'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Αυτόματος Υπολογισμός Αποδόσεων' : 'Automatic Odds Calculation'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Αυτόματος Υπολογισμός Αποδόσεων' : 'Automatic Odds Calculation'}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-8">
-                            <div className="bg-white rounded-xl p-6 shadow-lg">
+                        <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm rounded-2xl p-8 border border-blue-400/30">
+                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
                                 <div className="text-center mb-6">
-                                    <h4 className="font-bold text-slate-900 flex items-center justify-center gap-2 mb-2">
+                                    <h4 className="font-bold text-white flex items-center justify-center gap-2 mb-2">
                                         <span className="text-2xl">👥</span>
                                         {lang === 'el' ? 'Δείγμα Παίκτη' : 'Sample Player'}
                                     </h4>
-                                    <p className="text-sm text-slate-600">{lang === 'el' ? 'Από τη βάση δεδομένων' : 'From our database'}</p>
+                                    <p className="text-sm text-slate-300">{lang === 'el' ? 'Από τη βάση δεδομένων' : 'From our database'}</p>
                                 </div>
 
                                 {/* Player Card Example */}
-                                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
                                     <div className="flex items-center justify-between mb-3">
                                         <div>
-                                            <h5 className="font-bold text-slate-900">Γιώργος Παπαδόπουλος</h5>
-                                            <p className="text-sm text-slate-600">NTRP 4.5 • Clay Court Specialist</p>
+                                            <h5 className="font-bold text-white">Γιώργος Παπαδόπουλος</h5>
+                                            <p className="text-sm text-slate-300">NTRP 4.5 • Clay Court Specialist</p>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-lg font-bold text-blue-600">4.5</div>
-                                            <div className="text-xs text-slate-500">NTRP</div>
+                                            <div className="text-lg font-bold text-blue-400">4.5</div>
+                                            <div className="text-xs text-slate-400">NTRP</div>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3 text-center">
-                                        <div className="bg-green-50 rounded-lg p-2">
-                                            <div className="text-sm font-bold text-green-600">12-3</div>
-                                            <div className="text-xs text-slate-500">2024 Record</div>
+                                        <div className="bg-green-500/20 rounded-lg p-2 border border-green-400/30">
+                                            <div className="text-sm font-bold text-green-400">12-3</div>
+                                            <div className="text-xs text-slate-400">2024 Record</div>
                                         </div>
-                                        <div className="bg-blue-50 rounded-lg p-2">
-                                            <div className="text-sm font-bold text-blue-600">80%</div>
-                                            <div className="text-xs text-slate-500">Win Rate</div>
+                                        <div className="bg-blue-500/20 rounded-lg p-2 border border-blue-400/30">
+                                            <div className="text-sm font-bold text-blue-400">80%</div>
+                                            <div className="text-xs text-slate-400">Win Rate</div>
                                         </div>
                                     </div>
 
-                                    <div className="mt-3 pt-3 border-t border-slate-200">
-                                        <div className="flex items-center justify-between text-xs text-slate-600">
+                                    <div className="mt-3 pt-3 border-t border-white/20">
+                                        <div className="flex items-center justify-between text-xs text-slate-300">
                                             <span>🏟️ Clay Court</span>
                                             <span>📊 Detailed Stats</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="mt-4 pt-4 border-t border-slate-200">
+                                <div className="mt-4 pt-4 border-t border-white/20">
                                     <div className="text-center">
-                                        <div className="text-sm text-slate-600">
+                                        <div className="text-sm text-slate-300">
                                             {lang === 'el' ? '1000+ παίκτες διαθέσιμοι' : '1000+ players available'}
                                         </div>
                                     </div>
@@ -368,54 +382,54 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                         <div className="order-2 lg:order-1">
-                            <div className="bg-gradient-to-br from-slate-50 to-green-50 rounded-2xl p-8">
-                                <div className="bg-white rounded-xl p-6 shadow-lg">
+                            <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl p-8 border border-green-400/30">
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
                                     <div className="text-center mb-6">
-                                        <h4 className="font-bold text-slate-900 flex items-center justify-center gap-2 mb-2">
+                                        <h4 className="font-bold text-white flex items-center justify-center gap-2 mb-2">
                                             <span className="text-2xl">🔍</span>
                                             {lang === 'el' ? 'Αναζήτηση & Φιλτράρισμα' : 'Search & Filter'}
                                         </h4>
-                                        <p className="text-sm text-slate-600">{lang === 'el' ? 'Βρες τον παίκτη που θέλεις' : 'Find the player you want'}</p>
+                                        <p className="text-sm text-slate-300">{lang === 'el' ? 'Βρες τον παίκτη που θέλεις' : 'Find the player you want'}</p>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                        <div className="flex items-center justify-between p-3 bg-blue-500/20 rounded-lg border border-blue-400/30">
                                             <div className="flex items-center gap-3">
                                                 <span className="text-2xl">🔍</span>
                                                 <div>
-                                                    <div className="font-semibold text-slate-900">{lang === 'el' ? 'Αναζήτηση' : 'Search'}</div>
-                                                    <div className="text-xs text-slate-600">{lang === 'el' ? 'Με όνομα ή επώνυμο' : 'By first or last name'}</div>
+                                                    <div className="font-semibold text-white">{lang === 'el' ? 'Αναζήτηση' : 'Search'}</div>
+                                                    <div className="text-xs text-slate-300">{lang === 'el' ? 'Με όνομα ή επώνυμο' : 'By first or last name'}</div>
                                                 </div>
                                             </div>
-                                            <div className="text-blue-600 font-bold">✓</div>
+                                            <div className="text-blue-400 font-bold">✓</div>
                                         </div>
 
-                                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                        <div className="flex items-center justify-between p-3 bg-green-500/20 rounded-lg border border-green-400/30">
                                             <div className="flex items-center gap-3">
                                                 <span className="text-2xl">🏟️</span>
                                                 <div>
-                                                    <div className="font-semibold text-slate-900">{lang === 'el' ? 'Επιφάνεια' : 'Surface'}</div>
-                                                    <div className="text-xs text-slate-600">{lang === 'el' ? 'Clay, Hard, Grass' : 'Clay, Hard, Grass'}</div>
+                                                    <div className="font-semibold text-white">{lang === 'el' ? 'Επιφάνεια' : 'Surface'}</div>
+                                                    <div className="text-xs text-slate-300">{lang === 'el' ? 'Clay, Hard, Grass' : 'Clay, Hard, Grass'}</div>
                                                 </div>
                                             </div>
-                                            <div className="text-green-600 font-bold">✓</div>
+                                            <div className="text-green-400 font-bold">✓</div>
                                         </div>
 
-                                        <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                        <div className="flex items-center justify-between p-3 bg-purple-500/20 rounded-lg border border-purple-400/30">
                                             <div className="flex items-center gap-3">
                                                 <span className="text-2xl">📊</span>
                                                 <div>
-                                                    <div className="font-semibold text-slate-900">{lang === 'el' ? 'Στατιστικά' : 'Statistics'}</div>
-                                                    <div className="text-xs text-slate-600">{lang === 'el' ? 'NTRP, Record, H2H' : 'NTRP, Record, H2H'}</div>
+                                                    <div className="font-semibold text-white">{lang === 'el' ? 'Στατιστικά' : 'Statistics'}</div>
+                                                    <div className="text-xs text-slate-300">{lang === 'el' ? 'NTRP, Record, H2H' : 'NTRP, Record, H2H'}</div>
                                                 </div>
                                             </div>
-                                            <div className="text-purple-600 font-bold">✓</div>
+                                            <div className="text-purple-400 font-bold">✓</div>
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 pt-4 border-t border-slate-200">
+                                    <div className="mt-4 pt-4 border-t border-white/20">
                                         <div className="text-center">
-                                            <div className="text-sm text-slate-600">
+                                            <div className="text-sm text-slate-300">
                                                 {lang === 'el' ? 'Εύκολη αναζήτηση παικτών' : 'Easy player search'}
                                             </div>
                                         </div>
@@ -424,10 +438,10 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </div>
                         </div>
                         <div className="order-1 lg:order-2">
-                            <h3 className="text-2xl font-bold text-slate-900 mb-6">
+                            <h3 className="text-2xl font-bold text-white mb-6">
                                 {lang === 'el' ? '📊 Μεγάλη Βάση Δεδομένων Παικτών' : '📊 Large Player Database'}
                             </h3>
-                            <p className="text-slate-700 mb-6">
+                            <p className="text-slate-300 mb-6">
                                 {lang === 'el'
                                     ? 'Ανακαλύψτε περισσότερους από 1000 ερασιτέχνες παίκτες με πλήρη στατιστικά. Κάθε παίκτης έχει λεπτομερή δεδομένα: NTRP rating, επιφάνεια προτίμησης, win/loss record, και πολλά άλλα.'
                                     : 'Discover more than 1000 amateur players with complete statistics. Each player has detailed data: NTRP rating, surface preference, win/loss record, and much more.'
@@ -435,20 +449,20 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </p>
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? '1000+ Παίκτες' : '1000+ Players'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? '1000+ Παίκτες' : '1000+ Players'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Λεπτομερή Στατιστικά' : 'Detailed Statistics'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Λεπτομερή Στατιστικά' : 'Detailed Statistics'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Αναζήτηση & Φιλτράρισμα' : 'Search & Filter'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Αναζήτηση & Φιλτράρισμα' : 'Search & Filter'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Επιφάνεια Προτίμησης' : 'Surface Preference'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Επιφάνεια Προτίμησης' : 'Surface Preference'}</span>
                                 </div>
                             </div>
                         </div>
@@ -557,23 +571,24 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
             </section>
 
             {/* Live Tournament Results Section */}
-            <section className="py-20 bg-slate-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-20 bg-gradient-to-br from-slate-800 via-slate-900 to-black text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-black/20"></div>
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             {lang === 'el' ? '🏆 Όλα τα Τουρνουά σε Ένα Μέρος' : '🏆 All Tournaments in One Place'}
                         </h2>
-                        <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                        <p className="text-xl text-slate-300 max-w-3xl mx-auto">
                             {lang === 'el' ? 'Δες όλα τα ενεργά τουρνουά και τα αποτελέσματά τους, ενημερωμένα καθημερινά. Όλα μέσα στο NetProphet!' : 'See all active tournaments and their results, updated daily. All inside NetProphet!'}
                         </p>
                     </div>
 
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                         <div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-6">
+                            <h3 className="text-2xl font-bold text-white mb-6">
                                 {lang === 'el' ? '📊 Live Αποτελέσματα & Στατιστικά' : '📊 Live Results & Statistics'}
                             </h3>
-                            <p className="text-slate-700 mb-6">
+                            <p className="text-slate-300 mb-6">
                                 {lang === 'el'
                                     ? 'Παρακολούθησε όλα τα τουρνουά σε πραγματικό χρόνο. Αποτελέσματα αγώνων, στατιστικά παικτών, leaderboards και πολλά άλλα - όλα ενημερωμένα καθημερινά!'
                                     : 'Follow all tournaments in real-time. Match results, player statistics, leaderboards and much more - all updated daily!'
@@ -581,65 +596,65 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </p>
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Live Αποτελέσματα Αγώνων' : 'Live Match Results'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Live Αποτελέσματα Αγώνων' : 'Live Match Results'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Ενημερωμένα Στατιστικά Παικτών' : 'Updated Player Statistics'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Ενημερωμένα Στατιστικά Παικτών' : 'Updated Player Statistics'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Tournament Leaderboards' : 'Tournament Leaderboards'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Tournament Leaderboards' : 'Tournament Leaderboards'}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-green-500 text-xl">✓</span>
-                                    <span className="text-slate-700">{lang === 'el' ? 'Καθημερινές Ενημερώσεις' : 'Daily Updates'}</span>
+                                    <span className="text-green-400 text-xl">✓</span>
+                                    <span className="text-slate-300">{lang === 'el' ? 'Καθημερινές Ενημερώσεις' : 'Daily Updates'}</span>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-8">
-                            <div className="bg-white rounded-xl p-6 shadow-lg">
+                        <div className="bg-gradient-to-br from-slate-500/20 to-blue-500/20 backdrop-blur-sm rounded-2xl p-8 border border-slate-400/30">
+                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-white/20">
                                 <div className="text-center mb-6">
-                                    <h4 className="font-bold text-slate-900 flex items-center justify-center gap-2 mb-2">
+                                    <h4 className="font-bold text-white flex items-center justify-center gap-2 mb-2">
                                         <span className="text-2xl">🏆</span>
                                         Maroussi Tennis Open
                                     </h4>
-                                    <p className="text-sm text-slate-600">Live Tournament Results</p>
+                                    <p className="text-sm text-slate-300">Live Tournament Results</p>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                                    <div className="flex items-center justify-between p-3 bg-green-500/20 rounded-lg border border-green-400/30">
                                         <div>
-                                            <div className="font-semibold text-slate-900">Γιώργος Παπαδόπουλος</div>
-                                            <div className="text-sm text-slate-600">6-4, 6-2</div>
+                                            <div className="font-semibold text-white">Γιώργος Παπαδόπουλος</div>
+                                            <div className="text-sm text-slate-300">6-4, 6-2</div>
                                         </div>
-                                        <div className="text-green-600 font-bold">W</div>
+                                        <div className="text-green-400 font-bold">W</div>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                                    <div className="flex items-center justify-between p-3 bg-red-500/20 rounded-lg border border-red-400/30">
                                         <div>
-                                            <div className="font-semibold text-slate-900">Νίκος Κωνσταντίνου</div>
-                                            <div className="text-sm text-slate-600">4-6, 2-6</div>
+                                            <div className="font-semibold text-white">Νίκος Κωνσταντίνου</div>
+                                            <div className="text-sm text-slate-300">4-6, 2-6</div>
                                         </div>
-                                        <div className="text-red-600 font-bold">L</div>
+                                        <div className="text-red-400 font-bold">L</div>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div className="flex items-center justify-between p-3 bg-blue-500/20 rounded-lg border border-blue-400/30">
                                         <div>
-                                            <div className="font-semibold text-slate-900">Μαρία Κωνσταντίνου</div>
-                                            <div className="text-sm text-slate-600">6-3, 6-1</div>
+                                            <div className="font-semibold text-white">Μαρία Κωνσταντίνου</div>
+                                            <div className="text-sm text-slate-300">6-3, 6-1</div>
                                         </div>
-                                        <div className="text-blue-600 font-bold">W</div>
+                                        <div className="text-blue-400 font-bold">W</div>
                                     </div>
                                 </div>
 
-                                <div className="mt-4 pt-4 border-t border-slate-200">
+                                <div className="mt-4 pt-4 border-t border-white/20">
                                     <div className="text-center">
-                                        <div className="text-sm text-slate-600 mb-2">
+                                        <div className="text-sm text-slate-300 mb-2">
                                             <span className="font-semibold">{lang === 'el' ? 'Ενημερώθηκε:' : 'Updated:'}</span> 15 Σεπτεμβρίου 2025
                                         </div>
-                                        <div className="text-xs text-slate-500">
+                                        <div className="text-xs text-slate-400">
                                             {lang === 'el' ? 'Όλα τα αποτελέσματα ενημερώνονται καθημερινά' : 'All results updated daily'}
                                         </div>
                                     </div>
