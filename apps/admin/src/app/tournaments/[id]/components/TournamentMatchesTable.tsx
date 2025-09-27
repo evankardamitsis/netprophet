@@ -95,7 +95,7 @@ export function TournamentMatchesTable({
 
     const getPlayerName = (player: any) => {
         if (player?.first_name && player?.last_name) {
-            const ntrp = player?.ntrp_rating ? ` (${player.ntrp_rating})` : '';
+            const ntrp = player?.ntrp_rating ? ` (${parseFloat(player.ntrp_rating).toFixed(1)})` : '';
             return `${player.first_name} ${player.last_name}${ntrp}`;
         }
         return 'TBD';
@@ -342,7 +342,6 @@ export function TournamentMatchesTable({
                             <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                                 Should Lock
                             </Badge>
-                            <span className="text-xs text-orange-600">(Run Automation)</span>
                         </div>
                     );
                 }
@@ -565,6 +564,20 @@ export function TournamentMatchesTable({
                                 className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
                             >
                                 Calculate Odds
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    if (confirm(`Are you sure you want to delete ${selectedMatches.length} match(es)? This action cannot be undone.`)) {
+                                        selectedMatches.forEach(matchId => onDeleteMatch(matchId));
+                                    }
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="border-red-600 text-red-600 hover:bg-red-50 text-xs sm:text-sm"
+                            >
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">Delete Selected</span>
+                                <span className="sm:hidden">Delete</span>
                             </Button>
                             <Button
                                 onClick={() => {

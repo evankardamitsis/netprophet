@@ -25,7 +25,7 @@ export default function Footer({ lang, dict }: FooterProps) {
                             <Logo size="md" />
                         </div>
                         <p className="text-slate-400 mb-6">
-                            {lang === 'el' ? 'Η πλατφόρμα προβλέψεων για το τένις με πραγματικούς αγώνες' : 'The prediction platform for tennis with real matches'}
+                            {lang === 'el' ? 'Η νούμερο ένα πλατφόρμα προβλέψεων για το τένις με πραγματικούς αγώνες' : 'The prediction platform for tennis with real matches'}
                         </p>
                         <Button
                             onClick={() => router.push(`/${lang}/auth/signin`)}
@@ -38,9 +38,30 @@ export default function Footer({ lang, dict }: FooterProps) {
                     <div>
                         <h4 className="font-semibold mb-4">Support</h4>
                         <ul className="space-y-2 text-slate-400">
-                            <li>FAQ</li>
-                            <li>Contact</li>
-                            <li>Help Center</li>
+                            <li>
+                                <a
+                                    href={`/${lang}/faq`}
+                                    className="hover:text-white transition-colors"
+                                >
+                                    FAQ
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href={`/${lang}/contact`}
+                                    className="hover:text-white transition-colors"
+                                >
+                                    Contact
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href={`/${lang}/help-center`}
+                                    className="hover:text-white transition-colors"
+                                >
+                                    Help Center
+                                </a>
+                            </li>
                         </ul>
                     </div>
 

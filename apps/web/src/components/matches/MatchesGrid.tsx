@@ -104,9 +104,13 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             {liveMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
-                                        ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
-                                        : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
+                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col relative ${
+                                        // Check for high odds difference (underdog alert)
+                                        !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5
+                                            ? 'border-2 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 cursor-pointer'
+                                            : match.locked
+                                                ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
+                                                : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
                                         } ${
                                         // Locked matches are much smaller and compact
                                         match.locked
@@ -117,7 +121,21 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 : 'p-2 xs:p-2.5 sm:p-3 md:p-4 h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px]'
                                         }`}
                                     onClick={() => !match.locked && onSelectMatch(match)}
+                                    style={!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 ? {
+                                        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.95) 100%)',
+                                        borderImage: 'linear-gradient(45deg, #fbbf24, #f97316, #ef4444) 1',
+                                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.1)'
+                                    } : undefined}
                                 >
+                                    {/* Underdog Alert Banner */}
+                                    {!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 && (
+                                        <div className="absolute -top-2 -right-2 z-10">
+                                            <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                                                🔥 UNDERDOG ALERT
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Content Area - Takes up available space */}
                                     <div className="flex-1 flex flex-col">
                                         {match.locked ? (
@@ -267,9 +285,13 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             {upcomingMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col ${match.locked
-                                        ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
-                                        : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
+                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col relative ${
+                                        // Check for high odds difference (underdog alert)
+                                        !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5
+                                            ? 'border-2 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 cursor-pointer'
+                                            : match.locked
+                                                ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
+                                                : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
                                         } ${
                                         // Locked matches are much smaller and compact
                                         match.locked
@@ -280,7 +302,21 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 : 'p-2 xs:p-2.5 sm:p-3 md:p-4 h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px]'
                                         }`}
                                     onClick={() => !match.locked && onSelectMatch(match)}
+                                    style={!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 ? {
+                                        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.95) 100%)',
+                                        borderImage: 'linear-gradient(45deg, #fbbf24, #f97316, #ef4444) 1',
+                                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.1)'
+                                    } : undefined}
                                 >
+                                    {/* Underdog Alert Banner */}
+                                    {!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 && (
+                                        <div className="absolute -top-2 -right-2 z-10">
+                                            <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                                                🔥 UNDERDOG ALERT
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Content Area - Takes up available space */}
                                     <div className="flex-1 flex flex-col">
                                         {match.locked ? (

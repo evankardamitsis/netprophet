@@ -354,7 +354,7 @@ export function TournamentDetails({ tournament, onClose }: TournamentDetailsProp
                                                             {participant.players?.first_name} {participant.players?.last_name}
                                                         </p>
                                                         <p className="text-xs sm:text-sm text-gray-600">
-                                                            NTRP: {participant.players?.ntrp_rating} | Age: {participant.players?.age}
+                                                            NTRP: {participant.players?.ntrp_rating ? parseFloat(participant.players.ntrp_rating).toFixed(1) : 'N/A'} | Age: {participant.players?.age}
                                                         </p>
                                                     </div>
                                                 </div>

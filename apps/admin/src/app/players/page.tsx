@@ -161,7 +161,7 @@ export default function PlayersPage() {
             {
                 accessorKey: 'ntrpRating',
                 header: 'NTRP',
-                cell: info => info.getValue(),
+                cell: info => parseFloat(info.getValue()).toFixed(1),
                 enableSorting: true,
                 enableColumnFilter: true,
             },
@@ -502,7 +502,7 @@ export default function PlayersPage() {
                                                 <tr key={i}>
                                                     <td>{p.firstName}</td>
                                                     <td>{p.lastName}</td>
-                                                    <td>{p.ntrpRating}</td>
+                                                    <td>{p.ntrpRating.toFixed(1)}</td>
                                                     <td>{p.wins}</td>
                                                     <td>{p.losses}</td>
                                                     <td>{p.surfacePreference}</td>
@@ -701,7 +701,7 @@ export default function PlayersPage() {
                                                 {player.firstName} {player.lastName}
                                             </h3>
                                             <div className="text-sm text-gray-600">
-                                                NTRP: {player.ntrpRating}
+                                                NTRP: {player.ntrpRating.toFixed(1)}
                                             </div>
                                         </div>
                                         <div className="text-right">

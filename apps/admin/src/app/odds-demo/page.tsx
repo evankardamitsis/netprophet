@@ -216,7 +216,7 @@ export default function OddsDemoPage() {
                                     <SelectContent>
                                         {demoPlayers.map(player => (
                                             <SelectItem key={player.id} value={player.id}>
-                                                {player.firstName} {player.lastName} (NTRP: {player.ntrpRating})
+                                                {player.firstName} {player.lastName} (NTRP: {player.ntrpRating.toFixed(1)})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -337,7 +337,7 @@ export default function OddsDemoPage() {
                                     <SelectContent>
                                         {demoPlayers.map(player => (
                                             <SelectItem key={player.id} value={player.id}>
-                                                {player.firstName} {player.lastName} (NTRP: {player.ntrpRating})
+                                                {player.firstName} {player.lastName} (NTRP: {player.ntrpRating.toFixed(1)})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
