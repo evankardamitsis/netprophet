@@ -500,21 +500,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     return newState;
                 });
 
-                // Also update the database to ensure consistency
-                if (user) {
-                    try {
-                        await supabase
-                            .from('profiles')
-                            .update({
-                                has_received_welcome_bonus: true,
-                                has_tournament_pass: true,
-                                tournament_pass_used: false
-                            })
-                            .eq('id', user.id);
-                    } catch (dbError) {
-                        console.error('Failed to update welcome bonus flag in database:', dbError);
-                    }
-                }
+                // The database is already updated by the wallet operations service
+                // No need for duplicate updates
 
                 toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()), {
                     id: loadingToast,

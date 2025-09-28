@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge } from '@netprophet/ui';
+import { Card, CardContent, CardTitle, Button, Badge, CardHeader } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useDictionary } from '@/context/DictionaryContext';
 import { BetsService, supabase } from '@netprophet/lib';
 import { useWallet } from '@/context/WalletContext';
+import { ProfileSetupModal } from '@/components/ProfileSetupModal';
+import { useProfileClaim } from '@/hooks/useProfileClaim';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -16,6 +18,7 @@ export default function MyProfilePage() {
     const { user, signOut, loading } = useAuth();
     const { dict } = useDictionary();
     const { wallet } = useWallet();
+    const { refreshStatus } = useProfileClaim(user?.id || null);
     const [profileStats, setProfileStats] = useState({
         totalCoins: 0,
         totalWins: 0,
@@ -28,20 +31,24 @@ export default function MyProfilePage() {
     const [loadingStats, setLoadingStats] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [showProfileSetup, setShowProfileSetup] = useState(false);
+    const [hasPlayerProfile, setHasPlayerProfile] = useState(false);
 
-    // Check if user is admin
-    const checkAdminStatus = useCallback(async () => {
+    // Check if user is admin and has player profile
+    const checkUserStatus = useCallback(async () => {
         try {
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('is_admin')
+                .select('is_admin, claimed_player_id, profile_claim_status')
                 .eq('id', user?.id || '')
                 .single();
 
             setIsAdmin(profile?.is_admin || false);
+            setHasPlayerProfile(!!profile?.claimed_player_id || profile?.profile_claim_status === 'claimed');
         } catch (err) {
-            console.error('Failed to check admin status:', err);
+            console.error('Failed to check user status:', err);
             setIsAdmin(false);
+            setHasPlayerProfile(false);
         }
     }, [user?.id]);
 
@@ -89,13 +96,43 @@ export default function MyProfilePage() {
             if (wallet.totalBets !== undefined) {
                 loadProfileStats();
             }
-            checkAdminStatus();
+            checkUserStatus();
         }
-    }, [user, loading, router, lang, loadProfileStats, checkAdminStatus, wallet]);
+    }, [user, loading, router, lang, loadProfileStats, checkUserStatus, wallet]);
 
     const handleSignOut = async () => {
         await signOut();
         router.push(`/${lang}`);
+    };
+
+    const handleStartPlayerSetup = async () => {
+        try {
+            // Reset user's profile claim status from 'skipped' to 'pending'
+            // This allows them to go through the full flow again
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    profile_claim_status: 'pending',
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', user?.id);
+
+            if (error) {
+                console.error('Error resetting profile claim status:', error);
+            }
+
+            // Refresh the profile claim status
+            if (refreshStatus) {
+                refreshStatus();
+            }
+
+            // Open the modal
+            setShowProfileSetup(true);
+        } catch (err) {
+            console.error('Error starting player setup:', err);
+            // Still open the modal even if there's an error
+            setShowProfileSetup(true);
+        }
     };
 
     if (loading || !user) {
@@ -240,45 +277,62 @@ export default function MyProfilePage() {
                         </CardContent>
                     </Card>
 
-                    {/* Settings */}
-                    <Card className="bg-slate-800 border border-slate-700 shadow-lg">
-                        <CardHeader>
-                            <CardTitle className="text-xl font-semibold text-white">
-                                {dict?.profile?.settings || 'Settings'}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="font-medium text-white">{dict?.profile?.emailNotifications || 'Email Notifications'}</h4>
-                                        <p className="text-sm text-gray-300">{dict?.profile?.emailNotificationsDesc || 'Receive updates about matches'}</p>
+                    {/* Player Profile Section */}
+                    {!hasPlayerProfile ? (
+                        <Card className="bg-slate-800 border border-slate-700 shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-semibold text-white">
+                                    {(dict as any)?.profile?.becomePlayer || 'Become a Player'}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-lg p-4 border border-purple-500/30">
+                                    <div className="flex items-center space-x-3 mb-3">
+                                        <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-lg">🎾</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-white">{(dict as any)?.profile?.playerBenefits || 'Player Benefits'}</h3>
+                                            <p className="text-sm text-gray-300">{(dict as any)?.profile?.playerBenefitsDesc || 'Join as a tennis player'}</p>
+                                        </div>
                                     </div>
-                                    <Button variant="outline" size="sm" className="border-slate-600 text-gray-300 hover:bg-slate-700">
-                                        {dict?.profile?.configure || 'Configure'}
+                                    <ul className="text-sm text-gray-300 space-y-1 mb-4">
+                                        <li>• {(dict as any)?.profile?.participateTournaments || 'Participate in tournaments'}</li>
+                                        <li>• {(dict as any)?.profile?.competeMatches || 'Compete in matches'}</li>
+                                        <li>• {(dict as any)?.profile?.earnRewards || 'Earn rewards and prizes'}</li>
+                                        <li>• {(dict as any)?.profile?.trackStats || 'Track your performance statistics'}</li>
+                                    </ul>
+                                    <Button
+                                        onClick={handleStartPlayerSetup}
+                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                                    >
+                                        {(dict as any)?.profile?.startPlayerSetup || 'Start Player Setup'}
                                     </Button>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="font-medium text-white">{dict?.profile?.privacySettings || 'Privacy Settings'}</h4>
-                                        <p className="text-sm text-gray-300">{dict?.profile?.privacySettingsDesc || 'Control your profile visibility'}</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <Card className="bg-slate-800 border border-slate-700 shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="text-xl font-semibold text-white">
+                                    {(dict as any)?.profile?.playerProfile || 'Player Profile'}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="bg-green-600/20 rounded-lg p-4 border border-green-500/30">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                                            <span className="text-white text-lg">✓</span>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-white">{(dict as any)?.profile?.playerActive || 'Player Profile Active'}</h3>
+                                            <p className="text-sm text-gray-300">{(dict as any)?.profile?.playerActiveDesc || 'You are registered as a tennis player'}</p>
+                                        </div>
                                     </div>
-                                    <Button variant="outline" size="sm" className="border-slate-600 text-gray-300 hover:bg-slate-700">
-                                        {dict?.profile?.manage || 'Manage'}
-                                    </Button>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h4 className="font-medium text-white">{dict?.profile?.changePassword || 'Change Password'}</h4>
-                                        <p className="text-sm text-gray-300">{dict?.profile?.changePasswordDesc || 'Update your account password'}</p>
-                                    </div>
-                                    <Button variant="outline" size="sm" className="border-slate-600 text-gray-300 hover:bg-slate-700">
-                                        {dict?.profile?.update || 'Update'}
-                                    </Button>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Account Actions */}
                     <Card className="bg-slate-800 border border-slate-700 shadow-lg">
@@ -326,6 +380,12 @@ export default function MyProfilePage() {
                     </Card>
                 </div>
             </div>
+
+            {/* Profile Setup Modal */}
+            <ProfileSetupModal
+                isOpen={showProfileSetup}
+                onClose={() => setShowProfileSetup(false)}
+            />
         </div>
     );
 } 

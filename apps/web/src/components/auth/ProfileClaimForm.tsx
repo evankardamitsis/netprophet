@@ -13,11 +13,15 @@ interface ProfileClaimFormProps {
     }) => void;
     onCancel: () => void;
     loading?: boolean;
+    initialValues?: {
+        firstName: string;
+        lastName: string;
+    };
 }
 
-export function ProfileClaimForm({ onComplete, onCancel, loading = false }: ProfileClaimFormProps) {
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+export function ProfileClaimForm({ onComplete, onCancel, loading = false, initialValues }: ProfileClaimFormProps) {
+    const [firstName, setFirstName] = useState(initialValues?.firstName || "");
+    const [lastName, setLastName] = useState(initialValues?.lastName || "");
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const { dict } = useDictionary();
@@ -54,7 +58,7 @@ export function ProfileClaimForm({ onComplete, onCancel, loading = false }: Prof
     };
 
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-md mx-auto sm:max-w-lg">
             <CardHeader className="text-center">
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <User className="h-6 w-6 text-blue-600" />
@@ -76,8 +80,9 @@ export function ProfileClaimForm({ onComplete, onCancel, loading = false }: Prof
                             value={firstName}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
                             placeholder={dict.profileSetup.form.firstNamePlaceholder}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.firstName ? "border-red-500" : "border-gray-300"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400 bg-white ${errors.firstName ? "border-red-500" : "border-gray-300"
                                 }`}
+                            style={{ color: '#000000 !important', backgroundColor: '#ffffff' }}
                         />
                         {errors.firstName && (
                             <p className="text-sm text-red-500">{errors.firstName}</p>
@@ -94,8 +99,9 @@ export function ProfileClaimForm({ onComplete, onCancel, loading = false }: Prof
                             value={lastName}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
                             placeholder={dict.profileSetup.form.lastNamePlaceholder}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.lastName ? "border-red-500" : "border-gray-300"
+                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-400 bg-white ${errors.lastName ? "border-red-500" : "border-gray-300"
                                 }`}
+                            style={{ color: '#000000 !important', backgroundColor: '#ffffff' }}
                         />
                         {errors.lastName && (
                             <p className="text-sm text-red-500">{errors.lastName}</p>
@@ -127,12 +133,13 @@ export function ProfileClaimForm({ onComplete, onCancel, loading = false }: Prof
                         </AlertDescription>
                     </Alert>
 
+
                     <div className="flex space-x-3">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onCancel}
-                            className="flex-1 hover:bg-gray-50"
+                            className="flex-1 border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                             disabled={loading}
                         >
                             {(dict as any)?.profileSetup?.skipForNow || "Skip for Now"}

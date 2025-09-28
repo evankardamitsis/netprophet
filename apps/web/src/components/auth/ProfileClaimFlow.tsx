@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { ProfileClaimForm } from "./ProfileClaimForm";
 import { ProfileClaimResult } from "./ProfileClaimResult";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Alert, AlertDescription } from "@netprophet/ui";
-import { CheckCircle, Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Alert, AlertDescription, Button } from "@netprophet/ui";
+import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { supabase } from "@netprophet/lib";
 import { useDictionary } from "@/context/DictionaryContext";
 
@@ -25,10 +25,10 @@ interface ProfileClaimFlowProps {
     onRefresh?: () => void;
 }
 
-type FlowStep = "form" | "result" | "processing" | "completed";
+type FlowStep = "checking" | "form" | "result" | "processing" | "completed" | "waiting";
 
 export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: ProfileClaimFlowProps) {
-    const [currentStep, setCurrentStep] = useState<FlowStep>("form");
+    const [currentStep, setCurrentStep] = useState<FlowStep>("checking");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [playerMatch, setPlayerMatch] = useState<PlayerMatch | null>(null);
@@ -36,11 +36,14 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
         firstName: string;
         lastName: string;
     } | null>(null);
+    const [cameFromForm, setCameFromForm] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const { dict } = useDictionary();
 
-    // Check if user already has names and search for matches
+    // Step 1: Check if user already has names and search for matches
     useEffect(() => {
         const checkExistingProfile = async () => {
+            setLoading(true);
             try {
                 const { data: profile, error: profileError } = await supabase
                     .from("profiles")
@@ -50,17 +53,85 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
 
                 if (profileError) {
                     console.error("Error fetching profile:", profileError);
+                    setCurrentStep("form");
+                    setLoading(false);
                     return;
                 }
 
-                // If user has names and profile is pending, search for matches
-                if (profile.first_name && profile.last_name && profile.profile_claim_status === "pending") {
+                // If user has names, search for matches automatically
+                if (profile.first_name && profile.last_name) {
                     setUserData({
                         firstName: profile.first_name,
                         lastName: profile.last_name
                     });
 
-                    // Search for matching players
+                    // Check if user already completed the process
+                    if (profile.profile_claim_status === "claimed") {
+                        // User has successfully claimed a player profile
+                        setCurrentStep("completed");
+                        setLoading(false);
+                        return;
+                    }
+
+                    // If user requested profile creation, they're still waiting for admin approval
+                    if (profile.profile_claim_status === "creation_requested") {
+                        // Check if this was set by automatic lookup (not by user action)
+                        // If so, reset it to allow the user to go through the flow
+                        const { data: profileData } = await supabase
+                            .from("profiles")
+                            .select("created_at, updated_at")
+                            .eq("id", userId)
+                            .single();
+
+                        // If the profile was just created and updated at the same time,
+                        // it was likely set by automatic lookup, so reset it
+                        if (profileData && profileData.created_at === profileData.updated_at) {
+                            await supabase
+                                .from("profiles")
+                                .update({
+                                    profile_claim_status: null,
+                                    updated_at: new Date().toISOString(),
+                                })
+                                .eq("id", userId);
+                            // Continue with the flow instead of showing waiting
+                        } else {
+                            setCurrentStep("waiting");
+                            setLoading(false);
+                            return;
+                        }
+                    }
+
+                    // If user has pending status, it means automatic lookup found matches
+                    // This should always show the results, even if user previously skipped
+                    if (profile.profile_claim_status === "pending") {
+                        // Search for matching players to show the results
+                        const { data: matches, error: searchError } = await supabase
+                            .rpc("find_matching_players", {
+                                search_name: profile.first_name,
+                                search_surname: profile.last_name,
+                            });
+
+                        if (searchError) {
+                            console.error("Error searching for players:", searchError);
+                            setCurrentStep("form");
+                            setLoading(false);
+                            return;
+                        }
+
+                        if (matches && matches.length > 0) {
+                            // Found matching players - show claim option
+                            setPlayerMatch(matches[0]);
+                            setCurrentStep("result");
+                        } else {
+                            // No matches found - show create profile option
+                            setPlayerMatch(null);
+                            setCurrentStep("result");
+                        }
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Search for matching players automatically
                     const { data: matches, error: searchError } = await supabase
                         .rpc("find_matching_players", {
                             search_name: profile.first_name,
@@ -69,14 +140,29 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
 
                     if (searchError) {
                         console.error("Error searching for players:", searchError);
+                        setCurrentStep("form");
+                        setLoading(false);
                         return;
                     }
 
-                    setPlayerMatch(matches && matches.length > 0 ? matches[0] : null);
-                    setCurrentStep("result");
+                    if (matches && matches.length > 0) {
+                        // Found matching players - show claim option
+                        setPlayerMatch(matches[0]);
+                        setCurrentStep("result");
+                    } else {
+                        // No matches found - show create profile option
+                        setPlayerMatch(null);
+                        setCurrentStep("result");
+                    }
+                } else {
+                    // User doesn't have names, show form
+                    setCurrentStep("form");
                 }
             } catch (err) {
                 console.error("Error checking existing profile:", err);
+                setCurrentStep("form");
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -103,6 +189,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
                     last_name: data.lastName,
                     terms_accepted: true,
                     terms_accepted_at: new Date().toISOString(),
+                    profile_claim_status: "pending",
                 })
                 .eq("id", userId);
 
@@ -110,7 +197,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
                 throw new Error(`Failed to update profile: ${updateError.message}`);
             }
 
-            // Search for matching players
+            // Search for matching players after updating profile
             const { data: matches, error: searchError } = await supabase
                 .rpc("find_matching_players", {
                     search_name: data.firstName,
@@ -118,15 +205,27 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
                 });
 
             if (searchError) {
-                throw new Error(`Failed to search for players: ${searchError.message}`);
+                console.error("Error searching for players:", searchError);
+                setError("Failed to search for matching players");
+                return;
             }
 
-            setCurrentStep("result");
-            setPlayerMatch(matches && matches.length > 0 ? matches[0] : null);
+            setCameFromForm(true); // User came from form step
+
+            if (matches && matches.length > 0) {
+                // Found matching players - show claim option
+                setPlayerMatch(matches[0]);
+                setCurrentStep("result");
+            } else {
+                // No matches found - show create profile option
+                setPlayerMatch(null);
+                setCurrentStep("result");
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unexpected error occurred");
         } finally {
             setLoading(false);
+            setIsEditing(false);
         }
     };
 
@@ -197,8 +296,41 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
         }
     };
 
-    const handleSkip = () => {
-        onSkip();
+    const handleBackToForm = () => {
+        setCurrentStep("form");
+        setError(null);
+    };
+
+    const handleEdit = () => {
+        setIsEditing(true);
+        setCurrentStep("form");
+        setError(null);
+    };
+
+
+    const handleSkip = async () => {
+        setLoading(true);
+        try {
+            // Update profile to mark as skipped
+            const { error } = await supabase
+                .from("profiles")
+                .update({
+                    profile_claim_status: "skipped",
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", userId);
+
+            if (error) {
+                console.error("Error updating profile skip status:", error);
+            }
+
+            onSkip();
+        } catch (err) {
+            console.error("Error skipping profile claim:", err);
+            onSkip(); // Still call onSkip even if there's an error
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleComplete = () => {
@@ -207,7 +339,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
 
     if (currentStep === "completed") {
         return (
-            <Card className="w-full max-w-md mx-auto">
+            <Card className="w-full max-w-md mx-auto sm:max-w-lg">
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                         <CheckCircle className="h-6 w-6 text-green-600" />
@@ -239,9 +371,47 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
         );
     }
 
+    if (currentStep === "waiting") {
+        return (
+            <Card className="w-full max-w-md mx-auto sm:max-w-lg">
+                <CardHeader className="text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                        <Clock className="h-6 w-6 text-yellow-600" />
+                    </div>
+                    <CardTitle className="text-2xl text-yellow-800">Profile Creation Requested</CardTitle>
+                    <CardDescription>
+                        Your player profile creation request has been submitted and is waiting for admin approval.
+                        You&apos;ll be notified once it&apos;s been reviewed.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <div className="flex items-center space-x-2 mb-2">
+                            <AlertCircle className="h-5 w-5 text-yellow-600" />
+                            <span className="font-semibold text-yellow-800">What happens next?</span>
+                        </div>
+                        <ul className="text-sm text-yellow-700 space-y-1">
+                            <li>• Admin will review your request</li>
+                            <li>• You&apos;ll receive an email notification</li>
+                            <li>• You can continue using the app as a regular user</li>
+                        </ul>
+                    </div>
+                    <div className="flex space-x-3">
+                        <Button
+                            onClick={handleComplete}
+                            className="flex-1"
+                        >
+                            Continue to App
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
     if (error) {
         return (
-            <Card className="w-full max-w-md mx-auto">
+            <Card className="w-full max-w-md mx-auto sm:max-w-lg">
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl text-red-600">Error</CardTitle>
                 </CardHeader>
@@ -268,12 +438,32 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
         );
     }
 
+    if (currentStep === "checking") {
+        return (
+            <Card className="w-full max-w-md mx-auto sm:max-w-lg">
+                <CardHeader className="text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                        <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+                    </div>
+                    <CardTitle className="text-2xl">Checking Profile...</CardTitle>
+                    <CardDescription>
+                        We&apos;re looking for existing player profiles that match your information.
+                    </CardDescription>
+                </CardHeader>
+            </Card>
+        );
+    }
+
     if (currentStep === "form") {
         return (
             <ProfileClaimForm
                 onComplete={handleFormSubmit}
                 onCancel={onSkip}
                 loading={loading}
+                initialValues={isEditing && userData ? {
+                    firstName: userData.firstName,
+                    lastName: userData.lastName
+                } : undefined}
             />
         );
     }
@@ -287,13 +477,15 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
                 onClaimProfile={handleClaimProfile}
                 onCreateProfile={handleCreateProfile}
                 onSkip={handleSkip}
+                onBack={cameFromForm ? handleBackToForm : undefined}
+                onEdit={!playerMatch ? handleEdit : undefined}
                 loading={loading}
             />
         );
     }
 
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-md mx-auto sm:max-w-lg">
             <CardContent className="text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                 <p>Processing...</p>

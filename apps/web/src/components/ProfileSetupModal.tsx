@@ -41,6 +41,10 @@ export function ProfileSetupModal({ isOpen, onClose }: ProfileSetupModalProps) {
 
     const handleSkip = () => {
         onClose();
+        // Refresh the profile claim status
+        if (refreshStatus) {
+            refreshStatus();
+        }
     };
 
     if (!isOpen || !needsProfileSetup || loading) {
@@ -49,14 +53,14 @@ export function ProfileSetupModal({ isOpen, onClose }: ProfileSetupModalProps) {
 
     return (
         <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     onClose();
                 }
             }}
         >
-            <Card className="w-full max-w-lg mx-auto relative shadow-2xl border-0 bg-white animate-in fade-in-0 zoom-in-95 duration-300">
+            <Card className="w-full max-w-lg mx-auto relative shadow-2xl border-0 bg-white animate-in fade-in-0 zoom-in-95 duration-300 sm:max-w-xl my-8">
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10 transition-colors"
@@ -64,7 +68,7 @@ export function ProfileSetupModal({ isOpen, onClose }: ProfileSetupModalProps) {
                     <X className="h-6 w-6" />
                 </button>
 
-                <CardContent className="bg-white p-6">
+                <CardContent className="bg-white p-4 sm:p-6">
                     <ProfileClaimFlow
                         userId={user?.id || ""}
                         onComplete={handleComplete}

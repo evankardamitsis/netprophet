@@ -47,14 +47,15 @@ export function useProfileClaim(userId: string | null) {
         }
 
         // Check if user needs to complete profile setup
+        // Show profile claim flow to all users who haven't completed it yet
+        // Exclude users who have explicitly skipped (they can manually trigger from profile page)
         const needsSetup =
-          !profile.first_name ||
-          !profile.last_name ||
-          !profile.terms_accepted ||
-          (profile.profile_claim_status !== "claimed" &&
-            profile.profile_claim_status !== "completed" &&
-            profile.profile_claim_status !== "creation_requested" &&
-            !profile.claimed_player_id);
+          profile.profile_claim_status !== "skipped" &&
+          (!profile.first_name ||
+            !profile.last_name ||
+            !profile.terms_accepted ||
+            profile.profile_claim_status === null ||
+            profile.profile_claim_status === "pending");
 
         setStatus({
           needsProfileSetup: needsSetup,
@@ -97,13 +98,12 @@ export function useProfileClaim(userId: string | null) {
       }
 
       const needsSetup =
-        !profile.first_name ||
-        !profile.last_name ||
-        !profile.terms_accepted ||
-        (profile.profile_claim_status !== "claimed" &&
-          profile.profile_claim_status !== "completed" &&
-          profile.profile_claim_status !== "creation_requested" &&
-          !profile.claimed_player_id);
+        profile.profile_claim_status !== "skipped" &&
+        (!profile.first_name ||
+          !profile.last_name ||
+          !profile.terms_accepted ||
+          profile.profile_claim_status === null ||
+          profile.profile_claim_status === "pending");
 
       setStatus({
         needsProfileSetup: needsSetup,

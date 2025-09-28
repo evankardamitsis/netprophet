@@ -5,7 +5,7 @@
  * This script tests the email system by calling database functions directly
  */
 
-const { createClient } = require("@supabase/supabase-js");
+import { createClient } from "@supabase/supabase-js";
 
 // NetProphet project details
 const SUPABASE_URL = "https://mgojbigzulgkjomgirrm.supabase.co";

@@ -22,6 +22,8 @@ interface ProfileClaimResultProps {
     onClaimProfile: (playerId: string) => Promise<void>;
     onCreateProfile: () => Promise<void>;
     onSkip: () => void;
+    onBack?: () => void;
+    onEdit?: () => void;
     loading?: boolean;
 }
 
@@ -32,6 +34,8 @@ export function ProfileClaimResult({
     onClaimProfile,
     onCreateProfile,
     onSkip,
+    onBack,
+    onEdit,
     loading = false,
 }: ProfileClaimResultProps) {
     const [actionLoading, setActionLoading] = useState(false);
@@ -60,7 +64,7 @@ export function ProfileClaimResult({
     if (playerMatch) {
         // Player found - show claim option
         return (
-            <Card className="w-full max-w-md mx-auto">
+            <Card className="w-full max-w-md mx-auto sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                         <CheckCircle className="h-6 w-6 text-green-600" />
@@ -135,7 +139,7 @@ export function ProfileClaimResult({
 
     // No player found - show create option
     return (
-        <Card className="w-full max-w-md mx-auto">
+        <Card className="w-full max-w-md mx-auto sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <CardHeader className="text-center">
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
                     <Plus className="h-6 w-6 text-blue-600" />
@@ -147,9 +151,22 @@ export function ProfileClaimResult({
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <User className="h-5 w-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800">{dict.profileSetup.result.yourName}:</span>
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                            <User className="h-5 w-5 text-blue-600" />
+                            <span className="font-semibold text-blue-800">{dict.profileSetup.result.yourName}:</span>
+                        </div>
+                        {onEdit && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={onEdit}
+                                className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                            >
+                                {(dict as any)?.profileSetup?.result?.editButton || "Edit"}
+                            </Button>
+                        )}
                     </div>
                     <p className="text-blue-700">
                         <strong>{userFirstName} {userLastName}</strong>
@@ -157,21 +174,44 @@ export function ProfileClaimResult({
                     <p className="text-sm text-blue-600 mt-1">
                         {dict.profileSetup.result.nameUsageDescription}
                     </p>
+                    <div className="mt-3 p-3 bg-blue-100 rounded-lg">
+                        <div className="flex items-start space-x-2">
+                            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm text-blue-700">
+                                <p className="font-medium">{(dict as any)?.profileSetup?.result?.importantNotice || "Important:"}</p>
+                                <p>{(dict as any)?.profileSetup?.result?.credentialsNotice || "Please use your real name and surname as they appear in official documents. This ensures accurate matching in tournaments and competitions."}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                        {dict.profileSetup.result.createDescription}
-                    </AlertDescription>
-                </Alert>
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                        <AlertCircle className="h-5 w-5 text-yellow-600" />
+                        <span className="font-semibold text-yellow-800">{(dict as any)?.profileSetup?.result?.skipTitle || "Skip Player Setup"}</span>
+                    </div>
+                    <p className="text-yellow-700 text-sm">
+                        {(dict as any)?.profileSetup?.result?.skipDescription || "You can skip this step and continue as a regular user. You can always set up your player profile later from your profile page."}
+                    </p>
+                </div>
 
                 <div className="flex space-x-3">
+                    {onBack && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onBack}
+                            className="flex-1"
+                            disabled={loading || actionLoading}
+                        >
+                            Back
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="outline"
                         onClick={onSkip}
-                        className="flex-1 hover:bg-gray-50"
+                        className="flex-1 border-yellow-300 text-white"
                         disabled={loading || actionLoading}
                     >
                         {dict.profileSetup.skip}

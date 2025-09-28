@@ -250,16 +250,15 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
   console.log("🔍 DEBUG: WELCOME_BONUS constant value:", bonus);
 
   try {
-    // Get current profile
-    console.log("🔍 DEBUG: Fetching profile for user:", user.id);
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("balance, has_received_welcome_bonus")
-      .eq("id", user.id)
-      .single();
+    // Get or create profile safely
+    console.log("🔍 DEBUG: Fetching or creating profile for user:", user.id);
+    const { data: profileData, error: profileError } = await supabase.rpc(
+      "get_or_create_profile",
+      { user_uuid: user.id }
+    );
 
     console.log("🔍 DEBUG: Profile query result:", {
-      profile,
+      profileData,
       error: profileError,
     });
 
@@ -268,10 +267,12 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
       throw new Error(`Failed to load profile: ${profileError.message}`);
     }
 
-    if (!profile) {
-      console.log("🔍 DEBUG: Profile not found");
+    if (!profileData || profileData.length === 0) {
+      console.log("🔍 DEBUG: Profile not found or created");
       throw new Error("Profile not found");
     }
+
+    const profile = profileData[0];
 
     console.log("🔍 DEBUG: Current profile state:", {
       balance: profile.balance,

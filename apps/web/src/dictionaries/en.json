@@ -55,13 +55,18 @@
       "termsLabel": "I accept the terms and conditions",
       "termsDescription": "By claiming this profile, you agree to participate in matches and tournaments as this player.",
       "noPlayerFound": "No Player Profile Found",
-      "noPlayerFoundDescription": "We couldn't find a player profile that matches your name. You can request to create a new player profile.",
-      "createProfile": "Create My Profile",
-      "createDescription": "You can request to create a new player profile. An admin will review and approve your request.",
+      "noPlayerFoundDescription": "We couldn't find a player profile that matches your name. To participate as a tennis player in the app and have your matches available for predictions, you can create a new player profile.",
+      "createProfile": "Create Player Profile",
+      "createDescription": "By creating a player profile, you can participate as a tennis player in the app. Your matches will be available for predictions by other users and you can participate in tournaments. An admin will review and approve your request.",
       "playerName": "Player Name",
       "playerDetails": "Player Details",
       "yourName": "Your Name",
-      "nameUsageDescription": "This name will be used to create your player profile."
+      "nameUsageDescription": "This name will be used to create your player profile.",
+      "editButton": "Edit",
+      "importantNotice": "Important:",
+      "credentialsNotice": "Use your real name as it appears on official documents for accurate tournament matching.",
+      "skipTitle": "Skip Player Setup",
+      "skipDescription": "Skip to continue as a regular user. You can set up your player profile later."
     },
     "success": {
       "title": "Profile Setup Complete!",
@@ -471,7 +476,18 @@
     "viewMyPicks": "View My Picks",
     "contactSupport": "Contact Support",
     "helpAndFaq": "Help & FAQ",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "becomePlayer": "Become a Player",
+    "playerBenefits": "Player Benefits",
+    "playerBenefitsDesc": "Join as a tennis player",
+    "participateTournaments": "Participate in tournaments",
+    "competeMatches": "Compete in matches",
+    "earnRewards": "Earn rewards and prizes",
+    "trackStats": "Track your performance statistics",
+    "startPlayerSetup": "Start Player Setup",
+    "playerProfile": "Player Profile",
+    "playerActive": "Player Profile Active",
+    "playerActiveDesc": "You are registered as a tennis player"
   },
   "notifications": {
     "title": "Notifications",
