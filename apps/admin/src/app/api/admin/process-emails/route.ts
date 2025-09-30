@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -6,9 +6,25 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    console.log("Processing pending admin emails...");
+    // Verify authentication (optional but recommended)
+    // Accept either CRON_SECRET (via Authorization header) or EMAIL_WEBHOOK_SECRET (via custom header)
+    const authHeader = request.headers.get("authorization");
+    const webhookSecret = request.headers.get("x-webhook-secret");
+
+    const isAuthorized =
+      authHeader === `Bearer ${process.env.CRON_SECRET}` ||
+      (process.env.EMAIL_WEBHOOK_SECRET &&
+        webhookSecret === process.env.EMAIL_WEBHOOK_SECRET) ||
+      !process.env.EMAIL_WEBHOOK_SECRET; // Allow if EMAIL_WEBHOOK_SECRET not set (for easier setup)
+
+    if (!isAuthorized) {
+      console.log("❌ Unauthorized request to process emails");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    console.log("📧 Processing pending admin emails...");
 
     // Get recent pending admin emails (last 30 minutes to avoid processing old emails)
     const thirtyMinutesAgo = new Date(
