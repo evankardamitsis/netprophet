@@ -32,6 +32,8 @@ export default function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deletingPlayer, setDeletingPlayer] = useState<Player | null>(null);
+    const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
+    const [deactivatingPlayer, setDeactivatingPlayer] = useState<Player | null>(null);
 
     // Bulk upload state
     const [importModalOpen, setImportModalOpen] = useState(false);
@@ -99,16 +101,45 @@ export default function PlayersPage() {
     }, []);
 
     const handleToggleStatus = useCallback(async (player: Player) => {
+        // If deactivating a claimed player, show confirmation modal
+        if (player.isActive && player.claimedByUserId) {
+            setDeactivatingPlayer(player);
+            setIsDeactivateModalOpen(true);
+            return;
+        }
+
+        // Otherwise, toggle status directly
         try {
             await updatePlayerStatus(player.id, !player.isActive);
             // Refetch players with pagination
             await fetchPlayersData(currentPage);
-            toast.success(`Player ${!player.isActive ? 'activated' : 'deactivated'} successfully!`);
+
+            if (!player.isActive) {
+                toast.success(`Player activated successfully!`);
+            } else {
+                toast.success(`Player deactivated successfully!`);
+            }
         } catch (error) {
             console.error('Error toggling player status:', error);
             toast.error('Failed to update player status');
         }
     }, [currentPage, fetchPlayersData]);
+
+    const confirmDeactivate = useCallback(async () => {
+        if (!deactivatingPlayer) return;
+
+        try {
+            await updatePlayerStatus(deactivatingPlayer.id, false);
+            // Refetch players with pagination
+            await fetchPlayersData(currentPage);
+            toast.success(`Player deactivated and user unclaimed successfully!`);
+            setIsDeactivateModalOpen(false);
+            setDeactivatingPlayer(null);
+        } catch (error) {
+            console.error('Error deactivating player:', error);
+            toast.error('Failed to deactivate player');
+        }
+    }, [deactivatingPlayer, currentPage, fetchPlayersData]);
 
     const columns = useMemo<ColumnDef<Player, any>[]>(
         () => [
@@ -800,6 +831,19 @@ export default function PlayersPage() {
                 description={deletingPlayer ? `Είστε σίγουροι ότι θέλετε να διαγράψετε τον παίκτη ${deletingPlayer.firstName} ${deletingPlayer.lastName}; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.` : ''}
                 confirmText="Διαγραφή"
                 cancelText="Ακύρωση"
+                variant="destructive"
+            />
+            <WarningModal
+                isOpen={isDeactivateModalOpen}
+                onClose={() => {
+                    setIsDeactivateModalOpen(false);
+                    setDeactivatingPlayer(null);
+                }}
+                onConfirm={confirmDeactivate}
+                title="Deactivate Claimed Player"
+                description={deactivatingPlayer ? `This player (${deactivatingPlayer.firstName} ${deactivatingPlayer.lastName}) is currently claimed by a user.\n\nDeactivating will unclaim the user and allow them to claim a profile again.\n\nDo you want to continue?` : ''}
+                confirmText="Deactivate"
+                cancelText="Cancel"
                 variant="destructive"
             />
         </div>

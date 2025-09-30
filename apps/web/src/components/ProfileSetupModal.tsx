@@ -11,9 +11,10 @@ import { useDictionary } from "@/context/DictionaryContext";
 interface ProfileSetupModalProps {
     isOpen: boolean;
     onClose: () => void;
+    forceRefresh?: number;
 }
 
-export function ProfileSetupModal({ isOpen, onClose }: ProfileSetupModalProps) {
+export function ProfileSetupModal({ isOpen, onClose, forceRefresh }: ProfileSetupModalProps) {
     const { user } = useAuth();
     const { needsProfileSetup, loading, refreshStatus } = useProfileClaim(user?.id || null);
     const { dict } = useDictionary();
@@ -47,7 +48,9 @@ export function ProfileSetupModal({ isOpen, onClose }: ProfileSetupModalProps) {
         }
     };
 
-    if (!isOpen || !needsProfileSetup || loading) {
+    // Only show modal if explicitly opened (isOpen)
+    // Don't check needsProfileSetup here because user might be manually triggering it
+    if (!isOpen || loading) {
         return null;
     }
 
@@ -74,6 +77,7 @@ export function ProfileSetupModal({ isOpen, onClose }: ProfileSetupModalProps) {
                         onComplete={handleComplete}
                         onSkip={handleSkip}
                         onRefresh={refreshStatus}
+                        forceRefresh={forceRefresh}
                     />
                 </CardContent>
             </Card>

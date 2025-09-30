@@ -72,7 +72,7 @@
       "title": "Profile Setup Complete!",
       "description": "Your profile has been successfully set up.",
       "claimedMessage": "You have successfully claimed your player profile and can now participate in matches.",
-      "requestedMessage": "Your profile creation request has been submitted. An admin will review and approve it.",
+      "requestedMessage": "Your player profile has been created successfully and is now available.",
       "continueButton": "Continue to App"
     }
   },

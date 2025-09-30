@@ -33,6 +33,7 @@ export default function MyProfilePage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [showProfileSetup, setShowProfileSetup] = useState(false);
     const [hasPlayerProfile, setHasPlayerProfile] = useState(false);
+    const [profileRefreshKey, setProfileRefreshKey] = useState(0); // Add this to force refresh
 
     // Check if user is admin and has player profile
     const checkUserStatus = useCallback(async () => {
@@ -125,6 +126,9 @@ export default function MyProfilePage() {
             if (refreshStatus) {
                 refreshStatus();
             }
+
+            // Force ProfileClaimFlow to re-check for matching players
+            setProfileRefreshKey(prev => prev + 1);
 
             // Open the modal
             setShowProfileSetup(true);
@@ -385,6 +389,7 @@ export default function MyProfilePage() {
             <ProfileSetupModal
                 isOpen={showProfileSetup}
                 onClose={() => setShowProfileSetup(false)}
+                forceRefresh={profileRefreshKey}
             />
         </div>
     );

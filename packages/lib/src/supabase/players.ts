@@ -196,6 +196,56 @@ export async function updatePlayerStatus(id: string, isActive: boolean) {
     .eq("id", id)
     .select();
   if (error) throw error;
+
+  // If deactivating the player, unclaim any user who has claimed this player
+  if (!isActive && data?.[0]) {
+    const player = data[0];
+
+    // Check if this player has been claimed by a user
+    if (player.claimed_by_user_id) {
+      console.log(
+        `Player ${id} deactivated. Unclaiming user ${player.claimed_by_user_id}`
+      );
+
+      // Reset the player's claim fields so it can be found by find_matching_players
+      const { error: playerUnclaimError } = await supabase
+        .from(TABLE)
+        .update({
+          claimed_by_user_id: null,
+          claimed_at: null,
+          is_hidden: true, // Make it hidden again so find_matching_players can find it
+          is_demo_player: false, // Ensure it's not marked as demo player
+        })
+        .eq("id", id);
+
+      if (playerUnclaimError) {
+        console.error(`Error unclaiming player ${id}:`, playerUnclaimError);
+      }
+
+      // Reset the user's profile claim status to allow them to claim again
+      const { error: userUnclaimError } = await supabase
+        .from("profiles")
+        .update({
+          profile_claim_status: "pending",
+          claimed_player_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("claimed_player_id", id);
+
+      if (userUnclaimError) {
+        console.error(
+          `Error unclaiming user for player ${id}:`,
+          userUnclaimError
+        );
+        // Don't throw error, just log it - the player status update was successful
+      } else {
+        console.log(
+          `Successfully unclaimed user ${player.claimed_by_user_id} from player ${id}`
+        );
+      }
+    }
+  }
+
   return data?.[0] as unknown as Player;
 }
 

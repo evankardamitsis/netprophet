@@ -23,11 +23,12 @@ interface ProfileClaimFlowProps {
     onComplete: () => void;
     onSkip: () => void;
     onRefresh?: () => void;
+    forceRefresh?: number; // Increment this to force re-check
 }
 
 type FlowStep = "checking" | "form" | "result" | "processing" | "completed" | "waiting";
 
-export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: ProfileClaimFlowProps) {
+export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceRefresh }: ProfileClaimFlowProps) {
     const [currentStep, setCurrentStep] = useState<FlowStep>("checking");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -68,6 +69,16 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
                     // Check if user already completed the process
                     if (profile.profile_claim_status === "claimed") {
                         // User has successfully claimed a player profile
+                        // Set a dummy playerMatch to indicate this was a claim (not a creation request)
+                        setPlayerMatch({
+                            id: '',
+                            first_name: profile.first_name,
+                            last_name: profile.last_name,
+                            is_hidden: false,
+                            is_active: true,
+                            claimed_by_user_id: userId,
+                            is_demo_player: false
+                        });
                         setCurrentStep("completed");
                         setLoading(false);
                         return;
@@ -169,7 +180,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh }: Prof
         if (userId) {
             checkExistingProfile();
         }
-    }, [userId]);
+    }, [userId, forceRefresh]); // Add forceRefresh as dependency
 
     const handleFormSubmit = async (data: {
         firstName: string;

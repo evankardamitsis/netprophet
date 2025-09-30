@@ -1,14 +1,61 @@
--- Simple admin email notifications using existing email infrastructure
--- This replaces the complex notification system with simple transactional emails
+-- Consolidated admin email system migration
+-- This replaces multiple redundant migrations with a single comprehensive one
 
--- Drop the complex admin_notifications table and related functions
+-- 1. Drop the admin_notifications table (replaced by email-based system)
 DROP TABLE IF EXISTS admin_notifications CASCADE;
-DROP FUNCTION IF EXISTS trigger_admin_user_registration_notification() CASCADE;
-DROP FUNCTION IF EXISTS trigger_admin_profile_claim_notification() CASCADE;
-DROP FUNCTION IF EXISTS get_pending_admin_notifications() CASCADE;
-DROP FUNCTION IF EXISTS mark_admin_notification_processed(UUID, BOOLEAN, TEXT) CASCADE;
 
--- Create simple trigger function for new user registrations
+-- 2. Create the final send_admin_alert_email function
+CREATE OR REPLACE FUNCTION send_admin_alert_email
+(
+    alert_type TEXT,
+    message TEXT,
+    details JSONB DEFAULT NULL
+)
+RETURNS void AS $$
+DECLARE
+    template_variables JSONB;
+    admin_record RECORD;
+BEGIN
+    -- Prepare template variables
+    template_variables := jsonb_build_object(
+        'alert_type', alert_type,
+        'message', message,
+        'details', COALESCE(details::text, ''),
+        'timestamp', NOW()::text
+    );
+
+    -- Log emails for each admin user with 'pending' status for processing
+    FOR admin_record IN
+    SELECT p.email, p.id as user_id
+    FROM profiles p
+    WHERE p.is_admin = true
+    LOOP
+        INSERT INTO public.email_logs (
+            user_id,
+            to_email,
+            template,
+            type,
+            language,
+            variables,
+            status
+        )
+        VALUES (
+            admin_record.user_id,
+            admin_record.email,
+            'admin_alert',
+            'admin',
+            'en',
+            template_variables,
+            'pending'  -- Mark as pending for processing
+        );
+    END LOOP;
+    
+    RAISE LOG 'Admin alert emails logged for % admin users',
+        (SELECT COUNT(*) FROM profiles WHERE is_admin = true);
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Create trigger function for new user registrations
 CREATE OR REPLACE FUNCTION trigger_admin_user_registration_email()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -36,7 +83,7 @@ EXCEPTION
 END;
 $$;
 
--- Create simple trigger function for profile claims
+-- 4. Create trigger function for profile claims
 CREATE OR REPLACE FUNCTION trigger_admin_profile_claim_email()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -70,7 +117,7 @@ EXCEPTION
 END;
 $$;
 
--- Create triggers
+-- 5. Create triggers
 DROP TRIGGER IF EXISTS admin_user_registration_email_trigger ON profiles;
 CREATE TRIGGER admin_user_registration_email_trigger
     AFTER INSERT ON profiles
@@ -83,7 +130,7 @@ CREATE TRIGGER admin_profile_claim_email_trigger
     FOR EACH ROW
     EXECUTE FUNCTION trigger_admin_profile_claim_email();
 
--- Grant necessary permissions
+-- 6. Grant necessary permissions
+GRANT EXECUTE ON FUNCTION send_admin_alert_email(TEXT, TEXT, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION trigger_admin_user_registration_email() TO authenticated;
 GRANT EXECUTE ON FUNCTION trigger_admin_profile_claim_email() TO authenticated;
-GRANT EXECUTE ON FUNCTION send_admin_alert_email(TEXT, TEXT, JSONB) TO authenticated;
