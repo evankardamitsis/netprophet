@@ -2,7 +2,7 @@
   "cron": [
     {
       "name": "process-admin-emails",
-      "schedule": "* * * * *",
+      "schedule": "0 * * * *",
       "endpoint": "/api/cron/process-emails",
       "description": "Process pending admin emails every minute"
     }
