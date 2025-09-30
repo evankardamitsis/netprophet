@@ -444,6 +444,7 @@ export interface Dictionary {
       claimedMessage: string;
       requestedMessage: string;
       continueButton: string;
+      viewPlayerProfile: string;
     };
   };
   results: {

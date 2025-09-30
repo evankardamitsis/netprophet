@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import { ProfileClaimForm } from "./ProfileClaimForm";
 import { ProfileClaimResult } from "./ProfileClaimResult";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Alert, AlertDescription, Button } from "@netprophet/ui";
-import { AlertCircle, CheckCircle, Clock, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Loader2, User } from "lucide-react";
 import { supabase } from "@netprophet/lib";
 import { useDictionary } from "@/context/DictionaryContext";
 
@@ -29,6 +31,8 @@ interface ProfileClaimFlowProps {
 type FlowStep = "checking" | "form" | "result" | "processing" | "completed" | "waiting";
 
 export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceRefresh }: ProfileClaimFlowProps) {
+    const params = useParams();
+    const lang = params?.lang || 'en';
     const [currentStep, setCurrentStep] = useState<FlowStep>("checking");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -39,6 +43,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
     } | null>(null);
     const [cameFromForm, setCameFromForm] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null);
     const { dict } = useDictionary();
 
     // Step 1: Check if user already has names and search for matches
@@ -48,7 +53,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
             try {
                 const { data: profile, error: profileError } = await supabase
                     .from("profiles")
-                    .select("first_name, last_name, profile_claim_status")
+                    .select("first_name, last_name, profile_claim_status, claimed_player_id")
                     .eq("id", userId)
                     .single();
 
@@ -71,7 +76,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
                         // User has successfully claimed a player profile
                         // Set a dummy playerMatch to indicate this was a claim (not a creation request)
                         setPlayerMatch({
-                            id: '',
+                            id: profile.claimed_player_id || '',
                             first_name: profile.first_name,
                             last_name: profile.last_name,
                             is_hidden: false,
@@ -79,6 +84,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
                             claimed_by_user_id: userId,
                             is_demo_player: false
                         });
+                        setClaimedPlayerId(profile.claimed_player_id);
                         setCurrentStep("completed");
                         setLoading(false);
                         return;
@@ -258,6 +264,8 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
                 throw new Error(data?.message || "Failed to claim profile");
             }
 
+            // Store the claimed player ID for the success screen
+            setClaimedPlayerId(playerId);
             setCurrentStep("completed");
             // Refresh profile status after successful claim with a small delay
             if (onRefresh) {
@@ -369,7 +377,17 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
                                 : dict.profileSetup.success.requestedMessage}
                         </AlertDescription>
                     </Alert>
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-3">
+                        {playerMatch && claimedPlayerId && (
+                            <Link
+                                href={`/${lang}/players/${claimedPlayerId}`}
+                                className="w-full inline-flex items-center justify-center bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors"
+                                onClick={handleComplete}
+                            >
+                                <User className="h-4 w-4 mr-2" />
+                                {dict.profileSetup.success.viewPlayerProfile || "View My Player Profile"}
+                            </Link>
+                        )}
                         <button
                             onClick={handleComplete}
                             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"

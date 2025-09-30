@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardContent, CardTitle, Button, Badge, CardHeader } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { TopNavigation } from '@/components/matches/TopNavigation';
@@ -33,6 +34,7 @@ export default function MyProfilePage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [showProfileSetup, setShowProfileSetup] = useState(false);
     const [hasPlayerProfile, setHasPlayerProfile] = useState(false);
+    const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null);
     const [profileRefreshKey, setProfileRefreshKey] = useState(0); // Add this to force refresh
 
     // Check if user is admin and has player profile
@@ -46,10 +48,12 @@ export default function MyProfilePage() {
 
             setIsAdmin(profile?.is_admin || false);
             setHasPlayerProfile(!!profile?.claimed_player_id || profile?.profile_claim_status === 'claimed');
+            setClaimedPlayerId(profile?.claimed_player_id || null);
         } catch (err) {
             console.error('Failed to check user status:', err);
             setIsAdmin(false);
             setHasPlayerProfile(false);
+            setClaimedPlayerId(null);
         }
     }, [user?.id]);
 
@@ -324,7 +328,7 @@ export default function MyProfilePage() {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="bg-green-600/20 rounded-lg p-4 border border-green-500/30">
-                                    <div className="flex items-center space-x-3">
+                                    <div className="flex items-center space-x-3 mb-4">
                                         <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
                                             <span className="text-white text-lg">✓</span>
                                         </div>
@@ -333,6 +337,16 @@ export default function MyProfilePage() {
                                             <p className="text-sm text-gray-300">{(dict as any)?.profile?.playerActiveDesc || 'You are registered as a tennis player'}</p>
                                         </div>
                                     </div>
+                                    {claimedPlayerId && (
+                                        <Link
+                                            href={`/${lang}/players/${claimedPlayerId}`}
+                                            className="block w-full"
+                                        >
+                                            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                                                {(dict as any)?.profileSetup?.success?.viewPlayerProfile || 'View My Player Profile'}
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

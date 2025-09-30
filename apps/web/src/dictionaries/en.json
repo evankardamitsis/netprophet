@@ -73,7 +73,8 @@
       "description": "Your profile has been successfully set up.",
       "claimedMessage": "You have successfully claimed your player profile and can now participate in matches.",
       "requestedMessage": "Your player profile has been created successfully and is now available.",
-      "continueButton": "Continue to App"
+      "continueButton": "Continue to App",
+      "viewPlayerProfile": "View My Player Profile"
     }
   },
   "auth": {
