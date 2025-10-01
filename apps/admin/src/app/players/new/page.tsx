@@ -39,9 +39,13 @@ export default function NewPlayerPage() {
         notes: '',
         lastMatchDate: '',
         injuryStatus: 'healthy',
-        seasonalForm: 0.5
+        seasonalForm: 0.5,
+        claimedByUserId: undefined,
+        isActive: true,
+        isHidden: false,
     });
     const [loading, setLoading] = useState(false);
+    const [notifying, setNotifying] = useState(false);
 
     const handleSave = async () => {
         setLoading(true);
@@ -54,6 +58,43 @@ export default function NewPlayerPage() {
             toast.error('Failed to create player');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleNotifyUser = async () => {
+        if (!player || !player.id) {
+            toast.error('Please save the player first before notifying');
+            return;
+        }
+
+        if (!player.claimedByUserId) {
+            toast.error('This player is not linked to a user account. Please add the User ID.');
+            return;
+        }
+
+        if (!player.isActive) {
+            toast.error('Please activate the player profile before notifying the user');
+            return;
+        }
+
+        setNotifying(true);
+        try {
+            const response = await fetch(`/api/players/${player.id}/notify-activation`, {
+                method: 'POST',
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to send notification');
+            }
+
+            toast.success('✅ User notified! Profile activation email sent successfully.');
+        } catch (error) {
+            console.error('Error notifying user:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to send notification');
+        } finally {
+            setNotifying(false);
         }
     };
 
@@ -110,6 +151,34 @@ export default function NewPlayerPage() {
                 </div>
             </div>
 
+            {player.claimedByUserId && (
+                <Card className="bg-blue-50 border-blue-200">
+                    <CardContent className="pt-6">
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <h3 className="font-semibold text-blue-900 mb-1">🔗 Player Linked to User</h3>
+                                <p className="text-sm text-blue-700">
+                                    User ID: <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{player.claimedByUserId}</code>
+                                </p>
+                                <p className="text-xs text-blue-600 mt-2">
+                                    💡 After saving and activating this profile, click the button below to notify the user
+                                </p>
+                            </div>
+                            {player.id && player.isActive && (
+                                <Button
+                                    variant="secondary"
+                                    onClick={handleNotifyUser}
+                                    disabled={notifying || loading}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                    {notifying ? '📧 Sending...' : '📧 Notify User'}
+                                </Button>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Basic Information */}
                 <Card>
@@ -136,6 +205,20 @@ export default function NewPlayerPage() {
                                     placeholder="Επώνυμο"
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="claimedByUserId">User ID (Optional - για profile creation requests)</Label>
+                            <Input
+                                id="claimedByUserId"
+                                value={player.claimedByUserId || ''}
+                                onChange={(e) => updatePlayer('claimedByUserId', e.target.value || undefined)}
+                                placeholder="Paste User ID from creation request email"
+                                className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                💡 Αν δημιουργείς προφίλ για user request, κάνε paste το User ID από το email
+                            </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

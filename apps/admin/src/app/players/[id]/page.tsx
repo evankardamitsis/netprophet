@@ -50,6 +50,7 @@ export default function PlayerEditPage() {
     const [player, setPlayer] = useState<Player>(mockPlayer);
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(!isNew);
+    const [notifying, setNotifying] = useState(false);
 
     useEffect(() => {
         if (!isNew) {
@@ -113,6 +114,40 @@ export default function PlayerEditPage() {
             toast.error('Failed to save player: ' + (error instanceof Error ? error.message : 'Unknown error'));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleNotifyUser = async () => {
+        if (!player || !player.id) return;
+
+        if (!player.claimedByUserId) {
+            toast.error('This player is not linked to a user account');
+            return;
+        }
+
+        if (!player.isActive) {
+            toast.error('Please activate the player profile before notifying the user');
+            return;
+        }
+
+        setNotifying(true);
+        try {
+            const response = await fetch(`/api/players/${player.id}/notify-activation`, {
+                method: 'POST',
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to send notification');
+            }
+
+            toast.success('✅ User notified! Profile activation email sent successfully.');
+        } catch (error) {
+            console.error('Error notifying user:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to send notification');
+        } finally {
+            setNotifying(false);
         }
     };
 
@@ -206,6 +241,20 @@ export default function PlayerEditPage() {
                                     placeholder="Επώνυμο"
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="claimedByUserId">User ID (Optional - για profile creation requests)</Label>
+                            <Input
+                                id="claimedByUserId"
+                                value={player.claimedByUserId || ''}
+                                onChange={(e) => updatePlayerField('claimedByUserId', e.target.value || undefined)}
+                                placeholder="Paste User ID from creation request email"
+                                className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                💡 Αν συνδέεις προφίλ με user request, κάνε paste το User ID από το email
+                            </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
