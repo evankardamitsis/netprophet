@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,7 @@ export default function PlayersPage() {
     const [loading, setLoading] = useState(true);
     const [importing, setImporting] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
+    const debouncedGlobalFilter = useDebounce(globalFilter, 500); // Debounce search by 500ms
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'lastName', desc: false }
     ]);
@@ -72,7 +74,7 @@ export default function PlayersPage() {
                 pageSize,
                 sortBy,
                 currentSort?.desc ? 'desc' : 'asc',
-                searchTerm || globalFilter
+                searchTerm || debouncedGlobalFilter
             );
 
             setPlayers(result.players);
@@ -85,7 +87,7 @@ export default function PlayersPage() {
         } finally {
             setLoading(false);
         }
-    }, [sorting, pageSize, globalFilter]);
+    }, [sorting, pageSize, debouncedGlobalFilter]);
 
     // Fetch players on mount and when dependencies change
     useEffect(() => {
@@ -325,11 +327,7 @@ export default function PlayersPage() {
             // Refetch data when sorting changes
             setTimeout(() => fetchPlayersData(1), 0);
         },
-        onGlobalFilterChange: (value) => {
-            setGlobalFilter(value);
-            // Refetch data when search changes
-            setTimeout(() => fetchPlayersData(1, value), 0);
-        },
+        onGlobalFilterChange: setGlobalFilter,
         onColumnFiltersChange: setColumnFilters,
         onRowSelectionChange: setRowSelection,
         getCoreRowModel: getCoreRowModel(),
@@ -383,7 +381,7 @@ export default function PlayersPage() {
                         age: parseInt(row.age) || 25,
                         hand: row.hand === 'left' ? 'left' : 'right',
                         notes: row.notes || '',
-                        lastMatchDate: row.lastMatchDate || '',
+                        lastMatchDate: row.lastMatchDate && row.lastMatchDate.trim() ? row.lastMatchDate : undefined,
                         injuryStatus: row.injuryStatus || 'healthy',
                         seasonalForm: undefined, // auto-calculated
                         // Historical players are hidden and inactive until claimed
