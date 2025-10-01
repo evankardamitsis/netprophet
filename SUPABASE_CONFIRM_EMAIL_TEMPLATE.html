@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Confirm Your NetProphet Account</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(
+        135deg,
+        #0f172a 0%,
+        #1e293b 50%,
+        #334155 100%
+      );
+      font-family:
+        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+        sans-serif;
+    "
+  >
+    <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px">
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 40px">
+        <div style="margin-bottom: 20px">
+          <!-- Styled text logo (email-client safe) -->
+          <div
+            style="
+              display: inline-block;
+              background: linear-gradient(135deg, #2563eb 0%, #9333ea 100%);
+              border-radius: 12px;
+              padding: 12px 24px;
+            "
+          >
+            <span
+              style="
+                color: white;
+                font-weight: bold;
+                font-size: 24px;
+                font-family:
+                  -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                  Roboto, sans-serif;
+              "
+              >NetProphet</span
+            >
+          </div>
+        </div>
+        <h1
+          style="
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          "
+        >
+          Επιβεβαίωση Λογαριασμού
+        </h1>
+        <p style="color: #94a3b8; font-size: 18px; margin: 10px 0 0 0">
+          Ένα βήμα μακριά από την εγγραφή σου!
+        </p>
+      </div>
+
+      <!-- Main Content -->
+      <div
+        style="
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 40px;
+          margin-bottom: 30px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        "
+      >
+        <h2
+          style="
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+          "
+        >
+          Γεια σου! 👋
+        </h2>
+
+        <p
+          style="
+            color: #e2e8f0;
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 0 0 30px 0;
+          "
+        >
+          Σε ευχαριστούμε που εγγράφηκες στο NetProphet! Για να ολοκληρώσεις την
+          εγγραφή σου και να ξεκινήσεις να κάνεις προβλέψεις, παρακαλώ
+          επιβεβαίωσε το email σου κάνοντας κλικ στο κουμπί παρακάτω.
+        </p>
+
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 40px 0">
+          <a
+            href="{{ .ConfirmationURL }}"
+            style="
+              display: inline-block;
+              background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+              color: #ffffff;
+              text-decoration: none;
+              padding: 18px 40px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 18px;
+              box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+              transition: all 0.3s ease;
+            "
+          >
+            Επιβεβαίωση Email
+          </a>
+        </div>
+
+        <p
+          style="
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 30px 0 0 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+          "
+        >
+          Αν δεν δημιούργησες αυτόν τον λογαριασμό, μπορείς να αγνοήσεις αυτό το
+          email.
+        </p>
+
+        <!-- Link fallback -->
+        <div
+          style="
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+          "
+        >
+          <p style="color: #94a3b8; font-size: 12px; margin: 0 0 8px 0">
+            Αν το κουμπί δεν λειτουργεί, αντίγραψε και επικόλλησε αυτό το link
+            στον browser σου:
+          </p>
+          <p
+            style="
+              color: #3b82f6;
+              font-size: 12px;
+              margin: 0;
+              word-break: break-all;
+            "
+          >
+            {{ .ConfirmationURL }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div
+        style="
+          text-align: center;
+          color: #94a3b8;
+          font-size: 14px;
+          line-height: 1.5;
+        "
+      >
+        <p style="margin: 0 0 10px 0">
+          Καλή επιτυχία με τις προβλέψεις σου! 🎾
+        </p>
+        <p style="margin: 0">
+          <a
+            href="https://netprophetapp.com"
+            style="color: #3b82f6; text-decoration: none"
+            >netprophetapp.com</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

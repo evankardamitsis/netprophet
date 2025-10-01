@@ -80,7 +80,7 @@ function AuthFormWithSearchParams() {
                         setMessage(error.message);
                     }
                 } else {
-                    setMessage('Check your email to confirm your account!');
+                    setMessage(dict?.auth?.checkEmailToConfirm || 'Check your email to confirm your account!');
                 }
             }
         } catch (err: any) {

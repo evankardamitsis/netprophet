@@ -17,6 +17,7 @@ export interface Dictionary {
     welcome: string;
     passwordRequirements?: string;
     passwordTooWeak?: string;
+    checkEmailToConfirm?: string;
   };
   sidebar: {
     live: string;

@@ -82,7 +82,8 @@
     "signOut": "Sign Out",
     "welcome": "Welcome",
     "passwordRequirements": "Password must be at least 8 characters long and contain uppercase, lowercase, and numbers",
-    "passwordTooWeak": "Password is too weak. Please use a stronger password."
+    "passwordTooWeak": "Password is too weak. Please use a stronger password.",
+    "checkEmailToConfirm": "Check your email to confirm your account!"
   },
   "matches": {
     "title": "Tennis Matches",
