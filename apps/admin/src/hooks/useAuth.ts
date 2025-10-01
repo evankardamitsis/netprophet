@@ -80,14 +80,39 @@ export function useAuth() {
 
     checkAuth();
 
-    // Only listen for SIGNED_OUT events to clear user state
+    // Listen for auth state changes but only update on specific events
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+
+      console.log("Admin useAuth: Auth state changed -", event);
+
       if (event === "SIGNED_OUT") {
         console.log("Admin useAuth: User signed out");
-        if (mounted) {
-          setUser(null);
+        setUser(null);
+      } else if (event === "SIGNED_IN" && session?.user) {
+        // Re-check admin status when user signs in
+        console.log("Admin useAuth: User signed in, checking admin status");
+        try {
+          const { data: profile, error } = await supabase
+            .from("profiles")
+            .select("is_admin")
+            .eq("id", session.user.id)
+            .single();
+
+          if (mounted && !error && profile?.is_admin) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email || "",
+              is_admin: true,
+            });
+          } else if (mounted) {
+            setUser(null);
+          }
+        } catch (error) {
+          console.error("Admin useAuth: SIGNED_IN profile check error:", error);
+          if (mounted) setUser(null);
         }
       }
     });
