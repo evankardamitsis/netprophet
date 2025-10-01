@@ -492,6 +492,11 @@ export interface Dictionary {
     claimingDailyReward: string;
     dailyRewardClaimed: string;
     failedToClaimDailyReward: string;
+    firstDailyLogin: string;
+    streakActivated: string;
+    streakBonus: string;
+    streakContinued: string;
+    streakBroken: string;
     claimingWelcomeBonus: string;
     welcomeBonusClaimed: string;
     failedToClaimWelcomeBonus: string;

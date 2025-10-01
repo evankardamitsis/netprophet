@@ -417,6 +417,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const checkDailyLogin = async (): Promise<number> => {
         try {
             const status = await DailyRewardsService.checkDailyReward();
+
+            // Safety check to ensure status is defined
+            if (!status) {
+                console.error('Daily reward status is undefined');
+                return 0;
+            }
+
             return status.can_claim ? status.next_reward_amount : 0;
         } catch (error) {
             console.error('Failed to check daily reward:', error);
@@ -440,33 +447,48 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     dailyLoginStreak: result.new_streak,
                 }));
 
-                // Show appropriate message based on whether reward was given
-                if (rewardAmount > 0) {
-                    // Handle pluralization for both languages
-                    let streakText: string;
-                    if (lang === 'el') {
-                        // Greek pluralization: 1 = "ημέρα", 2+ = "ημέρες"
-                        streakText = result.new_streak === 1 ? 'ημέρα' : 'ημέρες';
-                    } else {
-                        // English pluralization: 1 = "day", 2+ = "days"
-                        streakText = result.new_streak === 1 ? 'day' : 'days';
-                    }
+                // Translate message key from database
+                let translatedMessage: string;
+                const messageKey = result.message || '';
 
-                    const message = (dict?.toast?.dailyRewardClaimed || '🎁 Daily reward claimed! +{amount} 🌕 ({streak} {streakText} streak)')
-                        .replace('{amount}', rewardAmount.toString())
-                        .replace('{streak}', result.new_streak.toString())
-                        .replace('{streakText}', streakText);
-                    toast.success(message, {
+                if (messageKey === 'FIRST_LOGIN') {
+                    translatedMessage = dict?.toast?.firstDailyLogin || 'First daily login! Come back tomorrow to start your streak and earn 30 🌕';
+                } else if (messageKey === 'STREAK_ACTIVATED') {
+                    translatedMessage = dict?.toast?.streakActivated || 'Streak activated! Daily login reward claimed (+30 🌕)';
+                } else if (messageKey === 'STREAK_BONUS') {
+                    translatedMessage = dict?.toast?.streakBonus || 'Daily login reward claimed with 7-day streak bonus! (+130 🌕)';
+                } else if (messageKey.startsWith('STREAK_CONTINUED:')) {
+                    const streak = messageKey.split(':')[1];
+                    translatedMessage = (dict?.toast?.streakContinued || 'Daily login reward claimed! (+30 🌕, {streak} day streak)').replace('{streak}', streak);
+                } else if (messageKey === 'STREAK_BROKEN') {
+                    translatedMessage = dict?.toast?.streakBroken || 'Streak broken. Come back tomorrow to reactivate your streak and earn 30 🌕';
+                } else {
+                    translatedMessage = messageKey; // Fallback to raw message
+                }
+
+                // Show appropriate toast based on whether reward was given
+                if (rewardAmount > 0) {
+                    toast.success(translatedMessage, {
                         id: loadingToast,
                     });
                 } else {
-                    toast.error(result.message || 'Streak broken - no reward today. Come back tomorrow to start a new streak!', {
+                    // Show info message when no reward (streak not active yet or broken)
+                    toast(translatedMessage, {
                         id: loadingToast,
+                        icon: '📅',
+                        duration: 5000,
                     });
                 }
 
                 return rewardAmount;
             } else {
+                // Check if it's "Already claimed today" - if so, dismiss silently
+                if (result.message === 'Already claimed today') {
+                    toast.dismiss(loadingToast);
+                    return 0;
+                }
+
+                // For other errors, show error toast
                 toast.error(`Failed to claim daily reward: ${result.message}`, {
                     id: loadingToast,
                 });

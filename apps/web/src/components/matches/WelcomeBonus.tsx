@@ -65,14 +65,34 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
     useEffect(() => {
         // Check for daily login reward on component mount, but only if user has already received welcome bonus
         const checkDailyReward = async () => {
+            // Check session storage to see if we've already processed today
+            const today = new Date().toDateString();
+            const lastChecked = sessionStorage.getItem('dailyRewardChecked');
+
+            if (lastChecked === today) {
+                // Already checked today in this session
+                return;
+            }
+
             try {
                 // Only check daily login if user has already received welcome bonus AND we haven't checked yet
-                if (wallet.hasReceivedWelcomeBonus && !hasCheckedDailyLogin) {
+                if (wallet.hasReceivedWelcomeBonus && !hasCheckedDailyLogin && user) {
                     setHasCheckedDailyLogin(true); // Mark as checked to prevent multiple calls
+
+                    // Mark in session storage that we've checked today
+                    sessionStorage.setItem('dailyRewardChecked', today);
+
                     const reward = await checkDailyLogin();
+
                     if (reward > 0) {
+                        // Show modal if there's a reward to claim
                         setDailyReward(reward);
                         setShowDailyLogin(true);
+                    } else {
+                        // Automatically claim in background (day 1 or streak broken)
+                        // This records the login in the database without showing modal
+                        await claimDailyLogin();
+                        // Note: claimDailyLogin already shows a toast with the appropriate message
                     }
                 }
             } catch (error) {
@@ -80,7 +100,9 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
             }
         };
         checkDailyReward();
-    }, [wallet.hasReceivedWelcomeBonus, wallet.dailyLoginStreak, hasCheckedDailyLogin, checkDailyLogin]); // Added hasCheckedDailyLogin to dependencies
+        // Only run when welcome bonus status changes or user logs in - NOT when streak changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [wallet.hasReceivedWelcomeBonus, hasCheckedDailyLogin, user]); // Intentionally excluding checkDailyLogin and claimDailyLogin to prevent re-runs
 
     // Check welcome bonus status after wallet sync is complete
     useEffect(() => {
@@ -275,12 +297,9 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                             {/* Action button */}
                             <Button
                                 onClick={handleClaimDailyLogin}
-                                className={`w-full text-white font-semibold py-3 text-base shadow-lg ${dailyReward > 0
-                                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                                    : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
-                                    }`}
+                                className="w-full text-white font-semibold py-3 text-base shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
                             >
-                                {dailyReward > 0 ? 'Claim Daily Reward' : 'Streak Broken'}
+                                Claim Daily Reward
                             </Button>
                         </div>
                     )}

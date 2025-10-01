@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from "./client";
 
 export interface DailyRewardStatus {
   can_claim: boolean;
@@ -19,41 +19,53 @@ export class DailyRewardsService {
    */
   static async checkDailyReward(): Promise<DailyRewardStatus> {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
-        console.error('Daily reward session error:', sessionError);
+        console.error("Daily reward session error:", sessionError);
         throw new Error(`Session error: ${sessionError.message}`);
       }
-      
+
       if (!session) {
-        console.log('Daily reward: No session found, user not authenticated');
-        throw new Error('User not authenticated');
+        console.log("Daily reward: No session found, user not authenticated");
+        throw new Error("User not authenticated");
       }
 
-      console.log('Daily reward: Session found, user ID:', session.user.id);
+      console.log("Daily reward: Session found, user ID:", session.user.id);
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/daily-rewards?action=check`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Daily reward API error:', response.status, errorText);
-        throw new Error(`Failed to check daily reward status: ${response.status} ${errorText}`);
+        console.error("Daily reward API error:", response.status, errorText);
+        throw new Error(
+          `Failed to check daily reward status: ${response.status} ${errorText}`
+        );
       }
 
-      const result = await response.json() as { data: DailyRewardStatus };
+      const result = (await response.json()) as { data: DailyRewardStatus };
+
+      // Ensure we have valid data before returning
+      if (!result.data) {
+        console.error("Daily reward API returned no data");
+        throw new Error("Daily reward API returned no data");
+      }
+
       return result.data;
     } catch (error) {
-      console.error('checkDailyReward error:', error);
+      console.error("checkDailyReward error:", error);
       throw error;
     }
   }
@@ -62,28 +74,37 @@ export class DailyRewardsService {
    * Claim daily reward
    */
   static async claimDailyReward(): Promise<DailyRewardClaim> {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/daily-rewards?action=claim`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error('Failed to claim daily reward');
+      throw new Error("Failed to claim daily reward");
     }
 
-    const result = await response.json() as { data: DailyRewardClaim };
+    const result = (await response.json()) as { data: DailyRewardClaim };
+
+    // Ensure we have valid data before returning
+    if (!result.data) {
+      console.error("Daily reward claim API returned no data");
+      throw new Error("Daily reward claim API returned no data");
+    }
+
     return result.data;
   }
 
@@ -92,9 +113,9 @@ export class DailyRewardsService {
    */
   static async getDailyRewardHistory(): Promise<any[]> {
     const { data, error } = await supabase
-      .from('daily_rewards')
-      .select('*')
-      .order('claimed_date', { ascending: false })
+      .from("daily_rewards")
+      .select("*")
+      .order("claimed_date", { ascending: false })
       .limit(30); // Last 30 days
 
     if (error) {
@@ -103,4 +124,4 @@ export class DailyRewardsService {
 
     return data || [];
   }
-} 
+}
