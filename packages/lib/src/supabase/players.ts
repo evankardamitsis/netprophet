@@ -207,10 +207,31 @@ export async function bulkInsertPlayers(players: Player[]) {
     return [] as Player[];
   }
 
-  const dbPlayers = newPlayers.map(toDbPlayer);
-  const { data, error } = await supabase.from(TABLE).insert(dbPlayers).select();
-  if (error) throw error;
-  return data as unknown as Player[];
+  // Insert in batches of 500 to avoid query size limits
+  const BATCH_SIZE = 500;
+  const allInsertedPlayers: Player[] = [];
+
+  for (let i = 0; i < newPlayers.length; i += BATCH_SIZE) {
+    const batch = newPlayers.slice(i, i + BATCH_SIZE);
+    const dbPlayers = batch.map(toDbPlayer);
+
+    console.log(
+      `Inserting batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(newPlayers.length / BATCH_SIZE)} (${batch.length} players)`
+    );
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert(dbPlayers)
+      .select();
+    if (error) throw error;
+
+    if (data) {
+      allInsertedPlayers.push(...(data as unknown as Player[]));
+    }
+  }
+
+  console.log(`Successfully inserted ${allInsertedPlayers.length} players`);
+  return allInsertedPlayers;
 }
 
 export async function updatePlayer(id: string, updates: Partial<Player>) {

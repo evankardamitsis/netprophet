@@ -39,6 +39,7 @@ export default function PlayersPage() {
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [importedPlayers, setImportedPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
+    const [importing, setImporting] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
     const [sorting, setSorting] = useState<SortingState>([
         { id: 'lastName', desc: false }
@@ -402,6 +403,9 @@ export default function PlayersPage() {
     }
 
     async function handleImportConfirm() {
+        setImporting(true);
+        const loadingToast = toast.loading(`Importing ${importedPlayers.length} players in batches...`);
+
         try {
             const result = await bulkInsertPlayers(importedPlayers);
             const imported = result.length;
@@ -414,13 +418,21 @@ export default function PlayersPage() {
             await fetchPlayersData(1);
 
             if (skipped > 0) {
-                toast.success(`Successfully imported ${imported} players! ${skipped} duplicates skipped.`);
+                toast.success(`Successfully imported ${imported} players! ${skipped} duplicates skipped.`, {
+                    id: loadingToast,
+                });
             } else {
-                toast.success(`Successfully imported ${imported} players!`);
+                toast.success(`Successfully imported ${imported} players!`, {
+                    id: loadingToast,
+                });
             }
         } catch (err: any) {
             console.error('Import error:', err);
-            toast.error(err.message || 'Import failed');
+            toast.error(err.message || 'Import failed', {
+                id: loadingToast,
+            });
+        } finally {
+            setImporting(false);
         }
     }
 
@@ -568,11 +580,18 @@ export default function PlayersPage() {
                                     </table>
                                 </div>
                                 <button
-                                    className="px-4 py-2 bg-green-600 text-white rounded mr-2 disabled:opacity-60"
+                                    className="px-4 py-2 bg-green-600 text-white rounded mr-2 disabled:opacity-60 flex items-center gap-2"
                                     onClick={handleImportConfirm}
-                                    disabled={importedPlayers.length === 0}
+                                    disabled={importedPlayers.length === 0 || importing}
                                 >
-                                    Import {importedPlayers.length} Players
+                                    {importing ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                            Importing...
+                                        </>
+                                    ) : (
+                                        `Import ${importedPlayers.length} Players`
+                                    )}
                                 </button>
                                 <button
                                     className="px-4 py-2 bg-gray-300 rounded"
