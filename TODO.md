@@ -28,7 +28,6 @@
 - [x] **🔴 HIGH PRIORITY: Implement Head to Head update on each player after posting match results**
 - [x ] Add user profile management
 - [ ] Implement email preferences settings
-- [ ] Add push notifications
 - [ ] Create user achievement system
 - [ ] Add social features (friends, leaderboards)
 - [ ] Implement referral system
