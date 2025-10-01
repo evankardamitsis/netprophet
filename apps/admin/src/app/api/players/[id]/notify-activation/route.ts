@@ -3,10 +3,10 @@ import { supabase } from "@netprophet/lib";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const playerId = params.id;
+    const { id: playerId } = await params;
 
     // Get player information to find the associated user
     const { data: player, error: playerError } = await supabase
