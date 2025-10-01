@@ -18,6 +18,7 @@ interface PlayerMatch {
     is_active: boolean;
     claimed_by_user_id: string | null;
     is_demo_player: boolean;
+    match_score?: number;
 }
 
 interface ProfileClaimFlowProps {
@@ -37,6 +38,7 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [playerMatch, setPlayerMatch] = useState<PlayerMatch | null>(null);
+    const [playerMatches, setPlayerMatches] = useState<PlayerMatch[]>([]); // Store ALL matches
     const [userData, setUserData] = useState<{
         firstName: string;
         lastName: string;
@@ -136,12 +138,20 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
                         }
 
                         if (matches && matches.length > 0) {
-                            // Found matching players - show claim option
-                            setPlayerMatch(matches[0]);
+                            // Found matching players - store all matches
+                            setPlayerMatches(matches);
+                            // If only one match, set it directly
+                            if (matches.length === 1) {
+                                setPlayerMatch(matches[0]);
+                            } else {
+                                // Multiple matches - user needs to select
+                                setPlayerMatch(null);
+                            }
                             setCurrentStep("result");
                         } else {
                             // No matches found - show create profile option
                             setPlayerMatch(null);
+                            setPlayerMatches([]);
                             setCurrentStep("result");
                         }
                         setLoading(false);
@@ -163,12 +173,20 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
                     }
 
                     if (matches && matches.length > 0) {
-                        // Found matching players - show claim option
-                        setPlayerMatch(matches[0]);
+                        // Found matching players - store all matches
+                        setPlayerMatches(matches);
+                        // If only one match, set it directly
+                        if (matches.length === 1) {
+                            setPlayerMatch(matches[0]);
+                        } else {
+                            // Multiple matches - user needs to select
+                            setPlayerMatch(null);
+                        }
                         setCurrentStep("result");
                     } else {
                         // No matches found - show create profile option
                         setPlayerMatch(null);
+                        setPlayerMatches([]);
                         setCurrentStep("result");
                     }
                 } else {
@@ -230,12 +248,20 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
             setCameFromForm(true); // User came from form step
 
             if (matches && matches.length > 0) {
-                // Found matching players - show claim option
-                setPlayerMatch(matches[0]);
+                // Found matching players - store all matches
+                setPlayerMatches(matches);
+                // If only one match, set it directly
+                if (matches.length === 1) {
+                    setPlayerMatch(matches[0]);
+                } else {
+                    // Multiple matches - user needs to select
+                    setPlayerMatch(null);
+                }
                 setCurrentStep("result");
             } else {
                 // No matches found - show create profile option
                 setPlayerMatch(null);
+                setPlayerMatches([]);
                 setCurrentStep("result");
             }
         } catch (err) {
@@ -501,13 +527,14 @@ export function ProfileClaimFlow({ userId, onComplete, onSkip, onRefresh, forceR
         return (
             <ProfileClaimResult
                 playerMatch={playerMatch}
+                playerMatches={playerMatches}
                 userFirstName={userData.firstName}
                 userLastName={userData.lastName}
                 onClaimProfile={handleClaimProfile}
                 onCreateProfile={handleCreateProfile}
                 onSkip={handleSkip}
                 onBack={cameFromForm ? handleBackToForm : undefined}
-                onEdit={!playerMatch ? handleEdit : undefined}
+                onEdit={!playerMatch && playerMatches.length === 0 ? handleEdit : undefined}
                 loading={loading}
             />
         );

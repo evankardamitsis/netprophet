@@ -438,6 +438,13 @@ export interface Dictionary {
       playerDetails: string;
       yourName: string;
       nameUsageDescription: string;
+      editButton?: string;
+      importantNotice?: string;
+      credentialsNotice?: string;
+      skipTitle?: string;
+      skipDescription?: string;
+      backButton?: string;
+      skipButton?: string;
     };
     success: {
       title: string;
@@ -446,6 +453,19 @@ export interface Dictionary {
       requestedMessage: string;
       continueButton: string;
       viewPlayerProfile: string;
+    };
+    multipleMatches?: {
+      title: string;
+      description: string;
+      createInstead: string;
+    };
+    selectPlayer?: {
+      title: string;
+      description: string;
+      highMatch: string;
+      selected: string;
+      claiming: string;
+      confirmButton: string;
     };
   };
   results: {

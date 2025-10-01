@@ -2,21 +2,13 @@
 
 import { useState } from "react";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Alert, AlertDescription } from "@netprophet/ui";
-import { Loader2, User, CheckCircle, AlertCircle, Plus } from "lucide-react";
+import { Loader2, User, CheckCircle, AlertCircle, Plus, Users } from "lucide-react";
 import { useDictionary } from "@/context/DictionaryContext";
-
-interface PlayerMatch {
-    id: string;
-    first_name: string;
-    last_name: string;
-    is_hidden: boolean;
-    is_active: boolean;
-    claimed_by_user_id: string | null;
-    is_demo_player: boolean;
-}
+import { ProfileSelectionList, PlayerMatch } from "./ProfileSelectionList";
 
 interface ProfileClaimResultProps {
     playerMatch: PlayerMatch | null;
+    playerMatches?: PlayerMatch[];
     userFirstName: string;
     userLastName: string;
     onClaimProfile: (playerId: string) => Promise<void>;
@@ -29,6 +21,7 @@ interface ProfileClaimResultProps {
 
 export function ProfileClaimResult({
     playerMatch,
+    playerMatches = [],
     userFirstName,
     userLastName,
     onClaimProfile,
@@ -60,6 +53,67 @@ export function ProfileClaimResult({
             setActionLoading(false);
         }
     };
+
+    // Handle multiple matches - show selection list
+    if (!playerMatch && playerMatches.length > 1) {
+        return (
+            <Card className="w-full max-w-md mx-auto sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                <CardHeader className="text-center">
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                        <Users className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <CardTitle className="text-2xl">
+                        {dict.profileSetup?.multipleMatches?.title || "Multiple Players Found"}
+                    </CardTitle>
+                    <CardDescription>
+                        {dict.profileSetup?.multipleMatches?.description ||
+                            "We found multiple players with matching information. Please select your profile."}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <ProfileSelectionList
+                        players={playerMatches}
+                        onSelectPlayer={handleClaimProfile}
+                        loading={actionLoading || loading}
+                    />
+
+                    <div className="pt-4 border-t space-y-3">
+                        <Button
+                            variant="outline"
+                            onClick={onCreateProfile}
+                            disabled={actionLoading || loading}
+                            className="w-full"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            {dict.profileSetup?.multipleMatches?.createInstead || "None of these are me - Create New Profile"}
+                        </Button>
+
+                        {onBack && (
+                            <Button
+                                variant="ghost"
+                                onClick={onBack}
+                                disabled={actionLoading || loading}
+                                className="w-full"
+                            >
+                                {dict.profileSetup?.result?.backButton || "Back"}
+                            </Button>
+                        )}
+
+                        {onSkip && (
+                            <Button
+                                variant="ghost"
+                                onClick={onSkip}
+                                disabled={actionLoading || loading}
+                                className="w-full text-gray-500"
+                            >
+                                {dict.profileSetup?.result?.skipButton || "Skip for now"}
+                            </Button>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     if (playerMatch) {
         // Player found - show claim option

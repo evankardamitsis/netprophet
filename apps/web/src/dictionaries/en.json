@@ -75,6 +75,19 @@
       "requestedMessage": "Your player profile has been created successfully and is now available.",
       "continueButton": "Continue to App",
       "viewPlayerProfile": "View My Player Profile"
+    },
+    "multipleMatches": {
+      "title": "Multiple Players Found",
+      "description": "We found multiple players with matching information. Please select your profile.",
+      "createInstead": "None of these are me - Create New Profile"
+    },
+    "selectPlayer": {
+      "title": "Select Your Profile",
+      "description": "We found multiple players with a matching surname. Please select your profile:",
+      "highMatch": "High match confidence",
+      "selected": "Selected",
+      "claiming": "Claiming...",
+      "confirmButton": "Claim Selected Profile"
     }
   },
   "auth": {
