@@ -385,6 +385,12 @@ export default function PlayersPage() {
                         lastMatchDate: row.lastMatchDate || '',
                         injuryStatus: row.injuryStatus || 'healthy',
                         seasonalForm: undefined, // auto-calculated
+                        // Historical players are hidden and inactive until claimed
+                        isHidden: true,
+                        isActive: false,
+                        isDemoPlayer: false,
+                        claimedByUserId: undefined,
+                        claimedAt: undefined,
                     }));
                     setImportedPlayers(parsed);
                 } catch (err) {
@@ -397,13 +403,21 @@ export default function PlayersPage() {
 
     async function handleImportConfirm() {
         try {
-            await bulkInsertPlayers(importedPlayers);
+            const result = await bulkInsertPlayers(importedPlayers);
+            const imported = result.length;
+            const skipped = importedPlayers.length - imported;
+
             setImportModalOpen(false);
             setImportedPlayers([]);
             if (fileInputRef.current) fileInputRef.current.value = '';
             // Refetch players with pagination
             await fetchPlayersData(1);
-            toast.success(`Successfully imported ${importedPlayers.length} players!`);
+
+            if (skipped > 0) {
+                toast.success(`Successfully imported ${imported} players! ${skipped} duplicates skipped.`);
+            } else {
+                toast.success(`Successfully imported ${imported} players!`);
+            }
         } catch (err: any) {
             console.error('Import error:', err);
             toast.error(err.message || 'Import failed');

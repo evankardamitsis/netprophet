@@ -180,7 +180,34 @@ export async function insertPlayer(player: Player) {
 }
 
 export async function bulkInsertPlayers(players: Player[]) {
-  const dbPlayers = players.map(toDbPlayer);
+  // Check for existing players to avoid duplicates
+  const { data: existingPlayers } = await supabase
+    .from(TABLE)
+    .select("first_name, last_name");
+
+  const existingSet = new Set(
+    (existingPlayers || []).map((p) =>
+      `${p.first_name}|${p.last_name}`.toLowerCase()
+    )
+  );
+
+  // Filter out duplicates
+  const newPlayers = players.filter((player) => {
+    const key = `${player.firstName}|${player.lastName}`.toLowerCase();
+    return !existingSet.has(key);
+  });
+
+  console.log(`Total players to import: ${players.length}`);
+  console.log(
+    `Existing players (skipped): ${players.length - newPlayers.length}`
+  );
+  console.log(`New players (will import): ${newPlayers.length}`);
+
+  if (newPlayers.length === 0) {
+    return [] as Player[];
+  }
+
+  const dbPlayers = newPlayers.map(toDbPlayer);
   const { data, error } = await supabase.from(TABLE).insert(dbPlayers).select();
   if (error) throw error;
   return data as unknown as Player[];
