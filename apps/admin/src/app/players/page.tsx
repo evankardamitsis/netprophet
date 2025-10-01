@@ -366,11 +366,15 @@ export default function PlayersPage() {
                         currentStreak: parseInt(row.currentStreak) || 0,
                         streakType: row.streakType === 'W' ? 'W' : 'L',
                         surfacePreference: row.surfacePreference || 'Hard Court',
+                        // Surface match counts (historical data)
+                        hardMatches: parseInt(row.hardMatches) || 0,
+                        clayMatches: parseInt(row.clayMatches) || 0,
+                        grassMatches: parseInt(row.grassMatches) || 0,
+                        // Win rates will be auto-calculated from match counts
                         surfaceWinRates: {
-                            hardCourt: parseFloat(row.hardCourtWinRate) || 0,
-                            clayCourt: parseFloat(row.clayCourtWinRate) || 0,
-                            grassCourt: parseFloat(row.grassCourtWinRate) || 0,
-                            indoor: parseFloat(row.indoorWinRate) || 0,
+                            hardCourt: 0, // Will be calculated
+                            clayCourt: 0,
+                            grassCourt: 0,
                         },
                         aggressiveness: parseInt(row.aggressiveness) || 5,
                         stamina: parseInt(row.stamina) || 5,
@@ -379,7 +383,6 @@ export default function PlayersPage() {
                         hand: row.hand === 'left' ? 'left' : 'right',
                         notes: row.notes || '',
                         lastMatchDate: row.lastMatchDate || '',
-                        fatigueLevel: row.fatigueLevel ? parseInt(row.fatigueLevel) : undefined,
                         injuryStatus: row.injuryStatus || 'healthy',
                         seasonalForm: undefined, // auto-calculated
                     }));
@@ -518,27 +521,33 @@ export default function PlayersPage() {
                                     <table className="min-w-full text-xs">
                                         <thead>
                                             <tr>
-                                                <th>First Name</th>
-                                                <th>Last Name</th>
-                                                <th>NTRP</th>
-                                                <th>Wins</th>
-                                                <th>Losses</th>
-                                                <th>Surface</th>
-                                                <th>Streak</th>
-                                                <th>Age</th>
+                                                <th className="px-2">First Name</th>
+                                                <th className="px-2">Last Name</th>
+                                                <th className="px-2">NTRP</th>
+                                                <th className="px-2">Wins</th>
+                                                <th className="px-2">Losses</th>
+                                                <th className="px-2">Surface</th>
+                                                <th className="px-2">Hard</th>
+                                                <th className="px-2">Clay</th>
+                                                <th className="px-2">Grass</th>
+                                                <th className="px-2">Streak</th>
+                                                <th className="px-2">Age</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {importedPlayers.map((p, i) => (
                                                 <tr key={i}>
-                                                    <td>{p.firstName}</td>
-                                                    <td>{p.lastName}</td>
-                                                    <td>{p.ntrpRating.toFixed(1)}</td>
-                                                    <td>{p.wins}</td>
-                                                    <td>{p.losses}</td>
-                                                    <td>{p.surfacePreference}</td>
-                                                    <td>{p.currentStreak} {p.streakType}</td>
-                                                    <td>{p.age}</td>
+                                                    <td className="px-2">{p.firstName}</td>
+                                                    <td className="px-2">{p.lastName}</td>
+                                                    <td className="px-2">{p.ntrpRating.toFixed(1)}</td>
+                                                    <td className="px-2">{p.wins}</td>
+                                                    <td className="px-2">{p.losses}</td>
+                                                    <td className="px-2">{p.surfacePreference}</td>
+                                                    <td className="px-2">{p.hardMatches || 0}</td>
+                                                    <td className="px-2">{p.clayMatches || 0}</td>
+                                                    <td className="px-2">{p.grassMatches || 0}</td>
+                                                    <td className="px-2">{p.currentStreak} {p.streakType}</td>
+                                                    <td className="px-2">{p.age}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
