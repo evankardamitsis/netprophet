@@ -116,11 +116,12 @@ export async function fetchPlayersPaginated(
 ) {
   let query = supabase.from(TABLE).select("*", { count: "exact" });
 
-  // Add search filter if provided
+  // Add search filter if provided (using normalized columns for accent-insensitive search)
   if (searchTerm && searchTerm.trim()) {
-    const searchValue = searchTerm.trim();
+    const searchValue = searchTerm.trim().toLowerCase();
+    // Search using normalized columns for accent and case-insensitive matching
     query = query.or(
-      `first_name.ilike.%${searchValue}%,last_name.ilike.%${searchValue}%`
+      `first_name_normalized.like.%${searchValue}%,last_name_normalized.like.%${searchValue}%`
     );
   }
 

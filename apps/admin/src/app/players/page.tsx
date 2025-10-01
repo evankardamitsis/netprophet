@@ -40,6 +40,7 @@ export default function PlayersPage() {
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [importedPlayers, setImportedPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searching, setSearching] = useState(false);
     const [importing, setImporting] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
     const debouncedGlobalFilter = useDebounce(globalFilter, 500); // Debounce search by 500ms
@@ -57,8 +58,12 @@ export default function PlayersPage() {
     const [totalPages, setTotalPages] = useState(0);
 
     // Fetch players from Supabase with pagination
-    const fetchPlayersData = useCallback(async (page: number = 1, searchTerm?: string) => {
-        setLoading(true);
+    const fetchPlayersData = useCallback(async (page: number = 1, searchTerm?: string, isInitialLoad: boolean = false) => {
+        if (isInitialLoad) {
+            setLoading(true);
+        } else {
+            setSearching(true);
+        }
         try {
             const currentSort = sorting.length > 0 ? sorting[0] : null;
             const sortBy = currentSort?.id === 'firstName' ? 'first_name' :
@@ -86,12 +91,15 @@ export default function PlayersPage() {
             toast.error('Failed to load players: ' + (err instanceof Error ? err.message : String(err)));
         } finally {
             setLoading(false);
+            setSearching(false);
         }
     }, [sorting, pageSize, debouncedGlobalFilter]);
 
     // Fetch players on mount and when dependencies change
     useEffect(() => {
-        fetchPlayersData(1);
+        // Only set loading=true on initial mount
+        const isInitialLoad = players.length === 0;
+        fetchPlayersData(1, undefined, isInitialLoad);
     }, [fetchPlayersData]);
 
     const handleEdit = useCallback((player: Player) => {
@@ -620,12 +628,19 @@ export default function PlayersPage() {
                     <div className="mb-4 space-y-4">
                         {/* Search and Page Size - Mobile First */}
                         <div className="flex flex-col sm:flex-row gap-4">
-                            <Input
-                                placeholder="Search by name..."
-                                value={globalFilter}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
-                                className="w-full sm:max-w-xs"
-                            />
+                            <div className="relative w-full sm:max-w-xs">
+                                <Input
+                                    placeholder="Search by name..."
+                                    value={globalFilter}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
+                                    className="w-full"
+                                />
+                                {searching && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm text-gray-600">Page size:</span>
                                 <select
