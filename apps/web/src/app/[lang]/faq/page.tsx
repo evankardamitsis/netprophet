@@ -28,7 +28,7 @@ const faqData: Record<string, FAQItem[]> = {
         },
         {
             question: "Can I withdraw my coins?",
-            answer: "Currently, coins are used for platform rewards and leaderboard rankings. We're working on additional features for coin redemption."
+            answer: "No, coins are not withdrawable. They are used solely for in-app purchases and are never transformed into real money."
         },
         {
             question: "What happens if a match is cancelled?",
@@ -62,7 +62,7 @@ const faqData: Record<string, FAQItem[]> = {
         },
         {
             question: "Μπορώ να αποσύρω τα νομίσματά μου;",
-            answer: "Προς το παρόν, τα νομίσματα χρησιμοποιούνται για ανταμοιβές πλατφόρμας και κατατάξεις στον πίνακα κατάταξης. Εργαζόμαστε σε πρόσθετα χαρακτηριστικά για εξαργύρωση νομισμάτων."
+            answer: "Όχι, τα νομίσματα δεν μπορούν να αποσυρθούν. Χρησιμοποιούνται μόνο για αγορές στην εφαρμογή και δεν μετατρέπονται σε πραγματικά χρήματα."
         },
         {
             question: "Τι συμβαίνει αν ένας αγώνας ακυρωθεί;",

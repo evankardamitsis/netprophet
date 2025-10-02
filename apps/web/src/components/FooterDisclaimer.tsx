@@ -1,23 +1,18 @@
 import React from 'react';
-import { useRouter } from 'next/navigation';
 
 interface FooterDisclaimerProps {
     lang?: 'en' | 'el';
 }
 
 export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
-    const router = useRouter();
-
     const translations = {
         en: {
             disclaimer: 'NetProphet is a points-only prediction game. No real-money betting. No real-money rewards.',
-            privacy: 'Privacy Policy',
-            terms: 'Terms of Service',
+            copyright: '© 2025 NetProphet. All rights reserved.',
         },
         el: {
             disclaimer: 'Το NetProphet είναι παιχνίδι προβλέψεων μόνο με ψηφιακά νομίσματα. Δεν υπάρχει στοίχημα με πραγματικά χρήματα.',
-            privacy: 'Πολιτική Απορρήτου',
-            terms: 'Όροι Χρήσης'
+            copyright: '© 2025 NetProphet. Με επιφύλαξη παντός δικαιώματος.',
         }
     };
 
@@ -28,24 +23,13 @@ export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                     <div className="flex items-center space-x-2">
-                        <span className="text-xs">
+                        <span className="text-xs text-gray-400">
                             {t.disclaimer}
                         </span>
                     </div>
 
-                    <div className="flex items-center space-x-6 text-sm text-gray-400">
-                        <button
-                            onClick={() => router.push(`/${lang}/privacy`)}
-                            className="hover:text-white transition-colors"
-                        >
-                            {t.privacy}
-                        </button>
-                        <button
-                            onClick={() => router.push(`/${lang}/terms`)}
-                            className="hover:text-white transition-colors"
-                        >
-                            {t.terms}
-                        </button>
+                    <div className="text-xs text-gray-400">
+                        {t.copyright}
                     </div>
                 </div>
             </div>

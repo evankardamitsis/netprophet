@@ -36,24 +36,29 @@ export default function MyProfilePage() {
     const [hasPlayerProfile, setHasPlayerProfile] = useState(false);
     const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null);
     const [profileRefreshKey, setProfileRefreshKey] = useState(0); // Add this to force refresh
+    const [username, setUsername] = useState('');
+    const [isEditingUsername, setIsEditingUsername] = useState(false);
+    const [savingUsername, setSavingUsername] = useState(false);
 
     // Check if user is admin and has player profile
     const checkUserStatus = useCallback(async () => {
         try {
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('is_admin, claimed_player_id, profile_claim_status')
+                .select('is_admin, claimed_player_id, profile_claim_status, username')
                 .eq('id', user?.id || '')
                 .single();
 
             setIsAdmin(profile?.is_admin || false);
             setHasPlayerProfile(!!profile?.claimed_player_id || profile?.profile_claim_status === 'claimed');
             setClaimedPlayerId(profile?.claimed_player_id || null);
+            setUsername(profile?.username || '');
         } catch (err) {
             console.error('Failed to check user status:', err);
             setIsAdmin(false);
             setHasPlayerProfile(false);
             setClaimedPlayerId(null);
+            setUsername('');
         }
     }, [user?.id]);
 
@@ -143,6 +148,50 @@ export default function MyProfilePage() {
         }
     };
 
+    const handleSaveUsername = async () => {
+        if (!user?.id) return;
+
+        // Validate username
+        if (!username.trim()) {
+            return;
+        }
+
+        if (username.length < 3 || username.length > 20) {
+            alert(lang === 'el'
+                ? 'Το όνομα χρήστη πρέπει να είναι 3-20 χαρακτήρες'
+                : 'Username must be 3-20 characters');
+            return;
+        }
+
+        setSavingUsername(true);
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update({
+                    username: username.trim(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            setIsEditingUsername(false);
+            // Show success message
+            const successMsg = lang === 'el'
+                ? '✅ Το όνομα χρήστη ενημερώθηκε επιτυχώς!'
+                : '✅ Username updated successfully!';
+            alert(successMsg);
+        } catch (err: any) {
+            console.error('Error updating username:', err);
+            const errorMsg = lang === 'el'
+                ? 'Αποτυχία ενημέρωσης ονόματος χρήστη'
+                : 'Failed to update username';
+            alert(errorMsg + (err?.message ? `: ${err.message}` : ''));
+        } finally {
+            setSavingUsername(false);
+        }
+    };
+
     if (loading || !user) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-900">
@@ -214,6 +263,64 @@ export default function MyProfilePage() {
                                 <div className="flex justify-between items-center py-2 border-b border-slate-600">
                                     <span className="text-gray-300">{dict?.profile?.email || 'Email'}:</span>
                                     <span className="font-medium text-white">{user.email}</span>
+                                </div>
+                                <div className="py-2 border-b border-slate-600">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="text-gray-300">{lang === 'el' ? 'Όνομα χρήστη:' : 'Username:'}:</span>
+                                        {!isEditingUsername ? (
+                                            <div className="flex items-center space-x-2">
+                                                <span className="font-medium text-white">
+                                                    {username || (lang === 'el' ? 'Μη ορισμένο' : 'Not set')}
+                                                </span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setIsEditingUsername(true)}
+                                                    className="text-blue-400 hover:text-blue-300 h-7 px-2"
+                                                >
+                                                    ✏️
+                                                </Button>
+                                            </div>
+                                        ) : null}
+                                    </div>
+                                    {isEditingUsername && (
+                                        <div className="space-y-2">
+                                            <input
+                                                type="text"
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value)}
+                                                placeholder={lang === 'el' ? 'Εισάγετε όνομα χρήστη' : 'Enter username'}
+                                                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                                                maxLength={20}
+                                            />
+                                            <p className="text-xs text-gray-400">
+                                                {lang === 'el'
+                                                    ? '3-20 χαρακτήρες • Εμφανίζεται στον πίνακα κατάταξης'
+                                                    : '3-20 characters • Displayed on leaderboard'}
+                                            </p>
+                                            <div className="flex space-x-2">
+                                                <Button
+                                                    size="sm"
+                                                    onClick={handleSaveUsername}
+                                                    disabled={savingUsername || !username.trim() || username.length < 3}
+                                                    className="bg-green-600 hover:bg-green-700"
+                                                >
+                                                    {savingUsername ? (lang === 'el' ? 'Αποθήκευση...' : 'Saving...') : (lang === 'el' ? 'Αποθήκευση' : 'Save')}
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setIsEditingUsername(false);
+                                                        checkUserStatus(); // Reload original username
+                                                    }}
+                                                    className="border-slate-600"
+                                                >
+                                                    {lang === 'el' ? 'Ακύρωση' : 'Cancel'}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex justify-between items-center py-2 border-b border-slate-600">
                                     <span className="text-gray-300">{dict?.profile?.memberSince || 'Member since'}:</span>

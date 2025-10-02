@@ -19,64 +19,98 @@ export default function Footer({ lang, dict }: FooterProps) {
     return (
         <footer className="bg-slate-900 text-white py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid md:grid-cols-3 gap-8 mb-8">
+                <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                    {/* Brand */}
                     <div>
                         <div className="mb-4">
                             <Logo size="md" />
                         </div>
                         <p className="text-slate-400 mb-6">
-                            {lang === 'el' ? 'Η νούμερο ένα πλατφόρμα προβλέψεων για το τένις με πραγματικούς αγώνες' : 'The prediction platform for tennis with real matches'}
+                            {lang === 'el' ? 'Η νούμερο ένα πλατφόρμα προβλέψεων με πραγματικούς ερασιτεχνικούς αγώνες' : 'The number one sports prediction platform with real amateur matches'}
                         </p>
                         <Button
                             onClick={() => router.push(`/${lang}/auth/signin`)}
+                            size="sm"
                             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                         >
-                            {lang === 'el' ? 'Δοκίμασε τώρα δωρεάν' : 'Try for free'}
+                            {lang === 'el' ? 'Ξεκίνα Δωρεάν' : 'Start Free'}
                         </Button>
                     </div>
 
+                    {/* Platform */}
                     <div>
-                        <h4 className="font-semibold mb-4">Support</h4>
-                        <ul className="space-y-2 text-slate-400">
+                        <h4 className="font-semibold mb-4">{lang === 'el' ? 'Πλατφόρμα' : 'Platform'}</h4>
+                        <ul className="space-y-2 text-slate-400 text-sm">
                             <li>
-                                <a
-                                    href={`/${lang}/faq`}
-                                    className="hover:text-white transition-colors"
-                                >
-                                    FAQ
+                                <a href={`/${lang}/matches`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Αγώνες' : 'Matches'}
                                 </a>
                             </li>
                             <li>
-                                <a
-                                    href={`/${lang}/contact`}
-                                    className="hover:text-white transition-colors"
-                                >
-                                    Contact
+                                <a href={`/${lang}/leaderboard`} className="hover:text-white transition-colors">
+                                    {dict?.navigation?.leaderboard || 'Leaderboard'}
                                 </a>
                             </li>
                             <li>
-                                <a
-                                    href={`/${lang}/help-center`}
-                                    className="hover:text-white transition-colors"
-                                >
-                                    Help Center
+                                <a href={`/${lang}/players`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Παίκτες' : 'Players'}
+                                </a>
+                            </li>
+                            <li>
+                                <a href={`/${lang}/results`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Αποτελέσματα' : 'Results'}
+                                </a>
+                            </li>
+                            <li>
+                                <a href={`/${lang}/how-it-works`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Πώς Λειτουργεί' : 'How It Works'}
                                 </a>
                             </li>
                         </ul>
                     </div>
 
+                    {/* Support */}
                     <div>
-                        <h4 className="font-semibold mb-4">Powered by</h4>
-                        <div className="text-slate-400">
-                            <a href="https://belowthefold.gr" target="_blank" className="text-blue-400 hover:text-blue-300">Below The Fold</a>
-                        </div>
+                        <h4 className="font-semibold mb-4">Support</h4>
+                        <ul className="space-y-2 text-slate-400 text-sm">
+                            <li>
+                                <a href={`/${lang}/faq`} className="hover:text-white transition-colors">
+                                    FAQ
+                                </a>
+                            </li>
+                            <li>
+                                <a href={`/${lang}/contact`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Επικοινωνία' : 'Contact'}
+                                </a>
+                            </li>
+                            <li>
+                                <a href={`/${lang}/help-center`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Κέντρο Βοήθειας' : 'Help Center'}
+                                </a>
+                            </li>
+                        </ul>
                     </div>
-                </div>
 
-                <div className="border-t border-slate-800 pt-8">
-                    <div className="flex justify-center">
-                        <div className="text-slate-400 text-sm">
-                            © 2025 NetProphet. All rights reserved.
+                    {/* Legal & Info */}
+                    <div>
+                        <h4 className="font-semibold mb-4">{lang === 'el' ? 'Πληροφορίες' : 'Information'}</h4>
+                        <ul className="space-y-2 text-slate-400 text-sm mb-6">
+                            <li>
+                                <a href={`/${lang}/terms`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Όροι Χρήσης' : 'Terms of Service'}
+                                </a>
+                            </li>
+                            <li>
+                                <a href={`/${lang}/privacy`} className="hover:text-white transition-colors">
+                                    {lang === 'el' ? 'Πολιτική Απορρήτου' : 'Privacy Policy'}
+                                </a>
+                            </li>
+                        </ul>
+                        <div className="text-xs text-slate-500">
+                            Powered by<br />
+                            <a href="https://belowthefold.gr" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                                Below The Fold
+                            </a>
                         </div>
                     </div>
                 </div>
