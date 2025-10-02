@@ -55,8 +55,25 @@ export default function PlayerEditPage() {
     useEffect(() => {
         if (!isNew) {
             // Fetch specific player data from Supabase
-            fetchPlayerById(playerId).then((player: Player) => {
-                setPlayer(player);
+            fetchPlayerById(playerId).then((fetchedPlayer: Player) => {
+                // Ensure last5 always has exactly 5 elements
+                const last5 = fetchedPlayer.last5 || [];
+                const normalizedLast5 = [...last5];
+
+                // Pad with 'L' if less than 5 elements
+                while (normalizedLast5.length < 5) {
+                    normalizedLast5.push('L');
+                }
+
+                // Trim if more than 5 elements
+                if (normalizedLast5.length > 5) {
+                    normalizedLast5.splice(5);
+                }
+
+                setPlayer({
+                    ...fetchedPlayer,
+                    last5: normalizedLast5 as ('W' | 'L')[]
+                });
                 setInitialLoading(false);
             }).catch((error) => {
                 console.error('Error fetching player:', error);
@@ -101,14 +118,16 @@ export default function PlayerEditPage() {
             if (isNew) {
                 const result = await insertPlayer(player);
                 console.log('Player created successfully:', result);
-                toast.success('Player created!');
+                toast.success('Player created! Redirecting to players list...');
+                // Redirect to players list only when creating new player
+                router.push('/players');
             } else {
                 console.log('Updating player with ID:', player.id);
                 const result = await updatePlayer(player.id, player);
                 console.log('Player updated successfully:', result);
-                toast.success('Player updated!');
+                toast.success('Player updated successfully!');
+                // Stay on the page when editing - no redirect
             }
-            router.push('/players');
         } catch (error) {
             console.error('Error saving player:', error);
             toast.error('Failed to save player: ' + (error instanceof Error ? error.message : 'Unknown error'));
@@ -168,7 +187,38 @@ export default function PlayerEditPage() {
     const updateLast5 = (index: number, result: 'W' | 'L') => {
         const newLast5 = [...player.last5];
         newLast5[index] = result;
-        setPlayer(prev => ({ ...prev, last5: newLast5 }));
+
+        // Auto-calculate streak and streak type based on last 5
+        const { currentStreak, streakType } = calculateStreakFromLast5(newLast5);
+
+        setPlayer(prev => ({
+            ...prev,
+            last5: newLast5,
+            currentStreak,
+            streakType
+        }));
+    };
+
+    const calculateStreakFromLast5 = (last5: string[]): { currentStreak: number; streakType: 'W' | 'L' } => {
+        if (last5.length === 0) return { currentStreak: 0, streakType: 'L' };
+
+        // Start from the most recent match (end of array) and count consecutive same results
+        let streak = 1;
+        const mostRecent = last5[last5.length - 1];
+
+        // Count backwards from second-to-last
+        for (let i = last5.length - 2; i >= 0; i--) {
+            if (last5[i] === mostRecent) {
+                streak++;
+            } else {
+                break;
+            }
+        }
+
+        return {
+            currentStreak: streak,
+            streakType: mostRecent as 'W' | 'L'
+        };
     };
 
     const getWinRate = (wins: number, losses: number) => {
@@ -364,48 +414,35 @@ export default function PlayerEditPage() {
                         <CardTitle>Πρόσφατη Φόρμα</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label htmlFor="currentStreak">Τρέχον Streak</Label>
-                                <Input
-                                    id="currentStreak"
-                                    type="number"
-                                    min="0"
-                                    value={player.currentStreak}
-                                    onChange={(e) => updatePlayerField('currentStreak', parseInt(e.target.value) || 0)}
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="streakType">Τύπος Streak</Label>
-                                <Select
-                                    value={player.streakType}
-                                    onValueChange={(value: 'W' | 'L') => updatePlayerField('streakType', value)}
-                                >
-                                    <SelectTrigger className="bg-white">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="W">Νίκες</SelectItem>
-                                        <SelectItem value="L">Ήττες</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
 
                         <div>
                             <Label>Τελευταία 5 Αγώνες</Label>
-                            <div className="flex space-x-2 mt-2">
+                            <p className="text-xs text-gray-500 mb-2">
+                                Κλικ για να αλλάξεις • Το streak υπολογίζεται αυτόματα
+                            </p>
+                            <div className="flex space-x-2">
                                 {player.last5.map((result, index) => (
                                     <Button
                                         key={index}
                                         variant={result === 'W' ? 'default' : 'secondary'}
                                         size="sm"
                                         onClick={() => updateLast5(index, result === 'W' ? 'L' : 'W')}
-                                        className="w-10 h-10"
+                                        className={`w-12 h-12 font-bold ${result === 'W'
+                                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                                            : 'bg-red-600 hover:bg-red-700 text-white'
+                                            }`}
+                                        title={`Match ${index + 1}: ${result === 'W' ? 'Win' : 'Loss'} - Click to toggle`}
                                     >
                                         {result}
                                     </Button>
                                 ))}
+                            </div>
+                            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <div className="text-sm">
+                                    <span className="font-semibold text-blue-900">Current Streak: </span>
+                                    <span className="text-blue-700">{player.currentStreak} {player.streakType}</span>
+                                    <span className="text-xs text-gray-500 ml-2">(Auto-calculated)</span>
+                                </div>
                             </div>
                         </div>
 

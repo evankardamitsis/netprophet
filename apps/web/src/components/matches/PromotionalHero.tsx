@@ -349,11 +349,11 @@ export function PromotionalHero({
                                                 {/* Player 2 - Bottom Right */}
                                                 <div className="absolute bottom-2 right-2 w-3/5 h-3/5 flex flex-col justify-center items-end">
                                                     <div className="bg-gradient-to-br from-red-500/20 to-red-600/30 rounded-lg p-3 w-full">
-                                                        <div className="text-white text-sm font-bold mb-1 text-right leading-tight">
-                                                            {item.players[1]?.name || 'Player 2'}
-                                                        </div>
-                                                        <div className="text-yellow-400 text-xs font-bold text-right">
+                                                        <div className="text-yellow-400 text-xs font-bold text-right mb-1">
                                                             {item.players[1]?.odds.toFixed(2) || '17.75'}
+                                                        </div>
+                                                        <div className="text-white text-sm font-bold text-right leading-tight">
+                                                            {item.players[1]?.name || 'Player 2'}
                                                         </div>
                                                     </div>
                                                 </div>

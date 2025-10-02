@@ -17,13 +17,13 @@ export default function HowItWorksPage() {
             <Header lang={lang} />
 
             {/* Hero */}
-            <div className="py-16 sm:py-20 lg:py-24 relative overflow-hidden">
+            <div className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/20"></div>
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 leading-tight">
                         {lang === 'el' ? 'Πώς λειτουργεί το NetProphet' : 'How NetProphet Works'}
                     </h1>
-                    <p className="text-xl sm:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed">
+                    <p className="text-lg sm:text-xl opacity-90 max-w-3xl mx-auto leading-relaxed">
                         {lang === 'el'
                             ? 'Αντικειμενικές αποδόσεις βασισμένες σε πραγματικά δεδομένα 1200+ παικτών'
                             : 'Objective odds based on real data from 1200+ players'}
@@ -32,19 +32,19 @@ export default function HowItWorksPage() {
             </div>
 
             {/* Core Mechanics */}
-            <section className="py-20 relative overflow-hidden">
+            <section className="py-16 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {/* NTRP System */}
                         <div className="group relative">
                             <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
                             <Card className="relative bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm border border-blue-400/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105">
                                 <CardHeader>
-                                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                        <span className="text-3xl">📊</span>
+                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                        <span className="text-2xl">📊</span>
                                     </div>
-                                    <CardTitle className="text-xl text-center text-white">
+                                    <CardTitle className="text-lg text-center text-white">
                                         {lang === 'el' ? 'Σύστημα NTRP' : 'NTRP System'}
                                     </CardTitle>
                                 </CardHeader>
@@ -77,10 +77,10 @@ export default function HowItWorksPage() {
                             <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
                             <Card className="relative bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm border border-green-400/30 hover:border-green-400/50 transition-all duration-300 hover:scale-105">
                                 <CardHeader>
-                                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                        <span className="text-3xl">🎯</span>
+                                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                        <span className="text-2xl">🎯</span>
                                     </div>
-                                    <CardTitle className="text-xl text-center text-white">
+                                    <CardTitle className="text-lg text-center text-white">
                                         {lang === 'el' ? 'Αλγόριθμος Αποδόσεων' : 'Odds Algorithm'}
                                     </CardTitle>
                                 </CardHeader>
@@ -113,10 +113,10 @@ export default function HowItWorksPage() {
                             <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
                             <Card className="relative bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-105">
                                 <CardHeader>
-                                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                                        <span className="text-3xl">🏆</span>
+                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                        <span className="text-2xl">🏆</span>
                                     </div>
-                                    <CardTitle className="text-xl text-center text-white">
+                                    <CardTitle className="text-lg text-center text-white">
                                         {lang === 'el' ? 'Live Αποτελέσματα' : 'Live Results'}
                                     </CardTitle>
                                 </CardHeader>
@@ -148,62 +148,62 @@ export default function HowItWorksPage() {
             </section>
 
             {/* Player Database Section */}
-            <section className="py-20 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+            <section className="py-16 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    <div className="grid lg:grid-cols-2 gap-10 items-center">
                         <div>
-                            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                            <h2 className="text-2xl md:text-3xl font-bold mb-4">
                                 {lang === 'el' ? '👥 1200+ Παίκτες με Πλήρη Δεδομένα' : '👥 1200+ Players with Complete Data'}
                             </h2>
-                            <p className="text-xl text-slate-300 mb-8">
+                            <p className="text-base text-slate-300 mb-6">
                                 {lang === 'el'
                                     ? 'Κάθε παίκτης στη βάση δεδομένων έχει λεπτομερή στατιστικά που χρησιμοποιούνται για τον υπολογισμό των αποδόσεων.'
                                     : 'Every player in our database has detailed statistics used to calculate odds.'}
                             </p>
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                                    <span className="text-3xl">📈</span>
+                            <div className="space-y-3">
+                                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                                    <span className="text-2xl">📈</span>
                                     <div>
-                                        <h4 className="font-semibold mb-1">{lang === 'el' ? 'Win/Loss Records' : 'Win/Loss Records'}</h4>
-                                        <p className="text-sm text-slate-300">{lang === 'el' ? 'Πλήρες ιστορικό νικών και ηττών' : 'Complete history of wins and losses'}</p>
+                                        <h4 className="text-sm font-semibold mb-0.5">{lang === 'el' ? 'Win/Loss Records' : 'Win/Loss Records'}</h4>
+                                        <p className="text-xs text-slate-300">{lang === 'el' ? 'Πλήρες ιστορικό νικών και ηττών' : 'Complete history of wins and losses'}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                                    <span className="text-3xl">🎾</span>
+                                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                                    <span className="text-2xl">🎾</span>
                                     <div>
-                                        <h4 className="font-semibold mb-1">{lang === 'el' ? 'Surface Preferences' : 'Surface Preferences'}</h4>
-                                        <p className="text-sm text-slate-300">{lang === 'el' ? 'Επιδόσεις σε Hard, Clay, Grass courts' : 'Performance on Hard, Clay, Grass courts'}</p>
+                                        <h4 className="text-sm font-semibold mb-0.5">{lang === 'el' ? 'Surface Preferences' : 'Surface Preferences'}</h4>
+                                        <p className="text-xs text-slate-300">{lang === 'el' ? 'Επιδόσεις σε Hard, Clay, Grass courts' : 'Performance on Hard, Clay, Grass courts'}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-start gap-4 bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                                    <span className="text-3xl">⚔️</span>
+                                <div className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                                    <span className="text-2xl">⚔️</span>
                                     <div>
-                                        <h4 className="font-semibold mb-1">{lang === 'el' ? 'Head-to-Head' : 'Head-to-Head'}</h4>
-                                        <p className="text-sm text-slate-300">{lang === 'el' ? 'Ιστορικό αναμετρήσεων μεταξύ παικτών' : 'Match history between players'}</p>
+                                        <h4 className="text-sm font-semibold mb-0.5">{lang === 'el' ? 'Head-to-Head' : 'Head-to-Head'}</h4>
+                                        <p className="text-xs text-slate-300">{lang === 'el' ? 'Ιστορικό αναμετρήσεων μεταξύ παικτών' : 'Match history between players'}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Player Card Example */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
-                            <div className="bg-white rounded-xl p-6 shadow-2xl">
-                                <div className="text-center mb-6">
-                                    <div className="w-20 h-20 bg-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <span className="text-4xl">👤</span>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+                            <div className="bg-white rounded-xl p-5 shadow-2xl">
+                                <div className="text-center mb-5">
+                                    <div className="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                                        <span className="text-3xl">👤</span>
                                     </div>
-                                    <h4 className="text-2xl font-bold text-slate-900 mb-2">Γιώργος Παπαδόπουλος</h4>
-                                    <p className="text-sm text-slate-600">NTRP 4.5 • Clay Court Specialist</p>
+                                    <h4 className="text-xl font-bold text-slate-900 mb-1">Γιώργος Παπαδόπουλος</h4>
+                                    <p className="text-xs text-slate-600">NTRP 4.5 • Clay Court Specialist</p>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="bg-green-50 rounded-lg p-4 text-center">
-                                        <div className="text-3xl font-bold text-green-600">15-5</div>
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    <div className="bg-green-50 rounded-lg p-3 text-center">
+                                        <div className="text-2xl font-bold text-green-600">15-5</div>
                                         <div className="text-xs text-slate-600">2024 Record</div>
                                     </div>
-                                    <div className="bg-blue-50 rounded-lg p-4 text-center">
-                                        <div className="text-3xl font-bold text-blue-600">75%</div>
+                                    <div className="bg-blue-50 rounded-lg p-3 text-center">
+                                        <div className="text-2xl font-bold text-blue-600">75%</div>
                                         <div className="text-xs text-slate-600">Win Rate</div>
                                     </div>
                                 </div>
@@ -235,24 +235,24 @@ export default function HowItWorksPage() {
             </section>
 
             {/* How Predictions Work */}
-            <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
+            <section className="py-16 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    <div className="text-center mb-10">
+                        <h2 className="text-2xl md:text-3xl font-bold mb-3">
                             {lang === 'el' ? '🎮 Τύποι Προβλέψεων' : '🎮 Prediction Types'}
                         </h2>
-                        <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+                        <p className="text-base text-slate-300 max-w-3xl mx-auto">
                             {lang === 'el'
                                 ? 'Όσο πιο συγκεκριμένη η πρόβλεψη, τόσο μεγαλύτερη η απόδοση'
                                 : 'The more specific your prediction, the higher the payout'}
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid md:grid-cols-2 gap-6">
                         {/* Simple Predictions */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                 <span>🎯</span> {lang === 'el' ? 'Βασικές Προβλέψεις' : 'Basic Predictions'}
                             </h3>
                             <div className="space-y-3">
@@ -274,8 +274,8 @@ export default function HowItWorksPage() {
                         </div>
 
                         {/* Advanced Predictions */}
-                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                 <span>🔥</span> {lang === 'el' ? 'Προχωρημένες Προβλέψεις' : 'Advanced Predictions'}
                             </h3>
                             <div className="space-y-3">
@@ -297,11 +297,11 @@ export default function HowItWorksPage() {
                         </div>
                     </div>
 
-                    <div className="mt-12 text-center bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-sm rounded-2xl p-8 border border-yellow-400/30">
-                        <h3 className="text-2xl font-bold mb-4">
+                    <div className="mt-8 text-center bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-sm rounded-2xl p-6 border border-yellow-400/30">
+                        <h3 className="text-lg font-bold mb-3">
                             {lang === 'el' ? '💡 Συμβουλή Pro' : '💡 Pro Tip'}
                         </h3>
-                        <p className="text-lg text-slate-200">
+                        <p className="text-sm text-slate-200">
                             {lang === 'el'
                                 ? 'Συνδυάζοντας πολλές προβλέψεις σε ένα parlay, μπορείς να πολλαπλασιάσεις τις αποδόσεις σου! Π.χ. 3 προβλέψεις x2.0 = 8.0x συνολική απόδοση!'
                                 : 'Combining multiple predictions in a parlay can multiply your odds! E.g. 3 predictions x2.0 = 8.0x total payout!'}
@@ -311,43 +311,43 @@ export default function HowItWorksPage() {
             </section>
 
             {/* Leaderboard System */}
-            <section className="py-20 relative overflow-hidden">
+            <section className="py-16 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                    <div className="text-center mb-10">
+                        <h2 className="text-2xl md:text-3xl font-bold mb-3">
                             {lang === 'el' ? '🏆 Leaderboard & Ανταμοιβές' : '🏆 Leaderboard & Rewards'}
                         </h2>
-                        <p className="text-xl text-slate-300 max-w-3xl mx-auto">
+                        <p className="text-base text-slate-300 max-w-3xl mx-auto">
                             {lang === 'el'
                                 ? 'Ανταγωνίσου με άλλους χρήστες και κέρδισε ανταμοιβές'
                                 : 'Compete with other users and earn rewards'}
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8 mb-12">
-                        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-sm rounded-xl p-6 border border-yellow-400/30">
-                            <div className="text-6xl text-center mb-4">🥇</div>
-                            <h3 className="text-xl font-bold text-center mb-3">{lang === 'el' ? 'Εβδομαδιαίο' : 'Weekly'}</h3>
-                            <p className="text-center text-slate-300">
+                    <div className="grid md:grid-cols-3 gap-6 mb-10">
+                        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-sm rounded-xl p-5 border border-yellow-400/30">
+                            <div className="text-5xl text-center mb-3">🥇</div>
+                            <h3 className="text-lg font-bold text-center mb-2">{lang === 'el' ? 'Εβδομαδιαίο' : 'Weekly'}</h3>
+                            <p className="text-center text-sm text-slate-300">
                                 {lang === 'el'
                                     ? 'Κορυφαίοι της εβδομάδας κερδίζουν bonus νομίσματα'
                                     : 'Top weekly players earn bonus coins'}
                             </p>
                         </div>
-                        <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-xl p-6 border border-purple-400/30">
-                            <div className="text-6xl text-center mb-4">🏆</div>
-                            <h3 className="text-xl font-bold text-center mb-3">{lang === 'el' ? 'All-Time' : 'All-Time'}</h3>
-                            <p className="text-center text-slate-300">
+                        <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-xl p-5 border border-purple-400/30">
+                            <div className="text-5xl text-center mb-3">🏆</div>
+                            <h3 className="text-lg font-bold text-center mb-2">{lang === 'el' ? 'All-Time' : 'All-Time'}</h3>
+                            <p className="text-center text-sm text-slate-300">
                                 {lang === 'el'
                                     ? 'Οι θρύλοι του NetProphet με τα περισσότερα κέρδη'
                                     : 'NetProphet legends with most winnings'}
                             </p>
                         </div>
-                        <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl p-6 border border-blue-400/30">
-                            <div className="text-6xl text-center mb-4">🔥</div>
-                            <h3 className="text-xl font-bold text-center mb-3">{lang === 'el' ? 'Streaks' : 'Streaks'}</h3>
-                            <p className="text-center text-slate-300">
+                        <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl p-5 border border-blue-400/30">
+                            <div className="text-5xl text-center mb-3">🔥</div>
+                            <h3 className="text-lg font-bold text-center mb-2">{lang === 'el' ? 'Streaks' : 'Streaks'}</h3>
+                            <p className="text-center text-sm text-slate-300">
                                 {lang === 'el'
                                     ? 'Συνεχείς σωστές προβλέψεις = multipliers'
                                     : 'Consecutive correct picks = multipliers'}
@@ -355,54 +355,54 @@ export default function HowItWorksPage() {
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl p-8 border border-green-400/30">
-                        <h3 className="text-2xl font-bold mb-6 text-center">
+                    <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-2xl p-6 border border-green-400/30">
+                        <h3 className="text-lg font-bold mb-5 text-center">
                             {lang === 'el' ? '🎯 Πώς Υπολογίζονται οι Πόντοι' : '🎯 How Points are Calculated'}
                         </h3>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">✅</span>
+                        <div className="grid md:grid-cols-2 gap-5">
+                            <div className="space-y-2.5">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xl">✅</span>
                                     <div>
-                                        <div className="font-semibold">{lang === 'el' ? 'Σωστή πρόβλεψη νικητή' : 'Correct winner prediction'}</div>
-                                        <div className="text-sm text-slate-300">+100 πόντοι</div>
+                                        <div className="text-sm font-semibold">{lang === 'el' ? 'Σωστή πρόβλεψη νικητή' : 'Correct winner prediction'}</div>
+                                        <div className="text-xs text-slate-300">+100 πόντοι</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">🎯</span>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xl">🎯</span>
                                     <div>
-                                        <div className="font-semibold">{lang === 'el' ? 'Σωστό score' : 'Correct score'}</div>
-                                        <div className="text-sm text-slate-300">+50 bonus πόντοι</div>
+                                        <div className="text-sm font-semibold">{lang === 'el' ? 'Σωστό score' : 'Correct score'}</div>
+                                        <div className="text-xs text-slate-300">+50 bonus πόντοι</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">🔥</span>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xl">🔥</span>
                                     <div>
-                                        <div className="font-semibold">{lang === 'el' ? 'Streak bonus' : 'Streak bonus'}</div>
-                                        <div className="text-sm text-slate-300">x1.2 - x2.0</div>
+                                        <div className="text-sm font-semibold">{lang === 'el' ? 'Streak bonus' : 'Streak bonus'}</div>
+                                        <div className="text-xs text-slate-300">x1.2 - x2.0</div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">🐶</span>
+                            <div className="space-y-2.5">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xl">🐶</span>
                                     <div>
-                                        <div className="font-semibold">{lang === 'el' ? 'Underdog bonus' : 'Underdog bonus'}</div>
-                                        <div className="text-sm text-slate-300">+25% πόντοι</div>
+                                        <div className="text-sm font-semibold">{lang === 'el' ? 'Underdog bonus' : 'Underdog bonus'}</div>
+                                        <div className="text-xs text-slate-300">+25% πόντοι</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">⚡</span>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xl">⚡</span>
                                     <div>
-                                        <div className="font-semibold">{lang === 'el' ? 'Power-up multipliers' : 'Power-up multipliers'}</div>
-                                        <div className="text-sm text-slate-300">έως +50%</div>
+                                        <div className="text-sm font-semibold">{lang === 'el' ? 'Power-up multipliers' : 'Power-up multipliers'}</div>
+                                        <div className="text-xs text-slate-300">έως +50%</div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-2xl">📊</span>
+                                <div className="flex items-center gap-2.5">
+                                    <span className="text-xl">📊</span>
                                     <div>
-                                        <div className="font-semibold">{lang === 'el' ? 'Parlay combos' : 'Parlay combos'}</div>
-                                        <div className="text-sm text-slate-300">Πολλαπλασιαστικά κέρδη</div>
+                                        <div className="text-sm font-semibold">{lang === 'el' ? 'Parlay combos' : 'Parlay combos'}</div>
+                                        <div className="text-xs text-slate-300">Πολλαπλασιαστικά κέρδη</div>
                                     </div>
                                 </div>
                             </div>
@@ -412,41 +412,41 @@ export default function HowItWorksPage() {
             </section>
 
             {/* Final CTA */}
-            <section className="py-20 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+            <section className="py-16 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
                         {lang === 'el' ? 'Έτοιμος να ξεκινήσεις;' : 'Ready to start?'}
                     </h2>
-                    <p className="text-xl opacity-90 mb-8">
+                    <p className="text-base opacity-90 mb-6">
                         {lang === 'el'
-                            ? 'Κάνε εγγραφή και πάρε 100 νομίσματα + tournament pass δωρεάν!'
-                            : 'Sign up and get 100 coins + tournament pass free!'}
+                            ? 'Κάνε εγγραφή και πάρε 100 νομίσματα + Tournament Pass δωρεάν!'
+                            : 'Sign up and get 100 coins + Tournament Pass free!'}
                     </p>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 max-w-2xl mx-auto">
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                            <div className="text-3xl mb-2">🎾</div>
-                            <div className="text-sm font-semibold">{lang === 'el' ? '1200+ Παίκτες' : '1200+ Players'}</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 max-w-2xl mx-auto">
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                            <div className="text-2xl mb-1.5">🎾</div>
+                            <div className="text-xs font-semibold">{lang === 'el' ? '1200+ Παίκτες' : '1200+ Players'}</div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                            <div className="text-3xl mb-2">🏆</div>
-                            <div className="text-sm font-semibold">{lang === 'el' ? 'Live Τουρνουά' : 'Live Tournaments'}</div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                            <div className="text-2xl mb-1.5">🏆</div>
+                            <div className="text-xs font-semibold">{lang === 'el' ? 'Live Τουρνουά' : 'Live Tournaments'}</div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                            <div className="text-3xl mb-2">⚡</div>
-                            <div className="text-sm font-semibold">Power-ups</div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                            <div className="text-2xl mb-1.5">⚡</div>
+                            <div className="text-xs font-semibold">Power-ups</div>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                            <div className="text-3xl mb-2">🎁</div>
-                            <div className="text-sm font-semibold">100 Coins</div>
+                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                            <div className="text-2xl mb-1.5">🎁</div>
+                            <div className="text-xs font-semibold">100 Coins</div>
                         </div>
                     </div>
 
                     <Button
                         onClick={() => router.push(`/${lang}/auth/signin`)}
                         size="lg"
-                        className="text-lg px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-xl font-bold"
+                        className="text-base px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-xl font-bold"
                     >
                         {lang === 'el' ? 'Ξεκίνα Δωρεάν' : 'Start Free'}
                     </Button>
