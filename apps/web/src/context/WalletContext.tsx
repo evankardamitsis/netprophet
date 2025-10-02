@@ -222,7 +222,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
 
             const transactions = await TransactionsService.getRecentTransactions(10);
-            console.log('Loaded transactions for user:', user.id, transactions);
 
             if (transactions && transactions.length > 0) {
                 // Convert database transactions to local Transaction format
