@@ -6,10 +6,6 @@ Sentry.init({
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
-  // Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
   // Environment
   environment: process.env.NODE_ENV,
 
@@ -19,14 +15,7 @@ Sentry.init({
     process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true",
 
   // Debug mode
-  debug: false,
-
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-  ],
+  debug: true, // Enable for testing
 });
 
 // Set tag for filtering admin app events

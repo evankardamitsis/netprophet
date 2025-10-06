@@ -114,3 +114,5 @@ web-build/
 # Vercel
 .vercel # TypeScript build info
 *.tsbuildinfo
+apps/web/.env.sentry-build-plugin
+apps/admin/.env.sentry-build-plugin
