@@ -88,7 +88,7 @@ export default function MyProfilePage() {
                 winRate,
                 dailyStreak,
                 totalBets,
-                ranking: 0 // TODO: Implement ranking logic
+                ranking: 0 // Ranking feature to be implemented in future release
             });
         } catch (err) {
             console.error('Failed to load profile stats:', err);

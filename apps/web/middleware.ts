@@ -30,15 +30,45 @@ export function middleware(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
 
+  let response: NextResponse;
+
   if (pathnameHasLocale) {
-    return;
+    response = NextResponse.next();
+  } else {
+    // Redirect if there is no locale
+    const locale = getLocale(request);
+    request.nextUrl.pathname = `/${locale}${pathname}`;
+    response = NextResponse.redirect(request.nextUrl);
   }
 
-  // Redirect if there is no locale
-  const locale = getLocale(request);
-  request.nextUrl.pathname = `/${locale}${pathname}`;
+  // Add security headers
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  );
 
-  return NextResponse.redirect(request.nextUrl);
+  // Content Security Policy
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://va.vercel-scripts.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://vitals.vercel-insights.com",
+      "frame-src 'self' https://js.stripe.com",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join("; ")
+  );
+
+  return response;
 }
 
 export const config = {

@@ -112,4 +112,5 @@ web-build/
 .turbo/
 
 # Vercel
-.vercel 
+.vercel # TypeScript build info
+*.tsbuildinfo

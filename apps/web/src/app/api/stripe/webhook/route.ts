@@ -1,59 +1,74 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
+import { NextRequest, NextResponse } from "next/server";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
+import { headers } from "next/headers";
+import { applyRateLimit, RATE_LIMITS } from "@/lib/apiRateLimit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-07-30.basil',
+  apiVersion: "2025-07-30.basil",
 });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabase = supabaseUrl && supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+const supabase =
+  supabaseUrl && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey)
+    : null;
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
+  // 🔒 Rate limit: 60 webhook calls per minute per IP
+  const rateLimitResponse = applyRateLimit(request, RATE_LIMITS.api);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const body = await request.text();
   const headersList = await headers();
-  const sig = headersList.get('stripe-signature');
+  const sig = headersList.get("stripe-signature");
 
   let event: Stripe.Event;
 
   try {
     event = stripe.webhooks.constructEvent(body, sig!, endpointSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    console.error("Webhook signature verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        
+
         // Extract metadata
         const { userId, packId, coins } = session.metadata!;
         const coinsToAdd = parseInt(coins);
 
         if (!userId || !coinsToAdd) {
-          console.error('Missing required metadata in session:', session.metadata);
-          return NextResponse.json({ error: 'Missing metadata' }, { status: 400 });
+          console.error(
+            "Missing required metadata in session:",
+            session.metadata
+          );
+          return NextResponse.json(
+            { error: "Missing metadata" },
+            { status: 400 }
+          );
         }
 
         if (!supabase) {
-          console.error('Database not configured');
-          return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
+          console.error("Database not configured");
+          return NextResponse.json(
+            { error: "Database not configured" },
+            { status: 500 }
+          );
         }
 
         // Check if this session has already been processed (idempotency)
         const { data: existingTransaction } = await supabase
-          .from('transactions')
-          .select('id')
-          .eq('stripe_session_id', session.id)
+          .from("transactions")
+          .select("id")
+          .eq("stripe_session_id", session.id)
           .single();
 
         if (existingTransaction) {
@@ -62,30 +77,36 @@ export async function POST(request: NextRequest) {
         }
 
         // Add coins to user's balance
-        const { error: updateError } = await supabase.rpc('add_coins_to_balance', {
-          user_uuid: userId,
-          coins_to_add: coinsToAdd
-        });
+        const { error: updateError } = await supabase.rpc(
+          "add_coins_to_balance",
+          {
+            user_uuid: userId,
+            coins_to_add: coinsToAdd,
+          }
+        );
 
         if (updateError) {
-          console.error('Error adding coins to balance:', updateError);
-          return NextResponse.json({ error: 'Failed to update balance' }, { status: 500 });
+          console.error("Error adding coins to balance:", updateError);
+          return NextResponse.json(
+            { error: "Failed to update balance" },
+            { status: 500 }
+          );
         }
 
         // Create transaction record
         const { error: transactionError } = await supabase
-          .from('transactions')
+          .from("transactions")
           .insert({
             user_id: userId,
-            type: 'purchase',
+            type: "purchase",
             amount: coinsToAdd,
             description: `Purchased ${packId} pack`,
             stripe_session_id: session.id,
-            status: 'completed'
+            status: "completed",
           });
 
         if (transactionError) {
-          console.error('Error creating transaction record:', transactionError);
+          console.error("Error creating transaction record:", transactionError);
           // Don't fail the webhook if transaction record fails
         }
 
@@ -93,9 +114,9 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case 'payment_intent.payment_failed': {
+      case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment failed:', paymentIntent.id);
+        console.log("Payment failed:", paymentIntent.id);
         break;
       }
 
@@ -105,7 +126,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    console.error("Error processing webhook:", error);
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 }
+    );
   }
 }

@@ -7,6 +7,7 @@ import { useDictionary } from '@/context/DictionaryContext';
 import { Card, CardContent } from '@netprophet/ui';
 
 export default function PlayerDetailPage() {
+    // TESTING HOT RELOAD WITH NEXT.JS 15.0.3
     const params = useParams();
     const router = useRouter();
     const { dict } = useDictionary();

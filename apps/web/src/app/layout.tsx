@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Analytics } from '@vercel/analytics/next';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const inter = Inter({ subsets: ['latin', 'greek'] });
 
@@ -22,10 +23,12 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <Providers>
-                    {children}
-                </Providers>
-                <Analytics />
+                <ErrorBoundary>
+                    <Providers>
+                        {children}
+                    </Providers>
+                    <Analytics />
+                </ErrorBoundary>
             </body>
         </html>
     );
