@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
+import Logo from '@/components/Logo';
 
 export default function AuthCallbackPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const params = useParams();
+    const lang = params?.lang as 'en' | 'el' || 'el';
 
     useEffect(() => {
         // Check if this is an OAuth callback with proper parameters
@@ -153,10 +156,22 @@ export default function AuthCallbackPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-200 via-purple-200 to-indigo-200">
                 <div className="text-center">
+                    <div className="mb-6">
+                        <Logo size="lg" />
+                    </div>
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Completing authentication...</p>
+                    <p className="text-slate-700 font-medium">
+                        {lang === 'el'
+                            ? 'Ανακατεύθυνση στο NetProphet...'
+                            : 'Redirecting to NetProphet...'}
+                    </p>
+                    <p className="text-slate-500 text-sm mt-2">
+                        {lang === 'el'
+                            ? 'Παρακαλώ περιμένετε'
+                            : 'Please wait'}
+                    </p>
                 </div>
             </div>
         );
@@ -164,22 +179,21 @@ export default function AuthCallbackPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="max-w-md w-full space-y-8">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-200 via-purple-200 to-indigo-200">
+                <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
                     <div className="text-center">
+                        <div className="mb-6">
+                            <Logo size="md" />
+                        </div>
                         <h2 className="text-2xl font-bold text-red-600 mb-4">
-                            Authentication Error
+                            {lang === 'el' ? 'Σφάλμα Ταυτοποίησης' : 'Authentication Error'}
                         </h2>
                         <p className="text-gray-600 mb-6">{error}</p>
                         <button
-                            onClick={() => {
-                                const pathSegments = window.location.pathname.split('/');
-                                const lang = pathSegments[1] || 'en';
-                                router.push(`/${lang}/auth/signin`);
-                            }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium"
                         >
-                            Try Again
+                            {lang === 'el' ? 'Δοκίμασε Ξανά' : 'Try Again'}
                         </button>
                     </div>
                 </div>

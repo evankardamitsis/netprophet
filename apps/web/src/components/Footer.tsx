@@ -19,14 +19,14 @@ export default function Footer({ lang, dict }: FooterProps) {
     return (
         <footer className="bg-slate-900 text-white py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-                    {/* Brand */}
-                    <div>
+                <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-8 mb-8">
+                    {/* Brand - Takes 2 columns */}
+                    <div className="md:col-span-2">
                         <div className="mb-4">
                             <Logo size="md" />
                         </div>
                         <p className="text-slate-400 mb-6">
-                            {lang === 'el' ? 'Η νούμερο ένα πλατφόρμα προβλέψεων με πραγματικούς ερασιτεχνικούς αγώνες' : 'The number one sports prediction platform with real amateur matches'}
+                            {lang === 'el' ? 'Η πιο διασκεδαστική πλατφόρμα προβλέψεων με πραγματικούς ερασιτεχνικούς αγώνες' : 'The most exciting sports prediction platform with real amateur matches'}
                         </p>
                         <Button
                             onClick={() => router.push(`/${lang}/auth/signin`)}
