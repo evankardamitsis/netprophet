@@ -179,6 +179,49 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         return `${diffInDays}d ago`;
     };
 
+    const formatTransactionDescription = (description: string, type: string) => {
+        // Handle technical codes and convert to human-readable text
+        if (description.startsWith('STREAK_CONTINUED')) {
+            const days = description.split(':')[1] || '';
+            return lang === 'el'
+                ? `Ημερήσιο Μπόνους Σειρά ${days} ημερών`
+                : `Daily Bonus - ${days} day streak`;
+        }
+
+        if (description === 'STREAK_ACTIVATED') {
+            return lang === 'el'
+                ? 'Ημερήσιο Μπόνους - Νέα Σειρά'
+                : 'Daily Bonus - New Streak';
+        }
+
+        if (description.startsWith('WELCOME_BONUS')) {
+            return lang === 'el'
+                ? 'Μπόνους Καλωσορίσματος'
+                : 'Welcome Bonus';
+        }
+
+        if (description.startsWith('Bet on') || description.startsWith('Στοίχημα')) {
+            return description; // Keep bet descriptions as is
+        }
+
+        if (description.startsWith('Won bet') || description.startsWith('Κέρδισες')) {
+            return description; // Keep win descriptions as is
+        }
+
+        if (description.startsWith('Lost bet') || description.startsWith('Έχασες')) {
+            return description; // Keep loss descriptions as is
+        }
+
+        if (description.startsWith('Purchased')) {
+            return lang === 'el'
+                ? description.replace('Purchased', 'Αγορά')
+                : description;
+        }
+
+        // Default: return as is
+        return description;
+    };
+
     const handleTopUp = async (packId: string) => {
         if (!user) {
             toast.error('Please sign in to purchase coins');
@@ -409,7 +452,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                                     {getTransactionIcon(transaction.type)}
                                                     <div className="min-w-0 flex-1">
                                                         <div className="text-xs font-medium text-white break-words">
-                                                            {transaction.description}
+                                                            {formatTransactionDescription(transaction.description, transaction.type)}
                                                         </div>
                                                         <div className="text-xs text-gray-400">
                                                             {formatTimeAgo(transaction.timestamp)}
