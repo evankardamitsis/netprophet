@@ -452,7 +452,7 @@ export function PredictionForm({
     };
 
     return (
-        <div className="space-y-4 sm:space-y-6 pb-6 h-full flex flex-col relative px-2 sm:px-0">
+        <div className="space-y-3 pb-4 h-full flex flex-col relative px-2 sm:px-0">
             {/* Clear All Button */}
             <button
                 onClick={handleClearAll}
@@ -464,7 +464,7 @@ export function PredictionForm({
 
             {/* Multiplier Bonus Display */}
             {bonusMultiplier > 0 && (
-                <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 backdrop-blur-sm rounded-xl p-3 border border-green-500/30 mb-3 sm:mb-4 z-10">
+                <div className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 backdrop-blur-sm rounded-lg p-2 border border-green-500/30 mb-2 z-10">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div className="flex items-center space-x-2">
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -488,23 +488,23 @@ export function PredictionForm({
                 </div>
             )}
             {/* Match Winner */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-slate-700/50">
-                <h3 className="text-sm sm:text-base font-bold text-white mb-2 sm:mb-3">{dict?.matches?.matchWinner || 'Match Winner'}</h3>
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
+                <h3 className="text-sm font-bold text-white mb-2">{dict?.matches?.matchWinner || 'Match Winner'}</h3>
+                <div className="grid grid-cols-2 gap-2">
                     <button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name)}
                         disabled={locked}
-                        className={`p-3 sm:p-4 rounded-lg border transition-colors ${locked
+                        className={`p-2 rounded-lg border transition-colors ${locked
                             ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                             : (formPredictions.winner === details.player1.name
                                 ? 'bg-purple-600 border-purple-600 text-white'
                                 : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                             }`}
                     >
-                        <div className="text-sm sm:text-base font-semibold truncate">
+                        <div className="text-sm font-semibold truncate">
                             {details.player1.name.split(' ')[1]}
                             {details.player1.ntrpRating && (
-                                <span className="text-sm text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
+                                <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
                             )}
                         </div>
                         <div className="text-xs text-gray-400">{details.player1.odds.toFixed(2)}x</div>
@@ -512,17 +512,17 @@ export function PredictionForm({
                     <button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player2.name ? '' : details.player2.name)}
                         disabled={locked}
-                        className={`p-2.5 sm:p-3 rounded-lg border transition-colors ${locked
+                        className={`p-2 rounded-lg border transition-colors ${locked
                             ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                             : (formPredictions.winner === details.player2.name
                                 ? 'bg-purple-600 border-purple-600 text-white'
                                 : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
                             }`}
                     >
-                        <div className="text-sm sm:text-base font-semibold truncate">
+                        <div className="text-sm font-semibold truncate">
                             {details.player2.name.split(' ')[1]}
                             {details.player2.ntrpRating && (
-                                <span className="text-sm text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
+                                <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
                             )}
                         </div>
                         <div className="text-xs text-gray-400">{details.player2.odds.toFixed(2)}x</div>
@@ -530,12 +530,26 @@ export function PredictionForm({
                 </div>
             </div>
 
+            {/* Optional Predictions Notice */}
+            {formPredictions.winner && (
+                <div className="flex items-center justify-center">
+                    <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-blue-600/10 border border-blue-500/20">
+                        <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-xs font-medium text-blue-300">
+                            {dict?.matches?.optional || 'Optional'}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             {/* Match Result */}
             {
                 formPredictions.winner && (
                     <motion.div
                         ref={matchResultRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showMatchResultPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showMatchResultPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                         animate={showMatchResultPulse ? {
                             scale: [1, 1.02, 1],
                             boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
@@ -543,9 +557,9 @@ export function PredictionForm({
                         transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
 
                     >
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 sm:mb-3 gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                             <div className="flex items-center space-x-2">
-                                <h3 className="text-sm sm:text-base font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
+                                <h3 className="text-sm font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
                                 <motion.div
                                     className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${formPredictions.matchResult
                                         ? 'bg-green-600/20 text-green-300 border-green-500/30'
@@ -561,8 +575,8 @@ export function PredictionForm({
                                 {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400 mb-2 sm:mb-3">{dict?.matches?.howWillWin?.replace('{player}', formPredictions.winner.split(' ')[1]) || `How will ${formPredictions.winner.split(' ')[1]} win the match?`}</p>
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                        <p className="text-xs text-gray-400 mb-2">{dict?.matches?.howWillWin?.replace('{player}', formPredictions.winner.split(' ')[1]) || `How will ${formPredictions.winner.split(' ')[1]} win the match?`}</p>
+                        <div className="grid grid-cols-2 gap-2">
                             {isBestOf5 ? (
                                 <>
                                     {formPredictions.winner === details.player1.name ? (
@@ -570,7 +584,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-0' ? '' : '3-0')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '3-0'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -583,7 +597,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-1' ? '' : '3-1')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '3-1'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -596,7 +610,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-2' ? '' : '3-2')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '3-2'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -612,7 +626,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-3' ? '' : '0-3')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '0-3'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -625,7 +639,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-3' ? '' : '1-3')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '1-3'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -638,7 +652,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-3' ? '' : '2-3')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '2-3'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -658,7 +672,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-0' ? '' : '2-0')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '2-0'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -671,7 +685,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-1' ? '' : '2-1')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '2-1'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -687,7 +701,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-2' ? '' : '0-2')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '0-2'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -700,7 +714,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-2' ? '' : '1-2')}
                                                 disabled={locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '1-2'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -724,8 +738,8 @@ export function PredictionForm({
                 formPredictions.matchResult && (
                     // For straight-set results, show set scores directly
                     ['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) ? (
-                        <div ref={setScoresRef} className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-slate-700/50">
-                            <div className="flex items-center justify-between mb-3">
+                        <div ref={setScoresRef} className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
+                            <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center space-x-2">
                                     <h3 className="text-base font-bold text-white">{dict?.matches?.setScores || 'Set Scores'}</h3>
                                     {(() => {
@@ -758,7 +772,7 @@ export function PredictionForm({
                                     {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-400 mb-3">
+                            <p className="text-xs text-gray-400 mb-2">
                                 {dict?.matches?.predictExactScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Predict the exact score for each set. ${formPredictions.winner.split(' ')[1]} wins all sets.`}
                             </p>
                             {Array.from({
@@ -779,8 +793,8 @@ export function PredictionForm({
                                 const setWinner = formPredictions.winner;
 
                                 return (
-                                    <div key={i} className="space-y-2 mb-3">
-                                        <h4 className="font-semibold text-white text-sm">Set {i + 1} Score - {setWinner.split(' ')[1]} {dict?.matches?.wins || 'wins'}</h4>
+                                    <div key={i} className="space-y-1.5 mb-2">
+                                        <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {setWinner.split(' ')[1]} {dict?.matches?.wins || 'wins'}</h4>
                                         {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                                     </div>
                                 );
@@ -790,7 +804,7 @@ export function PredictionForm({
                         // For non-straight-set results, show set winners with inline scores
                         <motion.div
                             ref={setWinnersRef}
-                            className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showSetWinnersPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                            className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSetWinnersPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                             animate={showSetWinnersPulse ? {
                                 scale: [1, 1.02, 1],
                                 boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
@@ -798,7 +812,7 @@ export function PredictionForm({
                             transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
 
                         >
-                            <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center space-x-2">
                                     <h3 className="text-base font-bold text-white">{dict?.matches?.setWinners || 'Set Winners'}</h3>
                                     {(() => {
@@ -830,7 +844,7 @@ export function PredictionForm({
                                     })()}
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-400 mb-3">
+                            <p className="text-xs text-gray-400 mb-2">
                                 {dict?.matches?.whoWinsEachSet?.replace('{result}', formPredictions.matchResult) || `Who wins each set based on your ${formPredictions.matchResult} prediction?`}
                                 {['2-1', '1-2'].includes(formPredictions.matchResult) ?
                                     ` ${dict?.matches?.selectOneSetWinner || 'Select one set winner. The other will be automatically selected.'}` :
@@ -879,13 +893,13 @@ export function PredictionForm({
                                 }
 
                                 return (
-                                    <div key={i} className="space-y-3 mb-4">
-                                        <h4 className="font-semibold text-white text-sm">{dict?.matches?.setWinner?.replace('{setNumber}', (i + 1).toString()) || `Set ${i + 1} Winner`}</h4>
-                                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                    <div key={i} className="space-y-2 mb-3">
+                                        <h4 className="font-semibold text-white text-xs">{dict?.matches?.setWinner?.replace('{setNumber}', (i + 1).toString()) || `Set ${i + 1} Winner`}</h4>
+                                        <div className="grid grid-cols-2 gap-2">
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
                                                 disabled={!canPlayer1Win || locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (currentWinner === details.player1.name
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -900,7 +914,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player2.name ? '' : details.player2.name)}
                                                 disabled={!canPlayer2Win || locked}
-                                                className={`p-3 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border transition-colors ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (currentWinner === details.player2.name
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -929,7 +943,7 @@ export function PredictionForm({
                 Array.from({ length: 2 }, (_, i) => getSetWinner(i + 1)).some(winner => winner) && (
                     <motion.div
                         ref={setScoresRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showSetScoresPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSetScoresPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                         animate={showSetScoresPulse ? {
                             scale: [1, 1.02, 1],
                             boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
@@ -965,15 +979,15 @@ export function PredictionForm({
                                 {isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">
+                        <p className="text-xs text-gray-400 mb-2">
                             {dict?.matches?.predictExactScoreForEachSet || 'Predict the exact score for each set.'} (+0.2x each)
                         </p>
                         {Array.from({ length: 2 }, (_, i) => {
                             const setWinner = getSetWinner(i + 1);
 
                             return (
-                                <div key={i} className="space-y-2 mb-3">
-                                    <h4 className="font-semibold text-white text-sm">Set {i + 1} Score - {setWinner.split(' ')[1]} {dict?.matches?.wins || 'wins'}</h4>
+                                <div key={i} className="space-y-1.5 mb-2">
+                                    <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {setWinner.split(' ')[1]} {dict?.matches?.wins || 'wins'}</h4>
                                     {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                                 </div>
                             );
@@ -1004,7 +1018,7 @@ export function PredictionForm({
                 })() && (
                     <motion.div
                         ref={setTiebreaksRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showTiebreaksPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showTiebreaksPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                         animate={showTiebreaksPulse ? {
                             scale: [1, 1.02, 1],
                             boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
@@ -1040,7 +1054,7 @@ export function PredictionForm({
                             </div>
 
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">
+                        <p className="text-xs text-gray-400 mb-2">
                             {dict?.matches?.tiebreakScoresSelected || "You've selected tiebreak scores for some sets. Here you can predict the detailed tiebreak scores within those sets."}
                         </p>
 
@@ -1050,12 +1064,12 @@ export function PredictionForm({
                             const set1Score = getSetScore(1);
                             return set1Score === '7-6' || set1Score === '6-7';
                         })() && (
-                                <div className="space-y-3 mb-4">
-                                    <h4 className="font-semibold text-white text-sm">{dict?.matches?.setTiebreakDetails?.replace('{setNumber}', '1') || 'Set 1 Tiebreak Details'}</h4>
-                                    <p className="text-xs text-gray-400 mb-2">
+                                <div className="space-y-2 mb-3">
+                                    <h4 className="font-semibold text-white text-xs">{dict?.matches?.setTiebreakDetails?.replace('{setNumber}', '1') || 'Set 1 Tiebreak Details'}</h4>
+                                    <p className="text-xs text-gray-400 mb-1.5">
                                         {dict?.matches?.setEndedInTiebreak?.replace('{setNumber}', '1') || 'Set 1 ended in a tiebreak. Predict the detailed tiebreak score:'}
                                     </p>
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
                                         <label className="text-xs text-gray-400">{dict?.matches?.tiebreakScore || 'Tiebreak Score'}</label>
                                         <select
                                             value={formPredictions.set1TieBreakScore}
@@ -1111,12 +1125,12 @@ export function PredictionForm({
                             const set2Score = getSetScore(2);
                             return set2Score === '7-6' || set2Score === '6-7';
                         })() && (
-                                <div className="space-y-3">
-                                    <h4 className="font-semibold text-white text-sm">{dict?.matches?.setTiebreakDetails?.replace('{setNumber}', '2') || 'Set 2 Tiebreak Details'}</h4>
-                                    <p className="text-xs text-gray-400 mb-2">
+                                <div className="space-y-2">
+                                    <h4 className="font-semibold text-white text-xs">{dict?.matches?.setTiebreakDetails?.replace('{setNumber}', '2') || 'Set 2 Tiebreak Details'}</h4>
+                                    <p className="text-xs text-gray-400 mb-1.5">
                                         {dict?.matches?.setEndedInTiebreak?.replace('{setNumber}', '2') || 'Set 2 ended in a tiebreak. Predict the detailed tiebreak score:'}
                                     </p>
-                                    <div className="space-y-2">
+                                    <div className="space-y-1.5">
                                         <label className="text-xs text-gray-400">{dict?.matches?.tiebreakScore || 'Tiebreak Score'}</label>
                                         <select
                                             value={formPredictions.set2TieBreakScore}
@@ -1174,7 +1188,7 @@ export function PredictionForm({
                 isAmateurFormat && formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) && (
                     <motion.div
                         ref={superTiebreakRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-4 sm:p-5 border ${showSuperTiebreakPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSuperTiebreakPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                         animate={showSuperTiebreakPulse ? {
                             scale: [1, 1.02, 1],
                             boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
@@ -1208,18 +1222,18 @@ export function PredictionForm({
                             </div>
 
                         </div>
-                        <p className="text-xs text-gray-400 mb-3">
+                        <p className="text-xs text-gray-400 mb-2">
                             {dict?.matches?.superTiebreakDescription || 'Since this is a 2-1 match in amateur format, there will be a 10-point super tiebreak instead of a 3rd set.'}
                         </p>
 
                         {/* Super Tiebreak Winner - Pre-selected */}
-                        <div className="space-y-3 mb-4">
-                            <h4 className="font-semibold text-white text-sm">{dict?.matches?.superTiebreakWinner || 'Super Tiebreak Winner'}</h4>
-                            <p className="text-xs text-gray-400 mb-3">
+                        <div className="space-y-2 mb-3">
+                            <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakWinner || 'Super Tiebreak Winner'}</h4>
+                            <p className="text-xs text-gray-400 mb-2">
                                 {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', formPredictions.winner.split(' ')[1]) || `The super tiebreak winner must be ${formPredictions.winner.split(' ')[1]} to match your overall prediction.`}
                             </p>
-                            <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                                <div className="p-3 rounded-lg border bg-purple-600/20 border-purple-500/30 text-purple-300">
+                            <div className="grid grid-cols-1 gap-2">
+                                <div className="p-2 rounded-lg border bg-purple-600/20 border-purple-500/30 text-purple-300">
                                     <div className="text-sm font-semibold">{formPredictions.winner.split(' ')[1]}</div>
                                     <div className="text-xs text-purple-400">{dict?.matches?.winsSuperTiebreak || 'Wins super tiebreak (pre-selected)'}</div>
                                 </div>
@@ -1228,8 +1242,8 @@ export function PredictionForm({
 
                         {/* Super Tiebreak Score */}
                         {formPredictions.superTieBreakWinner && (
-                            <div className="space-y-2">
-                                <h4 className="font-semibold text-white text-sm">{dict?.matches?.superTiebreakScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Super Tiebreak Score - ${formPredictions.winner.split(' ')[1]} ${dict?.matches?.wins || 'wins'}`}</h4>
+                            <div className="space-y-1.5">
+                                <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Super Tiebreak Score - ${formPredictions.winner.split(' ')[1]} ${dict?.matches?.wins || 'wins'}`}</h4>
                                 <select
                                     value={formPredictions.superTieBreakScore}
                                     onChange={(e) => onPredictionChange('superTieBreakScore', e.target.value)}
