@@ -11,6 +11,7 @@ import { BetsService, supabase } from '@netprophet/lib';
 import { useWallet } from '@/context/WalletContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
+import { toast } from 'sonner';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -39,6 +40,8 @@ export default function MyProfilePage() {
     const [username, setUsername] = useState('');
     const [isEditingUsername, setIsEditingUsername] = useState(false);
     const [savingUsername, setSavingUsername] = useState(false);
+    const [removingProfile, setRemovingProfile] = useState(false);
+    const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
 
     // Check if user is admin and has player profile
     const checkUserStatus = useCallback(async () => {
@@ -148,6 +151,59 @@ export default function MyProfilePage() {
         }
     };
 
+    const handleRemovePlayerProfile = async () => {
+        if (!user?.id || !claimedPlayerId) return;
+
+        setRemovingProfile(true);
+        setShowRemoveConfirmation(false);
+        try {
+            // Update profile to remove player claim
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update({
+                    claimed_player_id: null,
+                    profile_claim_status: 'skipped',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', user.id);
+
+            if (profileError) throw profileError;
+
+            // Update player to set back to hidden/unclaimed
+            const { error: playerError } = await supabase
+                .from('players')
+                .update({
+                    claimed_by_user_id: null,
+                    is_hidden: true,
+                    is_active: false,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', claimedPlayerId);
+
+            if (playerError) throw playerError;
+
+            // Update local state
+            setHasPlayerProfile(false);
+            setClaimedPlayerId(null);
+
+            toast.success(lang === 'el'
+                ? 'Το προφίλ παίκτη αφαιρέθηκε επιτυχώς'
+                : 'Player profile removed successfully');
+
+            // Refresh status
+            if (refreshStatus) {
+                refreshStatus();
+            }
+        } catch (err: any) {
+            console.error('Error removing player profile:', err);
+            toast.error(lang === 'el'
+                ? 'Αποτυχία αφαίρεσης προφίλ παίκτη'
+                : 'Failed to remove player profile');
+        } finally {
+            setRemovingProfile(false);
+        }
+    };
+
     const handleSaveUsername = async () => {
         if (!user?.id) return;
 
@@ -157,7 +213,7 @@ export default function MyProfilePage() {
         }
 
         if (username.length < 3 || username.length > 20) {
-            alert(lang === 'el'
+            toast.error(lang === 'el'
                 ? 'Το όνομα χρήστη πρέπει να είναι 3-20 χαρακτήρες'
                 : 'Username must be 3-20 characters');
             return;
@@ -177,16 +233,15 @@ export default function MyProfilePage() {
 
             setIsEditingUsername(false);
             // Show success message
-            const successMsg = lang === 'el'
-                ? '✅ Το όνομα χρήστη ενημερώθηκε επιτυχώς!'
-                : '✅ Username updated successfully!';
-            alert(successMsg);
+            toast.success(lang === 'el'
+                ? 'Το όνομα χρήστη ενημερώθηκε επιτυχώς!'
+                : 'Username updated successfully!');
         } catch (err: any) {
             console.error('Error updating username:', err);
             const errorMsg = lang === 'el'
                 ? 'Αποτυχία ενημέρωσης ονόματος χρήστη'
                 : 'Failed to update username';
-            alert(errorMsg + (err?.message ? `: ${err.message}` : ''));
+            toast.error(errorMsg + (err?.message ? `: ${err.message}` : ''));
         } finally {
             setSavingUsername(false);
         }
@@ -266,7 +321,7 @@ export default function MyProfilePage() {
                                 </div>
                                 <div className="py-2 border-b border-slate-600">
                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-300">{lang === 'el' ? 'Όνομα χρήστη:' : 'Username:'}:</span>
+                                        <span className="text-gray-300">{lang === 'el' ? 'Όνομα χρήστη:' : 'Username:'}</span>
                                         {!isEditingUsername ? (
                                             <div className="flex items-center space-x-2">
                                                 <span className="font-medium text-white">
@@ -369,15 +424,15 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-green-400">{profileStats.totalWins}</div>
-                                        <div className="text-sm text-gray-300">{dict?.profile?.totalWins || 'Total Wins'}</div>
+                                        <div className="text-sm text-gray-300">{lang === 'el' ? 'Σωστές Προβλέψεις' : 'Correct Predictions'}</div>
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-red-400">{profileStats.totalLosses}</div>
-                                        <div className="text-sm text-gray-300">{dict?.profile?.totalLosses || 'Total Losses'}</div>
+                                        <div className="text-sm text-gray-300">{lang === 'el' ? 'Λάθος Προβλέψεις' : 'Wrong Predictions'}</div>
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-blue-400">{profileStats.winRate}%</div>
-                                        <div className="text-sm text-gray-300">{dict?.profile?.winRate || 'Win Rate'}</div>
+                                        <div className="text-sm text-gray-300">{lang === 'el' ? 'Ακρίβεια Προβλέψεων' : 'Prediction Accuracy'}</div>
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-yellow-400">{profileStats.dailyStreak}</div>
@@ -385,7 +440,7 @@ export default function MyProfilePage() {
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
                                         <div className="text-2xl font-bold text-cyan-400">{profileStats.totalBets}</div>
-                                        <div className="text-sm text-gray-300">{dict?.profile?.totalBets || 'Total Bets'}</div>
+                                        <div className="text-sm text-gray-300">{dict?.profile?.totalBets || 'Total Predictions'}</div>
                                     </div>
                                 </div>
                             )}
@@ -445,14 +500,24 @@ export default function MyProfilePage() {
                                         </div>
                                     </div>
                                     {claimedPlayerId && (
-                                        <Link
-                                            href={`/${lang}/players/${claimedPlayerId}`}
-                                            className="block w-full"
-                                        >
-                                            <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                                                {(dict as any)?.profileSetup?.success?.viewPlayerProfile || 'View My Player Profile'}
+                                        <div className="space-y-3">
+                                            <Link
+                                                href={`/${lang}/players/${claimedPlayerId}`}
+                                                className="block w-full"
+                                            >
+                                                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                                                    {(dict as any)?.profileSetup?.success?.viewPlayerProfile || 'View My Player Profile'}
+                                                </Button>
+                                            </Link>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setShowRemoveConfirmation(true)}
+                                                disabled={removingProfile}
+                                                className="w-full border-red-500 text-red-400 hover:bg-red-900/20 hover:text-red-300"
+                                            >
+                                                {lang === 'el' ? 'Αφαίρεση Προφίλ Παίκτη' : 'Remove Player Profile'}
                                             </Button>
-                                        </Link>
+                                        </div>
                                     )}
                                 </div>
                             </CardContent>
@@ -512,6 +577,43 @@ export default function MyProfilePage() {
                 onClose={() => setShowProfileSetup(false)}
                 forceRefresh={profileRefreshKey}
             />
+
+            {/* Remove Player Profile Confirmation Modal */}
+            {showRemoveConfirmation && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 rounded-lg max-w-md w-full p-6 border border-slate-700">
+                        <h3 className="text-xl font-bold text-white mb-4">
+                            {lang === 'el' ? 'Αφαίρεση Προφίλ Παίκτη' : 'Remove Player Profile'}
+                        </h3>
+                        <p className="text-gray-300 mb-6">
+                            {lang === 'el'
+                                ? 'Είστε σίγουροι ότι θέλετε να αφαιρέσετε το προφίλ παίκτη σας; Το προφίλ θα γίνει ανενεργό και μπορείτε να το διεκδικήσετε ξανά αργότερα.'
+                                : 'Are you sure you want to remove your player profile? The profile will be set to inactive and you can claim it again later.'
+                            }
+                        </p>
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={() => setShowRemoveConfirmation(false)}
+                                variant="outline"
+                                className="flex-1 border-slate-600"
+                                disabled={removingProfile}
+                            >
+                                {lang === 'el' ? 'Ακύρωση' : 'Cancel'}
+                            </Button>
+                            <Button
+                                onClick={handleRemovePlayerProfile}
+                                disabled={removingProfile}
+                                className="flex-1 bg-red-600 hover:bg-red-700"
+                            >
+                                {removingProfile
+                                    ? (lang === 'el' ? 'Αφαίρεση...' : 'Removing...')
+                                    : (lang === 'el' ? 'Αφαίρεση' : 'Remove')
+                                }
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 } 
