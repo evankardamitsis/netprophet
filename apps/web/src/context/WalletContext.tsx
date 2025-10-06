@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { BetsService, TransactionsService } from '@netprophet/lib';
 import { loadFromSessionStorage, saveToSessionStorage, SESSION_KEYS } from '@/lib/sessionStorage';
 import { DailyRewardsService, WalletOperationsService, supabase, DAILY_REWARDS_CONSTANTS } from '@netprophet/lib';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmail } from '@/hooks/useEmail';
+import * as Sentry from '@sentry/nextjs';
 
 export interface Transaction {
     id: string;
@@ -249,34 +250,81 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }, [dict?.toast?.failedToLoadTransactions, user]);
 
 
-    // Load bet statistics and transactions from database on mount
-    useEffect(() => {
-        if (!user) {
-            // For unauthenticated users, just load the default wallet state
-            setWallet(defaultWallet);
-            return;
-        }
+    // Use ref to track if we're currently loading
+    const isLoadingRef = useRef(false);
 
-        // Additional safety check: Don't load data if we're on auth pages
-        const currentPath = window.location.pathname;
-        if (currentPath.includes('/auth/')) {
+    // Reset loaded state when user logs out
+    useEffect(() => {
+        if (!user?.id) {
+            setWallet(defaultWallet);
+        }
+    }, [user?.id]);
+
+    // Load bet statistics and transactions from database when user changes
+    // This effect will trigger whenever the user logs in or the user ID changes
+    // Note: We don't skip loading on auth pages because we want the data ready
+    // when the user navigates away from auth pages (e.g., after login callback)
+    useEffect(() => {
+        if (!user?.id) {
             return;
         }
 
         // Load data for authenticated users
         const loadUserData = async () => {
-            try {
-                // Load data sequentially to avoid race conditions
-                await syncWalletWithDatabase();
-                await loadBetStats();
-                await loadTransactions();
-            } catch (error) {
-                console.error('Error loading user data:', error);
+            if (isLoadingRef.current) {
+                console.log('⏭️ Skipping wallet load - already loading');
+                return;
             }
+
+            isLoadingRef.current = true;
+            console.log('🔄 Loading wallet data for user:', user.id);
+
+            await Sentry.startSpan(
+                {
+                    op: 'wallet.load',
+                    name: 'Load Wallet Data',
+                },
+                async (span) => {
+                    try {
+                        const startTime = Date.now();
+
+                        // Load data sequentially to avoid race conditions
+                        console.log('  - Syncing wallet...');
+                        await syncWalletWithDatabase();
+                        console.log('  - Loading bet stats...');
+                        await loadBetStats();
+                        console.log('  - Loading transactions...');
+                        await loadTransactions();
+
+                        const loadTime = Date.now() - startTime;
+                        span.setAttribute('load_time_ms', loadTime);
+                        span.setAttribute('user_id', user.id);
+                        span.setAttribute('success', true);
+
+                        console.log('✅ Wallet data loaded successfully');
+                    } catch (error) {
+                        span.setAttribute('success', false);
+                        span.setAttribute('error', error instanceof Error ? error.message : 'Unknown error');
+
+                        console.error('❌ Error loading user data:', error);
+                        Sentry.captureException(error, {
+                            tags: {
+                                section: 'wallet',
+                                operation: 'load_user_data',
+                            },
+                            extra: {
+                                userId: user.id,
+                            },
+                        });
+                    } finally {
+                        isLoadingRef.current = false;
+                    }
+                }
+            );
         };
 
         loadUserData();
-    }, [user, loadBetStats, loadTransactions, syncWalletWithDatabase]); // Include all dependencies
+    }, [user?.id, syncWalletWithDatabase, loadBetStats, loadTransactions]); // Include functions in deps
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {
