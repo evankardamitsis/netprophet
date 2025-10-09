@@ -114,17 +114,17 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
 
             {/* Hero Section */}
             <section className="relative overflow-hidden">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 xl:py-32">
-                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-16 items-center">
-                        <div className="text-center lg:text-left">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 xl:py-32">
+                    <div className="grid lg:grid-cols-[40%_60%] gap-8 lg:gap-12 xl:gap-16 items-stretch">
+                        <div className="text-center lg:text-left flex flex-col justify-center">
                             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight">
                                 {lang === 'el' ? 'Γίνε ο επόμενος' : 'Become the next'}{' '}
                                 <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Net Prophet</span>
                             </h1>
                             <p className="text-lg sm:text-xl md:text-2xl text-slate-300 mb-6 sm:mb-8 leading-relaxed">
                                 {lang === 'el'
-                                    ? 'Η πιο διασκεδαστική πλατφόρμα πρόβλεψης ερασιτεχνικού τένις με πραγματικούς παίκτες, τουρνουά, power-ups και ανταμοιβές.'
-                                    : 'The most exciting tennis prediction platform with amateur players, tournaments, power-ups and rewards.'
+                                    ? 'Το πιο διασκεδαστικό παιχνίδι προβλέψεων με πραγματικούς ερασιτεχνικούς αγώνες και τουρνουά.'
+                                    : 'The most exciting tennis prediction game with real amateur matches and tournaments.'
                                 }
                             </p>
                             <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8 justify-center lg:justify-start">
@@ -150,33 +150,24 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                                 </Button>
                             </div>
                         </div>
-                        <div className="relative">
-                            <div className="bg-gradient-to-br from-blue-100 via-purple-100 to-indigo-100 rounded-3xl p-8 shadow-2xl">
-                                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm text-slate-500">Live Match</span>
-                                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">Live</Badge>
-                                        </div>
-                                        <div className="border-t border-slate-200 pt-4">
-                                            <div className="text-sm text-slate-500 mb-3">Maroussi Tennis Open • Best of 3</div>
-                                            <div className="space-y-3">
-                                                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                                                    <span className="font-semibold text-slate-900">Γιώργος Παπαδόπουλος</span>
-                                                    <span className="text-blue-700 font-bold text-lg">1.85</span>
-                                                </div>
-                                                <div className="flex justify-between items-center p-3 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200">
-                                                    <span className="font-semibold text-slate-900">Νίκος Κωνσταντίνου</span>
-                                                    <span className="text-slate-700 font-bold text-lg">2.10</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-200">
-                                                <span className="text-sm text-slate-600">Your pick: Γιώργος Παπαδόπουλος</span>
-                                                <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">1.85x</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div className="relative h-full min-h-[400px] lg:min-h-[500px]">
+                            {/* App Demo Video */}
+                            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 h-full bg-slate-900">
+                                <video
+                                    autoPlay
+                                    loop
+                                    muted
+                                    playsInline
+                                    className="w-full h-full object-contain"
+                                >
+                                    <source src="/images/app-demo.mp4" type="video/mp4" />
+                                    {lang === 'el'
+                                        ? 'Το πρόγραμμα περιήγησής σας δεν υποστηρίζει βίντεο.'
+                                        : 'Your browser does not support the video tag.'
+                                    }
+                                </video>
+                                {/* Optional overlay gradient for better contrast */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
                             </div>
                         </div>
                     </div>
@@ -186,7 +177,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
             {/* Features Section */}
             <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/20"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             {lang === 'el' ? 'Απλό, σαν να σερβίρεις πρώτο game' : 'Simple, like serving first game'}
@@ -291,7 +282,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
             {/* Advanced Features Section */}
             <section className="py-20 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             {lang === 'el' ? 'Προηγμένες Λειτουργίες' : 'Advanced Features'}
@@ -473,7 +464,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
             {/* Welcome Bonus Banner */}
             <section className="py-20 bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                         <div>
                             <div className="flex items-center gap-3 mb-4">
@@ -573,7 +564,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
             {/* Live Tournament Results Section */}
             <section className="py-20 bg-gradient-to-br from-slate-800 via-slate-900 to-black text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/20"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold mb-4">
                             {lang === 'el' ? '🏆 Όλα τα Τουρνουά σε Ένα Μέρος' : '🏆 All Tournaments in One Place'}

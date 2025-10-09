@@ -87,7 +87,25 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Delete from profiles table first
+    // Delete from Supabase Auth first using admin API
+    // This will CASCADE delete from all tables that reference auth.users:
+    // - bets, parlays, notifications, daily_rewards, email_logs, etc.
+    // Note: This requires the service_role key to delete auth users
+    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(id);
+
+    if (deleteAuthError) {
+      console.error("Error deleting from auth:", deleteAuthError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Failed to delete user from authentication: ${deleteAuthError.message}`,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Delete from profiles table
+    // This is done after auth deletion to ensure consistency
     const { error: deleteProfileError } = await supabase
       .from("profiles")
       .delete()
@@ -95,28 +113,12 @@ export async function POST(request: NextRequest) {
 
     if (deleteProfileError) {
       console.error("Error deleting from profiles:", deleteProfileError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Failed to delete user profile: ${deleteProfileError.message}`,
-        },
-        { status: 500 }
-      );
-    }
-
-    // Delete from Supabase Auth using admin API
-    // Note: This requires the service_role key to delete auth users
-    const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(id);
-
-    if (deleteAuthError) {
-      console.error("Error deleting from auth:", deleteAuthError);
-      // Even if auth deletion fails, we've already deleted the profile
-      // We'll return a warning but still consider it successful
+      // Auth user is already deleted, so we'll return a warning
       return NextResponse.json(
         {
           success: true,
-          warning: `User profile deleted but auth deletion failed: ${deleteAuthError.message}`,
-          message: "User profile has been deleted from the database.",
+          warning: `User deleted from auth but profile cleanup failed: ${deleteProfileError.message}`,
+          message: "User has been deleted from authentication system.",
         },
         { status: 200 }
       );

@@ -610,39 +610,10 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
                                 <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/50 backdrop-blur-sm z-10">
                                     <button
-                                        onClick={() => {
-                                            // Handle outrights submission
-                                            const hasOutrightsPredictions = selectedTournamentWinner || selectedFinalsPair;
-                                            if (hasOutrightsPredictions) {
-                                                // Add to outrights predictions (separate from regular predictions)
-                                                addOutrightsPrediction({
-                                                    matchId: match.id,
-                                                    match,
-                                                    prediction: {
-                                                        tournamentWinner: selectedTournamentWinner,
-                                                        finalsPair: selectedFinalsPair
-                                                    },
-                                                    points: match.points * 2, // Higher points for outrights
-                                                    betAmount: 0, // Start with 0, user will set in slip
-                                                    multiplier: outrightsMultiplier,
-                                                    potentialWinnings: 0, // Will be calculated in slip based on bet amount
-                                                    isOutrights: true
-                                                });
-                                                setIsPredictionSlipCollapsed(false);
-
-                                                // Reset form change flag after successful submission
-                                                setHasOutrightsFormChanged(false);
-                                            }
-                                        }}
-                                        disabled={!selectedTournamentWinner && !selectedFinalsPair || !hasOutrightsFormChanged || match.locked || false}
-                                        className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm ${match.locked
-                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                            : ((selectedTournamentWinner || selectedFinalsPair) && hasOutrightsFormChanged
-                                                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                                                : 'bg-gray-600 text-gray-400 cursor-not-allowed')
-                                            }`}
+                                        disabled={true}
+                                        className="w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm bg-gray-600 text-gray-400 cursor-not-allowed"
                                     >
-                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : ((selectedTournamentWinner || selectedFinalsPair) ? (hasOutrightsPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : 'Select at least one outright prediction')}
+                                        {dict?.matches?.comingSoon || 'Coming Soon'}
                                     </button>
                                 </div>
                             </div>

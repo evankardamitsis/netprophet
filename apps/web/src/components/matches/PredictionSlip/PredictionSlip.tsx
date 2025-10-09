@@ -384,16 +384,70 @@ export function PredictionSlip({
         }
 
         const parts = [];
-        if (prediction.winner) parts.push(`Winner: ${prediction.winner}`);
-        if (prediction.matchResult) parts.push(`Result: ${prediction.matchResult}`);
-        if (prediction.set1Score) parts.push(`Set 1: ${prediction.set1Score}`);
-        if (prediction.set2Score) parts.push(`Set 2: ${prediction.set2Score}`);
-        if (prediction.set3Score) parts.push(`Set 3: ${prediction.set3Score}`);
-        if (prediction.set1TieBreakScore) parts.push(`TB1: ${prediction.set1TieBreakScore}`);
-        if (prediction.set2TieBreakScore) parts.push(`TB2: ${prediction.set2TieBreakScore}`);
-        if (prediction.superTieBreakScore) parts.push(`STB: ${prediction.superTieBreakScore}`);
 
-        return parts.length > 0 ? parts.join(' | ') : (dict?.matches?.noPrediction || 'No prediction');
+        // Winner
+        if (prediction.winner) {
+            const winnerName = prediction.winner.split(' ').pop(); // Get last name only
+            parts.push(`${dict?.matches?.winner || 'Winner'}: ${winnerName}`);
+        }
+
+        // Match Result
+        if (prediction.matchResult) {
+            parts.push(`${dict?.matches?.result || 'Result'}: ${prediction.matchResult}`);
+        }
+
+        // Set Winners (only show if not automatically determined by match result)
+        if (prediction.set1Winner && !['2-0', '0-2', '3-0', '0-3'].includes(prediction.matchResult)) {
+            parts.push(`Set 1: ${prediction.set1Winner.split(' ').pop()}`);
+        }
+        if (prediction.set2Winner && !['2-0', '0-2', '3-0', '0-3'].includes(prediction.matchResult)) {
+            parts.push(`Set 2: ${prediction.set2Winner.split(' ').pop()}`);
+        }
+        if (prediction.set3Winner) {
+            parts.push(`Set 3: ${prediction.set3Winner.split(' ').pop()}`);
+        }
+        if (prediction.set4Winner) {
+            parts.push(`Set 4: ${prediction.set4Winner.split(' ').pop()}`);
+        }
+        if (prediction.set5Winner) {
+            parts.push(`Set 5: ${prediction.set5Winner.split(' ').pop()}`);
+        }
+
+        // Set Scores
+        if (prediction.set1Score) {
+            parts.push(`Set 1 Score: ${prediction.set1Score}`);
+        }
+        if (prediction.set2Score) {
+            parts.push(`Set 2 Score: ${prediction.set2Score}`);
+        }
+        if (prediction.set3Score) {
+            parts.push(`Set 3 Score: ${prediction.set3Score}`);
+        }
+        if (prediction.set4Score) {
+            parts.push(`Set 4 Score: ${prediction.set4Score}`);
+        }
+        if (prediction.set5Score) {
+            parts.push(`Set 5 Score: ${prediction.set5Score}`);
+        }
+
+        // Tiebreak Scores
+        if (prediction.set1TieBreakScore) {
+            parts.push(`Set 1 TB: ${prediction.set1TieBreakScore}`);
+        }
+        if (prediction.set2TieBreakScore) {
+            parts.push(`Set 2 TB: ${prediction.set2TieBreakScore}`);
+        }
+
+        // Super Tiebreak
+        if (prediction.superTieBreakWinner) {
+            const winnerName = prediction.superTieBreakWinner.split(' ').pop();
+            parts.push(`Super TB: ${winnerName}`);
+        }
+        if (prediction.superTieBreakScore) {
+            parts.push(`STB Score: ${prediction.superTieBreakScore}`);
+        }
+
+        return parts.length > 0 ? parts.join(' • ') : (dict?.matches?.noPrediction || 'No prediction');
     }
 
 

@@ -95,7 +95,7 @@ export function PredictionCard({
                     </div>
 
                     <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm">
+                        <div className="text-xs leading-relaxed">
                             <span className="text-slate-300">{dict?.matches?.pick || 'Pick'}: </span>
                             <span className="font-semibold text-yellow-200">
                                 {formatPredictionDisplay(item.prediction)}

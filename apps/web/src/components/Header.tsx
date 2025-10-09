@@ -24,16 +24,22 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
 
     return (
         <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
-                    {/* Logo */}
-                    <div className="flex items-center flex-shrink-0">
+                    {/* Logo and Navigation */}
+                    <div className="flex items-center space-x-4 sm:space-x-6 flex-shrink-0">
                         <div
                             className="cursor-pointer"
                             onClick={() => router.push(`/${lang}`)}
                         >
                             <Logo size="md" />
                         </div>
+                        <button
+                            onClick={() => router.push(`/${lang}/how-it-works`)}
+                            className="text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-600 transition-colors whitespace-nowrap"
+                        >
+                            {lang === 'el' ? 'Πώς Λειτουργεί' : 'How It Works'}
+                        </button>
                     </div>
 
                     {/* Right side - Language switch and Start Now button */}

@@ -203,6 +203,7 @@ export interface Dictionary {
     placeOutrightsBet?: string;
     addToSlip?: string;
     updateSlip?: string;
+    comingSoon?: string;
     multiplierBonus?: string;
     predictionCount?: string;
     oneSetPreSelected?: string;
