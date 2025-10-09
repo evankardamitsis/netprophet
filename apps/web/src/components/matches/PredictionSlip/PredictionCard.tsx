@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '@netprophet/ui';
 import { formatWinnings } from '@netprophet/lib';
 import { COIN_CONSTANTS } from '@/context/WalletContext';
+import CoinIcon from '@/components/CoinIcon';
 
 interface PredictionCardProps {
     item: any;
@@ -151,7 +152,7 @@ export function PredictionCard({
                                         className="w-16 px-1.5 py-0.5 text-sm bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                         placeholder="0"
                                     />
-                                    <span className="text-sm text-slate-400">🌕</span>
+                                    <CoinIcon size={14} className="text-slate-400" />
                                 </div>
                                 <div className="text-sm text-slate-500">
                                     (min {COIN_CONSTANTS.MIN_BET})
@@ -166,8 +167,8 @@ export function PredictionCard({
                                 </div>
                                 <div className="text-center">
                                     <div className="text-sm text-slate-400">{dict?.matches?.potentialWin || 'Win'}</div>
-                                    <div className="text-sm font-bold text-green-400">
-                                        {formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} 🌕
+                                    <div className="text-sm font-bold text-green-400 flex items-center justify-center gap-1">
+                                        {formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} <CoinIcon size={14} />
                                     </div>
                                 </div>
                                 <div className="text-center">

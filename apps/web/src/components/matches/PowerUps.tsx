@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDictionary } from '@/context/DictionaryContext';
 import { toast } from 'sonner';
 import { fetchPowerUps, purchasePowerUp, type PowerUp as DBPowerUp } from '@netprophet/lib';
+import CoinIcon from '@/components/CoinIcon';
 
 export interface PowerUp {
     id: string;
@@ -233,7 +234,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
 
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-2xl">🌕</span>
+                                                <CoinIcon size={24} />
                                                 <span className="font-bold text-xl text-yellow-400">{powerUp.cost}</span>
                                             </div>
 

@@ -6,6 +6,7 @@ import { useWallet } from '@/context/WalletContext';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { purchasePowerUp } from '@netprophet/lib';
+import CoinIcon from '@/components/CoinIcon';
 
 interface PowerUpSuggestionsProps {
     predictionsCount: number;
@@ -172,7 +173,7 @@ export function PowerUpSuggestions({
                             className="text-xs py-1 px-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white flex items-center gap-1"
                         >
                             <span>{suggestion.cost}</span>
-                            <span>🌕</span>
+                            <CoinIcon size={12} />
                         </Button>
                     </motion.div>
                 ))}

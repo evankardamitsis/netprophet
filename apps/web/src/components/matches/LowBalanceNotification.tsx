@@ -8,6 +8,7 @@ import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/useAuth';
 import { useCoinPacks } from '@/hooks/useCoinPacks';
 import { toast } from 'sonner';
+import CoinIcon from '@/components/CoinIcon';
 
 // Helper function to check if notification was dismissed
 const isNotificationDismissed = () => {
@@ -200,7 +201,7 @@ export function LowBalanceNotification({
                                                 >
                                                     {isProcessing ? '...' : (
                                                         <div className="flex flex-col items-center whitespace-nowrap">
-                                                            <span className="font-bold">{pack.base_coins + pack.bonus_coins} 🌕</span>
+                                                            <span className="font-bold flex items-center gap-1">{pack.base_coins + pack.bonus_coins} <CoinIcon size={14} /></span>
                                                             <span className="text-xs text-gray-100/80">€{pack.price_euro.toFixed(2)}</span>
                                                         </div>
                                                     )}

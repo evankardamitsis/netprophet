@@ -5,6 +5,7 @@ import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/useAuth';
 import { useDictionary } from '@/context/DictionaryContext';
 import { createClient } from '@supabase/supabase-js';
+import CoinIcon from '@/components/CoinIcon';
 
 export type CoinPack = {
     id: string;
@@ -112,7 +113,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                 )}
                                 {pack.bonusCoins > 0 && (
                                     <div className="absolute top-0 left-0 bg-gradient-to-r from-green-400 to-emerald-500 text-white px-2 py-1 text-xs font-bold rounded-br-xl shadow-lg flex items-center gap-1">
-                                        <span className="text-xs">🌕</span>
+                                        <CoinIcon size={12} />
                                         <span>+{pack.bonusCoins.toLocaleString()}</span>
                                     </div>
                                 )}
@@ -127,7 +128,9 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                 <CardContent className="pt-0 text-center relative z-10">
                                     <div className="space-y-2 md:space-y-4">
                                         <div className="flex items-center justify-center gap-2 md:gap-3">
-                                            <div className="text-lg md:text-2xl animate-pulse">🌕</div>
+                                            <div className="animate-pulse">
+                                                <CoinIcon size={32} />
+                                            </div>
                                             <span className="text-base md:text-xl font-bold text-white">{pack.baseCoins.toLocaleString()}</span>
                                         </div>
                                         <div className="text-xs md:text-base font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">

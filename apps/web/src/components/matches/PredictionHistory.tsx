@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Badge, Button } from '@netprophet/ui';
+import CoinIcon from '@/components/CoinIcon';
 
 interface Prediction {
     winner?: string;
@@ -143,14 +144,14 @@ export function PredictionHistory({ predictions }: PredictionHistoryProps) {
                                     </div>
                                     <div className="flex items-center justify-end">
                                         <div className="text-right">
-                                            <div className="text-2xl font-bold text-green-600">
-                                                {prediction.pointsEarned > 0 ? `+${prediction.pointsEarned} 🌕` : '0 🌕'}
+                                            <div className="text-2xl font-bold text-green-600 flex items-center justify-end gap-2">
+                                                {prediction.pointsEarned > 0 ? `+${prediction.pointsEarned}` : '0'} <CoinIcon size={24} />
                                             </div>
                                             <div className="text-sm text-gray-500">
                                                 Winnings
                                             </div>
-                                            <div className="text-xs text-gray-400">
-                                                Bet: {prediction.betAmount} 🌕 | Multiplier: {prediction.multiplier}x
+                                            <div className="text-xs text-gray-400 flex items-center justify-end gap-1">
+                                                Bet: {prediction.betAmount} <CoinIcon size={12} /> | Multiplier: {prediction.multiplier}x
                                             </div>
                                         </div>
                                     </div>

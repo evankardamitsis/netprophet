@@ -6,6 +6,7 @@ import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
 import { calculateMultiplier, getMultiplierOptions, PlayerOdds } from '@/lib/predictionHelpers';
 import { Badge } from '@netprophet/ui';
+import CoinIcon from '@/components/CoinIcon';
 
 // Warning Icon Component
 function WarningIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -82,8 +83,8 @@ export function BettingSection({
 
             {/* Bet Amount Input */}
             <div className="space-y-2 mb-4">
-                <label className="text-xs font-medium text-gray-300">
-                    {dict?.matches?.stake || 'Bet Amount'} (🌕)
+                <label className="text-xs font-medium text-gray-300 flex items-center gap-1">
+                    {dict?.matches?.stake || 'Bet Amount'} (<CoinIcon size={12} />)
                 </label>
                 <div className="flex gap-1">
                     <input
@@ -132,8 +133,8 @@ export function BettingSection({
                 </div>
                 <div className="bg-slate-600 p-3 rounded-lg border border-slate-500">
                     <div className="text-xs text-gray-400 mb-1">{dict?.matches?.potentialWin || 'Potential Win'}</div>
-                    <div className="text-xl font-bold text-green-400">
-                        {potentialWinnings} 🌕
+                    <div className="text-xl font-bold text-green-400 flex items-center gap-2">
+                        {potentialWinnings} <CoinIcon size={20} />
                     </div>
                     <div className="text-xs text-gray-500">
                         {betAmount > 0 ? `Bet ${betAmount} × ${selectedMultiplier.toFixed(2)}x` : dict?.matches?.enterBetAmountFirst || 'Enter bet amount'}

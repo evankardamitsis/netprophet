@@ -9,6 +9,7 @@ import { BetHistoryTable } from '@/components/matches/BetHistoryTable';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useDictionary } from '@/context/DictionaryContext';
 import { PredictionHistory } from '@/components/matches/PredictionHistory';
+import CoinIcon from '@/components/CoinIcon';
 
 // Interface for bet data with match details
 interface BetWithMatchDetails {
@@ -244,14 +245,14 @@ export default function MyPicksPage() {
                                                         </p>
                                                     </div>
                                                     <div className="text-right ml-4 flex-shrink-0">
-                                                        <div className="text-green-400 font-bold text-sm">
-                                                            {bet.betAmount} 🌕
+                                                        <div className="text-green-400 font-bold text-sm flex items-center justify-end gap-1">
+                                                            {bet.betAmount} <CoinIcon size={14} />
                                                         </div>
                                                         <div className="text-gray-400 text-xs">
                                                             {bet.multiplier}x
                                                         </div>
                                                         <div className="text-gray-300 text-xs mt-1">
-                                                            {dict?.myPicks?.potential || 'Potential'}: <span className="text-green-400 font-medium">{bet.potentialWinnings} 🌕</span>
+                                                            {dict?.myPicks?.potential || 'Potential'}: <span className="text-green-400 font-medium items-center justify-end gap-1 inline-flex">{bet.potentialWinnings} <CoinIcon size={12} /></span>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { Dictionary } from '@/types/dictionary';
+import CoinIcon from '@/components/CoinIcon';
 
 interface Prediction {
     winner?: string;
@@ -137,8 +138,8 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
                                 </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-300">
-                                    {bet.betAmount} 🌕
+                                <div className="text-sm text-gray-300 flex items-center gap-1">
+                                    {bet.betAmount} <CoinIcon size={14} />
                                 </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
@@ -147,16 +148,16 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
                                 </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-300">
-                                    {bet.potentialWinnings} 🌕
+                                <div className="text-sm text-gray-300 flex items-center gap-1">
+                                    {bet.potentialWinnings} <CoinIcon size={14} />
                                 </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                                 {getStatusBadge(bet.status)}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                                <div className={`text-sm font-medium ${bet.pointsEarned > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                                    {bet.pointsEarned > 0 ? `+${bet.pointsEarned} 🌕` : '0 🌕'}
+                                <div className={`text-sm font-medium flex items-center gap-1 ${bet.pointsEarned > 0 ? 'text-green-400' : 'text-gray-400'}`}>
+                                    {bet.pointsEarned > 0 ? `+${bet.pointsEarned}` : '0'} <CoinIcon size={14} />
                                 </div>
                             </td>
                         </tr>

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@netprophet/ui';
 import { formatWinnings, formatParlayOdds } from '@netprophet/lib';
 import { COIN_CONSTANTS } from '@/context/WalletContext';
+import CoinIcon from '@/components/CoinIcon';
 
 // Function to calculate potential leaderboard points
 function calculatePotentialLeaderboardPoints(predictions: any[], isParlayMode: boolean, parlayCalculation: any, doublePointsMatchId?: string | null): number {
@@ -102,7 +103,7 @@ export function SubmitSection({
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-xs text-slate-300">
                             <span>{dict?.matches?.parlayStake || 'Parlay Stake'}: </span>
-                            <span className="font-bold text-blue-400 text-base">{parlayStake} 🌕</span>
+                            <span className="font-bold text-blue-400 text-base items-center gap-1 inline-flex">{parlayStake} <CoinIcon size={14} /></span>
                         </div>
                         <div className="text-xs text-slate-300">
                             <span>{dict?.leaderboard?.points || 'Points'}: </span>
@@ -116,8 +117,8 @@ export function SubmitSection({
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-xs text-slate-300">
                             <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
-                            <span className="font-bold text-yellow-300 text-base">
-                                {formatWinnings(parlayCalculation!.potentialWinnings)} 🌕
+                            <span className="font-bold text-yellow-300 text-base  items-center gap-1 inline-flex">
+                                {formatWinnings(parlayCalculation!.potentialWinnings)} <CoinIcon size={14} />
                             </span>
                         </div>
                         <div className="text-xs text-slate-400">
@@ -156,7 +157,7 @@ export function SubmitSection({
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-xs text-slate-300">
                             <span>{dict?.matches?.totalStake || 'Total Stake'}: </span>
-                            <span className="font-bold text-blue-400 text-base">{totalIndividualStake} 🌕</span>
+                            <span className="font-bold text-blue-400 text-base items-center gap-1 inline-flex">{totalIndividualStake} <CoinIcon size={14} /></span>
                         </div>
                         <div className="text-xs text-slate-300">
                             <span>{dict?.leaderboard?.points || 'Points'}: </span>
@@ -169,8 +170,8 @@ export function SubmitSection({
                     <div className="flex justify-between items-center mb-3">
                         <div className="text-xs text-slate-300">
                             <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
-                            <span className="font-bold text-yellow-300 text-base">
-                                {formatWinnings(totalIndividualWinnings)} 🌕
+                            <span className="font-bold text-yellow-300 text-base items-center gap-1 inline-flex">
+                                {formatWinnings(totalIndividualWinnings)} <CoinIcon size={14} />
                             </span>
                         </div>
                         <div className="text-xs text-slate-400">

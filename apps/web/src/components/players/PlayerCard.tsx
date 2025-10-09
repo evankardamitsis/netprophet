@@ -7,9 +7,10 @@ import { useDictionary } from '@/context/DictionaryContext';
 interface PlayerCardProps {
     player: Player;
     className?: string;
+    disableLink?: boolean;
 }
 
-export function PlayerCard({ player, className = '' }: PlayerCardProps) {
+export function PlayerCard({ player, className = '', disableLink = false }: PlayerCardProps) {
     const router = useRouter();
     const { dict, lang } = useDictionary();
 
@@ -53,12 +54,14 @@ export function PlayerCard({ player, className = '' }: PlayerCardProps) {
     };
 
     const handleCardClick = () => {
-        router.push(`/${lang}/players/${player.id}`);
+        if (!disableLink) {
+            router.push(`/${lang}/players/${player.id}`);
+        }
     };
 
     return (
         <div
-            className={`bg-slate-900/80 rounded-xl border border-slate-700 hover:border-blue-500/50 transition-all duration-300 cursor-pointer group hover:shadow-lg hover:shadow-blue-500/10 ${className}`}
+            className={`bg-slate-900/80 rounded-xl border border-slate-700 ${!disableLink ? 'hover:border-blue-500/50 cursor-pointer hover:shadow-lg hover:shadow-blue-500/10' : ''} transition-all duration-300 group ${className}`}
             onClick={handleCardClick}
         >
             {/* Header with name and rating */}

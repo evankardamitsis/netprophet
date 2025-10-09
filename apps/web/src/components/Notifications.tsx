@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { NotificationsService, WelcomeBonusNotificationService } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useWallet } from '@/context/WalletContext';
+import CoinIcon from '@/components/CoinIcon';
 
 interface Notification {
     id: string;
@@ -279,8 +280,8 @@ export function Notifications() {
                                                 </div>
                                                 <p className="text-sm text-gray-300 mt-1">{notification.message}</p>
                                                 {notification.data?.winnings && (
-                                                    <p className="text-sm text-green-400 mt-1">
-                                                        {dict?.notifications?.winnings || 'Winnings'}: {notification.data.winnings} 🌕
+                                                    <p className="text-sm text-green-400 mt-1 flex items-center gap-1">
+                                                        {dict?.notifications?.winnings || 'Winnings'}: {notification.data.winnings} <CoinIcon size={14} />
                                                     </p>
                                                 )}
                                                 <p className="text-xs text-gray-400 mt-2">{formatTimeAgo(notification.created_at)}</p>

@@ -11,6 +11,7 @@ import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/useAuth';
 import { useCoinPacks } from '@/hooks/useCoinPacks';
 import { toast } from 'sonner';
+import CoinIcon from '@/components/CoinIcon';
 
 // Icon components
 function ChevronUpIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -273,7 +274,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
             >
                 {/* Coin Icon with Balance Overlay */}
                 <div className="relative">
-                    <span className="text-lg">🌕</span>
+                    <CoinIcon size={20} />
                     {/* Balance Badge on top right */}
                     <div className="absolute -top-1.5 -right-4 bg-slate-800 border border-slate-600 rounded-full px-1.5 min-w-[16px] h-4 flex items-center justify-center">
                         <span className={`font-bold text-xs ${isLowBalance ? 'text-red-400' : 'text-yellow-300'}`}>
@@ -307,8 +308,8 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                     </button>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <div className={`text-lg font-bold ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
-                                        {availableBalance} 🌕
+                                    <div className={`text-lg font-bold flex items-center gap-1 ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
+                                        {availableBalance} <CoinIcon size={18} />
                                     </div>
                                     {wallet.dailyLoginStreak > 0 && (
                                         <div className="flex items-center gap-1">
@@ -346,8 +347,8 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                         <div className="flex items-center gap-2">
                                             <ClockIcon className="text-blue-500 h-4 w-4" />
                                             <div className="flex-1">
-                                                <div className="text-sm font-medium text-blue-300">
-                                                    {dict?.wallet?.pendingBets || 'Pending Bets'}: {pendingBetAmount} 🌕
+                                                <div className="text-sm font-medium text-blue-300 flex items-center gap-1">
+                                                    {dict?.wallet?.pendingBets || 'Pending Bets'}: {pendingBetAmount} <CoinIcon size={14} />
                                                 </div>
                                                 <div className="text-xs text-blue-400">
                                                     {predictions.length} {dict?.wallet?.matchesInSlip || 'matches in slip'}
@@ -390,7 +391,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                                 >
                                                     {isProcessing ? '...' : (
                                                         <div className="flex flex-col items-center">
-                                                            <span>{pack.base_coins + pack.bonus_coins} 🌕</span>
+                                                            <span className="flex items-center gap-1">{pack.base_coins + pack.bonus_coins} <CoinIcon size={16} /></span>
                                                             <span className="text-xs opacity-80">€{pack.price_euro.toFixed(2)}</span>
                                                         </div>
                                                     )}

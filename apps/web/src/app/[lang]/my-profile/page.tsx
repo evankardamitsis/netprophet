@@ -12,6 +12,7 @@ import { useWallet } from '@/context/WalletContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
 import { toast } from 'sonner';
+import CoinIcon from '@/components/CoinIcon';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -419,7 +420,7 @@ export default function MyProfilePage() {
                             ) : (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">
-                                        <div className="text-2xl font-bold text-purple-400">{profileStats.totalCoins.toLocaleString()} 🌕</div>
+                                        <div className="text-2xl font-bold text-purple-400 flex items-center justify-center gap-2">{profileStats.totalCoins.toLocaleString()} <CoinIcon size={24} /></div>
                                         <div className="text-sm text-gray-300">{dict?.profile?.totalWinnings || 'Total Winnings'}</div>
                                     </div>
                                     <div className="text-center p-4 bg-slate-700 rounded-lg border border-slate-600">

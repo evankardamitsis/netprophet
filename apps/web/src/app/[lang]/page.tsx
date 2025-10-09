@@ -1,5 +1,5 @@
 import { getDictionary } from '../../lib/dictionaries';
-import HomePageClient from './HomePageClient';
+import HomePageClientGame from './HomePageClientGame';
 
 export default async function HomePage({
     params,
@@ -11,5 +11,5 @@ export default async function HomePage({
 
     const dict = getDictionary(lang);
 
-    return <HomePageClient dict={dict} lang={lang} />;
+    return <HomePageClientGame dict={dict} lang={lang} />;
 } 

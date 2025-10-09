@@ -6,6 +6,7 @@ import { useWallet } from '@/context/WalletContext';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useDictionary } from '@/context/DictionaryContext';
+import CoinIcon from '@/components/CoinIcon';
 import {
     RewardShopHeader,
     CoinTopUpSection,
@@ -98,7 +99,7 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                             <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
                                 <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>🌕</span>
+                                    <CoinIcon size={20} />
                                     {dict.rewards.earnCoins}
                                 </h4>
                                 <p className="text-gray-300">{dict.rewards.earnCoinsDescription}</p>

@@ -29,11 +29,11 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
 
     return (
         <div className={`flex items-center ${className}`}>
-            <div className={`${icon} bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3 hover:shadow-[0_0_8px_rgba(59,130,246,0.3)] transition-all duration-300`}>
-                <span className={`text-white font-bold ${iconText}`}>NP</span>
+            <div className={`${icon} bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center mr-3 shadow-lg`}>
+                <span className={`text-purple-900 font-black ${iconText}`}>NP</span>
             </div>
             {showText && (
-                <span className={`font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent ${text} hover:drop-shadow-[0_0_6px_rgba(147,51,234,0.4)] transition-all duration-300`}>
+                <span className={`font-black text-purple-600 ${text}`}>
                     NetProphet
                 </span>
             )}

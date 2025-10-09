@@ -11,6 +11,7 @@ import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
 import { Lock, Coins, CheckCircle, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CoinIcon from '@/components/CoinIcon';
 
 interface TournamentAccessModalProps {
     tournamentId: string;
@@ -150,8 +151,8 @@ export function TournamentAccessModal({
                                     <Coins className="h-5 w-5 text-yellow-500" />
                                     <span className="font-semibold text-white">{dict?.tournamentAccess?.entryFee || 'Entry Fee'}</span>
                                 </div>
-                                <Badge variant="secondary" className="text-lg font-bold">
-                                    {accessResult.buyInFee} 🌕
+                                <Badge variant="secondary" className="text-lg font-bold flex items-center gap-1">
+                                    {accessResult.buyInFee} <CoinIcon size={18} />
                                 </Badge>
                             </div>
 
@@ -160,8 +161,8 @@ export function TournamentAccessModal({
                                     <Coins className="h-5 w-5 text-blue-400" />
                                     <span className="font-semibold text-white">{dict?.tournamentAccess?.yourBalance || 'Your Balance'}</span>
                                 </div>
-                                <Badge variant="outline" className="text-lg font-bold">
-                                    {wallet.balance} 🌕
+                                <Badge variant="outline" className="text-lg font-bold flex items-center gap-1">
+                                    {wallet.balance} <CoinIcon size={18} />
                                 </Badge>
                             </div>
 

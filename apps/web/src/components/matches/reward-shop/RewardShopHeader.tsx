@@ -1,5 +1,6 @@
 import { useWallet } from '@/context/WalletContext';
 import { useDictionary } from '@/context/DictionaryContext';
+import CoinIcon from '@/components/CoinIcon';
 
 interface RewardShopHeaderProps {
     userPoints?: number;
@@ -37,7 +38,7 @@ export function RewardShopHeader({ userPoints, onInfoClick }: RewardShopHeaderPr
                         <div className="text-blue-100 text-sm">{dict.rewards.yourBalance}</div>
                         <div className="text-4xl font-bold flex items-center gap-2">
                             {actualBalance.toLocaleString()}
-                            <span className="text-yellow-300">🌕</span>
+                            <CoinIcon size={40} />
                         </div>
                     </div>
                 </div>
