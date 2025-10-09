@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
     title: 'NetProphet - Tennis Predictions',
-    description: 'Predict tennis matches and earn rewards',
+    description: 'The ultimate tennis prediction game. Play with real players, win coins, and become a Net Prophet!',
 }
 
 // Generate static params for supported locales
