@@ -36,8 +36,8 @@ export default function HowItWorksPageGame() {
                     </h1>
                     <p className="text-2xl text-white/90 font-bold max-w-3xl mx-auto">
                         {lang === 'el'
-                            ? 'Αντικειμενικές αποδόσεις από 1200+ παίκτες με πραγματικά δεδομένα!'
-                            : 'Objective odds from 1200+ players with real data!'}
+                            ? 'Διάλεξε αγώνες, κάνε προβλέψεις, μάζεψε coins και κυριάρχησε στο leaderboard!'
+                            : 'Pick matches, make predictions, collect coins and dominate the leaderboard!'}
                     </p>
                 </div>
             </section>
