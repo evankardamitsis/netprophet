@@ -33,7 +33,7 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
                 <span className={`text-purple-900 font-black ${iconText}`}>NP</span>
             </div>
             {showText && (
-                <span className={`font-black text-purple-600 ${text}`}>
+                <span className={`font-black text-yellow-400 ${text}`}>
                     NetProphet
                 </span>
             )}
