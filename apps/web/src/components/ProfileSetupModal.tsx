@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileClaim } from "@/hooks/useProfileClaim";
-import { ProfileClaimFlow } from "@/components/auth/ProfileClaimFlow";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@netprophet/ui";
+import { ProfileClaimFlowNew } from "@/components/auth/ProfileClaimFlowNew";
 import { X } from "lucide-react";
 import { useDictionary } from "@/context/DictionaryContext";
 
@@ -56,31 +55,32 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh }: ProfileSetu
 
     return (
         <div
-            className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     onClose();
                 }
             }}
         >
-            <Card className="w-full max-w-lg mx-auto relative shadow-2xl border-0 bg-white animate-in fade-in-0 zoom-in-95 duration-300 sm:max-w-xl my-8">
+            <div className="w-full max-w-3xl mx-auto relative my-4 sm:my-8 animate-in fade-in-0 zoom-in-95 duration-300">
+                {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10 transition-colors"
+                    className="absolute -top-10 sm:-top-12 right-0 text-white hover:text-gray-300 z-10 transition-colors flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-2 rounded-lg font-medium text-sm"
                 >
-                    <X className="h-6 w-6" />
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">{dict?.profileSetup?.success?.close || "Close"}</span>
                 </button>
 
-                <CardContent className="bg-white p-4 sm:p-6">
-                    <ProfileClaimFlow
-                        userId={user?.id || ""}
-                        onComplete={handleComplete}
-                        onSkip={handleSkip}
-                        onRefresh={refreshStatus}
-                        forceRefresh={forceRefresh}
-                    />
-                </CardContent>
-            </Card>
+                {/* Flow Content */}
+                <ProfileClaimFlowNew
+                    userId={user?.id || ""}
+                    onComplete={handleComplete}
+                    onSkip={handleSkip}
+                    onRefresh={refreshStatus}
+                    forceRefresh={forceRefresh}
+                />
+            </div>
         </div>
     );
 }

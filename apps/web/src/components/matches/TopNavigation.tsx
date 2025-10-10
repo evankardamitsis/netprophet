@@ -11,29 +11,12 @@ import Logo from '@/components/Logo';
 import { ProfilesService, fetchUserPowerUps, supabase, type UserPowerUp } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
 import { useWallet } from '@/context/WalletContext';
+import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 
 // Icon components
 function ChevronDownIcon() {
     return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-    </svg>
-}
-
-function LeaderboardIcon() {
-    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-}
-
-function RewardsIcon() {
-    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-    </svg>
-}
-
-function PlayersIcon() {
-    return <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
     </svg>
 }
 
@@ -191,9 +174,12 @@ export function TopNavigation({
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userPowerUps, setUserPowerUps] = useState<UserPowerUp[]>([]);
     const [powerUpsLoading, setPowerUpsLoading] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+    const [modalRefresh, setModalRefresh] = useState(0);
     const router = useRouter();
     const pathname = usePathname();
     const { user } = useAuth();
+    const isDev = process.env.NODE_ENV === 'development';
     const dropdownRef = useRef<HTMLDivElement>(null);
     const languageDropdownRef = useRef<HTMLDivElement>(null);
     const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -321,6 +307,32 @@ export function TopNavigation({
         router.push(newPath);
     };
 
+    const handleTestProfileClick = async () => {
+        if (!user) return;
+
+        try {
+            // Reset only the claim status, keep the user's name for automatic lookup
+            await supabase
+                .from('profiles')
+                .update({
+                    profile_claim_status: null,
+                    claimed_player_id: null,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', user.id);
+
+            console.log('🔄 Profile claim status reset - automatic lookup will run with existing name');
+
+            // Force refresh the modal
+            setModalRefresh(prev => prev + 1);
+            setShowProfileModal(true);
+        } catch (error) {
+            console.error('Error resetting profile:', error);
+            // Still open the modal even if reset fails
+            setShowProfileModal(true);
+        }
+    };
+
     return (
         <div className="relative">
             <header className="w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-10  bg-gradient-to-r from-slate-900 via-blue-950 to-purple-950 text-white shadow-lg">
@@ -404,6 +416,17 @@ export function TopNavigation({
 
                 {/* Right Section - Wallet, Notifications, Language, Account */}
                 <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+                    {/* Dev Test Button - Profile Claim */}
+                    {isDev && (
+                        <button
+                            onClick={handleTestProfileClick}
+                            className="px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition bg-blue-500 hover:bg-blue-600 text-white focus:outline-none text-xs"
+                            title="Test Profile Claim Flow (Resets Profile)"
+                        >
+                            Test Profile
+                        </button>
+                    )}
+
                     {/* Wallet Component */}
                     <div className="block relative group">
                         <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
@@ -754,6 +777,15 @@ export function TopNavigation({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Profile Claim Modal - Dev Test */}
+            {isDev && showProfileModal && (
+                <ProfileSetupModal
+                    isOpen={showProfileModal}
+                    onClose={() => setShowProfileModal(false)}
+                    forceRefresh={modalRefresh}
+                />
+            )}
         </div>
     );
 } 

@@ -137,7 +137,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                         {/* Left - Title & CTA */}
                         <div className="text-center lg:text-left space-y-4">
                             {/* Subtitle */}
-                            <p className="text-lg text-white/90 font-semibold">
+                            <p className="text-md text-white/90 font-semibold">
                                 {lang === 'el'
                                     ? 'Πόσο καλά νομίζεις ότι ξέρεις το παιχνίδι;'
                                     : 'How well can you read the game?'
@@ -155,8 +155,8 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             {/* Description */}
                             <p className="text-xl sm:text-2xl text-white/80 font-bold max-w-2xl mx-auto lg:mx-0">
                                 {lang === 'el'
-                                    ? 'Ο τρόπος για να κερδίζεις και εκτός γηπέδου. Μάντεψε νικητές, μάζεψε coins, κυριάρχησε στο leaderboard!'
-                                    : 'The way to win off the court. Pick winners, collect coins, dominate the leaderboard!'}
+                                    ? 'Ο τρόπος να κερδίζεις και εκτός γηπέδου. Μάντεψε νικητές, μάζεψε coins, κυριάρχησε στο leaderboard!'
+                                    : 'The way to win off the court. Predict winners, collect coins, dominate the leaderboard!'}
                             </p>
 
 

@@ -4,6 +4,7 @@ import { Button } from '@netprophet/ui';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Logo from './Logo';
+import { ProfileSetupModal } from './ProfileSetupModal';
 
 interface HeaderProps {
     lang: 'en' | 'el';
