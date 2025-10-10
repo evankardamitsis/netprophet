@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin', 'greek'] });
 
 export const metadata: Metadata = {
     title: 'NetProphet',
-    description: 'The ultimate tennis prediction game. Play with real players, win coins, and become a Net Prophet!',
+    description: 'The ultimate sports prediction game. Play with real players, earn coins, and become a Net Prophet!',
     icons: {
         icon: '/net-prophet-favicon.svg',
     },

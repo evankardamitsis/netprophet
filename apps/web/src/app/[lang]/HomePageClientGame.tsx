@@ -135,17 +135,14 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-[40%_60%] gap-8 items-center">
                         {/* Left - Title & CTA */}
-                        <div className="text-center lg:text-left space-y-6">
-                            {/* Badges */}
-                            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border-2 border-white/30">
-                                    <span className="animate-pulse text-xl">🎾</span>
-                                    <span className="text-white font-bold text-sm">
-                                        {lang === 'el' ? 'Νέο Παιχνίδι Προβλέψεων!' : 'New Prediction Game!'}
-                                    </span>
-                                </div>
-                            </div>
-
+                        <div className="text-center lg:text-left space-y-4">
+                            {/* Subtitle */}
+                            <p className="text-lg text-white/90 font-semibold">
+                                {lang === 'el'
+                                    ? 'Πόσο καλά νομίζεις ότι ξέρεις το παιχνίδι;'
+                                    : 'How well can you read the game?'
+                                }
+                            </p>
                             {/* Title */}
                             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight">
                                 {lang === 'el' ? 'Γίνε ο επόμενος' : 'Become the next'}
@@ -155,16 +152,17 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                 </span>
                             </h1>
 
-                            {/* Subtitle */}
-                            <p className="text-xl sm:text-2xl text-white/90 font-semibold">
+                            {/* Description */}
+                            <p className="text-xl sm:text-2xl text-white/80 font-bold max-w-2xl mx-auto lg:mx-0">
                                 {lang === 'el'
-                                    ? '🏆 Πρόβλεψε • Κέρδισε • Κυριάρχησε 🏆'
-                                    : '🏆 Predict • Win • Dominate 🏆'
-                                }
+                                    ? 'Ο τρόπος για να κερδίζεις και εκτός γηπέδου. Μάντεψε νικητές, μάζεψε coins, κυριάρχησε στο leaderboard!'
+                                    : 'The way to win off the court. Pick winners, collect coins, dominate the leaderboard!'}
                             </p>
 
+
+
                             {/* Feature Pills */}
-                            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                            {/* <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                                 <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
                                     <span className="font-bold text-purple-600">🎾 Real Matches</span>
                                 </div>
@@ -174,7 +172,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                 <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
                                     <span className="font-bold text-orange-600">⚡ Power-ups</span>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* CTA Buttons */}
                             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
@@ -246,7 +244,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Διάλεξε Αγώνες' : 'Pick Matches'}
                                     </h3>
                                     <p className="text-gray-600 font-semibold">
-                                        {lang === 'el' ? 'Από πραγματικά tournaments' : 'From real tournaments'}
+                                        {lang === 'el' ? 'Kάθε μέρα σε περιμένουν νέες αναμετρήσεις από πραγματικά τουρνουά!' : 'Every day you will find new challenges from real tournaments!'}
                                     </p>
                                 </div>
                             </div>
@@ -265,7 +263,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Κάνε Προβλέψεις' : 'Make Predictions'}
                                     </h3>
                                     <p className="text-gray-600 font-semibold">
-                                        {lang === 'el' ? 'Νικητής, score & tie-breaks' : 'Winner, score & tie-breaks'}
+                                        {lang === 'el' ? 'Μάντεψε ποιος θα κερδίσει (και με τι σκορ) — πριν αρχίσει το ματς!' : 'Predict winners and score — before it becomes a highlight!'}
                                     </p>
                                 </div>
                             </div>
@@ -286,7 +284,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Μάζεψε Coins' : 'Collect Coins'}
                                     </h3>
                                     <p className="text-gray-600 font-semibold">
-                                        {lang === 'el' ? 'Κέρδισε για κάθε πρόβλεψη' : 'Earn for each prediction'}
+                                        {lang === 'el' ? 'Κέρδισε νομίσματα για κάθε σωστή πρόβλεψη' : 'Earn coins for each correct prediction'}
                                     </p>
                                 </div>
                             </div>
@@ -305,7 +303,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Κυριάρχησε' : 'Dominate'}
                                     </h3>
                                     <p className="text-gray-600 font-semibold">
-                                        {lang === 'el' ? 'Ανέβα στο leaderboard!' : 'Climb the leaderboard!'}
+                                        {lang === 'el' ? 'Ανέβα στο leaderboard, δείξε ποιος «το έχει» και γίνε NetProphet!' : 'Climb the leaderboard, show everyone who «has it» and become a NetProphet!'}
                                     </p>
                                 </div>
                             </div>
@@ -513,54 +511,85 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
             {/* Welcome Bonus - Game Reward Style */}
             <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="relative">
-                        {/* Glow effect */}
-                        <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 rounded-2xl sm:rounded-[3rem] opacity-60 blur-3xl animate-pulse"></div>
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                        {/* Left - Text Content */}
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="text-5xl">🎁</span>
+                                <span className="text-3xl font-black text-white">Welcome Bonus</span>
+                            </div>
+                            <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 drop-shadow-lg">
+                                {lang === 'el' ? 'Ξεκίνα με 100 Νομίσματα + Tournament Pass!' : 'Start with 100 Coins + Tournament Pass!'}
+                            </h2>
+                            <p className="text-xl text-white/90 font-bold mb-8">
+                                {lang === 'el'
+                                    ? 'Νέοι χρήστες λαμβάνουν δωρεάν νομίσματα και πρόσβαση σε τουρνουά. Ξεκίνα να παίζεις αμέσως!'
+                                    : 'New users receive free coins and tournament access. Start playing immediately!'
+                                }
+                            </p>
 
-                        <div className="relative bg-white rounded-2xl sm:rounded-[3rem] shadow-2xl overflow-hidden border-4 sm:border-8 border-white/50">
-                            {/* Header */}
-                            <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-4 sm:px-8 py-4 sm:py-6 text-center">
-                                <div className="text-xs sm:text-sm font-black text-white/90 uppercase tracking-widest mb-1 sm:mb-2">
-                                    🎉 {lang === 'el' ? 'Bonus Καλωσορισματος' : 'Welcome Bonus'} 🎉
+                            {/* Quick Stats */}
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
+                                    <div className="flex items-center justify-center gap-2 text-4xl font-black text-white mb-1">
+                                        100 <CoinIcon size={36} />
+                                    </div>
+                                    <div className="text-sm text-white/90 font-bold">Welcome Coins</div>
                                 </div>
-                                <h2 className="text-2xl sm:text-4xl font-black text-white drop-shadow-lg">
-                                    {lang === 'el' ? 'Έτοιμος να Παίξεις;' : 'Ready to Play?'}
-                                </h2>
+                                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
+                                    <div className="text-5xl mb-1">🎟️</div>
+                                    <div className="text-sm text-white/90 font-bold">Tournament Pass</div>
+                                </div>
                             </div>
 
-                            {/* Content */}
-                            <div className="p-4 sm:p-6 lg:p-8">
-                                {/* Rewards */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                                    <div className="text-center group">
-                                        <div className="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg transform group-hover:scale-110 transition-all">
-                                            <div className="flex justify-center mb-2 sm:mb-3">
-                                                <CoinIcon size={60} className="sm:w-20 sm:h-20" />
+                            {/* CTA */}
+                            <Button
+                                onClick={() => router.push(`/${lang}/auth/signin`)}
+                                size="lg"
+                                className="text-xl px-10 py-6 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-purple-900 font-black rounded-2xl shadow-2xl transform hover:scale-105 transition-all"
+                            >
+                                {lang === 'el' ? '🎮 Ξεκίνα Τώρα Δωρεάν!' : '🎮 Start Now Free!'}
+                            </Button>
+                        </div>
+
+                        {/* Right - Visual Rewards */}
+                        <div className="hidden lg:block relative space-y-6">
+                            {/* Large Coin Card */}
+                            <div className="relative group">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
+                                <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Bonus Νομίσματα' : 'Bonus Coins'}</div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-7xl font-black text-white drop-shadow-lg">100</div>
+                                                <CoinIcon size={72} />
                                             </div>
-                                            <div className="text-3xl sm:text-4xl font-black text-white mb-1 sm:mb-2">100</div>
-                                            <div className="text-sm sm:text-base font-bold text-white/90">{lang === 'el' ? 'Νομίσματα' : 'Coins'}</div>
-                                            <div className="text-xs text-white/70 mt-1 sm:mt-2">{lang === 'el' ? 'Άμεση πίστωση' : 'Instant credit'}</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-center group">
-                                        <div className="bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-lg transform group-hover:scale-110 transition-all">
-                                            <div className="text-5xl sm:text-7xl mb-2 sm:mb-3">🎟️</div>
-                                            <div className="text-3xl sm:text-4xl font-black text-white mb-1 sm:mb-2">1</div>
-                                            <div className="text-sm sm:text-base font-bold text-white/90">Tournament Pass</div>
-                                            <div className="text-xs text-white/70 mt-1 sm:mt-2">{lang === 'el' ? 'Δωρεάν πρόσβαση' : 'Free access'}</div>
+                                            <div className="text-white/90 font-bold text-sm mt-2">{lang === 'el' ? '✨ Άμεση πίστωση' : '✨ Instant credit'}</div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* CTA */}
-                                <Button
-                                    onClick={() => router.push(`/${lang}/auth/signin`)}
-                                    size="lg"
-                                    className="w-full text-lg sm:text-2xl px-6 sm:px-8 py-4 sm:py-6 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black rounded-xl sm:rounded-2xl shadow-xl transform hover:scale-105 transition-all border-2 sm:border-4 border-purple-400"
-                                >
-                                    {lang === 'el' ? '🎮 Παίξε Τώρα Δωρεάν!' : '🎮 Play Now Free!'}
-                                </Button>
+                            {/* Tournament Pass Card */}
+                            <div className="relative group">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 to-purple-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
+                                <div className="relative bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Πρόσβαση Τουρνουά' : 'Tournament Access'}</div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-8xl">🎟️</div>
+                                                <div>
+                                                    <div className="text-6xl font-black text-white drop-shadow-lg">1</div>
+                                                    <div className="text-white/90 font-bold text-sm">Pass</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-white/90 font-bold text-sm mt-2">{lang === 'el' ? '🏆 Όλα τα τουρνουά' : '🏆 All tournaments'}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
