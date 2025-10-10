@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Match } from '@/types/dashboard';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
 
 interface PromotionalHeroProps {
     featuredMatches: Match[];
@@ -307,10 +308,17 @@ export function PromotionalHero({
                             >
                                 {item.type === 'match' ? (
                                     // Featured Match Card - Same height as promo cards
-                                    <div className="border rounded-2xl border-yellow-400 bg-slate-800/50 backdrop-blur-sm hover:bg-yellow-900/10 cursor-pointer group transition-all duration-150 h-64 relative overflow-hidden">
+                                    <div className={cx(
+                                        borders.thick,
+                                        borders.rounded.lg,
+                                        "border-yellow-400 bg-gradient-to-br from-purple-800/80 to-indigo-900/80 backdrop-blur-sm cursor-pointer group h-64 relative overflow-hidden",
+                                        shadows.glow.yellow,
+                                        transitions.default,
+                                        animations.hover.scale
+                                    )}>
                                         {/* Featured Badge */}
-                                        <span className="absolute top-3 left-3 text-[9px] font-bold px-2 py-1 rounded-full bg-yellow-400/20 text-yellow-300">
-                                            FEATURED
+                                        <span className="absolute top-3 left-3 text-[9px] font-bold px-2 py-1 rounded-full bg-yellow-400/20 text-yellow-300 animate-pulse">
+                                            ⭐ FEATURED
                                         </span>
 
                                         {/* Content */}
@@ -380,7 +388,13 @@ export function PromotionalHero({
                                             <div className="flex-shrink-0">
                                                 <button
                                                     onClick={item.action}
-                                                    className="w-full px-3 py-2 bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-bold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                                    className={cx(
+                                                        "w-full px-3 py-2 text-black text-xs font-bold shadow-lg",
+                                                        gradients.yellow,
+                                                        borders.rounded.sm,
+                                                        transitions.default,
+                                                        animations.hover.scaleSmall
+                                                    )}
                                                 >
                                                     {item.actionText}
                                                 </button>
@@ -392,7 +406,16 @@ export function PromotionalHero({
                                     </div>
                                 ) : (
                                     // Promotional Card - Enhanced Style
-                                    <div className="relative overflow-hidden rounded-2xl border border-white/20 hover:border-yellow-400/50 transition-all duration-300 h-64 shadow-2xl">
+                                    <div className={cx(
+                                        "relative overflow-hidden h-64",
+                                        borders.thick,
+                                        borders.rounded.lg,
+                                        "border-white/20 hover:border-yellow-400",
+                                        shadows.cardHover,
+                                        shadows.glow.yellow,
+                                        transitions.default,
+                                        animations.hover.scale
+                                    )}>
                                         {item.id === 'coin-packs' ? (
                                             // Coin Packs - Coin Pattern Image Background
                                             <div
@@ -441,7 +464,13 @@ export function PromotionalHero({
                                             <div className="space-y-2">
                                                 <button
                                                     onClick={item.action}
-                                                    className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg"
+                                                    className={cx(
+                                                        "w-full px-4 py-2 text-white text-sm font-semibold shadow-lg",
+                                                        gradients.blue,
+                                                        borders.rounded.sm,
+                                                        transitions.default,
+                                                        animations.hover.scaleSmall
+                                                    )}
                                                 >
                                                     {item.actionText}
                                                 </button>

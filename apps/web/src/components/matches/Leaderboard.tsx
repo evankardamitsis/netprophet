@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableBo
 import { useDictionary } from '@/context/DictionaryContext';
 import { LeaderboardService, LeaderboardEntry } from '@netprophet/lib';
 import { motion, AnimatePresence } from 'framer-motion';
+import { gradients, shadows, borders, transitions, animations, typography, spacing, cx } from '@/styles/design-system';
 
 interface LeaderboardProps {
     className?: string;
@@ -175,61 +176,115 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
     }
 
     return (
-        <div className={`space-y-6 ${className} ${!sidebarOpen ? 'w-full' : ''}`}>
+        <div className={cx(spacing.sectionGap, className, !sidebarOpen ? 'w-full' : '', 'relative')}>
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400 rounded-full opacity-10 blur-3xl pointer-events-none animate-pulse"></div>
+            <div className="absolute bottom-20 left-20 w-48 h-48 bg-purple-400 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ animationDelay: '1.5s' }}></div>
+
             {/* Header */}
-            <div className="px-2 sm:px-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-white">{dict?.leaderboard?.title || 'Leaderboard'}</h1>
-                <p className="text-sm sm:text-base text-gray-400 mt-1 max-w-2xl">
+            <div className="px-2 sm:px-0 relative z-10">
+                <h1 className={cx(typography.heading.lg, "bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-500 bg-clip-text text-transparent")}>
+                    🏆 {dict?.leaderboard?.title || 'Leaderboard'}
+                </h1>
+                <p className={cx(typography.body.md, "text-gray-300 mt-1 max-w-2xl")}>
                     {timeFrame === 'weekly' ? dict?.leaderboard?.weeklyTopPerformers || 'This week\'s top performers' : dict?.leaderboard?.allTimeChampions || 'All-time champions'}
                 </p>
             </div>
 
             {/* Compact Description Section */}
-            <Card className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/50">
-                <CardContent className="p-3 sm:p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                        <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0">
-                                <span className="text-white text-sm sm:text-lg">🏆</span>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="relative z-10"
+            >
+                <Card className={cx(
+                    "bg-gradient-to-r from-slate-800/50 to-slate-700/50 border-slate-600/50 backdrop-blur-sm",
+                    shadows.card,
+                    transitions.default,
+                    animations.hover.lift
+                )}>
+                    <CardContent className="p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                            <div className="flex items-center space-x-3">
+                                <motion.div
+                                    className={cx(
+                                        "w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shadow-lg flex-shrink-0",
+                                        gradients.purple,
+                                        shadows.glow.purple
+                                    )}
+                                    animate={{ rotate: [0, 5, -5, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    <span className="text-white text-sm sm:text-lg">🏆</span>
+                                </motion.div>
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="text-base sm:text-lg font-semibold text-white">
+                                        {dict?.leaderboard?.howItWorks || 'How the Leaderboard Works'}
+                                    </h3>
+                                    <p className="text-gray-400 text-xs sm:text-sm">
+                                        {dict?.leaderboard?.learnAboutPoints || 'Learn about points calculation, prizes, and strategies'}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <h3 className="text-base sm:text-lg font-semibold text-white">
-                                    {dict?.leaderboard?.howItWorks || 'How the Leaderboard Works'}
-                                </h3>
-                                <p className="text-gray-400 text-xs sm:text-sm">
-                                    {dict?.leaderboard?.learnAboutPoints || 'Learn about points calculation, prizes, and strategies'}
-                                </p>
-                            </div>
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button
+                                    onClick={() => setShowHowItWorksModal(true)}
+                                    className={cx(
+                                        "w-full sm:w-auto text-white px-3 sm:px-4 py-2 shadow-lg text-sm",
+                                        gradients.purple,
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        shadows.glow.purple
+                                    )}
+                                >
+                                    {dict?.leaderboard?.learnMore || 'Learn More'}
+                                </Button>
+                            </motion.div>
                         </div>
-                        <Button
-                            onClick={() => setShowHowItWorksModal(true)}
-                            className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl text-sm"
-                        >
-                            {dict?.leaderboard?.learnMore || 'Learn More'}
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </motion.div>
 
             {/* Time Frame Toggle */}
-            <div className="flex justify-center">
-                <div className="flex bg-slate-800/50 rounded-lg p-1 border border-slate-700/50 shadow-lg">
-                    <Button
-                        variant={timeFrame === 'weekly' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setTimeFrame('weekly')}
-                        className={`text-sm px-6 py-2 ${timeFrame === 'weekly' ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg' : 'text-gray-300 hover:text-white hover:bg-slate-700/50'}`}
-                    >
-                        {dict?.leaderboard?.weekly || 'Weekly'}
-                    </Button>
-                    <Button
-                        variant={timeFrame === 'allTime' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setTimeFrame('allTime')}
-                        className={`text-sm px-6 py-2 ${timeFrame === 'allTime' ? 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white shadow-lg' : 'text-gray-300 hover:text-white hover:bg-slate-700/50'}`}
-                    >
-                        {dict?.leaderboard?.allTime || 'All Time'}
-                    </Button>
+            <div className="flex justify-center relative z-10">
+                <div className={cx(
+                    "flex bg-slate-800/50 p-1 border border-slate-700/50 backdrop-blur-sm",
+                    borders.rounded.sm,
+                    shadows.card
+                )}>
+                    <motion.div whileHover={{ scale: 1.02 }}>
+                        <Button
+                            variant={timeFrame === 'weekly' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setTimeFrame('weekly')}
+                            className={cx(
+                                "text-sm px-6 py-2",
+                                transitions.default,
+                                timeFrame === 'weekly'
+                                    ? cx(gradients.purple, 'text-white', shadows.card)
+                                    : 'text-gray-300 hover:text-white hover:bg-slate-700/50'
+                            )}
+                        >
+                            {dict?.leaderboard?.weekly || 'Weekly'}
+                        </Button>
+                    </motion.div>
+                    <motion.div whileHover={{ scale: 1.02 }}>
+                        <Button
+                            variant={timeFrame === 'allTime' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setTimeFrame('allTime')}
+                            className={cx(
+                                "text-sm px-6 py-2",
+                                transitions.default,
+                                timeFrame === 'allTime'
+                                    ? cx(gradients.purple, 'text-white', shadows.card)
+                                    : 'text-gray-300 hover:text-white hover:bg-slate-700/50'
+                            )}
+                        >
+                            {dict?.leaderboard?.allTime || 'All Time'}
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
 

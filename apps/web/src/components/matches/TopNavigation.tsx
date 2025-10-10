@@ -12,6 +12,7 @@ import { ProfilesService, fetchUserPowerUps, supabase, type UserPowerUp } from '
 import { useAuth } from '@/hooks/useAuth';
 import { useWallet } from '@/context/WalletContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
+import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
 
 // Icon components
 function ChevronDownIcon() {
@@ -335,17 +336,28 @@ export function TopNavigation({
 
     return (
         <div className="relative">
-            <header className="w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-10  bg-gradient-to-r from-slate-900 via-blue-950 to-purple-950 text-white shadow-lg">
+            <header className={cx(
+                "w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-50 text-white",
+                gradients.gameBackground,
+                shadows.card,
+                "border-b border-white/10"
+            )}>
                 {/* Left Section - Logo and Menu */}
                 <div className="flex items-center gap-1 sm:gap-2">
-                    <button
+                    <motion.button
                         ref={burgerButtonRef}
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="text-white focus:outline-none lg:hidden p-2 rounded hover:bg-purple-600/20 hover:text-purple-300 transition-colors"
+                        className={cx(
+                            "text-white focus:outline-none lg:hidden p-2 rounded",
+                            transitions.default,
+                            "hover:bg-purple-600/30 hover:text-purple-300"
+                        )}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                         aria-label="Mobile menu"
                     >
                         <BurgerIcon isOpen={mobileMenuOpen} />
-                    </button>
+                    </motion.button>
                     <Link
                         href={`/${currentLang}`}
                         className="focus:outline-none focus:ring-2 focus:ring-accent/50 rounded group"
@@ -357,60 +369,96 @@ export function TopNavigation({
                 {/* Center Section - Navigation Tabs (Hidden on mobile) */}
                 {showNavigationTabs && (
                     <nav className="hidden lg:flex flex-1 justify-center gap-1.5 xl:gap-3">
-                        <button
+                        <motion.button
                             onClick={() => router.push(`/${currentLang}/matches`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {dict?.navigation?.matches || 'Matches'}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             onClick={() => router.push(`/${currentLang}/leaderboard`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/leaderboard`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname === `/${currentLang}/leaderboard`
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {dict?.navigation?.leaderboard || 'Leaderboard'}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             onClick={() => router.push(`/${currentLang}/players`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/players`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname === `/${currentLang}/players`
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {dict?.navigation?.players || 'Players'}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             onClick={() => router.push(`/${currentLang}/results`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/results`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname === `/${currentLang}/results`
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {dict?.navigation?.results || 'Results'}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             onClick={() => router.push(`/${currentLang}/my-picks`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/my-picks`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname === `/${currentLang}/my-picks`
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {dict?.navigation?.myPicks || 'My Picks'}
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             onClick={() => router.push(`/${currentLang}/rewards`)}
-                            className={`px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 rounded-lg font-semibold transition text-xs xl:text-sm ${pathname === `/${currentLang}/rewards`
-                                ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                }`}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname === `/${currentLang}/rewards`
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
                             {dict?.navigation?.rewards || 'Rewards'}
-                        </button>
+                        </motion.button>
                     </nav>
                 )}
 
@@ -428,8 +476,14 @@ export function TopNavigation({
                     )}
 
                     {/* Wallet Component */}
-                    <div className="block relative group">
-                        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                    <div className="block relative group z-[100]">
+                        <div className={cx(
+                            "absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[100]",
+                            "bg-slate-800/95 backdrop-blur-sm",
+                            borders.rounded.sm,
+                            transitions.default,
+                            shadows.card
+                        )}>
                             {dict?.navigation?.myWallet || 'My Wallet'}
                         </div>
                         <div className="flex items-center gap-1">
@@ -438,15 +492,22 @@ export function TopNavigation({
                     </div>
 
                     {/* Notifications Component */}
-                    <div className="block">
+                    <div className="block relative z-[100]">
                         <Notifications />
                     </div>
 
                     {/* Low Balance Info Icon - Hidden on mobile */}
                     {showInfoIcon && (
-                        <button
+                        <motion.button
                             onClick={showLowBalanceNotification}
-                            className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full  items-center justify-center font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white focus:outline-none hidden sm:flex"
+                            className={cx(
+                                "relative w-8 h-8 sm:w-9 sm:h-9 items-center justify-center font-semibold text-white focus:outline-none hidden sm:flex",
+                                borders.rounded.full,
+                                transitions.default,
+                                "hover:bg-purple-600/30 hover:text-purple-300"
+                            )}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.95 }}
                             title={isCriticalBalance
                                 ? 'Critical low balance - Click to view options'
                                 : isVeryLowBalance
@@ -456,49 +517,87 @@ export function TopNavigation({
                         >
                             <InfoIcon />
                             <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                        </button>
+                        </motion.button>
                     )}
 
                     {/* Language Switcher - Hidden on mobile */}
-                    <div className="relative hidden lg:block" ref={languageDropdownRef}>
-                        <button
+                    <div className="relative hidden lg:block z-[90]" ref={languageDropdownRef}>
+                        <motion.button
                             onClick={() => setLanguageDropdownOpen((open) => !open)}
-                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white focus:outline-none text-sm sm:text-base"
+                            className={cx(
+                                "flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 font-semibold text-white focus:outline-none text-sm sm:text-base",
+                                borders.rounded.sm,
+                                transitions.default,
+                                "hover:bg-purple-600/30 hover:text-purple-300"
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             aria-label="Language menu"
                         >
                             <GlobeIcon />
                             <span className="hidden sm:inline text-xs">{currentLang === 'en' ? 'EN' : 'EL'}</span>
                             <ChevronDownIcon />
-                        </button>
-                        {languageDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-32 sm:w-36 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
-                                <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs ${currentLang === 'en' ? 'text-purple-300' : ''}`}
-                                    onClick={() => switchLanguage('en')}
-                                >
-                                    🇺🇸 English
-                                </button>
-                                <button
-                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs ${currentLang === 'el' ? 'text-purple-300' : ''}`}
-                                    onClick={() => switchLanguage('el')}
-                                >
-                                    🇬🇷 Ελληνικά
-                                </button>
-                            </div>
-                        )}
+                        </motion.button>
+                        <AnimatePresence>
+                            {languageDropdownOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={cx(
+                                        "absolute right-0 mt-2 w-32 sm:w-36 py-2 text-white z-[90]",
+                                        "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95",
+                                        "backdrop-blur-md border border-slate-700/50",
+                                        borders.rounded.sm,
+                                        shadows.cardHover
+                                    )}>
+                                    <motion.button
+                                        className={cx(
+                                            "w-full text-left px-4 py-2 flex items-center gap-2 text-xs",
+                                            transitions.default,
+                                            "hover:bg-purple-600/30 hover:text-purple-300",
+                                            currentLang === 'en' ? 'text-purple-300 bg-purple-600/20' : ''
+                                        )}
+                                        onClick={() => switchLanguage('en')}
+                                        whileHover={{ x: 4 }}
+                                    >
+                                        🇺🇸 English
+                                    </motion.button>
+                                    <motion.button
+                                        className={cx(
+                                            "w-full text-left px-4 py-2 flex items-center gap-2 text-xs",
+                                            transitions.default,
+                                            "hover:bg-purple-600/30 hover:text-purple-300",
+                                            currentLang === 'el' ? 'text-purple-300 bg-purple-600/20' : ''
+                                        )}
+                                        onClick={() => switchLanguage('el')}
+                                        whileHover={{ x: 4 }}
+                                    >
+                                        🇬🇷 Ελληνικά
+                                    </motion.button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Account dropdown with power-up badge */}
-                    <div className="relative" ref={dropdownRef}>
-                        <button
+                    <div className="relative z-[90]" ref={dropdownRef}>
+                        <motion.button
                             onClick={() => setAccountDropdownOpen((open) => !open)}
-                            className={`relative w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none transition-all duration-300 ${(totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed))
-                                ? 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-lg shadow-purple-500/50 ring-2 ring-purple-400/30'
-                                : 'bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 shadow-sm shadow-purple-500/30'
-                                }`}
+                            className={cx(
+                                "relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none",
+                                borders.rounded.full,
+                                transitions.default,
+                                (totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed))
+                                    ? cx(gradients.purple, shadows.glow.purple, 'ring-2 ring-purple-400/30')
+                                    : cx(gradients.purple, 'shadow-sm shadow-purple-500/30')
+                            )}
                             style={(totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed)) ? {
                                 animation: 'slowPulse 2s ease-in-out infinite'
                             } : {}}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             aria-label="Account menu"
                         >
                             {userEmail?.charAt(0).toUpperCase() || 'U'}
@@ -516,114 +615,137 @@ export function TopNavigation({
                                     🎫
                                 </div>
                             )}
-                        </button>
-                        {accountDropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 sm:w-56 rounded-lg shadow-lg z-50 py-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
-                                {/* Power-ups section */}
-                                {totalActivePowerUps > 0 && (
-                                    <>
-                                        <div className="px-4 py-2 border-b border-slate-700/50">
-                                            <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
-                                                <PowerUpIcon />
-                                                <span>Active Power-ups</span>
-                                                <span className="ml-auto bg-purple-600/20 px-2 py-1 rounded-full text-xs">
-                                                    {totalActivePowerUps}
-                                                </span>
+                        </motion.button>
+                        <AnimatePresence>
+                            {accountDropdownOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={cx(
+                                        "absolute right-0 mt-2 w-48 sm:w-56 py-2 text-white z-[90]",
+                                        "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95",
+                                        "backdrop-blur-md border border-slate-700/50",
+                                        borders.rounded.sm,
+                                        shadows.cardHover
+                                    )}>
+                                    {/* Power-ups section */}
+                                    {totalActivePowerUps > 0 && (
+                                        <>
+                                            <div className="px-4 py-2 border-b border-slate-700/50">
+                                                <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                                                    <PowerUpIcon />
+                                                    <span>Active Power-ups</span>
+                                                    <span className="ml-auto bg-purple-600/20 px-2 py-1 rounded-full text-xs">
+                                                        {totalActivePowerUps}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="max-h-32 overflow-y-auto">
-                                            {userPowerUps.map((userPowerUp) => {
-                                                // Skip expired power-ups
-                                                if (userPowerUp.expires_at && new Date(userPowerUp.expires_at) < new Date()) {
-                                                    return null;
-                                                }
-
-                                                // Calculate time until expiry
-                                                const getExpiryText = () => {
-                                                    if (!userPowerUp.expires_at) return null;
-
-                                                    const now = new Date();
-                                                    const expiryDate = new Date(userPowerUp.expires_at);
-                                                    const diffTime = expiryDate.getTime() - now.getTime();
-                                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                                    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-
-                                                    if (diffDays > 1) {
-                                                        return `Expires in: ${diffDays} days`;
-                                                    } else if (diffDays === 1) {
-                                                        return 'Expires in: 1 day';
-                                                    } else if (diffHours > 1) {
-                                                        return `Expires in: ${diffHours} hours`;
-                                                    } else if (diffHours === 1) {
-                                                        return 'Expires in: 1 hour';
-                                                    } else {
-                                                        return 'Expires soon';
+                                            <div className="max-h-32 overflow-y-auto">
+                                                {userPowerUps.map((userPowerUp) => {
+                                                    // Skip expired power-ups
+                                                    if (userPowerUp.expires_at && new Date(userPowerUp.expires_at) < new Date()) {
+                                                        return null;
                                                     }
-                                                };
 
-                                                const expiryText = getExpiryText();
+                                                    // Calculate time until expiry
+                                                    const getExpiryText = () => {
+                                                        if (!userPowerUp.expires_at) return null;
 
-                                                return (
-                                                    <div key={userPowerUp.id} className="px-4 py-2 text-xs">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-lg">{userPowerUp.power_up?.icon || '⚡'}</span>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="font-medium text-white truncate">
-                                                                    {userPowerUp.power_up?.name || 'Power-up'}
-                                                                </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    {userPowerUp.quantity > 1 && (
-                                                                        <span className="text-gray-400 text-xs">
-                                                                            {userPowerUp.quantity}x
-                                                                        </span>
-                                                                    )}
-                                                                    {expiryText && (
-                                                                        <span className="text-orange-400 text-xs font-medium">
-                                                                            {expiryText}
-                                                                        </span>
-                                                                    )}
+                                                        const now = new Date();
+                                                        const expiryDate = new Date(userPowerUp.expires_at);
+                                                        const diffTime = expiryDate.getTime() - now.getTime();
+                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                        const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+
+                                                        if (diffDays > 1) {
+                                                            return `Expires in: ${diffDays} days`;
+                                                        } else if (diffDays === 1) {
+                                                            return 'Expires in: 1 day';
+                                                        } else if (diffHours > 1) {
+                                                            return `Expires in: ${diffHours} hours`;
+                                                        } else if (diffHours === 1) {
+                                                            return 'Expires in: 1 hour';
+                                                        } else {
+                                                            return 'Expires soon';
+                                                        }
+                                                    };
+
+                                                    const expiryText = getExpiryText();
+
+                                                    return (
+                                                        <div key={userPowerUp.id} className="px-4 py-2 text-xs">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-lg">{userPowerUp.power_up?.icon || '⚡'}</span>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="font-medium text-white truncate">
+                                                                        {userPowerUp.power_up?.name || 'Power-up'}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        {userPowerUp.quantity > 1 && (
+                                                                            <span className="text-gray-400 text-xs">
+                                                                                {userPowerUp.quantity}x
+                                                                            </span>
+                                                                        )}
+                                                                        {expiryText && (
+                                                                            <span className="text-orange-400 text-xs font-medium">
+                                                                                {expiryText}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <div className="border-t border-slate-700/50 my-2" />
-                                    </>
-                                )}
-
-                                {/* Tournament Pass section */}
-                                {wallet.hasTournamentPass && !wallet.tournamentPassUsed && (
-                                    <>
-                                        <div className="px-4 py-2 border-b border-slate-700/50">
-                                            <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
-                                                <span className="text-lg">🎫</span>
-                                                <span>Tournament Pass</span>
-                                                <span className="ml-auto bg-purple-600/20 px-2 py-1 rounded-full text-xs">
-                                                    Available
-                                                </span>
+                                                    );
+                                                })}
                                             </div>
-                                        </div>
-                                        <div className="border-t border-slate-700/50 my-2" />
-                                    </>
-                                )}
+                                            <div className="border-t border-slate-700/50 my-2" />
+                                        </>
+                                    )}
 
-                                <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 hover:bg-purple-600/20 hover:text-purple-300 text-xs sm:text-sm"
-                                    onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/my-profile`); }}
-                                >
-                                    <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
-                                </button>
-                                <div className="border-t my-2 border-gray-700" />
-                                <button
-                                    className="w-full text-left px-4 py-2 flex items-center gap-2 text-red-600 hover:bg-[#23262F]/80 text-xs sm:text-sm"
-                                    onClick={() => { setAccountDropdownOpen(false); onSignOut(); }}
-                                >
-                                    {dict?.auth?.signOut || 'Sign Out'}
-                                </button>
-                            </div>
-                        )}
+                                    {/* Tournament Pass section */}
+                                    {wallet.hasTournamentPass && !wallet.tournamentPassUsed && (
+                                        <>
+                                            <div className="px-4 py-2 border-b border-slate-700/50">
+                                                <div className="flex items-center gap-2 text-xs font-semibold text-purple-300">
+                                                    <span className="text-lg">🎫</span>
+                                                    <span>Tournament Pass</span>
+                                                    <span className="ml-auto bg-purple-600/20 px-2 py-1 rounded-full text-xs">
+                                                        Available
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="border-t border-slate-700/50 my-2" />
+                                        </>
+                                    )}
+
+                                    <motion.button
+                                        className={cx(
+                                            "w-full text-left px-4 py-2 flex items-center gap-2 text-xs sm:text-sm",
+                                            transitions.default,
+                                            "hover:bg-purple-600/30 hover:text-purple-300"
+                                        )}
+                                        onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/my-profile`); }}
+                                        whileHover={{ x: 4 }}
+                                    >
+                                        <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
+                                    </motion.button>
+                                    <div className="border-t my-2 border-gray-700/50" />
+                                    <motion.button
+                                        className={cx(
+                                            "w-full text-left px-4 py-2 flex items-center gap-2 text-red-400 text-xs sm:text-sm",
+                                            transitions.default,
+                                            "hover:bg-red-900/30 hover:text-red-300"
+                                        )}
+                                        onClick={() => { setAccountDropdownOpen(false); onSignOut(); }}
+                                        whileHover={{ x: 4 }}
+                                    >
+                                        {dict?.auth?.signOut || 'Sign Out'}
+                                    </motion.button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </header>
@@ -637,83 +759,124 @@ export function TopNavigation({
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="lg:hidden absolute top-full left-0 right-0 z-50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 border-b border-slate-700/50 shadow-lg overflow-hidden"
+                        className={cx(
+                            "lg:hidden absolute top-full left-0 right-0 z-[60] overflow-hidden",
+                            "bg-gradient-to-br from-slate-950/98 via-slate-900/98 to-slate-950/98",
+                            "backdrop-blur-md border-b border-slate-700/50",
+                            shadows.cardHover
+                        )}
                     >
                         <div className="px-4 py-3 space-y-3">
                             {/* Navigation Links */}
                             <div className="space-y-2">
-                                <button
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/matches`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-base",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
+                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {dict?.navigation?.matches || 'Matches'}
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/leaderboard`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/leaderboard`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-base",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        pathname === `/${currentLang}/leaderboard`
+                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {dict?.navigation?.leaderboard || 'Leaderboard'}
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/players`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/players`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-base",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        pathname === `/${currentLang}/players`
+                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {dict?.navigation?.players || 'Players'}
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/results`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/results`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-base",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        pathname === `/${currentLang}/results`
+                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {dict?.navigation?.results || 'Results'}
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/my-picks`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/my-picks`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-base",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        pathname === `/${currentLang}/my-picks`
+                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {dict?.navigation?.myPicks || 'My Picks'}
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/rewards`);
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition text-base ${pathname === `/${currentLang}/rewards`
-                                        ? 'bg-purple-600/30 text-purple-200 border border-purple-500/50'
-                                        : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
-                                        }`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-base",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        pathname === `/${currentLang}/rewards`
+                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {dict?.navigation?.rewards || 'Rewards'}
-                                </button>
+                                </motion.button>
                             </div>
 
                             {/* Divider */}
@@ -721,15 +884,22 @@ export function TopNavigation({
 
                             {/* Account Links */}
                             <div className="space-y-2">
-                                <button
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         router.push(`/${currentLang}/my-profile`);
                                     }}
-                                    className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-base flex items-center gap-2"
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-white text-base flex items-center gap-2",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        "hover:bg-purple-600/30 hover:text-purple-300"
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
-                                </button>
+                                </motion.button>
                             </div>
 
                             {/* Divider */}
@@ -737,42 +907,67 @@ export function TopNavigation({
 
                             {/* Language Switcher - Mobile */}
                             <div className="space-y-2">
-                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wide px-3">
+                                <div className={cx(typography.body.sm, "font-bold text-gray-400 uppercase tracking-wide px-3")}>
                                     Language
                                 </div>
-                                <button
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         switchLanguage('en');
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm flex items-center gap-2 ${currentLang === 'en' ? 'text-purple-300' : ''}`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-sm flex items-center gap-2",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        currentLang === 'en'
+                                            ? 'text-purple-300 bg-purple-600/30'
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     <GlobeIcon /> 🇺🇸 English
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
                                         switchLanguage('el');
                                     }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-purple-600/20 hover:text-purple-300 text-white text-sm flex items-center gap-2 ${currentLang === 'el' ? 'text-purple-300' : ''}`}
+                                    className={cx(
+                                        "w-full text-left px-3 py-2 font-semibold text-sm flex items-center gap-2",
+                                        borders.rounded.sm,
+                                        transitions.default,
+                                        currentLang === 'el'
+                                            ? 'text-purple-300 bg-purple-600/30'
+                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                    )}
+                                    whileHover={{ x: 4 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     <GlobeIcon /> 🇬🇷 Ελληνικά
-                                </button>
+                                </motion.button>
                             </div>
 
                             {/* Divider */}
                             <div className="border-t border-slate-700/50 my-3"></div>
 
                             {/* Sign Out */}
-                            <button
+                            <motion.button
                                 onClick={() => {
                                     setMobileMenuOpen(false);
                                     onSignOut();
                                 }}
-                                className="w-full text-left px-3 py-2 rounded-lg font-semibold transition hover:bg-red-900/20 hover:text-red-400 text-red-600 text-base"
+                                className={cx(
+                                    "w-full text-left px-3 py-2 font-semibold text-red-400 text-base",
+                                    borders.rounded.sm,
+                                    transitions.default,
+                                    "hover:bg-red-900/30 hover:text-red-300"
+                                )}
+                                whileHover={{ x: 4 }}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 {dict?.auth?.signOut || 'Sign Out'}
-                            </button>
+                            </motion.button>
                         </div>
                     </motion.div>
                 )}

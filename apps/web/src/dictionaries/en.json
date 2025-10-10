@@ -182,6 +182,7 @@
     "clearAll": "Clear All",
     "clearAllSelections": "Clear all selections",
     "matchWinner": "Match Winner",
+    "required": "Required",
     "howWillWin": "How will {player} win the match?",
     "straightSets": "Straight sets",
     "fourSets": "Four sets",

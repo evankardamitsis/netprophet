@@ -7,6 +7,7 @@ import { useTheme } from '../Providers';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase, WelcomeBonusNotificationService } from '@netprophet/lib';
 import { motion, AnimatePresence } from 'framer-motion';
+import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
 
 // Icon components
 function GiftIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -189,122 +190,204 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className={`w-full max-w-md ${theme === 'dark' ? 'bg-[#23262F] border-[#2A2D38]' : 'bg-white border-gray-200'} shadow-2xl`}>
-                <CardContent className="p-6">
-                    {showWelcomeBonus && (
-                        <div className="text-center space-y-6">
-                            {/* Header with icon and title */}
-                            <div className="space-y-3">
-                                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                                    <GiftIcon className="text-white h-8 w-8 animate-pulse" />
-                                </div>
-                                <CardTitle className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                    Welcome to NetProphet! 🎉
-                                </CardTitle>
-                                <p className={`text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
-                                    Start your prediction journey with a welcome bonus!
-                                </p>
-                            </div>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-20 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-yellow-400 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            </div>
 
-                            {/* Rewards section */}
-                            <div className="space-y-4">
-                                {/* Coins reward */}
-                                <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 rounded-xl p-4 border border-yellow-200 dark:border-yellow-700/30 hover:scale-105 transition-transform duration-300">
-                                    <div className="flex items-center justify-center gap-3 mb-2">
-                                        <div className="text-3xl animate-pulse">🪙</div>
-                                        <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-                                            +{COIN_CONSTANTS.WELCOME_BONUS}
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="relative z-10 w-full max-w-md"
+            >
+                <Card className={cx(
+                    "w-full",
+                    theme === 'dark' ? 'bg-gradient-to-br from-slate-800/95 to-slate-900/95 border-purple-500/30' : 'bg-white border-gray-200',
+                    shadows.cardHover,
+                    borders.rounded.lg
+                )}>
+                    <CardContent className="p-6">
+                        {showWelcomeBonus && (
+                            <div className="text-center space-y-6">
+                                {/* Header with icon and title */}
+                                <div className="space-y-3">
+                                    <motion.div
+                                        className={cx(
+                                            "mx-auto w-16 h-16 rounded-full flex items-center justify-center shadow-lg",
+                                            gradients.yellow,
+                                            shadows.glow.yellow
+                                        )}
+                                        animate={{
+                                            y: [0, -10, 0],
+                                            rotate: [0, 5, -5, 0]
+                                        }}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }}
+                                    >
+                                        <GiftIcon className="text-white h-8 w-8 animate-pulse" />
+                                    </motion.div>
+                                    <CardTitle className={cx(
+                                        typography.heading.lg,
+                                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                    )}>
+                                        Welcome to NetProphet! 🎉
+                                    </CardTitle>
+                                    <p className={cx(
+                                        typography.body.md,
+                                        theme === 'dark' ? 'text-gray-300' : 'text-gray-600',
+                                        'leading-relaxed'
+                                    )}>
+                                        Start your prediction journey with a welcome bonus!
+                                    </p>
+                                </div>
+
+                                {/* Rewards section */}
+                                <div className="space-y-4">
+                                    {/* Coins reward */}
+                                    <motion.div
+                                        className={cx(
+                                            "rounded-xl p-4 border border-yellow-200 dark:border-yellow-700/30",
+                                            "bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20",
+                                            transitions.default
+                                        )}
+                                        whileHover={{ scale: 1.05 }}
+                                    >
+                                        <div className="flex items-center justify-center gap-3 mb-2">
+                                            <div className="text-3xl animate-pulse">🪙</div>
+                                            <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                                                +{COIN_CONSTANTS.WELCOME_BONUS}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <Badge variant="secondary" className="text-xs bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">
-                                        One-time bonus
-                                    </Badge>
-                                </div>
-
-                                {/* Tournament pass reward */}
-                                <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-xl p-4 border border-purple-200 dark:border-purple-700/30 hover:scale-105 transition-transform duration-300">
-                                    <div className="flex items-center justify-center gap-3 mb-2">
-                                        <div className="text-3xl animate-bounce">🎫</div>
-                                        <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                                            Free Tournament Pass
-                                        </div>
-                                    </div>
-                                    <Badge variant="outline" className="text-xs text-purple-600 border-purple-600 dark:text-purple-400 dark:border-purple-400">
-                                        Access any paid tournament
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            {/* Action buttons */}
-                            <div className="flex gap-3 pt-2">
-                                <Button
-                                    onClick={handleClaimWelcomeBonus}
-                                    className="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-semibold py-3 text-base shadow-lg hover:scale-105 transition-transform duration-200"
-                                >
-                                    Claim Welcome Bonus
-                                </Button>
-                                <Button
-                                    onClick={handleDismiss}
-                                    variant="outline"
-                                    className="px-6 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 border-gray-300 dark:border-gray-600"
-                                >
-                                    Later
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {showDailyLogin && (
-                        <div className="text-center space-y-6">
-                            {/* Header with icon and title */}
-                            <div className="space-y-3">
-                                <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                                    <CalendarIcon className="text-white h-8 w-8" />
-                                </div>
-                                <CardTitle className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                                    Daily Login Reward! 🔥
-                                </CardTitle>
-                                <p className={`text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
-                                    {dailyReward > 0
-                                        ? (wallet.dailyLoginStreak > 1
-                                            ? `You're on a ${wallet.dailyLoginStreak} day streak!`
-                                            : 'Come back tomorrow for more rewards!'
-                                        )
-                                        : 'Streak broken! Come back tomorrow to start a new streak.'
-                                    }
-                                </p>
-                            </div>
-
-                            {/* Reward section */}
-                            <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/30">
-                                <div className="flex items-center justify-center gap-3 mb-2">
-                                    <div className="text-3xl">🪙</div>
-                                    <div className={`text-3xl font-bold ${dailyReward > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
-                                        {dailyReward > 0 ? `+${dailyReward}` : 'No Reward'}
-                                    </div>
-                                </div>
-                                {dailyReward > 0 && (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <FireIcon className="text-orange-500 h-4 w-4" />
-                                        <Badge variant="outline" className="text-xs text-orange-600 border-orange-600 dark:text-orange-400 dark:border-orange-400">
-                                            {wallet.dailyLoginStreak} day streak
+                                        <Badge variant="secondary" className="text-xs bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">
+                                            One-time bonus
                                         </Badge>
-                                    </div>
-                                )}
-                            </div>
+                                    </motion.div>
 
-                            {/* Action button */}
-                            <Button
-                                onClick={handleClaimDailyLogin}
-                                className="w-full text-white font-semibold py-3 text-base shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                            >
-                                Claim Daily Reward
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                                    {/* Tournament pass reward */}
+                                    <motion.div
+                                        className={cx(
+                                            "rounded-xl p-4 border border-purple-200 dark:border-purple-700/30",
+                                            "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20",
+                                            transitions.default
+                                        )}
+                                        whileHover={{ scale: 1.05 }}
+                                    >
+                                        <div className="flex items-center justify-center gap-3 mb-2">
+                                            <div className="text-3xl animate-bounce">🎫</div>
+                                            <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                                                Free Tournament Pass
+                                            </div>
+                                        </div>
+                                        <Badge variant="outline" className="text-xs text-purple-600 border-purple-600 dark:text-purple-400 dark:border-purple-400">
+                                            Access any paid tournament
+                                        </Badge>
+                                    </motion.div>
+                                </div>
+
+                                {/* Action buttons */}
+                                <div className="flex gap-3 pt-2">
+                                    <Button
+                                        onClick={handleClaimWelcomeBonus}
+                                        className={cx(
+                                            "flex-1 text-white font-semibold py-3 text-base shadow-lg",
+                                            gradients.yellow,
+                                            transitions.default,
+                                            animations.hover.scaleSmall
+                                        )}
+                                    >
+                                        Claim Welcome Bonus
+                                    </Button>
+                                    <Button
+                                        onClick={handleDismiss}
+                                        variant="outline"
+                                        className="px-6 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 border-gray-300 dark:border-gray-600"
+                                    >
+                                        Later
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {showDailyLogin && (
+                            <div className="text-center space-y-6">
+                                {/* Header with icon and title */}
+                                <div className="space-y-3">
+                                    <motion.div
+                                        className={cx(
+                                            "mx-auto w-16 h-16 rounded-full flex items-center justify-center shadow-lg",
+                                            gradients.blue,
+                                            shadows.glow.blue
+                                        )}
+                                        animate={{
+                                            scale: [1, 1.1, 1],
+                                        }}
+                                        transition={{
+                                            duration: 1.5,
+                                            repeat: Infinity,
+                                            ease: "easeInOut"
+                                        }}
+                                    >
+                                        <CalendarIcon className="text-white h-8 w-8" />
+                                    </motion.div>
+                                    <CardTitle className={cx(
+                                        typography.heading.lg,
+                                        theme === 'dark' ? 'text-white' : 'text-gray-900'
+                                    )}>
+                                        Daily Login Reward! 🔥
+                                    </CardTitle>
+                                    <p className={`text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
+                                        {dailyReward > 0
+                                            ? (wallet.dailyLoginStreak > 1
+                                                ? `You're on a ${wallet.dailyLoginStreak} day streak!`
+                                                : 'Come back tomorrow for more rewards!'
+                                            )
+                                            : 'Streak broken! Come back tomorrow to start a new streak.'
+                                        }
+                                    </p>
+                                </div>
+
+                                {/* Reward section */}
+                                <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/30">
+                                    <div className="flex items-center justify-center gap-3 mb-2">
+                                        <div className="text-3xl">🪙</div>
+                                        <div className={`text-3xl font-bold ${dailyReward > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
+                                            {dailyReward > 0 ? `+${dailyReward}` : 'No Reward'}
+                                        </div>
+                                    </div>
+                                    {dailyReward > 0 && (
+                                        <div className="flex items-center justify-center gap-2">
+                                            <FireIcon className="text-orange-500 h-4 w-4" />
+                                            <Badge variant="outline" className="text-xs text-orange-600 border-orange-600 dark:text-orange-400 dark:border-orange-400">
+                                                {wallet.dailyLoginStreak} day streak
+                                            </Badge>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Action button */}
+                                <Button
+                                    onClick={handleClaimDailyLogin}
+                                    className={cx(
+                                        "w-full text-white font-semibold py-3 text-base shadow-lg",
+                                        gradients.blue,
+                                        transitions.default,
+                                        animations.hover.scaleSmall
+                                    )}
+                                >
+                                    Claim Daily Reward
+                                </Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </motion.div>
 
             {/* Confetti Effect */}
             <AnimatePresence>

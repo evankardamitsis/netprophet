@@ -8,6 +8,8 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useState, useMemo } from 'react';
 import { TournamentFilter } from './TournamentFilter';
+import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
+import { motion } from 'framer-motion';
 
 interface MatchesGridProps {
     matches?: Match[];
@@ -35,11 +37,17 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
     const upcomingMatches = filteredMatches.filter(match => match.status_display === 'upcoming');
 
     return (
-        <div className="flex flex-col w-full text-white">
+        <div className="flex flex-col w-full text-white relative">
+            {/* Decorative background elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400 rounded-full opacity-10 blur-3xl pointer-events-none animate-pulse"></div>
+            <div className="absolute bottom-40 left-10 w-48 h-48 bg-yellow-400 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ animationDelay: '1.5s' }}></div>
+
             {/* Header Section */}
-            <div className="p-3 xs:p-4 sm:p-5 md:p-6 pb-2 xs:pb-3 sm:pb-4">
-                <h1 className="text-2xl font-bold text-white mb-1 xs:mb-2">{dict?.matches?.title || 'Tennis Matches'}</h1>
-                <p className="text-gray-400">{dict?.matches?.loading || 'Monitor tennis games and place your predictions'}</p>
+            <div className="p-3 xs:p-4 sm:p-5 md:p-6 pb-2 xs:pb-3 sm:pb-4 relative z-10">
+                <h1 className={cx(typography.heading.lg, " mb-1 xs:mb-2")}>
+                    🎾 {dict?.matches?.title || 'Tennis Matches'}
+                </h1>
+                <p className={cx(typography.body.md, "text-gray-300")}>{dict?.matches?.loading || 'Monitor tennis games and place your predictions'}</p>
             </div>
 
             {/* Tournament Filter */}
@@ -50,42 +58,56 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
             />
 
             {/* Content Section - Natural Flow */}
-            <div className="px-3 xs:px-4 sm:px-5 md:px-6">
+            <div className="px-3 xs:px-4 sm:px-5 md:px-6 relative z-10">
                 {/* Live Matches Section */}
                 {liveMatches.length > 0 && (
                     <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-4 lg:mt-6">
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                            <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white flex items-center">
+                            <h2 className={cx(typography.heading.md, "text-white flex items-center")}>
                                 <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
-                                {dict?.sidebar?.liveMatches || 'Live Matches'}
-                                <span className="ml-2 text-sm text-gray-400">({liveMatches.length})</span>
+                                🔴 {dict?.sidebar?.liveMatches || 'Live Matches'}
+                                <span className={cx(typography.body.sm, "ml-2 text-gray-400")}>({liveMatches.length})</span>
                             </h2>
                             {/* Navigation arrows for live matches - only visible on large screens */}
                             <div className="hidden lg:flex gap-2">
-                                <button
+                                <motion.button
                                     onClick={() => {
                                         const container = document.querySelector('.live-matches-container');
                                         if (container) {
                                             container.scrollBy({ left: -200, behavior: 'smooth' });
                                         }
                                     }}
-                                    className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-gray-300 hover:scale-110 hover:bg-slate-700/50 rounded-full"
+                                    className={cx(
+                                        "w-8 h-8 text-white flex items-center justify-center",
+                                        borders.rounded.full,
+                                        transitions.default,
+                                        "hover:text-yellow-400 hover:bg-slate-700/50"
+                                    )}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
                                     aria-label="Scroll left"
                                 >
                                     ←
-                                </button>
-                                <button
+                                </motion.button>
+                                <motion.button
                                     onClick={() => {
                                         const container = document.querySelector('.live-matches-container');
                                         if (container) {
                                             container.scrollBy({ left: 200, behavior: 'smooth' });
                                         }
                                     }}
-                                    className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-gray-300 hover:scale-110 hover:bg-slate-700/50 rounded-full"
+                                    className={cx(
+                                        "w-8 h-8 text-white flex items-center justify-center",
+                                        borders.rounded.full,
+                                        transitions.default,
+                                        "hover:text-yellow-400 hover:bg-slate-700/50"
+                                    )}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
                                     aria-label="Scroll right"
                                 >
                                     →
-                                </button>
+                                </motion.button>
                             </div>
                         </div>
                         <div className={`live-matches-container ${
@@ -104,14 +126,15 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                             {liveMatches.map((match) => (
                                 <div
                                     key={match.id}
-                                    className={`bg-slate-900/80 rounded-lg xs:rounded-xl border transition-all duration-200 flex flex-col relative ${
+                                    className={cx(
+                                        "rounded-lg xs:rounded-xl flex flex-col relative",
+                                        transitions.default,
                                         // Check for high odds difference (underdog alert)
                                         !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5
-                                            ? 'border-2 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 cursor-pointer'
+                                            ? cx(borders.thick, shadows.glow.orange, 'border-orange-500 bg-slate-900/90 cursor-pointer backdrop-blur-sm', animations.hover.scale)
                                             : match.locked
-                                                ? 'border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
-                                                : 'border-blue-600 hover:border-blue-500/50 cursor-pointer'
-                                        } ${
+                                                ? 'border border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
+                                                : cx('border bg-slate-900/80 border-blue-600 hover:border-blue-500/50 cursor-pointer', animations.hover.lift),
                                         // Locked matches are much smaller and compact
                                         match.locked
                                             ? 'p-2 xs:p-2.5 sm:p-3 h-[90px] xs:h-[100px] sm:h-[110px] md:h-[120px] min-w-[280px] xs:min-w-[300px] sm:min-w-[320px]'
@@ -119,7 +142,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                             sidebarOpen && !isSlipCollapsed
                                                 ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
                                                 : 'p-2 xs:p-2.5 sm:p-3 md:p-4 h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px]'
-                                        }`}
+                                    )}
                                     onClick={() => !match.locked && onSelectMatch(match)}
                                     style={!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 ? {
                                         background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.95) 100%)',
@@ -129,8 +152,13 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                 >
                                     {/* Underdog Alert Banner */}
                                     {!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 && (
-                                        <div className="absolute -top-2 -right-2 z-10">
-                                            <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                                        <div className="absolute -top-2 -right-2 z-10 animate-pulse">
+                                            <div className={cx(
+                                                "text-black text-xs font-bold px-2 py-1 shadow-md",
+                                                gradients.orange,
+                                                borders.rounded.full,
+                                                shadows.glow.orange
+                                            )}>
                                                 🔥 UNDERDOG ALERT
                                             </div>
                                         </div>
@@ -250,15 +278,23 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                     {/* Action Button - Only for active matches */}
                                     {!match.locked && (
-                                        <button
-                                            className="w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 rounded-lg transition-colors text-xs xs:text-sm mt-2 xs:mt-3 bg-purple-600 hover:bg-purple-700 text-white"
+                                        <motion.button
+                                            className={cx(
+                                                "w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 text-xs xs:text-sm mt-2 xs:mt-3 text-white",
+                                                gradients.purple,
+                                                borders.rounded.sm,
+                                                transitions.default,
+                                                shadows.glow.purple
+                                            )}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onSelectMatch(match);
                                             }}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                         >
                                             {dict?.sidebar?.makePrediction || 'Make your prediction'}
-                                        </button>
+                                        </motion.button>
                                     )}
                                 </div>
                             ))}
@@ -270,9 +306,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                 {upcomingMatches.length > 0 && (
                     <div className="pb-3 xs:pb-4 sm:pb-5 md:pb-6">
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                            <h2 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-white">
-                                {dict?.sidebar?.upcoming || 'Upcoming Matches'}
-                                <span className="ml-2 text-sm text-gray-400">({upcomingMatches.length})</span>
+                            <h2 className={cx(typography.heading.md, "text-white")}>
+                                ⏰ {dict?.sidebar?.upcoming || 'Upcoming Matches'}
+                                <span className={cx(typography.body.sm, "ml-2 text-gray-400")}>({upcomingMatches.length})</span>
                             </h2>
                         </div>
                         <div className={`grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ${
@@ -310,8 +346,13 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                 >
                                     {/* Underdog Alert Banner */}
                                     {!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 && (
-                                        <div className="absolute -top-2 -right-2 z-10">
-                                            <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                                        <div className="absolute -top-2 -right-2 z-10 animate-pulse">
+                                            <div className={cx(
+                                                "text-black text-xs font-bold px-2 py-1 shadow-md",
+                                                gradients.orange,
+                                                borders.rounded.full,
+                                                shadows.glow.orange
+                                            )}>
                                                 🔥 UNDERDOG ALERT
                                             </div>
                                         </div>
@@ -432,15 +473,23 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                     {/* Action Button - Only for active matches */}
                                     {!match.locked && (
-                                        <button
-                                            className="w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 rounded-lg transition-colors text-xs xs:text-sm mt-2 xs:mt-3 bg-purple-600 hover:bg-purple-700 text-white"
+                                        <motion.button
+                                            className={cx(
+                                                "w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 text-xs xs:text-sm mt-2 xs:mt-3 text-white",
+                                                gradients.purple,
+                                                borders.rounded.sm,
+                                                transitions.default,
+                                                shadows.glow.purple
+                                            )}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onSelectMatch(match);
                                             }}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
                                         >
                                             {dict?.sidebar?.makePrediction || 'Make your prediction'}
-                                        </button>
+                                        </motion.button>
                                     )}
                                 </div>
                             ))}
@@ -457,6 +506,6 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 } 

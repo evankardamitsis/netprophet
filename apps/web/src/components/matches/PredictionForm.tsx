@@ -6,6 +6,7 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import { calculateMultiplier, getPredictionCount } from '@/lib/predictionHelpers';
 import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
 import { motion } from 'framer-motion';
+import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
 
 interface PredictionOptions {
     winner: string;
@@ -454,13 +455,19 @@ export function PredictionForm({
     return (
         <div className="space-y-3 pb-4 h-full flex flex-col relative px-2 sm:px-0">
             {/* Clear All Button */}
-            <button
+            <motion.button
                 onClick={handleClearAll}
-                className="absolute top-0 right-0 text-xs text-gray-400 hover:text-white transition-colors px-2 py-1 rounded border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 z-20"
+                className={cx(
+                    "absolute top-0 right-0 text-xs text-gray-400 hover:text-white px-2 py-1 border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 z-20",
+                    borders.rounded.sm,
+                    transitions.default
+                )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 title={dict?.matches?.clearAllSelections || "Clear all selections"}
             >
                 {dict?.matches?.clearAll || 'Clear All'}
-            </button>
+            </motion.button>
 
             {/* Multiplier Bonus Display */}
             {bonusMultiplier > 0 && (
@@ -488,18 +495,52 @@ export function PredictionForm({
                 </div>
             )}
             {/* Match Winner */}
-            <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
-                <h3 className="text-sm font-bold text-white mb-2">{dict?.matches?.matchWinner || 'Match Winner'}</h3>
+            <motion.div
+                className={cx(
+                    "bg-slate-800/50 backdrop-blur-sm p-3 border",
+                    borders.rounded.sm,
+                    !formPredictions.winner ? "border-yellow-400/60 border-2 animate-pulse" : "border-slate-700/50"
+                )}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{
+                    opacity: 1,
+                    y: 0,
+                    ...((!formPredictions.winner) && {
+                        boxShadow: ['0 0 0 0 rgba(250, 204, 21, 0.4)', '0 0 20px rgba(250, 204, 21, 0.3)', '0 0 0 0 rgba(250, 204, 21, 0.4)']
+                    })
+                }}
+                transition={{
+                    duration: 0.3,
+                    boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                }}
+            >
+                <div className="flex items-center space-x-2 mb-2">
+                    <h3 className={cx(typography.body.md, "font-bold text-white")}>
+                        🏆 {dict?.matches?.matchWinner || 'Match Winner'}
+                    </h3>
+                    <span className={cx(
+                        "text-xs font-bold px-2 py-1 rounded-full",
+                        "bg-yellow-600/20 text-yellow-300 border border-yellow-500/30"
+                    )}>
+                        {dict?.matches?.required || 'Required'}
+                    </span>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
-                    <button
+                    <motion.button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name)}
                         disabled={locked}
-                        className={`p-2 rounded-lg border transition-colors ${locked
-                            ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
-                            : (formPredictions.winner === details.player1.name
-                                ? 'bg-purple-600 border-purple-600 text-white'
-                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
-                            }`}
+                        className={cx(
+                            "p-2 border",
+                            borders.rounded.sm,
+                            transitions.default,
+                            locked
+                                ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                : (formPredictions.winner === details.player1.name
+                                    ? cx(gradients.purple, 'border-purple-400 text-white', shadows.glow.purple)
+                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50 hover:border-slate-500/50')
+                        )}
+                        whileHover={!locked ? { scale: 1.05 } : {}}
+                        whileTap={!locked ? { scale: 0.95 } : {}}
                     >
                         <div className="text-sm font-semibold truncate">
                             {details.player1.name.split(' ')[1]}
@@ -507,17 +548,23 @@ export function PredictionForm({
                                 <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
                             )}
                         </div>
-                        <div className="text-xs text-gray-400">{details.player1.odds.toFixed(2)}x</div>
-                    </button>
-                    <button
+                        <div className="text-xs text-yellow-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
+                    </motion.button>
+                    <motion.button
                         onClick={() => onPredictionChange('winner', formPredictions.winner === details.player2.name ? '' : details.player2.name)}
                         disabled={locked}
-                        className={`p-2 rounded-lg border transition-colors ${locked
-                            ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
-                            : (formPredictions.winner === details.player2.name
-                                ? 'bg-purple-600 border-purple-600 text-white'
-                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50')
-                            }`}
+                        className={cx(
+                            "p-2 border",
+                            borders.rounded.sm,
+                            transitions.default,
+                            locked
+                                ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                : (formPredictions.winner === details.player2.name
+                                    ? cx(gradients.purple, 'border-purple-400 text-white', shadows.glow.purple)
+                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50 hover:border-slate-500/50')
+                        )}
+                        whileHover={!locked ? { scale: 1.05 } : {}}
+                        whileTap={!locked ? { scale: 0.95 } : {}}
                     >
                         <div className="text-sm font-semibold truncate">
                             {details.player2.name.split(' ')[1]}
@@ -525,10 +572,10 @@ export function PredictionForm({
                                 <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
                             )}
                         </div>
-                        <div className="text-xs text-gray-400">{details.player2.odds.toFixed(2)}x</div>
-                    </button>
+                        <div className="text-xs text-yellow-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Optional Predictions Notice */}
             {formPredictions.winner && (

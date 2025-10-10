@@ -80,6 +80,7 @@ export interface Dictionary {
     clearAll: string;
     clearAllSelections: string;
     matchWinner: string;
+    required: string;
     howWillWin: string;
     straightSets: string;
     fourSets: string;

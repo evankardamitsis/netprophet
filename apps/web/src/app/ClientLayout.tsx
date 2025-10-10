@@ -12,6 +12,7 @@ import { DictionaryProvider } from '@/context/DictionaryContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
 import { SuccessModalProvider, useSuccessModal } from '@/context/SuccessModalContext';
 import { BetSuccessModal } from '@/components/matches/PredictionSlip/BetSuccessModal';
+import { gradients } from '@/styles/design-system';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -95,7 +96,7 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
         <DictionaryProvider dict={dict} lang={lang}>
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
-                    <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white">
+                    <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white overflow-hidden">
                         <TopNavigation
                             userEmail={user?.email}
                             onMenuClick={() => setSidebarOpen(true)}
@@ -132,8 +133,8 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                             </div>
 
                             {/* Main content */}
-                            <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out`}>
-                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90">
+                            <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out relative z-10`}>
+                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90 backdrop-blur-sm">
                                     {children}
                                 </div>
                             </div>
