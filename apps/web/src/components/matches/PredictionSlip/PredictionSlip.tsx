@@ -56,6 +56,14 @@ function WarningIcon() {
     );
 }
 
+function BettingSlipIcon({ className = "h-6 w-6 text-white" }: { className?: string }) {
+    return (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+        </svg>
+    );
+}
+
 interface PredictionSlipProps {
     onRemovePrediction: (matchId: string) => void;
     onSubmitPredictions: () => void;
@@ -92,12 +100,23 @@ export function PredictionSlip({
     // Success modal state from context
     const { showSuccessModal, setShowSuccessModal } = useSuccessModal();
 
+    // Track which cards are expanded (only the most recent one by default)
+    const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
     // Reset parlay mode if less than 2 predictions
     useEffect(() => {
         if (predictions.length < 2 && isParlayMode) {
             setIsParlayMode(false);
         }
     }, [predictions.length, isParlayMode]);
+
+    // Auto-expand the most recent prediction and collapse others
+    useEffect(() => {
+        if (predictions.length > 0) {
+            const mostRecentId = predictions[predictions.length - 1].matchId;
+            setExpandedCards(new Set([mostRecentId]));
+        }
+    }, [predictions]);
 
     // Reset safe single power-up when switching to parlay mode
     useEffect(() => {
@@ -331,6 +350,18 @@ export function PredictionSlip({
         clearFormPredictionsForMatch(matchId);
     };
 
+    const handleToggleExpand = (matchId: string) => {
+        setExpandedCards(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(matchId)) {
+                newSet.delete(matchId);
+            } else {
+                newSet.add(matchId);
+            }
+            return newSet;
+        });
+    };
+
     function formatPrediction(prediction: any) {
         // Handle case where prediction might be undefined or null
         if (!prediction) {
@@ -508,7 +539,7 @@ export function PredictionSlip({
 
     return (
         <motion.div
-            className={`h-full flex flex-col shadow-2xl relative overflow-hidden border-l-2 border-blue-500/30 bg-gradient-to-b from-slate-900 via-blue-950 to-purple-950 ${getSafeSlipGradient()}`}
+            className={`h-full flex flex-col shadow-2xl relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ${getSafeSlipGradient()}`}
             initial={false}
             animate={{
                 opacity: isCollapsed ? 0 : 1,
@@ -523,57 +554,110 @@ export function PredictionSlip({
             style={{
                 transformOrigin: "bottom right",
                 boxShadow: isSafeSlipActive
-                    ? '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.4), 0 0 15px rgba(16, 185, 129, 0.2)'
-                    : '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(59, 130, 246, 0.3)',
+                    ? '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.3)'
+                    : '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(139, 92, 246, 0.3), 0 0 15px rgba(139, 92, 246, 0.2)',
                 backgroundImage: isSafeSlipActive
-                    ? 'linear-gradient(to bottom, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05))'
+                    ? 'linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))'
                     : undefined
             }}
         >
-            <div className="flex-shrink-0 p-4 border-b border-dashed border-slate-700 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 flex justify-between items-center">
-                <h3 className="text-base font-bold text-yellow-300 tracking-wider uppercase">
-                    {dict?.matches?.bettingSlip || 'Betting Slip'}
-                </h3>
-                {onToggleCollapse && (
-                    <motion.button
-                        onClick={onToggleCollapse}
-                        className="text-yellow-300 bg-gradient-to-r from-slate-600 to-slate-700 transition-all duration-200 p-2 rounded-lg hover:from-slate-500 hover:to-slate-600 hover:shadow-lg"
-                        title={dict?.matches?.minimizeSlip || 'Minimize slip'}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <ChevronUpIcon />
-                    </motion.button>
-                )}
+            {/* Header */}
+            <div className="relative flex-shrink-0 p-4 bg-gradient-to-r from-slate-800/90 via-slate-700/90 to-slate-800/90 backdrop-blur-sm border-b border-purple-500/20">
+                {/* Animated border gradient */}
+                <motion.div
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent)',
+                        backgroundSize: '200% 100%',
+                    }}
+                    animate={{
+                        backgroundPosition: ['0% 0%', '100% 0%'],
+                    }}
+                    transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'linear',
+                    }}
+                />
+
+                <div className="relative flex justify-between items-center">
+                    <div className="flex items-center space-x-3">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-purple-500 rounded-lg blur-md opacity-50" />
+                            <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 p-2 rounded-lg">
+                                <BettingSlipIcon className="h-5 w-5 text-white" />
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-bold text-white tracking-wide uppercase">
+                                {dict?.matches?.bettingSlip || 'Betting Slip'}
+                            </h3>
+                            <p className="text-xs text-purple-300">
+                                {predictions.length} {predictions.length !== 1 ? (dict?.matches?.picks || 'picks') : (dict?.matches?.pick || 'pick')}
+                            </p>
+                        </div>
+                    </div>
+
+                    {onToggleCollapse && (
+                        <motion.button
+                            onClick={onToggleCollapse}
+                            className="relative p-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 hover:border-purple-500/50 transition-all duration-200"
+                            title={dict?.matches?.minimizeSlip || 'Minimize slip'}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <svg className="h-5 w-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </motion.button>
+                    )}
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {predictions.length === 0 ? (
                     <EmptyState dict={dict} />
                 ) : (
-                    <div className="space-y-3">
+                    <>
                         {/* Mode Toggle - Only show when 2+ predictions */}
-                        <ParlayModeToggle
-                            predictionsCount={predictions.length}
-                            isParlayMode={isParlayMode}
-                            onToggleParlayMode={() => setIsParlayMode(!isParlayMode)}
-                            dict={dict}
-                        />
+                        {predictions.length >= 2 && (
+                            <ParlayModeToggle
+                                predictionsCount={predictions.length}
+                                isParlayMode={isParlayMode}
+                                onToggleParlayMode={() => setIsParlayMode(!isParlayMode)}
+                                dict={dict}
+                            />
+                        )}
 
                         {/* Encouragement message for single prediction */}
                         {predictions.length === 1 && (
                             <motion.div
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-2 border border-blue-400/50"
+                                className="relative bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 rounded-xl p-3 border border-purple-500/30 backdrop-blur-sm"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}
                             >
-                                <div className="flex items-center space-x-2">
-                                    <span className="text-2xl">🎯</span>
+                                <div className="flex items-center space-x-3">
+                                    <motion.div
+                                        animate={{
+                                            scale: [1, 1.1, 1],
+                                            rotate: [0, 5, -5, 0],
+                                        }}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: Infinity,
+                                            ease: 'easeInOut',
+                                        }}
+                                    >
+                                        <span className="text-2xl">🎯</span>
+                                    </motion.div>
                                     <div className="text-white text-xs">
-                                        <span className="font-semibold">
+                                        <span className="font-semibold text-purple-200">
                                             {dict?.matches?.addOneMorePrediction || 'Add one more prediction'}
-                                        </span> {dict?.matches?.unlockParlayMode || 'to unlock exciting parlay mode with bonus rewards!'}
+                                        </span>
+                                        <p className="text-purple-300/80 mt-0.5">
+                                            {dict?.matches?.unlockParlayMode || 'to unlock exciting parlay mode with bonus rewards!'}
+                                        </p>
                                     </div>
                                 </div>
                             </motion.div>
@@ -653,10 +737,12 @@ export function PredictionSlip({
                                             setDoublePointsMatchId(matchId);
                                         }
                                     }}
+                                    isExpanded={expandedCards.has(item.matchId)}
+                                    onToggleExpand={handleToggleExpand}
                                 />
                             ))}
                         </AnimatePresence>
-                    </div>
+                    </>
                 )}
             </div>
 
@@ -683,10 +769,10 @@ export function PredictionSlip({
             {isLowBalance && (
                 <motion.div
                     className={`px-4 py-3 border-t ${isCriticalBalance
-                        ? 'bg-gradient-to-r from-red-500 via-red-600 to-red-700 border-red-400 shadow-lg'
+                        ? 'bg-gradient-to-r from-red-900/80 via-red-800/80 to-red-900/80 border-red-500/50 shadow-lg backdrop-blur-sm'
                         : isVeryLowBalance
-                            ? 'bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 border-orange-400 shadow-lg'
-                            : 'bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 border-blue-400 shadow-lg'
+                            ? 'bg-gradient-to-r from-orange-900/80 via-orange-800/80 to-orange-900/80 border-orange-500/50 shadow-lg backdrop-blur-sm'
+                            : 'bg-gradient-to-r from-blue-900/80 via-blue-800/80 to-blue-900/80 border-blue-500/50 shadow-lg backdrop-blur-sm'
                         }`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -694,14 +780,24 @@ export function PredictionSlip({
                 >
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                            <WarningIcon />
-                            <span className="text-sm font-semibold text-white">
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.1, 1],
+                                }}
+                                transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                }}
+                            >
+                                <WarningIcon />
+                            </motion.div>
+                            <span className={`text-sm font-semibold ${getLowBalanceColor()}`}>
                                 {getLowBalanceMessage()}
                             </span>
                         </div>
                         <a
                             href={`/${lang}/rewards`}
-                            className="text-sm text-white hover:text-yellow-200 underline transition-colors font-medium"
+                            className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 transition-all duration-200 font-medium"
                         >
                             {lang === 'el' ? 'Ανανέωση' : 'Top up'}
                         </a>

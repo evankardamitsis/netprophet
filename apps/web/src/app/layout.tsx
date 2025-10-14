@@ -4,7 +4,6 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { Analytics } from '@vercel/analytics/next';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import TawkToChat from '@/components/TawkToChat';
 
 const inter = Inter({ subsets: ['latin', 'greek'] });
 
@@ -29,7 +28,6 @@ export default function RootLayout({
                         {children}
                     </Providers>
                     <Analytics />
-                    <TawkToChat />
                 </ErrorBoundary>
             </body>
         </html>

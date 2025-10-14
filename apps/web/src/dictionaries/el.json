@@ -312,7 +312,7 @@
     "match": "αγώνας",
     "matches": "αγώνες",
     "pleaseSetStakes": "Παρακαλώ βάλε ποσά για όλες τις προβλέψεις",
-    "pleaseSetStakesMin": "Παρακαλώ βάλε τουλάχιστον {min} 🌕 για όλες τις προβλέψεις",
+    "pleaseSetStakesMin": "Παρακαλώ βάλε τουλάχιστον {min} 🌕 σε κάθε πρόβλεψη",
     "pleaseSetStakesForOutrights": "Παρακαλώ βάλε ποσά για όλα τα μακροχρόνια",
     "pleaseSetStakesForOutrightsGeneric": "Παρακαλώ βάλε ποσά για τα μακροχρόνια σου",
     "insufficientBalance": "Ανεπαρκές υπόλοιπο",

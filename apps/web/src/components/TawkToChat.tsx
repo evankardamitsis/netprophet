@@ -2,8 +2,20 @@
 
 import { useEffect } from 'react';
 
-export default function TawkToChat() {
+interface TawkToChatProps {
+    autoLoad?: boolean;
+}
+
+export default function TawkToChat({ autoLoad = true }: TawkToChatProps) {
     useEffect(() => {
+        // Only load if autoLoad is true
+        if (!autoLoad) return;
+
+        // Check if Tawk.to is already loaded
+        if ((window as any).Tawk_API) {
+            return;
+        }
+
         // Tawk.to script
         const script = document.createElement('script');
         script.async = true;
@@ -25,7 +37,7 @@ export default function TawkToChat() {
                 tawkScript.remove();
             }
         };
-    }, []);
+    }, [autoLoad]);
 
     return null;
 }

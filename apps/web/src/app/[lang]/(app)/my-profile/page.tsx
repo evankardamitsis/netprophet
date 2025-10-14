@@ -13,6 +13,7 @@ import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
 import { toast } from 'sonner';
 import CoinIcon from '@/components/CoinIcon';
+import { useTawkToChat } from '@/context/TawkToChatContext';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -43,6 +44,7 @@ export default function MyProfilePage() {
     const [savingUsername, setSavingUsername] = useState(false);
     const [removingProfile, setRemovingProfile] = useState(false);
     const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false);
+    const { showChat } = useTawkToChat();
 
     // Check if user is admin and has player profile
     const checkUserStatus = useCallback(async () => {
@@ -545,6 +547,7 @@ export default function MyProfilePage() {
                                 <Button
                                     variant="outline"
                                     className="w-full justify-start border-slate-600 text-gray-300 hover:bg-slate-700"
+                                    onClick={showChat}
                                 >
                                     <span className="mr-2">📧</span>
                                     {dict?.profile?.contactSupport || 'Contact Support'}
