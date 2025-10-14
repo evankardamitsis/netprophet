@@ -119,7 +119,12 @@ function AuthFormWithSearchParams() {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-indigo-200">
+        <div className="min-h-screen" style={{ backgroundColor: '#121A39' }}>
+            {/* Decorative circles */}
+            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
+            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
+            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
+
             {/* Header */}
             <Header lang={lang} showStartButton={false} />
 
@@ -131,10 +136,10 @@ function AuthFormWithSearchParams() {
                         <div className="flex items-center justify-center mb-4">
                             <Logo size="lg" />
                         </div>
-                        <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                        <h1 className="text-2xl font-bold text-white mb-2">
                             {lang === 'el' ? 'Καλώς ήρθες' : 'Welcome back'}
                         </h1>
-                        <p className="text-slate-600">
+                        <p className="text-white/80">
                             {lang === 'el'
                                 ? 'Συνδέσου για να ξεκινήσεις τις προβλέψεις σου'
                                 : 'Sign in to start making predictions'
@@ -401,7 +406,7 @@ function AuthFormWithSearchParams() {
 
                     {/* Footer */}
                     <div className="text-center mt-8">
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-white/70">
                             {lang === 'el'
                                 ? 'Συνεχίζοντας, συμφωνείτε με τους Όρους Χρήσης και την Πολιτική Απορρήτου'
                                 : 'By continuing, you agree to our Terms of Service and Privacy Policy'
@@ -418,10 +423,10 @@ function AuthFormWithSearchParams() {
 export default function AuthPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-indigo-200 flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-                    <p className="text-slate-600">Loading...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
+                    <p className="text-white">Loading...</p>
                 </div>
             </div>
         }>

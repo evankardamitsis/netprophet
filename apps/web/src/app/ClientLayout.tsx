@@ -13,6 +13,7 @@ import { LowBalanceNotification } from '@/components/matches/LowBalanceNotificat
 import { SuccessModalProvider, useSuccessModal } from '@/context/SuccessModalContext';
 import { BetSuccessModal } from '@/components/matches/PredictionSlip/BetSuccessModal';
 import { gradients } from '@/styles/design-system';
+import { PageTransitionLoader } from '@/components/PageTransitionLoader';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -94,6 +95,7 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
 
     return (
         <DictionaryProvider dict={dict} lang={lang}>
+            <PageTransitionLoader />
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
                     <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white overflow-hidden">

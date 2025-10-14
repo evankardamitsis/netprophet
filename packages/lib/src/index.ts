@@ -66,6 +66,7 @@ export {
   updatePlayerStatus,
   updatePlayerStatsFromMatchResult,
   reversePlayerStatsFromMatchResult,
+  getPlayerMatchHistory,
 } from "./supabase/players";
 
 // Match Status Constants

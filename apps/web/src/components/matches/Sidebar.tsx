@@ -229,14 +229,14 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
         <aside
             className={cx(
                 "h-full flex flex-col relative overflow-hidden",
-                gradients.gameBackground,
                 transitions.default,
                 sidebarOpen
                     ? 'w-full max-w-[320px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:w-[400px] rounded-r-3xl'
                     : 'w-48 rounded-r-3xl'
             )}
             style={{
-                minHeight: '100vh'
+                minHeight: '100vh',
+                backgroundColor: '#121A39'
             }}
         >
             {/* Decorative elements for sidebar - Game-like aesthetic */}

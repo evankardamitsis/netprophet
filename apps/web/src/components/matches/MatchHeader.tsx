@@ -92,7 +92,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     };
 
     return (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700/50 overflow-hidden">
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border-2 border-purple-500/30 shadow-lg shadow-purple-500/10 overflow-hidden">
             {/* Compact View - Always visible */}
             <div className="p-2 sm:p-3 lg:p-4 min-h-[60px] lg:min-h-[70px]">
                 {/* Small screens: Stacked layout */}
@@ -218,7 +218,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
 
             {/* Expanded Details - Hidden by default */}
             {isExpanded && (
-                <div className="border-t border-slate-700/50 p-2 sm:p-3 lg:p-4 bg-slate-700/20">
+                <div className="border-t-2 border-purple-500/30 p-2 sm:p-3 lg:p-4 bg-slate-700/20">
                     <div className="space-y-2 lg:space-y-3">
                         <div className="text-xs text-gray-400">
                             {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
@@ -237,7 +237,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             </div>
                         )}
                         <div className="grid grid-cols-2 gap-3 lg:gap-4 text-xs">
-                            <div className="text-left">
+                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
                                     disabled={!player1Id}
@@ -250,7 +250,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                 </button>
                                 <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}</div>
                             </div>
-                            <div className="text-left">
+                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
                                 <button
                                     onClick={() => navigateToPlayer(player2Id)}
                                     disabled={!player2Id}

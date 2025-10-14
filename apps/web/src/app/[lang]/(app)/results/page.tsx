@@ -446,36 +446,48 @@ export default function ResultsPage() {
 
     if (loading || !user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-900">
-                <div className="text-center text-white">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-                    <p>Loading...</p>
+            <div className="min-h-screen relative flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
+                <div className="text-center">
+                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
+                    </div>
+                    <p className="text-white text-lg font-bold">Loading...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white">
+        <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
+            {/* Decorative circles */}
+            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
+            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
+            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
+
             {/* Back to Dashboard Button */}
-            <div className="max-w-6xl mx-auto px-6 pt-6">
+            <div className="max-w-6xl mx-auto px-6 pt-6 relative z-10">
                 <Button
                     variant="outline"
                     onClick={() => router.push(`/${lang}/matches`)}
-                    className="mb-6 bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
+                    className="mb-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                 >
                     {dict?.navigation?.backToMatches || '← Back to Matches'}
                 </Button>
             </div>
 
             {/* Content Area */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
                 {/* Page Header */}
-                <div className="text-center mb-6 sm:mb-8">
-                    <h1 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
+                <div className="text-center mb-8 sm:mb-12">
+                    <div className="inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
+                        <p className="text-sm sm:text-base text-white font-bold">
+                            {lang === 'el' ? '📊 Ζωντανά Αποτελέσματα' : '📊 Live Results'}
+                        </p>
+                    </div>
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
                         {dict?.results?.title || 'Match Results'}
                     </h1>
-                    <p className="text-gray-300 max-w-2xl mx-auto text-sm sm:text-base px-2">
+                    <p className="text-lg sm:text-xl text-white/90 font-bold max-w-2xl mx-auto px-2">
                         {dict?.results?.subtitle || 'View the latest match results and tournament outcomes.'}
                     </p>
                 </div>
@@ -492,128 +504,171 @@ export default function ResultsPage() {
 
                 {/* Results Content */}
                 {loadingResults ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-                        <p className="text-gray-300">{dict?.results?.loadingResults || 'Loading results...'}</p>
+                    <div className="text-center py-12">
+                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
+                        </div>
+                        <p className="text-white text-lg font-bold">{dict?.results?.loadingResults || 'Loading results...'}</p>
                     </div>
                 ) : error ? (
-                    <div className="text-center py-8">
-                        <p className="text-red-400 mb-4">{error}</p>
-                        <Button onClick={loadResults} variant="outline" className="border-gray-600 text-gray-300">
+                    <div className="text-center py-12">
+                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-red-500 to-pink-500 mb-4">
+                            <span className="text-4xl">⚠️</span>
+                        </div>
+                        <p className="text-red-300 text-lg font-bold mb-6">{error}</p>
+                        <Button onClick={loadResults} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
                             {dict?.results?.tryAgain || 'Try Again'}
                         </Button>
                     </div>
                 ) : results.length === 0 ? (
-                    <div className="text-center py-8">
-                        <p className="text-gray-300 mb-4">{dict?.results?.noResults || 'No results available yet.'}</p>
-                        <Button onClick={() => router.push(`/${lang}/matches`)} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <div className="text-center py-12">
+                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-4">
+                            <span className="text-4xl">🎾</span>
+                        </div>
+                        <p className="text-white text-lg font-bold mb-6">{dict?.results?.noResults || 'No results available yet.'}</p>
+                        <Button onClick={() => router.push(`/${lang}/matches`)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
                             {dict?.results?.goToMatches || 'Go to Matches'}
                         </Button>
                     </div>
                 ) : (
-                    <div className="space-y-4 sm:space-y-6">
+                    <div className="space-y-6 sm:space-y-8">
                         {results.map((tournament) => (
-                            <Card key={tournament.tournament_name} className="bg-slate-800 border border-slate-700 shadow-lg">
-                                <CardHeader className="pb-3 sm:pb-4">
-                                    <CardTitle className="text-lg sm:text-xl font-semibold text-white">
-                                        {tournament.tournament_name}
-                                    </CardTitle>
-                                    <p className="text-gray-400 text-xs sm:text-sm">
-                                        {tournament.matches.length} {dict?.results?.matches || 'matches'} • {dict?.results?.latestResults || 'Latest results'}
-                                    </p>
-                                </CardHeader>
-                                <CardContent className="pt-0">
-                                    <div className="space-y-2 sm:space-y-3">
-                                        {tournament.matches.map((match) => {
-                                            const isPlayerAWinner = match.winner_name === match.player_a_name;
-                                            const isPlayerBWinner = match.winner_name === match.player_b_name;
+                            <div key={tournament.tournament_name} className="relative group">
+                                {/* Gradient border effect */}
+                                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-3xl opacity-75 group-hover:opacity-100 blur transition duration-300"></div>
+
+                                <Card className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border-0 shadow-2xl rounded-3xl overflow-hidden">
+                                    <CardHeader className="pb-4 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/30">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-black text-white mb-2 drop-shadow-lg truncate">
+                                                    🏆 {tournament.tournament_name}
+                                                </CardTitle>
+                                                <p className="text-purple-200 text-xs sm:text-sm lg:text-base font-bold">
+                                                    {tournament.matches.length} {dict?.results?.matches || 'matches'} • {dict?.results?.latestResults || 'Latest results'}
+                                                </p>
+                                            </div>
+                                            <div className="hidden sm:block text-4xl lg:text-6xl opacity-30 flex-shrink-0">🎾</div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-6">
+                                        <div className="space-y-3 sm:space-y-4">
+                                            {tournament.matches.map((match) => {
+                                                const isPlayerAWinner = match.winner_name === match.player_a_name;
+                                                const isPlayerBWinner = match.winner_name === match.player_b_name;
+
+                                                return (
+                                                    <div key={match.id} className="relative group/item">
+                                                        {/* Gradient border effect */}
+                                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-40 group-hover/item:opacity-60 blur transition duration-300"></div>
+
+                                                        <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl p-4 sm:p-5 border border-purple-500/30 hover:border-purple-400/50 transition-all">
+                                                            {/* Date and Category Badge */}
+                                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-3 sm:mb-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-purple-300 text-xs sm:text-sm font-bold">📅</span>
+                                                                    <p className="text-purple-200 text-xs sm:text-sm font-bold">
+                                                                        {new Date(match.updated_at).toLocaleDateString('en-GB', {
+                                                                            day: 'numeric',
+                                                                            month: 'short',
+                                                                            year: 'numeric'
+                                                                        })}
+                                                                    </p>
+                                                                </div>
+                                                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg whitespace-nowrap">
+                                                                    {match.category_name}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Players and Score - Mobile Stacked, Desktop Side by Side */}
+                                                            <div className="flex flex-col gap-4">
+                                                                {/* Top Row: Players */}
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    {/* Player A */}
+                                                                    <div className={`flex-1 text-center ${isPlayerAWinner ? 'text-white' : 'text-gray-400'}`}>
+                                                                        <div className={`font-black text-sm sm:text-base lg:text-lg mb-1 ${isPlayerAWinner ? 'text-green-400 drop-shadow-lg' : ''}`}>
+                                                                            {match.player_a_name}
+                                                                        </div>
+                                                                        <div className="text-xs text-purple-300 font-bold">
+                                                                            NTRP {match.player_a_ntrp.toFixed(1)}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* VS Badge */}
+                                                                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg flex-shrink-0">
+                                                                        VS
+                                                                    </div>
+
+                                                                    {/* Player B */}
+                                                                    <div className={`flex-1 text-center ${isPlayerBWinner ? 'text-white' : 'text-gray-400'}`}>
+                                                                        <div className={`font-black text-sm sm:text-base lg:text-lg mb-1 ${isPlayerBWinner ? 'text-green-400 drop-shadow-lg' : ''}`}>
+                                                                            {match.player_b_name}
+                                                                        </div>
+                                                                        <div className="text-xs text-purple-300 font-bold">
+                                                                            NTRP {match.player_b_ntrp.toFixed(1)}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Bottom Row: Score and Winner Badge */}
+                                                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-purple-500/20">
+                                                                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
+                                                                        <div className="text-sm sm:text-base font-black text-white text-center">
+                                                                            {formatScore(match)}
+                                                                        </div>
+                                                                    </div>
+                                                                    {(isPlayerAWinner || isPlayerBWinner) && (
+                                                                        <div className="inline-block text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-bold shadow-lg">
+                                                                            {isPlayerAWinner ? match.player_a_name : match.player_b_name} WINS
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Pagination Controls */}
+                                        {(() => {
+                                            const totalMatches = tournamentTotals[tournament.tournament_name] || 0;
+                                            const currentPage = tournamentPages[tournament.tournament_name] || 1;
+                                            const totalPages = Math.ceil(totalMatches / resultsPerPage);
+
+                                            if (totalPages <= 1) return null;
 
                                             return (
-                                                <div key={match.id} className="bg-slate-700 rounded-lg p-3 sm:p-4 border border-slate-600 relative">
-                                                    {/* Date and Category Badge */}
-                                                    <div className="flex justify-between items-center mb-3 sm:mb-2">
-                                                        <p className="text-gray-400 text-xs sm:text-sm">
-                                                            {new Date(match.updated_at).toLocaleDateString('en-GB', {
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </p>
-                                                        <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-                                                            {match.category_name}
+                                                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6 pt-6 border-t border-purple-500/30">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => loadMoreResults(tournament.tournament_name, currentPage - 1)}
+                                                        disabled={currentPage === 1}
+                                                        className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
+                                                    >
+                                                        ← Previous
+                                                    </Button>
+                                                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30 whitespace-nowrap">
+                                                        <span className="text-white text-sm font-bold">
+                                                            Page <span className="text-purple-300">{currentPage}</span> of <span className="text-purple-300">{totalPages}</span>
                                                         </span>
                                                     </div>
-
-                                                    {/* Players and Score - Mobile Stacked, Desktop Side by Side */}
-                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
-                                                        {/* Player A */}
-                                                        <div className={`text-center sm:flex-1 ${isPlayerAWinner ? 'text-white' : 'text-gray-500'}`}>
-                                                            <div className={`font-semibold text-sm sm:text-base ${isPlayerAWinner ? 'text-green-400' : ''}`}>
-                                                                {match.player_a_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-400 mt-1">
-                                                                NTRP {match.player_a_ntrp.toFixed(1)}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Score - Centered */}
-                                                        <div className="text-center sm:mx-3">
-                                                            <div className="text-sm sm:text-base font-bold text-white">
-                                                                {formatScore(match)}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Player B */}
-                                                        <div className={`text-center sm:flex-1 ${isPlayerBWinner ? 'text-white' : 'text-gray-500'}`}>
-                                                            <div className={`font-semibold text-sm sm:text-base ${isPlayerBWinner ? 'text-green-400' : ''}`}>
-                                                                {match.player_b_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-400 mt-1">
-                                                                NTRP {match.player_b_ntrp.toFixed(1)}
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => loadMoreResults(tournament.tournament_name, currentPage + 1)}
+                                                        disabled={currentPage === totalPages}
+                                                        className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
+                                                    >
+                                                        Next →
+                                                    </Button>
                                                 </div>
                                             );
-                                        })}
-                                    </div>
-
-                                    {/* Pagination Controls */}
-                                    {(() => {
-                                        const totalMatches = tournamentTotals[tournament.tournament_name] || 0;
-                                        const currentPage = tournamentPages[tournament.tournament_name] || 1;
-                                        const totalPages = Math.ceil(totalMatches / resultsPerPage);
-
-                                        if (totalPages <= 1) return null;
-
-                                        return (
-                                            <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-slate-600">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => loadMoreResults(tournament.tournament_name, currentPage - 1)}
-                                                    disabled={currentPage === 1}
-                                                    className="px-3 py-1 text-xs sm:text-sm border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50"
-                                                >
-                                                    Previous
-                                                </Button>
-                                                <span className="text-gray-300 text-xs sm:text-sm px-3">
-                                                    Page {currentPage} of {totalPages}
-                                                </span>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => loadMoreResults(tournament.tournament_name, currentPage + 1)}
-                                                    disabled={currentPage === totalPages}
-                                                    className="px-3 py-1 text-xs sm:text-sm border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50"
-                                                >
-                                                    Next
-                                                </Button>
-                                            </div>
-                                        );
-                                    })()}
-                                </CardContent>
-                            </Card>
+                                        })()}
+                                    </CardContent>
+                                </Card>
+                            </div>
                         ))}
                     </div>
                 )}

@@ -336,12 +336,14 @@ export function TopNavigation({
 
     return (
         <div className="relative">
-            <header className={cx(
-                "w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-50 text-white",
-                gradients.gameBackground,
-                shadows.card,
-                "border-b border-white/10"
-            )}>
+            <header
+                className={cx(
+                    "w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-50 text-white",
+                    shadows.card,
+                    "border-b border-white/10"
+                )}
+                style={{ backgroundColor: '#121A39' }}
+            >
                 {/* Left Section - Logo and Menu */}
                 <div className="flex items-center gap-1 sm:gap-2">
                     <motion.button
@@ -465,6 +467,7 @@ export function TopNavigation({
                 {/* Right Section - Wallet, Notifications, Language, Account */}
                 <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
                     {/* Dev Test Button - Profile Claim */}
+                    {/* Hidden but kept for future use
                     {isDev && (
                         <button
                             onClick={handleTestProfileClick}
@@ -474,6 +477,7 @@ export function TopNavigation({
                             Test Profile
                         </button>
                     )}
+                    */}
 
                     {/* Wallet Component */}
                     <div className="block relative group z-[100]">

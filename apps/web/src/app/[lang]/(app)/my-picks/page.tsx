@@ -179,93 +179,120 @@ export default function MyPicksPage() {
 
     if (loading || !user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-900">
-                <div className="text-center text-white">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-                    <p>Loading...</p>
+            <div className="min-h-screen relative flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
+                <div className="text-center">
+                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
+                    </div>
+                    <p className="text-white text-lg font-bold">Loading...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white">
+        <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
+            {/* Decorative circles */}
+            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
+            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
+            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
+
             {/* Back to Dashboard Button */}
-            <div className="max-w-6xl mx-auto px-6 pt-6">
+            <div className="max-w-6xl mx-auto px-6 pt-6 relative z-10">
                 <Button
                     variant="outline"
                     onClick={() => router.push(`/${lang}/matches`)}
-                    className="mb-6 bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
+                    className="mb-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                 >
                     {dict?.navigation?.backToMatches || '← Back to Matches'}
                 </Button>
             </div>
+
             {/* Content Area */}
-            <div className="max-w-6xl mx-auto px-6 pb-6">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
                 {/* Page Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-bold text-white mb-4">
+                <div className="text-center mb-8 sm:mb-12">
+                    <div className="inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
+                        <p className="text-sm sm:text-base text-white font-bold">
+                            🎯 {dict?.myPicks?.title || 'My Predictions'}
+                        </p>
+                    </div>
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
                         {dict?.myPicks?.title || 'My Predictions'}
                     </h1>
-                    <p className="text-gray-300 max-w-2xl mx-auto">
-                        {dict?.myPicks?.subtitle || 'View your prediction history and the points you&apos;ve earned.'}
+                    <p className="text-lg sm:text-xl text-white/90 font-bold max-w-2xl mx-auto px-2">
+                        {dict?.myPicks?.subtitle || 'View your prediction history and the points you\'ve earned.'}
                     </p>
                 </div>
 
                 {/* Active Bets Section */}
                 {!loadingBets && !error && (
-                    <div className="mb-8">
-                        <h2 className="text-md font-bold text-white mb-4">
+                    <div className="mb-8 sm:mb-12">
+                        <h2 className="text-xl sm:text-2xl font-black text-white mb-6 drop-shadow-lg">
                             {dict?.myPicks?.activeBets || 'Active Bets'}
                         </h2>
                         {(() => {
                             const activeBets = bets.filter(bet => bet.status === 'active');
                             return activeBets.length > 0 ? (
-                                <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
-                                    <div className="space-y-2">
-                                        {activeBets.map((bet) => (
-                                            <div key={bet.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 hover:bg-slate-650 transition-colors min-h-[80px]">
-                                                <div className="flex justify-between items-center h-full">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-3 mb-1">
-                                                            <h3 className="font-semibold text-white text-sm">
-                                                                <span className="md:hidden">{bet.matchTitleShort}</span>
-                                                                <span className="hidden md:inline truncate">{bet.matchTitle}</span>
-                                                            </h3>
-                                                        </div>
-                                                        <p className="text-gray-400 text-xs mb-1">
-                                                            {new Date(bet.created_at).toLocaleDateString('en-GB', {
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </p>
-                                                        <p className="text-gray-300 text-xs">
-                                                            <span className="font-medium text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
-                                                        </p>
-                                                    </div>
-                                                    <div className="text-right ml-4 flex-shrink-0">
-                                                        <div className="text-green-400 font-bold text-sm flex items-center justify-end gap-1">
-                                                            {bet.betAmount} <CoinIcon size={14} />
-                                                        </div>
-                                                        <div className="text-gray-400 text-xs">
-                                                            {bet.multiplier}x
-                                                        </div>
-                                                        <div className="text-gray-300 text-xs mt-1">
-                                                            {dict?.myPicks?.potential || 'Potential'}: <span className="text-green-400 font-medium items-center justify-end gap-1 inline-flex">{bet.potentialWinnings} <CoinIcon size={12} /></span>
+                                <div className="relative group">
+                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-3xl opacity-40 group-hover:opacity-60 blur transition"></div>
+                                    <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl border-0 shadow-2xl p-6">
+                                        <div className="space-y-3">
+                                            {activeBets.map((bet) => (
+                                                <div key={bet.id} className="relative group/item">
+                                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-30 group-hover/item:opacity-50 blur transition"></div>
+                                                    <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30 hover:border-purple-400/50 transition-all">
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-black text-white text-base sm:text-lg mb-2">
+                                                                    <span className="md:hidden">{bet.matchTitleShort}</span>
+                                                                    <span className="hidden md:inline truncate">{bet.matchTitle}</span>
+                                                                </h3>
+                                                                <p className="text-purple-300 text-xs mb-2">
+                                                                    {new Date(bet.created_at).toLocaleDateString('en-GB', {
+                                                                        day: 'numeric',
+                                                                        month: 'short',
+                                                                        year: 'numeric'
+                                                                    })}
+                                                                </p>
+                                                                <p className="text-purple-200 text-xs sm:text-sm">
+                                                                    <span className="font-bold text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex flex-row sm:flex-col sm:text-right gap-3 sm:gap-2 flex-shrink-0">
+                                                                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-500/30">
+                                                                    <div className="text-green-400 font-black text-sm flex items-center gap-1">
+                                                                        {bet.betAmount} <CoinIcon size={14} />
+                                                                    </div>
+                                                                    <div className="text-purple-300 text-xs">
+                                                                        {bet.multiplier}x
+                                                                    </div>
+                                                                </div>
+                                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
+                                                                    <div className="text-purple-300 text-xs font-bold mb-1">
+                                                                        {dict?.myPicks?.potential || 'Potential'}
+                                                                    </div>
+                                                                    <div className="text-green-400 font-black text-sm flex items-center gap-1">
+                                                                        {bet.potentialWinnings} <CoinIcon size={14} />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 text-center">
-                                    <p className="text-gray-300 mb-4">
+                                <div className="text-center py-12">
+                                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-4">
+                                        <span className="text-4xl">🎯</span>
+                                    </div>
+                                    <p className="text-white text-lg font-bold mb-6">
                                         {dict?.myPicks?.noActiveBets || 'No active bets at the moment.'}
                                     </p>
-                                    <Button onClick={() => router.push(`/${lang}/matches`)} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+                                    <Button onClick={() => router.push(`/${lang}/matches`)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
                                         {dict?.myPicks?.goToMatches || 'Go to Matches'}
                                     </Button>
                                 </div>
@@ -276,27 +303,35 @@ export default function MyPicksPage() {
 
                 {/* Bet History Section */}
                 {loadingBets ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-                        <p className="text-gray-300">{dict?.myPicks?.loadingBets || 'Loading your bets...'}</p>
+                    <div className="text-center py-12">
+                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
+                        </div>
+                        <p className="text-white text-lg font-bold">{dict?.myPicks?.loadingBets || 'Loading your bets...'}</p>
                     </div>
                 ) : error ? (
-                    <div className="text-center py-8">
-                        <p className="text-red-400 mb-4">{error}</p>
-                        <Button onClick={loadBets} variant="outline" className="border-gray-600 text-gray-300">
+                    <div className="text-center py-12">
+                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-red-500 to-pink-500 mb-4">
+                            <span className="text-4xl">⚠️</span>
+                        </div>
+                        <p className="text-red-300 text-lg font-bold mb-6">{error}</p>
+                        <Button onClick={loadBets} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
                             {dict?.myPicks?.tryAgain || 'Try Again'}
                         </Button>
                     </div>
                 ) : bets.length === 0 ? (
-                    <div className="text-center py-8">
-                        <p className="text-gray-300 mb-4">{dict?.myPicks?.noBetsFound || 'No bets found. Start making predictions to see them here!'}</p>
-                        <Button onClick={() => router.push(`/${lang}/matches`)} variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    <div className="text-center py-12">
+                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-4">
+                            <span className="text-4xl">🎯</span>
+                        </div>
+                        <p className="text-white text-lg font-bold mb-6">{dict?.myPicks?.noBetsFound || 'No bets found. Start making predictions to see them here!'}</p>
+                        <Button onClick={() => router.push(`/${lang}/matches`)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
                             {dict?.myPicks?.goToMatches || 'Go to Matches'}
                         </Button>
                     </div>
                 ) : (
                     <div>
-                        <h2 className="text-md font-bold text-white mb-4">
+                        <h2 className="text-xl sm:text-2xl font-black text-white mb-6 drop-shadow-lg">
                             {dict?.myPicks?.betHistory || 'Bet History'}
                         </h2>
                         {(() => {
@@ -307,25 +342,27 @@ export default function MyPicksPage() {
                                 <>
                                     <BetHistoryTable bets={resolvedBets} dict={dict} />
                                     {totalPages > 1 && (
-                                        <div className="flex justify-center items-center gap-2 mt-6">
+                                        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6 pt-6 border-t border-purple-500/30">
                                             <Button
                                                 variant="outline"
                                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                                 disabled={currentPage === 1}
-                                                className="px-3 py-1 text-sm border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50"
+                                                className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
                                             >
-                                                Previous
+                                                ← Previous
                                             </Button>
-                                            <span className="text-gray-300 text-sm px-4">
-                                                Page {currentPage} of {totalPages}
-                                            </span>
+                                            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30 whitespace-nowrap">
+                                                <span className="text-white text-sm font-bold">
+                                                    Page <span className="text-purple-300">{currentPage}</span> of <span className="text-purple-300">{totalPages}</span>
+                                                </span>
+                                            </div>
                                             <Button
                                                 variant="outline"
                                                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                                 disabled={currentPage === totalPages}
-                                                className="px-3 py-1 text-sm border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white disabled:opacity-50"
+                                                className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
                                             >
-                                                Next
+                                                Next →
                                             </Button>
                                         </div>
                                     )}

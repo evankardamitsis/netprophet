@@ -654,3 +654,56 @@ export async function getHeadToHeadRecord(
     return null;
   }
 }
+
+/**
+ * Get last 5 matches for a specific player with match details
+ */
+export async function getPlayerMatchHistory(playerId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("matches")
+      .select(
+        `
+        id,
+        start_time,
+        status,
+        player_a_id,
+        player_b_id,
+        winner_id,
+        player_a:players!matches_player_a_id_fkey(
+          id,
+          first_name,
+          last_name
+        ),
+        player_b:players!matches_player_b_id_fkey(
+          id,
+          first_name,
+          last_name
+        ),
+        match_results(
+          match_result,
+          set1_score,
+          set2_score,
+          set3_score
+        ),
+        tournaments(
+          name
+        )
+      `
+      )
+      .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
+      .eq("status", "finished")
+      .order("start_time", { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error("Error fetching player match history:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching player match history:", error);
+    return [];
+  }
+}
