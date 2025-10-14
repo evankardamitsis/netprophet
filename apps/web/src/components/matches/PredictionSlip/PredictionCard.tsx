@@ -141,7 +141,7 @@ export function PredictionCard({
                             <div className="flex flex-col space-y-1">
                                 <span className="text-sm text-slate-300">{dict?.matches?.stake || 'Stake'}</span>
                                 <div className="flex items-center space-x-1">
-                                    <input
+                                    <motion.input
                                         type="number"
                                         max={walletBalance}
                                         value={item.betAmount || ''}
@@ -149,8 +149,14 @@ export function PredictionCard({
                                             const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
                                             onUpdateBetAmount(item.matchId, value);
                                         }}
-                                        className="w-16 px-1.5 py-0.5 text-sm bg-slate-700 border border-slate-600 rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className={`w-16 px-1.5 py-0.5 text-sm bg-slate-700 border rounded text-green-400 font-semibold focus:ring-2 focus:ring-green-500 focus:border-transparent ${!item.betAmount || item.betAmount === 0 ? 'border-yellow-400/60 border-2' : 'border-slate-600'}`}
                                         placeholder="0"
+                                        animate={(!item.betAmount || item.betAmount === 0) ? {
+                                            boxShadow: ['0 0 0 0 rgba(250, 204, 21, 0.4)', '0 0 10px rgba(250, 204, 21, 0.3)', '0 0 0 0 rgba(250, 204, 21, 0.4)']
+                                        } : {}}
+                                        transition={{
+                                            boxShadow: (!item.betAmount || item.betAmount === 0) ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } : undefined
+                                        }}
                                     />
                                     <CoinIcon size={14} className="text-slate-400" />
                                 </div>
