@@ -20,7 +20,7 @@ export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
 
     return (
         <footer className="bottom-0 left-0 right-0 bg-gray-900 text-white py-6 px-6 z-30">
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                     <div className="flex items-center space-x-2">
                         <span className="text-xs text-gray-400">

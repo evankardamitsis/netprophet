@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useDictionary } from '@/context/DictionaryContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { buttons } from '@/styles/design-system';
 
 export default function ContactPage() {
     const params = useParams();
@@ -78,13 +79,15 @@ export default function ContactPage() {
                         <div className="space-y-4">
                             <a
                                 href={`/${lang}/faq`}
-                                className="block text-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg p-4 text-blue-300 hover:text-blue-200 transition-all duration-200 border border-white/20"
+                                style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                className={`block text-center ${buttons.secondary.className} backdrop-blur-sm p-4`}
                             >
                                 → {lang === 'el' ? 'Συχνές ερωτήσεις' : 'Frequently Asked Questions'}
                             </a>
                             <a
                                 href={`/${lang}/help-center`}
-                                className="block text-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg p-4 text-blue-300 hover:text-blue-200 transition-all duration-200 border border-white/20"
+                                style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                className={`block text-center ${buttons.secondary.className} backdrop-blur-sm p-4`}
                             >
                                 → {lang === 'el' ? 'Κέντρο βοήθειας' : 'Help Center'}
                             </a>

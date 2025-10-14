@@ -6,6 +6,7 @@ import { useDictionary } from '@/context/DictionaryContext';
 import { Search, BookOpen, Video, FileText, MessageCircle, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { buttons } from '@/styles/design-system';
 
 interface HelpArticle {
     id: string;
@@ -712,13 +713,15 @@ export default function HelpCenterPage() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <a
                                 href={`/${lang}/contact`}
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                                style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                className={`${buttons.primary.className} px-6 py-3 text-center`}
                             >
                                 {lang === 'el' ? 'Επικοινωνία' : 'Contact Support'}
                             </a>
                             <a
                                 href={`/${lang}/faq`}
-                                className="bg-slate-700 hover:bg-slate-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+                                style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                className={`${buttons.secondary.className} px-6 py-3 text-center`}
                             >
                                 {lang === 'el' ? 'Συχνές Ερωτήσεις' : 'FAQ'}
                             </a>

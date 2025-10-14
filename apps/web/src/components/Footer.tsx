@@ -2,7 +2,10 @@
 
 import { Button } from '@netprophet/ui';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import Logo from './Logo';
+import { buttons, headerStyles } from '@/styles/design-system';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FooterProps {
     lang: 'en' | 'el';
@@ -15,9 +18,30 @@ interface FooterProps {
 
 export default function Footer({ lang, dict }: FooterProps) {
     const router = useRouter();
+    const { user } = useAuth();
+    const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+
+    const handleLanguageChange = (newLang: 'en' | 'el') => {
+        // Get current path and replace language
+        const currentPath = window.location.pathname;
+        const pathWithoutLang = currentPath.replace(/^\/(en|el)/, '');
+        const newPath = `/${newLang}${pathWithoutLang}`;
+        router.push(newPath);
+    };
+
+    const handleProtectedLink = (path: string) => {
+        if (!user) {
+            router.push(`/${lang}/auth/signin`);
+        } else {
+            router.push(path);
+        }
+    };
 
     return (
-        <footer className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white py-16 relative overflow-hidden">
+        <footer
+            className="text-white py-16 relative overflow-hidden"
+            style={{ backgroundColor: headerStyles.bg }}
+        >
             {/* Decorative elements */}
             <div className="absolute top-10 left-10 w-32 h-32 bg-purple-500 rounded-full opacity-15 blur-3xl"></div>
             <div className="absolute bottom-10 right-20 w-40 h-40 bg-pink-500 rounded-full opacity-12 blur-3xl"></div>
@@ -30,15 +54,16 @@ export default function Footer({ lang, dict }: FooterProps) {
                         <div className="mb-4">
                             <Logo size="md" />
                         </div>
-                        <p className="text-slate-300 mb-6 w-2/3 font-semibold">
+                        <p className="text-slate-300 mb-6  font-semibold">
                             {lang === 'el' ? 'Το πιο διασκεδαστικό παιχνίδι προβλέψεων με πραγματικούς ερασιτεχνικούς αγώνες και τουρνουά.' : 'The most exciting sports prediction game with real amateur matches and tournaments.'}
                         </p>
                         <Button
                             onClick={() => router.push(`/${lang}/auth/signin`)}
                             size="sm"
-                            className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-purple-900 font-black rounded-xl shadow-lg transform hover:scale-105 transition-all"
+                            style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                            className={`${buttons.primary.className} shadow-lg`}
                         >
-                            {lang === 'el' ? '🎮 Ξεκίνα Δωρεάν' : '🎮 Start Free'}
+                            {lang === 'el' ? 'Ξεκίνα Δωρεάν' : 'Start Free'}
                         </Button>
                     </div>
 
@@ -49,24 +74,24 @@ export default function Footer({ lang, dict }: FooterProps) {
                         </h4>
                         <ul className="space-y-3 text-slate-300 text-sm font-semibold">
                             <li>
-                                <a href={`/${lang}/matches`} className="hover:text-yellow-300 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleProtectedLink(`/${lang}/matches`)} className="hover:text-yellow-300 transition-colors flex items-center gap-2 cursor-pointer">
                                     <span>🎾</span> {lang === 'el' ? 'Αγώνες' : 'Matches'}
-                                </a>
+                                </button>
                             </li>
                             <li>
-                                <a href={`/${lang}/leaderboard`} className="hover:text-yellow-300 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleProtectedLink(`/${lang}/leaderboard`)} className="hover:text-yellow-300 transition-colors flex items-center gap-2 cursor-pointer">
                                     <span>🏆</span> {dict?.navigation?.leaderboard || 'Leaderboard'}
-                                </a>
+                                </button>
                             </li>
                             <li>
-                                <a href={`/${lang}/players`} className="hover:text-yellow-300 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleProtectedLink(`/${lang}/players`)} className="hover:text-yellow-300 transition-colors flex items-center gap-2 cursor-pointer">
                                     <span>👥</span> {lang === 'el' ? 'Παίκτες' : 'Players'}
-                                </a>
+                                </button>
                             </li>
                             <li>
-                                <a href={`/${lang}/results`} className="hover:text-yellow-300 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleProtectedLink(`/${lang}/results`)} className="hover:text-yellow-300 transition-colors flex items-center gap-2 cursor-pointer">
                                     <span>📊</span> {lang === 'el' ? 'Αποτελέσματα' : 'Results'}
-                                </a>
+                                </button>
                             </li>
                             <li>
                                 <a href={`/${lang}/how-it-works`} className="hover:text-yellow-300 transition-colors flex items-center gap-2">
@@ -117,6 +142,68 @@ export default function Footer({ lang, dict }: FooterProps) {
                                 </a>
                             </li>
                         </ul>
+                        {/* Language Switcher - Mobile Only */}
+                        <div className="md:hidden mb-4">
+                            <h5 className="font-bold mb-3 text-sm text-slate-300">
+                                {lang === 'el' ? '🌐 Γλώσσα' : '🌐 Language'}
+                            </h5>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
+                                    className="flex items-center space-x-2 px-3 py-2 text-sm font-bold text-purple-300 hover:text-pink-300 bg-purple-800/30 hover:bg-purple-700/50 rounded-xl transition-all border border-purple-600/30"
+                                >
+                                    <span className="text-lg">{lang === 'el' ? '🇬🇷' : '🇺🇸'}</span>
+                                    <span>{lang === 'el' ? 'Ελληνικά' : 'English'}</span>
+                                    <svg
+                                        className={`w-4 h-4 transition-transform ${isLanguageMenuOpen ? 'rotate-180' : ''}`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {/* Language Dropdown */}
+                                {isLanguageMenuOpen && (
+                                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-slate-800 rounded-xl shadow-2xl border border-purple-600/30 py-2 z-50 overflow-hidden">
+                                        <button
+                                            onClick={() => {
+                                                handleLanguageChange('el');
+                                                setIsLanguageMenuOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-3 text-sm font-bold hover:bg-purple-800/50 flex items-center space-x-3 transition-colors ${lang === 'el' ? 'bg-purple-700/50 text-purple-200' : 'text-slate-300'
+                                                }`}
+                                        >
+                                            <span className="text-xl">🇬🇷</span>
+                                            <span>Ελληνικά</span>
+                                            {lang === 'el' && (
+                                                <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                handleLanguageChange('en');
+                                                setIsLanguageMenuOpen(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-3 text-sm font-bold hover:bg-purple-800/50 flex items-center space-x-3 transition-colors ${lang === 'en' ? 'bg-purple-700/50 text-purple-200' : 'text-slate-300'
+                                                }`}
+                                        >
+                                            <span className="text-xl">🇺🇸</span>
+                                            <span>English</span>
+                                            {lang === 'en' && (
+                                                <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="text-xs text-slate-400 font-semibold">
                             Powered by<br />
                             <a href="https://belowthefold.gr" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 font-bold">
@@ -126,6 +213,14 @@ export default function Footer({ lang, dict }: FooterProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Click outside to close language menu */}
+            {isLanguageMenuOpen && (
+                <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsLanguageMenuOpen(false)}
+                />
+            )}
         </footer>
     );
 }

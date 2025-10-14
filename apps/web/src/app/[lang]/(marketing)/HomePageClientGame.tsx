@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Player } from '@netprophet/lib';
 import { Button } from '@netprophet/ui';
 import Header from '@/components/Header';
@@ -11,6 +12,7 @@ import { PlayerCard } from '@/components/players/PlayerCard';
 import CoinIcon from '@/components/CoinIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
+import { buttons } from '@/styles/design-system';
 
 interface Dictionary {
     navigation: {
@@ -111,7 +113,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-pink-800 to-purple-700">
+            <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mx-auto mb-4" />
                     <p className="text-white text-xl font-bold">{dict?.common?.loading || 'Loading...'}</p>
@@ -121,7 +123,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-800 to-purple-700">
+        <div className="min-h-screen" style={{ backgroundColor: '#121A39' }}>
             {/* Decorative circles */}
             <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
             <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
@@ -131,61 +133,60 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
             <Header lang={lang} />
 
             {/* Hero Section - Game Style */}
-            <section className="relative overflow-hidden pt-8 pb-12 sm:pb-16 lg:pb-20">
+            <section className="relative overflow-hidden py-2 sm:py-6 lg:py-8">
+                {/* Secondary background image spanning from center to right */}
+                <div className="absolute top-0 bottom-0 left-1/3 right-0 z-0 opacity-10 hidden lg:block">
+                    <Image
+                        src="/secondary_hero_bg.png"
+                        alt={lang === 'el' ? 'NetProphet Background' : 'NetProphet Background'}
+                        width={1200}
+                        height={450}
+                        className="w-full  object-contain"
+                    />
+                </div>
+
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid lg:grid-cols-[40%_60%] gap-8 items-center">
+                    <div className="flex flex-col lg:flex-row items-center">
                         {/* Left - Title & CTA */}
-                        <div className="text-center lg:text-left space-y-4">
+                        <div className="w-full lg:w-[35%] text-center lg:text-left space-y-6 sm:space-y-6 lg:pr-8 relative z-10 ">
                             {/* Subtitle */}
-                            <p className="text-md text-white/90 font-semibold">
+                            <p className="text-xs lg:text-lg text-white font-bold inline-block px-4 py-2 sm:px-4 sm:py-2 rounded-full" style={{ backgroundColor: '#BE05A1' }}>
                                 {lang === 'el'
-                                    ? 'Πόσο καλά νομίζεις ότι ξέρεις το παιχνίδι;'
+                                    ? '"Πόσο καλά νομίζεις ότι ξέρεις το παιχνίδι;"'
                                     : 'How well can you read the game?'
                                 }
                             </p>
+
                             {/* Title */}
-                            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-tight">
+                            <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
                                 {lang === 'el' ? 'Γίνε ο επόμενος' : 'Become the next'}
                                 <br />
-                                <span className="text-yellow-300 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">
+                                <span className="text-yellow-300">
                                     Net Prophet
                                 </span>
                             </h1>
 
                             {/* Description */}
-                            <p className="text-xl sm:text-2xl text-white/80 font-bold max-w-2xl mx-auto lg:mx-0">
+                            <p className="text-lg sm:text-lg md:text-xl text-white/90 font-bold max-w-2xl mx-auto lg:mx-0">
                                 {lang === 'el'
                                     ? 'Ο τρόπος να κερδίζεις και εκτός γηπέδου. Μάντεψε νικητές, μάζεψε coins, κυριάρχησε στο leaderboard!'
                                     : 'The way to win off the court. Predict winners, collect coins, dominate the leaderboard!'}
                             </p>
 
-
-
-                            {/* Feature Pills */}
-                            {/* <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                                <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-                                    <span className="font-bold text-purple-600">🎾 Real Matches</span>
-                                </div>
-                                <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-                                    <span className="font-bold text-pink-600">🏆 Tournaments</span>
-                                </div>
-                                <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-                                    <span className="font-bold text-orange-600">⚡ Power-ups</span>
-                                </div>
-                            </div> */}
-
                             {/* CTA Buttons */}
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                            <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-center lg:justify-start pt-6 sm:pt-6">
                                 <Button
                                     onClick={() => router.push(`/${lang}/auth/signin`)}
                                     size="lg"
-                                    className="text-xl px-10 py-6 bg-yellow-400 hover:bg-yellow-300 text-purple-800 font-black rounded-2xl shadow-2xl transform hover:scale-105 transition-all"
+                                    style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                    className={`text-lg sm:text-lg px-8 py-4 sm:px-8 sm:py-4 ${buttons.primary.className} shadow-2xl`}
                                 >
                                     {lang === 'el' ? 'Παίξε Τώρα!' : 'Play Now!'}
                                 </Button>
                                 <Button
                                     size="lg"
-                                    className="text-xl px-10 py-6 bg-white/20 hover:bg-white/30 text-white font-bold rounded-2xl backdrop-blur-md"
+                                    style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                    className={`text-lg sm:text-lg px-8 py-4 sm:px-8 sm:py-4 ${buttons.secondary.className} backdrop-blur-md`}
                                     onClick={() => router.push(`/${lang}/how-it-works`)}
                                 >
                                     {lang === 'el' ? 'Πώς Λειτουργεί' : 'How It Works'}
@@ -193,23 +194,16 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             </div>
                         </div>
 
-                        {/* Right - Video */}
-                        <div className="relative">
-                            <div className="absolute -inset-4 bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 rounded-3xl opacity-60 blur-2xl animate-pulse"></div>
-                            <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20 bg-slate-900">
-                                <video
-                                    autoPlay
-                                    loop
-                                    muted
-                                    playsInline
-                                    className="w-full h-auto min-h-[400px] sm:min-h-[500px] lg:min-h-0 object-cover lg:object-contain"
-                                >
-                                    <source src="/images/app-demo.mp4" type="video/mp4" />
-                                    {lang === 'el'
-                                        ? 'Το πρόγραμμα περιήγησής σας δεν υποστηρίζει βίντεο.'
-                                        : 'Your browser does not support the video tag.'
-                                    }
-                                </video>
+                        {/* Right - Visual Elements - Centered Image */}
+                        <div className="w-full lg:w-[50%] flex justify-center items-center relative z-20">
+                            <div className="flex items-center justify-center h-[600px] ">
+                                <Image
+                                    src="/main_hero_bg.png"
+                                    alt={lang === 'el' ? 'NetProphet App Interface' : 'NetProphet App Interface'}
+                                    width={1000}
+                                    height={800}
+                                    className="w-auto h-auto max-w-[500px] max-h-[600px] sm:max-w-[500px] sm:max-h-[600px] lg:max-w-[700px] lg:max-h-[800px] object-contain"
+                                />
                             </div>
                         </div>
                     </div>
@@ -217,12 +211,24 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
             </section>
 
             {/* How to Play Section - Game Cards Style */}
-            <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="pt-0 pb-12 sm:pb-16 lg:pb-20 relative" style={{
+                background: 'linear-gradient(180deg, #1A2240 0%, #141D49 100%)',
+                boxShadow: '-22px 4px 120px 0px #121A39'
+            }}>
+                {/* Curved top shape - overlaps hero section */}
+                <div
+                    className="absolute -top-32 left-0 right-0 h-64"
+                    style={{
+                        background: 'linear-gradient(180deg, #1A2240 0%, #141D49 100%)',
+                        clipPath: 'ellipse(100% 100% at 50% 100%)',
+                        zIndex: 1
+                    }}
+                ></div>
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     {/* Title */}
                     <div className="text-center mb-12">
                         <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
-                            {lang === 'el' ? '🎯 Πώς να Παίξεις' : '🎯 How to Play'}
+                            {lang === 'el' ? 'Πώς να Παίξεις' : 'How to Play'}
                         </h2>
                         <p className="text-2xl text-white/90 font-bold">
                             {lang === 'el' ? 'Super Εύκολο σε 4 Βήματα!' : 'Super Easy in 4 Steps!'}
@@ -230,21 +236,21 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                     </div>
 
                     {/* Steps Grid */}
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12">
                         {/* Step 1 */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
-                            <div className="relative bg-white rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all">
-                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg border-4 border-white">
-                                    1
+                            <div className="absolute -inset-1 bg-gradient-to-r from-pink-400 to-purple-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
+                            <div className="relative bg-slate-800 rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all border border-purple-400/30">
+                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-pink-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg">
+                                    {lang === 'el' ? 'Βήμα 1ο' : 'Step 1'}
                                 </div>
                                 <div className="text-center pt-6">
                                     <div className="text-6xl mb-3">🎾</div>
-                                    <h3 className="font-black text-xl text-gray-900 mb-2">
+                                    <h3 className="font-black text-xl text-white mb-2">
                                         {lang === 'el' ? 'Διάλεξε Αγώνες' : 'Pick Matches'}
                                     </h3>
-                                    <p className="text-gray-600 font-semibold">
-                                        {lang === 'el' ? 'Kάθε μέρα σε περιμένουν νέες αναμετρήσεις από πραγματικά τουρνουά!' : 'Every day you will find new challenges from real tournaments!'}
+                                    <p className="text-white/80 font-semibold text-sm">
+                                        {lang === 'el' ? 'Κάθε μέρα σε περιμένουν νέες αναμετρήσεις από πραγματικά τουρνουά!' : 'Every day you will find new challenges from real tournaments!'}
                                     </p>
                                 </div>
                             </div>
@@ -252,17 +258,17 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                         {/* Step 2 */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
-                            <div className="relative bg-white rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all">
-                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-400 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg border-4 border-white">
-                                    2
+                            <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
+                            <div className="relative bg-slate-800 rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all border border-blue-400/30">
+                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-blue-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg">
+                                    {lang === 'el' ? 'Βήμα 2ο' : 'Step 2'}
                                 </div>
                                 <div className="text-center pt-6">
                                     <div className="text-6xl mb-3">🎯</div>
-                                    <h3 className="font-black text-xl text-gray-900 mb-2">
+                                    <h3 className="font-black text-xl text-white mb-2">
                                         {lang === 'el' ? 'Κάνε Προβλέψεις' : 'Make Predictions'}
                                     </h3>
-                                    <p className="text-gray-600 font-semibold">
+                                    <p className="text-white/80 font-semibold text-sm">
                                         {lang === 'el' ? 'Μάντεψε ποιος θα κερδίσει (και με τι σκορ) — πριν αρχίσει το ματς!' : 'Predict winners and score — before it becomes a highlight!'}
                                     </p>
                                 </div>
@@ -271,19 +277,19 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                         {/* Step 3 */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
-                            <div className="relative bg-white rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all">
-                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg border-4 border-white">
-                                    3
+                            <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
+                            <div className="relative bg-slate-800 rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all border border-green-400/30">
+                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-green-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg">
+                                    {lang === 'el' ? 'Βήμα 3ο' : 'Step 3'}
                                 </div>
                                 <div className="text-center pt-6">
                                     <div className="flex justify-center mb-3">
                                         <CoinIcon size={72} />
                                     </div>
-                                    <h3 className="font-black text-xl text-gray-900 mb-2">
+                                    <h3 className="font-black text-xl text-white mb-2">
                                         {lang === 'el' ? 'Μάζεψε Coins' : 'Collect Coins'}
                                     </h3>
-                                    <p className="text-gray-600 font-semibold">
+                                    <p className="text-white/80 font-semibold text-sm">
                                         {lang === 'el' ? 'Κέρδισε νομίσματα για κάθε σωστή πρόβλεψη' : 'Earn coins for each correct prediction'}
                                     </p>
                                 </div>
@@ -292,22 +298,34 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                         {/* Step 4 */}
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
-                            <div className="relative bg-white rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all">
-                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-14 h-14 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg border-4 border-white">
-                                    4
+                            <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-3xl opacity-75 group-hover:opacity-100 blur transition"></div>
+                            <div className="relative bg-slate-800 rounded-3xl p-6 shadow-xl transform group-hover:scale-105 transition-all border border-orange-400/30">
+                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-orange-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg">
+                                    {lang === 'el' ? 'Βήμα 4ο' : 'Step 4'}
                                 </div>
                                 <div className="text-center pt-6">
                                     <div className="text-6xl mb-3">🏆</div>
-                                    <h3 className="font-black text-xl text-gray-900 mb-2">
+                                    <h3 className="font-black text-xl text-white mb-2">
                                         {lang === 'el' ? 'Κυριάρχησε' : 'Dominate'}
                                     </h3>
-                                    <p className="text-gray-600 font-semibold">
+                                    <p className="text-white/80 font-semibold text-sm">
                                         {lang === 'el' ? 'Ανέβα στο leaderboard, δείξε ποιος «το έχει» και γίνε NetProphet!' : 'Climb the leaderboard, show everyone who «has it» and become a NetProphet!'}
                                     </p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    {/* CTA Button */}
+                    <div className="text-center mt-12">
+                        <Button
+                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            size="lg"
+                            style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                            className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
+                        >
+                            {lang === 'el' ? 'Παίξε τώρα!' : 'Play now!'}
+                        </Button>
                     </div>
                 </div>
             </section>
@@ -510,8 +528,16 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
             </section>
 
             {/* Welcome Bonus - Game Reward Style */}
-            <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-12 sm:py-16 lg:py-20 relative" style={{
+                background: 'linear-gradient(135deg, #1A0B2E 0%, #2D1B69 25%, #4C2A85 50%, #6B46C1 75%, #8B5CF6 100%)',
+                boxShadow: 'inset 0 0 100px rgba(139, 92, 246, 0.3)'
+            }}>
+                {/* Decorative elements */}
+                <div className="absolute top-10 left-10 w-64 h-64 bg-purple-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-10 right-20 w-80 h-80 bg-pink-400 rounded-full opacity-15 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-indigo-400 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                     <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                         {/* Left - Text Content */}
                         <div>
@@ -547,9 +573,10 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             <Button
                                 onClick={() => router.push(`/${lang}/auth/signin`)}
                                 size="lg"
-                                className="text-xl px-10 py-6 bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-300 hover:to-orange-400 text-purple-900 font-black rounded-2xl shadow-2xl transform hover:scale-105 transition-all"
+                                style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
                             >
-                                {lang === 'el' ? '🎮 Ξεκίνα Τώρα Δωρεάν!' : '🎮 Start Now Free!'}
+                                {lang === 'el' ? 'Ξεκίνα Τώρα Δωρεάν!' : 'Start Now Free!'}
                             </Button>
                         </div>
 
@@ -557,8 +584,8 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                         <div className="hidden lg:block relative space-y-6">
                             {/* Large Coin Card */}
                             <div className="relative group">
-                                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
-                                <div className="relative bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-600 to-orange-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
+                                <div className="relative bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Bonus Νομίσματα' : 'Bonus Coins'}</div>
@@ -574,8 +601,8 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                             {/* Tournament Pass Card */}
                             <div className="relative group">
-                                <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 to-purple-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
-                                <div className="relative bg-gradient-to-br from-pink-500 to-purple-600 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-pink-700 to-purple-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
+                                <div className="relative bg-gradient-to-br from-pink-700 to-purple-600 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
                                             <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Πρόσβαση Τουρνουά' : 'Tournament Access'}</div>
@@ -601,7 +628,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                 <Footer lang={lang} dict={dict} />
                 <FooterDisclaimer lang={lang} />
             </div>
-        </div >
+        </div>
     );
 }
 

@@ -1,4 +1,4 @@
-import { getDictionary } from '../../lib/dictionaries';
+import { getDictionary } from '../../../lib/dictionaries';
 import HomePageClientGame from './HomePageClientGame';
 
 export default async function HomePage({
@@ -12,4 +12,5 @@ export default async function HomePage({
     const dict = getDictionary(lang);
 
     return <HomePageClientGame dict={dict} lang={lang} />;
-} 
+}
+

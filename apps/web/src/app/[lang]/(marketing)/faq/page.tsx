@@ -6,6 +6,7 @@ import { useDictionary } from '@/context/DictionaryContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { buttons } from '@/styles/design-system';
 
 interface FAQItem {
     question: string;
@@ -50,15 +51,15 @@ const faqData: Record<string, FAQItem[]> = {
     el: [
         {
             question: "Τι είναι το NetProphet;",
-            answer: "Το NetProphet είναι μια πλατφόρμα προβλέψεων τένις όπου μπορείτε να κάνετε προβλέψεις σε πραγματικούς αγώνες τένις. Κερδίζετε νομίσματα για σωστές προβλέψεις και μπορείτε να ανεβείτε στον πίνακα κατάταξης."
+            answer: "Το NetProphet είναι ένα παιχνίδι προβλέψεων τένις όπου μπορείτε να κάνετε προβλέψεις σε πραγματικούς αγώνες. Κερδίζετε νομίσματα για σωστές προβλέψεις και μπορείτε να ανεβείτε στον πίνακα κατάταξης."
         },
         {
             question: "Πώς κερδίζω νομίσματα;",
-            answer: "Κερδίζετε νομίσματα κάνοντας σωστές προβλέψεις σε αγώνες τένις. Το ποσό των νομισμάτων που κερδίζετε εξαρτάται από τις αποδόσεις της πρόβλεψής σας - υψηλότερες αποδόσεις σημαίνουν υψηλότερες ανταμοιβές."
+            answer: "Κερδίζετε νομίσματα κάνοντας σωστές προβλέψεις σε αγώνες. Το ποσό των νομισμάτων που κερδίζετε εξαρτάται από τις αποδόσεις της πρόβλεψής σας - υψηλότερες αποδόσεις σημαίνουν υψηλότερες ανταμοιβές."
         },
         {
             question: "Πώς υπολογίζονται οι αποδόσεις;",
-            answer: "Οι αποδόσεις μας υπολογίζονται χρησιμοποιώντας προηγμένα αλγόριθμους που λαμβάνουν υπόψη τις βαθμολογίες NTRP των παικτών, την πρόσφατη φόρμα, τα ρεκόρ μεταξύ τους, τις προτιμήσεις επιφάνειας και άλλους στατιστικούς παράγοντες."
+            answer: "Οι αποδόσεις μας υπολογίζονται χρησιμοποιώντας προηγμένους αλγόριθμους που λαμβάνουν υπόψη τις βαθμολογίες NTRP των παικτών, την πρόσφατη φόρμα, τα ρεκόρ μεταξύ τους, τις προτιμήσεις επιφάνειας και άλλους στατιστικούς παράγοντες."
         },
         {
             question: "Μπορώ να αποσύρω τα νομίσματά μου;",
@@ -157,13 +158,15 @@ export default function FAQPage() {
                         <div className="space-y-4">
                             <a
                                 href={`/${lang}/contact`}
-                                className="block text-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg p-4 text-blue-300 hover:text-blue-200 transition-all duration-200 border border-white/20"
+                                style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                className={`block text-center ${buttons.secondary.className} backdrop-blur-sm p-4`}
                             >
                                 → {lang === 'el' ? 'Επικοινωνία' : 'Contact Us'}
                             </a>
                             <a
                                 href={`/${lang}/help-center`}
-                                className="block text-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg p-4 text-blue-300 hover:text-blue-200 transition-all duration-200 border border-white/20"
+                                style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                className={`block text-center ${buttons.secondary.className} backdrop-blur-sm p-4`}
                             >
                                 → {lang === 'el' ? 'Κέντρο βοήθειας' : 'Help Center'}
                             </a>

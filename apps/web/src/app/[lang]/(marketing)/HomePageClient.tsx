@@ -11,6 +11,7 @@ import { PlayerCard } from '@/components/players/PlayerCard';
 import CoinIcon from '@/components/CoinIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
+import { buttons } from '@/styles/design-system';
 
 interface Dictionary {
     navigation: {
@@ -161,13 +162,15 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                                 <Button
                                     onClick={() => router.push(`/${lang}/auth/signin`)}
                                     size="lg"
-                                    className="text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg font-medium"
+                                    style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                    className={`text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 ${buttons.primary.className} shadow-lg`}
                                 >
                                     {lang === 'el' ? 'Ξεκίνα τώρα' : 'Start Now'}
                                 </Button>
                                 <Button
                                     size="lg"
-                                    className="text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 border-2 border-slate-400 text-slate-200 bg-transparent hover:bg-slate-800/50 hover:text-white hover:border-slate-300 font-medium"
+                                    style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
+                                    className={`text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 ${buttons.secondary.className}`}
                                     onClick={() => router.push(`/${lang}/how-it-works`)}
                                 >
                                     {dict?.navigation?.howItWorks || 'How It Works'}
@@ -496,7 +499,8 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             <Button
                                 onClick={() => router.push(`/${lang}/auth/signin`)}
                                 size="lg"
-                                className="text-xl px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-xl"
+                                style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                className={`text-xl px-8 py-4 ${buttons.primary.className} shadow-xl`}
                             >
                                 {lang === 'el' ? 'Ξεκίνα Τώρα Δωρεάν' : 'Start Now Free'}
                             </Button>

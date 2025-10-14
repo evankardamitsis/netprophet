@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 import CoinIcon from '@/components/CoinIcon';
 import { useParams, useRouter } from 'next/navigation';
+import { buttons } from '@/styles/design-system';
 
 export default function HowItWorksPageGame() {
     const params = useParams();
@@ -13,7 +14,7 @@ export default function HowItWorksPageGame() {
     const lang = params?.lang as 'en' | 'el' || 'el';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-600 via-pink-800 to-purple-700">
+        <div className="min-h-screen" style={{ backgroundColor: '#121A39' }}>
             {/* Decorative circles */}
             <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
             <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
@@ -24,7 +25,7 @@ export default function HowItWorksPageGame() {
 
             {/* Hero */}
             <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full border-2 border-white/30 mb-6">
                         <span className="text-xl">💡</span>
                         <span className="text-white font-bold text-sm">
@@ -44,7 +45,7 @@ export default function HowItWorksPageGame() {
 
             {/* Core Mechanics - Game Style */}
             <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-4xl font-black text-white mb-4 drop-shadow-lg">
                             {lang === 'el' ? '⚙️ Μηχανισμοί Παιχνιδιού' : '⚙️ Game Mechanics'}
@@ -153,7 +154,7 @@ export default function HowItWorksPageGame() {
 
             {/* Prediction Types */}
             <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-4xl font-black text-white mb-4 drop-shadow-lg">
                             {lang === 'el' ? '🎮 Τύποι Προβλέψεων' : '🎮 Prediction Types'}
@@ -239,7 +240,7 @@ export default function HowItWorksPageGame() {
 
             {/* Player Database */}
             <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <div className="order-2 lg:order-1">
                             <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl border-4 sm:border-8 border-white/50">
@@ -314,7 +315,7 @@ export default function HowItWorksPageGame() {
 
             {/* Leaderboard & Rewards */}
             <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h2 className="text-4xl font-black text-white mb-4 drop-shadow-lg">
                             {lang === 'el' ? '🏆 Leaderboard & Ανταμοιβές' : '🏆 Leaderboard & Rewards'}
@@ -424,61 +425,95 @@ export default function HowItWorksPageGame() {
                 </div>
             </section>
 
-            {/* Final CTA */}
-            <section className="py-12 sm:py-16 lg:py-20 relative">
-                <div className="max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="relative">
-                        <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400 rounded-2xl sm:rounded-[3rem] opacity-60 blur-3xl animate-pulse"></div>
+            {/* Welcome Bonus - Game Reward Style */}
+            <section className="py-12 sm:py-16 lg:py-20 relative" style={{
+                background: 'linear-gradient(135deg, #1A0B2E 0%, #2D1B69 25%, #4C2A85 50%, #6B46C1 75%, #8B5CF6 100%)',
+                boxShadow: 'inset 0 0 100px rgba(139, 92, 246, 0.3)'
+            }}>
+                {/* Decorative elements */}
+                <div className="absolute top-10 left-10 w-64 h-64 bg-purple-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-10 right-20 w-80 h-80 bg-pink-400 rounded-full opacity-15 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-indigo-400 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
 
-                        <div className="relative bg-white rounded-2xl sm:rounded-[3rem] shadow-2xl overflow-hidden border-4 sm:border-8 border-white/50">
-                            <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-4 sm:px-8 py-6 sm:py-8 text-center">
-                                <h2 className="text-2xl sm:text-4xl font-black text-white mb-2 sm:mb-3 drop-shadow-lg">
-                                    {lang === 'el' ? 'Έτοιμος να Παίξεις;' : 'Ready to Play?'}
-                                </h2>
-                                <p className="text-white/90 font-bold text-base sm:text-lg">
-                                    {lang === 'el'
-                                        ? '100 Coins + Tournament Pass - Δωρεάν!'
-                                        : '100 Coins + Tournament Pass - Free!'}
-                                </p>
+                <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                        {/* Left - Text Content */}
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="text-5xl">🎁</span>
+                                <span className="text-3xl font-black text-white">Welcome Bonus</span>
+                            </div>
+                            <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 drop-shadow-lg">
+                                {lang === 'el' ? 'Ξεκίνα με 100 Νομίσματα + Tournament Pass!' : 'Start with 100 Coins + Tournament Pass!'}
+                            </h2>
+                            <p className="text-xl text-white/90 font-bold mb-8">
+                                {lang === 'el'
+                                    ? 'Νέοι χρήστες λαμβάνουν δωρεάν νομίσματα και πρόσβαση σε τουρνουά. Ξεκίνα να παίζεις αμέσως!'
+                                    : 'New users receive free coins and tournament access. Start playing immediately!'}
+                            </p>
+
+                            {/* Quick Stats */}
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
+                                    <div className="flex items-center justify-center gap-2 text-4xl font-black text-white mb-1">
+                                        100 <CoinIcon size={36} />
+                                    </div>
+                                    <div className="text-sm text-white/90 font-bold">Welcome Coins</div>
+                                </div>
+                                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
+                                    <div className="text-5xl mb-1">🎟️</div>
+                                    <div className="text-sm text-white/90 font-bold">Tournament Pass</div>
+                                </div>
                             </div>
 
-                            <div className="p-4 sm:p-6 lg:p-8">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                                    <div className="text-center">
-                                        <div className="bg-purple-50 rounded-2xl p-4">
-                                            <div className="text-3xl mb-2">🎾</div>
-                                            <div className="text-xs font-bold text-gray-700">{lang === 'el' ? '1200+ Παίκτες' : '1200+ Players'}</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="bg-pink-50 rounded-2xl p-4">
-                                            <div className="text-3xl mb-2">🏆</div>
-                                            <div className="text-xs font-bold text-gray-700">{lang === 'el' ? 'Live Τουρνουά' : 'Live Tournaments'}</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="bg-orange-50 rounded-2xl p-4">
-                                            <div className="text-3xl mb-2">⚡</div>
-                                            <div className="text-xs font-bold text-gray-700">Power-ups</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="bg-yellow-50 rounded-2xl p-4">
-                                            <div className="flex justify-center mb-2">
-                                                <CoinIcon size={32} />
+                            {/* CTA */}
+                            <Button
+                                onClick={() => router.push(`/${lang}/auth/signin`)}
+                                size="lg"
+                                style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
+                            >
+                                {lang === 'el' ? 'Ξεκίνα Τώρα Δωρεάν!' : 'Start Now Free!'}
+                            </Button>
+                        </div>
+
+                        {/* Right - Visual Rewards */}
+                        <div className="hidden lg:block relative space-y-6">
+                            {/* Large Coin Card */}
+                            <div className="relative group">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-600 to-orange-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
+                                <div className="relative bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Bonus Νομίσματα' : 'Bonus Coins'}</div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-7xl font-black text-white drop-shadow-lg">100</div>
+                                                <CoinIcon size={72} />
                                             </div>
-                                            <div className="text-xs font-bold text-gray-700">100 Coins</div>
+                                            <div className="text-white/90 font-bold text-sm mt-2">{lang === 'el' ? '✨ Άμεση πίστωση' : '✨ Instant credit'}</div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <Button
-                                    onClick={() => router.push(`/${lang}/auth/signin`)}
-                                    size="lg"
-                                    className="w-full text-lg sm:text-2xl px-6 sm:px-8 py-4 sm:py-6 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-purple-900 font-black rounded-xl sm:rounded-2xl shadow-xl transform hover:scale-105 transition-all"
-                                >
-                                    {lang === 'el' ? '🎮 Ξεκίνα Τώρα Δωρεάν!' : '🎮 Start Now Free!'}
-                                </Button>
+                            {/* Tournament Pass Card */}
+                            <div className="relative group">
+                                <div className="absolute -inset-2 bg-gradient-to-r from-pink-700 to-purple-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
+                                <div className="relative bg-gradient-to-br from-pink-700 to-purple-600 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Πρόσβαση Τουρνουά' : 'Tournament Access'}</div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-8xl">🎟️</div>
+                                                <div>
+                                                    <div className="text-6xl font-black text-white drop-shadow-lg">1</div>
+                                                    <div className="text-white/90 font-bold text-sm">Pass</div>
+                                                </div>
+                                            </div>
+                                            <div className="text-white/90 font-bold text-sm mt-2">{lang === 'el' ? '🏆 Όλα τα τουρνουά' : '🏆 All tournaments'}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

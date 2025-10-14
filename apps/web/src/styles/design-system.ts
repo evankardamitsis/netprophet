@@ -26,6 +26,7 @@ export const gradients = {
   // Game background
   gameBackground:
     "bg-gradient-to-br from-purple-900 via-indigo-900 to-purple-800",
+  headerBackground: "#121A39",
 };
 
 export const shadows = {
@@ -90,6 +91,37 @@ export const spacing = {
   sectionGap: "space-y-6 sm:space-y-8",
   card: "p-4 sm:p-6 lg:p-8",
   cardCompact: "p-3 sm:p-4 lg:p-6",
+};
+
+export const buttons = {
+  // Main CTA button: yellow background (#F7E65D) with purple text (#4E1289)
+  primary: {
+    base: "font-bold rounded-xl px-6 py-3 transition-all duration-300",
+    bg: "#F7E65D",
+    color: "#4E1289",
+    hover: "hover:opacity-90 hover:scale-[1.02]",
+    className:
+      "font-bold rounded-xl px-6 py-3 transition-all duration-300 hover:opacity-90 hover:scale-[1.02]",
+  },
+  // Secondary button: white 8% opacity background with white text
+  secondary: {
+    base: "font-bold rounded-xl px-6 py-3 transition-all duration-300",
+    bg: "rgba(255, 255, 255, 0.08)",
+    color: "#ffffff",
+    hover: "hover:bg-opacity-15 hover:scale-[1.02]",
+    className:
+      "font-bold rounded-xl px-6 py-3 transition-all duration-300 hover:scale-[1.02]",
+    bgHover: "rgba(255, 255, 255, 0.15)",
+  },
+};
+
+export const headerStyles = {
+  base: "sticky top-0 z-50",
+  bg: "#121A39",
+  border: "border-b border-white/8",
+  shadow: "shadow-[0px_0px_24px_0px_rgba(255,255,255,0.08)]",
+  className:
+    "sticky top-0 z-50 border-b border-white/8 shadow-[0px_0px_24px_0px_rgba(255,255,255,0.08)]",
 };
 
 // Helper function to combine classes

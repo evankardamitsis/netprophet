@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 interface LogoProps {
     size?: 'sm' | 'md' | 'lg';
     showText?: boolean;
@@ -29,13 +31,23 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
 
     return (
         <div className={`flex items-center ${className}`}>
-            <div className={`${icon} bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center mr-3 shadow-lg`}>
-                <span className={`text-purple-900 font-black ${iconText}`}>NP</span>
-            </div>
+            {/* <div className={`${icon} flex items-center justify-center mr-3`}>
+                <Image
+                    src="/net-prophet-favicon.svg"
+                    alt="NetProphet Logo"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
+                />
+            </div> */}
             {showText && (
-                <span className={`font-black text-yellow-400 ${text}`}>
-                    NetProphet
-                </span>
+                <Image
+                    src="/net-prophet-logo.svg"
+                    alt="NetProphet Logo"
+                    width={160}
+                    height={160}
+                    className=" h-full object-contain"
+                />
             )}
         </div>
     );
