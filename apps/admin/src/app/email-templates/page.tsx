@@ -178,49 +178,108 @@ export default function EmailTemplatesPage() {
                 </TabsList>
 
                 <TabsContent value="all" className="space-y-4">
-                    {Object.entries(groupedTemplates).map(([key, templateGroup]) => (
-                        <Card key={key}>
-                            <CardHeader>
-                                <CardTitle className="flex items-center justify-between">
-                                    <span className="capitalize">
-                                        {templateGroup[0].type} Templates - {templateGroup[0].language.toUpperCase()}
-                                    </span>
-                                    <Badge className={getTypeColor(templateGroup[0].type)}>
-                                        {templateGroup[0].type}
-                                    </Badge>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    {templateGroup.map((template) => (
-                                        <div key={template.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {templates.map((template) => (
+                            <Card key={template.id} className="group hover:shadow-lg transition-all duration-200">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle className="text-lg font-semibold">{template.name}</CardTitle>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm">{getLanguageFlag(template.language)}</span>
+                                            <Badge className={getTypeColor(template.type)}>
+                                                {template.type}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    {!template.is_active && (
+                                        <Badge variant="secondary" className="w-fit">Inactive</Badge>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                        {template.subject}
+                                    </p>
+
+                                    <div className="text-xs text-gray-500 mb-4">
+                                        Version {template.version} • Updated {new Date(template.updated_at).toLocaleDateString()}
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        <Link href={`/email-templates/${template.id}`}>
+                                            <Button size="sm" variant="outline" className="flex-1">
+                                                <Eye className="w-3 h-3 mr-1" />
+                                                View
+                                            </Button>
+                                        </Link>
+                                        <Link href={`/email-templates/${template.id}/edit`}>
+                                            <Button size="sm" variant="outline" className="flex-1">
+                                                <Edit className="w-3 h-3 mr-1" />
+                                                Edit
+                                            </Button>
+                                        </Link>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleDuplicateTemplate(template)}
+                                            className="flex-1"
+                                        >
+                                            <Copy className="w-3 h-3 mr-1" />
+                                            Copy
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleDeleteTemplate(template.id)}
+                                            className="text-red-600 hover:text-red-700 flex-1"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </TabsContent>
+
+                {['2fa', 'promotional', 'winnings', 'admin'].map((type) => (
+                    <TabsContent key={type} value={type} className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {templates
+                                .filter(template => template.type === type)
+                                .map((template) => (
+                                    <Card key={template.id} className="group hover:shadow-lg transition-all duration-200">
+                                        <CardHeader className="pb-3">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="font-medium">{template.name}</h3>
+                                                <CardTitle className="text-lg font-semibold">{template.name}</CardTitle>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-sm">{getLanguageFlag(template.language)}</span>
-                                                    {!template.is_active && (
-                                                        <Badge variant="secondary">Inactive</Badge>
-                                                    )}
+                                                    <Badge className={getTypeColor(template.type)}>
+                                                        {template.type}
+                                                    </Badge>
                                                 </div>
                                             </div>
-
-                                            <p className="text-sm text-gray-600 line-clamp-2">
+                                            {!template.is_active && (
+                                                <Badge variant="secondary" className="w-fit">Inactive</Badge>
+                                            )}
+                                        </CardHeader>
+                                        <CardContent className="pt-0">
+                                            <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                                                 {template.subject}
                                             </p>
 
-                                            <div className="text-xs text-gray-500">
+                                            <div className="text-xs text-gray-500 mb-4">
                                                 Version {template.version} • Updated {new Date(template.updated_at).toLocaleDateString()}
                                             </div>
 
-                                            <div className="flex gap-2">
+                                            <div className="flex flex-wrap gap-2">
                                                 <Link href={`/email-templates/${template.id}`}>
-                                                    <Button size="sm" variant="outline">
+                                                    <Button size="sm" variant="outline" className="flex-1">
                                                         <Eye className="w-3 h-3 mr-1" />
                                                         View
                                                     </Button>
                                                 </Link>
                                                 <Link href={`/email-templates/${template.id}/edit`}>
-                                                    <Button size="sm" variant="outline">
+                                                    <Button size="sm" variant="outline" className="flex-1">
                                                         <Edit className="w-3 h-3 mr-1" />
                                                         Edit
                                                     </Button>
@@ -229,6 +288,7 @@ export default function EmailTemplatesPage() {
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => handleDuplicateTemplate(template)}
+                                                    className="flex-1"
                                                 >
                                                     <Copy className="w-3 h-3 mr-1" />
                                                     Copy
@@ -237,88 +297,15 @@ export default function EmailTemplatesPage() {
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => handleDeleteTemplate(template.id)}
-                                                    className="text-red-600 hover:text-red-700"
+                                                    className="text-red-600 hover:text-red-700 flex-1"
                                                 >
                                                     <Trash2 className="w-3 h-3" />
                                                 </Button>
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </TabsContent>
-
-                {['2fa', 'promotional', 'winnings', 'admin'].map((type) => (
-                    <TabsContent key={type} value={type} className="space-y-4">
-                        {Object.entries(groupedTemplates)
-                            .filter(([key]) => key.startsWith(`${type}-`))
-                            .map(([key, templateGroup]) => (
-                                <Card key={key}>
-                                    <CardHeader>
-                                        <CardTitle className="capitalize">
-                                            {type} Templates - {templateGroup[0].language.toUpperCase()}
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                            {templateGroup.map((template) => (
-                                                <div key={template.id} className="border rounded-lg p-4 space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <h3 className="font-medium">{template.name}</h3>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm">{getLanguageFlag(template.language)}</span>
-                                                            {!template.is_active && (
-                                                                <Badge variant="secondary">Inactive</Badge>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    <p className="text-sm text-gray-600 line-clamp-2">
-                                                        {template.subject}
-                                                    </p>
-
-                                                    <div className="text-xs text-gray-500">
-                                                        Version {template.version} • Updated {new Date(template.updated_at).toLocaleDateString()}
-                                                    </div>
-
-                                                    <div className="flex gap-2">
-                                                        <Link href={`/email-templates/${template.id}`}>
-                                                            <Button size="sm" variant="outline">
-                                                                <Eye className="w-3 h-3 mr-1" />
-                                                                View
-                                                            </Button>
-                                                        </Link>
-                                                        <Link href={`/email-templates/${template.id}/edit`}>
-                                                            <Button size="sm" variant="outline">
-                                                                <Edit className="w-3 h-3 mr-1" />
-                                                                Edit
-                                                            </Button>
-                                                        </Link>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleDuplicateTemplate(template)}
-                                                        >
-                                                            <Copy className="w-3 h-3 mr-1" />
-                                                            Copy
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            onClick={() => handleDeleteTemplate(template.id)}
-                                                            className="text-red-600 hover:text-red-700"
-                                                        >
-                                                            <Trash2 className="w-3 h-3" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                        </div>
                     </TabsContent>
                 ))}
             </Tabs>

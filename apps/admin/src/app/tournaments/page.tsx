@@ -206,7 +206,11 @@ export default function TournamentsPage() {
 
             <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {tournaments.map((tournament) => (
-                    <Card key={tournament.id} className="group hover:shadow-xl transition-all duration-200 border-0 shadow-md">
+                    <Card
+                        key={tournament.id}
+                        className="group hover:shadow-xl transition-all duration-200 border-0 shadow-md cursor-pointer"
+                        onClick={() => handleManageTournament(tournament.id)}
+                    >
                         <CardHeader className="pb-3">
                             <div className="flex items-start justify-between">
                                 <div className="flex-1 min-w-0">
@@ -228,6 +232,7 @@ export default function TournamentsPage() {
                                             variant="ghost"
                                             size="sm"
                                             className="h-8 w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                            onClick={(e) => e.stopPropagation()}
                                         >
                                             <MoreHorizontal className="h-4 w-4" />
                                         </Button>
@@ -317,7 +322,10 @@ export default function TournamentsPage() {
                                 )}
 
                                 <Button
-                                    onClick={() => handleManageTournament(tournament.id)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleManageTournament(tournament.id);
+                                    }}
                                     className="w-full mt-4"
                                     variant="outline"
                                 >
