@@ -13,32 +13,34 @@ export function RewardShopHeader({ userPoints, onInfoClick }: RewardShopHeaderPr
     const actualBalance = wallet?.balance ?? userPoints ?? 0;
 
     return (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-4 sm:p-6 lg:p-8 text-white">
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <h2 className="text-3xl font-bold">{dict.rewards.rewardShop}</h2>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold">{dict.rewards.rewardShop}</h2>
                             {onInfoClick && (
                                 <button
                                     onClick={onInfoClick}
-                                    className="text-blue-100 hover:text-white transition-colors duration-200 p-1 rounded-full hover:bg-white/10"
+                                    className="text-blue-100 hover:text-white transition-colors duration-200 p-1 rounded-full hover:bg-white/10 flex-shrink-0"
                                     title={dict.rewards.howItWorks}
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>
                             )}
                         </div>
-                        <p className="text-blue-100">{dict.rewards.redeemDescription}</p>
+                        <p className="text-blue-100 text-sm sm:text-base">{dict.rewards.redeemDescription}</p>
                     </div>
-                    <div className="text-right">
-                        <div className="text-blue-100 text-sm">{dict.rewards.yourBalance}</div>
-                        <div className="text-4xl font-bold flex items-center gap-2">
+                    <div className="text-center sm:text-right flex-shrink-0">
+                        <div className="text-blue-100 text-xs sm:text-sm">{dict.rewards.yourBalance}</div>
+                        <div className="text-2xl sm:text-3xl lg:text-4xl font-bold flex items-center justify-center sm:justify-end gap-2">
                             {actualBalance.toLocaleString()}
-                            <CoinIcon size={40} />
+                            <CoinIcon size={24} className="sm:hidden" />
+                            <CoinIcon size={32} className="hidden sm:block lg:hidden" />
+                            <CoinIcon size={40} className="hidden lg:block" />
                         </div>
                     </div>
                 </div>

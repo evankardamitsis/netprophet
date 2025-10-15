@@ -275,9 +275,9 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`relative flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-transparent hover:bg-slate-800/50 ${isOpen ? 'pointer-events-none' : ''}`}
-                aria-label={isOpen ? undefined : "Wallet"}
-                title={isOpen ? undefined : "Wallet"}
+                className="relative flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-transparent hover:bg-slate-800/50"
+                aria-label={isOpen ? "Close wallet" : "Open wallet"}
+                title={isOpen ? "Close wallet" : "Open wallet"}
             >
                 {/* Coin Icon with Balance Overlay */}
                 <div className="relative">
@@ -315,9 +315,12 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                     </button>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <div className={`text-lg font-bold flex items-center gap-1 ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}>
+                                    <button
+                                        onClick={() => setIsOpen(false)}
+                                        className={`text-lg font-bold flex items-center gap-1 hover:opacity-80 transition-opacity ${isLowBalance ? 'text-red-300' : 'text-yellow-300'}`}
+                                    >
                                         {availableBalance} <CoinIcon size={18} />
-                                    </div>
+                                    </button>
                                     {wallet.dailyLoginStreak > 0 && (
                                         <div className="flex items-center gap-1">
                                             <span className="text-xs text-blue-500">🔥</span>

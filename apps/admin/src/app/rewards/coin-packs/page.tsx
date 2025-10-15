@@ -47,16 +47,21 @@ export default function RewardsPage() {
     const loadCoinPacks = async () => {
         try {
             setLoading(true);
+
             const { data, error } = await supabase
                 .from('coin_packs')
                 .select('*')
                 .order('price_euro', { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                throw error;
+            }
+
             setCoinPacks(data || []);
         } catch (error) {
             console.error('Error loading coin packs:', error);
-            toast.error('Failed to load coin packs');
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            toast.error(`Failed to load coin packs: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -84,7 +89,9 @@ export default function RewardsPage() {
 
             setEditingPack(null);
             setShowAddForm(false);
-            loadCoinPacks();
+
+            // Reload coin packs to reflect changes
+            await loadCoinPacks();
         } catch (error) {
             console.error('Error saving coin pack:', error);
             toast.error('Failed to save coin pack');
@@ -108,7 +115,7 @@ export default function RewardsPage() {
 
                     if (error) throw error;
                     toast.success(`"${pack.name}" ${action}d successfully`);
-                    loadCoinPacks();
+                    await loadCoinPacks();
                 } catch (error) {
                     console.error('Error toggling pack status:', error);
                     toast.error('Failed to update pack status');
@@ -138,7 +145,7 @@ export default function RewardsPage() {
 
                     if (error) throw error;
                     toast.success(`"${pack.name}" deleted successfully`);
-                    loadCoinPacks();
+                    await loadCoinPacks();
                 } catch (error) {
                     console.error('Error deleting coin pack:', error);
                     toast.error('Failed to delete coin pack');
@@ -152,7 +159,17 @@ export default function RewardsPage() {
 
 
     useEffect(() => {
+        // Add a timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+            if (loading) {
+                console.warn('Loading timeout reached, forcing loading to false');
+                setLoading(false);
+            }
+        }, 10000); // 10 second timeout
+
         loadCoinPacks();
+
+        return () => clearTimeout(timeoutId);
     }, []);
 
     const totalCoins = (pack: CoinPack) => pack.base_coins + pack.bonus_coins;
@@ -188,6 +205,7 @@ export default function RewardsPage() {
                     </CardHeader>
                     <CardContent>
                         <CoinPackForm
+                            key={editingPack?.id || 'new'}
                             pack={editingPack}
                             onSave={saveCoinPack}
                             onCancel={() => {
@@ -387,6 +405,27 @@ function CoinPackForm({
         is_active: pack?.is_active ?? true
     });
 
+    // Update form data when pack prop changes
+    useEffect(() => {
+        if (pack) {
+            setFormData({
+                name: pack.name || '',
+                price_euro: pack.price_euro || 0,
+                base_coins: pack.base_coins || 0,
+                bonus_coins: pack.bonus_coins || 0,
+                is_active: pack.is_active ?? true
+            });
+        } else {
+            setFormData({
+                name: '',
+                price_euro: 0,
+                base_coins: 0,
+                bonus_coins: 0,
+                is_active: true
+            });
+        }
+    }, [pack]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(formData);
@@ -520,11 +559,11 @@ function CoinPackCard({
                                 €{pack.price_euro}
                             </Badge>
                             <Badge className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1">
-                                {totalCoins.toLocaleString()} coins
+                                {pack.base_coins.toLocaleString()} coins
                             </Badge>
                             {pack.bonus_coins > 0 && (
                                 <Badge className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1">
-                                    +{pack.bonus_coins} bonus
+                                    +{pack.bonus_coins} Bonus
                                 </Badge>
                             )}
                         </div>

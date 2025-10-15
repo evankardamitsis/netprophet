@@ -25,11 +25,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
     useEffect(() => {
         // Only redirect if we're certain there's no user (not loading and not on auth page)
-        if (!loading && !user && !isAuthPage) {
-            console.log('AdminLayout: Redirecting to signin - no user found');
-            router.push('/auth/signin');
-        }
-    }, [user, loading, isAuthPage]); // Removed router from dependencies to prevent redirect loops
+        // Add a small delay to prevent race conditions
+        const timeoutId = setTimeout(() => {
+            if (!loading && !user && !isAuthPage) {
+                console.log('AdminLayout: Redirecting to signin - no user found');
+                router.push('/auth/signin');
+            }
+        }, 1000); // 1 second delay
+
+        return () => clearTimeout(timeoutId);
+    }, [user, loading, isAuthPage, router]);
 
     // Reset sidebar state on route change
     useEffect(() => {

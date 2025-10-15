@@ -51,6 +51,10 @@ export function LowBalanceNotification({
     useEffect(() => {
         if (hasShown || !isLowBalance || isNotificationDismissed()) return;
 
+        // Check if user is newly registered (created within last 5 minutes)
+        const isNewUser = user?.created_at && (Date.now() - new Date(user.created_at).getTime()) < 5 * 60 * 1000;
+        if (isNewUser) return;
+
         // Show notification after 3 seconds on page load
         const timer = setTimeout(() => {
             setIsVisible(true);
@@ -58,12 +62,16 @@ export function LowBalanceNotification({
         }, 3000);
 
         return () => clearTimeout(timer);
-    }, [isLowBalance, hasShown]);
+    }, [isLowBalance, hasShown, user?.created_at]);
 
     // Listen for show notification events
     useEffect(() => {
         const handleShowNotification = () => {
             if (isLowBalance) {
+                // Check if user is newly registered (created within last 5 minutes)
+                const isNewUser = user?.created_at && (Date.now() - new Date(user.created_at).getTime()) < 5 * 60 * 1000;
+                if (isNewUser) return;
+
                 setIsVisible(true);
                 setHasShown(true);
             }
@@ -73,7 +81,7 @@ export function LowBalanceNotification({
         return () => {
             window.removeEventListener('showLowBalanceNotification', handleShowNotification);
         };
-    }, [isLowBalance]);
+    }, [isLowBalance, user?.created_at]);
 
     const handleTopUp = async (packId: string) => {
         if (!user) {
@@ -154,36 +162,45 @@ export function LowBalanceNotification({
                             ease: "easeInOut"
                         }
                     }}
-                    className="fixed top-4 right-4 z-50 max-w-sm"
+                    className="fixed top-4 right-4 z-[9999] max-w-xs"
                 >
-                    <div className={`${content.bgGradient} rounded-lg p-4 shadow-2xl border border-white/20 relative`}>
+                    <div className={`${content.bgGradient} rounded-xl p-3 shadow-xl border border-white/20 relative backdrop-blur-sm overflow-hidden pointer-events-auto`}>
                         <button
                             onClick={handleDismiss}
-                            className="absolute top-2 right-2 text-white/70 hover:text-white text-lg leading-none p-1 rounded-full hover:bg-white/10 transition-colors"
+                            className="absolute top-2 right-2 text-white/60 hover:text-white text-xl leading-none p-2 rounded-full hover:bg-white/15 transition-all duration-200 z-50 pointer-events-auto min-w-[32px] min-h-[32px] flex items-center justify-center"
                         >
                             ×
                         </button>
-                        <div className="flex items-start space-x-3 pr-8">
-                            <div className="text-2xl">{content.icon}</div>
+                        <div className="flex items-start space-x-3 pr-6 relative z-10">
+                            <div className="text-xl animate-pulse">{content.icon}</div>
                             <div className="flex-1">
                                 <h3 className="text-white font-bold text-sm mb-1">
                                     {content.title}
                                 </h3>
-                                <p className="text-white/90 text-xs mb-3">
+                                <p className="text-white/85 text-xs mb-3 leading-relaxed">
                                     {content.message}
                                 </p>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex space-x-3">
+                                <div className="flex flex-col space-y-3 mb-3">
+                                    <div className="flex flex-wrap gap-2">
                                         {coinPacksLoading ? (
                                             <>
-                                                <Button disabled className="text-xs py-2 px-4 bg-white/10 text-white/70 border border-white/20 rounded-lg">
-                                                    Loading...
+                                                <Button disabled className="text-xs py-1.5 px-2 bg-white/10 text-white/70 border border-white/20 rounded-md backdrop-blur-sm flex-shrink-0">
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-2 h-2 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        Loading
+                                                    </div>
                                                 </Button>
-                                                <Button disabled className="text-xs py-2 px-4 bg-white/10 text-white/70 border border-white/20 rounded-lg">
-                                                    Loading...
+                                                <Button disabled className="text-xs py-1.5 px-2 bg-white/10 text-white/70 border border-white/20 rounded-md backdrop-blur-sm flex-shrink-0">
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-2 h-2 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        Loading
+                                                    </div>
                                                 </Button>
-                                                <Button disabled className="text-xs py-2 px-4 bg-white/10 text-white/70 border border-white/20 rounded-lg">
-                                                    Loading...
+                                                <Button disabled className="text-xs py-1.5 px-2 bg-white/10 text-white/70 border border-white/20 rounded-md backdrop-blur-sm flex-shrink-0">
+                                                    <div className="flex items-center gap-1">
+                                                        <div className="w-2 h-2 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                        Loading
+                                                    </div>
                                                 </Button>
                                             </>
                                         ) : (
@@ -192,17 +209,25 @@ export function LowBalanceNotification({
                                                     key={pack.id}
                                                     onClick={() => handleTopUp(pack.id)}
                                                     disabled={isProcessing}
-                                                    className={`text-xs py-2 px-4 font-semibold border-0 shadow-lg rounded-lg transition-all duration-200 ${index === 0
+                                                    className={`text-xs py-1.5 px-2 font-bold border-0 shadow-md rounded-md transition-all duration-200 hover:scale-105 backdrop-blur-sm flex-shrink-0 ${index === 0
                                                         ? 'bg-gradient-to-br from-green-500 via-emerald-600 to-green-700 hover:from-green-600 hover:via-emerald-700 hover:to-green-800 text-white'
                                                         : index === 1
                                                             ? 'bg-gradient-to-br from-blue-500 via-purple-600 to-blue-700 hover:from-blue-600 hover:via-purple-700 hover:to-blue-800 text-white'
                                                             : 'bg-gradient-to-br from-orange-500 via-red-600 to-orange-700 hover:from-orange-600 hover:via-red-700 hover:to-orange-800 text-white'
                                                         }`}
                                                 >
-                                                    {isProcessing ? '...' : (
-                                                        <div className="flex flex-col items-center whitespace-nowrap">
-                                                            <span className="font-bold flex items-center gap-1">{pack.base_coins + pack.bonus_coins} <CoinIcon size={14} /></span>
-                                                            <span className="text-xs text-gray-100/80">€{pack.price_euro.toFixed(2)}</span>
+                                                    {isProcessing ? (
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="w-2 h-2 border border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                            ...
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="font-bold flex items-center gap-0.5 text-xs">
+                                                                {pack.base_coins + pack.bonus_coins}
+                                                                <CoinIcon size={10} />
+                                                            </span>
+                                                            <span className="text-xs text-white/90">€{pack.price_euro.toFixed(2)}</span>
                                                         </div>
                                                     )}
                                                 </Button>
@@ -211,7 +236,7 @@ export function LowBalanceNotification({
                                     </div>
                                     <a
                                         href={`/${lang}/rewards`}
-                                        className="text-xs text-white/80 hover:text-white underline transition-colors ml-4"
+                                        className="text-xs text-white/80 hover:text-white font-medium transition-all duration-200 px-1.5 py-1 rounded hover:bg-white/10 self-start"
                                     >
                                         {lang === 'el' ? 'Όλες οι επιλογές' : 'View all options'}
                                     </a>

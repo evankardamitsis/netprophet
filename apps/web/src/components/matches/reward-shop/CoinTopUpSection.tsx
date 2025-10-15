@@ -67,7 +67,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
     }, []);
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 w-full">
             {/* Header */}
             <div className="text-center space-y-3">
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
@@ -85,20 +85,32 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                     <div className="text-white/60">{dict.rewards.noCoinPacks}</div>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-4 w-full">
                     {coinPacks.map((pack, index) => {
                         const totalCoins = pack.baseCoins + pack.bonusCoins;
                         const valueRatio = totalCoins / pack.priceEuro;
                         const isBestValue = valueRatio === Math.max(...coinPacks.map(p => (p.baseCoins + p.bonusCoins) / p.priceEuro));
-                        const isProPack = pack.id === 'pro';
+                        const isProPack = pack.name.toLowerCase().includes('pro') || pack.id.toLowerCase().includes('pro');
 
-                        // Mobile layout: first row 2 cols, second row full width, third row 2 cols
+
+                        // Mobile layout: first 2 packs fit in 1 row, rest span full width
                         const getMobileLayoutClass = () => {
-                            if (index === 2) {
-                                // Third item (index 2) takes full width on mobile
-                                return 'col-span-2 md:col-span-1 lg:col-span-1 xl:col-span-1';
+                            if (index < 2) {
+                                // First 2 packs take half width on mobile
+                                return 'col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-1';
+                            } else {
+                                // Check if this is the last pack and there's an odd total (would be alone)
+                                const isLastPack = index === coinPacks.length - 1;
+                                const hasOddTotal = coinPacks.length % 2 === 1;
+
+                                if (isLastPack && hasOddTotal) {
+                                    // Last pack alone on mobile gets full width
+                                    return 'col-span-2 md:col-span-1 lg:col-span-1 xl:col-span-1';
+                                } else {
+                                    // Other packs take full width on mobile
+                                    return 'col-span-2 md:col-span-1 lg:col-span-1 xl:col-span-1';
+                                }
                             }
-                            return 'col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-1';
                         };
 
                         return (
@@ -106,7 +118,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                 {/* Background gradient overlay */}
                                 <div className={`absolute inset-0 bg-gradient-to-br ${isBestValue ? 'from-yellow-400/5 to-orange-500/5' : 'from-purple-500/5 to-blue-500/5'} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
 
-                                {isBestValue && (
+                                {isBestValue && !isProPack && (
                                     <div className="absolute top-0 right-0 bg-gradient-to-l from-yellow-400 to-orange-500 text-white px-3 py-1 text-xs font-bold rounded-bl-xl shadow-lg">
                                         {dict.rewards.bestValue}
                                     </div>
@@ -114,7 +126,12 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                 {pack.bonusCoins > 0 && (
                                     <div className="absolute top-0 left-0 bg-gradient-to-r from-green-400 to-emerald-500 text-white px-2 py-1 text-xs font-bold rounded-br-xl shadow-lg flex items-center gap-1">
                                         <CoinIcon size={12} />
-                                        <span>+{pack.bonusCoins.toLocaleString()}</span>
+                                        <span>+{pack.bonusCoins.toLocaleString()} Bonus</span>
+                                    </div>
+                                )}
+                                {isProPack && (
+                                    <div className="absolute top-0 right-0 bg-gradient-to-l from-purple-500 to-pink-500 text-white px-2 py-1 text-xs font-bold rounded-bl-xl shadow-lg">
+                                        ⭐ PRO
                                     </div>
                                 )}
 

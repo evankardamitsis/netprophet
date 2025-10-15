@@ -345,7 +345,7 @@ export function TopNavigation({
                 style={{ backgroundColor: '#121A39' }}
             >
                 {/* Left Section - Logo and Menu */}
-                <div className="flex items-center gap-1 sm:gap-2">
+                <div className="flex items-center gap-2 sm:gap-2">
                     <motion.button
                         ref={burgerButtonRef}
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -465,7 +465,7 @@ export function TopNavigation({
                 )}
 
                 {/* Right Section - Wallet, Notifications, Language, Account */}
-                <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+                <div className="flex items-center gap-2 sm:gap-2 lg:gap-3">
                     {/* Dev Test Button - Profile Claim */}
                     {/* Hidden but kept for future use
                     {isDev && (
@@ -480,16 +480,7 @@ export function TopNavigation({
                     */}
 
                     {/* Wallet Component */}
-                    <div className="block relative group z-[100]">
-                        <div className={cx(
-                            "absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-[100]",
-                            "bg-slate-800/95 backdrop-blur-sm",
-                            borders.rounded.sm,
-                            transitions.default,
-                            shadows.card
-                        )}>
-                            {dict?.navigation?.myWallet || 'My Wallet'}
-                        </div>
+                    <div className="block relative z-[100]">
                         <div className="flex items-center gap-1">
                             <Wallet dict={dict} lang={lang} />
                         </div>
@@ -752,239 +743,243 @@ export function TopNavigation({
                         </AnimatePresence>
                     </div>
                 </div>
-            </header>
+            </header >
 
             {/* Mobile Menu Dropdown */}
             <AnimatePresence>
-                {mobileMenuOpen && (
-                    <motion.div
-                        ref={mobileMenuRef}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className={cx(
-                            "lg:hidden absolute top-full left-0 right-0 z-[60] overflow-hidden",
-                            "bg-gradient-to-br from-slate-950/98 via-slate-900/98 to-slate-950/98",
-                            "backdrop-blur-md border-b border-slate-700/50",
-                            shadows.cardHover
-                        )}
-                    >
-                        <div className="px-4 py-3 space-y-3">
-                            {/* Navigation Links */}
-                            <div className="space-y-2">
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/matches`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-base",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
-                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {dict?.navigation?.matches || 'Matches'}
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/leaderboard`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-base",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        pathname === `/${currentLang}/leaderboard`
-                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {dict?.navigation?.leaderboard || 'Leaderboard'}
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/players`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-base",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        pathname === `/${currentLang}/players`
-                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {dict?.navigation?.players || 'Players'}
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/results`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-base",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        pathname === `/${currentLang}/results`
-                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {dict?.navigation?.results || 'Results'}
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/my-picks`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-base",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        pathname === `/${currentLang}/my-picks`
-                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {dict?.navigation?.myPicks || 'My Picks'}
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/rewards`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-base",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        pathname === `/${currentLang}/rewards`
-                                            ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {dict?.navigation?.rewards || 'Rewards'}
-                                </motion.button>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="border-t border-slate-700/50 my-3"></div>
-
-                            {/* Account Links */}
-                            <div className="space-y-2">
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        router.push(`/${currentLang}/my-profile`);
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-white text-base flex items-center gap-2",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        "hover:bg-purple-600/30 hover:text-purple-300"
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
-                                </motion.button>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="border-t border-slate-700/50 my-3"></div>
-
-                            {/* Language Switcher - Mobile */}
-                            <div className="space-y-2">
-                                <div className={cx(typography.body.sm, "font-bold text-gray-400 uppercase tracking-wide px-3")}>
-                                    Language
+                {
+                    mobileMenuOpen && (
+                        <motion.div
+                            ref={mobileMenuRef}
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className={cx(
+                                "lg:hidden absolute top-full left-0 right-0 z-[60] overflow-hidden",
+                                "bg-gradient-to-br from-slate-950/98 via-slate-900/98 to-slate-950/98",
+                                "backdrop-blur-md border-b border-slate-700/50",
+                                shadows.cardHover
+                            )}
+                        >
+                            <div className="px-4 py-3 space-y-3">
+                                {/* Navigation Links */}
+                                <div className="space-y-2">
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/matches`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.matches || 'Matches'}
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/leaderboard`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname === `/${currentLang}/leaderboard`
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.leaderboard || 'Leaderboard'}
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/players`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname === `/${currentLang}/players`
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.players || 'Players'}
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/results`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname === `/${currentLang}/results`
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.results || 'Results'}
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/my-picks`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname === `/${currentLang}/my-picks`
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.myPicks || 'My Picks'}
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/rewards`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname === `/${currentLang}/rewards`
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.rewards || 'Rewards'}
+                                    </motion.button>
                                 </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-slate-700/50 my-3"></div>
+
+                                {/* Account Links */}
+                                <div className="space-y-2">
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            router.push(`/${currentLang}/my-profile`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-white text-base flex items-center gap-2",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            "hover:bg-purple-600/30 hover:text-purple-300"
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
+                                    </motion.button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-slate-700/50 my-3"></div>
+
+                                {/* Language Switcher - Mobile */}
+                                <div className="space-y-2">
+                                    <div className={cx(typography.body.sm, "font-bold text-gray-400 uppercase tracking-wide px-3")}>
+                                        Language
+                                    </div>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            switchLanguage('en');
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-sm flex items-center gap-2",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            currentLang === 'en'
+                                                ? 'text-purple-300 bg-purple-600/30'
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <GlobeIcon /> 🇺🇸 English
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            switchLanguage('el');
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-sm flex items-center gap-2",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            currentLang === 'el'
+                                                ? 'text-purple-300 bg-purple-600/30'
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <GlobeIcon /> 🇬🇷 Ελληνικά
+                                    </motion.button>
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-slate-700/50 my-3"></div>
+
+                                {/* Sign Out */}
                                 <motion.button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
-                                        switchLanguage('en');
+                                        onSignOut();
                                     }}
                                     className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-sm flex items-center gap-2",
+                                        "w-full text-left px-3 py-2 font-semibold text-red-400 text-base",
                                         borders.rounded.sm,
                                         transitions.default,
-                                        currentLang === 'en'
-                                            ? 'text-purple-300 bg-purple-600/30'
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        "hover:bg-red-900/30 hover:text-red-300"
                                     )}
                                     whileHover={{ x: 4 }}
                                     whileTap={{ scale: 0.98 }}
                                 >
-                                    <GlobeIcon /> 🇺🇸 English
-                                </motion.button>
-                                <motion.button
-                                    onClick={() => {
-                                        setMobileMenuOpen(false);
-                                        switchLanguage('el');
-                                    }}
-                                    className={cx(
-                                        "w-full text-left px-3 py-2 font-semibold text-sm flex items-center gap-2",
-                                        borders.rounded.sm,
-                                        transitions.default,
-                                        currentLang === 'el'
-                                            ? 'text-purple-300 bg-purple-600/30'
-                                            : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
-                                    )}
-                                    whileHover={{ x: 4 }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    <GlobeIcon /> 🇬🇷 Ελληνικά
+                                    {dict?.auth?.signOut || 'Sign Out'}
                                 </motion.button>
                             </div>
-
-                            {/* Divider */}
-                            <div className="border-t border-slate-700/50 my-3"></div>
-
-                            {/* Sign Out */}
-                            <motion.button
-                                onClick={() => {
-                                    setMobileMenuOpen(false);
-                                    onSignOut();
-                                }}
-                                className={cx(
-                                    "w-full text-left px-3 py-2 font-semibold text-red-400 text-base",
-                                    borders.rounded.sm,
-                                    transitions.default,
-                                    "hover:bg-red-900/30 hover:text-red-300"
-                                )}
-                                whileHover={{ x: 4 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                {dict?.auth?.signOut || 'Sign Out'}
-                            </motion.button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        </motion.div>
+                    )
+                }
+            </AnimatePresence >
 
             {/* Profile Claim Modal - Dev Test */}
-            {isDev && showProfileModal && (
-                <ProfileSetupModal
-                    isOpen={showProfileModal}
-                    onClose={() => setShowProfileModal(false)}
-                    forceRefresh={modalRefresh}
-                />
-            )}
-        </div>
+            {
+                isDev && showProfileModal && (
+                    <ProfileSetupModal
+                        isOpen={showProfileModal}
+                        onClose={() => setShowProfileModal(false)}
+                        forceRefresh={modalRefresh}
+                    />
+                )
+            }
+        </div >
     );
 } 

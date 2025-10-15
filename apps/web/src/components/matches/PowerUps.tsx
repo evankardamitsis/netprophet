@@ -130,6 +130,45 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
         return wallet?.balance ? wallet.balance >= cost : false;
     };
 
+    // Function to get translated power-up name
+    const getTranslatedName = (name: string) => {
+        const nameMap: { [key: string]: string } = {
+            'Safe Slip': 'safeSlips',
+            'Safe Parlay Slip': 'safeParlaySlip',
+            'Double Points Match': 'doubleXPMatch',
+            'Streak Multiplier': 'streakMultiplier',
+            'Pro Tips': 'proTips'
+        };
+        const key = nameMap[name] || name.toLowerCase().replace(' ', '');
+        return dict.rewards[key as keyof typeof dict.rewards] || name;
+    };
+
+    // Function to get translated description
+    const getTranslatedDescription = (name: string) => {
+        const nameMap: { [key: string]: string } = {
+            'Safe Slip': 'safeSlipsDescription',
+            'Safe Parlay Slip': 'safeParlaySlipDescription',
+            'Double Points Match': 'doubleXPMatchDescription',
+            'Streak Multiplier': 'streakMultiplierDescription',
+            'Pro Tips': 'proTipsDescription'
+        };
+        const key = nameMap[name] || name.toLowerCase().replace(' ', '') + 'Description';
+        return dict.rewards[key as keyof typeof dict.rewards] || '';
+    };
+
+    // Function to get translated effect
+    const getTranslatedEffect = (name: string) => {
+        const nameMap: { [key: string]: string } = {
+            'Safe Slip': 'safeSlipsEffect',
+            'Safe Parlay Slip': 'safeParlaySlipEffect',
+            'Double Points Match': 'doubleXPMatchEffect',
+            'Streak Multiplier': 'streakMultiplierEffect',
+            'Pro Tips': 'proTipsEffect'
+        };
+        const key = nameMap[name] || name.toLowerCase().replace(' ', '') + 'Effect';
+        return dict.rewards[key as keyof typeof dict.rewards] || '';
+    };
+
     // Convert Tailwind gradient classes to CSS gradient colors
     const getGradientColors = (gradientClass: string): string => {
         const gradientMap: { [key: string]: string } = {
@@ -209,11 +248,11 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                                             <div className="flex items-center gap-3 mb-2">
                                                 <div className="text-3xl animate-pulse">{powerUp.icon}</div>
                                                 <CardTitle className="text-white text-xl font-bold">
-                                                    {powerUp.name}
+                                                    {getTranslatedName(powerUp.name)}
                                                 </CardTitle>
                                             </div>
                                             <span className="inline-block text-xs bg-slate-700/80 text-slate-300 px-3 py-1 rounded-full border border-slate-600/50">
-                                                {powerUp.usageType}
+                                                {dict.rewards[powerUp.usageType.toLowerCase().replace(' ', '') as keyof typeof dict.rewards] || powerUp.usageType}
                                             </span>
                                         </div>
                                     </div>
@@ -222,13 +261,13 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                                 <CardContent className="pt-0 relative z-10 flex-1 flex flex-col">
                                     <div className="flex-1">
                                         <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                                            {powerUp.description}
+                                            {getTranslatedDescription(powerUp.name) || powerUp.description}
                                         </p>
 
                                         <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/80 p-4 rounded-lg mb-4 border border-slate-600/30">
                                             <p className="text-green-400 text-sm font-semibold flex items-center gap-2">
                                                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                                                {powerUp.effect}
+                                                {getTranslatedEffect(powerUp.name) || powerUp.effect}
                                             </p>
                                         </div>
 

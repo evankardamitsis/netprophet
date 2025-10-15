@@ -12,6 +12,7 @@ interface User {
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -26,34 +27,39 @@ export function useAuth() {
         if (!mounted) return;
 
         if (session?.user) {
-          // Check if user is admin
-          try {
-            const { data: profile, error } = await supabase
-              .from("profiles")
-              .select("is_admin")
-              .eq("id", session.user.id)
-              .single();
+          // Check if user is admin (prevent multiple simultaneous checks)
+          if (!checkingAdmin) {
+            setCheckingAdmin(true);
+            try {
+              const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("is_admin")
+                .eq("id", session.user.id)
+                .single();
 
-            if (!mounted) return;
+              if (!mounted) return;
 
-            if (error) {
-              console.error("Admin useAuth: Profile check error:", error);
-              setUser(null);
-            } else if (profile?.is_admin) {
-              setUser({
-                id: session.user.id,
-                email: session.user.email || "",
-                is_admin: true,
-              });
-            } else {
-              setUser(null);
+              if (error) {
+                console.error("Admin useAuth: Profile check error:", error);
+                setUser(null);
+              } else if (profile?.is_admin) {
+                setUser({
+                  id: session.user.id,
+                  email: session.user.email || "",
+                  is_admin: true,
+                });
+              } else {
+                setUser(null);
+              }
+            } catch (profileError) {
+              console.error(
+                "Admin useAuth: Profile check exception:",
+                profileError
+              );
+              if (mounted) setUser(null);
+            } finally {
+              if (mounted) setCheckingAdmin(false);
             }
-          } catch (profileError) {
-            console.error(
-              "Admin useAuth: Profile check exception:",
-              profileError
-            );
-            if (mounted) setUser(null);
           }
         } else {
           setUser(null);
@@ -92,27 +98,35 @@ export function useAuth() {
         console.log("Admin useAuth: User signed out");
         setUser(null);
       } else if (event === "SIGNED_IN" && session?.user) {
-        // Re-check admin status when user signs in
+        // Re-check admin status when user signs in (prevent multiple simultaneous checks)
         console.log("Admin useAuth: User signed in, checking admin status");
-        try {
-          const { data: profile, error } = await supabase
-            .from("profiles")
-            .select("is_admin")
-            .eq("id", session.user.id)
-            .single();
+        if (!checkingAdmin) {
+          setCheckingAdmin(true);
+          try {
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("is_admin")
+              .eq("id", session.user.id)
+              .single();
 
-          if (mounted && !error && profile?.is_admin) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email || "",
-              is_admin: true,
-            });
-          } else if (mounted) {
-            setUser(null);
+            if (mounted && !error && profile?.is_admin) {
+              setUser({
+                id: session.user.id,
+                email: session.user.email || "",
+                is_admin: true,
+              });
+            } else if (mounted) {
+              setUser(null);
+            }
+          } catch (error) {
+            console.error(
+              "Admin useAuth: SIGNED_IN profile check error:",
+              error
+            );
+            if (mounted) setUser(null);
+          } finally {
+            if (mounted) setCheckingAdmin(false);
           }
-        } catch (error) {
-          console.error("Admin useAuth: SIGNED_IN profile check error:", error);
-          if (mounted) setUser(null);
         }
       }
     });
