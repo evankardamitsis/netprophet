@@ -341,7 +341,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                 <div className="mt-4 sm:mt-6 text-center">
                                     <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-black shadow-lg text-sm sm:text-base">
                                         <span className="text-xl sm:text-2xl">✨</span>
-                                        <span>{lang === 'el' ? '1200+ Παίκτες Διαθέσιμοι!' : '1200+ Players Available!'}</span>
+                                        <span>{lang === 'el' ? '1200+ Ερασιτέχνες Αθλητές Διαθέσιμοι!' : '1200+ Players Available!'}</span>
                                     </div>
                                 </div>
                             </div>
@@ -349,12 +349,12 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                         <div className="order-1 lg:order-2 space-y-6">
                             <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
-                                {lang === 'el' ? '👥 1200+ Παίκτες' : '👥 1200+ Players'}
+                                {lang === 'el' ? '👥 1200+ Ερασιτέχνες Αθλητές' : '👥 1200+ Amateur Players'}
                             </h2>
                             <p className="text-xl text-white/90 font-bold">
                                 {lang === 'el'
-                                    ? 'Πραγματικοί παίκτες με πλήρη στατιστικά! Όλα ενημερώνονται αυτόματα για ακριβείς προβλέψεις.'
-                                    : 'Real players with complete stats! All updated automatically for accurate predictions.'
+                                    ? 'Πραγματικοί ερασιτέχνες αθλητές με πλήρη στατιστικά! Όλα ενημερώνονται αυτόματα για ακριβείς προβλέψεις.'
+                                    : 'Real amateur players with complete stats! All updated automatically for accurate predictions.'
                                 }
                             </p>
                             <div className="space-y-3">
@@ -410,9 +410,9 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                 <div className="p-6 space-y-4">
                                     {/* Top 3 */}
                                     {[
-                                        { rank: 1, emoji: '🥇', name: 'Prophet Master', coins: 2450, rate: 85, color: 'from-yellow-400 to-yellow-500' },
-                                        { rank: 2, emoji: '🥈', name: 'Tennis Oracle', coins: 2180, rate: 82, color: 'from-gray-300 to-gray-400' },
-                                        { rank: 3, emoji: '🥉', name: 'Net Genius', coins: 1950, rate: 79, color: 'from-orange-400 to-orange-500' }
+                                        { rank: 1, emoji: '🥇', name: 'AlexTennis_Pro', coins: 2450, rate: 85, color: 'from-yellow-400 to-yellow-500' },
+                                        { rank: 2, emoji: '🥈', name: 'Maria_NetProphet', coins: 2180, rate: 82, color: 'from-gray-300 to-gray-400' },
+                                        { rank: 3, emoji: '🥉', name: 'Nikos_Champion', coins: 1950, rate: 79, color: 'from-orange-400 to-orange-500' }
                                     ].map((player) => (
                                         <div key={player.rank} className={`bg-gradient-to-r ${player.color} rounded-2xl p-4 shadow-lg transform hover:scale-105 transition-all`}>
                                             <div className="flex items-center justify-between">

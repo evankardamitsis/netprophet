@@ -61,7 +61,7 @@ export default function HowItWorksPageGame() {
                                     <span className="text-3xl">📊</span>
                                 </div>
                                 <h3 className="text-xl font-black text-gray-900 text-center mb-3">
-                                    {lang === 'el' ? 'Σύστημα δυναμικότητας NTRP' : 'NTRP Skill Level System'}
+                                    {lang === 'el' ? 'Βαθμολογία Δυναμικότητας (NTRP)' : 'Skill Level Rating (NTRP)'}
                                 </h3>
                                 <p className="text-gray-600 mb-4 text-center">
                                     {lang === 'el'
@@ -288,11 +288,11 @@ export default function HowItWorksPageGame() {
 
                         <div className="order-1 lg:order-2 space-y-6">
                             <h2 className="text-4xl font-black text-white mb-4 drop-shadow-lg">
-                                {lang === 'el' ? '👥 1200+ Παίκτες' : '👥 1200+ Players'}
+                                {lang === 'el' ? '👥 1200+ Ερασιτέχνες Αθλητές' : '👥 1200+ Amateur Players'}
                             </h2>
                             <p className="text-xl text-white/90 font-bold">
                                 {lang === 'el'
-                                    ? 'Κάθε παίκτης έχει λεπτομερή στατιστικά που χρησιμοποιούνται για ακριβείς αποδόσεις.'
+                                    ? 'Κάθε ερασιτέχνης αθλητής έχει λεπτομερή στατιστικά που χρησιμοποιούνται για ακριβείς αποδόσεις.'
                                     : 'Every player has detailed statistics used for accurate odds.'}
                             </p>
                             <div className="space-y-3">
@@ -322,7 +322,7 @@ export default function HowItWorksPageGame() {
                         </h2>
                         <p className="text-xl text-white/90 font-bold">
                             {lang === 'el'
-                                ? 'Ανταγωνίσου και κέρδισε ανταμοιβές!'
+                                ? 'Ανταγωνίσου και κέρδισε Νομίσματα και Ανταμοιβές!'
                                 : 'Compete and earn rewards!'}
                         </p>
                     </div>

@@ -82,7 +82,7 @@ interface WalletProps {
 export function Wallet({ dict, lang = 'en' }: WalletProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { wallet } = useWallet();
-    const { predictions } = usePredictionSlip();
+    const { predictions, setSlipCollapsed } = usePredictionSlip();
     const { processPayment, isProcessing } = useStripePayment();
     const { user } = useAuth();
     const { coinPacks, loading: coinPacksLoading } = useCoinPacks();
@@ -236,6 +236,13 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         }
     };
 
+    const handleOpenPredictionSlip = () => {
+        if (setSlipCollapsed) {
+            setSlipCollapsed(false);
+            setIsOpen(false); // Close wallet dropdown
+        }
+    };
+
     const getLowBalanceMessage = () => {
         if (isCriticalBalance) {
             return {
@@ -343,10 +350,14 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
 
                                 {/* Pending Bets Indicator */}
                                 {pendingBetAmount > 0 && (
-                                    <div className="mt-2 p-2 rounded-lg bg-blue-900/20 border border-blue-800">
+                                    <button
+                                        onClick={handleOpenPredictionSlip}
+                                        className="mt-2 w-full p-2 rounded-lg bg-blue-900/20 border border-blue-800 hover:bg-blue-900/30 hover:border-blue-700 transition-all duration-200 cursor-pointer"
+                                        title={lang === 'el' ? 'Κάντε κλικ για να δείτε το δελτίο στοιχημάτων' : 'Click to view betting slip'}
+                                    >
                                         <div className="flex items-center gap-2">
                                             <ClockIcon className="text-blue-500 h-4 w-4" />
-                                            <div className="flex-1">
+                                            <div className="flex-1 text-left">
                                                 <div className="text-sm font-medium text-blue-300 flex items-center gap-1">
                                                     {dict?.wallet?.pendingBets || 'Pending Bets'}: {pendingBetAmount} <CoinIcon size={14} />
                                                 </div>
@@ -354,8 +365,13 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
                                                     {predictions.length} {dict?.wallet?.matchesInSlip || 'matches in slip'}
                                                 </div>
                                             </div>
+                                            <div className="text-blue-400">
+                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </button>
                                 )}
                             </div>
 

@@ -11,6 +11,7 @@ import Header from '@/components/Header';
 import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
+import { PasswordInput } from '@/components/PasswordInput';
 
 // Component that uses useSearchParams - wrapped in Suspense
 function AuthFormWithSearchParams() {
@@ -230,41 +231,16 @@ function AuthFormWithSearchParams() {
                                             />
                                         </div>
 
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                                                    {lang === 'el' ? 'Κωδικός' : 'Password'}
-                                                </label>
-                                                <div className="group relative">
-                                                    <svg className="w-4 h-4 text-slate-400 cursor-help" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                                                    </svg>
-                                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                        <div className="text-center">
-                                                            <div className="font-medium mb-1">{lang === 'el' ? 'Απαιτήσεις κωδικού:' : 'Password requirements:'}</div>
-                                                            <div className="space-y-1">
-                                                                <div>• {lang === 'el' ? 'Τουλάχιστον 8 χαρακτήρες' : 'At least 8 characters'}</div>
-                                                                <div>• {lang === 'el' ? 'Κεφαλαία γράμματα (A-Z)' : 'Uppercase letters (A-Z)'}</div>
-                                                                <div>• {lang === 'el' ? 'Πεζά γράμματα (a-z)' : 'Lowercase letters (a-z)'}</div>
-                                                                <div>• {lang === 'el' ? 'Αριθμοί (0-9)' : 'Numbers (0-9)'}</div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <input
-                                                id="password"
-                                                name="password"
-                                                type="password"
-                                                autoComplete="new-password"
-                                                required
-                                                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
-                                                placeholder={lang === 'el' ? 'Κωδικός' : 'Password'}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                            />
-                                        </div>
+                                        <PasswordInput
+                                            id="password"
+                                            name="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder={lang === 'el' ? 'Κωδικός' : 'Password'}
+                                            autoComplete="new-password"
+                                            showRequirements={true}
+                                            lang={lang}
+                                        />
                                     </>
                                 ) : (
                                     <>
@@ -285,22 +261,16 @@ function AuthFormWithSearchParams() {
                                                 onChange={(e) => setEmail(e.target.value)}
                                             />
                                         </div>
-                                        <div>
-                                            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
-                                                {lang === 'el' ? 'Κωδικός' : 'Password'}
-                                            </label>
-                                            <input
-                                                id="password"
-                                                name="password"
-                                                type="password"
-                                                autoComplete="current-password"
-                                                required
-                                                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
-                                                placeholder={lang === 'el' ? 'εισάγετε τον κωδικό σας' : 'Enter your password'}
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                            />
-                                        </div>
+                                        <PasswordInput
+                                            id="password"
+                                            name="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder={lang === 'el' ? 'εισάγετε τον κωδικό σας' : 'Enter your password'}
+                                            autoComplete="current-password"
+                                            showRequirements={false}
+                                            lang={lang}
+                                        />
                                     </>
                                 )}
                                 <Button
