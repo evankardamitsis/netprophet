@@ -24,7 +24,7 @@ SELECT DISTINCT
     user_id,
     bet_amount as total_stake,
     parlay_base_odds as base_odds,
-    parlay_final_odds as final_odds,
+    parlay_base_odds as final_odds, -- Use base_odds as final_odds since parlay_final_odds was removed
     parlay_bonus_multiplier as bonus_multiplier,
     parlay_streak_booster as streak_booster,
     is_safe_bet,
@@ -37,7 +37,7 @@ SELECT DISTINCT
                 WHEN is_safe_bet = true AND status = 'lost' THEN 
                     bet_amount -- Return stake for safe bet
                 ELSE 
-                    ROUND(bet_amount * parlay_final_odds)
+                    ROUND(bet_amount * parlay_base_odds) -- Use base_odds since parlay_final_odds was removed
             END
         ELSE 0
     END as total_winnings,

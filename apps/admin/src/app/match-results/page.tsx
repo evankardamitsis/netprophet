@@ -21,6 +21,7 @@ export default function MatchResultsPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Filter states
     const [statusFilter, setStatusFilter] = useState<'all' | 'finished' | 'live' | 'upcoming'>('finished');
@@ -177,8 +178,9 @@ export default function MatchResultsPage() {
     };
 
     const handleSubmitResult = async () => {
-        if (!selectedMatch) return;
+        if (!selectedMatch || isSubmitting) return;
 
+        setIsSubmitting(true);
         try {
             // Helper function to clear regular set score if tiebreak exists
             const getSetScore = (setNum: number) => {
@@ -215,20 +217,29 @@ export default function MatchResultsPage() {
                 super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null
             };
 
-            await MatchResultsService.createMatchResult(resultData);
+            console.log('Submitting match result:', resultData);
+            const { data, error } = await MatchResultsService.createMatchResult(resultData);
+
+            if (error) {
+                console.error('MatchResultsService error:', error);
+                throw new Error(error.message || 'Failed to create match result');
+            }
 
             toast.success('Match result added successfully');
             setIsAddDialogOpen(false);
             loadData();
         } catch (error) {
             console.error('Error adding match result:', error);
-            toast.error('Failed to add match result');
+            toast.error(`Failed to add match result: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleUpdateResult = async () => {
-        if (!selectedMatch) return;
+        if (!selectedMatch || isSubmitting) return;
 
+        setIsSubmitting(true);
         try {
             // Helper function to clear regular set score if tiebreak exists
             const getSetScore = (setNum: number) => {
@@ -265,14 +276,22 @@ export default function MatchResultsPage() {
                 super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null
             };
 
-            await MatchResultsService.updateMatchResult(selectedMatch.id, resultData);
+            console.log('Updating match result:', resultData);
+            const { data, error } = await MatchResultsService.updateMatchResult(selectedMatch.id, resultData);
+
+            if (error) {
+                console.error('MatchResultsService error:', error);
+                throw new Error(error.message || 'Failed to update match result');
+            }
 
             toast.success('Match result updated successfully');
             setIsEditDialogOpen(false);
             loadData();
         } catch (error) {
             console.error('Error updating match result:', error);
-            toast.error('Failed to update match result');
+            toast.error(`Failed to update match result: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -383,6 +402,7 @@ export default function MatchResultsPage() {
                         match={selectedMatch}
                         onSubmit={handleSubmitResult}
                         submitLabel="Add Result"
+                        isLoading={isSubmitting}
                     />
                 </DialogContent>
             </Dialog>
@@ -399,6 +419,7 @@ export default function MatchResultsPage() {
                         match={selectedMatch}
                         onSubmit={handleUpdateResult}
                         submitLabel="Update Result"
+                        isLoading={isSubmitting}
                     />
                 </DialogContent>
             </Dialog>

@@ -74,40 +74,9 @@ GROUP BY p.id, p.user_id, p.total_stake, p.base_odds, p.final_odds,
          p.bonus_multiplier, p.streak_booster, p.is_safe_bet, p.status, 
          p.outcome, p.total_winnings, p.created_at, p.resolved_at;
 
--- Recreate bet_analytics view with SECURITY INVOKER
-CREATE OR REPLACE VIEW public.bet_analytics
-WITH
-(security_invoker = true) AS
-SELECT 
-    b.id as bet_id,
-    b.user_id,
-    b.match_id,
-    b.bet_amount,
-    b.multiplier,
-    b.potential_winnings,
-    b.prediction,
-    b.status,
-    b.outcome,
-    b.winnings_paid,
-    b.created_at,
-    b.resolved_at,
-    b.is_parlay,
-    b.parlay_id,
-    b.parlay_position,
-    p.total_stake as parlay_total_stake,
-    p.base_odds as parlay_base_odds,
-    p.final_odds as parlay_final_odds,
-    p.bonus_multiplier as parlay_bonus_multiplier,
-    p.streak_booster as parlay_streak_booster,
-    p.is_safe_bet as parlay_is_safe_bet,
-    p.safe_bet_cost as parlay_safe_bet_cost,
-    p.status as parlay_status,
-    p.outcome as parlay_outcome,
-    p.total_winnings as parlay_total_winnings
-FROM public.bets b
-LEFT JOIN public.parlays p ON b.parlay_id = p.id;
+-- bet_analytics view removed - was causing parlay_final_odds error
 
 -- Add comments for documentation
 COMMENT ON VIEW public.parlay_analytics IS 'Basic parlay analytics with bet statistics (SECURITY INVOKER)';
 COMMENT ON VIEW public.parlay_performance IS 'Advanced parlay performance metrics with profitability (SECURITY INVOKER)';
-COMMENT ON VIEW public.bet_analytics IS 'Comprehensive bet analytics combining individual bets with parlay information (SECURITY INVOKER)';
+-- bet_analytics view comment removed - view was dropped
