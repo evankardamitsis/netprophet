@@ -75,7 +75,7 @@ export function TournamentMatchesTable({
 }: TournamentMatchesTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         {
-            id: "start_time",
+            id: "created_at",
             desc: true
         }
     ]);
@@ -365,6 +365,37 @@ export function TournamentMatchesTable({
             },
         },
         {
+            accessorKey: "created_at",
+            header: ({ column }) => {
+                return (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Created
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                );
+            },
+            cell: ({ row }) => {
+                const createdAt = row.getValue("created_at") as string;
+                if (!createdAt) return <div className="text-gray-400">-</div>;
+
+                try {
+                    const date = new Date(createdAt);
+                    if (isNaN(date.getTime())) return <div className="text-gray-400">-</div>;
+
+                    return (
+                        <div className="text-sm">
+                            {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                        </div>
+                    );
+                } catch {
+                    return <div className="text-gray-400">-</div>;
+                }
+            },
+        },
+        {
             accessorKey: "start_time",
             header: ({ column }) => {
                 return (
@@ -479,6 +510,12 @@ export function TournamentMatchesTable({
             columnFilters,
             columnVisibility,
             rowSelection,
+        },
+        initialState: {
+            pagination: {
+                pageIndex: 0,
+                pageSize: 10,
+            },
         },
     });
 
@@ -675,8 +712,8 @@ export function TournamentMatchesTable({
                                         key={row.id}
                                         data-state={row.getIsSelected() && "selected"}
                                         className={`
-                                            ${row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : ""}
-                                            ${row.original.locked ? "bg-red-50 border-l-4 border-l-red-500" : ""}
+                                            ${row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : "bg-red-50 border-l-4 border-l-red-500"}
+                                            ${row.original.locked ? "bg-red-100 border-l-4 border-l-red-600" : ""}
                                             ${row.original.status === 'live' ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
                                         `}
                                     >
@@ -715,9 +752,9 @@ export function TournamentMatchesTable({
                         return (
                             <div
                                 key={match.id}
-                                className={`border rounded-lg p-4 space-y-3 ${isSelected ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
-                                    } ${match.web_synced ? "border-l-4 border-l-green-500" : ""
-                                    } ${match.locked ? "border-l-4 border-l-red-500" : ""
+                                className={`border rounded-lg p-4 space-y-3 ${isSelected ? 'bg-blue-50 border-blue-200' : match.web_synced ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                                    } ${match.web_synced ? "border-l-4 border-l-green-500" : "border-l-4 border-l-red-500"
+                                    } ${match.locked ? "border-l-4 border-l-red-600 bg-red-100" : ""
                                     } ${match.status === 'live' ? "border-l-4 border-l-blue-500" : ""
                                     }`}
                             >
@@ -805,6 +842,13 @@ export function TournamentMatchesTable({
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Created Time */}
+                                {match.created_at && (
+                                    <div className="text-xs text-gray-500">
+                                        <span className="font-medium">Created:</span> {formatTime(match.created_at)}
+                                    </div>
+                                )}
 
                                 {/* Start Time */}
                                 {match.start_time && (

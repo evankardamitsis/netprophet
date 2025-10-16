@@ -167,12 +167,14 @@ export default function ResultsPage() {
                     // Get the match result data
                     const matchResultData = Array.isArray(match.match_results) ? match.match_results[0] : match.match_results;
 
-                    // Determine winner name based on winner_id in matches table
+                    // Determine winner name based on winner_id in match_results
                     let winnerName = 'TBD';
-                    if (match.winner_id) {
-                        const winner = Array.isArray(match.winner) ? match.winner[0] : match.winner;
-                        if (winner) {
-                            winnerName = `${winner.first_name} ${winner.last_name}`;
+                    if (matchResultData?.winner_id) {
+                        // Check if winner is player A or player B
+                        if (matchResultData.winner_id === match.player_a_id) {
+                            winnerName = playerAName;
+                        } else if (matchResultData.winner_id === match.player_b_id) {
+                            winnerName = playerBName;
                         }
                     }
 
@@ -381,12 +383,14 @@ export default function ResultsPage() {
                 // Get the match result data
                 const matchResultData = Array.isArray(match.match_results) ? match.match_results[0] : match.match_results;
 
-                // Determine winner name based on winner_id in matches table
+                // Determine winner name based on winner_id in match_results
                 let winnerName = 'TBD';
-                if (match.winner_id) {
-                    const winner = Array.isArray(match.winner) ? match.winner[0] : match.winner;
-                    if (winner) {
-                        winnerName = `${winner.first_name} ${winner.last_name}`;
+                if (matchResultData?.winner_id) {
+                    // Check if winner is player A or player B
+                    if (matchResultData.winner_id === match.player_a_id) {
+                        winnerName = playerAName;
+                    } else if (matchResultData.winner_id === match.player_b_id) {
+                        winnerName = playerBName;
                     }
                 }
 
@@ -557,6 +561,7 @@ export default function ResultsPage() {
                                                 const isPlayerAWinner = match.winner_name === match.player_a_name;
                                                 const isPlayerBWinner = match.winner_name === match.player_b_name;
 
+
                                                 return (
                                                     <div key={match.id} className="relative group/item">
                                                         {/* Gradient border effect */}
@@ -580,13 +585,13 @@ export default function ResultsPage() {
                                                                 </span>
                                                             </div>
 
-                                                            {/* Players and Score - Mobile Stacked, Desktop Side by Side */}
-                                                            <div className="flex flex-col gap-4">
-                                                                {/* Top Row: Players */}
-                                                                <div className="flex items-center justify-between gap-3">
+                                                            {/* Players and Score - Centered Layout */}
+                                                            <div className="flex flex-col items-center gap-3">
+                                                                {/* Players Row */}
+                                                                <div className="flex items-center justify-between gap-3 w-full">
                                                                     {/* Player A */}
-                                                                    <div className={`flex-1 text-center ${isPlayerAWinner ? 'text-white' : 'text-gray-400'}`}>
-                                                                        <div className={`font-black text-sm sm:text-base lg:text-lg mb-1 ${isPlayerAWinner ? 'text-green-400 drop-shadow-lg' : ''}`}>
+                                                                    <div className="flex-1 text-center">
+                                                                        <div className={`font-black text-sm sm:text-base lg:text-lg mb-1 ${isPlayerAWinner ? '!text-green-500 drop-shadow-lg' : 'text-gray-400'}`}>
                                                                             {match.player_a_name}
                                                                         </div>
                                                                         <div className="text-xs text-purple-300 font-bold">
@@ -600,8 +605,8 @@ export default function ResultsPage() {
                                                                     </div>
 
                                                                     {/* Player B */}
-                                                                    <div className={`flex-1 text-center ${isPlayerBWinner ? 'text-white' : 'text-gray-400'}`}>
-                                                                        <div className={`font-black text-sm sm:text-base lg:text-lg mb-1 ${isPlayerBWinner ? 'text-green-400 drop-shadow-lg' : ''}`}>
+                                                                    <div className="flex-1 text-center">
+                                                                        <div className={`font-black text-sm sm:text-base lg:text-lg mb-1 ${isPlayerBWinner ? '!text-green-500 drop-shadow-lg' : 'text-gray-400'}`}>
                                                                             {match.player_b_name}
                                                                         </div>
                                                                         <div className="text-xs text-purple-300 font-bold">
@@ -610,19 +615,13 @@ export default function ResultsPage() {
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Bottom Row: Score and Winner Badge */}
-                                                                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-purple-500/20">
-                                                                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
-                                                                        <div className="text-sm sm:text-base font-black text-white text-center">
-                                                                            {formatScore(match)}
-                                                                        </div>
+                                                                {/* Score - Centered below VS */}
+                                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
+                                                                    <div className="text-sm sm:text-base font-black text-white text-center">
+                                                                        {formatScore(match)}
                                                                     </div>
-                                                                    {(isPlayerAWinner || isPlayerBWinner) && (
-                                                                        <div className="inline-block text-xs bg-green-500 text-white px-3 py-1.5 rounded-full font-bold shadow-lg">
-                                                                            {isPlayerAWinner ? match.player_a_name : match.player_b_name} WINS
-                                                                        </div>
-                                                                    )}
                                                                 </div>
+
                                                             </div>
                                                         </div>
                                                     </div>
@@ -673,6 +672,6 @@ export default function ResultsPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

@@ -45,6 +45,7 @@ export interface Match {
   winner_id: string | null;
   web_synced: boolean | null;
   locked: boolean | null;
+  created_at: string | null;
   updated_at: string | null;
   tournaments?: {
     id: string;

@@ -82,31 +82,65 @@ function calculateOdds(
   // Calculate base probability from factors with NTRP-heavy weighting
   let player1Score = 0.5; // Start at 50%
 
-  // Apply factor adjustments with balanced NTRP weighting
-  player1Score += factors.ntrpAdvantage * 0.3; // Balanced NTRP weight
-  player1Score += factors.formAdvantage * 0.15; // Increased back
-  player1Score += factors.surfaceAdvantage * 0.1; // Increased back
-  player1Score += factors.headToHeadAdvantage * 0.15; // Increased back
-  player1Score += factors.experienceAdvantage * 0.08; // Increased back
-  player1Score += factors.momentumAdvantage * 0.05; // Increased back
+  // Apply factor adjustments with dynamic NTRP weighting based on difference size
+  const ntrpDiff = Math.abs(player1.ntrpRating - player2.ntrpRating);
+
+  // Dynamic NTRP weighting: higher weight for larger differences and higher levels
+  const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
+  let ntrpWeight = 0.25; // Base weight
+
+  if (ntrpDiff >= 1.5) {
+    // Level-aware weight for 1.5+ differences
+    if (baseRating >= 4.0) {
+      ntrpWeight = 0.6; // 60% weight at high levels (4.0+)
+    } else {
+      ntrpWeight = 0.55; // 55% weight at lower levels
+    }
+  } else if (ntrpDiff >= 1.0) {
+    // Level-aware weight for 1.0+ differences
+    if (baseRating >= 4.0) {
+      ntrpWeight = 0.55; // 55% weight at high levels (4.0+)
+    } else if (baseRating >= 3.5) {
+      ntrpWeight = 0.5; // 50% weight at mid-high levels (3.5-4.0)
+    } else {
+      ntrpWeight = 0.45; // 45% weight at lower levels (<3.5)
+    }
+  } else if (ntrpDiff >= 0.5) {
+    ntrpWeight = 0.35; // 35% weight for 0.5+ differences
+  }
+
+  // Adjust other weights to maintain total of 100%
+  const remainingWeight = 1.0 - ntrpWeight;
+  const otherFactorsWeight = remainingWeight / 5; // Distribute among 5 other factors
+
+  player1Score += factors.ntrpAdvantage * ntrpWeight;
+  player1Score += factors.formAdvantage * otherFactorsWeight;
+  player1Score += factors.surfaceAdvantage * otherFactorsWeight;
+  player1Score += factors.headToHeadAdvantage * otherFactorsWeight;
+  player1Score += factors.experienceAdvantage * otherFactorsWeight;
+  player1Score += factors.momentumAdvantage * otherFactorsWeight;
 
   // Add uncertainty factor to prevent extreme results
   const uncertaintyFactor = 0.05; // 5% uncertainty
   const randomFactor = (Math.random() - 0.5) * uncertaintyFactor;
   player1Score += randomFactor;
 
-  // More conservative bounds for realistic odds
-  const ntrpDiff = Math.abs(player1.ntrpRating - player2.ntrpRating);
-  const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
+  // Dynamic bounds based on NTRP difference - allow more extreme results for significant rating gaps
 
   let minBound = 0.2; // 20%
   let maxBound = 0.8; // 80%
 
-  // Only allow more extreme results for very large differences at high levels
-  if (ntrpDiff >= 1.5 && baseRating >= 4.5) {
+  // Allow more extreme results for significant NTRP differences
+  if (ntrpDiff >= 1.5) {
+    // For very large differences (1.5+), allow extreme results
+    minBound = 0.05; // 5%
+    maxBound = 0.95; // 95%
+  } else if (ntrpDiff >= 1.0) {
+    // For large differences (1.0+), allow more extreme results
     minBound = 0.1; // 10%
     maxBound = 0.9; // 90%
-  } else if (ntrpDiff >= 1.0 && baseRating >= 4.0) {
+  } else if (ntrpDiff >= 0.5) {
+    // For moderate differences (0.5+), allow some extremes
     minBound = 0.15; // 15%
     maxBound = 0.85; // 85%
   }
@@ -180,34 +214,41 @@ function calculateNTRPAdvantage(
     return Math.tanh(ntrpDiff * 0.1); // Very small impact
   }
 
-  // Level-aware scaling: higher ratings mean differences matter more
+  // Enhanced scaling for significant NTRP differences
+  // For differences >= 1.0, apply level-aware stronger weighting
+  if (Math.abs(ntrpDiff) >= 1.0) {
+    // Level-aware multiplier: higher NTRP levels = bigger impact of differences
+    let levelMultiplier;
+    if (baseRating >= 4.5) {
+      levelMultiplier = 3.5; // Very strong impact at high levels (4.5+)
+    } else if (baseRating >= 4.0) {
+      levelMultiplier = 3.0; // Strong impact at mid-high levels (4.0-4.5)
+    } else if (baseRating >= 3.5) {
+      levelMultiplier = 2.5; // Moderate impact at mid levels (3.5-4.0)
+    } else {
+      levelMultiplier = 2.0; // Lower impact at beginner levels (<3.5)
+    }
+
+    const significantDiffMultiplier =
+      ntrpDiff >= 0 ? levelMultiplier : -levelMultiplier;
+    return Math.max(-0.8, Math.min(0.8, ntrpDiff * significantDiffMultiplier));
+  }
+
+  // For smaller differences (< 0.5), use the existing level-aware scaling
   let levelMultiplier;
   if (baseRating >= 4.5) {
-    levelMultiplier = 1.0; // Full impact at high levels (4.5+)
+    levelMultiplier = 1.2; // Increased from 1.0
   } else if (baseRating >= 4.0) {
-    levelMultiplier = 0.8; // Reduced impact at mid-high levels (4.0-4.5)
+    levelMultiplier = 1.0; // Increased from 0.8
   } else if (baseRating >= 3.5) {
-    levelMultiplier = 0.6; // Further reduced at mid levels (3.5-4.0)
+    levelMultiplier = 0.8; // Increased from 0.6
   } else {
-    levelMultiplier = 0.4; // Lowest impact at beginner levels (<3.5)
+    levelMultiplier = 0.6; // Increased from 0.4
   }
 
-  // Incremental difference scaling with special handling for small differences
-  let diffMultiplier;
-  if (Math.abs(ntrpDiff) >= 1.5) {
-    diffMultiplier = 1.2; // Very big advantage for 1.5+ differences
-  } else if (Math.abs(ntrpDiff) >= 1.0) {
-    diffMultiplier = 1.0; // Significant advantage for 1.0+ differences
-  } else if (Math.abs(ntrpDiff) >= 0.5) {
-    diffMultiplier = 0.8; // Moderate advantage for 0.5+ differences
-  } else {
-    // For very small differences (0.0-0.5), use much smaller multiplier
-    diffMultiplier = 0.2; // Much smaller advantage for <0.5 differences
-  }
-
-  // Apply combined scaling
-  const scaledDiff = ntrpDiff * levelMultiplier * diffMultiplier;
-  return Math.tanh(scaledDiff * 0.8); // Moderate sigmoid scaling
+  // Apply enhanced sigmoid-like function for smaller differences
+  const scaledDiff = ntrpDiff * levelMultiplier;
+  return Math.tanh(scaledDiff * 1.0); // Increased from 0.8
 }
 
 function calculateFormAdvantage(
@@ -311,10 +352,10 @@ function calculateHeadToHeadAdvantage(
     const daysSince =
       (Date.now() - lastMatchDate.getTime()) / (1000 * 60 * 60 * 24);
     if (daysSince < 180) {
-      recentBonus = h2hRecord.lastMatchResult === "W" ? 0.08 : -0.08; // Increased from 0.05 to 0.08
+      recentBonus = h2hRecord.lastMatchResult === "W" ? 0.05 : -0.05; // Reduced from 0.08 to 0.05
     }
   }
-  const h2hAdvantage = (p1H2HWinRate - 0.5) * 2.0 + recentBonus; // Increased from 1.5 to 2.0
+  const h2hAdvantage = (p1H2HWinRate - 0.5) * 1.2 + recentBonus; // Reduced from 2.0 to 1.2
   return Math.tanh(h2hAdvantage);
 }
 
@@ -517,7 +558,7 @@ serve(async (req) => {
       );
     }
 
-    const results = [];
+    const results: any[] = [];
 
     for (const matchId of matchIds) {
       try {
@@ -649,7 +690,7 @@ serve(async (req) => {
         }
 
         // Determine which player should be player1 (higher NTRP) and player2 (lower NTRP)
-        const player1IsHigherRated = playerA.ntrp_rating >= playerB.ntrp_rating;
+        const player1IsHigherRated = playerA.ntrpRating >= playerB.ntrpRating;
         const player1 = player1IsHigherRated ? playerA : playerB;
         const player2 = player1IsHigherRated ? playerB : playerA;
 

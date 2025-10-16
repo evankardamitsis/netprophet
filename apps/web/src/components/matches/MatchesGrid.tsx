@@ -187,20 +187,30 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     <div className="text-xs text-slate-400 font-medium">{match.time}</div>
                                                 </div>
 
-                                                {/* Player names with better typography */}
+                                                {/* Player names with NTRP ratings */}
                                                 <div className="flex items-center justify-between mb-3">
                                                     <div className="text-white font-semibold text-sm truncate flex-1">
-                                                        {match.player1.name.split(' ').length > 1
-                                                            ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
-                                                            : match.player1.name
-                                                        }
+                                                        <div>
+                                                            {match.player1.name.split(' ').length > 1
+                                                                ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
+                                                                : match.player1.name
+                                                            }
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
                                                     <div className="text-slate-500 text-xs font-bold mx-2">VS</div>
                                                     <div className="text-white font-semibold text-sm truncate flex-1 text-right">
-                                                        {match.player2.name.split(' ').length > 1
-                                                            ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
-                                                            : match.player2.name
-                                                        }
+                                                        <div>
+                                                            {match.player2.name.split(' ').length > 1
+                                                                ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
+                                                                : match.player2.name
+                                                            }
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -248,6 +258,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     {/* Team 1 */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player1.name}</div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
 
                                                     {/* VS */}
@@ -258,6 +271,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     {/* Team 2 */}
                                                     <div className="flex-1 text-right min-w-0">
                                                         <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player2.name}</div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -381,20 +397,30 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     <div className="text-xs text-slate-400 font-medium">{match.time}</div>
                                                 </div>
 
-                                                {/* Player names with better typography */}
+                                                {/* Player names with NTRP ratings */}
                                                 <div className="flex items-center justify-between mb-3">
                                                     <div className="text-white font-semibold text-sm truncate flex-1">
-                                                        {match.player1.name.split(' ').length > 1
-                                                            ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
-                                                            : match.player1.name
-                                                        }
+                                                        <div>
+                                                            {match.player1.name.split(' ').length > 1
+                                                                ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
+                                                                : match.player1.name
+                                                            }
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
                                                     <div className="text-slate-500 text-xs font-bold mx-2">VS</div>
                                                     <div className="text-white font-semibold text-sm truncate flex-1 text-right">
-                                                        {match.player2.name.split(' ').length > 1
-                                                            ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
-                                                            : match.player2.name
-                                                        }
+                                                        <div>
+                                                            {match.player2.name.split(' ').length > 1
+                                                                ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
+                                                                : match.player2.name
+                                                            }
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -442,6 +468,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     {/* Team 1 */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player1.name}</div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
 
                                                     {/* VS */}
@@ -453,6 +482,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                     {/* Team 2 */}
                                                     <div className="flex-1 text-right min-w-0">
                                                         <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player2.name}</div>
+                                                        <div className="text-xs text-gray-400 font-medium">
+                                                            NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
+                                                        </div>
                                                     </div>
                                                 </div>
 

@@ -16,13 +16,18 @@ CORE ALGORITHM STRUCTURE
 2. FACTOR CALCULATION
    The algorithm calculates 7 key factors that influence match outcomes:
 
-   a) NTRP Rating Advantage (Weight: 30%)
+   a) NTRP Rating Advantage (Weight: 30-50% Dynamic)
       - Compares player NTRP ratings (1.0-7.0 scale)
-      - Level-aware scaling: higher ratings mean differences matter more
-      - Level multipliers: 4.5+ (1.0x), 4.0-4.5 (0.8x), 3.5-4.0 (0.6x), <3.5 (0.4x)
-      - Incremental difference scaling: 1.5+ (1.2x), 1.0+ (1.0x), 0.5+ (0.8x), <0.5 (0.6x)
-      - Combined scaling: ntrp_diff * level_multiplier * diff_multiplier
-      - Applies moderate sigmoid function (tanh) with 0.8 multiplier
+      - Dynamic weighting based on difference size:
+        * 1.0+ differences: 50% weight (significantly increased)
+        * 0.5+ differences: 40% weight (increased)
+        * <0.5 differences: 30% weight (base)
+      - Enhanced scaling for significant differences (0.5+):
+        * Uses linear scaling with 2.0x multiplier (increased from 1.5x)
+        * Direct impact: ntrp_diff * 2.0, clamped to ±0.8
+      - Level-aware scaling for smaller differences:
+        * Level multipliers: 4.5+ (1.2x), 4.0-4.5 (1.0x), 3.5-4.0 (0.8x), <3.5 (0.6x)
+        * Enhanced sigmoid function (tanh) with 1.0x multiplier (increased from 0.8x)
 
    b) Form Advantage (Weight: 15%)
       - Combines overall win rate with recent form
@@ -59,12 +64,13 @@ CORE ALGORITHM STRUCTURE
 
 3. PROBABILITY CALCULATION
    - Starts with 50% base probability for player 1
-   - Applies weighted factor adjustments with balanced NTRP weighting
+   - Applies weighted factor adjustments with dynamic NTRP weighting
    - Adds 5% uncertainty factor (random ±2.5%)
-   - Conservative bounds with level-aware extremes:
+   - Dynamic bounds based on NTRP difference:
      * Default: 20% to 80% (realistic range)
-     * 1.0+ difference at 4.0+ levels: 15% to 85% (moderate extreme)
-     * 1.5+ difference at 4.5+ levels: 10% to 90% (most extreme)
+     * 0.5+ differences: 15% to 85% (moderate extreme)
+     * 1.0+ differences: 10% to 90% (significant extreme)
+     * 1.5+ differences: 5% to 95% (maximum extreme)
    - Player 2 probability = 1 - player 1 probability
 
 4. ODDS CONVERSION
