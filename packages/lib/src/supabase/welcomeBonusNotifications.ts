@@ -21,14 +21,50 @@ export class WelcomeBonusNotificationService {
   static async createWelcomeBonusNotification(
     userId: string,
     bonusAmount: number,
-    hasTournamentPass: boolean = true
+    hasTournamentPass: boolean = true,
+    language: string = "en"
   ): Promise<WelcomeBonusNotification> {
+    // Get the localized template
+    let template;
+    const { data: templateData, error: templateError } = await supabase
+      .from("notification_templates")
+      .select("title, message")
+      .eq("type", "welcome_bonus")
+      .eq("language", language)
+      .single();
+
+    if (templateError) {
+      console.error("Error fetching welcome bonus template:", templateError);
+      // Fallback to English if template not found
+      const { data: fallbackTemplate } = await supabase
+        .from("notification_templates")
+        .select("title, message")
+        .eq("type", "welcome_bonus")
+        .eq("language", "en")
+        .single();
+
+      template = fallbackTemplate;
+    } else {
+      template = templateData;
+    }
+
+    // Use template or fallback to hardcoded text
+    const title = template?.title || "Welcome Bonus Available! 🎉";
+    const messageTemplate =
+      template?.message || `Claim your {amount} coin welcome bonus{pass}!`;
+
+    // Replace placeholders in the message
+    const passText = hasTournamentPass ? " and free tournament pass" : "";
+    const message = messageTemplate
+      .replace("{amount}", bonusAmount.toString())
+      .replace("{pass}", passText);
+
     const { data, error } = await supabase
       .from("notifications")
       .insert({
         user_id: userId,
-        title: "Welcome Bonus Available! 🎉",
-        message: `Claim your ${bonusAmount} coin welcome bonus${hasTournamentPass ? " and free tournament pass" : ""}!`,
+        title: title,
+        message: message,
         type: "welcome_bonus",
         data: {
           bonus_amount: bonusAmount,
