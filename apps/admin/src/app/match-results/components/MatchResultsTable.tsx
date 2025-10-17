@@ -246,77 +246,83 @@ export function MatchResultsTable({
                             </Table>
                         </div>
 
-                        {/* Mobile Card View */}
-                        <div className="lg:hidden space-y-3 p-4">
+                        {/* Mobile-Optimized Card View */}
+                        <div className="lg:hidden space-y-4 p-4">
                             {dateMatches.map((match) => {
                                 const result = getResult(match.id);
                                 const hasExistingResult = hasResult(match.id);
 
                                 return (
-                                    <div key={match.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
-                                        {/* Players */}
-                                        <div className="space-y-1">
-                                            <div className="font-medium text-sm text-gray-900">
+                                    <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-4 space-y-4 shadow-sm hover:shadow-md transition-shadow">
+                                        {/* Players Section */}
+                                        <div className="text-center space-y-2">
+                                            <div className="font-semibold text-base text-gray-900">
                                                 {match.player_a.first_name} {match.player_a.last_name}
                                             </div>
-                                            <div className="text-xs text-gray-500 text-center">vs</div>
-                                            <div className="font-medium text-sm text-gray-900">
+                                            <div className="text-sm text-gray-500 font-medium">VS</div>
+                                            <div className="font-semibold text-base text-gray-900">
                                                 {match.player_b.first_name} {match.player_b.last_name}
                                             </div>
                                         </div>
 
-                                        {/* Tournament and Format */}
-                                        <div className="flex flex-col space-y-2">
+                                        {/* Tournament Info */}
+                                        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">Tournament:</span>
-                                                <span className="text-sm font-medium">{match.tournaments?.name || 'N/A'}</span>
+                                                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Tournament</span>
+                                                <span className="text-sm font-medium text-gray-900">{match.tournaments?.name || 'N/A'}</span>
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">Format:</span>
-                                                <Badge variant="outline" className="text-xs">
+                                                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Format</span>
+                                                <Badge variant="outline" className="text-xs px-2 py-1">
                                                     {match.tournaments?.matches_type || 'N/A'}
                                                 </Badge>
                                             </div>
-                                        </div>
-
-                                        {/* Status and Results */}
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-xs text-gray-500">Status:</span>
-                                                <Badge className={`text-xs ${getStatusColor(match.status)}`}>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</span>
+                                                <Badge className={`text-xs px-2 py-1 ${getStatusColor(match.status)}`}>
                                                     {match.status}
                                                 </Badge>
                                             </div>
                                         </div>
 
-                                        {/* Results */}
+                                        {/* Results Section */}
                                         {hasExistingResult ? (
-                                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
-                                                <div className="text-xs font-medium text-green-800">Match Result</div>
-                                                <div className="text-sm font-medium text-green-900">
-                                                    Winner: {result?.winner?.first_name} {result?.winner?.last_name}
+                                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 space-y-3">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                                    <span className="text-xs font-semibold text-green-800 uppercase tracking-wide">Match Result</span>
                                                 </div>
-                                                <div className="text-xs text-green-700">
-                                                    {result?.match_result}
-                                                </div>
-                                                <div className="text-xs text-green-600">
-                                                    {result && getDetailedScore(result)}
+                                                <div className="space-y-2">
+                                                    <div className="text-sm font-bold text-green-900">
+                                                        Winner: {result?.winner?.first_name} {result?.winner?.last_name}
+                                                    </div>
+                                                    <div className="text-sm font-medium text-green-700">
+                                                        Result: {result?.match_result}
+                                                    </div>
+                                                    <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                                        {result && getDetailedScore(result)}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                                <div className="text-xs text-gray-500">No results yet</div>
+                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                                                <div className="text-sm text-gray-500">No results recorded yet</div>
+                                                {match.status !== 'finished' && (
+                                                    <div className="text-xs text-gray-400 mt-1">
+                                                        Change status to &quot;finished&quot; to add results
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
-                                        {/* Actions */}
-                                        <div className="flex space-x-2 pt-2">
+                                        {/* Action Button */}
+                                        <div className="pt-2">
                                             {hasExistingResult ? (
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
                                                     onClick={() => onEditResult(result!)}
-                                                    className="flex-1 text-xs"
+                                                    className="w-full text-sm font-semibold h-10 border-blue-200 text-blue-700 hover:bg-blue-50"
                                                 >
                                                     Edit Result
                                                 </Button>
@@ -325,9 +331,9 @@ export function MatchResultsTable({
                                                     size="sm"
                                                     onClick={() => onAddResult(match)}
                                                     disabled={match.status !== 'finished'}
-                                                    className="flex-1 text-xs"
+                                                    className="w-full text-sm font-semibold h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white disabled:opacity-50"
                                                 >
-                                                    Add Results
+                                                    {match.status === 'finished' ? 'Add Results' : 'Match Not Finished'}
                                                 </Button>
                                             )}
                                         </div>

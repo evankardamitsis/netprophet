@@ -360,69 +360,83 @@ export default function MatchResultsPage() {
     });
 
     return (
-        <div className="container mx-auto py-4 sm:py-6 space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold">Match Results</h1>
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <Button onClick={() => loadData()} className="w-full sm:w-auto">
-                        Refresh
-                    </Button>
+        <div className="min-h-screen bg-gray-50/50">
+            <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+                {/* Mobile-First Header */}
+                <div className="space-y-4">
+                    <div className="text-center sm:text-left">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                            Match Results
+                        </h1>
+                        <p className="text-sm sm:text-base text-gray-600 mt-2">
+                            Manage and update match results
+                        </p>
+                    </div>
+
+                    {/* Mobile-Optimized Refresh Button */}
+                    <div className="flex justify-center sm:justify-end">
+                        <Button
+                            onClick={() => loadData()}
+                            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 py-3 px-6 text-base font-semibold"
+                        >
+                            Refresh Data
+                        </Button>
+                    </div>
                 </div>
+
+                <MatchResultsFilters
+                    statusFilter={statusFilter}
+                    setStatusFilter={setStatusFilter}
+                    searchTerm={searchTerm}
+                    setSearchTerm={setSearchTerm}
+                    tournamentFilter={tournamentFilter}
+                    setTournamentFilter={setTournamentFilter}
+                    dateFilter={dateFilter}
+                    setDateFilter={setDateFilter}
+                    tournaments={tournaments}
+                    dates={dates}
+                />
+
+                <MatchResultsTable
+                    groupedMatches={sortedGroups}
+                    matchResults={matchResults}
+                    onAddResult={handleAddResult}
+                    onEditResult={handleEditResult}
+                />
+
+                {/* Mobile-Optimized Dialogs */}
+                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                    <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+                        <DialogHeader className="pb-4">
+                            <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Add Match Result</DialogTitle>
+                        </DialogHeader>
+                        <MatchResultForm
+                            formData={formData}
+                            setFormData={setFormData}
+                            match={selectedMatch}
+                            onSubmit={handleSubmitResult}
+                            submitLabel="Add Result"
+                            isLoading={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+                        <DialogHeader className="pb-4">
+                            <DialogTitle className="text-xl sm:text-2xl font-bold text-gray-900">Edit Match Result</DialogTitle>
+                        </DialogHeader>
+                        <MatchResultForm
+                            formData={formData}
+                            setFormData={setFormData}
+                            match={selectedMatch}
+                            onSubmit={handleUpdateResult}
+                            submitLabel="Update Result"
+                            isLoading={isSubmitting}
+                        />
+                    </DialogContent>
+                </Dialog>
             </div>
-
-            <MatchResultsFilters
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                tournamentFilter={tournamentFilter}
-                setTournamentFilter={setTournamentFilter}
-                dateFilter={dateFilter}
-                setDateFilter={setDateFilter}
-                tournaments={tournaments}
-                dates={dates}
-            />
-
-            <MatchResultsTable
-                groupedMatches={sortedGroups}
-                matchResults={matchResults}
-                onAddResult={handleAddResult}
-                onEditResult={handleEditResult}
-            />
-
-            {/* Add Result Dialog */}
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl">Add Match Result</DialogTitle>
-                    </DialogHeader>
-                    <MatchResultForm
-                        formData={formData}
-                        setFormData={setFormData}
-                        match={selectedMatch}
-                        onSubmit={handleSubmitResult}
-                        submitLabel="Add Result"
-                        isLoading={isSubmitting}
-                    />
-                </DialogContent>
-            </Dialog>
-
-            {/* Edit Result Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-lg sm:text-xl">Edit Match Result</DialogTitle>
-                    </DialogHeader>
-                    <MatchResultForm
-                        formData={formData}
-                        setFormData={setFormData}
-                        match={selectedMatch}
-                        onSubmit={handleUpdateResult}
-                        submitLabel="Update Result"
-                        isLoading={isSubmitting}
-                    />
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

@@ -253,62 +253,74 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     return (
-        <div className="space-y-4 sm:space-y-6">
-            {/* Match Winner */}
-            <div className="p-4 border rounded-lg">
-                <div className="mb-3">
-                    <h3 className="text-lg font-bold text-gray-900">🏆 Match Winner</h3>
+        <div className="space-y-6">
+            {/* Mobile-Optimized Match Winner Selection */}
+            <div className="p-4 sm:p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className="mb-4">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-2">
+                            <span className="text-white text-lg">🏆</span>
+                        </div>
+                        Match Winner
+                    </h3>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
                         onClick={() => handleMatchWinnerChange(formData.winner_id === match.player_a.id ? '' : match.player_a.id)}
-                        className={`p-3 border rounded-lg transition-colors ${formData.winner_id === match.player_a.id
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                        className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.winner_id === match.player_a.id
+                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                            : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                             }`}
                     >
-                        <div className="text-sm font-semibold">
+                        <div className="text-base sm:text-lg font-bold text-center">
                             {match.player_a.first_name} {match.player_a.last_name}
                         </div>
                     </button>
                     <button
                         onClick={() => handleMatchWinnerChange(formData.winner_id === match.player_b.id ? '' : match.player_b.id)}
-                        className={`p-3 border rounded-lg transition-colors ${formData.winner_id === match.player_b.id
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                        className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.winner_id === match.player_b.id
+                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                            : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                             }`}
                     >
-                        <div className="text-sm font-semibold">
+                        <div className="text-base sm:text-lg font-bold text-center">
                             {match.player_b.first_name} {match.player_b.last_name}
                         </div>
                     </button>
                 </div>
             </div>
 
-            {/* Match Result - Only show if winner is selected */}
+            {/* Mobile-Optimized Match Result Selection */}
             {formData.winner_id && (
-                <div className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-bold text-gray-900">Match Result</h3>
-                        <span className="text-xs text-gray-400">
-                            {isBestOf5 ? 'Best of 5' : isAmateurFormat ? 'Best of 3 (Super TB)' : 'Best of 3'}
-                        </span>
+                <div className="p-4 sm:p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <div className="mb-4">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-2">
+                                <span className="text-white text-lg">📊</span>
+                            </div>
+                            Match Result
+                        </h3>
+                        <div className="mt-2">
+                            <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                                {isBestOf5 ? 'Best of 5' : isAmateurFormat ? 'Best of 3 (Super TB)' : 'Best of 3'}
+                            </span>
+                        </div>
                     </div>
-                    <p className="text-sm text-gray-400 mb-3">
-                        How will {formData.winner_id === match.player_a.id ? match.player_a.first_name : match.player_b.first_name} win the match?
+                    <p className="text-sm sm:text-base text-gray-600 mb-4">
+                        How will <span className="font-semibold text-gray-900">{formData.winner_id === match.player_a.id ? match.player_a.first_name : match.player_b.first_name}</span> win the match?
                     </p>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {getMatchResultOptions().map((option) => (
                             <button
                                 key={option.value}
                                 onClick={() => handleMatchResultChange(formData.match_result === option.value ? '' : option.value)}
-                                className={`p-3 border rounded-lg transition-colors ${formData.match_result === option.value
-                                    ? 'bg-purple-600 border-purple-600 text-white'
-                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                                className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_result === option.value
+                                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                                    : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                                     }`}
                             >
-                                <div className="text-base font-semibold">{option.value}</div>
-                                <div className="text-xs text-gray-400">{option.label.split('(')[1]?.replace(')', '')}</div>
+                                <div className="text-xl font-bold text-center mb-1">{option.value}</div>
+                                <div className="text-xs text-center opacity-80">{option.label.split('(')[1]?.replace(')', '')}</div>
                             </button>
                         ))}
                     </div>
@@ -485,9 +497,14 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                 </div>
             )}
 
-            {/* Submit Button */}
-            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 sm:pt-6">
-                <Button type="button" variant="outline" onClick={() => window.history.back()} className="w-full sm:w-auto">
+            {/* Mobile-Optimized Submit Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.history.back()}
+                    className="w-full sm:w-auto h-12 text-base font-semibold border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
                     Cancel
                 </Button>
                 <Button
@@ -499,11 +516,11 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                         onSubmit();
                     }}
                     disabled={isLoading}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                     {isLoading ? (
                         <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             Processing...
                         </>
                     ) : (

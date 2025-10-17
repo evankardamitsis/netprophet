@@ -33,33 +33,37 @@ export function MatchResultsFilters({
     dates
 }: MatchResultsFiltersProps) {
     return (
-        <Card className="mb-4 sm:mb-6">
-            <CardHeader className="pb-3 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                    <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
+        <Card className="mb-4 sm:mb-6 shadow-lg border-0 bg-white">
+            <CardHeader className="pb-3 sm:pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl font-bold text-gray-900">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-2">
+                        <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </div>
                     Filters
                 </CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {/* Search */}
-                    <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <Search className="h-4 w-4" />
-                            Search
-                        </Label>
-                        <Input
-                            placeholder="Search players or tournaments..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+            <CardContent className="space-y-4">
+                {/* Mobile-Optimized Search */}
+                <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                        <Search className="h-4 w-4 text-gray-500" />
+                        Search Players or Tournaments
+                    </Label>
+                    <Input
+                        placeholder="Type to search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="h-11 text-base"
+                    />
+                </div>
 
+                {/* Mobile-Optimized Filter Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Status Filter */}
                     <div className="space-y-2">
-                        <Label>Status</Label>
+                        <Label className="text-sm font-semibold text-gray-700">Match Status</Label>
                         <Select value={statusFilter} onValueChange={(value: FilterStatus) => setStatusFilter(value)}>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-11 text-base">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -73,12 +77,12 @@ export function MatchResultsFilters({
 
                     {/* Tournament Filter */}
                     <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <Trophy className="h-4 w-4" />
+                        <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <Trophy className="h-4 w-4 text-gray-500" />
                             Tournament
                         </Label>
                         <Select value={tournamentFilter} onValueChange={setTournamentFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-11 text-base">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -93,13 +97,13 @@ export function MatchResultsFilters({
                     </div>
 
                     {/* Date Filter */}
-                    <div className="space-y-2">
-                        <Label className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
+                    <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+                        <Label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <Calendar className="h-4 w-4 text-gray-500" />
                             Date
                         </Label>
                         <Select value={dateFilter} onValueChange={setDateFilter}>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-11 text-base">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

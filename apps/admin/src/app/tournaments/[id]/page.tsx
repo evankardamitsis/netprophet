@@ -404,139 +404,216 @@ export default function TournamentPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header Section */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
-                    {/* Back Button Row */}
-                    <div className="mb-4">
+        <div className="min-h-screen bg-gray-50/50">
+            {/* Mobile-Optimized Header Section */}
+            <div className="bg-white border-b border-gray-200 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 py-6">
+                    {/* Mobile-First Back Button */}
+                    <div className="mb-6">
                         <Button
                             variant="ghost"
                             onClick={() => router.push('/tournaments')}
-                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 w-full sm:w-auto"
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
                         >
                             <ArrowLeft className="h-4 w-4" />
-                            <span className="sm:hidden">Back</span>
-                            <span className="hidden sm:inline">Back to Tournaments</span>
+                            <span className="font-medium">Back to Tournaments</span>
                         </Button>
                     </div>
 
-                    {/* Tournament Title and Actions Row */}
-                    <div className="flex flex-col gap-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                            <div className="flex-1 min-w-0">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{tournament?.name}</h1>
-                                    <Badge className={`${getSurfaceColor(tournament?.surface || '')} text-sm font-medium px-3 py-1 w-fit`}>
-                                        {tournament?.surface}
-                                    </Badge>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">Tournament Management</p>
+                    {/* Tournament Title Section */}
+                    <div className="space-y-6">
+                        <div className="text-center sm:text-left">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
+                                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                                    {tournament?.name}
+                                </h1>
+                                <Badge className={`${getSurfaceColor(tournament?.surface || '')} text-sm font-semibold px-4 py-2 w-fit mx-auto sm:mx-0`}>
+                                    {tournament?.surface}
+                                </Badge>
                             </div>
+                            <p className="text-gray-600 text-sm sm:text-base">Tournament Management</p>
                         </div>
 
-                        {/* Action Buttons - Mobile Optimized */}
-                        <div className="flex flex-col sm:flex-row gap-2">
-                            <div className="flex gap-2">
+                        {/* Mobile-Optimized Action Buttons */}
+                        <div className="space-y-3">
+                            {/* Primary Actions */}
+                            <div className="flex flex-col sm:flex-row gap-3">
                                 <Button
                                     onClick={() => setShowMatchForm(true)}
-                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
+                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 py-3 px-6 text-base font-semibold w-full sm:w-auto"
                                 >
-                                    <Plus className="h-4 w-4" />
-                                    <span className="sm:hidden">Add Match</span>
-                                    <span className="hidden sm:inline">Add Match</span>
+                                    <Plus className="h-5 w-5" />
+                                    Add Match
                                 </Button>
                                 <Button
                                     onClick={handleRunMatchAutomation}
-                                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 flex-1 sm:flex-none"
+                                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 py-3 px-6 text-base font-semibold w-full sm:w-auto"
                                 >
-                                    <Clock className="h-4 w-4" />
-                                    <span className="sm:hidden">Automation</span>
-                                    <span className="hidden sm:inline">Run Automation</span>
+                                    <Clock className="h-5 w-5" />
+                                    Run Automation
                                 </Button>
                             </div>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="border-gray-300 w-full sm:w-auto">
-                                        <Settings className="h-4 w-4 mr-2" />
-                                        <span className="sm:hidden">Settings</span>
-                                        <span className="hidden sm:inline">Settings</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                    <DropdownMenuItem onClick={() => {
-                                        setEditingTournament(tournament);
-                                        setShowTournamentForm(true);
-                                    }}>
-                                        <Edit className="h-4 w-4 mr-2" />
-                                        Edit Tournament
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setShowMatchForm(true)}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Add Match
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => {
-                                        setEditingCategory(null);
-                                        setShowCategoryForm(true);
-                                    }}>
-                                        <Tag className="h-4 w-4 mr-2" />
-                                        Add Category
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={handleDeleteTournament}
-                                        className="text-red-600 focus:text-red-600"
-                                    >
-                                        <Trash2 className="h-4 w-4 mr-2" />
-                                        Delete Tournament
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+
+                            {/* Settings Dropdown */}
+                            <div className="flex justify-center sm:justify-start">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="border-gray-300 hover:bg-gray-50 px-6 py-3 text-base font-semibold"
+                                        >
+                                            <Settings className="h-5 w-5 mr-2" />
+                                            Settings
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56 shadow-xl border-0">
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                setEditingTournament(tournament);
+                                                setShowTournamentForm(true);
+                                            }}
+                                            className="py-3 px-4 text-base"
+                                        >
+                                            <Edit className="h-4 w-4 mr-3" />
+                                            Edit Tournament
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setShowMatchForm(true)}
+                                            className="py-3 px-4 text-base"
+                                        >
+                                            <Plus className="h-4 w-4 mr-3" />
+                                            Add Match
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                setEditingCategory(null);
+                                                setShowCategoryForm(true);
+                                            }}
+                                            className="py-3 px-4 text-base"
+                                        >
+                                            <Tag className="h-4 w-4 mr-3" />
+                                            Add Category
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={handleDeleteTournament}
+                                            className="text-red-600 focus:text-red-600 py-3 px-4 text-base"
+                                        >
+                                            <Trash2 className="h-4 w-4 mr-3" />
+                                            Delete Tournament
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-
-
-
+            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+                {/* Mobile-Optimized Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-gray-100 p-1 rounded-lg mb-4 sm:mb-6 lg:mb-8">
-                        <TabsTrigger value="overview" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
-                            <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="hidden sm:inline">Overview</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="matches" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
-                            <Trophy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="hidden sm:inline">Matches</span>
-                            {matches.length > 0 && (
-                                <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0">
-                                    {matches.length}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger value="categories" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
-                            <Tag className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="hidden sm:inline">Categories</span>
-                            {categories.length > 0 && (
-                                <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0">
-                                    {categories.length}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                        <TabsTrigger value="participants" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2">
-                            <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                            <span className="hidden sm:inline">Participants</span>
-                            {participants.length > 0 && (
-                                <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0">
-                                    {participants.length}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
-                    </TabsList>
+                    {/* Mobile Tabs - Horizontal Scroll */}
+                    <div className="lg:hidden mb-6">
+                        <div className="flex overflow-x-auto scrollbar-hide pb-2">
+                            <TabsList className="flex gap-2 min-w-max px-1 bg-transparent border-0 p-0">
+                                <TabsTrigger
+                                    value="overview"
+                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
+                                >
+                                    <BarChart3 className="h-4 w-4 flex-shrink-0" />
+                                    <span>Overview</span>
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="matches"
+                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Trophy className="h-4 w-4 flex-shrink-0" />
+                                    <span>Matches</span>
+                                    {matches.length > 0 && (
+                                        <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                            {matches.length}
+                                        </Badge>
+                                    )}
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="categories"
+                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Tag className="h-4 w-4 flex-shrink-0" />
+                                    <span>Categories</span>
+                                    {categories.length > 0 && (
+                                        <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                            {categories.length}
+                                        </Badge>
+                                    )}
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="participants"
+                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
+                                >
+                                    <Users className="h-4 w-4 flex-shrink-0" />
+                                    <span>Participants</span>
+                                    {participants.length > 0 && (
+                                        <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                            {participants.length}
+                                        </Badge>
+                                    )}
+                                </TabsTrigger>
+                            </TabsList>
+                        </div>
+                    </div>
 
-                    <TabsContent value="overview" className="mt-6">
+                    {/* Desktop Tabs - Grid Layout */}
+                    <div className="hidden lg:block">
+                        <TabsList className="grid w-full grid-cols-4 bg-gray-50 border border-gray-200 shadow-sm p-1 rounded-xl mb-6">
+                            <TabsTrigger
+                                value="overview"
+                                className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
+                            >
+                                <BarChart3 className="h-4 w-4 flex-shrink-0" />
+                                <span>Overview</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="matches"
+                                className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
+                            >
+                                <Trophy className="h-4 w-4 flex-shrink-0" />
+                                <span>Matches</span>
+                                {matches.length > 0 && (
+                                    <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                        {matches.length}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="categories"
+                                className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
+                            >
+                                <Tag className="h-4 w-4 flex-shrink-0" />
+                                <span>Categories</span>
+                                {categories.length > 0 && (
+                                    <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                        {categories.length}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="participants"
+                                className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
+                            >
+                                <Users className="h-4 w-4 flex-shrink-0" />
+                                <span>Participants</span>
+                                {participants.length > 0 && (
+                                    <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                        {participants.length}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <TabsContent value="overview" className="mt-0">
                         {tournament && (
                             <TournamentOverview
                                 tournament={tournament}
@@ -550,7 +627,7 @@ export default function TournamentPage() {
                         )}
                     </TabsContent>
 
-                    <TabsContent value="matches" className="mt-6">
+                    <TabsContent value="matches" className="mt-0">
                         <TournamentMatches
                             matches={matches}
                             onAddMatch={() => setShowMatchForm(true)}
@@ -568,7 +645,7 @@ export default function TournamentPage() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="categories" className="mt-6">
+                    <TabsContent value="categories" className="mt-0">
                         <TournamentCategories
                             categories={categories}
                             onAddCategory={() => {
@@ -584,7 +661,7 @@ export default function TournamentPage() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="participants" className="mt-6">
+                    <TabsContent value="participants" className="mt-0">
                         <ParticipantsTable
                             participants={participants}
                             tournamentName={tournament?.name || ''}
@@ -595,7 +672,7 @@ export default function TournamentPage() {
 
                 </Tabs>
 
-                {/* Modals */}
+                {/* Mobile-Optimized Modals */}
                 {tournament && (
                     <MatchModal
                         isOpen={showMatchForm}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge, Clock, Edit, MoreHorizontal, Trash2, Users } from 'lucide-react';
+import { Badge, Clock, Edit, MoreHorizontal, Plus, Trash2, Trophy, Users } from 'lucide-react';
 import { Match } from '@/types';
 import { TournamentMatchesTable } from './TournamentMatchesTable';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
@@ -36,12 +36,11 @@ export function TournamentMatches({
     const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
 
     return (
-        <div className="space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <div className="min-w-0 flex-1">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Tournament Matches</h2>
-                    <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage all matches for this tournament</p>
-                </div>
+        <div className="space-y-6">
+            {/* Mobile-Optimized Header */}
+            <div className="text-center sm:text-left">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Tournament Matches</h2>
+                <p className="text-gray-600 text-sm sm:text-base">Manage all matches for this tournament</p>
             </div>
 
             {matches.length > 0 ? (
@@ -59,20 +58,19 @@ export function TournamentMatches({
                     onSelectionChange={setSelectedMatches}
                 />
             ) : (
-                <div className="text-center py-8 sm:py-12">
-                    <div className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mx-auto mb-4 sm:mb-6 flex items-center justify-center">
-                        <svg className="h-12 w-12 sm:h-16 sm:w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-full p-8 mb-6">
+                        <Trophy className="h-16 w-16 text-blue-500" />
                     </div>
-                    <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2 sm:mb-3">No matches found</h3>
-                    <p className="text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base px-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">No matches found</h3>
+                    <p className="text-gray-600 mb-6 text-center max-w-md text-base">
                         Add matches to this tournament to get started. Each match will be associated with this tournament.
                     </p>
                     <Button
                         onClick={onAddMatch}
-                        className="bg-blue-600 hover:bg-blue-700 text-sm sm:text-base"
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                     >
+                        <Plus className="h-5 w-5 mr-2" />
                         Add First Match
                     </Button>
                 </div>

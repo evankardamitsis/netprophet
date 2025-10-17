@@ -33,105 +33,119 @@ export function TournamentOverview({
         return 'TBD';
     };
     return (
-        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-            <div className="grid gap-4 sm:gap-6 lg:gap-8 grid-cols-1 lg:grid-cols-3">
-                {/* Tournament Details Card */}
+        <div className="space-y-6">
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+                {/* Mobile-Optimized Tournament Details Card */}
                 <div className="lg:col-span-2">
-                    <Card className="border-0 shadow-lg">
-                        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-                            <CardTitle className="flex items-center gap-2 sm:gap-3 text-lg sm:text-xl">
-                                <div className="p-2 bg-blue-100 rounded-lg">
-                                    <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                    <Card className="border-0 shadow-xl bg-white">
+                        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 p-6">
+                            <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-3">
+                                    <Trophy className="h-6 w-6 text-white" />
                                 </div>
                                 <span className="truncate">Tournament Details</span>
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6">
-                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 lg:gap-3">
-                                <Badge className={`${getStatusColor(tournament.status)} text-xs sm:text-sm font-medium px-2 sm:px-3 py-1`}>
+                        <CardContent className="p-6 space-y-6">
+                            {/* Mobile-Optimized Status Badges */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <Badge className={`${getStatusColor(tournament.status)} text-sm font-semibold px-4 py-2`}>
                                     {tournament.status}
                                 </Badge>
-                                <Badge className={`${getSurfaceColor(tournament.surface)} text-xs sm:text-sm font-medium px-2 sm:px-3 py-1`}>
+                                <Badge className={`${getSurfaceColor(tournament.surface)} text-sm font-semibold px-4 py-2`}>
                                     {tournament.surface}
                                 </Badge>
                             </div>
 
+                            {/* Description */}
                             {tournament.description && (
-                                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                                    <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+                                    <p className="text-gray-700 leading-relaxed text-base">
                                         {tournament.description}
                                     </p>
                                 </div>
                             )}
 
-                            <div className="grid gap-2 sm:gap-3 lg:gap-4 grid-cols-1 sm:grid-cols-2">
-                                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-3 bg-gray-50 rounded-lg">
-                                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-500 flex-shrink-0" />
+                            {/* Mobile-Optimized Info Grid */}
+                            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                                    <div className="bg-blue-500 rounded-lg p-3">
+                                        <Calendar className="h-5 w-5 text-white" />
+                                    </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-xs sm:text-sm font-medium text-gray-900">Date Range</div>
-                                        <div className="text-xs sm:text-sm text-gray-600 truncate">
+                                        <div className="text-sm font-semibold text-gray-900">Date Range</div>
+                                        <div className="text-sm text-gray-600 truncate">
                                             {tournament.start_date} - {tournament.end_date}
                                         </div>
                                     </div>
                                 </div>
 
                                 {tournament.location && (
-                                    <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-3 bg-gray-50 rounded-lg">
-                                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-500 flex-shrink-0" />
+                                    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                                        <div className="bg-green-500 rounded-lg p-3">
+                                            <MapPin className="h-5 w-5 text-white" />
+                                        </div>
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-xs sm:text-sm font-medium text-gray-900">Location</div>
-                                            <div className="text-xs sm:text-sm text-gray-600 truncate">{tournament.location}</div>
+                                            <div className="text-sm font-semibold text-gray-900">Location</div>
+                                            <div className="text-sm text-gray-600 truncate">{tournament.location}</div>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-3 bg-gray-50 rounded-lg">
-                                    <Users className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-500 flex-shrink-0" />
+                                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                                    <div className="bg-purple-500 rounded-lg p-3">
+                                        <Users className="h-5 w-5 text-white" />
+                                    </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-xs sm:text-sm font-medium text-gray-900">Participants</div>
-                                        <div className="text-xs sm:text-sm text-gray-600">
+                                        <div className="text-sm font-semibold text-gray-900">Participants</div>
+                                        <div className="text-sm text-gray-600">
                                             {tournament.current_participants}
                                             {tournament.max_participants && `/${tournament.max_participants}`}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-3 bg-gray-50 rounded-lg">
-                                    <Trophy className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-500 flex-shrink-0" />
+                                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
+                                    <div className="bg-yellow-500 rounded-lg p-3">
+                                        <Trophy className="h-5 w-5 text-white" />
+                                    </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-xs sm:text-sm font-medium text-gray-900">Entry Fee</div>
-                                        <div className="text-xs sm:text-sm text-gray-600">${tournament.entry_fee}</div>
+                                        <div className="text-sm font-semibold text-gray-900">Entry Fee</div>
+                                        <div className="text-sm text-gray-600">${tournament.entry_fee}</div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-3 bg-gray-50 rounded-lg">
-                                    <Trophy className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-500 flex-shrink-0" />
+                                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
+                                    <div className="bg-indigo-500 rounded-lg p-3">
+                                        <Trophy className="h-5 w-5 text-white" />
+                                    </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-xs sm:text-sm font-medium text-gray-900">Tournament Type</div>
-                                        <div className="text-xs sm:text-sm text-gray-600 capitalize">{tournament.tournament_type}</div>
+                                        <div className="text-sm font-semibold text-gray-900">Tournament Type</div>
+                                        <div className="text-sm text-gray-600 capitalize">{tournament.tournament_type}</div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 p-1.5 sm:p-2 lg:p-3 bg-gray-50 rounded-lg">
-                                    <Trophy className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-500 flex-shrink-0" />
+                                <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-200">
+                                    <div className="bg-red-500 rounded-lg p-3">
+                                        <Trophy className="h-5 w-5 text-white" />
+                                    </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-xs sm:text-sm font-medium text-gray-900">Format</div>
-                                        <div className="text-xs sm:text-sm text-gray-600 capitalize">{tournament.format.replace('_', ' ')}</div>
+                                        <div className="text-sm font-semibold text-gray-900">Format</div>
+                                        <div className="text-sm text-gray-600 capitalize">{tournament.format.replace('_', ' ')}</div>
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Prize Pool */}
                             {tournament.prize_pool && (
-                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 p-2 sm:p-3 lg:p-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0">
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 p-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <div>
-                                            <div className="text-xs sm:text-sm font-medium text-green-800">Prize Pool</div>
-                                            <div className="text-xs text-green-600">Total prize money</div>
+                                            <div className="text-lg font-bold text-green-800">Prize Pool</div>
+                                            <div className="text-sm text-green-600">Total prize money</div>
                                         </div>
-                                        <div className="text-left sm:text-right">
-                                            <div className="text-base sm:text-lg lg:text-2xl font-bold text-green-600">
-                                                ${tournament.prize_pool.toLocaleString()}
-                                            </div>
+                                        <div className="text-3xl font-black text-green-600">
+                                            ${tournament.prize_pool.toLocaleString()}
                                         </div>
                                     </div>
                                 </div>
@@ -142,33 +156,37 @@ export function TournamentOverview({
                     </Card>
                 </div>
 
-                {/* Recent Matches Card */}
+                {/* Mobile-Optimized Recent Matches Card */}
                 <div className="lg:col-span-1">
-                    <Card className="border-0 shadow-lg h-fit">
-                        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
-                            <CardTitle className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base lg:text-lg">
-                                <div className="p-1.5 sm:p-2 bg-gray-100 rounded-lg">
-                                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-600" />
+                    <Card className="border-0 shadow-xl h-fit bg-white">
+                        <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100 p-6">
+                            <CardTitle className="flex items-center gap-3 text-lg font-bold text-gray-900">
+                                <div className="bg-gradient-to-r from-gray-500 to-gray-600 rounded-xl p-3">
+                                    <Clock className="h-6 w-6 text-white" />
                                 </div>
                                 <span className="truncate">Recent Matches</span>
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 lg:p-4">
+                        <CardContent className="p-6">
                             {matches.length > 0 ? (
-                                <div className="space-y-1.5 sm:space-y-2 lg:space-y-3">
+                                <div className="space-y-4">
                                     {matches.slice(0, 5).map((match) => (
-                                        <div key={match.id} className="flex items-center justify-between p-1.5 sm:p-2 lg:p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                                            <div className="flex-1 min-w-0 pr-2">
-                                                <div className="font-medium text-xs sm:text-sm text-gray-900 truncate">
+                                        <div key={match.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200">
+                                            <div className="flex-1 min-w-0 pr-3">
+                                                <div className="font-semibold text-sm text-gray-900 truncate">
                                                     {getPlayerName(match.player_a)} vs {getPlayerName(match.player_b)}
                                                 </div>
-                                                <div className="text-xs text-gray-500 flex items-center gap-1 truncate">
-                                                    {match.round && <span className="truncate">{match.round}</span>}
-                                                    {match.round && <span>•</span>}
+                                                <div className="text-xs text-gray-500 flex items-center gap-2 mt-1">
+                                                    {match.round && (
+                                                        <>
+                                                            <span className="truncate">{match.round}</span>
+                                                            <span>•</span>
+                                                        </>
+                                                    )}
                                                     <span className="truncate">{match.status}</span>
                                                 </div>
                                             </div>
-                                            <Badge className={`${getStatusColor(match.status)} text-xs flex-shrink-0`}>
+                                            <Badge className={`${getStatusColor(match.status)} text-xs px-3 py-1 font-semibold flex-shrink-0`}>
                                                 {match.status}
                                             </Badge>
                                         </div>
@@ -176,7 +194,7 @@ export function TournamentOverview({
                                     {matches.length > 5 && (
                                         <Button
                                             variant="outline"
-                                            className="w-full mt-3 sm:mt-4 text-xs sm:text-sm"
+                                            className="w-full mt-4 text-sm font-semibold h-11 border-blue-200 text-blue-700 hover:bg-blue-50"
                                             onClick={onViewAllMatches}
                                         >
                                             View All Matches ({matches.length})
@@ -184,16 +202,17 @@ export function TournamentOverview({
                                     )}
                                 </div>
                             ) : (
-                                <div className="text-center py-4 sm:py-6 lg:py-8">
-                                    <Clock className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-400 mx-auto mb-2 sm:mb-3 lg:mb-4" />
-                                    <h3 className="text-sm sm:text-base lg:text-lg font-medium text-gray-900 mb-1 sm:mb-2">No matches yet</h3>
-                                    <p className="text-gray-600 mb-2 sm:mb-3 lg:mb-4 text-xs sm:text-sm">
+                                <div className="text-center py-8">
+                                    <div className="bg-gradient-to-r from-gray-100 to-gray-200 rounded-full p-6 w-fit mx-auto mb-4">
+                                        <Clock className="h-12 w-12 text-gray-500" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">No matches yet</h3>
+                                    <p className="text-gray-600 mb-4 text-sm">
                                         Add matches to this tournament to get started
                                     </p>
                                     <Button
                                         onClick={onAddMatch}
-                                        size="sm"
-                                        className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm"
+                                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2"
                                     >
                                         Add First Match
                                     </Button>

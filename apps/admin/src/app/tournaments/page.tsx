@@ -167,191 +167,231 @@ export default function TournamentsPage() {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tournament Management</h1>
-                    <p className="text-gray-600 mt-2">
-                        Create and manage tournaments
-                    </p>
+        <div className="min-h-screen bg-gray-50/50">
+            <div className="container mx-auto px-4 py-6 space-y-6">
+                {/* Mobile-First Header */}
+                <div className="space-y-4">
+                    <div className="text-center sm:text-left">
+                        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+                            Tournament Management
+                        </h1>
+                        <p className="text-sm sm:text-base text-gray-600 mt-2">
+                            Create and manage tournaments
+                        </p>
+                    </div>
+
+                    {/* Mobile-Optimized Create Button */}
+                    <div className="flex justify-center sm:justify-start">
+                        <Button
+                            onClick={() => setShowTournamentForm(true)}
+                            className="flex items-center gap-2 w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 py-3 px-6 text-base font-semibold"
+                        >
+                            <Plus className="h-5 w-5" />
+                            Create Tournament
+                        </Button>
+                    </div>
                 </div>
-                <Button
-                    onClick={() => setShowTournamentForm(true)}
-                    className="flex items-center gap-2 w-full sm:w-auto"
-                >
-                    <Plus className="h-4 w-4" />
-                    Create Tournament
-                </Button>
-            </div>
 
-            <TournamentModal
-                isOpen={showTournamentForm}
-                onClose={() => {
-                    setShowTournamentForm(false);
-                    setEditingTournament(null);
-                }}
-                tournament={editingTournament}
-                onSubmit={editingTournament ? handleUpdateTournament : handleCreateTournament}
-            />
-
-            {showDetails && selectedTournament && (
-                <TournamentDetails
-                    tournament={selectedTournament}
+                <TournamentModal
+                    isOpen={showTournamentForm}
                     onClose={() => {
-                        setShowDetails(false);
-                        setSelectedTournament(null);
+                        setShowTournamentForm(false);
+                        setEditingTournament(null);
                     }}
+                    tournament={editingTournament}
+                    onSubmit={editingTournament ? handleUpdateTournament : handleCreateTournament}
                 />
-            )}
 
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {tournaments.map((tournament) => (
-                    <Card
-                        key={tournament.id}
-                        className="group hover:shadow-xl transition-all duration-200 border-0 shadow-md cursor-pointer"
-                        onClick={() => handleManageTournament(tournament.id)}
-                    >
-                        <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                    <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors break-words">
-                                        {tournament.name}
-                                    </CardTitle>
-                                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                                        <Badge className={`${getStatusColor(tournament.status)} text-xs font-medium px-2 py-1`}>
-                                            {tournament.status}
-                                        </Badge>
-                                        <Badge className={`${getSurfaceColor(tournament.surface)} text-xs font-medium px-2 py-1`}>
-                                            {tournament.surface}
-                                        </Badge>
+                {showDetails && selectedTournament && (
+                    <TournamentDetails
+                        tournament={selectedTournament}
+                        onClose={() => {
+                            setShowDetails(false);
+                            setSelectedTournament(null);
+                        }}
+                    />
+                )}
+
+                {/* Mobile-Optimized Tournament Grid */}
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                    {tournaments.map((tournament) => (
+                        <Card
+                            key={tournament.id}
+                            className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg cursor-pointer bg-white hover:bg-gray-50/50"
+                            onClick={() => handleManageTournament(tournament.id)}
+                        >
+                            <CardHeader className="pb-3 sm:pb-4">
+                                <div className="space-y-3">
+                                    {/* Title and Badges */}
+                                    <div className="space-y-3">
+                                        <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors break-words leading-tight">
+                                            {tournament.name}
+                                        </CardTitle>
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <Badge className={`${getStatusColor(tournament.status)} text-xs font-medium px-3 py-1.5`}>
+                                                {tournament.status}
+                                            </Badge>
+                                            <Badge className={`${getSurfaceColor(tournament.surface)} text-xs font-medium px-3 py-1.5`}>
+                                                {tournament.surface}
+                                            </Badge>
+                                        </div>
+                                    </div>
+
+                                    {/* Mobile-Optimized Actions */}
+                                    <div className="flex items-center justify-between pt-2">
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleManageTournament(tournament.id);
+                                                }}
+                                                className="text-xs sm:text-sm h-8 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
+                                            >
+                                                <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                                                Manage
+                                            </Button>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 hover:bg-gray-100 flex-shrink-0"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-48">
+                                                <DropdownMenuItem onClick={() => handleManageTournament(tournament.id)}>
+                                                    <Trophy className="h-4 w-4 mr-2" />
+                                                    Manage Tournament
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleViewDetails(tournament)}>
+                                                    <Eye className="h-4 w-4 mr-2" />
+                                                    View Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => {
+                                                    setEditingTournament(tournament);
+                                                    setShowTournamentForm(true);
+                                                }}>
+                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    Edit Tournament
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleDeleteTournament(tournament.id)}
+                                                    className="text-red-600 focus:text-red-600"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Delete Tournament
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 w-8 p-0 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleManageTournament(tournament.id)}>
-                                            <Trophy className="h-4 w-4 mr-2" />
-                                            Manage Tournament
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleViewDetails(tournament)}>
-                                            <Eye className="h-4 w-4 mr-2" />
-                                            View Details
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => {
-                                            setEditingTournament(tournament);
-                                            setShowTournamentForm(true);
-                                        }}>
-                                            <Edit className="h-4 w-4 mr-2" />
-                                            Edit Tournament
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => handleDeleteTournament(tournament.id)}
-                                            className="text-red-600 focus:text-red-600"
-                                        >
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Delete Tournament
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                            <div className="space-y-4">
+                            </CardHeader>
+                            <CardContent className="pt-0 space-y-4">
+                                {/* Description */}
                                 {tournament.description && (
                                     <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                                         {tournament.description}
                                     </p>
                                 )}
 
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-3 text-sm text-gray-700">
-                                        <Calendar className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                        <span className="font-medium break-words">
-                                            {tournament.start_date} - {tournament.end_date}
-                                        </span>
+                                {/* Mobile-Optimized Info Grid */}
+                                <div className="grid grid-cols-1 gap-3">
+                                    {/* Date */}
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <span className="font-medium text-gray-700 break-words">
+                                                {tournament.start_date} - {tournament.end_date}
+                                            </span>
+                                        </div>
                                     </div>
 
+                                    {/* Location */}
                                     {tournament.location && (
-                                        <div className="flex items-start gap-3 text-sm text-gray-700">
-                                            <MapPin className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                            <span className="font-medium break-words">{tournament.location}</span>
+                                        <div className="flex items-center gap-3 text-sm">
+                                            <MapPin className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                            <div className="min-w-0 flex-1">
+                                                <span className="font-medium text-gray-700 break-words">
+                                                    {tournament.location}
+                                                </span>
+                                            </div>
                                         </div>
                                     )}
 
-                                    <div className="flex items-start gap-3 text-sm text-gray-700">
-                                        <Users className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                        <span className="font-medium">
-                                            {tournament.current_participants}
-                                            {tournament.max_participants && `/${tournament.max_participants}`} participants
-                                        </span>
+                                    {/* Participants */}
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <Users className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <span className="font-medium text-gray-700">
+                                                {tournament.current_participants}
+                                                {tournament.max_participants && `/${tournament.max_participants}`} participants
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-start gap-3 text-sm text-gray-700">
-                                        <Trophy className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                        <span className="font-medium">
-                                            Buy-in: {tournament.buy_in_fee || 0} 🌕
-                                        </span>
+                                    {/* Buy-in */}
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <Trophy className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <span className="font-medium text-gray-700">
+                                                Buy-in: {tournament.buy_in_fee || 0} 🌕
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div className="flex items-start gap-3 text-sm text-gray-700">
-                                        <Users className="h-4 w-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                        <span className="font-medium">
-                                            {purchaseCounts[tournament.id] || 0} users purchased access
-                                        </span>
+                                    {/* Purchases */}
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <Users className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <span className="font-medium text-gray-700">
+                                                {purchaseCounts[tournament.id] || 0} users purchased access
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
+                                {/* Prize Pool */}
                                 {tournament.prize_pool && (
-                                    <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                                    <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium text-green-800">Prize Pool</span>
+                                            <span className="text-sm font-semibold text-green-800">Prize Pool</span>
                                             <span className="text-lg font-bold text-green-600">
                                                 ${tournament.prize_pool.toLocaleString()}
                                             </span>
                                         </div>
                                     </div>
                                 )}
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
 
-                                <Button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleManageTournament(tournament.id);
-                                    }}
-                                    className="w-full mt-4"
-                                    variant="outline"
-                                >
-                                    <Trophy className="h-4 w-4 mr-2" />
-                                    Manage Tournament
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {tournaments.length === 0 && (
-                <Card>
-                    <CardContent className="p-12 text-center">
-                        <Trophy className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No tournaments yet</h3>
-                        <p className="text-gray-600 mb-4">
-                            Create your first tournament to get started
+                {/* Empty State */}
+                {tournaments.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 px-4">
+                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-full p-6 mb-6">
+                            <Trophy className="h-12 w-12 text-blue-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">No tournaments yet</h3>
+                        <p className="text-gray-600 mb-6 text-center max-w-md">
+                            Create your first tournament to get started with organizing matches and managing participants.
                         </p>
-                        <Button onClick={() => setShowTournamentForm(true)}>
+                        <Button
+                            onClick={() => setShowTournamentForm(true)}
+                            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3"
+                        >
+                            <Plus className="h-5 w-5 mr-2" />
                             Create Tournament
                         </Button>
-                    </CardContent>
-                </Card>
-            )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 } 
