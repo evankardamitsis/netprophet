@@ -348,7 +348,7 @@ function AuthFormWithSearchParams() {
                             )}
 
                             {mode === 'signin' && (
-                                <div className="text-center mt-4">
+                                <div className="text-center mt-4 space-y-2">
                                     <p className="text-sm text-slate-600">
                                         {lang === 'el' ? 'Δεν έχεις λογαριασμό; ' : "Don't have an account? "}
                                         <button
@@ -357,6 +357,16 @@ function AuthFormWithSearchParams() {
                                             className="text-blue-600 hover:text-blue-700 font-medium underline"
                                         >
                                             {lang === 'el' ? 'Εγγράψου' : 'Sign up'}
+                                        </button>
+                                    </p>
+                                    <p className="text-sm text-slate-600">
+                                        {lang === 'el' ? 'Ξέχασες τον κωδικό σου; ' : 'Forgot your password? '}
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push(`/${lang}/auth/forgot-password`)}
+                                            className="text-blue-600 hover:text-blue-700 font-medium underline"
+                                        >
+                                            {lang === 'el' ? 'Επαναφορά Κωδικού' : 'Reset Password'}
                                         </button>
                                     </p>
                                 </div>

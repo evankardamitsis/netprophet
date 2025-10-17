@@ -155,7 +155,19 @@
     "welcome": "Welcome",
     "passwordRequirements": "Password must be at least 8 characters long and contain uppercase, lowercase, and numbers",
     "passwordTooWeak": "Password is too weak. Please use a stronger password.",
-    "checkEmailToConfirm": "Check your email to confirm your account!"
+    "checkEmailToConfirm": "Check your email to confirm your account!",
+    "resetPassword": "Reset Password",
+
+    "newPassword": "New Password",
+    "enterNewPassword": "Enter new password",
+    "confirmPassword": "Confirm Password",
+    "confirmNewPassword": "Confirm new password",
+    "passwordsDoNotMatch": "Passwords do not match.",
+    "passwordResetSuccess": "Password updated successfully! Redirecting to sign in...",
+    "updatingPassword": "Updating Password...",
+    "updatePassword": "Update Password",
+    "backToSignIn": "Back to Sign In",
+    "invalidResetLink": "Invalid Reset Link"
   },
   "matches": {
     "title": "Tennis Matches",
