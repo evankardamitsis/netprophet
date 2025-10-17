@@ -11,7 +11,7 @@ export function FooterDisclaimer({ lang = 'en' }: FooterDisclaimerProps) {
             copyright: '© 2025 NetProphet. All rights reserved.',
         },
         el: {
-            disclaimer: 'Το NetProphet είναι παιχνίδι προβλέψεων μόνο με ψηφιακά νομίσματα. Δεν υπάρχει στοίχημα με πραγματικά χρήματα.',
+            disclaimer: 'Το NetProphet είναι παιχνίδι προβλέψεων μόνο με εικονικά νομίσματα. Δεν υπάρχει στοίχημα με πραγματικά χρήματα.',
             copyright: '© 2025 NetProphet. Με επιφύλαξη παντός δικαιώματος.',
         }
     };

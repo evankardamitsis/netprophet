@@ -6,6 +6,9 @@ import { Player, fetchPlayerById, getPlayerMatchHistory } from '@netprophet/lib'
 import { useDictionary } from '@/context/DictionaryContext';
 import { Card, CardContent } from '@netprophet/ui';
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function PlayerDetailPage() {
     // TESTING HOT RELOAD WITH NEXT.JS 15.0.3
     const params = useParams();

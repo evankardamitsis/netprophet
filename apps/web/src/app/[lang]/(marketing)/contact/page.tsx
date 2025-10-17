@@ -7,6 +7,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { buttons } from '@/styles/design-system';
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function ContactPage() {
     const params = useParams();
     const lang = params.lang as 'en' | 'el';

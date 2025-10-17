@@ -9,6 +9,9 @@ import { TopNavigation } from '@/components/matches/TopNavigation';
 import { ResultsTournamentFilter } from '@/components/matches/ResultsTournamentFilter';
 import { useDictionary } from '@/context/DictionaryContext';
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 interface MatchResult {
     id: string;
     tournament_name: string;

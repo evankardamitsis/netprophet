@@ -7,6 +7,9 @@ import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui
 import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);

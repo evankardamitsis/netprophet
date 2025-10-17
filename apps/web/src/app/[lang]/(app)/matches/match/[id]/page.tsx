@@ -6,6 +6,9 @@ import { supabase } from '@netprophet/lib';
 import { MatchDetail } from '@/components/matches/MatchDetail';
 import { Match } from '@/types/dashboard';
 
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
 // Function to fetch a specific match
 async function fetchMatch(id: string): Promise<Match | null> {
     const { data, error } = await supabase

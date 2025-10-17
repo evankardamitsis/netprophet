@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
@@ -8,7 +8,11 @@ import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 import { PasswordInput } from '@/components/PasswordInput';
 
-export default function ResetPasswordPage() {
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
+
+// Component that uses useSearchParams - wrapped in Suspense
+function ResetPasswordContent() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -238,5 +242,23 @@ export default function ResetPasswordPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+// Main export with Suspense boundary
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
+                <Card className="w-full max-w-md mx-auto">
+                    <CardContent className="text-center py-8">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
+                        <p className="text-white">Loading...</p>
+                    </CardContent>
+                </Card>
+            </div>
+        }>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }

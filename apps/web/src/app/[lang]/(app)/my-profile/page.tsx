@@ -8,6 +8,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useDictionary } from '@/context/DictionaryContext';
 import { BetsService, supabase } from '@netprophet/lib';
+
+// Prevent static generation for this page
+export const dynamic = 'force-dynamic';
 import { useWallet } from '@/context/WalletContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
