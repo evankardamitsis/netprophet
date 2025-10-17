@@ -5,6 +5,7 @@ import { Card, CardContent, CardTitle, Button, Badge } from '@netprophet/ui';
 import { useWallet, COIN_CONSTANTS } from '@/context/WalletContext';
 import { useTheme } from '../Providers';
 import { useAuth } from '@/hooks/useAuth';
+import { useDictionary } from '@/context/DictionaryContext';
 import { supabase, WelcomeBonusNotificationService } from '@netprophet/lib';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
@@ -38,6 +39,7 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
     const { user, loading: authLoading } = useAuth();
     const { wallet, isWalletSyncing, claimWelcomeBonus, checkDailyLogin, claimDailyLogin, syncWalletWithDatabase } = useWallet();
     const { theme } = useTheme();
+    const { lang } = useDictionary();
     const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
     const [showDailyLogin, setShowDailyLogin] = useState(false);
     const [dailyReward, setDailyReward] = useState(0);
@@ -92,7 +94,7 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                     } else {
                         // Automatically claim in background (day 1 or streak broken)
                         // This records the login in the database without showing modal
-                        await claimDailyLogin();
+                        await claimDailyLogin(false); // Don't show toasts on first login
                         // Note: claimDailyLogin already shows a toast with the appropriate message
                     }
                 }
@@ -126,7 +128,7 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
             }));
             setConfetti(confettiPieces);
 
-            const bonus = await claimWelcomeBonus();
+            const bonus = await claimWelcomeBonus(false); // Don't show toasts on first login
             setShowWelcomeBonus(false);
             // Don't show daily login immediately after claiming welcome bonus
             setShowDailyLogin(false);
@@ -159,7 +161,8 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                 await WelcomeBonusNotificationService.createWelcomeBonusNotification(
                     user.id,
                     COIN_CONSTANTS.WELCOME_BONUS,
-                    true // Include tournament pass
+                    true, // Include tournament pass
+                    lang // Pass the current language
                 );
 
                 // Refresh notifications to show the new one

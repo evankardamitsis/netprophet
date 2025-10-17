@@ -12,11 +12,12 @@ import { BetsService, supabase } from '@netprophet/lib';
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
 import { useWallet } from '@/context/WalletContext';
-import { ProfileSetupModal } from '@/components/ProfileSetupModal';
+import { useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
 import { toast } from 'sonner';
 import CoinIcon from '@/components/CoinIcon';
 import { useTawkToChat } from '@/context/TawkToChatContext';
+import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 
 export default function MyProfilePage() {
     const router = useRouter();
@@ -38,10 +39,9 @@ export default function MyProfilePage() {
     const [loadingStats, setLoadingStats] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
-    const [showProfileSetup, setShowProfileSetup] = useState(false);
+    const { showProfileSetup, setShowProfileSetup, profileRefreshKey, setProfileRefreshKey } = useProfileSetupModal();
     const [hasPlayerProfile, setHasPlayerProfile] = useState(false);
     const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null);
-    const [profileRefreshKey, setProfileRefreshKey] = useState(0); // Add this to force refresh
     const [username, setUsername] = useState('');
     const [isEditingUsername, setIsEditingUsername] = useState(false);
     const [savingUsername, setSavingUsername] = useState(false);
@@ -146,7 +146,7 @@ export default function MyProfilePage() {
             }
 
             // Force ProfileClaimFlow to re-check for matching players
-            setProfileRefreshKey(prev => prev + 1);
+            setProfileRefreshKey(profileRefreshKey + 1);
 
             // Open the modal
             setShowProfileSetup(true);
@@ -269,9 +269,9 @@ export default function MyProfilePage() {
             {/* Back to Dashboard Button */}
             <div className="max-w-6xl mx-auto px-6 pt-6">
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => router.push(`/${lang}/matches`)}
-                    className="mb-6 bg-purple-600 hover:bg-purple-700 text-white border-purple-600"
+                    className="mb-6 text-gray-300 hover:text-white hover:bg-slate-800/50 px-2 py-1 text-sm sm:px-3 sm:py-2 sm:text-base"
                 >
                     {dict?.navigation?.backToMatches || '← Back to Matches'}
                 </Button>
@@ -578,13 +578,6 @@ export default function MyProfilePage() {
                 </div>
             </div>
 
-            {/* Profile Setup Modal */}
-            <ProfileSetupModal
-                isOpen={showProfileSetup}
-                onClose={() => setShowProfileSetup(false)}
-                forceRefresh={profileRefreshKey}
-            />
-
             {/* Remove Player Profile Confirmation Modal */}
             {showRemoveConfirmation && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
@@ -621,6 +614,7 @@ export default function MyProfilePage() {
                     </div>
                 </div>
             )}
+
         </div>
     );
 } 

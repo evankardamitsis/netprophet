@@ -72,7 +72,7 @@ export default function PlayersPage() {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 relative z-10">
                 {/* Header */}
                 <div className="mb-8 sm:mb-12 text-center">
-                    <div className="inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
+                    <div className="hidden sm:inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
                         <p className="text-sm sm:text-base text-white font-bold">
                             👥 {dict?.players?.title || 'Players'}
                         </p>
@@ -86,7 +86,7 @@ export default function PlayersPage() {
                 </div>
 
                 {/* Search and Filters */}
-                <div className="mb-8 sm:mb-10 space-y-6">
+                <div className="mb-6 sm:mb-10 space-y-4 sm:space-y-6">
                     {/* Search */}
                     <div className="relative group">
                         <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-40 group-hover:opacity-60 blur transition"></div>
@@ -96,21 +96,21 @@ export default function PlayersPage() {
                                 placeholder={dict?.players?.searchPlaceholder || "Search players..."}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-6 py-4 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-purple-500/30 rounded-2xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition-all text-lg"
+                                className="w-full px-4 py-2.5 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-purple-500/30 rounded-xl sm:rounded-2xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition-all text-sm sm:text-lg"
                             />
-                            <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-2xl">
+                            <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-lg sm:text-2xl">
                                 🔍
                             </div>
                         </div>
                     </div>
 
                     {/* Surface Filter */}
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
                         {surfaces.map((surface) => (
                             <button
                                 key={surface}
                                 onClick={() => setSelectedSurface(surface)}
-                                className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all transform hover:scale-105 ${selectedSurface === surface
+                                className={`px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all transform hover:scale-105 ${selectedSurface === surface
                                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                                     : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/70 border border-slate-600/50'
                                     }`}
@@ -124,7 +124,7 @@ export default function PlayersPage() {
                 {/* Results Count */}
                 <div className="mb-6 sm:mb-8">
                     <div className="inline-block bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
-                        <p className="text-white font-bold">
+                        <p className="text-white font-bold text-xs">
                             <span className="text-purple-300">{filteredPlayers.length}</span> {dict?.players?.playersFound || 'players found'}
                         </p>
                     </div>

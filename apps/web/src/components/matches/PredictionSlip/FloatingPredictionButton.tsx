@@ -42,7 +42,7 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
             />
 
             {/* Main button */}
-            <div className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border-2 border-purple-500/50 rounded-2xl p-4 shadow-2xl backdrop-blur-sm">
+            <div className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border-2 border-purple-500/50 rounded-2xl p-2 sm:p-4 shadow-2xl backdrop-blur-sm">
                 {/* Animated border gradient */}
                 <motion.div
                     className="absolute inset-0 rounded-2xl opacity-50"
@@ -61,7 +61,7 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
                 />
 
                 {/* Content */}
-                <div className="relative flex items-center space-x-3">
+                <div className="relative flex items-center space-x-2 sm:space-x-3">
                     {/* Icon with pulse animation */}
                     <motion.div
                         className="relative"
@@ -76,19 +76,19 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
                         }}
                     >
                         <div className="absolute inset-0 bg-purple-500 rounded-full blur-md opacity-50" />
-                        <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 p-2.5 rounded-xl">
-                            <BettingSlipIcon className="h-6 w-6 text-white" />
+                        <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 p-1.5 sm:p-2.5 rounded-xl">
+                            <BettingSlipIcon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                     </motion.div>
 
                     {/* Text content */}
                     <div className="flex flex-col items-start">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1.5 sm:space-x-2">
                             <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider">
                                 {dict?.matches?.bettingSlip || 'Betting Slip'}
                             </span>
                             <motion.div
-                                className="bg-purple-600 text-white text-xs font-bold px-2 py-0.5 rounded-full"
+                                className="bg-purple-600 text-white text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full"
                                 animate={{
                                     scale: [1, 1.1, 1],
                                 }}
@@ -122,7 +122,7 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
                             repeat: Infinity,
                         }}
                     >
-                        <svg className="h-5 w-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                     </motion.div>

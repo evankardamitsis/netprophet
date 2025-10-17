@@ -10,8 +10,8 @@ interface MatchDetails {
     tournament: string;
     round: string;
     surface: string;
-    player1: { name: string; odds: number; wins: number; losses: number };
-    player2: { name: string; odds: number; wins: number; losses: number };
+    player1: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
+    player2: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
     headToHead: string;
     headToHeadData?: {
         player_a_wins: number;
@@ -132,7 +132,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                     : 'text-white cursor-default'
                                     }`}
                             >
-                                {details.player1.name.split(' ')[1]}
+                                {details.player1.name.split(' ')[1]}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
                             </button>
                             <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                         </div>
@@ -148,7 +148,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                     : 'text-white cursor-default'
                                     }`}
                             >
-                                {details.player2.name.split(' ')[1]}
+                                {details.player2.name.split(' ')[1]}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
                             </button>
                             <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                         </div>
@@ -193,7 +193,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                         : 'text-white cursor-default'
                                         }`}
                                 >
-                                    {details.player1.name}
+                                    {details.player1.name}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
                                 </button>
                                 <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                             </div>
@@ -207,7 +207,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                         : 'text-white cursor-default'
                                         }`}
                                 >
-                                    {details.player2.name}
+                                    {details.player2.name}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
                                 </button>
                                 <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                             </div>
@@ -236,7 +236,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                 )}
                             </div>
                         )}
-                        <div className="grid grid-cols-2 gap-3 lg:gap-4 text-xs">
+                        <div className="text-xs text-gray-400 bg-slate-600/30 rounded px-2 py-1">
+                            <span className="font-semibold text-purple-300">Head-to-Head Record:</span> {details.headToHeadData && details.headToHeadData.total_matches > 0
+                                ? `${details.headToHeadData.player_a_wins}-${details.headToHeadData.player_b_wins}`
+                                : 'No H2H details'
+                            }
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 text-xs">
                             <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
@@ -246,9 +252,11 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                         : 'cursor-default'
                                         }`}
                                 >
-                                    {details.player1.name}
+                                    {details.player1.name}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
                                 </button>
-                                <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}</div>
+                                <div className="text-gray-400">
+                                    {dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}
+                                </div>
                             </div>
                             <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
                                 <button
@@ -259,14 +267,16 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                         : 'cursor-default'
                                         }`}
                                 >
-                                    {details.player2.name}
+                                    {details.player2.name}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
                                 </button>
-                                <div className="text-gray-400">{dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}</div>
+                                <div className="text-gray-400">
+                                    {dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 } 

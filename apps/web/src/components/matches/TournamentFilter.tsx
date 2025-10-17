@@ -20,7 +20,7 @@ export function TournamentFilter({ matches, onTournamentSelect, selectedTourname
             match.status === 'live' ||
             match.status === 'upcoming' ||
             match.status === 'scheduled'
-            
+
         );
     }, [matches]);
 

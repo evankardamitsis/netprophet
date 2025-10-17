@@ -13,6 +13,7 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
+import { useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 
 
@@ -142,7 +143,7 @@ async function fetchSyncedMatches(): Promise<Match[]> {
 export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [showProfileSetup, setShowProfileSetup] = useState(false);
+    const { showProfileSetup, setShowProfileSetup } = useProfileSetupModal();
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
     const { user } = useAuth();
     const { needsProfileSetup, loading: profileLoading } = useProfileClaim(user?.id || null);
@@ -152,7 +153,7 @@ export default function DashboardPage() {
         if (!profileLoading && needsProfileSetup && user) {
             setShowProfileSetup(true);
         }
-    }, [needsProfileSetup, profileLoading, user]);
+    }, [needsProfileSetup, profileLoading, user, setShowProfileSetup]);
 
     // Get featured matches (top 3 upcoming matches with highest odds)
     const getFeaturedMatches = (matches: Match[]): Match[] => {
@@ -227,11 +228,6 @@ export default function DashboardPage() {
         <div className="min-h-full">
             <WelcomeBonus />
 
-            {/* Profile Setup Modal */}
-            <ProfileSetupModal
-                isOpen={showProfileSetup}
-                onClose={() => setShowProfileSetup(false)}
-            />
 
             {selectedMatch ? (
                 <MatchDetail

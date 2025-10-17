@@ -113,17 +113,23 @@ export async function findMatchingPlayers(
 export async function getUserName(
   userId: string
 ): Promise<{ firstName: string | null; lastName: string | null }> {
+  console.log("🔍 Debug - getUserName called with userId:", userId);
+
   // Get profile data
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("first_name, last_name")
     .eq("id", userId)
     .single();
 
+  console.log("🔍 Debug - Profile query result:", { profile, profileError });
+
   // Get user metadata for name fallback
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  console.log("🔍 Debug - User metadata:", user?.user_metadata);
 
   // Determine name source: profile table or user_metadata
   let firstName = profile?.first_name || null;
@@ -138,5 +144,6 @@ export async function getUserName(
     console.log("📋 Using names from profile table:", firstName, lastName);
   }
 
+  console.log("🔍 Debug - Final result:", { firstName, lastName });
   return { firstName, lastName };
 }

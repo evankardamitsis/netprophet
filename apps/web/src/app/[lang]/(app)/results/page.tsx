@@ -474,9 +474,9 @@ export default function ResultsPage() {
             {/* Back to Dashboard Button */}
             <div className="max-w-6xl mx-auto px-6 pt-6 relative z-10">
                 <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => router.push(`/${lang}/matches`)}
-                    className="mb-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                    className="mb-6 text-gray-300 hover:text-white hover:bg-slate-800/50 px-2 py-1 text-sm sm:px-3 sm:py-2 sm:text-base"
                 >
                     {dict?.navigation?.backToMatches || '← Back to Matches'}
                 </Button>
@@ -486,7 +486,7 @@ export default function ResultsPage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
                 {/* Page Header */}
                 <div className="text-center mb-8 sm:mb-12">
-                    <div className="inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
+                    <div className="hidden sm:inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
                         <p className="text-sm sm:text-base text-white font-bold">
                             {lang === 'el' ? '📊 Ζωντανά Αποτελέσματα' : '📊 Live Results'}
                         </p>
@@ -494,7 +494,7 @@ export default function ResultsPage() {
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
                         {dict?.results?.title || 'Match Results'}
                     </h1>
-                    <p className="text-lg sm:text-xl text-white/90 font-bold max-w-2xl mx-auto px-2">
+                    <p className="text-sm sm:text-lg text-white/90 font-bold max-w-2xl mx-auto px-2">
                         {dict?.results?.subtitle || 'View the latest match results and tournament outcomes.'}
                     </p>
                 </div>

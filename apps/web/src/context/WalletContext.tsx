@@ -48,8 +48,8 @@ interface WalletContextType {
     updateBalance: (amount: number, type: Transaction['type'], description: string) => void;
     // Coin system functions
     checkDailyLogin: () => Promise<number>;
-    claimDailyLogin: () => Promise<number>;
-    claimWelcomeBonus: () => Promise<number>;
+    claimDailyLogin: (showToasts?: boolean) => Promise<number>;
+    claimWelcomeBonus: (showToasts?: boolean) => Promise<number>;
     addReferralBonus: (amount: number) => void;
     addLeaderboardPrize: (amount: number) => void;
     purchaseItem: (cost: number, itemName: string) => void;
@@ -478,9 +478,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const claimDailyLogin = async (): Promise<number> => {
+    const claimDailyLogin = async (showToasts: boolean = true): Promise<number> => {
+        let loadingToast: string | number | undefined;
         try {
-            const loadingToast = toast.loading(dict?.toast?.claimingDailyReward || 'Claiming daily reward...');
+            if (showToasts) {
+                loadingToast = toast.loading(dict?.toast?.claimingDailyReward || 'Claiming daily reward...');
+            }
 
             const result = await DailyRewardsService.claimDailyReward();
 
@@ -494,64 +497,76 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     dailyLoginStreak: result.new_streak,
                 }));
 
-                // Translate message key from database
-                let translatedMessage: string;
-                const messageKey = result.message || '';
+                if (showToasts) {
+                    // Translate message key from database
+                    let translatedMessage: string;
+                    const messageKey = result.message || '';
 
-                if (messageKey === 'FIRST_LOGIN') {
-                    translatedMessage = dict?.toast?.firstDailyLogin || 'First daily login! Come back tomorrow to start your streak and earn 30 🌕';
-                } else if (messageKey === 'STREAK_ACTIVATED') {
-                    translatedMessage = dict?.toast?.streakActivated || 'Streak activated! Daily login reward claimed (+30 🌕)';
-                } else if (messageKey === 'STREAK_BONUS') {
-                    translatedMessage = dict?.toast?.streakBonus || 'Daily login reward claimed with 7-day streak bonus! (+130 🌕)';
-                } else if (messageKey.startsWith('STREAK_CONTINUED:')) {
-                    const streak = messageKey.split(':')[1];
-                    translatedMessage = (dict?.toast?.streakContinued || 'Daily login reward claimed! (+30 🌕, {streak} day streak)').replace('{streak}', streak);
-                } else if (messageKey === 'STREAK_BROKEN') {
-                    translatedMessage = dict?.toast?.streakBroken || 'Streak broken. Come back tomorrow to reactivate your streak and earn 30 🌕';
-                } else {
-                    translatedMessage = messageKey; // Fallback to raw message
-                }
+                    if (messageKey === 'FIRST_LOGIN') {
+                        translatedMessage = dict?.toast?.firstDailyLogin || 'First daily login! Come back tomorrow to start your streak and earn 30 🌕';
+                    } else if (messageKey === 'STREAK_ACTIVATED') {
+                        translatedMessage = dict?.toast?.streakActivated || 'Streak activated! Daily login reward claimed (+30 🌕)';
+                    } else if (messageKey === 'STREAK_BONUS') {
+                        translatedMessage = dict?.toast?.streakBonus || 'Daily login reward claimed with 7-day streak bonus! (+130 🌕)';
+                    } else if (messageKey.startsWith('STREAK_CONTINUED:')) {
+                        const streak = messageKey.split(':')[1];
+                        translatedMessage = (dict?.toast?.streakContinued || 'Daily login reward claimed! (+30 🌕, {streak} day streak)').replace('{streak}', streak);
+                    } else if (messageKey === 'STREAK_BROKEN') {
+                        translatedMessage = dict?.toast?.streakBroken || 'Streak broken. Come back tomorrow to reactivate your streak and earn 30 🌕';
+                    } else {
+                        translatedMessage = messageKey; // Fallback to raw message
+                    }
 
-                // Show appropriate toast based on whether reward was given
-                if (rewardAmount > 0) {
-                    toast.success(translatedMessage, {
-                        id: loadingToast,
-                    });
-                } else {
-                    // Show info message when no reward (streak not active yet or broken)
-                    toast(translatedMessage, {
-                        id: loadingToast,
-                        icon: '📅',
-                        duration: 5000,
-                    });
+                    // Show appropriate toast based on whether reward was given
+                    if (rewardAmount > 0) {
+                        toast.success(translatedMessage, {
+                            id: loadingToast,
+                        });
+                    } else {
+                        // Show info message when no reward (streak not active yet or broken)
+                        toast(translatedMessage, {
+                            id: loadingToast,
+                            icon: '📅',
+                            duration: 5000,
+                        });
+                    }
                 }
 
                 return rewardAmount;
             } else {
-                // Check if it's "Already claimed today" - if so, dismiss silently
-                if (result.message === 'Already claimed today') {
-                    toast.dismiss(loadingToast);
-                    return 0;
-                }
+                if (showToasts) {
+                    // Check if it's "Already claimed today" - if so, dismiss silently
+                    if (result.message === 'Already claimed today') {
+                        toast.dismiss(loadingToast);
+                        return 0;
+                    }
 
-                // For other errors, show error toast
-                toast.error(`Failed to claim daily reward: ${result.message}`, {
-                    id: loadingToast,
-                });
+                    // For other errors, show error toast
+                    toast.error(`Failed to claim daily reward: ${result.message}`, {
+                        id: loadingToast,
+                    });
+                }
                 return 0;
             }
         } catch (error) {
             console.error('Error claiming daily reward:', error);
-            toast.error(dict?.toast?.failedToClaimDailyReward || 'Failed to claim daily reward. Please try again.');
+            if (showToasts) {
+                toast.error(dict?.toast?.failedToClaimDailyReward || 'Failed to claim daily reward. Please try again.');
+            }
             return 0;
+        } finally {
+            if (loadingToast !== undefined) {
+                toast.dismiss(loadingToast);
+            }
         }
     };
 
-    const claimWelcomeBonus = async (): Promise<number> => {
+    const claimWelcomeBonus = async (showToasts: boolean = true): Promise<number> => {
         let loadingToast: string | number | undefined;
         try {
-            loadingToast = toast.loading(dict?.toast?.claimingWelcomeBonus || 'Claiming welcome bonus...');
+            if (showToasts) {
+                loadingToast = toast.loading(dict?.toast?.claimingWelcomeBonus || 'Claiming welcome bonus...');
+            }
 
             const result = await WalletOperationsService.claimWelcomeBonus();
 
@@ -572,31 +587,41 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 // The database is already updated by the wallet operations service
                 // No need for duplicate updates
 
-                toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()), {
-                    id: loadingToast,
-                });
+                if (showToasts) {
+                    toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()), {
+                        id: loadingToast,
+                    });
+                }
 
                 return bonusAmount;
             } else {
-                toast.error((dict?.toast?.failedToClaimWelcomeBonus || 'Failed to claim welcome bonus: {error}').replace('{error}', result.error || 'Unknown error'), {
-                    id: loadingToast,
-                });
+                if (showToasts) {
+                    toast.error((dict?.toast?.failedToClaimWelcomeBonus || 'Failed to claim welcome bonus: {error}').replace('{error}', result.error || 'Unknown error'), {
+                        id: loadingToast,
+                    });
+                }
                 return 0;
             }
         } catch (error) {
             console.error('Error claiming welcome bonus:', error);
 
-            // Handle specific JSON parsing errors
-            if (error instanceof Error && error.message.includes('Unexpected end of JSON input')) {
-                toast.error(dict?.toast?.serverEmptyResponse || 'Server returned an empty response. Please try again.', {
-                    id: loadingToast,
-                });
-            } else {
-                toast.error(`Failed to claim welcome bonus: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-                    id: loadingToast,
-                });
+            if (showToasts) {
+                // Handle specific JSON parsing errors
+                if (error instanceof Error && error.message.includes('Unexpected end of JSON input')) {
+                    toast.error(dict?.toast?.serverEmptyResponse || 'Server returned an empty response. Please try again.', {
+                        id: loadingToast,
+                    });
+                } else {
+                    toast.error(`Failed to claim welcome bonus: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+                        id: loadingToast,
+                    });
+                }
             }
             return 0;
+        } finally {
+            if (loadingToast !== undefined) {
+                toast.dismiss(loadingToast);
+            }
         }
     };
 

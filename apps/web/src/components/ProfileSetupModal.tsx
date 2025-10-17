@@ -11,9 +11,10 @@ interface ProfileSetupModalProps {
     isOpen: boolean;
     onClose: () => void;
     forceRefresh?: number;
+    testMode?: 'normal' | 'match' | 'multiple';
 }
 
-export function ProfileSetupModal({ isOpen, onClose, forceRefresh }: ProfileSetupModalProps) {
+export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'normal' }: ProfileSetupModalProps) {
     const { user } = useAuth();
     const { needsProfileSetup, loading, refreshStatus } = useProfileClaim(user?.id || null);
     const { dict } = useDictionary();
@@ -21,13 +22,29 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh }: ProfileSetu
     // Prevent background scrolling when modal is open
     useEffect(() => {
         if (isOpen) {
+            // Store current scroll position
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.width = '100%';
             document.body.style.overflow = 'hidden';
         } else {
-            document.body.style.overflow = 'unset';
+            // Restore scroll position
+            const scrollY = document.body.style.top;
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY || '0') * -1);
+            }
         }
 
         return () => {
-            document.body.style.overflow = 'unset';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
         };
     }, [isOpen]);
 
@@ -55,31 +72,43 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh }: ProfileSetu
 
     return (
         <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]"
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh'
+            }}
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     onClose();
                 }
             }}
         >
-            <div className="w-full max-w-3xl mx-auto relative my-4 sm:my-8 animate-in fade-in-0 zoom-in-95 duration-300">
+            <div className="w-full h-full max-w-4xl max-h-[95vh] mx-auto flex flex-col p-4 sm:p-6">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute -top-10 sm:-top-12 right-0 text-white hover:text-gray-300 z-10 transition-colors flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-2 rounded-lg font-medium text-sm"
+                    className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-gray-300 z-10 transition-colors flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-2 rounded-lg font-medium text-sm"
                 >
-                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <X className="h-4 w-4" />
                     <span className="hidden sm:inline">{dict?.profileSetup?.success?.close || "Close"}</span>
                 </button>
 
                 {/* Flow Content */}
-                <ProfileClaimFlowNew
-                    userId={user?.id || ""}
-                    onComplete={handleComplete}
-                    onSkip={handleSkip}
-                    onRefresh={refreshStatus}
-                    forceRefresh={forceRefresh}
-                />
+                <div className="flex-1 overflow-y-auto">
+                    <ProfileClaimFlowNew
+                        userId={user?.id || ""}
+                        onComplete={handleComplete}
+                        onSkip={handleSkip}
+                        onRefresh={refreshStatus}
+                        forceRefresh={forceRefresh}
+                        testMode={testMode}
+                    />
+                </div>
             </div>
         </div>
     );

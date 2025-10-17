@@ -12,6 +12,8 @@ import { DictionaryProvider } from '@/context/DictionaryContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
 import { SuccessModalProvider, useSuccessModal } from '@/context/SuccessModalContext';
 import { BetSuccessModal } from '@/components/matches/PredictionSlip/BetSuccessModal';
+import { ProfileSetupModalProvider, useProfileSetupModal } from '@/context/ProfileSetupModalContext';
+import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { gradients } from '@/styles/design-system';
 import { PageTransitionLoader } from '@/components/PageTransitionLoader';
 
@@ -190,6 +192,9 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
 
                             {/* Success Modal */}
                             <SuccessModalContent lang={lang} />
+
+                            {/* Profile Setup Modal */}
+                            <ProfileSetupModalContent />
                         </div>
                     </div>
                 </MatchSelectContext.Provider>
@@ -210,12 +215,27 @@ function SuccessModalContent({ lang }: { lang: string }) {
     );
 }
 
+function ProfileSetupModalContent() {
+    const { showProfileSetup, setShowProfileSetup, profileRefreshKey, testMode } = useProfileSetupModal();
+
+    return (
+        <ProfileSetupModal
+            isOpen={showProfileSetup}
+            onClose={() => setShowProfileSetup(false)}
+            forceRefresh={profileRefreshKey}
+            testMode={testMode}
+        />
+    );
+}
+
 export default function ClientLayout({ children, dict, lang = 'el' }: ClientLayoutProps) {
     return (
         <SuccessModalProvider>
-            <ClientLayoutContent dict={dict} lang={lang}>
-                {children}
-            </ClientLayoutContent>
+            <ProfileSetupModalProvider>
+                <ClientLayoutContent dict={dict} lang={lang}>
+                    {children}
+                </ClientLayoutContent>
+            </ProfileSetupModalProvider>
         </SuccessModalProvider>
     );
 }

@@ -240,14 +240,14 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 const { player_a_wins, player_b_wins, total_matches } = headToHeadData;
                 if (total_matches > 0) {
                     if (player_a_wins > player_b_wins) {
-                        return `${details.player1.name} leads ${player_a_wins}-${player_b_wins}`;
+                        return `${details.player1.name}${details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''} leads ${player_a_wins}-${player_b_wins}`;
                     } else if (player_b_wins > player_a_wins) {
-                        return `${details.player2.name} leads ${player_b_wins}-${player_a_wins}`;
+                        return `${details.player2.name}${details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''} leads ${player_b_wins}-${player_a_wins}`;
                     } else {
                         return `Tied ${player_a_wins}-${player_b_wins}`;
                     }
                 }
-                return `${details.player1.name} vs ${details.player2.name}`;
+                return `${details.player1.name}${details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''} vs ${details.player2.name}${details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}`;
             })() : details.headToHead,
             headToHeadData: headToHeadData
         };

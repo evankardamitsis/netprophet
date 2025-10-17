@@ -170,14 +170,14 @@ export function Notifications() {
             await deleteNotification(notificationId);
 
             if (bonusAmount > 0) {
-                toast.success(`Welcome bonus claimed! +${bonusAmount} coins and tournament pass!`);
+                toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()) + ' and tournament pass!');
             } else {
                 // User already claimed the bonus, but we still remove the notification
-                toast.success('Welcome bonus already claimed!');
+                toast.success(dict?.toast?.welcomeBonusClaimed || 'Welcome bonus already claimed!');
             }
         } catch (error) {
             console.error('Error claiming welcome bonus:', error);
-            toast.error('Failed to claim welcome bonus');
+            toast.error(dict?.toast?.failedToClaimWelcomeBonus || 'Failed to claim welcome bonus');
         } finally {
             setClaimingWelcomeBonus(false);
         }
@@ -224,16 +224,16 @@ export function Notifications() {
 
             {/* Notifications Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-96 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
-                    <div className="p-4 border-b border-slate-700">
+                <div className="fixed left-1/2 -translate-x-1/2 sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm sm:max-w-none rounded-lg shadow-lg z-50 max-h-[70vh] sm:max-h-96 overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/50">
+                    <div className="p-3 sm:p-4 border-b border-slate-700">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-lg font-semibold">{dict?.notifications?.title || 'Notifications'}</h3>
-                            <div className="flex gap-2">
+                            <h3 className="text-base sm:text-lg font-semibold">{dict?.notifications?.title || 'Notifications'}</h3>
+                            <div className="flex gap-1 sm:gap-2">
                                 {notifications.length > 0 && unreadCount === 0 && (
                                     <Button
                                         variant="outline"
                                         onClick={clearAllNotifications}
-                                        className="text-xs px-2 py-1 text-red-400 hover:text-red-300"
+                                        className="text-xs px-2 py-1 text-red-400 hover:text-red-300 text-[10px] sm:text-xs"
                                     >
                                         {dict?.notifications?.clearAll || 'Clear all'}
                                     </Button>
@@ -243,7 +243,7 @@ export function Notifications() {
                                         <Button
                                             variant="outline"
                                             onClick={markAllAsRead}
-                                            className="h-6 w-6 p-0 text-blue-400 hover:text-blue-300"
+                                            className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-blue-400 hover:text-blue-300"
                                             title=""
                                         >
                                             <Check className="h-3 w-3" />
@@ -257,7 +257,7 @@ export function Notifications() {
                         </div>
                     </div>
 
-                    <div className="p-4">
+                    <div className="p-3 sm:p-4">
                         {loading ? (
                             <div className="text-center py-4 text-gray-400">{dict?.notifications?.loading || 'Loading notifications...'}</div>
                         ) : notifications.length === 0 ? (
@@ -265,34 +265,34 @@ export function Notifications() {
                                 <p>{dict?.notifications?.noNotifications || 'No notifications yet'}</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-2 sm:space-y-3">
                                 {notifications.map((notification) => (
                                     <div
                                         key={notification.id}
-                                        className={`p-3 rounded-lg border ${notification.read_at ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-700 border-slate-500'
+                                        className={`p-2 sm:p-3 rounded-lg border ${notification.read_at ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-700 border-slate-500'
                                             }`}
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    {notification.type === 'welcome_bonus' && <Gift className="h-4 w-4 text-yellow-400" />}
-                                                    <h4 className="font-medium text-white">{notification.title}</h4>
+                                                    {notification.type === 'welcome_bonus' && <Gift className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />}
+                                                    <h4 className="font-medium text-white text-sm sm:text-base">{notification.title}</h4>
                                                 </div>
-                                                <p className="text-sm text-gray-300 mt-1">{notification.message}</p>
+                                                <p className="text-xs sm:text-sm text-gray-300 mt-1">{notification.message}</p>
                                                 {notification.data?.winnings && (
-                                                    <p className="text-sm text-green-400 mt-1 flex items-center gap-1">
-                                                        {dict?.notifications?.winnings || 'Winnings'}: {notification.data.winnings} <CoinIcon size={14} />
+                                                    <p className="text-xs sm:text-sm text-green-400 mt-1 flex items-center gap-1">
+                                                        {dict?.notifications?.winnings || 'Winnings'}: {notification.data.winnings} <CoinIcon size={12} />
                                                     </p>
                                                 )}
-                                                <p className="text-xs text-gray-400 mt-2">{formatTimeAgo(notification.created_at)}</p>
+                                                <p className="text-xs text-gray-400 mt-1 sm:mt-2">{formatTimeAgo(notification.created_at)}</p>
 
                                                 {/* Welcome Bonus Action Button */}
                                                 {notification.type === 'welcome_bonus' && !notification.read_at && (
-                                                    <div className="mt-3">
+                                                    <div className="mt-2 sm:mt-3">
                                                         <Button
                                                             onClick={() => handleWelcomeBonusClaim(notification.id)}
                                                             disabled={claimingWelcomeBonus}
-                                                            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-sm py-2"
+                                                            className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-xs sm:text-sm py-1.5 sm:py-2"
                                                         >
                                                             {claimingWelcomeBonus ? 'Claiming...' : 'Claim Welcome Bonus'}
                                                         </Button>
@@ -304,7 +304,7 @@ export function Notifications() {
                                                     <Button
                                                         variant="outline"
                                                         onClick={() => markAsRead(notification.id)}
-                                                        className="h-6 w-6 p-0 text-green-400 hover:text-green-300"
+                                                        className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-green-400 hover:text-green-300"
                                                     >
                                                         <Check className="h-3 w-3" />
                                                     </Button>
@@ -312,7 +312,7 @@ export function Notifications() {
                                                 <Button
                                                     variant="outline"
                                                     onClick={() => deleteNotification(notification.id)}
-                                                    className="h-6 w-6 p-0 text-red-400 hover:text-red-300"
+                                                    className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-red-400 hover:text-red-300"
                                                 >
                                                     <Trash2 className="h-3 w-3" />
                                                 </Button>
@@ -324,7 +324,8 @@ export function Notifications() {
                         )}
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

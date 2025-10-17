@@ -63,10 +63,10 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                 {liveMatches.length > 0 && (
                     <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-4 lg:mt-6">
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                            <h2 className={cx(typography.heading.md, "text-white flex items-center")}>
+                            <h2 className={cx(typography.heading.md, "text-white flex items-center text-sm xs:text-base sm:text-lg")}>
                                 <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
                                 🔴 {dict?.sidebar?.liveMatches || 'Live Matches'}
-                                <span className={cx(typography.body.sm, "ml-2 text-gray-400")}>({liveMatches.length})</span>
+                                <span className={cx(typography.body.sm, "ml-2 text-gray-400 text-xs xs:text-sm")}>({liveMatches.length})</span>
                             </h2>
                             {/* Navigation arrows for live matches - only visible on large screens */}
                             <div className="hidden lg:flex gap-2">
@@ -113,7 +113,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                         <div className={`live-matches-container ${
                             // Locked matches on small screens: horizontal carousel with peek
                             liveMatches.some(m => m.locked)
-                                ? 'flex gap-2 xs:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-2 xs:pb-3 pr-4 xs:pr-6'
+                                ? 'flex gap-2 xs:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-2 xs:pb-3 pr-4 xs:pr-6 snap-x snap-mandatory'
                                 : // Grid layout for active matches
                                 'grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ' + (
                                     // When both sidebar and prediction slip are open, max 2 columns
@@ -137,7 +137,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 : cx('border bg-slate-900/80 border-blue-600 hover:border-blue-500/50 cursor-pointer', animations.hover.lift),
                                         // Locked matches are much smaller and compact
                                         match.locked
-                                            ? 'p-2 xs:p-2.5 sm:p-3 h-[90px] xs:h-[100px] sm:h-[110px] md:h-[120px] min-w-[280px] xs:min-w-[300px] sm:min-w-[320px]'
+                                            ? 'p-2 xs:p-2.5 sm:p-3 h-[90px] xs:h-[100px] sm:h-[110px] md:h-[120px] min-w-[280px] xs:min-w-[300px] sm:min-w-[320px] snap-start flex-shrink-0'
                                             : // Active matches - adjust padding and height based on available space
                                             sidebarOpen && !isSlipCollapsed
                                                 ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
@@ -188,9 +188,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 </div>
 
                                                 {/* Player names with NTRP ratings */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div className="text-white font-semibold text-sm truncate flex-1">
-                                                        <div>
+                                                <div className="flex items-center justify-between mb-2 xs:mb-3">
+                                                    <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 min-w-0">
+                                                        <div className="truncate">
                                                             {match.player1.name.split(' ').length > 1
                                                                 ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
                                                                 : match.player1.name
@@ -200,9 +200,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                             NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
                                                         </div>
                                                     </div>
-                                                    <div className="text-slate-500 text-xs font-bold mx-2">VS</div>
-                                                    <div className="text-white font-semibold text-sm truncate flex-1 text-right">
-                                                        <div>
+                                                    <div className="text-slate-500 text-xs font-bold mx-1 xs:mx-2 flex-shrink-0">VS</div>
+                                                    <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 text-right min-w-0">
+                                                        <div className="truncate">
                                                             {match.player2.name.split(' ').length > 1
                                                                 ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
                                                                 : match.player2.name
@@ -217,10 +217,10 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 {/* Odds with better styling */}
                                                 <div className="flex justify-between items-center">
                                                     <div className="text-center flex-1">
-                                                        <div className="text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
+                                                        <div className="text-xs xs:text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                                     </div>
                                                     <div className="text-center flex-1">
-                                                        <div className="text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
+                                                        <div className="text-xs xs:text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                                     </div>
                                                 </div>
                                             </>
@@ -230,23 +230,23 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 {/* Match Header */}
                                                 <div className="mb-2 xs:mb-3 sm:mb-4">
                                                     <div className="flex items-start justify-between mb-1">
-                                                        <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2">
-                                                            <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border ${match.locked
+                                                        <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2 min-w-0 flex-1">
+                                                            <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border flex-shrink-0 ${match.locked
                                                                 ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
                                                                 : 'bg-red-500/20 text-red-400 border-red-500/30'
                                                                 }`}>
                                                                 {dict?.sidebar?.live || 'LIVE'}
                                                             </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-gray-400 text-xs xs:text-sm font-bold truncate max-w-[200px] xs:max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">{match.tournament}</span>
+                                                            <div className="flex flex-col min-w-0 flex-1">
+                                                                <span className="text-gray-400 text-xs xs:text-sm font-bold truncate">{match.tournament}</span>
                                                                 {match.round && (
-                                                                    <span className="text-gray-500 text-xs font-medium">
+                                                                    <span className="text-gray-500 text-xs font-medium truncate">
                                                                         {match.round}
                                                                     </span>
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <div className="text-right">
+                                                        <div className="text-right flex-shrink-0 ml-2">
                                                             <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
                                                             <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
                                                         </div>
@@ -257,7 +257,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                                     {/* Team 1 */}
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player1.name}</div>
+                                                        <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">{match.player1.name}</div>
                                                         <div className="text-xs text-gray-400 font-medium">
                                                             NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
                                                         </div>
@@ -270,7 +270,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                                     {/* Team 2 */}
                                                     <div className="flex-1 text-right min-w-0">
-                                                        <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight">{match.player2.name}</div>
+                                                        <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">{match.player2.name}</div>
                                                         <div className="text-xs text-gray-400 font-medium">
                                                             NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
                                                         </div>
@@ -279,12 +279,10 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                                 {/* Betting Odds */}
                                                 <div className="flex justify-between items-center px-1 xs:px-2">
-                                                    <div className="text-center flex-1">
-                                                        <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player1.name.split(' ')[1] || match.player1.name}</div>
+                                                    <div className="text-center flex-1 min-w-0">
                                                         <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                                     </div>
-                                                    <div className="text-center flex-1">
-                                                        <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player2.name.split(' ')[1] || match.player2.name}</div>
+                                                    <div className="text-center flex-1 min-w-0">
                                                         <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                                     </div>
                                                 </div>
@@ -300,7 +298,8 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 gradients.purple,
                                                 borders.rounded.sm,
                                                 transitions.default,
-                                                shadows.glow.purple
+                                                shadows.glow.purple,
+                                                "hover:scale-105 active:scale-95"
                                             )}
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -398,9 +397,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 </div>
 
                                                 {/* Player names with NTRP ratings */}
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <div className="text-white font-semibold text-sm truncate flex-1">
-                                                        <div>
+                                                <div className="flex items-center justify-between mb-2 xs:mb-3">
+                                                    <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 min-w-0">
+                                                        <div className="truncate">
                                                             {match.player1.name.split(' ').length > 1
                                                                 ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
                                                                 : match.player1.name
@@ -410,9 +409,9 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                             NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
                                                         </div>
                                                     </div>
-                                                    <div className="text-slate-500 text-xs font-bold mx-2">VS</div>
-                                                    <div className="text-white font-semibold text-sm truncate flex-1 text-right">
-                                                        <div>
+                                                    <div className="text-slate-500 text-xs font-bold mx-1 xs:mx-2 flex-shrink-0">VS</div>
+                                                    <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 text-right min-w-0">
+                                                        <div className="truncate">
                                                             {match.player2.name.split(' ').length > 1
                                                                 ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
                                                                 : match.player2.name
@@ -427,10 +426,10 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 {/* Odds with better styling */}
                                                 <div className="flex justify-between items-center">
                                                     <div className="text-center flex-1">
-                                                        <div className="text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
+                                                        <div className="text-xs xs:text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                                     </div>
                                                     <div className="text-center flex-1">
-                                                        <div className="text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
+                                                        <div className="text-xs xs:text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                                     </div>
                                                 </div>
                                             </>
@@ -490,12 +489,10 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
 
                                                 {/* Betting Odds */}
                                                 <div className="flex justify-between items-center px-1 xs:px-2">
-                                                    <div className="text-center flex-1">
-                                                        <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player1.name.split(' ')[1] || match.player1.name}</div>
+                                                    <div className="text-center flex-1 min-w-0">
                                                         <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
                                                     </div>
-                                                    <div className="text-center flex-1">
-                                                        <div className="text-xs text-gray-400 mb-0.5 xs:mb-1 truncate">{match.player2.name.split(' ')[1] || match.player2.name}</div>
+                                                    <div className="text-center flex-1 min-w-0">
                                                         <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
                                                     </div>
                                                 </div>
@@ -511,7 +508,8 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                                                 gradients.purple,
                                                 borders.rounded.sm,
                                                 transitions.default,
-                                                shadows.glow.purple
+                                                shadows.glow.purple,
+                                                "hover:scale-105 active:scale-95"
                                             )}
                                             onClick={(e) => {
                                                 e.stopPropagation();

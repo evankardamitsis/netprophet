@@ -11,7 +11,7 @@ import Logo from '@/components/Logo';
 import { ProfilesService, fetchUserPowerUps, supabase, type UserPowerUp } from '@netprophet/lib';
 import { useAuth } from '@/hooks/useAuth';
 import { useWallet } from '@/context/WalletContext';
-import { ProfileSetupModal } from '@/components/ProfileSetupModal';
+import { useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
 
 // Icon components
@@ -175,8 +175,7 @@ export function TopNavigation({
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userPowerUps, setUserPowerUps] = useState<UserPowerUp[]>([]);
     const [powerUpsLoading, setPowerUpsLoading] = useState(false);
-    const [showProfileModal, setShowProfileModal] = useState(false);
-    const [modalRefresh, setModalRefresh] = useState(0);
+    const { showProfileSetup, setShowProfileSetup, profileRefreshKey, setProfileRefreshKey, testMode, setTestMode } = useProfileSetupModal();
     const router = useRouter();
     const pathname = usePathname();
     const { user } = useAuth();
@@ -325,12 +324,40 @@ export function TopNavigation({
             console.log('🔄 Profile claim status reset - automatic lookup will run with existing name');
 
             // Force refresh the modal
-            setModalRefresh(prev => prev + 1);
-            setShowProfileModal(true);
+            setProfileRefreshKey(profileRefreshKey + 1);
+            setShowProfileSetup(true);
         } catch (error) {
             console.error('Error resetting profile:', error);
             // Still open the modal even if reset fails
-            setShowProfileModal(true);
+            setShowProfileSetup(true);
+        }
+    };
+
+    const handleTestProfileMatchClick = async () => {
+        if (!user) return;
+
+        try {
+            // Reset only the claim status, keep the user's name for automatic lookup
+            await supabase
+                .from('profiles')
+                .update({
+                    profile_claim_status: null,
+                    claimed_player_id: null,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq('id', user.id);
+
+            console.log('🧪 Test Profile Match - simulating successful match');
+
+            // Set test mode and force refresh the modal
+            setTestMode('match');
+            setProfileRefreshKey(profileRefreshKey + 1);
+            setShowProfileSetup(true);
+        } catch (error) {
+            console.error('Error resetting profile:', error);
+            // Still open the modal even if reset fails
+            setTestMode('match');
+            setShowProfileSetup(true);
         }
     };
 
@@ -466,18 +493,25 @@ export function TopNavigation({
 
                 {/* Right Section - Wallet, Notifications, Language, Account */}
                 <div className="flex items-center gap-2 sm:gap-2 lg:gap-3">
-                    {/* Dev Test Button - Profile Claim */}
-                    {/* Hidden but kept for future use
-                    {isDev && (
-                        <button
-                            onClick={handleTestProfileClick}
-                            className="px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition bg-blue-500 hover:bg-blue-600 text-white focus:outline-none text-xs"
-                            title="Test Profile Claim Flow (Resets Profile)"
-                        >
-                            Test Profile
-                        </button>
-                    )}
-                    */}
+                    {/* Dev Test Buttons - Profile Claim */}
+                    {/* {isDev && (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleTestProfileClick}
+                                className="px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition bg-blue-500 hover:bg-blue-600 text-white focus:outline-none text-xs"
+                                title="Test Profile Claim Flow (Resets Profile)"
+                            >
+                                Test Profile
+                            </button>
+                            <button
+                                onClick={handleTestProfileMatchClick}
+                                className="px-2 sm:px-3 py-1 sm:py-2 rounded-lg font-semibold transition bg-green-500 hover:bg-green-600 text-white focus:outline-none text-xs"
+                                title="Test Profile Match Flow (Shows Match Found)"
+                            >
+                                Test Match
+                            </button>
+                        </div>
+                    )} */}
 
                     {/* Wallet Component */}
                     <div className="block relative z-[100]">
@@ -972,12 +1006,18 @@ export function TopNavigation({
 
             {/* Profile Claim Modal - Dev Test */}
             {
-                isDev && showProfileModal && (
-                    <ProfileSetupModal
-                        isOpen={showProfileModal}
-                        onClose={() => setShowProfileModal(false)}
-                        forceRefresh={modalRefresh}
-                    />
+                isDev && showProfileSetup && (
+                    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                        <div className="text-white text-center">
+                            <p>Profile Setup Modal is now handled at the layout level</p>
+                            <button
+                                onClick={() => setShowProfileSetup(false)}
+                                className="mt-4 px-4 py-2 bg-blue-600 rounded-lg"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
                 )
             }
         </div >

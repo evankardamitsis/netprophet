@@ -82,7 +82,7 @@
     },
     "result": {
       "playerFound": "Athlete Profile Found",
-      "playerFoundDescription": "We found a player profile that matches your name. You can claim this profile to participate in matches.",
+      "playerFoundDescription": "You can claim this profile to participate in matches and activate your Athlete Card.",
       "claimProfile": "Claim This Profile",
       "claimDescription": "By claiming this profile, you will be able to participate in matches and tournaments as this player.",
       "claiming": "Claiming...",
@@ -97,7 +97,7 @@
       "termsLabel": "I accept the terms and conditions",
       "termsDescription": "By claiming this profile, you agree to participate in matches and tournaments as this athlete.",
       "noPlayerFound": "No Player Profile Found",
-      "noPlayerFoundDescription": "We couldn't find a player profile that matches your name. To participate as a tennis player in the app and have your matches available for predictions, you can create a new player profile.",
+      "noPlayerFoundDescription": "To participate as an athlete in the app and have your matches available for predictions, you can create a new athlete profile.",
       "createProfile": "Create Athlete Profile",
       "createDescription": "By creating a player profile, you can participate as a tennis player in the app. Your matches will be available for predictions by other users and you can participate in tournaments. An admin will review and approve your request.",
       "requesting": "Requesting...",
@@ -323,6 +323,7 @@
     "bp": "BP",
     "tournament": "Tournament",
     "odds": "Odds",
+    "points": "Points",
     "stake": "Stake",
     "parlayStats": "Parlay Stats",
     "individualStats": "Individual Stats",
@@ -605,7 +606,9 @@
     "notificationDeleted": "Notification deleted",
     "failedToDelete": "Failed to delete notification",
     "allNotificationsDeleted": "All notifications deleted",
-    "failedToDeleteAll": "Failed to delete all notifications"
+    "failedToDeleteAll": "Failed to delete all notifications",
+    "welcomeBonusTitle": "Welcome Bonus Available! 🎉",
+    "welcomeBonusMessage": "Claim your {amount} coin welcome bonus{pass}!"
   },
   "toast": {
     "placingPrediction": "Placing your prediction...",

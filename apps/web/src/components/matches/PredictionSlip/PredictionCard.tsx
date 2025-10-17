@@ -49,9 +49,9 @@ export function PredictionCard({
                 <Card className="relative overflow-hidden rounded-xl shadow-lg backdrop-blur-sm bg-gradient-to-br from-slate-800/90 to-slate-900/90 border border-slate-700/50 hover:border-purple-500/50 transition-colors cursor-pointer"
                     onClick={() => onToggleExpand?.(item.matchId)}
                 >
-                    <CardContent className="p-2.5">
+                    <CardContent className="p-1.5 sm:p-2.5">
                         <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0 flex items-center space-x-2">
+                            <div className="flex-1 min-w-0 flex items-center space-x-1.5 sm:space-x-2">
                                 <div className="w-1 h-1 bg-purple-400 rounded-full flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <h4 className="text-xs font-bold text-white truncate">
@@ -62,7 +62,7 @@ export function PredictionCard({
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center space-x-2 ml-2">
+                            <div className="flex items-center space-x-1 sm:space-x-2 ml-1 sm:ml-2">
                                 <div className="text-right">
                                     <div className="text-xs font-bold text-purple-400">
                                         {(item.multiplier || 1).toFixed(2)}x
@@ -71,7 +71,7 @@ export function PredictionCard({
                                         {formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} <CoinIcon size={10} />
                                     </div>
                                 </div>
-                                <svg className="h-4 w-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="h-3 w-3 sm:h-4 sm:w-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </div>
@@ -258,7 +258,7 @@ export function PredictionCard({
                         {/* Stats Grid */}
                         <div className="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-700/50">
                             <div className="text-center p-1.5 bg-slate-800/50 rounded">
-                                <div className="text-xs text-slate-400 mb-0.5">{dict?.matches?.odds || 'Odds'}</div>
+                                <div className="text-xs text-slate-400 mb-0.5">{dict?.players?.odds || 'Odds'}</div>
                                 <div className="text-sm font-bold text-purple-400">
                                     {(item.multiplier || 1).toFixed(2)}x
                                 </div>
@@ -270,7 +270,7 @@ export function PredictionCard({
                                 </div>
                             </div>
                             <div className="text-center p-1.5 bg-slate-800/50 rounded">
-                                <div className="text-xs text-slate-400 mb-0.5">Points</div>
+                                <div className="text-xs text-slate-400 mb-0.5">{dict?.players?.points || 'Points'}</div>
                                 <div className="text-sm font-bold text-blue-400">
                                     +{(() => {
                                         const multiplier = item.multiplier || 1;
