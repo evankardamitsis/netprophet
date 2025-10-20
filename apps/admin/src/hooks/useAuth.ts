@@ -2,6 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@netprophet/lib";
+import {
+  initializeAuth,
+  setupAuthListener,
+  addAuthListener,
+  removeAuthListener,
+  getGlobalUser,
+  getGlobalLoading,
+  clearGlobalAuth,
+} from "./adminAuthState";
 
 interface User {
   id: string;
@@ -10,131 +19,29 @@ interface User {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [checkingAdmin, setCheckingAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(getGlobalUser());
+  const [loading, setLoading] = useState(getGlobalLoading());
 
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session and check admin status
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        if (session?.user) {
-          // Check if user is admin (prevent multiple simultaneous checks)
-          if (!checkingAdmin) {
-            setCheckingAdmin(true);
-            try {
-              const { data: profile, error } = await supabase
-                .from("profiles")
-                .select("is_admin")
-                .eq("id", session.user.id)
-                .single();
-
-              if (!mounted) return;
-
-              if (error) {
-                console.error("Admin useAuth: Profile check error:", error);
-                setUser(null);
-              } else if (profile?.is_admin) {
-                setUser({
-                  id: session.user.id,
-                  email: session.user.email || "",
-                  is_admin: true,
-                });
-              } else {
-                setUser(null);
-              }
-            } catch (profileError) {
-              console.error(
-                "Admin useAuth: Profile check exception:",
-                profileError
-              );
-              if (mounted) setUser(null);
-            } finally {
-              if (mounted) setCheckingAdmin(false);
-            }
-          }
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Admin useAuth: Session error:", error);
-        if (mounted) setUser(null);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
+    // Create listener function for this component
+    const listener = (newUser: User | null, newLoading: boolean) => {
+      if (!mounted) return;
+      setUser(newUser);
+      setLoading(newLoading);
     };
 
-    // Add a timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (mounted) {
-        console.warn(
-          "Admin useAuth: Loading timeout reached, forcing loading to false"
-        );
-        setLoading(false);
-      }
-    }, 10000); // 10 second timeout
+    // Add this component's listener
+    addAuthListener(listener);
 
-    checkAuth();
-
-    // Listen for auth state changes but only update on specific events
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      console.log("Admin useAuth: Auth state changed -", event);
-
-      if (event === "SIGNED_OUT") {
-        console.log("Admin useAuth: User signed out");
-        setUser(null);
-      } else if (event === "SIGNED_IN" && session?.user) {
-        // Re-check admin status when user signs in (prevent multiple simultaneous checks)
-        console.log("Admin useAuth: User signed in, checking admin status");
-        if (!checkingAdmin) {
-          setCheckingAdmin(true);
-          try {
-            const { data: profile, error } = await supabase
-              .from("profiles")
-              .select("is_admin")
-              .eq("id", session.user.id)
-              .single();
-
-            if (mounted && !error && profile?.is_admin) {
-              setUser({
-                id: session.user.id,
-                email: session.user.email || "",
-                is_admin: true,
-              });
-            } else if (mounted) {
-              setUser(null);
-            }
-          } catch (error) {
-            console.error(
-              "Admin useAuth: SIGNED_IN profile check error:",
-              error
-            );
-            if (mounted) setUser(null);
-          } finally {
-            if (mounted) setCheckingAdmin(false);
-          }
-        }
-      }
-    });
+    // Initialize auth system if not already done
+    initializeAuth();
+    setupAuthListener();
 
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
-      subscription.unsubscribe();
+      removeAuthListener(listener);
     };
   }, []);
 
@@ -142,8 +49,8 @@ export function useAuth() {
     try {
       console.log("Admin useAuth: Starting signOut...");
 
-      // Clear local state immediately
-      setUser(null);
+      // Clear global and local state immediately
+      clearGlobalAuth();
 
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();

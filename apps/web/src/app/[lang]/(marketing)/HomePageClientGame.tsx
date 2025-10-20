@@ -142,6 +142,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                         width={1200}
                         height={450}
                         className="w-full  object-contain"
+                        priority
                     />
                 </div>
 
@@ -203,6 +204,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                     width={1000}
                                     height={800}
                                     className="w-auto h-auto max-w-[500px] max-h-[600px] sm:max-w-[500px] sm:max-h-[600px] lg:max-w-[700px] lg:max-h-[800px] object-contain"
+                                    priority
                                 />
                             </div>
                         </div>

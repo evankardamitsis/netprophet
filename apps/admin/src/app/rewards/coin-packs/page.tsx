@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@netprophet/lib';
 import toast from 'react-hot-toast';
 import { Plus, Edit, Trash2, Eye, Coins, Euro, Star, AlertTriangle } from 'lucide-react';
 

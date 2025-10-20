@@ -47,6 +47,7 @@ export default function Logo({ size = 'md', showText = true, className = '' }: L
                     width={160}
                     height={160}
                     className=" h-full object-contain"
+                    style={{ width: "auto" }}
                 />
             )}
         </div>

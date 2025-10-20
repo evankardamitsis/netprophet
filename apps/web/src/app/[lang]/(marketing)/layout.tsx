@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import TawkToChat from '@/components/TawkToChat';
 
 interface MarketingLayoutProps {
     children: ReactNode;
@@ -21,7 +20,6 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
                 </div>
             </div>
             {children}
-            <TawkToChat />
         </>
     );
 }

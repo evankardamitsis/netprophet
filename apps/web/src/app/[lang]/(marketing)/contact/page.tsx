@@ -3,6 +3,7 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useTawkToChat } from '@/context/TawkToChatContext';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { buttons } from '@/styles/design-system';
@@ -14,6 +15,12 @@ export default function ContactPage() {
     const params = useParams();
     const lang = params.lang as 'en' | 'el';
     const { dict } = useDictionary();
+    const { showChat } = useTawkToChat();
+
+    const handleLiveChatClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        showChat();
+    };
 
     const contactInfo = [
         {
@@ -24,7 +31,8 @@ export default function ContactPage() {
         {
             title: lang === 'el' ? 'Ζωντανή Συνομιλία' : 'Live Chat',
             value: lang === 'el' ? 'Διαθέσιμο 24/7' : 'Available 24/7',
-            link: '#'
+            link: '#',
+            onClick: handleLiveChatClick
         },
         {
             title: lang === 'el' ? 'Ώρες Λειτουργίας' : 'Business Hours',
@@ -64,12 +72,21 @@ export default function ContactPage() {
                             {contactInfo.map((info, index) => (
                                 <div key={index} className="text-center">
                                     <h3 className="font-semibold text-lg mb-2">{info.title}</h3>
-                                    <a
-                                        href={info.link}
-                                        className="text-slate-400 hover:text-blue-400 transition-colors"
-                                    >
-                                        {info.value}
-                                    </a>
+                                    {info.onClick ? (
+                                        <button
+                                            onClick={info.onClick}
+                                            className="text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                                        >
+                                            {info.value}
+                                        </button>
+                                    ) : (
+                                        <a
+                                            href={info.link}
+                                            className="text-slate-400 hover:text-blue-400 transition-colors"
+                                        >
+                                            {info.value}
+                                        </a>
+                                    )}
                                 </div>
                             ))}
                         </div>
