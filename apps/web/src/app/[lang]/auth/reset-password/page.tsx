@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
-import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 import { PasswordInput } from '@/components/PasswordInput';
 
@@ -132,9 +131,6 @@ function ResetPasswordContent() {
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
                 <Card className="w-full max-w-md mx-auto">
                     <CardHeader className="text-center">
-                        <div className="mx-auto mb-4">
-                            <Logo />
-                        </div>
                         <CardTitle className="text-white text-2xl">
                             {(dict as any)?.auth?.invalidResetLink || 'Invalid Reset Link'}
                         </CardTitle>
@@ -159,9 +155,6 @@ function ResetPasswordContent() {
         <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader className="text-center">
-                    <div className="mx-auto mb-4">
-                        <Logo />
-                    </div>
                     <CardTitle className="text-white text-2xl">
                         {(dict as any)?.auth?.resetPassword || 'Reset Password'}
                     </CardTitle>

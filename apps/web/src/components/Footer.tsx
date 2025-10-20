@@ -40,12 +40,8 @@ export default function Footer({ lang, dict }: FooterProps) {
     return (
         <footer
             className="text-white py-16 relative overflow-hidden"
-            style={{ backgroundColor: headerStyles.bg }}
+            style={{ backgroundColor: '#0F1625' }}
         >
-            {/* Decorative elements */}
-            <div className="absolute top-10 left-10 w-32 h-32 bg-purple-500 rounded-full opacity-15 blur-3xl"></div>
-            <div className="absolute bottom-10 right-20 w-40 h-40 bg-pink-500 rounded-full opacity-12 blur-3xl"></div>
-            <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-indigo-500 rounded-full opacity-10 blur-3xl"></div>
 
             <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-8 mb-8">
@@ -54,8 +50,8 @@ export default function Footer({ lang, dict }: FooterProps) {
                         <div className="mb-4">
                             <Logo size="md" />
                         </div>
-                        <p className="text-slate-300 mb-6  font-semibold">
-                            {lang === 'el' ? 'Το πιο διασκεδαστικό παιχνίδι προβλέψεων με πραγματικούς ερασιτεχνικούς αγώνες και τουρνουά.' : 'The most exciting sports prediction game with real amateur matches and tournaments.'}
+                        <p className="text-slate-300 mb-6  font-semibold max-w-md">
+                            {lang === 'el' ? 'Το πιο διασκεδαστικό παιχνίδι προβλέψεων με ερασιτεχνικούς αγώνες και τουρνουά.' : 'The most exciting sports prediction game with amateur matches and tournaments.'}
                         </p>
                         <Button
                             onClick={() => router.push(`/${lang}/auth/signin`)}

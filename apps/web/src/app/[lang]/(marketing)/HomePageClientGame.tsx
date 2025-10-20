@@ -95,21 +95,9 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
             return;
         }
 
-        const checkAuth = async () => {
-            try {
-                if (user) {
-                    router.push(`/${lang}/matches`);
-                    return;
-                }
-                setLoading(false);
-            } catch (err) {
-                setLoading(false);
-            }
-        };
-
-        const timer = setTimeout(checkAuth, 300);
-        return () => clearTimeout(timer);
-    }, [router, lang, user, needsProfileSetup]);
+        // Marketing pages should be accessible to everyone
+        setLoading(false);
+    }, [lang]);
 
     if (loading) {
         return (
@@ -125,9 +113,9 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
     return (
         <div className="min-h-screen" style={{ backgroundColor: '#121A39' }}>
             {/* Decorative circles */}
-            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
-            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
-            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
+            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-[0.3] blur-3xl"></div>
+            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-[0.2] blur-3xl"></div>
+            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-[0.3] blur-3xl"></div>
 
             {/* Header */}
             <Header lang={lang} />
@@ -151,7 +139,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                         {/* Left - Title & CTA */}
                         <div className="w-full lg:w-[35%] text-center lg:text-left space-y-6 sm:space-y-6 lg:pr-8 relative z-10 ">
                             {/* Subtitle */}
-                            <p className="text-xs lg:text-lg text-white font-bold inline-block px-4 py-2 sm:px-4 sm:py-2 rounded-full" style={{ backgroundColor: '#BE05A1' }}>
+                            <p className="text-xs lg:text-base text-white/80 font-medium inline-block px-3 py-1.5 sm:px-3 sm:py-1.5 rounded-full" style={{ backgroundColor: 'rgba(190, 5, 161, 0.3)' }}>
                                 {lang === 'el'
                                     ? '"Πόσο καλά νομίζεις ότι ξέρεις το παιχνίδι;"'
                                     : 'How well can you read the game?'
@@ -169,9 +157,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                             {/* Description */}
                             <p className="text-lg sm:text-lg md:text-xl text-white/90 font-bold max-w-2xl mx-auto lg:mx-0">
-                                {lang === 'el'
-                                    ? 'Ο τρόπος να κερδίζεις και εκτός γηπέδου. Μάντεψε νικητές, μάζεψε coins, κυριάρχησε στο leaderboard!'
-                                    : 'The way to win off the court. Predict winners, collect coins, dominate the leaderboard!'}
+                                {lang === 'el' ? 'Το πιο διασκεδαστικό παιχνίδι προβλέψεων με ερασιτεχνικούς αγώνες και τουρνουά.' : 'The most exciting sports prediction game with amateur matches and tournaments.'}
                             </p>
 
                             {/* CTA Buttons */}
@@ -252,7 +238,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Διάλεξε Αγώνες' : 'Pick Matches'}
                                     </h3>
                                     <p className="text-white/80 font-semibold text-sm">
-                                        {lang === 'el' ? 'Κάθε μέρα σε περιμένουν νέες αναμετρήσεις από πραγματικά τουρνουά!' : 'Every day you will find new challenges from real tournaments!'}
+                                        {lang === 'el' ? 'Κάθε μέρα σε περιμένουν νέες αναμετρήσεις από ερασιτεχνικά τουρνουά!' : 'Every day you will find new challenges from amateur tournaments!'}
                                     </p>
                                 </div>
                             </div>
@@ -271,7 +257,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Κάνε Προβλέψεις' : 'Make Predictions'}
                                     </h3>
                                     <p className="text-white/80 font-semibold text-sm">
-                                        {lang === 'el' ? 'Μάντεψε ποιος θα κερδίσει (και με τι σκορ) — πριν αρχίσει το ματς!' : 'Predict winners and score — before it becomes a highlight!'}
+                                        {lang === 'el' ? 'Μάντεψε ποιος θα κερδίσει (και με τι σκορ) — πριν αρχίσει το ματς!' : 'Predict winners and score — before it starts!'}
                                     </p>
                                 </div>
                             </div>
@@ -311,7 +297,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                         {lang === 'el' ? 'Κυριάρχησε' : 'Dominate'}
                                     </h3>
                                     <p className="text-white/80 font-semibold text-sm">
-                                        {lang === 'el' ? 'Ανέβα στο leaderboard, δείξε ποιος «το έχει» και γίνε NetProphet!' : 'Climb the leaderboard, show everyone who «has it» and become a NetProphet!'}
+                                        {lang === 'el' ? 'Ανέβα στην κατάταξη, δείξε ποιος «το έχει» και γίνε NetProphet!' : 'Climb the leaderboard, show everyone who «has it» and become a NetProphet!'}
                                     </p>
                                 </div>
                             </div>
@@ -327,6 +313,59 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
                         >
                             {lang === 'el' ? 'Παίξε τώρα!' : 'Play now!'}
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            {/* Welcome Bonus - Game Reward Style */}
+            <section className="py-12 sm:py-16 lg:py-20 relative" style={{
+                background: 'linear-gradient(135deg, #1A0B2E 0%, #2D1B69 25%, #3A2A5C 50%, #4A3A6B 75%, #5A4A7B 100%)',
+                boxShadow: 'inset 0 0 50px rgba(90, 74, 123, 0.15)'
+            }}>
+                {/* Decorative elements */}
+                <div className="absolute top-10 left-10 w-64 h-64 bg-purple-400 rounded-full opacity-[0.2] blur-3xl animate-pulse"></div>
+                <div className="absolute bottom-10 right-20 w-80 h-80 bg-pink-400 rounded-full opacity-[0.1] blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+                <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-indigo-400 rounded-full opacity-[0.1] blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="text-center">
+                        <div className="flex items-center justify-center gap-3 mb-4">
+                            <span className="text-5xl">🎁</span>
+                            <span className="text-3xl font-black text-white">Welcome Bonus</span>
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 drop-shadow-lg">
+                            {lang === 'el' ? 'Ξεκίνα με 100 Νομίσματα + Tournament Pass!' : 'Start with 100 Coins + Tournament Pass!'}
+                        </h2>
+                        <p className="text-xl text-white/90 font-bold mb-8 max-w-3xl mx-auto">
+                            {lang === 'el'
+                                ? 'Νέοι χρήστες λαμβάνουν δωρεάν νομίσματα και πρόσβαση σε τουρνουά. Εσύ τι περιμένεις;'
+                                : 'New users receive free coins and tournament access. What are you waiting for?'
+                            }
+                        </p>
+
+                        {/* Quick Stats */}
+                        <div className="flex justify-center gap-8 mb-8">
+                            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
+                                <div className="flex items-center justify-center gap-2 text-4xl font-black text-white mb-2">
+                                    100 <CoinIcon size={36} />
+                                </div>
+                                <div className="text-sm text-white/90 font-bold">Welcome Coins</div>
+                            </div>
+                            <div className="bg-white/20 backdrop-blur-md rounded-2xl p-6 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
+                                <div className="text-5xl mb-2">🎟️</div>
+                                <div className="text-sm text-white/90 font-bold">Tournament Pass</div>
+                            </div>
+                        </div>
+
+                        {/* CTA */}
+                        <Button
+                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            size="lg"
+                            style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                            className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
+                        >
+                            {lang === 'el' ? 'Ξεκίνα Τώρα Δωρεάν!' : 'Start Now Free!'}
                         </Button>
                     </div>
                 </div>
@@ -355,56 +394,56 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             </h2>
                             <p className="text-xl text-white/90 font-bold">
                                 {lang === 'el'
-                                    ? 'Πραγματικοί ερασιτέχνες αθλητές με πλήρη στατιστικά! Όλα ενημερώνονται αυτόματα για ακριβείς προβλέψεις.'
-                                    : 'Real amateur players with complete stats! All updated automatically for accurate predictions.'
+                                    ? 'Ερασιτέχνες αθλητές με πλήρη στατιστικά! Όλες οι πληροφορίες διαθέσιμες με το πάτημα ενός κουμπιού'
+                                    : 'Amateur players with complete stats! All the info available with the click of a button. '
                                 }
                             </p>
-                            <div className="space-y-3">
+                            <ul className="space-y-4">
                                 {[
                                     { icon: '📊', text: lang === 'el' ? 'Ενημερωμένα NTRP Ratings' : 'Updated NTRP Ratings' },
                                     { icon: '🎾', text: lang === 'el' ? 'Πλήρες Ιστορικό Αγώνων' : 'Complete Match History' },
                                     { icon: '⚔️', text: lang === 'el' ? 'Head-to-Head Στατιστικά' : 'Head-to-Head Stats' },
                                     { icon: '🔍', text: lang === 'el' ? 'Προηγμένη Αναζήτηση' : 'Advanced Search' }
                                 ].map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-3 rounded-xl border-2 border-white/30">
+                                    <li key={idx} className="flex items-center gap-4 text-white/90">
                                         <span className="text-2xl">{item.icon}</span>
-                                        <span className="text-white font-bold text-lg">{item.text}</span>
-                                    </div>
+                                        <span className="text-white font-semibold text-lg">{item.text}</span>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </div>
                     </div>
 
                     {/* Leaderboard Feature */}
-                    <div className="grid lg:grid-cols-2 gap-12 items-center mt-16">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center mt-[10rem]">
                         <div className="space-y-6">
                             <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
-                                {lang === 'el' ? '🏆 Γίνε ο Βασιλιάς!' : '🏆 Be the King!'}
+                                {lang === 'el' ? '🏆 Γίνε ο βασιλιάς της κατάταξης!' : '🏆 Be the King of the Rankings!'}
                             </h2>
                             <p className="text-xl text-white/90 font-bold">
                                 {lang === 'el'
-                                    ? 'Live κατάταξη με τους καλύτερους! Μάζεψε coins, κέρδισε streaks και ανέβα στην κορυφή!'
-                                    : 'Live rankings with the best! Collect coins, build streaks and climb to the top!'
+                                    ? 'Διαγωνίσου με τους καλύτερους! Μάζεψε coins, δημιούργησε σερί και ανέβα στην κορυφή!'
+                                    : 'Compete with the best! Collect coins, build streaks and climb to the top!'
                                 }
                             </p>
-                            <div className="space-y-3">
+                            <ul className="space-y-4">
                                 {[
                                     { icon: '🔥', text: lang === 'el' ? 'Live Κατάταξη' : 'Live Rankings' },
                                     { icon: '⚡', text: lang === 'el' ? 'Streaks & Achievements' : 'Streaks & Achievements' },
                                     { icon: '📈', text: lang === 'el' ? 'Ποσοστό Επιτυχίας' : 'Success Rate' },
                                     { icon: '🎖️', text: lang === 'el' ? 'Badges & Διακρίσεις' : 'Badges & Awards' }
                                 ].map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-3 rounded-xl border-2 border-white/30">
+                                    <li key={idx} className="flex items-center gap-4 text-white/90">
                                         <span className="text-2xl">{item.icon}</span>
-                                        <span className="text-white font-bold text-lg">{item.text}</span>
-                                    </div>
+                                        <span className="text-white font-semibold text-lg">{item.text}</span>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </div>
 
                         <div>
                             <div className="backdrop-blur-lg rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50">
-                                <div className="bg-gradient-to-r from-purple-500 to-indigo-600 px-6 py-4 text-center">
+                                <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-4 text-center">
                                     <h3 className="font-black text-2xl text-white drop-shadow-lg">
                                         {lang === 'el' ? '🏆 Top Net Prophets' : '🏆 Top Net Prophets'}
                                     </h3>
@@ -412,9 +451,9 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                 <div className="p-6 space-y-4">
                                     {/* Top 3 */}
                                     {[
-                                        { rank: 1, emoji: '🥇', name: 'AlexTennis_Pro', coins: 2450, rate: 85, color: 'from-yellow-400 to-yellow-500' },
-                                        { rank: 2, emoji: '🥈', name: 'Maria_NetProphet', coins: 2180, rate: 82, color: 'from-gray-300 to-gray-400' },
-                                        { rank: 3, emoji: '🥉', name: 'Nikos_Champion', coins: 1950, rate: 79, color: 'from-orange-400 to-orange-500' }
+                                        { rank: 1, emoji: '🥇', name: 'AlexTennis_Pro', coins: 2450, rate: 85, color: 'from-yellow-600 to-yellow-700' },
+                                        { rank: 2, emoji: '🥈', name: 'Maria_NetProphet', coins: 2180, rate: 82, color: 'from-gray-600 to-gray-700' },
+                                        { rank: 3, emoji: '🥉', name: 'Nikos_Champion', coins: 1950, rate: 79, color: 'from-orange-600 to-orange-700' }
                                     ].map((player) => (
                                         <div key={player.rank} className={`bg-gradient-to-r ${player.color} rounded-2xl p-4 shadow-lg transform hover:scale-105 transition-all`}>
                                             <div className="flex items-center justify-between">
@@ -457,165 +496,133 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             </h3>
                             <p className="text-xl text-white/90 font-bold">
                                 {lang === 'el'
-                                    ? 'Παρακολούθησε όλα τα τουρνουά σε πραγματικό χρόνο με αποτελέσματα που ενημερώνονται καθημερινά!'
-                                    : 'Follow all tournaments in real-time with results updated daily!'
+                                    ? 'Παρακολούθησε όλα τα τουρνουά με αποτελέσματα που ενημερώνονται καθημερινά!'
+                                    : 'Follow all tournaments with daily updated results!'
                                 }
                             </p>
-                            <div className="space-y-3">
+                            <ul className="space-y-4">
                                 {[
                                     { icon: '🎾', text: lang === 'el' ? 'Live Αποτελέσματα Αγώνων' : 'Live Match Results' },
                                     { icon: '📊', text: lang === 'el' ? 'Ενημερωμένα Στατιστικά' : 'Updated Statistics' },
-                                    { icon: '🏆', text: lang === 'el' ? 'Tournament Leaderboards' : 'Tournament Leaderboards' },
+                                    { icon: '🏆', text: lang === 'el' ? 'Όλες οι κατηγορίες' : 'All tournament categories' },
                                     { icon: '📅', text: lang === 'el' ? 'Καθημερινές Ενημερώσεις' : 'Daily Updates' }
                                 ].map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-4 py-3 rounded-xl border-2 border-white/30">
+                                    <li key={idx} className="flex items-center gap-4 text-white/90">
                                         <span className="text-2xl">{item.icon}</span>
-                                        <span className="text-white font-bold text-lg">{item.text}</span>
-                                    </div>
+                                        <span className="text-white font-semibold text-lg">{item.text}</span>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </div>
 
                         <div>
                             <div className="backdrop-blur-lg rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50">
-                                <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-center">
+                                <div className="bg-gradient-to-r from-green-600 to-emerald-700 px-6 py-4 text-center">
                                     <h3 className="font-black text-2xl text-white drop-shadow-lg">
                                         🏆 Maroussi Tennis Open
                                     </h3>
                                     <p className="text-white/90 font-bold text-sm mt-1">Live Tournament Results</p>
                                 </div>
-                                <div className="p-6 space-y-3">
-                                    <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-2xl p-4 shadow-lg">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="font-black text-white text-lg">Γιώργος Παπαδόπουλος</div>
-                                                <div className="text-sm text-white/90 font-bold">6-4, 6-2</div>
+                                <div className="p-6 space-y-4">
+                                    {/* Match Result 1 */}
+                                    <div className="relative group/item">
+                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-40 group-hover/item:opacity-60 blur transition duration-300"></div>
+                                        <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30">
+                                            {/* Date and Category */}
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-purple-300 text-xs font-bold">📅</span>
+                                                    <p className="text-purple-200 text-xs font-bold">15 Sep 2025</p>
+                                                </div>
+                                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg">
+                                                    Men&apos;s Singles
+                                                </span>
                                             </div>
-                                            <div className="text-white font-black text-3xl">W</div>
+
+                                            {/* Players and Score */}
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="flex items-center justify-between gap-3 w-full">
+                                                    <div className="flex-1 text-center">
+                                                        <div className="font-black text-sm text-green-500 drop-shadow-lg mb-1">
+                                                            Γιώργος Παπαδόπουλος
+                                                        </div>
+                                                        <div className="text-xs text-purple-300 font-bold">
+                                                            NTRP 4.5
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg flex-shrink-0">
+                                                        VS
+                                                    </div>
+                                                    <div className="flex-1 text-center">
+                                                        <div className="font-black text-sm text-gray-400 mb-1">
+                                                            Νίκος Κωνσταντίνου
+                                                        </div>
+                                                        <div className="text-xs text-purple-300 font-bold">
+                                                            NTRP 4.2
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
+                                                    <div className="text-sm font-black text-white text-center">
+                                                        2-1 (6-4, 6-2)
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-gradient-to-r from-red-400 to-red-500 rounded-2xl p-4 shadow-lg">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="font-black text-white text-lg">Νίκος Κωνσταντίνου</div>
-                                                <div className="text-sm text-white/90 font-bold">4-6, 2-6</div>
+                                    {/* Match Result 2 */}
+                                    <div className="relative group/item">
+                                        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-40 group-hover/item:opacity-60 blur transition duration-300"></div>
+                                        <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30">
+                                            {/* Date and Category */}
+                                            <div className="flex justify-between items-center mb-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-purple-300 text-xs font-bold">📅</span>
+                                                    <p className="text-purple-200 text-xs font-bold">15 Sep 2025</p>
+                                                </div>
+                                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg">
+                                                    Women&apos;s Singles
+                                                </span>
                                             </div>
-                                            <div className="text-white font-black text-3xl">L</div>
+
+                                            {/* Players and Score */}
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="flex items-center justify-between gap-3 w-full">
+                                                    <div className="flex-1 text-center">
+                                                        <div className="font-black text-sm text-green-500 drop-shadow-lg mb-1">
+                                                            Μαρία Κωνσταντίνου
+                                                        </div>
+                                                        <div className="text-xs text-purple-300 font-bold">
+                                                            NTRP 4.0
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg flex-shrink-0">
+                                                        VS
+                                                    </div>
+                                                    <div className="flex-1 text-center">
+                                                        <div className="font-black text-sm text-gray-400 mb-1">
+                                                            Άννα Παπαδοπούλου
+                                                        </div>
+                                                        <div className="text-xs text-purple-300 font-bold">
+                                                            NTRP 3.8
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
+                                                    <div className="text-sm font-black text-white text-center">
+                                                        2-0 (6-3, 6-1)
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-gradient-to-r from-green-400 to-green-500 rounded-2xl p-4 shadow-lg">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="font-black text-white text-lg">Μαρία Κωνσταντίνου</div>
-                                                <div className="text-sm text-white/90 font-bold">6-3, 6-1</div>
-                                            </div>
-                                            <div className="text-white font-black text-3xl">W</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 pt-4 border-t-2 border-gray-200">
+                                    <div className="mt-4 pt-4 border-t-2 border-purple-500/30">
                                         <div className="text-center">
                                             <div className="text-sm text-white font-bold">
                                                 <span className="font-black">{lang === 'el' ? 'Ενημερώθηκε:' : 'Updated:'}</span> 15 Σεπτεμβρίου 2025
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Welcome Bonus - Game Reward Style */}
-            <section className="py-12 sm:py-16 lg:py-20 relative" style={{
-                background: 'linear-gradient(135deg, #1A0B2E 0%, #2D1B69 25%, #4C2A85 50%, #6B46C1 75%, #8B5CF6 100%)',
-                boxShadow: 'inset 0 0 100px rgba(139, 92, 246, 0.3)'
-            }}>
-                {/* Decorative elements */}
-                <div className="absolute top-10 left-10 w-64 h-64 bg-purple-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-10 right-20 w-80 h-80 bg-pink-400 rounded-full opacity-15 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                <div className="absolute top-1/2 left-1/3 w-72 h-72 bg-indigo-400 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-
-                <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                        {/* Left - Text Content */}
-                        <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="text-5xl">🎁</span>
-                                <span className="text-3xl font-black text-white">Welcome Bonus</span>
-                            </div>
-                            <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 drop-shadow-lg">
-                                {lang === 'el' ? 'Ξεκίνα με 100 Νομίσματα + Tournament Pass!' : 'Start with 100 Coins + Tournament Pass!'}
-                            </h2>
-                            <p className="text-xl text-white/90 font-bold mb-8">
-                                {lang === 'el'
-                                    ? 'Νέοι χρήστες λαμβάνουν δωρεάν νομίσματα και πρόσβαση σε τουρνουά. Ξεκίνα να παίζεις αμέσως!'
-                                    : 'New users receive free coins and tournament access. Start playing immediately!'
-                                }
-                            </p>
-
-                            {/* Quick Stats */}
-                            <div className="grid grid-cols-2 gap-4 mb-8">
-                                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
-                                    <div className="flex items-center justify-center gap-2 text-4xl font-black text-white mb-1">
-                                        100 <CoinIcon size={36} />
-                                    </div>
-                                    <div className="text-sm text-white/90 font-bold">Welcome Coins</div>
-                                </div>
-                                <div className="bg-white/20 backdrop-blur-md rounded-2xl p-4 text-center border-2 border-white/30 transform hover:scale-105 transition-all">
-                                    <div className="text-5xl mb-1">🎟️</div>
-                                    <div className="text-sm text-white/90 font-bold">Tournament Pass</div>
-                                </div>
-                            </div>
-
-                            {/* CTA */}
-                            <Button
-                                onClick={() => router.push(`/${lang}/auth/signin`)}
-                                size="lg"
-                                style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
-                                className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
-                            >
-                                {lang === 'el' ? 'Ξεκίνα Τώρα Δωρεάν!' : 'Start Now Free!'}
-                            </Button>
-                        </div>
-
-                        {/* Right - Visual Rewards */}
-                        <div className="hidden lg:block relative space-y-6">
-                            {/* Large Coin Card */}
-                            <div className="relative group">
-                                <div className="absolute -inset-2 bg-gradient-to-r from-yellow-600 to-orange-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
-                                <div className="relative bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Bonus Νομίσματα' : 'Bonus Coins'}</div>
-                                            <div className="flex items-center gap-3">
-                                                <div className="text-7xl font-black text-white drop-shadow-lg">100</div>
-                                                <CoinIcon size={72} />
-                                            </div>
-                                            <div className="text-white/90 font-bold text-sm mt-2">{lang === 'el' ? '✨ Άμεση πίστωση' : '✨ Instant credit'}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tournament Pass Card */}
-                            <div className="relative group">
-                                <div className="absolute -inset-2 bg-gradient-to-r from-pink-700 to-purple-400 rounded-3xl opacity-40 blur-2xl group-hover:opacity-60 transition-opacity"></div>
-                                <div className="relative bg-gradient-to-br from-pink-700 to-purple-600 rounded-3xl p-8 shadow-2xl transform hover:scale-105 transition-all">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <div className="text-white/80 font-bold text-lg mb-2">{lang === 'el' ? 'Πρόσβαση Τουρνουά' : 'Tournament Access'}</div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="text-8xl">🎟️</div>
-                                                <div>
-                                                    <div className="text-6xl font-black text-white drop-shadow-lg">1</div>
-                                                    <div className="text-white/90 font-bold text-sm">Pass</div>
-                                                </div>
-                                            </div>
-                                            <div className="text-white/90 font-bold text-sm mt-2">{lang === 'el' ? '🏆 Όλα τα τουρνουά' : '🏆 All tournaments'}</div>
                                         </div>
                                     </div>
                                 </div>

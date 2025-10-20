@@ -8,7 +8,6 @@ import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
-import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
 import { PasswordInput } from '@/components/PasswordInput';
@@ -132,11 +131,8 @@ function AuthFormWithSearchParams() {
             {/* Main Content */}
             <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full">
-                    {/* Logo and Title */}
+                    {/* Title */}
                     <div className="text-center mb-8">
-                        <div className="flex items-center justify-center mb-4">
-                            <Logo size="lg" />
-                        </div>
                         <h1 className="text-2xl font-bold text-white mb-2">
                             {lang === 'el' ? 'Καλώς ήρθες' : 'Welcome back'}
                         </h1>

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
-import Logo from '@/components/Logo';
 import { useDictionary } from '@/context/DictionaryContext';
 
 // Prevent static generation for this page
@@ -61,9 +60,6 @@ export default function ForgotPasswordPage() {
         <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
             <Card className="w-full max-w-md mx-auto">
                 <CardHeader className="text-center">
-                    <div className="mx-auto mb-4">
-                        <Logo />
-                    </div>
                     <CardTitle className="text-white text-2xl">
                         {lang === 'el' ? 'Επαναφορά Κωδικού' : 'Reset Password'}
                     </CardTitle>

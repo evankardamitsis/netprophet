@@ -32,17 +32,8 @@ export default function ContactPage() {
             title: lang === 'el' ? 'Ζωντανή Συνομιλία' : 'Live Chat',
             value: lang === 'el' ? 'Διαθέσιμο 24/7' : 'Available 24/7',
             link: '#',
-            onClick: handleLiveChatClick
-        },
-        {
-            title: lang === 'el' ? 'Ώρες Λειτουργίας' : 'Business Hours',
-            value: lang === 'el' ? 'Δευτέρα - Σάββατο, 9:00 - 18:00' : 'Monday - Saturday, 9:00 AM - 6:00 PM',
-            link: '#'
-        },
-        {
-            title: lang === 'el' ? 'Τοποθεσία' : 'Location',
-            value: lang === 'el' ? 'Αθήνα, Ελλάδα' : 'Athens, Greece',
-            link: '#'
+            onClick: handleLiveChatClick,
+            buttonText: lang === 'el' ? 'Ξεκίνα Συνομιλία' : 'Start Conversation'
         }
     ];
 
@@ -54,30 +45,23 @@ export default function ContactPage() {
                     <h1 className="text-4xl font-bold mb-4">
                         {lang === 'el' ? 'Επικοινωνία' : 'Contact Us'}
                     </h1>
-                    <p className="text-slate-400 text-lg">
-                        {lang === 'el'
-                            ? 'Θα χαρούμε να ακούσουμε από εσάς'
-                            : 'We\'d love to hear from you'
-                        }
-                    </p>
                 </div>
 
                 {/* Contact Information */}
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-2xl font-semibold mb-6">
-                            {lang === 'el' ? 'Πληροφορίες επικοινωνίας' : 'Contact Information'}
-                        </h2>
                         <div className="space-y-6">
                             {contactInfo.map((info, index) => (
                                 <div key={index} className="text-center">
                                     <h3 className="font-semibold text-lg mb-2">{info.title}</h3>
+                                    <p className="text-slate-400 mb-4">{info.value}</p>
                                     {info.onClick ? (
                                         <button
                                             onClick={info.onClick}
-                                            className="text-slate-400 hover:text-blue-400 transition-colors cursor-pointer"
+                                            style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                            className={`px-6 py-3 rounded-lg font-bold ${buttons.primary.className} shadow-lg hover:shadow-xl transition-all transform hover:scale-105`}
                                         >
-                                            {info.value}
+                                            {info.buttonText}
                                         </button>
                                     ) : (
                                         <a
