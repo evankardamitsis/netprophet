@@ -332,11 +332,8 @@ export class BetsService {
       }
 
       if (!sessionData.session) {
-        console.log("No session found, user not authenticated");
         throw new Error("User not authenticated");
       }
-
-      console.log("Session found, user ID:", sessionData.session.user.id);
 
       // Ensure the session is properly set in the client
       const {
@@ -351,11 +348,8 @@ export class BetsService {
       }
 
       if (!user) {
-        console.log("No user found from getUser()");
         throw new Error("Failed to get authenticated user");
       }
-
-      console.log("User authenticated successfully:", user.id);
 
       const offset = (page - 1) * limit;
 

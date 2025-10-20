@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, Button } from '@netprophet/ui';
 import { useWallet } from '@/context/WalletContext';
+import { useWalletData } from '@/hooks/useWalletData';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { Dictionary } from '@/types/dictionary';
 import { useStripePayment } from '@/hooks/useStripePayment';
@@ -82,6 +83,7 @@ interface WalletProps {
 export function Wallet({ dict, lang = 'en' }: WalletProps) {
     const [isOpen, setIsOpen] = useState(false);
     const { wallet } = useWallet();
+    const { isWalletSyncing } = useWalletData();
     const { predictions, setSlipCollapsed } = usePredictionSlip();
     const { processPayment, isProcessing } = useStripePayment();
     const { user } = useAuth();

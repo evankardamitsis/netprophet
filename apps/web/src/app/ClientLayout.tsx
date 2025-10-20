@@ -14,8 +14,7 @@ import { SuccessModalProvider, useSuccessModal } from '@/context/SuccessModalCon
 import { BetSuccessModal } from '@/components/matches/PredictionSlip/BetSuccessModal';
 import { ProfileSetupModalProvider, useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
-import { gradients } from '@/styles/design-system';
-import { PageTransitionLoader } from '@/components/PageTransitionLoader';
+import { NavigationLoader } from '@/components/NavigationLoader';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -93,11 +92,20 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
         }, 100);
     };
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto mb-4" />
+                    <p className="text-white text-lg font-medium">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <DictionaryProvider dict={dict} lang={lang}>
-            <PageTransitionLoader />
+            <NavigationLoader />
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
                     <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white overflow-hidden">

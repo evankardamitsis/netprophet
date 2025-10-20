@@ -170,7 +170,7 @@ export default function MyPicksPage() {
         } else if (user && !loading) {
             loadBets();
         }
-    }, [user, loading, router, lang, loadBets]);
+    }, [loading, router, lang, loadBets, user]);
 
     const handleSignOut = async () => {
         await signOut();

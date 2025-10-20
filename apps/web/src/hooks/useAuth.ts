@@ -1,100 +1,150 @@
 import { supabase } from "@netprophet/lib";
 import { useState, useEffect, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { isInitialized } from "@sentry/nextjs";
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const isInitialized = useRef(false);
+// Global auth state to avoid repeated checks
+let globalUser: User | null = null;
+let globalSession: Session | null = null;
+let globalLoading = true;
+let authInitialized = false;
+let playerLookupChecked = false;
 
-  // Function to check for automatic player lookup
-  const checkPlayerLookup = async (userId: string) => {
-    try {
-      const { data, error } = await supabase.rpc(
-        "check_and_claim_player_for_user",
-        {
-          user_id: userId,
-        }
-      );
+// Global auth listeners to avoid multiple subscriptions
+let authStateChangeSubscription: any = null;
+let authListeners: Set<
+  (user: User | null, session: Session | null, loading: boolean) => void
+> = new Set();
 
-      if (error) {
-        console.error("Player lookup error:", error);
+// Function to check for automatic player lookup
+const checkPlayerLookup = async (userId: string) => {
+  // Only run once per session
+  if (playerLookupChecked) return;
+  playerLookupChecked = true;
+
+  try {
+    const { data, error } = await supabase.rpc(
+      "check_and_claim_player_for_user",
+      {
+        user_id: userId,
+      }
+    );
+
+    if (error) {
+      console.error("Player lookup error:", error);
+      return;
+    }
+
+    if (data?.success && data?.status === "auto_claimed") {
+      console.log("Player automatically claimed:", data);
+      // Optionally refresh the page or update UI
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error("Error checking player lookup:", error);
+  }
+};
+
+// Initialize auth system once globally
+const initializeAuth = async () => {
+  if (authInitialized) return;
+
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error("useAuth: Session error:", error);
+    } else if (session) {
+      globalSession = session;
+      globalUser = session.user;
+    }
+
+    globalLoading = false;
+    authInitialized = true;
+
+    // Notify all listeners
+    authListeners.forEach((listener) => {
+      listener(globalUser, globalSession, globalLoading);
+    });
+  } catch (error) {
+    console.error("useAuth: Error getting initial session:", error);
+    globalLoading = false;
+    authInitialized = true;
+
+    // Notify all listeners even on error
+    authListeners.forEach((listener) => {
+      listener(globalUser, globalSession, globalLoading);
+    });
+  }
+};
+
+// Set up auth state change listener once globally
+const setupAuthListener = () => {
+  if (authStateChangeSubscription) return;
+
+  authStateChangeSubscription = supabase.auth.onAuthStateChange(
+    (event, session) => {
+      // Skip INITIAL_SESSION events after initialization
+      if (event === "INITIAL_SESSION" && authInitialized) {
         return;
       }
 
-      if (data?.success && data?.status === "auto_claimed") {
-        console.log("Player automatically claimed:", data);
-        // Optionally refresh the page or update UI
-        window.location.reload();
+      // Handle different auth events
+      if (event === "SIGNED_IN" && session) {
+        globalSession = session;
+        globalUser = session.user;
+        // Check for automatic player lookup after successful login
+        checkPlayerLookup(session.user.id);
+      } else if (event === "SIGNED_OUT") {
+        globalSession = null;
+        globalUser = null;
+        playerLookupChecked = false;
+      } else if (event === "TOKEN_REFRESHED" && session) {
+        globalSession = session;
+        globalUser = session.user;
       }
-    } catch (error) {
-      console.error("Error checking player lookup:", error);
+
+      // Notify all listeners
+      authListeners.forEach((listener) => {
+        listener(globalUser, globalSession, globalLoading);
+      });
     }
-  };
+  );
+};
+
+export function useAuth() {
+  const [user, setUser] = useState<User | null>(globalUser);
+  const [session, setSession] = useState<Session | null>(globalSession);
+  const [loading, setLoading] = useState(globalLoading);
 
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-
-        if (!mounted) return;
-
-        if (error) {
-          console.error("useAuth: Session error:", error);
-        } else if (session) {
-          setSession(session);
-          setUser(session.user);
-        }
-      } catch (error) {
-        console.error("useAuth: Error getting initial session:", error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-          isInitialized.current = true;
-        }
-      }
+    // Create listener function for this component
+    const listener = (
+      newUser: User | null,
+      newSession: Session | null,
+      newLoading: boolean
+    ) => {
+      if (!mounted) return;
+      setUser(newUser);
+      setSession(newSession);
+      setLoading(newLoading);
     };
 
-    getInitialSession();
+    // Add this component's listener
+    authListeners.add(listener);
 
-    // Listen for auth changes - only process meaningful events
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      // Skip INITIAL_SESSION events after initialization
-      if (event === "INITIAL_SESSION" && isInitialized.current) {
-        return;
-      }
-
-      if (!mounted) return;
-
-      // Handle different auth events
-      if (event === "SIGNED_IN" && session) {
-        setSession(session);
-        setUser(session.user);
-        // Check for automatic player lookup after successful login
-        checkPlayerLookup(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-        setSession(null);
-      } else if (event === "TOKEN_REFRESHED" && session) {
-        setSession(session);
-        setUser(session.user);
-      }
-
-      setLoading(false);
-    });
+    // Initialize auth system if not already done
+    initializeAuth();
+    setupAuthListener();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      authListeners.delete(listener);
     };
   }, []);
 
@@ -114,9 +164,15 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
-      // Clear local state immediately
-      setUser(null);
-      setSession(null);
+      // Clear global and local state immediately
+      globalUser = null;
+      globalSession = null;
+      playerLookupChecked = false;
+
+      // Notify all listeners immediately
+      authListeners.forEach((listener) => {
+        listener(null, null, false);
+      });
 
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();

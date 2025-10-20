@@ -12,6 +12,7 @@ import { BetsService, supabase } from '@netprophet/lib';
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
 import { useWallet } from '@/context/WalletContext';
+import { useWalletData } from '@/hooks/useWalletData';
 import { useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ export default function MyProfilePage() {
     const { user, signOut, loading } = useAuth();
     const { dict } = useDictionary();
     const { wallet } = useWallet();
+    const { isWalletSyncing } = useWalletData(); // Load complete wallet data
     const { refreshStatus } = useProfileClaim(user?.id || null);
     const [profileStats, setProfileStats] = useState({
         totalCoins: 0,

@@ -55,9 +55,12 @@ interface WalletContextType {
     purchaseItem: (cost: number, itemName: string) => void;
     enterTournament: (cost: number, tournamentName: string) => void;
     unlockInsight: (cost: number, insightName: string) => void;
+    // Lazy loading methods
     loadBetStats: () => Promise<void>;
     loadTransactions: () => Promise<void>;
     syncWalletWithDatabase: () => Promise<void>;
+    // Lazy load all data when needed
+    loadAllData: () => Promise<void>;
 }
 
 const defaultWallet: UserWallet = {
@@ -145,12 +148,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 return;
             }
 
-            // Clear any cached data first to ensure fresh data
-            if (typeof window !== 'undefined') {
-                sessionStorage.removeItem(SESSION_KEYS.WALLET);
-            }
-
-            // Get user profile from database
+            // Get only essential profile data
             const { data: profile, error } = await supabase
                 .from('profiles')
                 .select('balance, daily_login_streak, has_received_welcome_bonus, has_tournament_pass, tournament_pass_used')
@@ -158,9 +156,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 .single();
 
             if (error && error.code === 'PGRST116') {
-                // Profile doesn't exist - this should be handled by the signup process
                 console.error('Profile not found - user should have a profile after signup');
-                toast.error(dict?.toast?.profileNotFound || 'Profile not found. Please contact support.');
                 return;
             } else if (error) {
                 console.error('Failed to load profile:', error);
@@ -170,7 +166,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 setWallet(prevWallet => {
                     const updatedWallet = {
                         ...prevWallet,
-                        balance: profile.balance || 0, // Default to 0 if null
+                        balance: profile.balance || 0,
                         dailyLoginStreak: profile.daily_login_streak || 0,
                         hasReceivedWelcomeBonus: profile.has_received_welcome_bonus || false,
                         hasTournamentPass: profile.has_tournament_pass || false,
@@ -183,11 +179,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Failed to sync wallet with database:', error);
-            toast.error(dict?.toast?.failedToSyncWallet || 'Failed to sync wallet with database');
         } finally {
             setIsWalletSyncing(false);
         }
-    }, [user, dict?.toast?.profileNotFound, dict?.toast?.failedToSyncWallet]);
+    }, [user]);
 
     const loadBetStats = useCallback(async () => {
         try {
@@ -210,15 +205,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Failed to load bet stats:', error);
-            toast.error(dict?.toast?.failedToLoadBetStats || 'Failed to load bet stats');
+            // Don't show toast for background loading
         }
-    }, [dict?.toast?.failedToLoadBetStats]);
+    }, []);
 
     const loadTransactions = useCallback(async () => {
         try {
             // Ensure user is authenticated before fetching transactions
             if (!user) {
-                console.warn('User not authenticated. Cannot load transactions.');
                 return;
             }
 
@@ -245,9 +239,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (error) {
             console.error('Failed to load transactions:', error);
-            toast.error(dict?.toast?.failedToLoadTransactions || 'Failed to load transactions');
+            // Don't show toast for background loading
         }
-    }, [dict?.toast?.failedToLoadTransactions, user]);
+    }, [user]);
 
 
     // Use ref to track if we're currently loading
@@ -260,71 +254,41 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         }
     }, [user?.id]);
 
-    // Load bet statistics and transactions from database when user changes
-    // This effect will trigger whenever the user logs in or the user ID changes
-    // Note: We don't skip loading on auth pages because we want the data ready
-    // when the user navigates away from auth pages (e.g., after login callback)
+    // Only load essential wallet data on user change - lazy load the rest
     useEffect(() => {
         if (!user?.id) {
             return;
         }
 
-        // Load data for authenticated users
-        const loadUserData = async () => {
+        // Load only critical wallet data immediately
+        const loadEssentialData = async () => {
             if (isLoadingRef.current) {
-                console.log('⏭️ Skipping wallet load - already loading');
                 return;
             }
 
             isLoadingRef.current = true;
-            console.log('🔄 Loading wallet data for user:', user.id);
 
-            await Sentry.startSpan(
-                {
-                    op: 'wallet.load',
-                    name: 'Load Wallet Data',
-                },
-                async (span) => {
-                    try {
-                        const startTime = Date.now();
-
-                        // Load data sequentially to avoid race conditions
-                        console.log('  - Syncing wallet...');
-                        await syncWalletWithDatabase();
-                        console.log('  - Loading bet stats...');
-                        await loadBetStats();
-                        console.log('  - Loading transactions...');
-                        await loadTransactions();
-
-                        const loadTime = Date.now() - startTime;
-                        span.setAttribute('load_time_ms', loadTime);
-                        span.setAttribute('user_id', user.id);
-                        span.setAttribute('success', true);
-
-                        console.log('✅ Wallet data loaded successfully');
-                    } catch (error) {
-                        span.setAttribute('success', false);
-                        span.setAttribute('error', error instanceof Error ? error.message : 'Unknown error');
-
-                        console.error('❌ Error loading user data:', error);
-                        Sentry.captureException(error, {
-                            tags: {
-                                section: 'wallet',
-                                operation: 'load_user_data',
-                            },
-                            extra: {
-                                userId: user.id,
-                            },
-                        });
-                    } finally {
-                        isLoadingRef.current = false;
-                    }
-                }
-            );
+            try {
+                // Only sync balance and basic profile data
+                await syncWalletWithDatabase();
+            } catch (error) {
+                console.error('❌ Error loading essential wallet data:', error);
+                Sentry.captureException(error, {
+                    tags: {
+                        section: 'wallet',
+                        operation: 'load_essential_data',
+                    },
+                    extra: {
+                        userId: user.id,
+                    },
+                });
+            } finally {
+                isLoadingRef.current = false;
+            }
         };
 
-        loadUserData();
-    }, [user?.id, syncWalletWithDatabase, loadBetStats, loadTransactions]); // Include functions in deps
+        loadEssentialData();
+    }, [user?.id, syncWalletWithDatabase]);
 
     const updateBalance = (amount: number, type: Transaction['type'], description: string) => {
         setWallet(prev => {
@@ -760,6 +724,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Lazy load all data when needed (for pages that need complete wallet data)
+    const loadAllData = useCallback(async () => {
+        try {
+            await Promise.all([
+                loadBetStats(),
+                loadTransactions()
+            ]);
+        } catch (error) {
+            console.error('Failed to load all wallet data:', error);
+        }
+    }, [loadBetStats, loadTransactions]);
+
     // Save wallet to session storage whenever it changes
     useEffect(() => {
         saveToSessionStorage(SESSION_KEYS.WALLET, wallet);
@@ -783,6 +759,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         loadBetStats,
         loadTransactions,
         syncWalletWithDatabase,
+        loadAllData,
     };
 
     return (

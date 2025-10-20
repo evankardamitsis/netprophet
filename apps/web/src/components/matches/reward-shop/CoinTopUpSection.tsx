@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/useAuth';
 import { useDictionary } from '@/context/DictionaryContext';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@netprophet/lib';
 import CoinIcon from '@/components/CoinIcon';
 
 export type CoinPack = {
@@ -14,11 +14,6 @@ export type CoinPack = {
     baseCoins: number;
     bonusCoins: number;
 };
-
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 interface CoinTopUpSectionProps {
     onTopUp?: (pack: CoinPack) => void;

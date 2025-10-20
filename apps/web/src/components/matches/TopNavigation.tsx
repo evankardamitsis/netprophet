@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useOptimizedNavigation } from '@/hooks/useOptimizedNavigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet } from './Wallet';
@@ -95,6 +96,7 @@ export function TopNavigation({
     lang = 'en'
 }: TopNavigationProps) {
     const { wallet } = useWallet();
+    const { navigateWithFeedback } = useOptimizedNavigation();
 
     // Check if low balance notification was dismissed
     const isLowBalanceNotificationDismissed = () => {
@@ -179,6 +181,7 @@ export function TopNavigation({
     const router = useRouter();
     const pathname = usePathname();
     const { user } = useAuth();
+    const userRef = useRef(user);
     const isDev = process.env.NODE_ENV === 'development';
     const dropdownRef = useRef<HTMLDivElement>(null);
     const languageDropdownRef = useRef<HTMLDivElement>(null);
@@ -188,14 +191,19 @@ export function TopNavigation({
     // Extract current language from pathname
     const currentLang = pathname.startsWith('/el') ? 'el' : 'en';
 
-    // Load user power-ups
+    // Update user ref when user changes
+    useEffect(() => {
+        userRef.current = user;
+    }, [user]);
+
+    // Load user power-ups only once when component mounts
     useEffect(() => {
         const loadUserPowerUps = async () => {
-            if (!user) return;
+            if (!userRef.current) return;
 
             setPowerUpsLoading(true);
             try {
-                const powerUps = await fetchUserPowerUps(user.id);
+                const powerUps = await fetchUserPowerUps(userRef.current!.id);
                 setUserPowerUps(powerUps);
             } catch (error) {
                 console.error('Error loading user power-ups:', error);
@@ -204,18 +212,21 @@ export function TopNavigation({
             }
         };
 
-        loadUserPowerUps();
-    }, [user]);
+        // Only load if we haven't loaded power-ups yet
+        if (userRef.current && userPowerUps.length === 0) {
+            loadUserPowerUps();
+        }
+    }, [userPowerUps.length]);
 
 
 
     // Manual refresh listener
     useEffect(() => {
         const handleManualRefresh = () => {
-            if (user) {
+            if (userRef.current) {
                 const loadUserPowerUps = async () => {
                     try {
-                        const powerUps = await fetchUserPowerUps(user.id);
+                        const powerUps = await fetchUserPowerUps(userRef.current!.id);
                         setUserPowerUps(powerUps);
                     } catch (error) {
                         console.error('Error manually refreshing user power-ups:', error);
@@ -230,7 +241,7 @@ export function TopNavigation({
         return () => {
             window.removeEventListener('refreshPowerUps', handleManualRefresh);
         };
-    }, [user]);
+    }, []);
 
     // Calculate total active power-ups
     const totalActivePowerUps = userPowerUps.reduce((total, powerUp) => {
@@ -304,7 +315,7 @@ export function TopNavigation({
 
         // Replace the current language in the pathname
         const newPath = pathname.replace(/^\/(en|el)/, `/${newLang}`);
-        router.push(newPath);
+        navigateWithFeedback(newPath);
     };
 
     const handleTestProfileClick = async () => {
@@ -399,7 +410,7 @@ export function TopNavigation({
                 {showNavigationTabs && (
                     <nav className="hidden lg:flex flex-1 justify-center gap-1.5 xl:gap-3">
                         <motion.button
-                            onClick={() => router.push(`/${currentLang}/matches`)}
+                            onClick={() => navigateWithFeedback(`/${currentLang}/matches`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
                                 borders.rounded.sm,
@@ -414,7 +425,7 @@ export function TopNavigation({
                             {dict?.navigation?.matches || 'Matches'}
                         </motion.button>
                         <motion.button
-                            onClick={() => router.push(`/${currentLang}/leaderboard`)}
+                            onClick={() => navigateWithFeedback(`/${currentLang}/leaderboard`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
                                 borders.rounded.sm,
@@ -429,7 +440,7 @@ export function TopNavigation({
                             {dict?.navigation?.leaderboard || 'Leaderboard'}
                         </motion.button>
                         <motion.button
-                            onClick={() => router.push(`/${currentLang}/players`)}
+                            onClick={() => navigateWithFeedback(`/${currentLang}/players`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
                                 borders.rounded.sm,
@@ -444,7 +455,7 @@ export function TopNavigation({
                             {dict?.navigation?.players || 'Players'}
                         </motion.button>
                         <motion.button
-                            onClick={() => router.push(`/${currentLang}/results`)}
+                            onClick={() => navigateWithFeedback(`/${currentLang}/results`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
                                 borders.rounded.sm,
@@ -459,7 +470,7 @@ export function TopNavigation({
                             {dict?.navigation?.results || 'Results'}
                         </motion.button>
                         <motion.button
-                            onClick={() => router.push(`/${currentLang}/my-picks`)}
+                            onClick={() => navigateWithFeedback(`/${currentLang}/my-picks`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
                                 borders.rounded.sm,
@@ -474,7 +485,7 @@ export function TopNavigation({
                             {dict?.navigation?.myPicks || 'My Picks'}
                         </motion.button>
                         <motion.button
-                            onClick={() => router.push(`/${currentLang}/rewards`)}
+                            onClick={() => navigateWithFeedback(`/${currentLang}/rewards`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
                                 borders.rounded.sm,
@@ -755,7 +766,7 @@ export function TopNavigation({
                                             transitions.default,
                                             "hover:bg-purple-600/30 hover:text-purple-300"
                                         )}
-                                        onClick={() => { setAccountDropdownOpen(false); router.push(`/${currentLang}/my-profile`); }}
+                                        onClick={() => { setAccountDropdownOpen(false); navigateWithFeedback(`/${currentLang}/my-profile`); }}
                                         whileHover={{ x: 4 }}
                                     >
                                         <UserIcon /> {dict?.navigation?.myProfile || 'My Profile'}
@@ -802,7 +813,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/matches`);
+                                            navigateWithFeedback(`/${currentLang}/matches`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-base",
@@ -820,7 +831,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/leaderboard`);
+                                            navigateWithFeedback(`/${currentLang}/leaderboard`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-base",
@@ -838,7 +849,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/players`);
+                                            navigateWithFeedback(`/${currentLang}/players`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-base",
@@ -856,7 +867,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/results`);
+                                            navigateWithFeedback(`/${currentLang}/results`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-base",
@@ -874,7 +885,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/my-picks`);
+                                            navigateWithFeedback(`/${currentLang}/my-picks`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-base",
@@ -892,7 +903,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/rewards`);
+                                            navigateWithFeedback(`/${currentLang}/rewards`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-base",
@@ -917,7 +928,7 @@ export function TopNavigation({
                                     <motion.button
                                         onClick={() => {
                                             setMobileMenuOpen(false);
-                                            router.push(`/${currentLang}/my-profile`);
+                                            navigateWithFeedback(`/${currentLang}/my-profile`);
                                         }}
                                         className={cx(
                                             "w-full text-left px-3 py-2 font-semibold text-white text-base flex items-center gap-2",

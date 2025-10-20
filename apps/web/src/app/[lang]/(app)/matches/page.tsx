@@ -180,7 +180,8 @@ export default function DashboardPage() {
     const { data: matches = [], isLoading, error } = useQuery({
         queryKey: ['syncedMatches'],
         queryFn: fetchSyncedMatches,
-        refetchInterval: 30000, // Refetch every 30 seconds
+        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        refetchOnWindowFocus: false, // Don't refetch on window focus
     });
 
 
