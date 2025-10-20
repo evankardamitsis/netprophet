@@ -659,4 +659,22 @@ export interface Dictionary {
     usePass: string;
     insufficientFunds: string;
   };
+  welcomeBonus: {
+    title: string;
+    description: string;
+    oneTimeBonus: string;
+    freeTournamentPass: string;
+    accessAnyTournament: string;
+    claimWelcomeBonus: string;
+    later: string;
+  };
+  dailyLogin: {
+    title: string;
+    streakMessage: string;
+    comeBackTomorrow: string;
+    streakBroken: string;
+    noReward: string;
+    dayStreak: string;
+    claimDailyReward: string;
+  };
 }
