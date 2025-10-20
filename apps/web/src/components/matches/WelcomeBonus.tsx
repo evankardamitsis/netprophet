@@ -9,6 +9,7 @@ import { useDictionary } from '@/context/DictionaryContext';
 import { supabase, WelcomeBonusNotificationService } from '@netprophet/lib';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
+import CoinIcon from '@/components/CoinIcon';
 
 // Icon components
 function GiftIcon({ className = "h-4 w-4" }: { className?: string }) {
@@ -39,7 +40,7 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
     const { user, loading: authLoading } = useAuth();
     const { wallet, isWalletSyncing, claimWelcomeBonus, checkDailyLogin, claimDailyLogin, syncWalletWithDatabase } = useWallet();
     const { theme } = useTheme();
-    const { lang } = useDictionary();
+    const { dict, lang } = useDictionary();
     const [showWelcomeBonus, setShowWelcomeBonus] = useState(false);
     const [showDailyLogin, setShowDailyLogin] = useState(false);
     const [dailyReward, setDailyReward] = useState(0);
@@ -240,58 +241,38 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                                         typography.heading.lg,
                                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                                     )}>
-                                        Welcome to NetProphet! 🎉
+                                        {dict?.welcomeBonus?.title || 'Welcome to NetProphet! 🎉'}
                                     </CardTitle>
                                     <p className={cx(
                                         typography.body.md,
                                         theme === 'dark' ? 'text-gray-300' : 'text-gray-600',
                                         'leading-relaxed'
                                     )}>
-                                        Start your prediction journey with a welcome bonus!
+                                        {dict?.welcomeBonus?.description || 'Start your prediction journey with a welcome bonus!'}
                                     </p>
                                 </div>
 
-                                {/* Rewards section */}
-                                <div className="space-y-4">
+                                {/* Rewards section - side by side */}
+                                <div className="flex gap-3">
                                     {/* Coins reward */}
-                                    <motion.div
-                                        className={cx(
-                                            "rounded-xl p-4 border border-yellow-200 dark:border-yellow-700/30",
-                                            "bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20",
-                                            transitions.default
-                                        )}
-                                        whileHover={{ scale: 1.05 }}
-                                    >
-                                        <div className="flex items-center justify-center gap-3 mb-2">
-                                            <div className="text-3xl animate-pulse">🪙</div>
-                                            <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                                    <div className="flex-1 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <CoinIcon size={20} />
+                                            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
                                                 +{COIN_CONSTANTS.WELCOME_BONUS}
                                             </div>
                                         </div>
-                                        <Badge variant="secondary" className="text-xs bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200">
-                                            One-time bonus
-                                        </Badge>
-                                    </motion.div>
+                                    </div>
 
                                     {/* Tournament pass reward */}
-                                    <motion.div
-                                        className={cx(
-                                            "rounded-xl p-4 border border-purple-200 dark:border-purple-700/30",
-                                            "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20",
-                                            transitions.default
-                                        )}
-                                        whileHover={{ scale: 1.05 }}
-                                    >
-                                        <div className="flex items-center justify-center gap-3 mb-2">
-                                            <div className="text-3xl animate-bounce">🎫</div>
-                                            <div className="text-xl font-bold text-purple-600 dark:text-purple-400">
-                                                Free Tournament Pass
+                                    <div className="flex-1 text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <div className="text-2xl">🎫</div>
+                                            <div className="text-sm font-bold text-purple-600 dark:text-purple-400">
+                                                {dict?.welcomeBonus?.freeTournamentPass || 'Free Tournament Pass'}
                                             </div>
                                         </div>
-                                        <Badge variant="outline" className="text-xs text-purple-600 border-purple-600 dark:text-purple-400 dark:border-purple-400">
-                                            Access any paid tournament
-                                        </Badge>
-                                    </motion.div>
+                                    </div>
                                 </div>
 
                                 {/* Action buttons */}
@@ -305,14 +286,14 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                                             animations.hover.scaleSmall
                                         )}
                                     >
-                                        Claim Welcome Bonus
+                                        {dict?.welcomeBonus?.claimWelcomeBonus || 'Πάρε το Μπόνους'}
                                     </Button>
                                     <Button
                                         onClick={handleDismiss}
                                         variant="outline"
                                         className="px-6 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-300 border-gray-300 dark:border-gray-600"
                                     >
-                                        Later
+                                        {dict?.welcomeBonus?.later || 'Later'}
                                     </Button>
                                 </div>
                             </div>
@@ -343,15 +324,15 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                                         typography.heading.lg,
                                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                                     )}>
-                                        Daily Login Reward! 🔥
+                                        {dict?.dailyLogin?.title || 'Daily Login Reward! 🔥'}
                                     </CardTitle>
                                     <p className={`text-base ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
                                         {dailyReward > 0
                                             ? (wallet.dailyLoginStreak > 1
-                                                ? `You're on a ${wallet.dailyLoginStreak} day streak!`
-                                                : 'Come back tomorrow for more rewards!'
+                                                ? (dict?.dailyLogin?.streakMessage || 'You\'re on a {streak} day streak!').replace('{streak}', wallet.dailyLoginStreak.toString())
+                                                : (dict?.dailyLogin?.comeBackTomorrow || 'Come back tomorrow for more rewards!')
                                             )
-                                            : 'Streak broken! Come back tomorrow to start a new streak.'
+                                            : (dict?.dailyLogin?.streakBroken || 'Streak broken! Come back tomorrow to start a new streak.')
                                         }
                                     </p>
                                 </div>
@@ -359,19 +340,11 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                                 {/* Reward section */}
                                 <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/30">
                                     <div className="flex items-center justify-center gap-3 mb-2">
-                                        <div className="text-3xl">🪙</div>
+                                        <CoinIcon size={24} />
                                         <div className={`text-3xl font-bold ${dailyReward > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500'}`}>
-                                            {dailyReward > 0 ? `+${dailyReward}` : 'No Reward'}
+                                            {dailyReward > 0 ? `+${dailyReward}` : (dict?.dailyLogin?.noReward || 'No Reward')}
                                         </div>
                                     </div>
-                                    {dailyReward > 0 && (
-                                        <div className="flex items-center justify-center gap-2">
-                                            <FireIcon className="text-orange-500 h-4 w-4" />
-                                            <Badge variant="outline" className="text-xs text-orange-600 border-orange-600 dark:text-orange-400 dark:border-orange-400">
-                                                {wallet.dailyLoginStreak} day streak
-                                            </Badge>
-                                        </div>
-                                    )}
                                 </div>
 
                                 {/* Action button */}
@@ -384,7 +357,7 @@ export function WelcomeBonus({ onClose, onDismiss }: WelcomeBonusProps) {
                                         animations.hover.scaleSmall
                                     )}
                                 >
-                                    Claim Daily Reward
+                                    {dict?.dailyLogin?.claimDailyReward || 'Claim Daily Reward'}
                                 </Button>
                             </div>
                         )}

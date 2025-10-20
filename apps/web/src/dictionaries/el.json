@@ -709,5 +709,23 @@
     "checkingAccessDescription": "Επαληθεύω την πρόσβασή σου σε αυτό το τουρνουά...",
     "usePass": "Δωρεάν Πρόσβαση",
     "insufficientFunds": "Ανεπαρκή Νομίσματα"
+  },
+  "welcomeBonus": {
+    "title": "Καλώς ήρθες στο NetProphet! 🎉",
+    "description": "Ξεκίνα το ταξίδι των προβλέψεών σου με ένα μπόνους καλωσορίσματος!",
+    "oneTimeBonus": "Μπόνους μία φορά",
+    "freeTournamentPass": "Πάσο Τουρνουά",
+    "accessAnyTournament": "Πρόσβαση σε οποιοδήποτε πληρωμένο τουρνουά",
+    "claimWelcomeBonus": "Πάρε το Μπόνους",
+    "later": "Αργότερα"
+  },
+  "dailyLogin": {
+    "title": "Δώρο Ημερήσιας Σύνδεσης! 🔥",
+    "streakMessage": "Είσαι σε σερί {streak} ημερών!",
+    "comeBackTomorrow": "Επέστρεψε αύριο για περισσότερες ανταμοιβές!",
+    "streakBroken": "Σερί διακόπηκε! Επέστρεψε αύριο για να ξεκινήσεις ένα νέο σερί.",
+    "noReward": "Χωρίς Βραβείο",
+    "dayStreak": "ημέρες σερί",
+    "claimDailyReward": "Πάρε το δώρο"
   }
 }

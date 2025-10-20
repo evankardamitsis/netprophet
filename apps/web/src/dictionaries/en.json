@@ -708,5 +708,23 @@
     "checkingAccessDescription": "Verifying your access to this tournament...",
     "usePass": "Use Tournament Pass",
     "insufficientFunds": "Insufficient Funds"
+  },
+  "welcomeBonus": {
+    "title": "Welcome to NetProphet! 🎉",
+    "description": "Start your prediction journey with a welcome bonus!",
+    "oneTimeBonus": "One-time bonus",
+    "freeTournamentPass": "Free Tournament Pass",
+    "accessAnyTournament": "Access any paid tournament",
+    "claimWelcomeBonus": "Get the Bonus",
+    "later": "Later"
+  },
+  "dailyLogin": {
+    "title": "Daily Login Reward! 🔥",
+    "streakMessage": "You're on a {streak} day streak!",
+    "comeBackTomorrow": "Come back tomorrow for more rewards!",
+    "streakBroken": "Streak broken! Come back tomorrow to start a new streak.",
+    "noReward": "No Reward",
+    "dayStreak": "day streak",
+    "claimDailyReward": "Claim Daily Reward"
   }
 }
