@@ -4,26 +4,32 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const isProd = process.env.NODE_ENV === "production";
+const isExplicitlyEnabled = process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true";
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
+  // In development, avoid heavy client integrations to reduce hook latency
+  integrations:
+    isProd || isExplicitlyEnabled ? [Sentry.replayIntegration()] : [],
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1,
+  // Performance Tracing
+  tracesSampleRate: isProd ? 0.1 : 0,
 
-  // Define how likely Replay events are sampled.
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  // Session Replay
+  replaysSessionSampleRate: isProd ? 0.1 : 0,
+  replaysOnErrorSampleRate: isProd ? 1.0 : 0,
 
   // Only enable in production or when explicitly set
-  enabled:
-    process.env.NODE_ENV === "production" ||
-    process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true",
+  enabled: isProd || isExplicitlyEnabled,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
+  // Debug off by default
   debug: false,
 });
 
-export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+// Avoid extra work in dev; export a no-op so the hook is present but cheap
+export const onRouterTransitionStart =
+  isProd || isExplicitlyEnabled
+    ? Sentry.captureRouterTransitionStart
+    : () => {};
