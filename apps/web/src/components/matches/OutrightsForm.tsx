@@ -573,7 +573,7 @@ export function OutrightsForm({
                     <p>{dict?.matches?.finalsPairSettled || '• Finals pair predictions are settled when finalists are determined'}</p>
                     <p>{dict?.matches?.betOnBothPredictions || '• You can bet on both predictions for maximum potential winnings'}</p>
                     <p>{dict?.matches?.higherRiskHigherRewards || '• Higher risk = higher potential rewards'}</p>
-                    <p>{dict?.matches?.differentPlayersAndOdds || '• Each category has different players and odds'}</p>
+                    <p>{dict?.matches?.differentAthletesAndOdds || '• Each category has different athletes and odds'}</p>
                 </div>
             </div>
         </div>

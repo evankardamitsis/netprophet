@@ -228,7 +228,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                         </div>
                         {details.headToHeadData && details.headToHeadData.total_matches > 0 && (
                             <div className="text-xs text-gray-400 bg-slate-700/30 rounded px-2 py-1">
-                                <span className="font-medium">{dict?.players?.totalMatches || 'Total matches'}: {details.headToHeadData.total_matches}</span>
+                                <span className="font-medium">{dict?.athletes?.totalMatches || 'Total matches'}: {details.headToHeadData.total_matches}</span>
                                 {details.headToHeadData.last_match_date && (
                                     <span className="ml-2 text-gray-300">
                                         • Last match: {new Date(details.headToHeadData.last_match_date).toLocaleDateString()}

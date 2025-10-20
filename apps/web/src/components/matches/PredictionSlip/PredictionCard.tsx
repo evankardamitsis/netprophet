@@ -258,7 +258,7 @@ export function PredictionCard({
                         {/* Stats Grid */}
                         <div className="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-700/50">
                             <div className="text-center p-1.5 bg-slate-800/50 rounded">
-                                <div className="text-xs text-slate-400 mb-0.5">{dict?.players?.odds || 'Odds'}</div>
+                                <div className="text-xs text-slate-400 mb-0.5">{dict?.athletes?.odds || 'Odds'}</div>
                                 <div className="text-sm font-bold text-purple-400">
                                     {(item.multiplier || 1).toFixed(2)}x
                                 </div>
@@ -270,7 +270,7 @@ export function PredictionCard({
                                 </div>
                             </div>
                             <div className="text-center p-1.5 bg-slate-800/50 rounded">
-                                <div className="text-xs text-slate-400 mb-0.5">{dict?.players?.points || 'Points'}</div>
+                                <div className="text-xs text-slate-400 mb-0.5">{dict?.athletes?.points || 'Points'}</div>
                                 <div className="text-sm font-bold text-blue-400">
                                     +{(() => {
                                         const multiplier = item.multiplier || 1;

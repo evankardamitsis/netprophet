@@ -77,9 +77,9 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
 
                 {/* Age and Hand */}
                 <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <span>{player.age} {dict?.players?.years || 'years'}</span>
+                    <span>{player.age} {dict?.athletes?.years || 'years'}</span>
                     <span>•</span>
-                    <span className="capitalize">{dict?.players?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.players?.handed || 'handed'}</span>
+                    <span className="capitalize">{dict?.athletes?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.athletes?.handed || 'handed'}</span>
                 </div>
             </div>
 
@@ -92,7 +92,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                             {winRate}%
                         </div>
                         <div className="text-xs text-gray-400">
-                            {dict?.players?.winRate || 'Win Rate'}
+                            {dict?.athletes?.winRate || 'Win Rate'}
                         </div>
                     </div>
 
@@ -102,7 +102,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                             {player.wins}-{player.losses}
                         </div>
                         <div className="text-xs text-gray-400">
-                            {dict?.players?.record || 'Record'}
+                            {dict?.athletes?.record || 'Record'}
                         </div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                 {/* Last 5 Matches */}
                 <div className="mb-4">
                     <div className="text-xs text-gray-400 mb-2">
-                        {dict?.players?.last5 || 'Last 5 Matches'}
+                        {dict?.athletes?.last5 || 'Last 5 Matches'}
                     </div>
                     <div className="flex gap-1">
                         {player.last5.map((result: string, idx: number) => (
@@ -130,12 +130,12 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                 {/* Current Streak */}
                 <div className="mb-4">
                     <div className="text-xs text-gray-400 mb-1">
-                        {dict?.players?.currentStreak || 'Current Streak'}
+                        {dict?.athletes?.currentStreak || 'Current Streak'}
                     </div>
                     <div className={`text-sm font-bold ${getStreakColor(player.currentStreak, player.streakType)}`}>
                         {player.currentStreak} {player.streakType === 'W'
-                            ? (player.currentStreak === 1 ? (dict?.players?.win || 'Win') : (dict?.players?.wins || 'Wins'))
-                            : (player.currentStreak === 1 ? (dict?.players?.loss || 'Loss') : (dict?.players?.losses || 'Losses'))
+                            ? (player.currentStreak === 1 ? (dict?.athletes?.win || 'Win') : (dict?.athletes?.wins || 'Wins'))
+                            : (player.currentStreak === 1 ? (dict?.athletes?.loss || 'Loss') : (dict?.athletes?.losses || 'Losses'))
                         }
                     </div>
                 </div>
@@ -143,7 +143,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                 {/* Surface Preference */}
                 <div className="mb-4">
                     <div className="text-xs text-gray-400 mb-1">
-                        {dict?.players?.preferredSurface || 'Preferred Surface'}
+                        {dict?.athletes?.preferredSurface || 'Preferred Surface'}
                     </div>
                     <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getSurfaceColor(player.surfacePreference)}`}>
                         {player.surfacePreference}
@@ -153,7 +153,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                 {/* Player Attributes */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{dict?.players?.aggressiveness || 'Aggressiveness'}</span>
+                        <span className="text-gray-400">{dict?.athletes?.aggressiveness || 'Aggressiveness'}</span>
                         <div className="flex gap-1">
                             {[...Array(10)].map((_, i) => (
                                 <div
@@ -166,7 +166,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                     </div>
 
                     <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{dict?.players?.stamina || 'Stamina'}</span>
+                        <span className="text-gray-400">{dict?.athletes?.stamina || 'Stamina'}</span>
                         <div className="flex gap-1">
                             {[...Array(10)].map((_, i) => (
                                 <div
@@ -179,7 +179,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                     </div>
 
                     <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{dict?.players?.consistency || 'Consistency'}</span>
+                        <span className="text-gray-400">{dict?.athletes?.consistency || 'Consistency'}</span>
                         <div className="flex gap-1">
                             {[...Array(10)].map((_, i) => (
                                 <div
@@ -196,7 +196,7 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                 {player.injuryStatus && player.injuryStatus !== 'healthy' && (
                     <div className="mt-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
                         <div className="text-xs text-red-400 font-medium">
-                            {player.injuryStatus === 'minor' ? (dict?.players?.minorInjury || 'Minor Injury') : (dict?.players?.majorInjury || 'Major Injury')}
+                            {player.injuryStatus === 'minor' ? (dict?.athletes?.minorInjury || 'Minor Injury') : (dict?.athletes?.majorInjury || 'Major Injury')}
                         </div>
                     </div>
                 )}

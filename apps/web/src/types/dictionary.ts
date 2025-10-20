@@ -4,7 +4,7 @@ export interface Dictionary {
     leaderboard: string;
     myPicks: string;
     rewards: string;
-    players: string;
+    athletes: string;
     results: string;
     myProfile: string;
     howItWorks: string;
@@ -200,7 +200,7 @@ export interface Dictionary {
     finalsPairSettled?: string;
     betOnBothPredictions?: string;
     higherRiskHigherRewards?: string;
-    differentPlayersAndOdds?: string;
+    differentAthletesAndOdds?: string;
     placeOutrightsBet?: string;
     addToSlip?: string;
     updateSlip?: string;
@@ -240,7 +240,7 @@ export interface Dictionary {
       purchaseFailed: string;
     };
   };
-  players: {
+  athletes: {
     years: string;
     handed: string;
     left: string;
@@ -267,16 +267,19 @@ export interface Dictionary {
     subtitle: string;
     searchPlaceholder: string;
     allSurfaces: string;
-    playersFound: string;
-    noPlayersFound: string;
+    athletesFound: string;
+    noAthletesFound: string;
     tryDifferentSearch: string;
-    playerNotFound: string;
+    athleteNotFound: string;
     totalMatches: string;
     attributes: string;
     additionalInfo: string;
     notes: string;
     injuryStatus: string;
     fatigueLevel: string;
+    odds: string;
+    points: string;
+    playerNotFound: string;
   };
   leaderboard: {
     title: string;

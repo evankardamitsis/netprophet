@@ -64,7 +64,7 @@ export default function PlayerDetailPage() {
                             <span className="text-4xl">⚠️</span>
                         </div>
                         <div className="text-white text-lg font-bold mb-6">
-                            {dict?.players?.playerNotFound || 'Player not found'}
+                            {dict?.athletes?.athleteNotFound || 'Athlete not found'}
                         </div>
                         <button
                             onClick={() => router.back()}
@@ -177,9 +177,9 @@ export default function PlayerDetailPage() {
                                         {player.firstName} {player.lastName}
                                     </h1>
                                     <div className="flex flex-wrap items-center gap-3 text-base sm:text-lg text-purple-200">
-                                        <span className="font-bold">{player.age} {dict?.players?.years || 'years'}</span>
+                                        <span className="font-bold">{player.age} {dict?.athletes?.years || 'years'}</span>
                                         <span className="text-purple-400">•</span>
-                                        <span className="capitalize font-bold">{dict?.players?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.players?.handed || 'handed'}</span>
+                                        <span className="capitalize font-bold">{dict?.athletes?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.athletes?.handed || 'handed'}</span>
                                         <span className="text-purple-400">•</span>
                                         <span className={`font-black ${getNTRPColor(player.ntrpRating)} text-xl`}>
                                             NTRP {player.ntrpRating.toFixed(1)}
@@ -191,7 +191,7 @@ export default function PlayerDetailPage() {
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-4 border-t border-purple-500/30">
                                     <div className="flex-1">
                                         <div className="text-xs text-purple-300 mb-2 font-bold">
-                                            {dict?.players?.preferredSurface || 'Preferred Surface'}
+                                            {dict?.athletes?.preferredSurface || 'Preferred Surface'}
                                         </div>
                                         <div className={`inline-block px-4 py-2 rounded-full text-sm font-bold border shadow-lg ${getSurfaceColor(player.surfacePreference)}`}>
                                             {player.surfacePreference}
@@ -222,7 +222,7 @@ export default function PlayerDetailPage() {
                                     {winRate}%
                                 </div>
                                 <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                                    {dict?.players?.winRate || 'Win Rate'}
+                                    {dict?.athletes?.winRate || 'Win Rate'}
                                 </div>
                             </CardContent>
                         </Card>
@@ -237,7 +237,7 @@ export default function PlayerDetailPage() {
                                     {player.wins}-{player.losses}
                                 </div>
                                 <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                                    {dict?.players?.record || 'Record'}
+                                    {dict?.athletes?.record || 'Record'}
                                 </div>
                             </CardContent>
                         </Card>
@@ -250,12 +250,12 @@ export default function PlayerDetailPage() {
                             <CardContent className="p-4 sm:p-6 text-center">
                                 <div className="text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-lg">
                                     {player.currentStreak} {player.streakType === 'W'
-                                        ? (player.currentStreak === 1 ? (dict?.players?.win || 'Win') : (dict?.players?.wins || 'Wins'))
-                                        : (player.currentStreak === 1 ? (dict?.players?.loss || 'Loss') : (dict?.players?.losses || 'Losses'))
+                                        ? (player.currentStreak === 1 ? (dict?.athletes?.win || 'Win') : (dict?.athletes?.wins || 'Wins'))
+                                        : (player.currentStreak === 1 ? (dict?.athletes?.loss || 'Loss') : (dict?.athletes?.losses || 'Losses'))
                                     }
                                 </div>
                                 <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                                    {dict?.players?.currentStreak || 'Current Streak'}
+                                    {dict?.athletes?.currentStreak || 'Current Streak'}
                                 </div>
                             </CardContent>
                         </Card>
@@ -270,7 +270,7 @@ export default function PlayerDetailPage() {
                                     {player.wins + player.losses}
                                 </div>
                                 <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                                    {dict?.players?.totalMatches || 'Total Matches'}
+                                    {dict?.athletes?.totalMatches || 'Total Matches'}
                                 </div>
                             </CardContent>
                         </Card>
@@ -280,7 +280,7 @@ export default function PlayerDetailPage() {
                 {/* Surface Statistics */}
                 <div className="mb-8 sm:mb-12">
                     <h2 className="text-2xl sm:text-3xl font-black text-white mb-6 drop-shadow-lg">
-                        {dict?.players?.surfaceStats || 'Surface Statistics'}
+                        {dict?.athletes?.surfaceStats || 'Surface Statistics'}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Hard Court Stats */}
@@ -392,7 +392,7 @@ export default function PlayerDetailPage() {
                         <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
                             <CardContent className="p-6">
                                 <h3 className="text-xl font-black text-white mb-6 drop-shadow-lg">
-                                    {dict?.players?.last5 || 'Last 5 Matches'}
+                                    {dict?.athletes?.last5 || 'Last 5 Matches'}
                                 </h3>
 
                                 {matchHistory.length > 0 ? (
@@ -476,12 +476,12 @@ export default function PlayerDetailPage() {
                         <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
                             <CardContent className="p-6">
                                 <h3 className="text-xl font-black text-white mb-6 drop-shadow-lg">
-                                    {dict?.players?.attributes || 'Player Attributes'}
+                                    {dict?.athletes?.attributes || 'Player Attributes'}
                                 </h3>
                                 <div className="space-y-5">
                                     <div>
                                         <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-purple-300 font-bold">{dict?.players?.aggressiveness || 'Aggressiveness'}</span>
+                                            <span className="text-purple-300 font-bold">{dict?.athletes?.aggressiveness || 'Aggressiveness'}</span>
                                             <span className="text-white font-black">{player.aggressiveness}/10</span>
                                         </div>
                                         <div className="w-full bg-slate-700/50 rounded-full h-3 shadow-inner">
@@ -494,7 +494,7 @@ export default function PlayerDetailPage() {
 
                                     <div>
                                         <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-purple-300 font-bold">{dict?.players?.stamina || 'Stamina'}</span>
+                                            <span className="text-purple-300 font-bold">{dict?.athletes?.stamina || 'Stamina'}</span>
                                             <span className="text-white font-black">{player.stamina}/10</span>
                                         </div>
                                         <div className="w-full bg-slate-700/50 rounded-full h-3 shadow-inner">
@@ -507,7 +507,7 @@ export default function PlayerDetailPage() {
 
                                     <div>
                                         <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-purple-300 font-bold">{dict?.players?.consistency || 'Consistency'}</span>
+                                            <span className="text-purple-300 font-bold">{dict?.athletes?.consistency || 'Consistency'}</span>
                                             <span className="text-white font-black">{player.consistency}/10</span>
                                         </div>
                                         <div className="w-full bg-slate-700/50 rounded-full h-3 shadow-inner">
@@ -531,13 +531,13 @@ export default function PlayerDetailPage() {
                             <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
                                 <CardContent className="p-6">
                                     <h3 className="text-xl font-black text-white mb-6 drop-shadow-lg">
-                                        {dict?.players?.additionalInfo || 'Additional Information'}
+                                        {dict?.athletes?.additionalInfo || 'Additional Information'}
                                     </h3>
                                     <div className="space-y-4">
                                         {player.notes && (
                                             <div>
                                                 <div className="text-sm text-purple-300 mb-2 font-bold">
-                                                    {dict?.players?.notes || 'Notes'}
+                                                    {dict?.athletes?.notes || 'Notes'}
                                                 </div>
                                                 <div className="text-base text-white font-bold">{player.notes}</div>
                                             </div>
@@ -546,10 +546,10 @@ export default function PlayerDetailPage() {
                                         {player.injuryStatus && player.injuryStatus !== 'healthy' && (
                                             <div>
                                                 <div className="text-sm text-purple-300 mb-2 font-bold">
-                                                    {dict?.players?.injuryStatus || 'Injury Status'}
+                                                    {dict?.athletes?.injuryStatus || 'Injury Status'}
                                                 </div>
                                                 <div className="inline-block px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full text-sm font-bold shadow-lg">
-                                                    {player.injuryStatus === 'minor' ? (dict?.players?.minorInjury || 'Minor Injury') : (dict?.players?.majorInjury || 'Major Injury')}
+                                                    {player.injuryStatus === 'minor' ? (dict?.athletes?.minorInjury || 'Minor Injury') : (dict?.athletes?.majorInjury || 'Major Injury')}
                                                 </div>
                                             </div>
                                         )}

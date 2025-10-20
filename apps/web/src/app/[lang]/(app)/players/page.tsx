@@ -56,7 +56,7 @@ export default function PlayersPage() {
                     <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
                         <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
                     </div>
-                    <p className="text-white text-lg font-bold">Loading players...</p>
+                    <p className="text-white text-lg font-bold">Loading athletes...</p>
                 </div>
             </div>
         );
@@ -72,16 +72,12 @@ export default function PlayersPage() {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 relative z-10">
                 {/* Header */}
                 <div className="mb-8 sm:mb-12 text-center">
-                    <div className="hidden sm:inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
-                        <p className="text-sm sm:text-base text-white font-bold">
-                            👥 {dict?.players?.title || 'Players'}
-                        </p>
-                    </div>
+
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
-                        {dict?.players?.title || 'Players'}
+                        {dict?.athletes?.title || 'Athletes'}
                     </h1>
                     <p className="text-lg sm:text-xl text-white/90 font-bold max-w-2xl mx-auto">
-                        {dict?.players?.subtitle || 'Discover detailed player statistics and performance data'}
+                        {dict?.athletes?.subtitle || 'Discover detailed athlete statistics and performance data'}
                     </p>
                 </div>
 
@@ -93,7 +89,7 @@ export default function PlayersPage() {
                         <div className="relative">
                             <input
                                 type="text"
-                                placeholder={dict?.players?.searchPlaceholder || "Search players..."}
+                                placeholder={dict?.athletes?.searchPlaceholder || "Search athletes..."}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full px-4 py-2.5 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-purple-500/30 rounded-xl sm:rounded-2xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition-all text-sm sm:text-lg"
@@ -115,7 +111,7 @@ export default function PlayersPage() {
                                     : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/70 border border-slate-600/50'
                                     }`}
                             >
-                                {surface === 'all' ? (dict?.players?.allSurfaces || 'All Surfaces') : surface}
+                                {surface === 'all' ? (dict?.athletes?.allSurfaces || 'All Surfaces') : surface}
                             </button>
                         ))}
                     </div>
@@ -125,7 +121,7 @@ export default function PlayersPage() {
                 <div className="mb-6 sm:mb-8">
                     <div className="inline-block bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
                         <p className="text-white font-bold text-xs">
-                            <span className="text-purple-300">{filteredPlayers.length}</span> {dict?.players?.playersFound || 'players found'}
+                            <span className="text-purple-300">{filteredPlayers.length}</span> {dict?.athletes?.athletesFound || 'athletes found'}
                         </p>
                     </div>
                 </div>
@@ -137,10 +133,10 @@ export default function PlayersPage() {
                             <span className="text-4xl">🎾</span>
                         </div>
                         <div className="text-white text-lg font-bold mb-2">
-                            {dict?.players?.noPlayersFound || 'No players found'}
+                            {dict?.athletes?.noAthletesFound || 'No athletes found'}
                         </div>
                         <p className="text-purple-300">
-                            {dict?.players?.tryDifferentSearch || 'Try adjusting your search criteria'}
+                            {dict?.athletes?.tryDifferentSearch || 'Try adjusting your search criteria'}
                         </p>
                     </div>
                 ) : (

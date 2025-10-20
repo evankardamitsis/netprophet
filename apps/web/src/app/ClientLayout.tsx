@@ -59,25 +59,9 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
     const router = useRouter();
     const { predictions, removePrediction, slipCollapsed, setSlipCollapsed } = usePredictionSlip();
 
-    const handleSignOut = async () => {
-        try {
-            console.log('ClientLayout: Starting signOut...');
-            const { error } = await signOut();
-
-            if (error) {
-                console.error('ClientLayout: SignOut error:', error);
-                // Still redirect even if there's an error
-            }
-
-            console.log('ClientLayout: SignOut completed, redirecting...');
-
-            // Force a hard redirect to clear any cached state
-            window.location.href = '/';
-        } catch (error) {
-            console.error('ClientLayout: SignOut exception:', error);
-            // Still redirect even if there's an exception
-            window.location.href = '/';
-        }
+    const handleSignOut = () => {
+        // Immediate redirect - logout will be handled by the redirect
+        window.location.href = '/';
     };
 
     // New: handle match selection by routing

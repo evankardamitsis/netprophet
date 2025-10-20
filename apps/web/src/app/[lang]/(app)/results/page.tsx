@@ -486,11 +486,6 @@ export default function ResultsPage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
                 {/* Page Header */}
                 <div className="text-center mb-8 sm:mb-12">
-                    <div className="hidden sm:inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
-                        <p className="text-sm sm:text-base text-white font-bold">
-                            {lang === 'el' ? '📊 Ζωντανά Αποτελέσματα' : '📊 Live Results'}
-                        </p>
-                    </div>
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
                         {dict?.results?.title || 'Match Results'}
                     </h1>

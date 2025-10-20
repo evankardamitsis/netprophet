@@ -399,7 +399,7 @@ export function TopNavigation({
                         <BurgerIcon isOpen={mobileMenuOpen} />
                     </motion.button>
                     <Link
-                        href={`/${currentLang}`}
+                        href={user ? `/${currentLang}/matches` : `/${currentLang}`}
                         className="focus:outline-none focus:ring-2 focus:ring-accent/50 rounded group"
                     >
                         <Logo size="md" />
@@ -452,7 +452,7 @@ export function TopNavigation({
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            {dict?.navigation?.players || 'Players'}
+                            {dict?.navigation?.athletes || 'Athletes'}
                         </motion.button>
                         <motion.button
                             onClick={() => navigateWithFeedback(`/${currentLang}/results`)}
@@ -862,7 +862,7 @@ export function TopNavigation({
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        {dict?.navigation?.players || 'Players'}
+                                        {dict?.navigation?.athletes || 'Athletes'}
                                     </motion.button>
                                     <motion.button
                                         onClick={() => {
