@@ -23,21 +23,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        // Log error to Sentry in production
-        if (typeof window !== 'undefined' && (window as any).Sentry) {
-            (window as any).Sentry.captureException(error, {
-                contexts: {
-                    react: {
-                        componentStack: errorInfo.componentStack,
-                    },
-                },
-            });
-        }
-
-        // Also log to console in development
-        if (process.env.NODE_ENV === 'development') {
-            console.error('Error Boundary caught an error:', error, errorInfo);
-        }
+        // Log error to console
+        console.error('Error Boundary caught an error:', error, errorInfo);
     }
 
     render() {

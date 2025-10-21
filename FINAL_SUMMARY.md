@@ -26,33 +26,21 @@
 - ✅ Auto-stripped in production builds
 - ✅ Keeps console.error and console.warn for debugging
 
-### 2. Error Monitoring with Sentry ✅
-
-#### Installation
-
-- ✅ Sentry installed in web app (`@sentry/nextjs`)
-- ✅ Sentry installed in admin app (`@sentry/nextjs`)
-
-#### Configuration Files Created
-
-- ✅ `apps/web/sentry.client.config.ts`
-- ✅ `apps/web/sentry.server.config.ts`
-- ✅ `apps/admin/sentry.client.config.ts`
-- ✅ `apps/admin/sentry.server.config.ts`
+### 2. Error Monitoring ✅
 
 #### Error Boundaries Updated
 
-- ✅ Web app Error Boundary now sends to Sentry
-- ✅ Admin app Error Boundary now sends to Sentry
+- ✅ Web app Error Boundary with console logging
+- ✅ Admin app Error Boundary with console logging
 - ✅ Graceful error handling for users
-- ✅ Automatic error reporting in production
+- ✅ Error logging for debugging
 
 #### Features
 
-- ✅ Performance monitoring (10% sampling)
-- ✅ Session replay on errors (100% of error sessions)
-- ✅ Privacy protected (all text/media masked)
-- ✅ Only active in production (unless explicitly enabled)
+- ✅ Console error logging
+- ✅ Error boundary fallback UI
+- ✅ Development error details
+- ✅ Production error handling
 
 ### 3. Code Cleanup ✅
 

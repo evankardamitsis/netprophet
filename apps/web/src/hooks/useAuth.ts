@@ -1,7 +1,6 @@
 import { supabase } from "@netprophet/lib";
 import { useState, useEffect, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { isInitialized } from "@sentry/nextjs";
 
 // Global auth state to avoid repeated checks
 let globalUser: User | null = null;

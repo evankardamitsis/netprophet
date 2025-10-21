@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmail } from '@/hooks/useEmail';
-import * as Sentry from '@sentry/nextjs';
 
 export interface Transaction {
     id: string;
@@ -273,15 +272,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 await syncWalletWithDatabase();
             } catch (error) {
                 console.error('❌ Error loading essential wallet data:', error);
-                Sentry.captureException(error, {
-                    tags: {
-                        section: 'wallet',
-                        operation: 'load_essential_data',
-                    },
-                    extra: {
-                        userId: user.id,
-                    },
-                });
+                // Log error to console
+                console.error('Wallet context error:', error);
             } finally {
                 isLoadingRef.current = false;
             }
