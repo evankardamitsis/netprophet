@@ -95,7 +95,7 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
             odds_a,
             odds_b,
             web_synced,
-            tournaments (
+            tournaments!inner (
                 id,
                 name,
                 surface,
@@ -132,7 +132,8 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
             )
         `)
         .eq('web_synced', true)
-        .order('start_time', { ascending: true });
+        .order('start_time', { ascending: true })
+        .limit(100); // Add reasonable limit to prevent large datasets
 
     if (error) throw error;
 
@@ -188,6 +189,10 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
         queryFn: fetchSyncedMatches,
         staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
         refetchOnWindowFocus: false, // Don't refetch on window focus
+        refetchOnMount: false, // Don't refetch on mount if data exists
+        retry: 2, // Retry failed requests twice
+        retryDelay: 1000, // Wait 1 second between retries
+        gcTime: 10 * 60 * 1000, // Keep data in cache for 10 minutes
     });
 
     const { theme } = useTheme();

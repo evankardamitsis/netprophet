@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@netprophet/lib';
+import { supabase, withCache } from '@netprophet/lib';
+import { fetchOptimizedTournamentResults, fetchTournamentPage, transformMatchData, WebCacheKeys, WebCacheTTL } from '@/utils/optimizedQueries';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { ResultsTournamentFilter } from '@/components/matches/ResultsTournamentFilter';
 import { useDictionary } from '@/context/DictionaryContext';
@@ -58,193 +59,34 @@ export default function ResultsPage() {
     const [tournamentTotals, setTournamentTotals] = useState<Record<string, number>>({});
     const resultsPerPage = 10;
 
-    // Load match results with pagination
+    // Load match results with optimized batch query and caching
     const loadResults = async () => {
         try {
             setLoadingResults(true);
             setError(null);
 
-            // First, get all tournaments that have finished matches
-            const { data: tournamentsData, error: tournamentsError } = await supabase
-                .from('matches')
-                .select(`
-                    tournament_id,
-                    tournaments(id, name),
-                    tournament_categories(name)
-                `)
-                .eq('status', 'finished')
-                .not('tournaments', 'is', null);
+            // Use optimized batch query with caching
+            const cacheKey = WebCacheKeys.tournamentResults();
+            const { tournaments, totals } = await withCache(
+                cacheKey,
+                async () => {
+                    return await fetchOptimizedTournamentResults();
+                },
+                WebCacheTTL.MEDIUM
+            );
 
-            if (tournamentsError) {
-                throw tournamentsError;
-            }
+            // Transform data to expected format
+            const tournamentResults: TournamentResults[] = tournaments.map(tournament => {
+                const matches = tournament.matches
+                    .slice(0, resultsPerPage) // Limit to first page
+                    .map(transformMatchData)
+                    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
-            // Extract unique tournaments with their IDs
-            const uniqueTournaments = new Map<string, { name: string; id: string }>();
-            tournamentsData?.forEach((match) => {
-                const tournament = Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments;
-                const tournamentName = tournament?.name || 'Unknown Tournament';
-                const tournamentId = tournament?.id || match.tournament_id || '';
-
-                // Use only tournament name as key to avoid duplicates
-                if (!uniqueTournaments.has(tournamentName)) {
-                    uniqueTournaments.set(tournamentName, { name: tournamentName, id: tournamentId });
-                }
+                return {
+                    tournament_name: tournament.name,
+                    matches
+                };
             });
-
-            const tournamentResults: TournamentResults[] = [];
-            const totals: Record<string, number> = {};
-
-            // OPTIMIZATION: Add timeout and limit to prevent hanging queries
-            const queryTimeout = 5000; // 5 second timeout per tournament
-
-            // Fetch paginated results for each tournament (with timeout protection)
-            for (const [tournamentKey, tournamentInfo] of uniqueTournaments) {
-                let tournamentMatches: any[] = [];
-
-                try {
-                    // Get total count for this tournament using tournament_id (with timeout)
-                    const countPromise = supabase
-                        .from('matches')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('status', 'finished')
-                        .eq('tournament_id', tournamentInfo.id);
-
-                    const { count, error: countError } = await Promise.race([
-                        countPromise,
-                        new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('Query timeout')), queryTimeout)
-                        )
-                    ]) as any;
-
-                    if (countError) {
-                        console.error(`Error getting count for ${tournamentInfo.name}:`, countError);
-                        continue;
-                    }
-
-                    totals[tournamentInfo.name] = count || 0;
-
-                    // Get first page of results for this tournament (with timeout)
-                    const matchesPromise = supabase
-                        .from('matches')
-                        .select(`
-                            id,
-                            status,
-                            start_time,
-                            updated_at,
-                            player_a_id,
-                            player_b_id,
-                            winner_id,
-                            tournaments(name),
-                            tournament_categories(name),
-                            player_a:players!matches_player_a_id_fkey(id, first_name, last_name, ntrp_rating),
-                            player_b:players!matches_player_b_id_fkey(id, first_name, last_name, ntrp_rating),
-                            winner:players!matches_winner_id_fkey(id, first_name, last_name),
-                            match_results(
-                                match_result,
-                                set1_score,
-                                set2_score,
-                                set3_score,
-                                set4_score,
-                                set5_score,
-                                set1_tiebreak_score,
-                                set2_tiebreak_score,
-                                set3_tiebreak_score,
-                                set4_tiebreak_score,
-                                set5_tiebreak_score,
-                                super_tiebreak_score,
-                                winner_id,
-                                created_at
-                            )
-                        `)
-                        .eq('status', 'finished')
-                        .eq('tournament_id', tournamentInfo.id)
-                        .order('updated_at', { ascending: false })
-                        .range(0, resultsPerPage - 1);
-
-                    const { data: matchesData, error: matchesError } = await Promise.race([
-                        matchesPromise,
-                        new Promise((_, reject) =>
-                            setTimeout(() => reject(new Error('Query timeout')), queryTimeout)
-                        )
-                    ]) as any;
-
-                    if (matchesError) {
-                        console.error(`Error fetching matches for ${tournamentInfo.name}:`, matchesError);
-                        continue;
-                    }
-
-                    tournamentMatches = matchesData || [];
-                } catch (timeoutError) {
-                    console.error(`Timeout fetching data for ${tournamentInfo.name}:`, timeoutError);
-                    continue;
-                }
-
-                // Transform matches data
-                const matches: MatchResult[] = [];
-                tournamentMatches?.forEach((match: any) => {
-                    const tournament = Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments;
-                    const tournamentName = tournament?.name || 'Unknown Tournament';
-                    const category = Array.isArray(match.tournament_categories) ? match.tournament_categories[0] : match.tournament_categories;
-                    const categoryName = category?.name || 'Unknown Category';
-                    const playerA = Array.isArray(match.player_a) ? match.player_a[0] : match.player_a;
-                    const playerB = Array.isArray(match.player_b) ? match.player_b[0] : match.player_b;
-                    const playerAName = `${playerA?.first_name || ''} ${playerA?.last_name || ''}`.trim() || 'Unknown Player';
-                    const playerBName = `${playerB?.first_name || ''} ${playerB?.last_name || ''}`.trim() || 'Unknown Player';
-                    const playerANtrp = playerA?.ntrp_rating || 0;
-                    const playerBNtrp = playerB?.ntrp_rating || 0;
-
-                    // Get the match result data
-                    const matchResultData = Array.isArray(match.match_results) ? match.match_results[0] : match.match_results;
-
-                    // Determine winner name based on winner_id in match_results
-                    let winnerName = 'TBD';
-                    if (matchResultData?.winner_id) {
-                        // Check if winner is player A or player B
-                        if (matchResultData.winner_id === match.player_a_id) {
-                            winnerName = playerAName;
-                        } else if (matchResultData.winner_id === match.player_b_id) {
-                            winnerName = playerBName;
-                        }
-                    }
-
-                    const matchResult: MatchResult = {
-                        id: match.id,
-                        tournament_name: tournamentName,
-                        category_name: categoryName,
-                        player_a_name: playerAName,
-                        player_a_ntrp: playerANtrp,
-                        player_b_name: playerBName,
-                        player_b_ntrp: playerBNtrp,
-                        winner_name: winnerName,
-                        match_result: matchResultData?.match_result || '',
-                        set1_score: matchResultData?.set1_score || null,
-                        set2_score: matchResultData?.set2_score || null,
-                        set3_score: matchResultData?.set3_score || null,
-                        set4_score: matchResultData?.set4_score || null,
-                        set5_score: matchResultData?.set5_score || null,
-                        set1_tiebreak_score: matchResultData?.set1_tiebreak_score || null,
-                        set2_tiebreak_score: matchResultData?.set2_tiebreak_score || null,
-                        set3_tiebreak_score: matchResultData?.set3_tiebreak_score || null,
-                        set4_tiebreak_score: matchResultData?.set4_tiebreak_score || null,
-                        set5_tiebreak_score: matchResultData?.set5_tiebreak_score || null,
-                        super_tiebreak_score: matchResultData?.super_tiebreak_score || null,
-                        status: match.status,
-                        start_time: match.start_time,
-                        updated_at: match.updated_at,
-                    };
-
-                    matches.push(matchResult);
-                });
-
-                // Add tournament results
-                if (matches.length > 0) {
-                    tournamentResults.push({
-                        tournament_name: tournamentInfo.name,
-                        matches: matches.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-                    });
-                }
-            }
 
             // Sort tournaments by most recent match
             tournamentResults.sort((a, b) => {
@@ -256,7 +98,7 @@ export default function ResultsPage() {
             setAllResults(tournamentResults);
             setResults(tournamentResults);
             setTournamentTotals(totals);
-            setTournamentPages(Object.fromEntries(Array.from(uniqueTournaments.values()).map(tournament => [tournament.name, 1])));
+            setTournamentPages(Object.fromEntries(tournaments.map(t => [t.name, 1])));
         } catch (err) {
             console.error('Error loading results:', err);
             setError(err instanceof Error ? err.message : 'Failed to load results');
@@ -334,130 +176,22 @@ export default function ResultsPage() {
     // Flatten all matches for the tournament filter
     const allMatches = allResults.flatMap(tournament => tournament.matches);
 
-    // Load more results for a specific tournament
+    // Load more results for a specific tournament (optimized)
     const loadMoreResults = async (tournamentName: string, page: number) => {
         try {
-            const start = (page - 1) * resultsPerPage;
-            const end = start + resultsPerPage - 1;
+            // Use optimized utility function
+            const tournamentMatches = await fetchTournamentPage(tournamentName, page, resultsPerPage);
 
-            // Find the tournament ID from allResults
-            const tournament = allResults.find(t => t.tournament_name === tournamentName);
-            if (!tournament) {
-                console.error(`Tournament ${tournamentName} not found`);
-                return;
-            }
-
-            // Get tournament ID from the first match
-            const firstMatch = tournament.matches[0];
-            if (!firstMatch) {
-                console.error(`No matches found for tournament ${tournamentName}`);
-                return;
-            }
-
-            const { data: tournamentMatches, error: matchesError } = await supabase
-                .from('matches')
-                .select(`
-                    id,
-                    status,
-                    start_time,
-                    updated_at,
-                    player_a_id,
-                    player_b_id,
-                    winner_id,
-                    tournaments(name),
-                    tournament_categories(name),
-                    player_a:players!matches_player_a_id_fkey(id, first_name, last_name, ntrp_rating),
-                    player_b:players!matches_player_b_id_fkey(id, first_name, last_name, ntrp_rating),
-                    winner:players!matches_winner_id_fkey(id, first_name, last_name),
-                    match_results(
-                        match_result,
-                        set1_score,
-                        set2_score,
-                        set3_score,
-                        set4_score,
-                        set5_score,
-                        set1_tiebreak_score,
-                        set2_tiebreak_score,
-                        set3_tiebreak_score,
-                        set4_tiebreak_score,
-                        set5_tiebreak_score,
-                        super_tiebreak_score,
-                        winner_id,
-                        created_at
-                    )
-                `)
-                .eq('status', 'finished')
-                .eq('tournaments.name', tournamentName)
-                .order('updated_at', { ascending: false })
-                .range(start, end);
-
-            if (matchesError) {
-                console.error(`Error fetching more matches for ${tournamentName}:`, matchesError);
-                return;
-            }
-
-            // Transform matches data
-            const matches: MatchResult[] = [];
-            tournamentMatches?.forEach((match) => {
-                const tournament = Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments;
-                const tournamentName = tournament?.name || 'Unknown Tournament';
-                const category = Array.isArray(match.tournament_categories) ? match.tournament_categories[0] : match.tournament_categories;
-                const categoryName = category?.name || 'Unknown Category';
-                const playerA = Array.isArray(match.player_a) ? match.player_a[0] : match.player_a;
-                const playerB = Array.isArray(match.player_b) ? match.player_b[0] : match.player_b;
-                const playerAName = `${playerA?.first_name || ''} ${playerA?.last_name || ''}`.trim() || 'Unknown Player';
-                const playerBName = `${playerB?.first_name || ''} ${playerB?.last_name || ''}`.trim() || 'Unknown Player';
-                const playerANtrp = playerA?.ntrp_rating || 0;
-                const playerBNtrp = playerB?.ntrp_rating || 0;
-
-                // Get the match result data
-                const matchResultData = Array.isArray(match.match_results) ? match.match_results[0] : match.match_results;
-
-                // Determine winner name based on winner_id in match_results
-                let winnerName = 'TBD';
-                if (matchResultData?.winner_id) {
-                    // Check if winner is player A or player B
-                    if (matchResultData.winner_id === match.player_a_id) {
-                        winnerName = playerAName;
-                    } else if (matchResultData.winner_id === match.player_b_id) {
-                        winnerName = playerBName;
-                    }
-                }
-
-                const matchResult: MatchResult = {
-                    id: match.id,
-                    tournament_name: tournamentName,
-                    category_name: categoryName,
-                    player_a_name: playerAName,
-                    player_a_ntrp: playerANtrp,
-                    player_b_name: playerBName,
-                    player_b_ntrp: playerBNtrp,
-                    winner_name: winnerName,
-                    match_result: matchResultData?.match_result || '',
-                    set1_score: matchResultData?.set1_score || null,
-                    set2_score: matchResultData?.set2_score || null,
-                    set3_score: matchResultData?.set3_score || null,
-                    set4_score: matchResultData?.set4_score || null,
-                    set5_score: matchResultData?.set5_score || null,
-                    set1_tiebreak_score: matchResultData?.set1_tiebreak_score || null,
-                    set2_tiebreak_score: matchResultData?.set2_tiebreak_score || null,
-                    set3_tiebreak_score: matchResultData?.set3_tiebreak_score || null,
-                    set4_tiebreak_score: matchResultData?.set4_tiebreak_score || null,
-                    set5_tiebreak_score: matchResultData?.set5_tiebreak_score || null,
-                    super_tiebreak_score: matchResultData?.super_tiebreak_score || null,
-                    status: match.status,
-                    start_time: match.start_time,
-                    updated_at: match.updated_at,
-                };
-
-                matches.push(matchResult);
-            });
+            // Transform matches data using utility function
+            const matches = tournamentMatches
+                .map(transformMatchData)
+                .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
             // Update the specific tournament's matches in allResults
             setAllResults(prevResults =>
                 prevResults.map(tournament =>
                     tournament.tournament_name === tournamentName
-                        ? { ...tournament, matches: matches.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()) }
+                        ? { ...tournament, matches: matches }
                         : tournament
                 )
             );
@@ -466,7 +200,7 @@ export default function ResultsPage() {
             setResults(prevResults =>
                 prevResults.map(tournament =>
                     tournament.tournament_name === tournamentName
-                        ? { ...tournament, matches: matches.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()) }
+                        ? { ...tournament, matches: matches }
                         : tournament
                 )
             );

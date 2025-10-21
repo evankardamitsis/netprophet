@@ -171,12 +171,15 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     const [expandedTournaments, setExpandedTournaments] = useState<Set<string>>(new Set(["1"])); // Default expand first tournament
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
-    // Fetch synced matches
+    // Fetch synced matches with optimized caching
     const { data: allMatches = [], isLoading } = useQuery<Match[]>({
         queryKey: ['syncedMatches'],
         queryFn: fetchSyncedMatches,
         staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
         refetchOnWindowFocus: false, // Don't refetch on window focus
+        refetchOnMount: false, // Don't refetch on mount if data exists
+        retry: 2, // Retry failed requests twice
+        retryDelay: 1000, // Wait 1 second between retries
     });
 
 

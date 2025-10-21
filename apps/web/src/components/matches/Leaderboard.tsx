@@ -32,15 +32,29 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
             setError(null);
 
             try {
-                const [data, summaryData] = await Promise.all([
+                // Use Promise.allSettled for better error handling
+                const [dataResult, summaryResult] = await Promise.allSettled([
                     timeFrame === 'weekly'
                         ? LeaderboardService.getWeeklyLeaderboard(50)
                         : LeaderboardService.getAllTimeLeaderboard(50),
                     LeaderboardService.getLeaderboardSummary(timeFrame)
                 ]);
 
-                setLeaderboardData(data);
-                setSummary(summaryData);
+                // Handle data result
+                if (dataResult.status === 'fulfilled') {
+                    setLeaderboardData(dataResult.value);
+                } else {
+                    console.error('Error fetching leaderboard data:', dataResult.reason);
+                    setError('Failed to load leaderboard data');
+                }
+
+                // Handle summary result
+                if (summaryResult.status === 'fulfilled') {
+                    setSummary(summaryResult.value);
+                } else {
+                    console.error('Error fetching leaderboard summary:', summaryResult.reason);
+                    // Don't set error for summary failure, just log it
+                }
             } catch (err) {
                 console.error('Error fetching leaderboard data:', err);
                 setError(err instanceof Error ? err.message : 'Failed to load leaderboard');

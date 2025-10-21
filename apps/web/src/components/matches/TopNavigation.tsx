@@ -212,11 +212,11 @@ export function TopNavigation({
             }
         };
 
-        // Only load if we haven't loaded power-ups yet
-        if (userRef.current && userPowerUps.length === 0) {
+        // Only load if we haven't loaded power-ups yet and user exists
+        if (userRef.current && userPowerUps.length === 0 && !powerUpsLoading) {
             loadUserPowerUps();
         }
-    }, [userPowerUps.length]);
+    }, [userRef.current?.id]); // Remove userPowerUps.length dependency to prevent loops
 
 
 

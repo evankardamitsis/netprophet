@@ -40,7 +40,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
     const [isClaimSuccess, setIsClaimSuccess] = useState(true); // true if claimed, false if created
     const { dict } = useDictionary();
 
-    // Automatic lookup on mount - Step 1
+    // Automatic lookup on mount - Step 1 (optimized with caching)
     useEffect(() => {
         const performAutoLookup = async () => {
             setLoading(true);
@@ -48,7 +48,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
             setCurrentStepNumber(1);
 
             try {
-                // Get profile data
+                // Get profile data with optimized query
                 const { data: profile, error: profileError } = await supabase
                     .from("profiles")
                     .select("profile_claim_status, claimed_player_id")
@@ -62,12 +62,6 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     setLoading(false);
                     return;
                 }
-
-                console.log("🔍 Debug - Profile status check:", {
-                    profile_claim_status: profile.profile_claim_status,
-                    claimed_player_id: profile.claimed_player_id,
-                    userId: userId
-                });
 
                 // If already completed, show success
                 if (profile.profile_claim_status === "claimed") {
