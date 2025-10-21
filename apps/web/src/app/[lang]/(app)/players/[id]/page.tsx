@@ -40,7 +40,8 @@ export default function PlayerDetailPage() {
 
                 // Handle match history
                 if (history.status === 'fulfilled') {
-                    setMatchHistory(history.value);
+                    // CRITICAL: Limit match history to prevent memory bloat
+                    setMatchHistory(history.value.slice(0, 20));
                 } else {
                     console.error('Error loading match history:', history.reason);
                 }

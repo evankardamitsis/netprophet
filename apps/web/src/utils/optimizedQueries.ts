@@ -77,7 +77,8 @@ export async function fetchOptimizedTournamentResults(): Promise<{
             `
       )
       .eq("status", "finished")
-      .order("updated_at", { ascending: false });
+      .order("updated_at", { ascending: false })
+      .limit(100); // Restore reasonable limit for results
 
     if (error) throw error;
 
@@ -240,7 +241,7 @@ export async function fetchOptimizedMatches() {
       )
       .eq("web_synced", true)
       .order("start_time", { ascending: true })
-      .limit(100); // Add reasonable limit
+      .limit(100); // Restore reasonable limit
 
     if (error) throw error;
     return data || [];

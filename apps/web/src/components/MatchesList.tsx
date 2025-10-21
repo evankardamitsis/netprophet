@@ -133,7 +133,7 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
         `)
         .eq('web_synced', true)
         .order('start_time', { ascending: true })
-        .limit(100); // Add reasonable limit to prevent large datasets
+        .limit(100); // Restore reasonable limit
 
     if (error) throw error;
 

@@ -20,7 +20,8 @@ export default function PlayersPage() {
             try {
                 setLoading(true);
                 const fetchedPlayers = await fetchActivePlayers();
-                setPlayers(fetchedPlayers);
+                // CRITICAL: Limit players to prevent memory bloat
+                setPlayers(fetchedPlayers.slice(0, 50));
             } catch (error) {
                 console.error('Error loading players:', error);
             } finally {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase, withCache, CacheKeys, CacheTTL } from "@netprophet/lib";
+import { supabase } from "@netprophet/lib";
 
 export interface DashboardStats {
   totalUsers: number;
@@ -28,17 +28,9 @@ export function useDashboardData() {
       setLoading(true);
       setError(null);
 
-      // Use cache for dashboard data (5 minute TTL)
-      const cacheKey = CacheKeys.dashboardStats();
-      const cachedData = await withCache(
-        cacheKey,
-        async () => {
-          return await fetchFreshDashboardData();
-        },
-        CacheTTL.MEDIUM
-      );
-
-      setStats(cachedData);
+      // Fetch dashboard data directly (relying on Supabase built-in caching)
+      const data = await fetchFreshDashboardData();
+      setStats(data);
       setLoading(false);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);

@@ -63,20 +63,24 @@ export function Notifications() {
         loadNotifications();
         loadUnreadCount();
 
-        // Subscribe to real-time notifications
+        // Subscribe to real-time notifications with better error handling
         const subscription = NotificationsService.subscribeToNotifications((payload) => {
+            console.log('Real-time notification received:', payload);
             if (payload.eventType === 'INSERT') {
                 // Reload notifications when a new one is created
                 loadNotifications();
                 loadUnreadCount();
             }
+        }).catch((error) => {
+            console.error('Failed to subscribe to real-time notifications:', error);
+            // Fallback to polling if real-time subscription fails
         });
 
-        // Also refresh every 30 seconds to catch any missed notifications
+        // Also refresh every 5 minutes to catch any missed notifications (minimal frequency)
         const interval = setInterval(() => {
             loadNotifications();
             loadUnreadCount();
-        }, 30000);
+        }, 300000); // 5 minutes - minimal polling
 
         return () => {
             if (subscription) {

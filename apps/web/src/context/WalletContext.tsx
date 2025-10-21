@@ -215,7 +215,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 return;
             }
 
-            const transactions = await TransactionsService.getRecentTransactions(10);
+            const transactions = await TransactionsService.getRecentTransactions(3); // CRITICAL: Reduce to 3
 
             if (transactions && transactions.length > 0) {
                 // Convert database transactions to local Transaction format
@@ -293,7 +293,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                 timestamp: new Date(),
             };
 
-            const updatedTransactions = [newTransaction, ...prev.recentTransactions.slice(0, 9)]; // Keep last 10
+            const updatedTransactions = [newTransaction, ...prev.recentTransactions.slice(0, 4)]; // CRITICAL: Keep only last 5
 
             let newTotalCoinsEarned = prev.totalCoinsEarned;
             let newTotalCoinsSpent = prev.totalCoinsSpent;

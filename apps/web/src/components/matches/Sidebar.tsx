@@ -175,20 +175,21 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     const { data: allMatches = [], isLoading } = useQuery<Match[]>({
         queryKey: ['syncedMatches'],
         queryFn: fetchSyncedMatches,
-        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+        staleTime: 2 * 60 * 1000, // CRITICAL: Reduce stale time to 2 minutes
         refetchOnWindowFocus: false, // Don't refetch on window focus
         refetchOnMount: false, // Don't refetch on mount if data exists
-        retry: 2, // Retry failed requests twice
+        retry: 1, // CRITICAL: Reduce retries to 1
         retryDelay: 1000, // Wait 1 second between retries
+        gcTime: 5 * 60 * 1000, // CRITICAL: Add garbage collection time
     });
 
 
 
-    // Update current time every 30 seconds (optimized frequency)
+    // Update current time every 60 seconds (further optimized)
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 30000); // Reduced from 1000ms to 30000ms for better performance
+        }, 60000); // Further reduced to 60 seconds for better performance
 
         return () => clearInterval(timer);
     }, []);

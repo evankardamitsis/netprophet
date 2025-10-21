@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/adminAuth";
-import { withCache, CacheKeys, CacheTTL } from "@netprophet/lib";
+// Removed cache imports - using Supabase built-in features
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,15 +22,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timePeriod = searchParams.get("timePeriod") || "month";
 
-    // Use cache for economy metrics (15 minute TTL)
-    const cacheKey = CacheKeys.economyMetrics(timePeriod);
-    const response = await withCache(
-      cacheKey,
-      async () => {
-        return await fetchEconomyMetrics(timePeriod, supabase);
-      },
-      CacheTTL.LONG
-    );
+    // Fetch economy metrics directly (relying on Supabase built-in caching)
+    const response = await fetchEconomyMetrics(timePeriod, supabase);
 
     return NextResponse.json(response);
   } catch (error) {

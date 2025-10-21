@@ -88,8 +88,10 @@ export default function ResultsPage() {
                 return bLatest - aLatest;
             });
 
-            setAllResults(tournamentResults);
+            // CRITICAL: Don't store all results in memory - only store current page
             setResults(tournamentResults);
+            // Clear allResults to free memory
+            setAllResults([]);
             setTournamentTotals(totals);
             setTournamentPages(Object.fromEntries(tournaments.map(t => [t.name, 1])));
         } catch (err) {
