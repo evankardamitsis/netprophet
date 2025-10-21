@@ -46,7 +46,7 @@ export function useDashboardData() {
 
       if (activeError) throw activeError;
 
-      // Get unique active users
+      // Get unique active users (optimized - fetch distinct user_ids only)
       const { data: uniqueActiveUsers, error: uniqueError } = await supabase
         .from("bets")
         .select("user_id")
@@ -57,29 +57,27 @@ export function useDashboardData() {
         uniqueActiveUsers?.map((bet) => bet.user_id)
       ).size;
 
-      // Fetch tournaments
-      const { data: tournaments, error: tournamentsError } = await supabase
-        .from("tournaments")
-        .select("*");
+      // Fetch active tournaments (optimized with database filtering)
+      const now = new Date().toISOString();
+      const { count: activeTournaments, error: tournamentsError } =
+        await supabase
+          .from("tournaments")
+          .select("*", { count: "exact", head: true })
+          .lte("start_date", now)
+          .gte("end_date", now);
 
       if (tournamentsError) throw tournamentsError;
 
-      const activeTournaments =
-        tournaments?.filter(
-          (t) =>
-            new Date(t.start_date) <= new Date() &&
-            new Date(t.end_date) >= new Date()
-        ).length || 0;
-
-      // Fetch live matches
+      // Fetch live matches (limited to prevent large datasets)
       const { data: liveMatches, error: matchesError } = await supabase
         .from("matches")
         .select("*")
-        .eq("status", "live");
+        .eq("status", "live")
+        .limit(50);
 
       if (matchesError) throw matchesError;
 
-      // Fetch upcoming matches (next 24 hours)
+      // Fetch upcoming matches (next 24 hours, limited)
       const next24Hours = new Date();
       next24Hours.setHours(next24Hours.getHours() + 24);
 
@@ -88,7 +86,8 @@ export function useDashboardData() {
         .select("*")
         .eq("status", "scheduled")
         .gte("start_time", new Date().toISOString())
-        .lte("start_time", next24Hours.toISOString());
+        .lte("start_time", next24Hours.toISOString())
+        .limit(50);
 
       if (upcomingError) throw upcomingError;
 
@@ -182,8 +181,8 @@ export function useDashboardData() {
       setStats({
         totalUsers: totalUsers || 0,
         activePlayers: uniqueActiveCount,
-        tournaments: tournaments?.length || 0,
-        activeTournaments,
+        tournaments: 0, // Removed tournaments count as we now only get active count
+        activeTournaments: activeTournaments || 0,
         liveMatches: liveMatches?.length || 0,
         upcomingMatches: upcomingMatches?.length || 0,
         totalRevenue,

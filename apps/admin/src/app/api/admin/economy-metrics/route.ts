@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timePeriod = searchParams.get("timePeriod") || "month";
 
-    // Fetch all economy metrics in parallel
+    // Fetch all economy metrics in parallel with timeout protection
+    const timeoutMs = 10000; // 10 second timeout per RPC call
+
     const [
       coinsInjectedResult,
       coinsBurnedResult,
@@ -35,84 +37,152 @@ export async function GET(request: NextRequest) {
       topUsersResult,
       conversionRateResult,
       burnRatioResult,
-    ] = await Promise.all([
-      supabase.rpc("get_total_coins_injected", { time_period: timePeriod }),
-      supabase.rpc("get_total_coins_burned", { time_period: timePeriod }),
-      supabase.rpc("get_paying_users_count", { time_period: timePeriod }),
-      supabase.rpc("get_average_coins_per_user", { time_period: timePeriod }),
-      supabase.rpc("get_total_users_count"),
-      supabase.rpc("get_active_users_count"),
-      supabase.rpc("get_coin_flow_data", {
-        time_period: timePeriod,
-        days_back: 30,
-      }),
-      supabase.rpc("get_inflow_breakdown", { time_period: timePeriod }),
-      supabase.rpc("get_outflow_breakdown", { time_period: timePeriod }),
-      supabase.rpc("get_top_users_by_spend", { limit_count: 10 }),
-      supabase.rpc("get_conversion_rate_trend", { months_back: 4 }),
-      supabase.rpc("get_burn_ratio_trend", { months_back: 4 }),
+    ] = await Promise.allSettled([
+      Promise.race([
+        supabase.rpc("get_total_coins_injected", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_total_coins_burned", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_paying_users_count", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_average_coins_per_user", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_total_users_count"),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_active_users_count"),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_coin_flow_data", {
+          time_period: timePeriod,
+          days_back: 30,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_inflow_breakdown", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_outflow_breakdown", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_top_users_by_spend", { limit_count: 10 }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_conversion_rate_trend", { months_back: 4 }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_burn_ratio_trend", { months_back: 4 }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
     ]);
 
-    // Check for errors
-    const errors = [
-      coinsInjectedResult.error,
-      coinsBurnedResult.error,
-      payingUsersResult.error,
-      averageCoinsResult.error,
-      totalUsersResult.error,
-      activeUsersResult.error,
-      coinFlowResult.error,
-      inflowBreakdownResult.error,
-      outflowBreakdownResult.error,
-      topUsersResult.error,
-      conversionRateResult.error,
-      burnRatioResult.error,
-    ].filter(Boolean);
+    // Check for errors (handle Promise.allSettled results)
+    const results = [
+      coinsInjectedResult,
+      coinsBurnedResult,
+      payingUsersResult,
+      averageCoinsResult,
+      totalUsersResult,
+      activeUsersResult,
+      coinFlowResult,
+      inflowBreakdownResult,
+      outflowBreakdownResult,
+      topUsersResult,
+      conversionRateResult,
+      burnRatioResult,
+    ];
+
+    const errors = results
+      .filter((result) => result.status === "rejected")
+      .map((result) => result.reason);
 
     if (errors.length > 0) {
       console.error("Database errors:", errors);
-      return NextResponse.json(
-        { error: "Failed to fetch economy metrics" },
-        { status: 500 }
-      );
+      // Continue with partial data instead of failing completely
     }
 
-    // Extract data
-    const coinsInjected = coinsInjectedResult.data?.[0] || {
+    // Extract data (handle Promise.allSettled results)
+    const getData = (result: any, defaultValue: any) => {
+      if (result.status === "fulfilled" && result.value?.data?.[0]) {
+        return result.value.data[0];
+      }
+      return defaultValue;
+    };
+
+    const coinsInjected = getData(coinsInjectedResult, {
       total_coins_injected: 0,
       previous_period_coins: 0,
       percentage_change: 0,
-    };
-    const coinsBurned = coinsBurnedResult.data?.[0] || {
+    });
+    const coinsBurned = getData(coinsBurnedResult, {
       total_coins_burned: 0,
       previous_period_coins: 0,
       percentage_change: 0,
-    };
-    const payingUsers = payingUsersResult.data?.[0] || {
+    });
+    const payingUsers = getData(payingUsersResult, {
       paying_users_count: 0,
       previous_period_count: 0,
       percentage_change: 0,
-    };
-    const averageCoins = averageCoinsResult.data?.[0] || {
+    });
+    const averageCoins = getData(averageCoinsResult, {
       average_coins_per_user: 0,
       previous_period_average: 0,
       percentage_change: 0,
-    };
-    const totalUsers = totalUsersResult.data?.[0] || { total_users_count: 0 };
-    const activeUsers = activeUsersResult.data?.[0] || {
+    });
+    const totalUsers = getData(totalUsersResult, { total_users_count: 0 });
+    const activeUsers = getData(activeUsersResult, {
       active_users_count: 0,
       previous_period_count: 0,
       percentage_change: 0,
-    };
+    });
 
-    // Transform data for charts
-    const coinFlowData = (coinFlowResult.data || []).map((item: any) => ({
+    // Transform data for charts (handle Promise.allSettled results)
+    const coinFlowData = getData(coinFlowResult, []).map((item: any) => ({
       date: item.date,
       inflow: Number(item.inflow),
       outflow: Number(item.outflow),
     }));
 
-    const inflowBreakdown = (inflowBreakdownResult.data || []).map(
+    const inflowBreakdown = getData(inflowBreakdownResult, []).map(
       (item: any, index: number) => ({
         name: item.transaction_type,
         value: Number(item.total_amount),
@@ -121,7 +191,7 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    const outflowBreakdown = (outflowBreakdownResult.data || []).map(
+    const outflowBreakdown = getData(outflowBreakdownResult, []).map(
       (item: any, index: number) => ({
         name: item.transaction_type,
         value: Number(item.total_amount),
@@ -130,7 +200,7 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    const topUsers = (topUsersResult.data || []).map((user: any) => {
+    const topUsers = getData(topUsersResult, []).map((user: any) => {
       const totalSpent = Number(user.total_spent);
       const lastSpend = user.last_spend;
       const betsPlaced = Number(user.bets_placed);
@@ -178,14 +248,14 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const conversionRateTrend = (conversionRateResult.data || []).map(
+    const conversionRateTrend = getData(conversionRateResult, []).map(
       (item: any) => ({
         month: item.month,
         rate: Number(item.conversion_rate),
       })
     );
 
-    const burnRatioTrend = (burnRatioResult.data || []).map((item: any) => ({
+    const burnRatioTrend = getData(burnRatioResult, []).map((item: any) => ({
       month: item.month,
       ratio: Number(item.burn_ratio),
     }));
