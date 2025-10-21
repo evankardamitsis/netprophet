@@ -109,6 +109,7 @@ export async function findMatchingPlayers(
 
 /**
  * Get user's name from profile or user_metadata
+ * Automatically syncs names from user_metadata to profile table for Gmail/OAuth users
  */
 export async function getUserName(
   userId: string
@@ -130,18 +131,101 @@ export async function getUserName(
   } = await supabase.auth.getUser();
 
   console.log("🔍 Debug - User metadata:", user?.user_metadata);
+  console.log(
+    "🔍 Debug - Raw user metadata keys:",
+    user?.user_metadata ? Object.keys(user.user_metadata) : "No metadata"
+  );
 
   // Determine name source: profile table or user_metadata
   let firstName = profile?.first_name || null;
   let lastName = profile?.last_name || null;
+  let needsSync = false;
 
   // Fallback to user_metadata if profile doesn't have names
   if (!firstName || !lastName) {
-    firstName = user?.user_metadata?.firstName || null;
-    lastName = user?.user_metadata?.lastName || null;
-    console.log("📋 Using names from user_metadata:", firstName, lastName);
+    console.log("🔍 Profile has no names, checking user_metadata...");
+
+    // Check both camelCase and snake_case versions in user_metadata
+    const metadataFirstName =
+      user?.user_metadata?.firstName || user?.user_metadata?.first_name || null;
+    const metadataLastName =
+      user?.user_metadata?.lastName || user?.user_metadata?.last_name || null;
+
+    console.log("🔍 Metadata names found:", {
+      metadataFirstName,
+      metadataLastName,
+    });
+
+    // If still no names, try OAuth fields (Google, GitHub, etc.)
+    if (!metadataFirstName || !metadataLastName) {
+      console.log("🔍 No metadata names, trying OAuth fields...");
+      const fullName =
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.user_metadata?.display_name ||
+        user?.user_metadata?.given_name ||
+        user?.user_metadata?.family_name ||
+        null;
+
+      console.log("🔍 OAuth full name found:", fullName);
+
+      if (fullName) {
+        const nameParts = fullName.trim().split(" ");
+        if (nameParts.length >= 2) {
+          firstName = nameParts[0];
+          lastName = nameParts[nameParts.length - 1];
+          console.log("🔍 Parsed names from full name:", {
+            firstName,
+            lastName,
+          });
+        }
+      }
+    } else {
+      firstName = metadataFirstName;
+      lastName = metadataLastName;
+      console.log("🔍 Using metadata names:", { firstName, lastName });
+    }
+
+    // If we found names in metadata but not in profile, sync them
+    if (
+      firstName &&
+      lastName &&
+      (!profile?.first_name || !profile?.last_name)
+    ) {
+      needsSync = true;
+      console.log(
+        "📋 Names found in user_metadata, syncing to profile:",
+        firstName,
+        lastName
+      );
+    } else {
+      console.log("📋 Using names from user_metadata:", firstName, lastName);
+    }
   } else {
     console.log("📋 Using names from profile table:", firstName, lastName);
+  }
+
+  // Auto-sync names from user_metadata to profile table for Gmail/OAuth users
+  if (needsSync && firstName && lastName) {
+    try {
+      console.log("🔄 Auto-syncing names to profile table...");
+      const { error: syncError } = await supabase
+        .from("profiles")
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
+
+      if (syncError) {
+        console.error("❌ Error syncing names to profile:", syncError);
+      } else {
+        console.log("✅ Names successfully synced to profile table");
+      }
+    } catch (error) {
+      console.error("❌ Error during name sync:", error);
+    }
   }
 
   console.log("🔍 Debug - Final result:", { firstName, lastName });

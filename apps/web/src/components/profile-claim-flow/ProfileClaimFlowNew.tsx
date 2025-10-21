@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { supabase } from "@netprophet/lib";
 import { useDictionary } from "@/context/DictionaryContext";
 import { StepIndicator } from "./StepIndicator";
@@ -18,6 +18,7 @@ interface ProfileClaimFlowNewProps {
     userId: string;
     onComplete: () => void;
     onSkip: () => void;
+    onClose?: () => void;
     onRefresh?: () => void;
     forceRefresh?: number;
     testMode?: 'normal' | 'match' | 'multiple';
@@ -25,7 +26,7 @@ interface ProfileClaimFlowNewProps {
 
 type FlowStep = "checking" | "form" | "result" | "reviewCreation" | "success";
 
-export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, forceRefresh, testMode = 'normal' }: ProfileClaimFlowNewProps) {
+export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onClose, onRefresh, forceRefresh, testMode = 'normal' }: ProfileClaimFlowNewProps) {
     const [currentStep, setCurrentStep] = useState<FlowStep>("checking");
     const [currentStepNumber, setCurrentStepNumber] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -89,7 +90,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     return;
                 }
 
-                // Get user's name from profile or user_metadata
+                // Get user's name from profile or user_metadata (with auto-sync for Gmail users)
                 const { firstName, lastName } = await getUserName(userId);
                 console.log("🔍 Debug - getUserName result:", { firstName, lastName, userId });
 
@@ -97,6 +98,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                 // This ensures consistent experience for all users
                 if (firstName && lastName) {
                     console.log("🔍 Auto lookup - User has name:", firstName, lastName);
+                    console.log("🔍 Skipping form, going directly to lookup");
 
                     setUserData({
                         firstName: firstName,
@@ -174,6 +176,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     }
                 } else {
                     console.log("📝 No name available - showing form after checking step");
+                    console.log("🔍 This means getUserName returned null/empty names");
                     // No name in profile - show form after the checking step
                     // Add a small delay to show the checking step with explanations
                     setTimeout(() => {
@@ -206,7 +209,8 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
         setUserData({ firstName: data.firstName, lastName: data.lastName });
 
         try {
-            // Update user profile
+            // Update user profile - don't set to pending immediately for Gmail users
+            // Let the lookup process determine the appropriate status
             const { error: updateError } = await supabase
                 .from("profiles")
                 .update({
@@ -214,7 +218,8 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     last_name: data.lastName,
                     terms_accepted: true,
                     terms_accepted_at: new Date().toISOString(),
-                    profile_claim_status: "pending",
+                    // Don't set profile_claim_status to "pending" here
+                    // Let the lookup result determine the status
                 })
                 .eq("id", userId);
 
@@ -238,6 +243,14 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                 } else {
                     setPlayerMatch(null);
                     setPlayerMatches([]);
+                    // Only set to pending when no matches found and user needs to take action
+                    await supabase
+                        .from("profiles")
+                        .update({
+                            profile_claim_status: "pending",
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq("id", userId);
                 }
 
                 setCurrentStep("result");
@@ -371,6 +384,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                 <ProfileClaimFormNew
                     onComplete={handleFormSubmit}
                     onCancel={handleSkip}
+                    onClose={onClose}
                     loading={loading}
                     initialValues={userData ? {
                         firstName: userData.firstName,
@@ -391,6 +405,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     onCreateProfile={handleShowReviewCreation}
                     onSkip={handleSkip}
                     onBack={cameFromForm ? handleBackToForm : undefined}
+                    onClose={onClose}
                     loading={loading}
                 />
             );
@@ -444,7 +459,18 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
             <div className="w-full h-full flex items-center justify-center">
                 <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[500px] max-h-[85vh]">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0">
+                    <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0 relative">
+                        {/* Close Button */}
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors p-1"
+                                aria-label="Close"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
+
                         <div className="flex items-center justify-center mb-2 sm:mb-3">
                             <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 sm:ring-3 lg:ring-4 ring-white/30">
                                 <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white animate-spin" />

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@netprophet/ui";
-import { User, Shield, Info, CheckCircle } from "lucide-react";
+import { User, Shield, Info, CheckCircle, X } from "lucide-react";
 import { useDictionary } from "@/context/DictionaryContext";
 import {
     isValidGreekName,
@@ -19,6 +19,7 @@ interface ProfileClaimFormNewProps {
         termsAccepted: boolean;
     }) => void;
     onCancel: () => void;
+    onClose?: () => void;
     loading?: boolean;
     initialValues?: {
         firstName: string;
@@ -26,7 +27,7 @@ interface ProfileClaimFormNewProps {
     };
 }
 
-export function ProfileClaimFormNew({ onComplete, onCancel, loading = false, initialValues }: ProfileClaimFormNewProps) {
+export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = false, initialValues }: ProfileClaimFormNewProps) {
     const [firstName, setFirstName] = useState(initialValues?.firstName || "");
     const [lastName, setLastName] = useState(initialValues?.lastName || "");
     const [termsAccepted, setTermsAccepted] = useState(false);
@@ -112,7 +113,18 @@ export function ProfileClaimFormNew({ onComplete, onCancel, loading = false, ini
         <div className="w-full h-full flex items-center justify-center">
             <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[500px] max-h-[85vh]">
                 {/* Header with Icon */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-6 flex-shrink-0">
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-6 flex-shrink-0 relative">
+                    {/* Close Button */}
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors p-1"
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
+
                     <div className="flex items-center justify-center mb-3">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-4 ring-white/30">
                             <User className="w-6 h-6 text-white" />

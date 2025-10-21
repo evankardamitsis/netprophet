@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@netprophet/ui";
-import { User, Users, CheckCircle, Plus, ArrowLeft, UserPlus } from "lucide-react";
+import { User, Users, CheckCircle, Plus, ArrowLeft, UserPlus, X } from "lucide-react";
 import { useDictionary } from "@/context/DictionaryContext";
 import { PlayerMatch } from "./types";
 
@@ -15,6 +15,7 @@ interface ProfileClaimResultNewProps {
     onCreateProfile: () => void;
     onSkip: () => void;
     onBack?: () => void;
+    onClose?: () => void;
     loading?: boolean;
 }
 
@@ -27,6 +28,7 @@ export function ProfileClaimResultNew({
     onCreateProfile,
     onSkip,
     onBack,
+    onClose,
     loading = false,
 }: ProfileClaimResultNewProps) {
     const [actionLoading, setActionLoading] = useState(false);
@@ -55,29 +57,34 @@ export function ProfileClaimResultNew({
             <div className="w-full h-full flex items-center justify-center">
                 <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[500px] max-h-[85vh]">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0 relative">
+                        {/* Close Button */}
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors p-1"
+                                aria-label="Close"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
+
                         <div className="flex items-center justify-center mb-2 sm:mb-3">
                             <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 sm:ring-3 lg:ring-4 ring-white/30">
                                 <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
                             </div>
                         </div>
                         <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white text-center">
-                            {dict.profileSetup?.multipleMatches?.title || "Multiple Players Found"}
+                            {dict.profileSetup?.multipleMatches?.title || "Multiple Athletes Found"}
                         </h2>
                         <p className="text-blue-100 text-center mt-1 sm:mt-2 text-xs sm:text-sm lg:text-base xl:text-lg">
-                            {dict.profileSetup?.multipleMatches?.description ||
-                                "We found multiple players with matching information. Please select your profile."}
+                            {dict.profileSetup?.result?.multipleMatchesBanner ||
+                                "We found multiple athletes with matching information. Please select your profile."}
                         </p>
                     </div>
 
                     {/* Player List - Scrollable */}
                     <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 xl:p-8 space-y-2.5 sm:space-y-3 lg:space-y-4">
-                        {/* Info Banner */}
-                        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg sm:rounded-xl p-2.5 sm:p-3 lg:p-4">
-                            <p className="text-[10px] sm:text-xs lg:text-sm text-blue-800 leading-relaxed">
-                                {dict.profileSetup?.result?.multipleMatchesBanner || "Select your player profile to participate in matches as yourself, or create a new one if you're not listed."}
-                            </p>
-                        </div>
 
                         {playerMatches.map((player) => (
                             <button
@@ -150,11 +157,6 @@ export function ProfileClaimResultNew({
                         </Button>
 
                         <div className="pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200 space-y-2 sm:space-y-2.5 lg:space-y-3">
-                            <div className="bg-purple-50 border border-purple-200 rounded-lg sm:rounded-xl p-1.5 sm:p-2 lg:p-3">
-                                <p className="text-[9px] sm:text-xs lg:text-sm text-purple-800 text-center font-medium">
-                                    💡 {dict.profileSetup?.result?.skipTooltip || "Skip to continue as a NetProphet user"}
-                                </p>
-                            </div>
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 {onBack && (
                                     <Button
@@ -189,7 +191,18 @@ export function ProfileClaimResultNew({
             <div className="w-full h-full flex items-center justify-center">
                 <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[500px] max-h-[85vh]">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0">
+                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0 relative">
+                        {/* Close Button */}
+                        {onClose && (
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors p-1"
+                                aria-label="Close"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        )}
+
                         <div className="flex items-center justify-center mb-2 sm:mb-3">
                             <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 sm:ring-3 lg:ring-4 ring-white/30">
                                 <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
@@ -257,11 +270,6 @@ export function ProfileClaimResultNew({
                             </Button>
 
                             <div className="pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200 space-y-2 sm:space-y-2.5 lg:space-y-3">
-                                <div className="bg-purple-50 border border-purple-200 rounded-lg sm:rounded-xl p-1.5 sm:p-2 lg:p-3">
-                                    <p className="text-[9px] sm:text-xs lg:text-sm text-purple-800 text-center font-medium">
-                                        💡 {dict.profileSetup?.result?.skipTooltip || "Skip to continue as a NetProphet user"}
-                                    </p>
-                                </div>
                                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                     {onBack && (
                                         <Button
@@ -296,7 +304,18 @@ export function ProfileClaimResultNew({
         <div className="w-full h-full flex items-center justify-center">
             <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden min-h-[500px] max-h-[85vh] flex flex-col">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-orange-600 to-yellow-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0">
+                <div className="bg-gradient-to-r from-orange-600 to-yellow-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 flex-shrink-0 relative">
+                    {/* Close Button */}
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors p-1"
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    )}
+
                     <div className="flex items-center justify-center mb-2 sm:mb-3">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 sm:ring-3 lg:ring-4 ring-white/30">
                             <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-white" />
@@ -351,11 +370,6 @@ export function ProfileClaimResultNew({
                         </Button>
 
                         <div className="pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200 space-y-2 sm:space-y-2.5 lg:space-y-3">
-                            <div className="bg-purple-50 border border-purple-200 rounded-lg sm:rounded-xl p-1.5 sm:p-2 lg:p-3">
-                                <p className="text-[9px] sm:text-xs lg:text-sm text-purple-800 text-center font-medium">
-                                    💡 {dict.profileSetup?.result?.skipTooltip || "Skip to continue as a NetProphet user"}
-                                </p>
-                            </div>
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 {onBack && (
                                     <Button

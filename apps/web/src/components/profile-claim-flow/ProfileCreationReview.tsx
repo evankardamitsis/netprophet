@@ -52,6 +52,9 @@ export function ProfileCreationReview({
                     <h2 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white text-center mb-1">
                         {dict.profileSetup?.review?.title || "Review Profile Information"}
                     </h2>
+                    <p className="text-orange-100 text-center text-xs sm:text-sm lg:text-base">
+                        {dict.profileSetup?.review?.description || "Confirm your details before submitting"}
+                    </p>
                 </div>
 
                 {/* Content */}

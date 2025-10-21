@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileClaim } from "@/hooks/useProfileClaim";
-import { ProfileClaimFlowNew } from "@/components/auth/ProfileClaimFlowNew";
+import { ProfileClaimFlowNew } from "@/components/profile-claim-flow/ProfileClaimFlowNew";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Alert, AlertDescription } from "@netprophet/ui";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@netprophet/ui";

@@ -43,46 +43,11 @@ export function ProfileClaimSuccessNew({ isClaimed, claimedPlayerId, onComplete 
                                 : (dict.profileSetup.success.requestedTitle || dict.profileSetup.success.title)
                             }
                         </h2>
-                        <p className="text-purple-100 text-center text-xs sm:text-sm lg:text-base xl:text-lg">
-                            {isClaimed
-                                ? (dict.profileSetup.success.claimedDescription || dict.profileSetup.success.description)
-                                : (dict.profileSetup.success.requestedDescription || dict.profileSetup.success.description)
-                            }
-                        </p>
                     </div>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 xl:p-8 space-y-3 sm:space-y-4 lg:space-y-6">
-                    {/* Success Message Card */}
-                    <div className={`
-                        rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6 border-2
-                        ${isClaimed
-                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
-                            : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
-                        }
-                    `}>
-                        <div className="flex items-start gap-2.5 sm:gap-3 lg:gap-4">
-                            <div className={`
-                                w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center flex-shrink-0
-                                ${isClaimed ? 'bg-green-500' : 'bg-blue-500'}
-                            `}>
-                                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-7 lg:h-7 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className={`
-                                    text-[10px] sm:text-xs lg:text-sm leading-relaxed
-                                    ${isClaimed ? 'text-green-800' : 'text-blue-800'}
-                                `}>
-                                    {isClaimed
-                                        ? (dict.profileSetup.success.claimedMessage || "Your player profile has been successfully linked to your account. You can now view your statistics and match history!")
-                                        : (dict.profileSetup.success.requestedMessage || "Your profile creation request has been submitted to our admin team. You'll receive a notification once it's been reviewed and approved.")
-                                    }
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* What's Next Card */}
                     <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6">
                         <h3 className="font-bold text-purple-900 text-sm sm:text-base lg:text-lg mb-2.5 sm:mb-3 lg:mb-4 flex items-center gap-1.5 sm:gap-2">

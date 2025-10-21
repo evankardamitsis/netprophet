@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileClaim } from "@/hooks/useProfileClaim";
-import { ProfileClaimFlowNew } from "@/components/auth/ProfileClaimFlowNew";
+import { ProfileClaimFlowNew } from "@/components/profile-claim-flow/ProfileClaimFlowNew";
 import { X } from "lucide-react";
 import { useDictionary } from "@/context/DictionaryContext";
 
@@ -104,6 +104,7 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'n
                         userId={user?.id || ""}
                         onComplete={handleComplete}
                         onSkip={handleSkip}
+                        onClose={onClose}
                         onRefresh={refreshStatus}
                         forceRefresh={forceRefresh}
                         testMode={testMode}

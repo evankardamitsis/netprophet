@@ -39,7 +39,7 @@
     },
     "review": {
       "title": "Review Athlete Profile Information",
-      "description": "Confirm your details before submitting",
+      "description": "Confirm your details before submitting. Please use your exact first and last name as it appears on your official documents.",
       "importantTitle": "Important: Use Your Real Name",
       "importantMessage": "Please use your real name exactly as it appears on official documents. This ensures accurate matching and helps maintain the integrity of the platform.",
       "yourInformation": "Your Information",
@@ -64,7 +64,7 @@
     },
     "form": {
       "title": "Enter Your Name",
-      "description": "We need your name to search for your athlete profile in our database.",
+      "description": "We need your name to search for your athlete profile in our database. Please use your exact first and last name as it appears on your official documents.",
       "aboutPlayerProfiles": "About Player Profiles",
       "aboutPlayerProfilesDescription": "We'll search our player database to match you with an existing profile. This allows you to participate in matches as yourself.",
       "aboutPlayerProfilesOptional": "✨ You can skip this and continue as a NetProphet user anytime!",
@@ -93,7 +93,6 @@
       "singleMatchBannerBold": "Great news!",
       "noMatchBanner": "No existing athlete profile found. You can request a new athlete profile to compete in matches, or skip to continue as a NetProphet user.",
       "noMatchBannerBold": "request a new player profile",
-      "skipTooltip": "You can claim/create your profile later from My Profile",
       "termsLabel": "I accept the terms and conditions",
       "termsDescription": "By claiming this profile, you agree to participate in matches and tournaments as this athlete.",
       "noPlayerFound": "No Player Profile Found",
@@ -120,10 +119,10 @@
     "success": {
       "title": "Profile Setup Complete!",
       "description": "Your profile has been successfully set up.",
-      "claimedTitle": "Profile Setup Complete!",
+      "claimedTitle": "Athlete Profile Setup Complete!",
       "claimedDescription": "Your profile has been successfully set up.",
       "claimedMessage": "Your athlete profile has been successfully linked to your account. You can now view your statistics and match history!",
-      "requestedTitle": "Profile Creation Requested!",
+      "requestedTitle": "Athlete Profile Creation Requested!",
       "requestedDescription": "The profile creation request has been submitted to our admin team. You will receive a notification once it's reviewed and approved.",
       "requestedMessage": "Your profile creation request has been submitted to our admin team. You'll receive a notification once it's been reviewed and approved.",
       "continueButton": "Continue to App",

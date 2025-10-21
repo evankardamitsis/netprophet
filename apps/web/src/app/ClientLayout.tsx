@@ -14,6 +14,7 @@ import { SuccessModalProvider, useSuccessModal } from '@/context/SuccessModalCon
 import { BetSuccessModal } from '@/components/matches/PredictionSlip/BetSuccessModal';
 import { ProfileSetupModalProvider, useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
+import { ProfileClaimNotification } from '@/components/ProfileClaimNotification';
 import { NavigationLoader } from '@/components/NavigationLoader';
 
 import React from 'react';
@@ -187,6 +188,9 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
 
                             {/* Profile Setup Modal */}
                             <ProfileSetupModalContent />
+
+                            {/* Profile Claim Notification */}
+                            <ProfileClaimNotification />
                         </div>
                     </div>
                 </MatchSelectContext.Provider>

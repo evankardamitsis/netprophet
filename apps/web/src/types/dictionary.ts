@@ -474,7 +474,6 @@ export interface Dictionary {
       singleMatchBannerBold?: string;
       noMatchBanner?: string;
       noMatchBannerBold?: string;
-      skipTooltip?: string;
       termsLabel: string;
       termsDescription: string;
       noPlayerFound: string;
