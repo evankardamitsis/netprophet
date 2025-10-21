@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Player, fetchPlayerById, getPlayerMatchHistory } from '@netprophet/lib';
+import { Player, fetchPlayerById, getPlayerMatchHistory, withCache } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
 import { Card, CardContent } from '@netprophet/ui';
+import { WebCacheKeys, WebCacheTTL } from '@/utils/optimizedQueries';
 
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
@@ -24,14 +25,36 @@ export default function PlayerDetailPage() {
         const loadPlayer = async () => {
             try {
                 setLoading(true);
-                const fetchedPlayer = await fetchPlayerById(playerId);
-                setPlayer(fetchedPlayer);
 
-                // Load match history
-                const history = await getPlayerMatchHistory(playerId);
-                setMatchHistory(history);
+                // Use parallel data fetching with caching
+                const [fetchedPlayer, history] = await Promise.allSettled([
+                    withCache(
+                        WebCacheKeys.userProfile(playerId),
+                        () => fetchPlayerById(playerId),
+                        WebCacheTTL.MEDIUM
+                    ),
+                    withCache(
+                        `web:player:${playerId}:matchHistory`,
+                        () => getPlayerMatchHistory(playerId),
+                        WebCacheTTL.SHORT
+                    )
+                ]);
+
+                // Handle player data
+                if (fetchedPlayer.status === 'fulfilled') {
+                    setPlayer(fetchedPlayer.value);
+                } else {
+                    console.error('Error loading player:', fetchedPlayer.reason);
+                }
+
+                // Handle match history
+                if (history.status === 'fulfilled') {
+                    setMatchHistory(history.value);
+                } else {
+                    console.error('Error loading match history:', history.reason);
+                }
             } catch (error) {
-                console.error('Error loading player:', error);
+                console.error('Error loading player data:', error);
             } finally {
                 setLoading(false);
             }

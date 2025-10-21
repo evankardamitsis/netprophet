@@ -5,7 +5,7 @@ import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useWallet } from '@/context/WalletContext';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     calculateParlayOdds,
     calculateSafeBetCost,
@@ -178,29 +178,31 @@ export function PredictionSlip({
         }
     };
 
-    // Convert StructuredPredictionItem to PredictionItem for parlay calculations
-    const predictionItems: PredictionItem[] = predictions.map(p => ({
-        matchId: p.matchId,
-        match: p.match,
-        prediction: formatPrediction(p.prediction),
-        points: p.points || 0
-    }));
+    // Convert StructuredPredictionItem to PredictionItem for parlay calculations (memoized)
+    const predictionItems: PredictionItem[] = useMemo(() =>
+        predictions.map(p => ({
+            matchId: p.matchId,
+            match: p.match,
+            prediction: formatPrediction(p.prediction),
+            points: p.points || 0
+        })), [predictions]
+    );
 
-    // Calculate individual bet totals using existing betAmount from predictions
-    const getTotalIndividualStake = () => {
+    // Calculate individual bet totals using existing betAmount from predictions (memoized)
+    const getTotalIndividualStake = useMemo(() => {
         return predictions.reduce((total, prediction) => {
             return total + (prediction.betAmount || 0);
         }, 0);
-    };
+    }, [predictions]);
 
-    const getTotalIndividualWinnings = () => {
+    const getTotalIndividualWinnings = useMemo(() => {
         return predictions.reduce((total, prediction) => {
             return total + (prediction.potentialWinnings || (prediction.betAmount || 0) * (prediction.multiplier || 1));
         }, 0);
-    };
+    }, [predictions]);
 
     // Use total individual stake as parlay stake
-    const parlayStake = getTotalIndividualStake();
+    const parlayStake = getTotalIndividualStake;
 
     // Calculate parlay odds and winnings (only when in parlay mode)
     const parlayCalculation = isParlayMode ? calculateParlayOdds(predictionItems, parlayStake, userStreak) : null;
@@ -484,14 +486,14 @@ export function PredictionSlip({
 
 
     const isIndividualModeValid = () => {
-        const totalStake = getTotalIndividualStake();
+        const totalStake = getTotalIndividualStake;
         // Check that all predictions have stakes >= MIN_BET
         const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) >= COIN_CONSTANTS.MIN_BET);
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
     };
 
     const isParlayModeValid = () => {
-        const totalStake = getTotalIndividualStake();
+        const totalStake = getTotalIndividualStake;
         // Check that all predictions have stakes >= MIN_BET
         const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) >= COIN_CONSTANTS.MIN_BET);
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
@@ -679,7 +681,7 @@ export function PredictionSlip({
                         {/* Power-up Suggestions */}
                         <PowerUpSuggestions
                             predictionsCount={predictions.length}
-                            totalStake={getTotalIndividualStake()}
+                            totalStake={getTotalIndividualStake}
                             isParlayMode={isParlayMode}
                             parlayOdds={parlayCalculation?.finalOdds}
                             dict={dict}
@@ -754,8 +756,8 @@ export function PredictionSlip({
                     parlayCalculation={parlayCalculation}
                     parlayStake={parlayStake}
                     parlayValidation={parlayValidation}
-                    totalIndividualStake={getTotalIndividualStake()}
-                    totalIndividualWinnings={getTotalIndividualWinnings()}
+                    totalIndividualStake={getTotalIndividualStake}
+                    totalIndividualWinnings={getTotalIndividualWinnings}
                     walletBalance={wallet.balance}
                     isIndividualModeValid={isIndividualModeValid()}
                     isParlayModeValid={isParlayModeValid()}

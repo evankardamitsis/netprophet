@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@netprophet/lib";
 import { useDictionary } from "@/context/DictionaryContext";
@@ -12,6 +12,7 @@ import { ProfileCreationReview } from "./ProfileCreationReview";
 import { PlayerMatch } from "./types";
 import { findMatchingPlayers, getUserName } from "@/lib/playerLookup";
 import { debugPlayerLookup } from "@/lib/debugPlayerLookup";
+import { withCache, CacheKeys, CacheTTL } from "@netprophet/lib";
 
 interface ProfileClaimFlowNewProps {
     userId: string;
@@ -48,25 +49,33 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
             setCurrentStepNumber(1);
 
             try {
-                // Get profile data with optimized query
-                const { data: profile, error: profileError } = await supabase
-                    .from("profiles")
-                    .select("profile_claim_status, claimed_player_id")
-                    .eq("id", userId)
-                    .single();
+                // Get profile data with caching
+                const cacheKey = CacheKeys.userProfile(userId);
+                const profile = await withCache(
+                    cacheKey,
+                    async () => {
+                        const { data, error } = await supabase
+                            .from("profiles")
+                            .select("profile_claim_status, claimed_player_id")
+                            .eq("id", userId)
+                            .single();
 
-                if (profileError) {
-                    console.error("Error fetching profile:", profileError);
-                    setCurrentStep("form");
-                    setCurrentStepNumber(1);
-                    setLoading(false);
-                    return;
-                }
+                        if (error) throw error;
+                        return data;
+                    },
+                    CacheTTL.SHORT
+                );
+
+                // Profile data is now cached and error-free
 
                 // If already completed, show success
                 if (profile.profile_claim_status === "claimed") {
                     console.log("✅ User already has claimed player - showing success");
-                    const { firstName, lastName } = await getUserName(userId);
+                    const { firstName, lastName } = await withCache(
+                        `user-name-${userId}`,
+                        () => getUserName(userId),
+                        CacheTTL.SHORT
+                    );
                     setPlayerMatch({
                         id: profile.claimed_player_id || '',
                         first_name: firstName || '',
@@ -92,8 +101,12 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     return;
                 }
 
-                // Get user's name from profile or user_metadata
-                const { firstName, lastName } = await getUserName(userId);
+                // Get user's name from profile or user_metadata (cached)
+                const { firstName, lastName } = await withCache(
+                    `user-name-${userId}`,
+                    () => getUserName(userId),
+                    CacheTTL.SHORT
+                );
                 console.log("🔍 Debug - getUserName result:", { firstName, lastName, userId });
 
                 // Always perform lookup, even if user doesn't have a name yet
@@ -148,10 +161,14 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                             ];
                             lookupResult = { matches: mockMatches };
                         } else {
-                            // Normal mode: perform actual lookup
+                            // Normal mode: perform actual lookup (cached)
                             console.log("🔍 Performing debug lookup for:", firstName, lastName);
                             await debugPlayerLookup(firstName, lastName);
-                            lookupResult = await findMatchingPlayers(firstName, lastName);
+                            lookupResult = await withCache(
+                                `player-lookup-${firstName}-${lastName}`,
+                                () => findMatchingPlayers(firstName, lastName),
+                                CacheTTL.MEDIUM
+                            );
                         }
 
                         // Show results (match found or not found)
@@ -199,7 +216,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
         }
     }, [userId, forceRefresh, testMode]);
 
-    const handleFormSubmit = async (data: {
+    const handleFormSubmit = useCallback(async (data: {
         firstName: string;
         lastName: string;
         termsAccepted: boolean;
@@ -225,9 +242,13 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                 throw new Error(`Failed to update profile: ${updateError.message}`);
             }
 
-            // Search for matching players using helper (checks both name orders)
+            // Search for matching players using helper (checks both name orders) - cached
             try {
-                const lookupResult = await findMatchingPlayers(data.firstName, data.lastName);
+                const lookupResult = await withCache(
+                    `player-lookup-${data.firstName}-${data.lastName}`,
+                    () => findMatchingPlayers(data.firstName, data.lastName),
+                    CacheTTL.MEDIUM
+                );
 
                 setCameFromForm(true);
 
@@ -256,9 +277,9 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId]);
 
-    const handleClaimProfile = async (playerId: string) => {
+    const handleClaimProfile = useCallback(async (playerId: string) => {
         setLoading(true);
         setError(null);
 
@@ -290,16 +311,16 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId, onRefresh]);
 
-    const handleShowReviewCreation = () => {
+    const handleShowReviewCreation = useCallback(() => {
         setCurrentStep("reviewCreation");
         setCurrentStepNumber(2);
         setError(null);
         setLoading(false); // Ensure loading state is reset when showing review
-    };
+    }, []);
 
-    const handleCreateProfile = async (firstName: string, lastName: string) => {
+    const handleCreateProfile = useCallback(async (firstName: string, lastName: string) => {
         setLoading(true);
         setError(null);
 
@@ -329,21 +350,21 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId, onRefresh]);
 
-    const handleBackFromReview = () => {
+    const handleBackFromReview = useCallback(() => {
         setCurrentStep("result");
         setCurrentStepNumber(2);
         setError(null);
-    };
+    }, []);
 
-    const handleBackToForm = () => {
+    const handleBackToForm = useCallback(() => {
         setCurrentStep("form");
         setCurrentStepNumber(1);
         setError(null);
-    };
+    }, []);
 
-    const handleSkip = async () => {
+    const handleSkip = useCallback(async () => {
         setLoading(true);
         try {
             const { error } = await supabase
@@ -365,7 +386,81 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId, onSkip]);
+
+    // Memoized step content to prevent unnecessary re-renders
+    const stepContent = useMemo(() => {
+        if (currentStep === "form") {
+            return (
+                <ProfileClaimFormNew
+                    onComplete={handleFormSubmit}
+                    onCancel={handleSkip}
+                    loading={loading}
+                    initialValues={userData ? {
+                        firstName: userData.firstName,
+                        lastName: userData.lastName
+                    } : undefined}
+                />
+            );
+        }
+
+        if (currentStep === "result" && userData) {
+            return (
+                <ProfileClaimResultNew
+                    playerMatch={playerMatch}
+                    playerMatches={playerMatches}
+                    userFirstName={userData.firstName}
+                    userLastName={userData.lastName}
+                    onClaimProfile={handleClaimProfile}
+                    onCreateProfile={handleShowReviewCreation}
+                    onSkip={handleSkip}
+                    onBack={cameFromForm ? handleBackToForm : undefined}
+                    loading={loading}
+                />
+            );
+        }
+
+        if (currentStep === "reviewCreation" && userData) {
+            return (
+                <ProfileCreationReview
+                    initialFirstName={userData.firstName}
+                    initialLastName={userData.lastName}
+                    onConfirm={handleCreateProfile}
+                    onBack={handleBackFromReview}
+                    loading={loading}
+                />
+            );
+        }
+
+        if (currentStep === "success") {
+            return (
+                <ProfileClaimSuccessNew
+                    isClaimed={isClaimSuccess}
+                    claimedPlayerId={claimedPlayerId}
+                    onComplete={onComplete}
+                />
+            );
+        }
+
+        return null;
+    }, [
+        currentStep,
+        userData,
+        playerMatch,
+        playerMatches,
+        cameFromForm,
+        loading,
+        isClaimSuccess,
+        claimedPlayerId,
+        handleFormSubmit,
+        handleSkip,
+        handleClaimProfile,
+        handleShowReviewCreation,
+        handleCreateProfile,
+        handleBackToForm,
+        handleBackFromReview,
+        onComplete
+    ]);
 
     // Loading state
     if (currentStep === "checking" || (loading && !currentStep)) {
@@ -497,52 +592,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
 
             {/* Current Step Content */}
             <div className="flex-1 flex items-center justify-center">
-                {currentStep === "form" && (
-                    <ProfileClaimFormNew
-                        onComplete={handleFormSubmit}
-                        onCancel={handleSkip}
-                        loading={loading}
-                        initialValues={userData ? {
-                            firstName: userData.firstName,
-                            lastName: userData.lastName
-                        } : undefined}
-                    />
-                )}
-
-                {currentStep === "result" && userData && (
-                    <>
-                        {console.log("🔧 Rendering ProfileClaimResultNew with loading:", loading)}
-                        <ProfileClaimResultNew
-                            playerMatch={playerMatch}
-                            playerMatches={playerMatches}
-                            userFirstName={userData.firstName}
-                            userLastName={userData.lastName}
-                            onClaimProfile={handleClaimProfile}
-                            onCreateProfile={handleShowReviewCreation}
-                            onSkip={handleSkip}
-                            onBack={cameFromForm ? handleBackToForm : undefined}
-                            loading={loading}
-                        />
-                    </>
-                )}
-
-                {currentStep === "reviewCreation" && userData && (
-                    <ProfileCreationReview
-                        initialFirstName={userData.firstName}
-                        initialLastName={userData.lastName}
-                        onConfirm={handleCreateProfile}
-                        onBack={handleBackFromReview}
-                        loading={loading}
-                    />
-                )}
-
-                {currentStep === "success" && (
-                    <ProfileClaimSuccessNew
-                        isClaimed={isClaimSuccess}
-                        claimedPlayerId={claimedPlayerId}
-                        onComplete={onComplete}
-                    />
-                )}
+                {stepContent}
             </div>
         </div>
     );

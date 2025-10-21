@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Player } from '@netprophet/lib';
@@ -58,8 +58,8 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
     const { needsProfileSetup, loading: profileLoading } = useProfileClaim(user?.id || null);
     const [loading, setLoading] = useState(true);
 
-    // Hardcoded sample player data
-    const samplePlayer: Player = {
+    // Hardcoded sample player data (memoized)
+    const samplePlayer: Player = useMemo(() => ({
         id: 'sample-player-id',
         firstName: 'Γιώργος',
         lastName: 'Παπαδόπουλος',
@@ -78,9 +78,9 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
         injuryStatus: 'healthy',
         isHidden: false,
         isActive: true
-    };
+    }), []);
 
-    useEffect(() => {
+    const handleOAuthRedirect = useCallback(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
@@ -98,6 +98,19 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
         // Marketing pages should be accessible to everyone
         setLoading(false);
     }, [lang]);
+
+    useEffect(() => {
+        handleOAuthRedirect();
+    }, [handleOAuthRedirect]);
+
+    // Memoized button handlers
+    const handlePlayNowClick = useCallback(() => {
+        router.push(`/${lang}/auth/signin`);
+    }, [router, lang]);
+
+    const handleHowItWorksClick = useCallback(() => {
+        router.push(`/${lang}/how-it-works`);
+    }, [router, lang]);
 
     if (loading) {
         return (
@@ -163,7 +176,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                             {/* CTA Buttons */}
                             <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-center lg:justify-start pt-6 sm:pt-6">
                                 <Button
-                                    onClick={() => router.push(`/${lang}/auth/signin`)}
+                                    onClick={handlePlayNowClick}
                                     size="lg"
                                     style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                                     className={`text-lg sm:text-lg px-8 py-4 sm:px-8 sm:py-4 ${buttons.primary.className} shadow-2xl`}
@@ -174,7 +187,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                                     size="lg"
                                     style={{ backgroundColor: buttons.secondary.bg, color: buttons.secondary.color }}
                                     className={`text-lg sm:text-lg px-8 py-4 sm:px-8 sm:py-4 ${buttons.secondary.className} backdrop-blur-md`}
-                                    onClick={() => router.push(`/${lang}/how-it-works`)}
+                                    onClick={handleHowItWorksClick}
                                 >
                                     {lang === 'el' ? 'Πώς Λειτουργεί' : 'How It Works'}
                                 </Button>

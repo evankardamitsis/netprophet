@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useOptimizedNavigation } from '@/hooks/useOptimizedNavigation';
 import Link from 'next/link';
@@ -216,7 +216,7 @@ export function TopNavigation({
         if (userRef.current && userPowerUps.length === 0 && !powerUpsLoading) {
             loadUserPowerUps();
         }
-    }, [userRef.current?.id]); // Remove userPowerUps.length dependency to prevent loops
+    }, [userRef.current?.id, powerUpsLoading, userPowerUps.length]); // Include all dependencies
 
 
 
@@ -243,14 +243,16 @@ export function TopNavigation({
         };
     }, []);
 
-    // Calculate total active power-ups
-    const totalActivePowerUps = userPowerUps.reduce((total, powerUp) => {
-        // Check if power-up has expired
-        if (powerUp.expires_at && new Date(powerUp.expires_at) < new Date()) {
-            return total;
-        }
-        return total + powerUp.quantity;
-    }, 0);
+    // Calculate total active power-ups (memoized)
+    const totalActivePowerUps = useMemo(() => {
+        return userPowerUps.reduce((total, powerUp) => {
+            // Check if power-up has expired
+            if (powerUp.expires_at && new Date(powerUp.expires_at) < new Date()) {
+                return total;
+            }
+            return total + powerUp.quantity;
+        }, 0);
+    }, [userPowerUps]);
 
     useEffect(() => {
         if (!accountDropdownOpen) return;
@@ -302,7 +304,7 @@ export function TopNavigation({
         };
     }, [mobileMenuOpen]);
 
-    const switchLanguage = async (newLang: 'en' | 'el') => {
+    const switchLanguage = useCallback(async (newLang: 'en' | 'el') => {
         setLanguageDropdownOpen(false);
 
         try {
@@ -316,9 +318,9 @@ export function TopNavigation({
         // Replace the current language in the pathname
         const newPath = pathname.replace(/^\/(en|el)/, `/${newLang}`);
         navigateWithFeedback(newPath);
-    };
+    }, [pathname, navigateWithFeedback]);
 
-    const handleTestProfileClick = async () => {
+    const handleTestProfileClick = useCallback(async () => {
         if (!user) return;
 
         try {
@@ -342,9 +344,9 @@ export function TopNavigation({
             // Still open the modal even if reset fails
             setShowProfileSetup(true);
         }
-    };
+    }, [user, setProfileRefreshKey, profileRefreshKey, setShowProfileSetup]);
 
-    const handleTestProfileMatchClick = async () => {
+    const handleTestProfileMatchClick = useCallback(async () => {
         if (!user) return;
 
         try {
@@ -370,7 +372,7 @@ export function TopNavigation({
             setTestMode('match');
             setShowProfileSetup(true);
         }
-    };
+    }, [user, setTestMode, setProfileRefreshKey, profileRefreshKey, setShowProfileSetup]);
 
     return (
         <div className="relative">

@@ -27,14 +27,18 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
     // Tournament filter state
     const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
 
-    // Filter matches by selected tournament
+    // Filter matches by selected tournament (optimized with useMemo)
     const filteredMatches = useMemo(() => {
         if (!selectedTournament) return matches;
         return matches.filter(match => match.tournament === selectedTournament);
     }, [matches, selectedTournament]);
 
-    const liveMatches = filteredMatches.filter(match => match.status_display === 'live');
-    const upcomingMatches = filteredMatches.filter(match => match.status_display === 'upcoming');
+    // Memoize filtered match arrays to prevent unnecessary recalculations
+    const { liveMatches, upcomingMatches } = useMemo(() => {
+        const live = filteredMatches.filter(match => match.status_display === 'live');
+        const upcoming = filteredMatches.filter(match => match.status_display === 'upcoming');
+        return { liveMatches: live, upcomingMatches: upcoming };
+    }, [filteredMatches]);
 
     return (
         <div className="flex flex-col w-full text-white relative">

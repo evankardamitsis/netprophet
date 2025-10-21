@@ -8,7 +8,8 @@ import { useWallet } from '@/context/WalletContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useDictionary } from '@/context/DictionaryContext';
 import { toast } from 'sonner';
-import { fetchPowerUps, purchasePowerUp, type PowerUp as DBPowerUp } from '@netprophet/lib';
+import { fetchPowerUps, purchasePowerUp, type PowerUp as DBPowerUp, withCache } from '@netprophet/lib';
+import { WebCacheKeys, WebCacheTTL } from '@/utils/optimizedQueries';
 import CoinIcon from '@/components/CoinIcon';
 
 export interface PowerUp {
@@ -37,11 +38,15 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
     const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Fetch power-ups from database
+    // Fetch power-ups from database with caching
     useEffect(() => {
         const loadPowerUps = async () => {
             try {
-                const dbPowerUps = await fetchPowerUps();
+                const dbPowerUps = await withCache(
+                    WebCacheKeys.powerUps(),
+                    fetchPowerUps,
+                    WebCacheTTL.LONG
+                );
                 const transformedPowerUps: PowerUp[] = dbPowerUps.map((powerUp: DBPowerUp) => ({
                     id: powerUp.power_up_id,
                     name: powerUp.name,

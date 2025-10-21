@@ -184,11 +184,11 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
 
 
 
-    // Update current time every second
+    // Update current time every 30 seconds (optimized frequency)
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 1000);
+        }, 30000); // Reduced from 1000ms to 30000ms for better performance
 
         return () => clearInterval(timer);
     }, []);

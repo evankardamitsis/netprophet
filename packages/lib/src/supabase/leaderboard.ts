@@ -150,7 +150,7 @@ export class LeaderboardService {
    * Get weekly leaderboard
    */
   static async getWeeklyLeaderboard(
-    limit: number = 50
+    limit?: number
   ): Promise<LeaderboardEntry[]> {
     // Use the database function to get weekly leaderboard stats
     const { data: weeklyStats, error } = await supabase.rpc(
@@ -162,12 +162,14 @@ export class LeaderboardService {
       throw new Error(`Failed to fetch weekly leaderboard: ${error.message}`);
     }
 
-    // The function returns an array, so we need to slice it for the limit
-    const limitedStats = (weeklyStats || []).slice(0, limit);
+    // Apply limit only if provided, otherwise return all players
+    const stats = limit
+      ? (weeklyStats || []).slice(0, limit)
+      : weeklyStats || [];
 
     // Check for active streak multipliers for all users
     const entriesWithPowerUps = await Promise.all(
-      limitedStats.map(async (entry: any, index: number) => {
+      stats.map(async (entry: any, index: number) => {
         const hasStreakMultiplier = await hasActiveStreakMultiplier(
           entry.user_id
         );
@@ -194,39 +196,39 @@ export class LeaderboardService {
    * Get all-time leaderboard
    */
   static async getAllTimeLeaderboard(
-    limit: number = 50
+    limit?: number
   ): Promise<LeaderboardEntry[]> {
-    // Use the pre-calculated database columns for all-time leaderboard
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, avatar_url, leaderboard_points, current_winning_streak, best_winning_streak, total_correct_picks, total_picks, accuracy_percentage"
-      )
-      .not("username", "is", null)
-      .gte("total_picks", 1) // Only include users who have made picks
-      .order("leaderboard_points", { ascending: false })
-      .order("current_winning_streak", { ascending: false })
-      .limit(limit);
+    // Use the database function to get all-time leaderboard stats
+    const { data: allTimeStats, error } = await supabase.rpc(
+      "get_all_time_leaderboard_stats"
+    );
 
-    if (profilesError) {
-      console.error("Error fetching profiles:", profilesError);
-      throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+    if (error) {
+      console.error("Error fetching all-time leaderboard:", error);
+      throw new Error(`Failed to fetch all-time leaderboard: ${error.message}`);
     }
+
+    // Apply limit only if provided, otherwise return all players
+    const stats = limit
+      ? (allTimeStats || []).slice(0, limit)
+      : allTimeStats || [];
 
     // Check for active streak multipliers for all users
     const entriesWithPowerUps = await Promise.all(
-      (profiles || []).map(async (profile, index) => {
-        const hasStreakMultiplier = await hasActiveStreakMultiplier(profile.id);
+      stats.map(async (entry: any, index: number) => {
+        const hasStreakMultiplier = await hasActiveStreakMultiplier(
+          entry.user_id
+        );
         return {
-          userId: profile.id,
-          username: profile.username,
-          avatarUrl: profile.avatar_url,
-          totalPoints: profile.leaderboard_points || 0,
-          currentStreak: profile.current_winning_streak || 0,
-          bestStreak: profile.best_winning_streak || 0,
-          correctPicks: profile.total_correct_picks || 0,
-          totalPicks: profile.total_picks || 0,
-          accuracyPercentage: profile.accuracy_percentage || 0,
+          userId: entry.user_id,
+          username: entry.username,
+          avatarUrl: entry.avatar_url,
+          totalPoints: entry.leaderboard_points || 0,
+          currentStreak: entry.current_winning_streak || 0,
+          bestStreak: entry.best_winning_streak || 0,
+          correctPicks: entry.total_correct_picks || 0,
+          totalPicks: entry.total_picks || 0,
+          accuracyPercentage: entry.accuracy_percentage || 0,
           rank: index + 1,
           hasActiveStreakMultiplier: hasStreakMultiplier,
         };

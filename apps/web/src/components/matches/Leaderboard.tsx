@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
-import { LeaderboardService, LeaderboardEntry } from '@netprophet/lib';
+import { LeaderboardService, LeaderboardEntry, withCache } from '@netprophet/lib';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gradients, shadows, borders, transitions, animations, typography, spacing, cx } from '@/styles/design-system';
+import { WebCacheKeys, WebCacheTTL } from '@/utils/optimizedQueries';
 
 interface LeaderboardProps {
     className?: string;
@@ -32,12 +33,20 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
             setError(null);
 
             try {
-                // Use Promise.allSettled for better error handling
+                // Use Promise.allSettled with caching for better performance
                 const [dataResult, summaryResult] = await Promise.allSettled([
-                    timeFrame === 'weekly'
-                        ? LeaderboardService.getWeeklyLeaderboard(50)
-                        : LeaderboardService.getAllTimeLeaderboard(50),
-                    LeaderboardService.getLeaderboardSummary(timeFrame)
+                    withCache(
+                        timeFrame === 'weekly' ? WebCacheKeys.leaderboardWeekly() : WebCacheKeys.leaderboardAllTime(),
+                        () => timeFrame === 'weekly'
+                            ? LeaderboardService.getWeeklyLeaderboard() // Show all players (no limit)
+                            : LeaderboardService.getAllTimeLeaderboard(), // Show all players (no limit)
+                        WebCacheTTL.MEDIUM
+                    ),
+                    withCache(
+                        `web:leaderboard:${timeFrame}:summary`,
+                        () => LeaderboardService.getLeaderboardSummary(timeFrame),
+                        WebCacheTTL.MEDIUM
+                    )
                 ]);
 
                 // Handle data result

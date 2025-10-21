@@ -267,6 +267,9 @@ export const WebCacheKeys = {
   // User data
   userPowerUps: (userId: string) => `web:user:${userId}:powerups`,
   userProfile: (userId: string) => `web:user:${userId}:profile`,
+
+  // Power-ups and rewards
+  powerUps: () => "web:powerups:all",
 } as const;
 
 /**
