@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase, MATCH_STATUSES } from '@netprophet/lib';
-import { MatchesGrid } from '@/components/matches/MatchesGrid';
+import { AllMatches } from '@/components/matches/AllMatches';
 import { MatchDetail } from '@/components/matches/MatchDetail';
 import { PromotionalHero } from '@/components/matches/PromotionalHero';
+import { TournamentFilter } from '@/components/matches/TournamentFilter';
 import { Match } from '@/types/dashboard';
 import { WelcomeBonus } from '@/components/matches/WelcomeBonus';
+import { useMatches } from '@/hooks/useMatches';
+import { useDictionary } from '@/context/DictionaryContext';
+import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
 
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
@@ -17,128 +19,6 @@ import { useProfileSetupModal } from '@/context/ProfileSetupModalContext';
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 
 
-// Function to fetch synced matches
-async function fetchSyncedMatches(): Promise<Match[]> {
-    const { data, error } = await supabase
-        .from('matches')
-        .select(`
-            id,
-            tournament_id,
-            category_id,
-            player_a_id,
-            player_b_id,
-            winner_id,
-            status,
-            round,
-            start_time,
-            lock_time,
-            odds_a,
-            odds_b,
-            web_synced,
-            locked,
-            updated_at,
-            tournaments (
-                id,
-                name,
-                surface,
-                location,
-                matches_type
-            ),
-            tournament_categories (
-                id,
-                name
-            ),
-            player_a:players!matches_player_a_id_fkey (
-                id,
-                first_name,
-                last_name,
-                ntrp_rating,
-                surface_preference,
-                wins,
-                losses,
-                last5,
-                current_streak,
-                streak_type
-            ),
-            player_b:players!matches_player_b_id_fkey (
-                id,
-                first_name,
-                last_name,
-                ntrp_rating,
-                surface_preference,
-                wins,
-                losses,
-                last5,
-                current_streak,
-                streak_type
-            )
-        `)
-        .eq('web_synced', true)
-        .order('start_time', { ascending: true });
-
-    if (error) throw error;
-
-    // Transform raw database match to web app format
-    return (data || []).map((rawMatch: any) => {
-        const getPlayerName = (player: any) => {
-            if (player?.first_name && player?.last_name) {
-                return `${player.first_name} ${player.last_name}`;
-            }
-            return 'TBD';
-        };
-
-        const startTime = rawMatch.start_time ? new Date(rawMatch.start_time) : new Date();
-        const lockTime = rawMatch.lock_time ? new Date(rawMatch.lock_time) : new Date();
-        const now = new Date();
-
-        let status_display: 'live' | 'upcoming' | 'finished' = 'upcoming';
-        if (rawMatch.status === MATCH_STATUSES.LIVE) {
-            status_display = 'live';
-        } else if (rawMatch.status === MATCH_STATUSES.FINISHED) {
-            status_display = 'finished';
-        } else if (startTime <= now) {
-            status_display = 'live';
-        }
-
-        return {
-            id: rawMatch.id,
-            tournament_id: rawMatch.tournament_id,
-            category_id: rawMatch.category_id,
-            player_a_id: rawMatch.player_a_id,
-            player_b_id: rawMatch.player_b_id,
-            winner_id: rawMatch.winner_id,
-            status: rawMatch.status,
-            round: rawMatch.round,
-            start_time: rawMatch.start_time,
-            lock_time: rawMatch.lock_time,
-            odds_a: rawMatch.odds_a,
-            odds_b: rawMatch.odds_b,
-            web_synced: rawMatch.web_synced,
-            tournaments: Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0] : rawMatch.tournaments,
-            tournament_categories: Array.isArray(rawMatch.tournament_categories) ? rawMatch.tournament_categories[0] : rawMatch.tournament_categories,
-            player_a: rawMatch.player_a,
-            player_b: rawMatch.player_b,
-            // Computed properties for web app compatibility
-            tournament: (Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0]?.name : rawMatch.tournaments?.name) || 'Unknown Tournament',
-            player1: {
-                name: getPlayerName(rawMatch.player_a),
-                odds: rawMatch.odds_a || 1.0
-            },
-            player2: {
-                name: getPlayerName(rawMatch.player_b),
-                odds: rawMatch.odds_b || 1.0
-            },
-            time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
-            status_display,
-            points: 0, // Points are calculated dynamically
-            locked: rawMatch.locked || (lockTime <= now),
-            updated_at: rawMatch.updated_at,
-            startTime,
-            lockTime,
-            isLocked: rawMatch.locked || lockTime <= now
-        };
-    });
-}
 
 export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -147,6 +27,18 @@ export default function DashboardPage() {
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
     const { user } = useAuth();
     const { needsProfileSetup, loading: profileLoading } = useProfileClaim(user?.id || null);
+    const { dict } = useDictionary();
+
+    // Use the shared matches hook
+    const {
+        matches,
+        liveMatches,
+        upcomingMatches,
+        selectedTournament,
+        setSelectedTournament,
+        loading: isLoading,
+        error
+    } = useMatches();
 
     // Show profile setup modal if needed
     useEffect(() => {
@@ -175,14 +67,6 @@ export default function DashboardPage() {
 
     // Note: Removed resetSlipState() call as it was clearing predictions on every page navigation
     // The slip state should persist across page navigations
-
-    // Fetch synced matches
-    const { data: matches = [], isLoading, error } = useQuery({
-        queryKey: ['syncedMatches'],
-        queryFn: fetchSyncedMatches,
-        staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-        refetchOnWindowFocus: false, // Don't refetch on window focus
-    });
 
 
 
@@ -250,13 +134,48 @@ export default function DashboardPage() {
                         </div>
                     )}
 
-                    {/* Regular Matches Grid */}
-                    <MatchesGrid
-                        matches={matches}
-                        onSelectMatch={handleSelectMatch}
-                        sidebarOpen={sidebarOpen}
-                        slipCollapsed={slipCollapsed}
-                    />
+                    {/* Main Content */}
+                    <div className="flex flex-col w-full text-white relative">
+                        {/* Decorative background elements */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-400 rounded-full opacity-10 blur-3xl pointer-events-none animate-pulse"></div>
+                        <div className="absolute bottom-40 left-10 w-48 h-48 bg-yellow-400 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ animationDelay: '1.5s' }}></div>
+
+                        {/* Header Section */}
+                        <div className="p-3 xs:p-4 sm:p-5 md:p-6 pb-2 xs:pb-3 sm:pb-4 relative z-10">
+                            <h1 className={cx(typography.heading.lg, " mb-1 xs:mb-2")}>
+                                🎾 {dict?.matches?.title || 'Tennis Matches'}
+                            </h1>
+                            <p className={cx(typography.body.md, "text-gray-300")}>{dict?.matches?.loading || 'Monitor tennis games and place your predictions'}</p>
+                        </div>
+
+                        {/* Tournament Filter */}
+                        <TournamentFilter
+                            matches={matches}
+                            onTournamentSelect={setSelectedTournament}
+                            selectedTournament={selectedTournament}
+                        />
+
+                        {/* Content Section */}
+                        <div className="px-3 xs:px-4 sm:px-5 md:px-6 relative z-10">
+                            {/* All Matches - Grid for Live, Table for Upcoming */}
+                            <AllMatches
+                                liveMatches={liveMatches}
+                                upcomingMatches={upcomingMatches}
+                                onSelectMatch={handleSelectMatch}
+                                sidebarOpen={sidebarOpen}
+                                slipCollapsed={slipCollapsed}
+                            />
+
+                            {/* No Matches State */}
+                            {matches.length === 0 && (
+                                <div className="text-center py-12">
+                                    <div className="text-6xl mb-4">🎾</div>
+                                    <h2 className="text-2xl font-semibold mb-2 text-white">{dict?.matches?.noMatches || 'No Tennis Matches Available'}</h2>
+                                    <p className="text-gray-400">{dict?.matches?.loading || 'Check back later for upcoming tennis matches'}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </>
             )}
         </div>

@@ -6,7 +6,7 @@ import { CardTitle } from '@/components/ui/card';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
-import { useState, useMemo } from 'react';
+import { useMatches } from '@/hooks/useMatches';
 import { TournamentFilter } from './TournamentFilter';
 import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
 import { motion } from 'framer-motion';
@@ -18,27 +18,26 @@ interface MatchesGridProps {
     slipCollapsed?: boolean;
 }
 
-export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }: MatchesGridProps) {
+export function MatchesGrid({ matches: propMatches = [], sidebarOpen = true, slipCollapsed }: MatchesGridProps) {
     const onSelectMatch = useMatchSelect();
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
     const { dict, lang } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
 
-    // Tournament filter state
-    const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
+    // Use shared matches hook
+    const {
+        matches: hookMatches,
+        filteredMatches,
+        liveMatches,
+        upcomingMatches,
+        selectedTournament,
+        setSelectedTournament,
+        loading,
+        error
+    } = useMatches();
 
-    // Filter matches by selected tournament (optimized with useMemo)
-    const filteredMatches = useMemo(() => {
-        if (!selectedTournament) return matches;
-        return matches.filter(match => match.tournament === selectedTournament);
-    }, [matches, selectedTournament]);
-
-    // Memoize filtered match arrays to prevent unnecessary recalculations
-    const { liveMatches, upcomingMatches } = useMemo(() => {
-        const live = filteredMatches.filter(match => match.status_display === 'live');
-        const upcoming = filteredMatches.filter(match => match.status_display === 'upcoming');
-        return { liveMatches: live, upcomingMatches: upcoming };
-    }, [filteredMatches]);
+    // Use prop matches if provided, otherwise use hook matches
+    const matches = propMatches.length > 0 ? propMatches : hookMatches;
 
     return (
         <div className="flex flex-col w-full text-white relative">
@@ -69,7 +68,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                             <h2 className={cx(typography.heading.md, "text-white flex items-center text-sm xs:text-base sm:text-lg")}>
                                 <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
-                                🔴 {dict?.sidebar?.liveMatches || 'Live Matches'}
+                                {dict?.sidebar?.liveMatches || 'Live Matches'}
                                 <span className={cx(typography.body.sm, "ml-2 text-gray-400 text-xs xs:text-sm")}>({liveMatches.length})</span>
                             </h2>
                             {/* Navigation arrows for live matches - only visible on large screens */}
@@ -326,7 +325,7 @@ export function MatchesGrid({ matches = [], sidebarOpen = true, slipCollapsed }:
                     <div className="pb-3 xs:pb-4 sm:pb-5 md:pb-6">
                         <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                             <h2 className={cx(typography.heading.md, "text-white")}>
-                                ⏰ {dict?.sidebar?.upcoming || 'Upcoming Matches'}
+                                {dict?.sidebar?.upcoming || 'Upcoming Matches'}
                                 <span className={cx(typography.body.sm, "ml-2 text-gray-400")}>({upcomingMatches.length})</span>
                             </h2>
                         </div>
