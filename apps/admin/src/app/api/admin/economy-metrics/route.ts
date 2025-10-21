@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/adminAuth";
+import { withCache, CacheKeys, CacheTTL } from "@netprophet/lib";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +22,28 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const timePeriod = searchParams.get("timePeriod") || "month";
 
+    // Use cache for economy metrics (15 minute TTL)
+    const cacheKey = CacheKeys.economyMetrics(timePeriod);
+    const response = await withCache(
+      cacheKey,
+      async () => {
+        return await fetchEconomyMetrics(timePeriod, supabase);
+      },
+      CacheTTL.LONG
+    );
+
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error("Economy metrics error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch economy metrics" },
+      { status: 500 }
+    );
+  }
+}
+
+async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
+  try {
     // Fetch all economy metrics in parallel with timeout protection
     const timeoutMs = 10000; // 10 second timeout per RPC call
 
@@ -142,8 +165,40 @@ export async function GET(request: NextRequest) {
 
     // Extract data (handle Promise.allSettled results)
     const getData = (result: any, defaultValue: any) => {
-      if (result.status === "fulfilled" && result.value?.data?.[0]) {
-        return result.value.data[0];
+      if (result.status === "fulfilled" && result.value?.data) {
+        // Handle both single objects and arrays
+        if (Array.isArray(result.value.data)) {
+          // If it's an array, return the first element if it exists
+          return result.value.data.length > 0
+            ? result.value.data[0]
+            : defaultValue;
+        } else if (result.value.data[0]) {
+          return result.value.data[0];
+        }
+      }
+      return defaultValue;
+    };
+
+    // Extract array data for charts
+    const getArrayData = (result: any, defaultValue: any[] = []) => {
+      if (result.status === "fulfilled" && result.value?.data) {
+        if (Array.isArray(result.value.data)) {
+          return result.value.data;
+        }
+      }
+      return defaultValue;
+    };
+
+    // Helper function to safely extract numeric values
+    const getNumericValue = (result: any, defaultValue: number = 0) => {
+      const data = getData(result, {});
+      if (data && typeof data === "object") {
+        // Find the first numeric value in the object
+        for (const [key, value] of Object.entries(data)) {
+          if (typeof value === "number" && !isNaN(value)) {
+            return value;
+          }
+        }
       }
       return defaultValue;
     };
@@ -176,13 +231,13 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data for charts (handle Promise.allSettled results)
-    const coinFlowData = getData(coinFlowResult, []).map((item: any) => ({
+    const coinFlowData = getArrayData(coinFlowResult, []).map((item: any) => ({
       date: item.date,
       inflow: Number(item.inflow),
       outflow: Number(item.outflow),
     }));
 
-    const inflowBreakdown = getData(inflowBreakdownResult, []).map(
+    const inflowBreakdown = getArrayData(inflowBreakdownResult, []).map(
       (item: any, index: number) => ({
         name: item.transaction_type,
         value: Number(item.total_amount),
@@ -191,7 +246,7 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    const outflowBreakdown = getData(outflowBreakdownResult, []).map(
+    const outflowBreakdown = getArrayData(outflowBreakdownResult, []).map(
       (item: any, index: number) => ({
         name: item.transaction_type,
         value: Number(item.total_amount),
@@ -200,7 +255,7 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    const topUsers = getData(topUsersResult, []).map((user: any) => {
+    const topUsers = getArrayData(topUsersResult, []).map((user: any) => {
       const totalSpent = Number(user.total_spent);
       const lastSpend = user.last_spend;
       const betsPlaced = Number(user.bets_placed);
@@ -248,45 +303,47 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const conversionRateTrend = getData(conversionRateResult, []).map(
+    const conversionRateTrend = getArrayData(conversionRateResult, []).map(
       (item: any) => ({
         month: item.month,
         rate: Number(item.conversion_rate),
       })
     );
 
-    const burnRatioTrend = getData(burnRatioResult, []).map((item: any) => ({
-      month: item.month,
-      ratio: Number(item.burn_ratio),
-    }));
+    const burnRatioTrend = getArrayData(burnRatioResult, []).map(
+      (item: any) => ({
+        month: item.month,
+        ratio: Number(item.burn_ratio),
+      })
+    );
 
-    return NextResponse.json({
+    return {
       success: true,
       data: {
         summary: {
-          totalCoinsInjected: Number(coinsInjected.total_coins_injected),
-          totalCoinsBurned: Number(coinsBurned.total_coins_burned),
-          payingUsers: Number(payingUsers.paying_users_count),
-          totalUsers: Number(totalUsers.total_users_count),
-          activeUsers: Number(activeUsers.active_users_count),
+          totalCoinsInjected: Number(coinsInjected?.total_coins_injected || 0),
+          totalCoinsBurned: Number(coinsBurned?.total_coins_burned || 0),
+          payingUsers: Number(payingUsers?.paying_users_count || 0),
+          totalUsers: Number(totalUsers?.total_users_count || 0),
+          activeUsers: Number(activeUsers?.active_users_count || 0),
           averageCoinBalance: Math.round(
-            Number(averageCoins.average_coins_per_user)
+            Number(averageCoins?.average_coins_per_user || 0)
           ),
           conversionRate: calculateConversionRate(
-            payingUsers.paying_users_count,
-            totalUsers.total_users_count
+            payingUsers?.paying_users_count || 0,
+            totalUsers?.total_users_count || 0
           ),
           burnRatio: calculateBurnRatio(
-            coinsInjected.total_coins_injected,
-            coinsBurned.total_coins_burned
+            coinsInjected?.total_coins_injected || 0,
+            coinsBurned?.total_coins_burned || 0
           ),
         },
         trends: {
-          coinsInjectedChange: Number(coinsInjected.percentage_change),
-          coinsBurnedChange: Number(coinsBurned.percentage_change),
-          payingUsersChange: Number(payingUsers.percentage_change),
-          activeUsersChange: Number(activeUsers.percentage_change),
-          averageCoinsChange: Number(averageCoins.percentage_change),
+          coinsInjectedChange: Number(coinsInjected?.percentage_change || 0),
+          coinsBurnedChange: Number(coinsBurned?.percentage_change || 0),
+          payingUsersChange: Number(payingUsers?.percentage_change || 0),
+          activeUsersChange: Number(activeUsers?.percentage_change || 0),
+          averageCoinsChange: Number(averageCoins?.percentage_change || 0),
         },
         charts: {
           coinFlowData,
@@ -297,13 +354,10 @@ export async function GET(request: NextRequest) {
         },
         topUsers,
       },
-    });
+    };
   } catch (error) {
     console.error("Error fetching economy metrics:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    throw error;
   }
 }
 

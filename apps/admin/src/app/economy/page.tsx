@@ -24,17 +24,21 @@ export default function EconomyPage() {
     const [sortField, setSortField] = useState<'username' | 'totalSpent' | 'lastSpend' | 'betsPlaced'>('totalSpent');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-    const formatNumber = (num: number) => {
-        if (num >= 1000000) {
-            return (num / 1000000).toFixed(1) + 'M';
-        } else if (num >= 1000) {
-            return (num / 1000).toFixed(1) + 'K';
+    const formatNumber = (num: number | null | undefined) => {
+        if (!num || num === 0) return '0';
+        const safeNum = Number(num);
+        if (safeNum >= 1000000) {
+            return (safeNum / 1000000).toFixed(1) + 'M';
+        } else if (safeNum >= 1000) {
+            return (safeNum / 1000).toFixed(1) + 'K';
         }
-        return num.toLocaleString();
+        return safeNum.toLocaleString();
     };
 
-    const formatCurrency = (num: number) => {
-        return '€' + (num / 100).toFixed(2);
+    const formatCurrency = (num: number | null | undefined) => {
+        if (!num || num === 0) return '€0.00';
+        const safeNum = Number(num);
+        return '€' + (safeNum / 100).toFixed(2);
     };
 
     // Sorting and filtering functions
@@ -239,13 +243,13 @@ export default function EconomyPage() {
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data.summary.totalCoinsInjected)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.totalCoinsInjected)}</div>
                         <p className="text-xs text-gray-500 mt-1">
                             {timeFilter === 'all' ? (
                                 <span>All time total</span>
                             ) : (
-                                <span className={data.trends.coinsInjectedChange >= 0 ? "text-green-600" : "text-red-600"}>
-                                    {data.trends.coinsInjectedChange >= 0 ? "+" : ""}{data.trends.coinsInjectedChange.toFixed(1)}%
+                                <span className={(data?.trends?.coinsInjectedChange || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                                    {(data?.trends?.coinsInjectedChange || 0) >= 0 ? "+" : ""}{(data?.trends?.coinsInjectedChange || 0).toFixed(1)}%
                                 </span>
                             )}
                             {timeFilter !== 'all' && ` from last ${timeFilter}`}
@@ -264,13 +268,13 @@ export default function EconomyPage() {
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data.summary.totalCoinsBurned)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.totalCoinsBurned)}</div>
                         <p className="text-xs text-gray-500 mt-1">
                             {timeFilter === 'all' ? (
                                 <span>All time total</span>
                             ) : (
-                                <span className={data.trends.coinsBurnedChange >= 0 ? "text-red-600" : "text-green-600"}>
-                                    {data.trends.coinsBurnedChange >= 0 ? "+" : ""}{data.trends.coinsBurnedChange.toFixed(1)}%
+                                <span className={(data?.trends?.coinsBurnedChange || 0) >= 0 ? "text-red-600" : "text-green-600"}>
+                                    {(data?.trends?.coinsBurnedChange || 0) >= 0 ? "+" : ""}{(data?.trends?.coinsBurnedChange || 0).toFixed(1)}%
                                 </span>
                             )}
                             {timeFilter !== 'all' && ` from last ${timeFilter}`}
@@ -284,13 +288,13 @@ export default function EconomyPage() {
                         <Users className="h-4 w-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data.summary.payingUsers)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.payingUsers)}</div>
                         <p className="text-xs text-gray-500 mt-1">
                             {timeFilter === 'all' ? (
                                 <span>All time total</span>
                             ) : (
-                                <span className={data.trends.payingUsersChange >= 0 ? "text-green-600" : "text-red-600"}>
-                                    {data.trends.payingUsersChange >= 0 ? "+" : ""}{data.trends.payingUsersChange.toFixed(1)}%
+                                <span className={(data?.trends?.payingUsersChange || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                                    {(data?.trends?.payingUsersChange || 0) >= 0 ? "+" : ""}{(data?.trends?.payingUsersChange || 0).toFixed(1)}%
                                 </span>
                             )}
                             {timeFilter !== 'all' && ` from last ${timeFilter}`}
@@ -304,13 +308,13 @@ export default function EconomyPage() {
                         <DollarSign className="h-4 w-4 text-purple-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data.summary.averageCoinBalance)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.averageCoinBalance)}</div>
                         <p className="text-xs text-gray-500 mt-1">
                             {timeFilter === 'all' ? (
                                 <span>All time total</span>
                             ) : (
-                                <span className={data.trends.averageCoinsChange >= 0 ? "text-green-600" : "text-red-600"}>
-                                    {data.trends.averageCoinsChange >= 0 ? "+" : ""}{data.trends.averageCoinsChange.toFixed(1)}%
+                                <span className={(data?.trends?.averageCoinsChange || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                                    {(data?.trends?.averageCoinsChange || 0) >= 0 ? "+" : ""}{(data?.trends?.averageCoinsChange || 0).toFixed(1)}%
                                 </span>
                             )}
                             {timeFilter !== 'all' && ` from last ${timeFilter}`}
@@ -324,7 +328,7 @@ export default function EconomyPage() {
                         <Users className="h-4 w-4 text-indigo-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data.summary.totalUsers)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.totalUsers)}</div>
                         <p className="text-xs text-gray-500 mt-1">
                             All registered users
                         </p>
@@ -337,13 +341,13 @@ export default function EconomyPage() {
                         <Activity className="h-4 w-4 text-emerald-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data.summary.activeUsers)}</div>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.activeUsers)}</div>
                         <p className="text-xs text-gray-500 mt-1">
                             {timeFilter === 'all' ? (
                                 <span>All time total</span>
                             ) : (
-                                <span className={data.trends.activeUsersChange >= 0 ? "text-green-600" : "text-red-600"}>
-                                    {data.trends.activeUsersChange >= 0 ? "+" : ""}{data.trends.activeUsersChange.toFixed(1)}%
+                                <span className={(data?.trends?.activeUsersChange || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                                    {(data?.trends?.activeUsersChange || 0) >= 0 ? "+" : ""}{(data?.trends?.activeUsersChange || 0).toFixed(1)}%
                                 </span>
                             )}
                             {timeFilter !== 'all' && ` from last 14 days`}
@@ -362,7 +366,7 @@ export default function EconomyPage() {
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={data.charts.coinFlowData}>
+                            <LineChart data={data?.charts?.coinFlowData || []}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis
                                     dataKey="date"
@@ -390,14 +394,14 @@ export default function EconomyPage() {
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
-                                    data={data.charts.inflowBreakdown}
+                                    data={data?.charts?.inflowBreakdown || []}
                                     cx="50%"
                                     cy="50%"
                                     outerRadius={80}
                                     dataKey="value"
                                     label={false}
                                 >
-                                    {data.charts.inflowBreakdown.map((entry: any, index: number) => (
+                                    {(data?.charts?.inflowBreakdown || []).map((entry: any, index: number) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
                                 </Pie>
@@ -407,14 +411,14 @@ export default function EconomyPage() {
 
                         {/* Legend */}
                         <div className="mt-4 flex flex-wrap gap-4 justify-center">
-                            {data.charts.inflowBreakdown.map((entry: any, index: number) => (
+                            {(data?.charts?.inflowBreakdown || []).map((entry: any, index: number) => (
                                 <div key={index} className="flex items-center gap-2">
                                     <div
                                         className="w-3 h-3 rounded-full"
                                         style={{ backgroundColor: entry.color }}
                                     />
                                     <span className="text-sm text-gray-600">
-                                        {entry.name} ({entry.percentage.toFixed(1)}%)
+                                        {entry.name} ({(entry.percentage || 0).toFixed(1)}%)
                                     </span>
                                 </div>
                             ))}
@@ -433,14 +437,14 @@ export default function EconomyPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center justify-between mb-4">
-                            <div className="text-3xl font-bold text-gray-900">{data.summary.conversionRate.toFixed(1)}%</div>
-                            <Badge variant="secondary" className={data.trends.payingUsersChange >= 0 ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"}>
-                                {data.trends.payingUsersChange >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                                {data.trends.payingUsersChange >= 0 ? "+" : ""}{data.trends.payingUsersChange.toFixed(1)}%
+                            <div className="text-3xl font-bold text-gray-900">{(data?.summary?.conversionRate || 0).toFixed(1)}%</div>
+                            <Badge variant="secondary" className={(data?.trends?.payingUsersChange || 0) >= 0 ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"}>
+                                {(data?.trends?.payingUsersChange || 0) >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                                {(data?.trends?.payingUsersChange || 0) >= 0 ? "+" : ""}{(data?.trends?.payingUsersChange || 0).toFixed(1)}%
                             </Badge>
                         </div>
                         <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={data.charts.conversionRateTrend}>
+                            <BarChart data={data?.charts?.conversionRateTrend || []}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="month" />
                                 <YAxis />
@@ -459,14 +463,14 @@ export default function EconomyPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center justify-between mb-4">
-                            <div className="text-3xl font-bold text-gray-900">{data.summary.burnRatio.toFixed(1)}%</div>
-                            <Badge variant="secondary" className={data.trends.coinsBurnedChange >= 0 ? "text-red-600 bg-red-50" : "text-green-600 bg-green-50"}>
-                                {data.trends.coinsBurnedChange >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-                                {data.trends.coinsBurnedChange >= 0 ? "+" : ""}{data.trends.coinsBurnedChange.toFixed(1)}%
+                            <div className="text-3xl font-bold text-gray-900">{(data?.summary?.burnRatio || 0).toFixed(1)}%</div>
+                            <Badge variant="secondary" className={(data?.trends?.coinsBurnedChange || 0) >= 0 ? "text-red-600 bg-red-50" : "text-green-600 bg-green-50"}>
+                                {(data?.trends?.coinsBurnedChange || 0) >= 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
+                                {(data?.trends?.coinsBurnedChange || 0) >= 0 ? "+" : ""}{(data?.trends?.coinsBurnedChange || 0).toFixed(1)}%
                             </Badge>
                         </div>
                         <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={data.charts.burnRatioTrend}>
+                            <BarChart data={data?.charts?.burnRatioTrend || []}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="month" />
                                 <YAxis />
@@ -528,7 +532,7 @@ export default function EconomyPage() {
                             />
                         </div>
                         <div className="text-sm text-gray-600">
-                            {getSortedAndFilteredUsers().length} of {data.topUsers?.length || 0} users
+                            {getSortedAndFilteredUsers().length} of {data?.topUsers?.length || 0} users
                         </div>
                     </div>
 

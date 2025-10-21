@@ -100,7 +100,7 @@ export default function AdminDashboardPage() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">{(stats?.totalUsers || 0).toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
                             Registered users
                         </p>
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
                         <UserCheck className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.activePlayers.toLocaleString()}</div>
+                        <div className="text-2xl font-bold">{(stats?.activePlayers || 0).toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">
                             Active in last 30 days
                         </p>
@@ -126,9 +126,9 @@ export default function AdminDashboardPage() {
                         <Trophy className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.tournaments}</div>
+                        <div className="text-2xl font-bold">{stats?.tournaments || 0}</div>
                         <p className="text-xs text-muted-foreground">
-                            {stats.activeTournaments} active tournaments
+                            {stats?.activeTournaments || 0} active tournaments
                         </p>
                     </CardContent>
                 </Card>
@@ -139,9 +139,9 @@ export default function AdminDashboardPage() {
                         <Gamepad2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.liveMatches}</div>
+                        <div className="text-2xl font-bold">{stats?.liveMatches || 0}</div>
                         <p className="text-xs text-muted-foreground">
-                            {stats.upcomingMatches} matches starting soon
+                            {stats?.upcomingMatches || 0} matches starting soon
                         </p>
                     </CardContent>
                 </Card>
@@ -152,7 +152,7 @@ export default function AdminDashboardPage() {
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+                        <div className="text-2xl font-bold">{formatCurrency(stats?.totalRevenue || 0)}</div>
                         <p className="text-xs text-muted-foreground">
                             Total from purchases
                         </p>
@@ -165,7 +165,7 @@ export default function AdminDashboardPage() {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.activeSessions}</div>
+                        <div className="text-2xl font-bold">{stats?.activeSessions || 0}</div>
                         <p className="text-xs text-muted-foreground">
                             Active in last hour
                         </p>
@@ -180,7 +180,7 @@ export default function AdminDashboardPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {stats.recentActivity.length > 0 ? (
+                        {stats?.recentActivity?.length > 0 ? (
                             stats.recentActivity.map((activity) => (
                                 <div key={activity.id} className="flex items-center space-x-4">
                                     <div className={`w-2 h-2 rounded-full ${activity.type === 'prediction' ? 'bg-green-500' :
