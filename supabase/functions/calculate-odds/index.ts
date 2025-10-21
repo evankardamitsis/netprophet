@@ -558,61 +558,71 @@ serve(async (req) => {
       );
     }
 
+    // OPTIMIZATION: Replace N+1 pattern with single batch query
+    const { data: matches, error: matchesError } = await supabaseClient
+      .from("matches")
+      .select(
+        `
+        id,
+        tournaments!inner (
+          surface
+        ),
+        player_a:players!matches_player_a_id_fkey (
+          id,
+          first_name,
+          last_name,
+          ntrp_rating,
+          surface_preference,
+          wins,
+          losses,
+          last5,
+          current_streak,
+          streak_type,
+          age,
+          hand,
+          notes
+        ),
+        player_b:players!matches_player_b_id_fkey (
+          id,
+          first_name,
+          last_name,
+          ntrp_rating,
+          surface_preference,
+          wins,
+          losses,
+          last5,
+          current_streak,
+          streak_type,
+          age,
+          hand,
+          notes
+        )
+      `
+      )
+      .in("id", matchIds);
+
+    if (matchesError) {
+      return new Response(
+        JSON.stringify({
+          error: "Failed to fetch matches",
+          details: matchesError.message,
+        }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     const results: any[] = [];
 
-    for (const matchId of matchIds) {
+    // Process all matches in batch
+    for (const match of matches || []) {
       try {
-        // Get match data with player and tournament information
-        const { data: match, error: matchError } = await supabaseClient
-          .from("matches")
-          .select(
-            `
-            id,
-            tournaments!inner (
-              surface
-            ),
-            player_a:players!matches_player_a_id_fkey (
-              id,
-              first_name,
-              last_name,
-              ntrp_rating,
-              surface_preference,
-              wins,
-              losses,
-              last5,
-              current_streak,
-              streak_type,
-              age,
-              hand,
-              notes
-            ),
-            player_b:players!matches_player_b_id_fkey (
-              id,
-              first_name,
-              last_name,
-              ntrp_rating,
-              surface_preference,
-              wins,
-              losses,
-              last5,
-              current_streak,
-              streak_type,
-              age,
-              hand,
-              notes
-            )
-          `
-          )
-          .eq("id", matchId)
-          .single();
-
-        if (matchError || !match) {
-          results.push({ matchId, error: "Match not found" });
+        if (!match) {
+          results.push({ matchId: match.id, error: "Match not found" });
           continue;
         }
 
         if (!match.player_a || !match.player_b || !match.tournaments) {
-          results.push({ matchId, error: "Incomplete match data" });
+          results.push({ matchId: match.id, error: "Incomplete match data" });
           continue;
         }
 
@@ -712,13 +722,16 @@ serve(async (req) => {
             odds_a: odds_a,
             odds_b: odds_b,
           })
-          .eq("id", matchId);
+          .eq("id", match.id);
 
         if (updateError) {
-          results.push({ matchId, error: "Failed to update match odds" });
+          results.push({
+            matchId: match.id,
+            error: "Failed to update match odds",
+          });
         } else {
           results.push({
-            matchId,
+            matchId: match.id,
             success: true,
             odds: {
               player_a: oddsResult.player1Odds,
@@ -728,7 +741,7 @@ serve(async (req) => {
           });
         }
       } catch (error) {
-        results.push({ matchId, error: error.message });
+        results.push({ matchId: match.id, error: error.message });
       }
     }
 

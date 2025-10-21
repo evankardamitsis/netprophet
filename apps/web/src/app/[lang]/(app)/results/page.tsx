@@ -95,67 +95,94 @@ export default function ResultsPage() {
             const tournamentResults: TournamentResults[] = [];
             const totals: Record<string, number> = {};
 
-            // Fetch paginated results for each tournament
+            // OPTIMIZATION: Add timeout and limit to prevent hanging queries
+            const queryTimeout = 5000; // 5 second timeout per tournament
+
+            // Fetch paginated results for each tournament (with timeout protection)
             for (const [tournamentKey, tournamentInfo] of uniqueTournaments) {
-                // Get total count for this tournament using tournament_id
-                const { count, error: countError } = await supabase
-                    .from('matches')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('status', 'finished')
-                    .eq('tournament_id', tournamentInfo.id);
+                let tournamentMatches: any[] = [];
 
-                if (countError) {
-                    console.error(`Error getting count for ${tournamentInfo.name}:`, countError);
-                    continue;
-                }
+                try {
+                    // Get total count for this tournament using tournament_id (with timeout)
+                    const countPromise = supabase
+                        .from('matches')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('status', 'finished')
+                        .eq('tournament_id', tournamentInfo.id);
 
-                totals[tournamentInfo.name] = count || 0;
-
-                // Get first page of results for this tournament
-                const { data: tournamentMatches, error: matchesError } = await supabase
-                    .from('matches')
-                    .select(`
-                        id,
-                        status,
-                        start_time,
-                        updated_at,
-                        player_a_id,
-                        player_b_id,
-                        winner_id,
-                        tournaments(name),
-                        tournament_categories(name),
-                        player_a:players!matches_player_a_id_fkey(id, first_name, last_name, ntrp_rating),
-                        player_b:players!matches_player_b_id_fkey(id, first_name, last_name, ntrp_rating),
-                        winner:players!matches_winner_id_fkey(id, first_name, last_name),
-                        match_results(
-                            match_result,
-                            set1_score,
-                            set2_score,
-                            set3_score,
-                            set4_score,
-                            set5_score,
-                            set1_tiebreak_score,
-                            set2_tiebreak_score,
-                            set3_tiebreak_score,
-                            set4_tiebreak_score,
-                            set5_tiebreak_score,
-                            super_tiebreak_score,
-                            winner_id,
-                            created_at
+                    const { count, error: countError } = await Promise.race([
+                        countPromise,
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Query timeout')), queryTimeout)
                         )
-                    `)
-                    .eq('status', 'finished')
-                    .eq('tournament_id', tournamentInfo.id)
-                    .order('updated_at', { ascending: false })
-                    .range(0, resultsPerPage - 1)
-                if (matchesError) {
-                    console.error(`Error fetching matches for ${tournamentInfo.name}:`, matchesError);
+                    ]) as any;
+
+                    if (countError) {
+                        console.error(`Error getting count for ${tournamentInfo.name}:`, countError);
+                        continue;
+                    }
+
+                    totals[tournamentInfo.name] = count || 0;
+
+                    // Get first page of results for this tournament (with timeout)
+                    const matchesPromise = supabase
+                        .from('matches')
+                        .select(`
+                            id,
+                            status,
+                            start_time,
+                            updated_at,
+                            player_a_id,
+                            player_b_id,
+                            winner_id,
+                            tournaments(name),
+                            tournament_categories(name),
+                            player_a:players!matches_player_a_id_fkey(id, first_name, last_name, ntrp_rating),
+                            player_b:players!matches_player_b_id_fkey(id, first_name, last_name, ntrp_rating),
+                            winner:players!matches_winner_id_fkey(id, first_name, last_name),
+                            match_results(
+                                match_result,
+                                set1_score,
+                                set2_score,
+                                set3_score,
+                                set4_score,
+                                set5_score,
+                                set1_tiebreak_score,
+                                set2_tiebreak_score,
+                                set3_tiebreak_score,
+                                set4_tiebreak_score,
+                                set5_tiebreak_score,
+                                super_tiebreak_score,
+                                winner_id,
+                                created_at
+                            )
+                        `)
+                        .eq('status', 'finished')
+                        .eq('tournament_id', tournamentInfo.id)
+                        .order('updated_at', { ascending: false })
+                        .range(0, resultsPerPage - 1);
+
+                    const { data: matchesData, error: matchesError } = await Promise.race([
+                        matchesPromise,
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Query timeout')), queryTimeout)
+                        )
+                    ]) as any;
+
+                    if (matchesError) {
+                        console.error(`Error fetching matches for ${tournamentInfo.name}:`, matchesError);
+                        continue;
+                    }
+
+                    tournamentMatches = matchesData || [];
+                } catch (timeoutError) {
+                    console.error(`Timeout fetching data for ${tournamentInfo.name}:`, timeoutError);
                     continue;
                 }
 
                 // Transform matches data
                 const matches: MatchResult[] = [];
-                tournamentMatches?.forEach((match) => {
+                tournamentMatches?.forEach((match: any) => {
                     const tournament = Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments;
                     const tournamentName = tournament?.name || 'Unknown Tournament';
                     const category = Array.isArray(match.tournament_categories) ? match.tournament_categories[0] : match.tournament_categories;
