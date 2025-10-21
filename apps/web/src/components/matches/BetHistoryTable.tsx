@@ -38,19 +38,19 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
         switch (status) {
             case 'active':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-300">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border border-blue-500/30">
                         Active
                     </span>
                 );
             case 'won':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-300">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-300 border border-green-500/30">
                         Won
                     </span>
                 );
             case 'lost':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 border border-red-500/30">
                         Lost
                     </span>
                 );
@@ -90,7 +90,7 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
 
     return (
         <div className="overflow-x-auto">
-            <table className="w-full bg-slate-800 rounded-lg border border-slate-700">
+            <table className="w-full bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
                 <thead className="bg-slate-700">
                     <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-48">

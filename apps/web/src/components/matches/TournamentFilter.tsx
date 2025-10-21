@@ -52,8 +52,8 @@ export function TournamentFilter({ matches, onTournamentSelect, selectedTourname
         }
     };
 
-    if (tournaments.length <= 1) {
-        return null; // Don't show filter if there's only one tournament or no tournaments
+    if (tournaments.length === 0) {
+        return null; // Don't show filter if there are no tournaments
     }
 
     return (

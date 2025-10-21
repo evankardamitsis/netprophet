@@ -232,7 +232,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                         placeholder="Search matches by tournament, players, category..."
                         value={globalFilter}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-2xl text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                        className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-2xl text-white placeholder-gray-400 placeholder:text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                     />
                 </div>
                 <div className="flex items-center gap-2">

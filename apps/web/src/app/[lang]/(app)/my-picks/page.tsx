@@ -47,6 +47,7 @@ export default function MyPicksPage() {
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalBets, setTotalBets] = useState(0);
+    const [isActiveBetsMinimized, setIsActiveBetsMinimized] = useState(true);
     const betsPerPage = 20;
 
     // Helper function to format prediction for display
@@ -212,11 +213,6 @@ export default function MyPicksPage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
                 {/* Page Header */}
                 <div className="text-center mb-8 sm:mb-12">
-                    <div className="hidden sm:inline-block px-4 py-2 rounded-full mb-4" style={{ backgroundColor: '#BE05A1' }}>
-                        <p className="text-sm sm:text-base text-white font-bold">
-                            🎯 {dict?.myPicks?.title || 'My Predictions'}
-                        </p>
-                    </div>
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
                         {dict?.myPicks?.title || 'My Predictions'}
                     </h1>
@@ -228,56 +224,104 @@ export default function MyPicksPage() {
                 {/* Active Bets Section */}
                 {!loadingBets && !error && (
                     <div className="mb-8 sm:mb-12">
-                        <h2 className="text-xl sm:text-2xl font-black text-white mb-6 drop-shadow-lg">
-                            {dict?.myPicks?.activeBets || 'Active Bets'}
-                        </h2>
+                        <div className="flex items-center gap-3 mb-6">
+                            <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-lg">
+                                {dict?.myPicks?.activeBets || 'Active Bets'}
+                            </h2>
+                            {(() => {
+                                const activeBets = bets.filter(bet => bet.status === 'active');
+                                return activeBets.length > 0 && (
+                                    <button
+                                        onClick={() => setIsActiveBetsMinimized(!isActiveBetsMinimized)}
+                                        className="text-white hover:text-purple-300 transition-colors transform hover:scale-110"
+                                        aria-label={isActiveBetsMinimized ? 'Expand active bets' : 'Collapse active bets'}
+                                    >
+                                        <span className="text-lg transition-transform duration-200">
+                                            {isActiveBetsMinimized ? '▼' : '▲'}
+                                        </span>
+                                    </button>
+                                );
+                            })()}
+                        </div>
                         {(() => {
                             const activeBets = bets.filter(bet => bet.status === 'active');
                             return activeBets.length > 0 ? (
                                 <div className="relative group">
                                     <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-3xl opacity-40 group-hover:opacity-60 blur transition"></div>
                                     <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl border-0 shadow-2xl p-6">
-                                        <div className="space-y-3">
+                                        <div className="space-y-2">
                                             {activeBets.map((bet) => (
                                                 <div key={bet.id} className="relative group/item">
                                                     <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-30 group-hover/item:opacity-50 blur transition"></div>
-                                                    <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl p-4 border border-purple-500/30 hover:border-purple-400/50 transition-all">
-                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                                            <div className="flex-1 min-w-0">
-                                                                <h3 className="font-black text-white text-base sm:text-lg mb-2">
-                                                                    <span className="md:hidden">{bet.matchTitleShort}</span>
-                                                                    <span className="hidden md:inline truncate">{bet.matchTitle}</span>
-                                                                </h3>
-                                                                <p className="text-purple-300 text-xs mb-2">
-                                                                    {new Date(bet.created_at).toLocaleDateString('en-GB', {
-                                                                        day: 'numeric',
-                                                                        month: 'short',
-                                                                        year: 'numeric'
-                                                                    })}
-                                                                </p>
-                                                                <p className="text-purple-200 text-xs sm:text-sm">
-                                                                    <span className="font-bold text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
-                                                                </p>
-                                                            </div>
-                                                            <div className="flex flex-row sm:flex-col sm:text-right gap-3 sm:gap-2 flex-shrink-0">
-                                                                <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-500/30">
-                                                                    <div className="text-green-400 font-black text-sm flex items-center gap-1">
-                                                                        {bet.betAmount} <CoinIcon size={14} />
+                                                    <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl border border-purple-500/30 hover:border-purple-400/50 transition-all">
+                                                        {isActiveBetsMinimized ? (
+                                                            // Compact view - single row
+                                                            <div className="p-3">
+                                                                <div className="flex items-center justify-between gap-4">
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h3 className="font-black text-white text-sm sm:text-base truncate">
+                                                                            <span className="md:hidden">{bet.matchTitleShort}</span>
+                                                                            <span className="hidden md:inline">{bet.matchTitle}</span>
+                                                                        </h3>
+                                                                        <p className="text-purple-300 text-xs truncate">
+                                                                            {formatPrediction(bet.prediction)}
+                                                                        </p>
                                                                     </div>
-                                                                    <div className="text-purple-300 text-xs">
-                                                                        {bet.multiplier}x
-                                                                    </div>
-                                                                </div>
-                                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
-                                                                    <div className="text-purple-300 text-xs font-bold mb-1">
-                                                                        {dict?.myPicks?.potential || 'Potential'}
-                                                                    </div>
-                                                                    <div className="text-green-400 font-black text-sm flex items-center gap-1">
-                                                                        {bet.potentialWinnings} <CoinIcon size={14} />
+                                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                                        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-green-500/30">
+                                                                            <div className="text-green-400 font-black text-xs flex items-center gap-1">
+                                                                                {bet.betAmount} <CoinIcon size={12} />
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-purple-500/30">
+                                                                            <div className="text-green-400 font-black text-xs flex items-center gap-1">
+                                                                                {bet.potentialWinnings} <CoinIcon size={12} />
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        ) : (
+                                                            // Full view - detailed cards
+                                                            <div className="p-4">
+                                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h3 className="font-black text-white text-base sm:text-lg mb-2">
+                                                                            <span className="md:hidden">{bet.matchTitleShort}</span>
+                                                                            <span className="hidden md:inline truncate">{bet.matchTitle}</span>
+                                                                        </h3>
+                                                                        <p className="text-purple-300 text-xs mb-2">
+                                                                            {new Date(bet.created_at).toLocaleDateString('en-GB', {
+                                                                                day: 'numeric',
+                                                                                month: 'short',
+                                                                                year: 'numeric'
+                                                                            })}
+                                                                        </p>
+                                                                        <p className="text-purple-200 text-xs sm:text-sm">
+                                                                            <span className="font-bold text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="flex flex-row sm:flex-col sm:text-right gap-3 sm:gap-2 flex-shrink-0">
+                                                                        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-500/30">
+                                                                            <div className="text-green-400 font-black text-sm flex items-center gap-1">
+                                                                                {bet.betAmount} <CoinIcon size={14} />
+                                                                            </div>
+                                                                            <div className="text-purple-300 text-xs">
+                                                                                {bet.multiplier}x
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
+                                                                            <div className="text-purple-300 text-xs font-bold mb-1">
+                                                                                {dict?.myPicks?.potential || 'Potential'}
+                                                                            </div>
+                                                                            <div className="text-green-400 font-black text-sm flex items-center gap-1">
+                                                                                {bet.potentialWinnings} <CoinIcon size={14} />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
