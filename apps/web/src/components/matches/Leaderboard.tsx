@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
-import { LeaderboardService, LeaderboardEntry, withCache } from '@netprophet/lib';
+import { LeaderboardService, LeaderboardEntry } from '@netprophet/lib';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gradients, shadows, borders, transitions, animations, typography, spacing, cx } from '@/styles/design-system';
-import { WebCacheKeys, WebCacheTTL } from '@/utils/optimizedQueries';
 
 interface LeaderboardProps {
     className?: string;
@@ -33,20 +32,12 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
             setError(null);
 
             try {
-                // Use Promise.allSettled with caching for better performance
+                // Use Promise.allSettled for better performance
                 const [dataResult, summaryResult] = await Promise.allSettled([
-                    withCache(
-                        timeFrame === 'weekly' ? WebCacheKeys.leaderboardWeekly() : WebCacheKeys.leaderboardAllTime(),
-                        () => timeFrame === 'weekly'
-                            ? LeaderboardService.getWeeklyLeaderboard() // Show all players (no limit)
-                            : LeaderboardService.getAllTimeLeaderboard(), // Show all players (no limit)
-                        WebCacheTTL.MEDIUM
-                    ),
-                    withCache(
-                        `web:leaderboard:${timeFrame}:summary`,
-                        () => LeaderboardService.getLeaderboardSummary(timeFrame),
-                        WebCacheTTL.MEDIUM
-                    )
+                    timeFrame === 'weekly'
+                        ? LeaderboardService.getWeeklyLeaderboard() // Show all players (no limit)
+                        : LeaderboardService.getAllTimeLeaderboard(), // Show all players (no limit)
+                    LeaderboardService.getLeaderboardSummary(timeFrame)
                 ]);
 
                 // Handle data result

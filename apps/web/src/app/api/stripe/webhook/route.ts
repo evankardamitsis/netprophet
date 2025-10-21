@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
-import { applyRateLimit, RATE_LIMITS } from "@/lib/apiRateLimit";
+
+// Using Supabase's built-in rate limiting instead of custom implementation
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil",
@@ -19,9 +20,7 @@ const supabase =
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
-  // 🔒 Rate limit: 60 webhook calls per minute per IP
-  const rateLimitResponse = applyRateLimit(request, RATE_LIMITS.api);
-  if (rateLimitResponse) return rateLimitResponse;
+  // Using Supabase's built-in rate limiting - no custom rate limiting needed
 
   const body = await request.text();
   const headersList = await headers();

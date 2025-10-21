@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import { applyRateLimit, RATE_LIMITS } from "@/lib/apiRateLimit";
+import { request } from "http";
+// Using Supabase's built-in rate limiting instead of custom implementation
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-07-30.basil",
@@ -16,9 +17,7 @@ const supabase =
     : null;
 
 export async function POST(request: NextRequest) {
-  // 🔒 Rate limit: 10 payment attempts per hour per IP
-  const rateLimitResponse = applyRateLimit(request, RATE_LIMITS.payment);
-  if (rateLimitResponse) return rateLimitResponse;
+  // Using Supabase's built-in rate limiting - no custom rate limiting needed
 
   try {
     const { packId, userId } = await request.json();

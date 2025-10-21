@@ -12,7 +12,7 @@ import { ProfileCreationReview } from "./ProfileCreationReview";
 import { PlayerMatch } from "./types";
 import { findMatchingPlayers, getUserName } from "@/lib/playerLookup";
 import { debugPlayerLookup } from "@/lib/debugPlayerLookup";
-import { withCache, CacheKeys, CacheTTL } from "@netprophet/lib";
+// Removed cache imports - using direct function calls
 
 interface ProfileClaimFlowNewProps {
     userId: string;
@@ -49,33 +49,21 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
             setCurrentStepNumber(1);
 
             try {
-                // Get profile data with caching
-                const cacheKey = CacheKeys.userProfile(userId);
-                const profile = await withCache(
-                    cacheKey,
-                    async () => {
-                        const { data, error } = await supabase
-                            .from("profiles")
-                            .select("profile_claim_status, claimed_player_id")
-                            .eq("id", userId)
-                            .single();
+                // Get profile data - no caching
+                const { data: profile, error } = await supabase
+                    .from("profiles")
+                    .select("profile_claim_status, claimed_player_id")
+                    .eq("id", userId)
+                    .single();
 
-                        if (error) throw error;
-                        return data;
-                    },
-                    CacheTTL.SHORT
-                );
+                if (error) throw error;
 
                 // Profile data is now cached and error-free
 
                 // If already completed, show success
                 if (profile.profile_claim_status === "claimed") {
                     console.log("✅ User already has claimed player - showing success");
-                    const { firstName, lastName } = await withCache(
-                        `user-name-${userId}`,
-                        () => getUserName(userId),
-                        CacheTTL.SHORT
-                    );
+                    const { firstName, lastName } = await getUserName(userId);
                     setPlayerMatch({
                         id: profile.claimed_player_id || '',
                         first_name: firstName || '',
@@ -101,12 +89,8 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                     return;
                 }
 
-                // Get user's name from profile or user_metadata (cached)
-                const { firstName, lastName } = await withCache(
-                    `user-name-${userId}`,
-                    () => getUserName(userId),
-                    CacheTTL.SHORT
-                );
+                // Get user's name from profile or user_metadata
+                const { firstName, lastName } = await getUserName(userId);
                 console.log("🔍 Debug - getUserName result:", { firstName, lastName, userId });
 
                 // Always perform lookup, even if user doesn't have a name yet
@@ -164,11 +148,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
                             // Normal mode: perform actual lookup (cached)
                             console.log("🔍 Performing debug lookup for:", firstName, lastName);
                             await debugPlayerLookup(firstName, lastName);
-                            lookupResult = await withCache(
-                                `player-lookup-${firstName}-${lastName}`,
-                                () => findMatchingPlayers(firstName, lastName),
-                                CacheTTL.MEDIUM
-                            );
+                            lookupResult = await findMatchingPlayers(firstName, lastName);
                         }
 
                         // Show results (match found or not found)
@@ -244,11 +224,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onRefresh, for
 
             // Search for matching players using helper (checks both name orders) - cached
             try {
-                const lookupResult = await withCache(
-                    `player-lookup-${data.firstName}-${data.lastName}`,
-                    () => findMatchingPlayers(data.firstName, data.lastName),
-                    CacheTTL.MEDIUM
-                );
+                const lookupResult = await findMatchingPlayers(data.firstName, data.lastName);
 
                 setCameFromForm(true);
 

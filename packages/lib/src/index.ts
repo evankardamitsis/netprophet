@@ -20,7 +20,6 @@ export type { LeaderboardEntry, UserStats } from "./supabase/leaderboard";
 
 // Utilities
 export * from "./utils/validation";
-export * from "./utils/cache";
 
 // Odds Calculation
 export * from "./odds/calculateOdds";

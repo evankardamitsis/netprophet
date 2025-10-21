@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase, withCache } from '@netprophet/lib';
-import { fetchOptimizedTournamentResults, fetchTournamentPage, transformMatchData, WebCacheKeys, WebCacheTTL } from '@/utils/optimizedQueries';
+import { supabase } from '@netprophet/lib';
+import { fetchOptimizedTournamentResults, fetchTournamentPage, transformMatchData } from '@/utils/optimizedQueries';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { ResultsTournamentFilter } from '@/components/matches/ResultsTournamentFilter';
 import { useDictionary } from '@/context/DictionaryContext';
@@ -65,15 +65,8 @@ export default function ResultsPage() {
             setLoadingResults(true);
             setError(null);
 
-            // Use optimized batch query with caching
-            const cacheKey = WebCacheKeys.tournamentResults();
-            const { tournaments, totals } = await withCache(
-                cacheKey,
-                async () => {
-                    return await fetchOptimizedTournamentResults();
-                },
-                WebCacheTTL.MEDIUM
-            );
+            // Use optimized batch query - no caching
+            const { tournaments, totals } = await fetchOptimizedTournamentResults();
 
             // Transform data to expected format
             const tournamentResults: TournamentResults[] = tournaments.map(tournament => {

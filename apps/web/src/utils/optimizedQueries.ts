@@ -250,27 +250,7 @@ export async function fetchOptimizedMatches() {
   }
 }
 
-/**
- * Cache key generators for web app
- */
-export const WebCacheKeys = {
-  // Tournament results
-  tournamentResults: () => "web:tournament:results",
-
-  // Matches data
-  syncedMatches: () => "web:matches:synced",
-
-  // Leaderboard data
-  leaderboardWeekly: () => "web:leaderboard:weekly",
-  leaderboardAllTime: () => "web:leaderboard:alltime",
-
-  // User data
-  userPowerUps: (userId: string) => `web:user:${userId}:powerups`,
-  userProfile: (userId: string) => `web:user:${userId}:profile`,
-
-  // Power-ups and rewards
-  powerUps: () => "web:powerups:all",
-} as const;
+// Removed cache key generators - using Supabase's built-in caching instead
 
 /**
  * Transform raw match data to MatchResult format
@@ -342,12 +322,4 @@ export function transformMatchData(match: any): any {
   };
 }
 
-/**
- * Cache TTL constants for web app (in milliseconds)
- */
-export const WebCacheTTL = {
-  SHORT: 2 * 60 * 1000, // 2 minutes
-  MEDIUM: 5 * 60 * 1000, // 5 minutes
-  LONG: 15 * 60 * 1000, // 15 minutes
-  VERY_LONG: 60 * 60 * 1000, // 1 hour
-} as const;
+// Removed cache TTL constants - using Supabase's built-in caching instead
