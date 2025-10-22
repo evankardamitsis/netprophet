@@ -166,7 +166,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
-                                    {dict?.sidebar?.makePrediction || 'Predict'}
+                                    {dict?.sidebar?.makePrediction || 'Βάλε Προβλέψεις'}
                                 </motion.button>
                             ) : (
                                 <span className="text-xs text-gray-500">Locked</span>
@@ -410,7 +410,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                                         whileHover={{ scale: 1.05 }}
                                                         whileTap={{ scale: 0.95 }}
                                                     >
-                                                        {dict?.sidebar?.makePrediction || 'Predict'}
+                                                        {dict?.sidebar?.makePrediction || 'Βάλε Προβλέψεις'}
                                                     </motion.button>
                                                 ) : (
                                                     <div className="w-full px-1 py-2 text-xs text-center text-gray-500 bg-slate-800/50 rounded-lg">

@@ -1,26 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileSetupModal } from "@/context/ProfileSetupModalContext";
+import { useDictionary } from "@/context/DictionaryContext";
+import { useWallet } from "@/context/WalletContext";
 import { supabase } from "@netprophet/lib";
 import { X, User, Trophy } from "lucide-react";
 
 export function ProfileClaimNotification() {
     const { user } = useAuth();
     const { setShowProfileSetup } = useProfileSetupModal();
+    const { dict } = useDictionary();
+    const { wallet } = useWallet();
     const [showNotification, setShowNotification] = useState(false);
     const [hasShownBefore, setHasShownBefore] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isReminder, setIsReminder] = useState(false);
+    const hasCheckedRef = useRef(false);
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || hasCheckedRef.current) return;
 
         const checkProfileStatus = async () => {
             try {
+                hasCheckedRef.current = true;
+
+                // Check both profile data and welcome bonus status directly from database
                 const { data: profile, error } = await supabase
                     .from("profiles")
-                    .select("first_name, last_name, profile_claim_status, claimed_player_id")
+                    .select("first_name, last_name, profile_claim_status, claimed_player_id, has_received_welcome_bonus")
                     .eq("id", user.id)
                     .single();
 
@@ -37,11 +46,22 @@ export function ProfileClaimNotification() {
                 }
 
                 // Check if user has names but hasn't claimed a player yet
-                if (profile.first_name && profile.last_name && !profile.claimed_player_id) {
+                // AND user has already claimed their welcome bonus (check both wallet and database)
+                const hasReceivedWelcomeBonus = wallet.hasReceivedWelcomeBonus || profile.has_received_welcome_bonus;
+
+                if (profile.first_name && profile.last_name && !profile.claimed_player_id && hasReceivedWelcomeBonus) {
                     // Check if we've shown this notification before
                     const notificationShown = localStorage.getItem(`profile-claim-notification-${user.id}`);
+                    const processStarted = localStorage.getItem(`profile-claim-started-${user.id}`);
+                    const processStartedTime = processStarted ? parseInt(processStarted) : null;
+                    const now = Date.now();
 
-                    if (!notificationShown) {
+                    // If user started the process but didn't complete it, show reminder after 1 hour
+                    if (processStartedTime && (now - processStartedTime) > 60 * 60 * 1000) { // 1 hour
+                        setIsReminder(true);
+                        setShowNotification(true);
+                    } else if (!notificationShown && !processStartedTime) {
+                        setIsReminder(false);
                         setShowNotification(true);
                     }
                 }
@@ -53,21 +73,23 @@ export function ProfileClaimNotification() {
             }
         };
 
-        checkProfileStatus();
-    }, [user, setShowProfileSetup]);
+        // Use a shorter delay and only run once per user change
+        const timer = setTimeout(checkProfileStatus, 500);
+        return () => clearTimeout(timer);
+    }, [user, wallet.hasReceivedWelcomeBonus]); // Include all dependencies
 
     const handleStartProfileClaim = () => {
         setShowProfileSetup(true);
         setShowNotification(false);
-        // Mark as shown for this user
+        // Track that user started the process
         if (user) {
-            localStorage.setItem(`profile-claim-notification-${user.id}`, 'true');
+            localStorage.setItem(`profile-claim-started-${user.id}`, Date.now().toString());
         }
     };
 
     const handleDismiss = () => {
         setShowNotification(false);
-        // Mark as shown for this user
+        // Mark as dismissed for this user (permanent dismissal)
         if (user) {
             localStorage.setItem(`profile-claim-notification-${user.id}`, 'true');
         }
@@ -88,23 +110,29 @@ export function ProfileClaimNotification() {
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-sm mb-1">
-                            Claim Your Player Profile
+                            {isReminder
+                                ? (dict?.profileClaimNotification?.reminderTitle || "Complete Your Athlete Profile")
+                                : (dict?.profileClaimNotification?.title || "Claim Your Athlete Profile")
+                            }
                         </h3>
                         <p className="text-xs text-blue-100 mb-3">
-                            Connect your account with your tennis player profile to compete in matches and track your career!
+                            {isReminder
+                                ? (dict?.profileClaimNotification?.reminderMessage || "You started setting up your athlete profile but didn't finish. Complete it now to compete in matches!")
+                                : (dict?.profileClaimNotification?.message || "Connect your account with your athlete profile to compete in matches and track your career!")
+                            }
                         </p>
                         <div className="flex gap-2">
                             <button
                                 onClick={handleStartProfileClaim}
                                 className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-xs font-medium transition-colors"
                             >
-                                Get Started
+                                {dict?.profileClaimNotification?.getStarted || "Get Started"}
                             </button>
                             <button
                                 onClick={handleDismiss}
                                 className="px-3 py-1.5 text-blue-100 hover:text-white text-xs transition-colors"
                             >
-                                Maybe Later
+                                {dict?.profileClaimNotification?.maybeLater || "Maybe Later"}
                             </button>
                         </div>
                     </div>

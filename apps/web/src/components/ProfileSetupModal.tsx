@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileClaim } from "@/hooks/useProfileClaim";
 import { ProfileClaimFlowNew } from "@/components/profile-claim-flow/ProfileClaimFlowNew";
@@ -18,6 +18,19 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'n
     const { user } = useAuth();
     const { needsProfileSetup, loading, refreshStatus } = useProfileClaim(user?.id || null);
     const { dict } = useDictionary();
+    const flowRef = useRef<any>(null);
+
+    // Trigger lookup when modal opens
+    useEffect(() => {
+        if (isOpen && flowRef.current) {
+            // Small delay to ensure component is mounted
+            setTimeout(() => {
+                if (flowRef.current?.triggerLookup) {
+                    flowRef.current.triggerLookup();
+                }
+            }, 100);
+        }
+    }, [isOpen]);
 
     // Prevent background scrolling when modal is open
     useEffect(() => {
@@ -50,6 +63,10 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'n
 
     const handleComplete = () => {
         onClose();
+        // Clear the "started" flag since process is completed
+        if (user) {
+            localStorage.removeItem(`profile-claim-started-${user.id}`);
+        }
         // Refresh the profile claim status
         if (refreshStatus) {
             refreshStatus();
@@ -58,6 +75,10 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'n
 
     const handleSkip = () => {
         onClose();
+        // Clear the "started" flag since process is completed (skipped)
+        if (user) {
+            localStorage.removeItem(`profile-claim-started-${user.id}`);
+        }
         // Refresh the profile claim status
         if (refreshStatus) {
             refreshStatus();
@@ -101,6 +122,7 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'n
                 {/* Flow Content */}
                 <div className="flex-1 overflow-y-auto">
                     <ProfileClaimFlowNew
+                        ref={flowRef}
                         userId={user?.id || ""}
                         onComplete={handleComplete}
                         onSkip={handleSkip}

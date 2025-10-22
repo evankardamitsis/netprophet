@@ -609,6 +609,14 @@
     "welcomeBonusTitle": "Welcome Bonus Available! 🎉",
     "welcomeBonusMessage": "Claim your {amount} coin welcome bonus{pass}!"
   },
+  "profileClaimNotification": {
+    "title": "Claim Your Player Profile",
+    "message": "Connect your account with your tennis player profile to compete in matches and track your career!",
+    "getStarted": "Get Started",
+    "maybeLater": "Maybe Later",
+    "reminderTitle": "Complete Your Athlete Profile",
+    "reminderMessage": "You started setting up your athlete profile but didn't finish. Complete it now to compete in matches!"
+  },
   "toast": {
     "placingPrediction": "Placing your prediction...",
     "predictionPlaced": "🎯 Prediction placed successfully! New balance: {balance} 🌕",

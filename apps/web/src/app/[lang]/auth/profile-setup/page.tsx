@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfileClaim } from "@/hooks/useProfileClaim";
@@ -13,6 +13,19 @@ export default function ProfileSetupPage() {
     const router = useRouter();
     const { user, loading: authLoading } = useAuth();
     const { needsProfileSetup, loading: profileLoading, error, refreshStatus } = useProfileClaim(user?.id || null);
+    const flowRef = useRef<any>(null);
+
+    // Trigger lookup when component mounts
+    useEffect(() => {
+        if (user && flowRef.current) {
+            // Small delay to ensure component is mounted
+            setTimeout(() => {
+                if (flowRef.current?.triggerLookup) {
+                    flowRef.current.triggerLookup();
+                }
+            }, 100);
+        }
+    }, [user]);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -27,12 +40,20 @@ export default function ProfileSetupPage() {
     }, [user, authLoading, profileLoading, needsProfileSetup, router]);
 
     const handleComplete = async () => {
+        // Clear the "started" flag since process is completed
+        if (user) {
+            localStorage.removeItem(`profile-claim-started-${user.id}`);
+        }
         // Add a small delay to allow database updates to propagate
         await new Promise(resolve => setTimeout(resolve, 1000));
         router.push("/");
     };
 
     const handleSkip = () => {
+        // Clear the "started" flag since process is completed (skipped)
+        if (user) {
+            localStorage.removeItem(`profile-claim-started-${user.id}`);
+        }
         router.push("/");
     };
 
@@ -102,6 +123,7 @@ export default function ProfileSetupPage() {
                 </div>
 
                 <ProfileClaimFlowNew
+                    ref={flowRef}
                     userId={user.id}
                     onComplete={handleComplete}
                     onSkip={handleSkip}

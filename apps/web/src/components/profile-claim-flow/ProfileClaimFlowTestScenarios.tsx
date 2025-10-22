@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@netprophet/lib";
 import { ProfileClaimFlowNew } from "./ProfileClaimFlowNew";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TestScenario {
     id: string;
@@ -73,50 +74,70 @@ const TEST_SCENARIOS: TestScenario[] = [
 ];
 
 export function ProfileClaimFlowTestScenarios() {
+    const { user, loading: authLoading } = useAuth();
     const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
     const [testUserId, setTestUserId] = useState<string | null>(null);
     const [showFlow, setShowFlow] = useState(false);
     const [testMode, setTestMode] = useState<'normal' | 'match' | 'multiple'>('normal');
     const [forceRefresh, setForceRefresh] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [adminCheckLoading, setAdminCheckLoading] = useState(true);
+
+    // Check if user is admin
+    const checkAdminStatus = useCallback(async () => {
+        if (!user?.id) {
+            setIsAdmin(false);
+            setAdminCheckLoading(false);
+            return;
+        }
+
+        try {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .single();
+
+            setIsAdmin(profile?.is_admin || false);
+        } catch (err) {
+            console.error('Failed to check admin status:', err);
+            setIsAdmin(false);
+        } finally {
+            setAdminCheckLoading(false);
+        }
+    }, [user?.id]);
+
+    useEffect(() => {
+        checkAdminStatus();
+    }, [checkAdminStatus]);
 
     const createTestUser = async (scenario: TestScenario) => {
         setLoading(true);
         try {
-            // Create auth user
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: scenario.userData.email,
-                password: "testpassword123",
-                options: {
-                    data: {
-                        first_name: scenario.userData.firstName,
-                        last_name: scenario.userData.lastName,
-                    }
-                }
+            // Use API endpoint to create test user with admin privileges
+            const response = await fetch('/api/admin/create-test-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: scenario.userData.email,
+                    password: "testpassword123",
+                    firstName: scenario.userData.firstName,
+                    lastName: scenario.userData.lastName,
+                    profileClaimStatus: scenario.userData.profileClaimStatus
+                })
             });
 
-            if (authError) throw authError;
+            const result = await response.json();
 
-            const userId = authData.user?.id;
-            if (!userId) throw new Error("Failed to create user");
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to create test user');
+            }
 
-            // Create profile
-            const { error: profileError } = await supabase
-                .from("profiles")
-                .insert({
-                    id: userId,
-                    email: scenario.userData.email,
-                    first_name: scenario.userData.firstName || null,
-                    last_name: scenario.userData.lastName || null,
-                    profile_claim_status: scenario.userData.profileClaimStatus || null,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-
-            if (profileError) throw profileError;
-
-            setTestUserId(userId);
-            alert(`Test user created successfully! User ID: ${userId}`);
+            setTestUserId(result.userId);
+            alert(`Test user created successfully! User ID: ${result.userId}\n\n✅ Email confirmation bypassed!\n\nTo test the notification:\n1. Sign out of your current account\n2. Sign in with: ${scenario.userData.email} / testpassword123\n3. Look for the notification in the top-right corner!`);
         } catch (error) {
             console.error("Error creating test user:", error);
             alert(`Error creating test user: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -154,6 +175,50 @@ export function ProfileClaimFlowTestScenarios() {
     };
 
     const selectedScenarioData = TEST_SCENARIOS.find(s => s.id === selectedScenario);
+
+    // Show loading state while checking admin status
+    if (authLoading || adminCheckLoading) {
+        return (
+            <div className="p-6 max-w-4xl mx-auto bg-white">
+                <div className="flex items-center justify-center h-64">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Checking access permissions...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show access denied for non-admin users
+    if (!user || !isAdmin) {
+        return (
+            <div className="p-6 max-w-4xl mx-auto bg-white">
+                <div className="text-center">
+                    <div className="mb-6">
+                        <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
+                        <p className="text-gray-600 mb-4">
+                            This page is only accessible to administrators.
+                        </p>
+                        {!user ? (
+                            <p className="text-sm text-gray-500">
+                                Please sign in to continue.
+                            </p>
+                        ) : (
+                            <p className="text-sm text-gray-500">
+                                You don&apos;t have administrator privileges.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (showFlow && testUserId) {
         return (

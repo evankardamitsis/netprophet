@@ -59,7 +59,7 @@ export function PromotionalHero({
             time: lang === 'el' ? 'Διαθέσιμα τώρα' : 'Available Now',
             players: [],
             image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTYwNTQ0emJra3BoaWdkdDZsYXNpYWh1ZjJicmd0MG1pa3dlOWg0eiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ls9hrqiE3ezVW5u7iE/giphy.gif', // Power-ups animation
-            action: () => router.push(`/${lang}/power-ups`),
+            action: () => router.push(`/${lang}/rewards`),
             actionText: lang === 'el' ? 'Δες Power-ups' : 'View Power-ups',
             secondaryAction: null,
             secondaryActionText: ''

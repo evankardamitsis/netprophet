@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Loader2, X } from "lucide-react";
 import { supabase } from "@netprophet/lib";
 import { useDictionary } from "@/context/DictionaryContext";
@@ -26,7 +26,7 @@ interface ProfileClaimFlowNewProps {
 
 type FlowStep = "checking" | "form" | "result" | "reviewCreation" | "success";
 
-export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onClose, onRefresh, forceRefresh, testMode = 'normal' }: ProfileClaimFlowNewProps) {
+export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ userId, onComplete, onSkip, onClose, onRefresh, forceRefresh, testMode = 'normal' }, ref) => {
     const [currentStep, setCurrentStep] = useState<FlowStep>("checking");
     const [currentStepNumber, setCurrentStepNumber] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -42,77 +42,86 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onClose, onRef
     const [isClaimSuccess, setIsClaimSuccess] = useState(true); // true if claimed, false if created
     const { dict } = useDictionary();
 
-    // Automatic lookup on mount - Step 1 (optimized with caching)
+    // Initialize the flow to start with the checking step (lookup) but only when manually triggered
     useEffect(() => {
-        const performAutoLookup = async () => {
-            setLoading(true);
+        if (userId) {
             setCurrentStep("checking");
             setCurrentStepNumber(1);
+            setLoading(false);
+        }
+    }, [userId]);
 
-            try {
-                // Get profile data - no caching
-                const { data: profile, error } = await supabase
-                    .from("profiles")
-                    .select("profile_claim_status, claimed_player_id")
-                    .eq("id", userId)
-                    .single();
+    // Manual lookup function that can be called from notification or profile page
+    const performManualLookup = useCallback(async () => {
+        setLoading(true);
+        setCurrentStep("checking");
+        setCurrentStepNumber(1);
 
-                if (error) throw error;
+        try {
+            // Get profile data
+            const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("profile_claim_status, claimed_player_id")
+                .eq("id", userId)
+                .single();
 
-                // Profile data is now cached and error-free
+            if (error) throw error;
 
-                // If already completed, show success
-                if (profile.profile_claim_status === "claimed") {
-                    console.log("✅ User already has claimed player - showing success");
-                    const { firstName, lastName } = await getUserName(userId);
-                    setPlayerMatch({
-                        id: profile.claimed_player_id || '',
-                        first_name: firstName || '',
-                        last_name: lastName || '',
-                        is_hidden: false,
-                        is_active: true,
-                        claimed_by_user_id: userId,
-                        is_demo_player: false
-                    });
-                    setClaimedPlayerId(profile.claimed_player_id);
-                    setIsClaimSuccess(true);
-                    setCurrentStep("success");
-                    setCurrentStepNumber(3);
-                    setLoading(false);
-                    return;
-                }
-
-                if (profile.profile_claim_status === "creation_requested") {
-                    setIsClaimSuccess(false);
-                    setCurrentStep("success");
-                    setCurrentStepNumber(3);
-                    setLoading(false);
-                    return;
-                }
-
-                // Get user's name from profile or user_metadata (with auto-sync for Gmail users)
+            // If already completed, show success
+            if (profile.profile_claim_status === "claimed") {
+                console.log("✅ User already has claimed player - showing success");
                 const { firstName, lastName } = await getUserName(userId);
-                console.log("🔍 Debug - getUserName result:", { firstName, lastName, userId });
+                setPlayerMatch({
+                    id: profile.claimed_player_id || '',
+                    first_name: firstName || '',
+                    last_name: lastName || '',
+                    is_hidden: false,
+                    is_active: true,
+                    claimed_by_user_id: userId,
+                    is_demo_player: false
+                });
+                setClaimedPlayerId(profile.claimed_player_id);
+                setIsClaimSuccess(true);
+                setCurrentStep("success");
+                setCurrentStepNumber(3);
+                setLoading(false);
+                return;
+            }
 
-                // Always perform lookup, even if user doesn't have a name yet
-                // This ensures consistent experience for all users
-                if (firstName && lastName) {
-                    console.log("🔍 Auto lookup - User has name:", firstName, lastName);
-                    console.log("🔍 Skipping form, going directly to lookup");
+            if (profile.profile_claim_status === "creation_requested") {
+                setIsClaimSuccess(false);
+                setCurrentStep("success");
+                setCurrentStepNumber(3);
+                setLoading(false);
+                return;
+            }
 
-                    setUserData({
-                        firstName: firstName,
-                        lastName: lastName
-                    });
+            // Get user's name from profile or user_metadata
+            const { firstName, lastName } = await getUserName(userId);
 
-                    // Perform player lookup (checks both name orders)
-                    try {
-                        let lookupResult;
+            if (firstName && lastName) {
+                setUserData({ firstName, lastName });
 
-                        if (testMode === 'match') {
-                            // Test mode: simulate single match found
-                            console.log("🧪 Test Mode: Simulating single match found");
-                            const mockMatch: PlayerMatch = {
+                // Perform player lookup
+                try {
+                    let lookupResult;
+
+                    if (testMode === 'match') {
+                        // Test mode: simulate single match found
+                        const mockMatch: PlayerMatch = {
+                            id: 'test-player-1',
+                            first_name: firstName,
+                            last_name: lastName,
+                            is_hidden: false,
+                            is_active: true,
+                            claimed_by_user_id: null,
+                            is_demo_player: false
+                        };
+                        lookupResult = { matches: [mockMatch] };
+                    } else if (testMode === 'multiple') {
+                        // Test mode: simulate multiple matches found
+                        const mockMatches: PlayerMatch[] = [
+                            {
                                 id: 'test-player-1',
                                 first_name: firstName,
                                 last_name: lastName,
@@ -120,84 +129,219 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onClose, onRef
                                 is_active: true,
                                 claimed_by_user_id: null,
                                 is_demo_player: false
-                            };
-                            lookupResult = { matches: [mockMatch] };
-                        } else if (testMode === 'multiple') {
-                            // Test mode: simulate multiple matches found
-                            console.log("🧪 Test Mode: Simulating multiple matches found");
-                            const mockMatches: PlayerMatch[] = [
-                                {
-                                    id: 'test-player-1',
-                                    first_name: firstName,
-                                    last_name: lastName,
-                                    is_hidden: false,
-                                    is_active: true,
-                                    claimed_by_user_id: null,
-                                    is_demo_player: false
-                                },
-                                {
-                                    id: 'test-player-2',
-                                    first_name: firstName,
-                                    last_name: lastName + ' Jr.',
-                                    is_hidden: false,
-                                    is_active: true,
-                                    claimed_by_user_id: null,
-                                    is_demo_player: false
-                                }
-                            ];
-                            lookupResult = { matches: mockMatches };
-                        } else {
-                            // Normal mode: perform actual lookup (cached)
-                            console.log("🔍 Performing debug lookup for:", firstName, lastName);
-                            await debugPlayerLookup(firstName, lastName);
-                            lookupResult = await findMatchingPlayers(firstName, lastName);
-                        }
-
-                        // Show results (match found or not found)
-                        if (lookupResult.matches.length > 0) {
-                            setPlayerMatches(lookupResult.matches);
-                            if (lookupResult.matches.length === 1) {
-                                setPlayerMatch(lookupResult.matches[0]);
+                            },
+                            {
+                                id: 'test-player-2',
+                                first_name: firstName,
+                                last_name: lastName + ' Jr.',
+                                is_hidden: false,
+                                is_active: true,
+                                claimed_by_user_id: null,
+                                is_demo_player: false
                             }
+                        ];
+                        lookupResult = { matches: mockMatches };
+                    } else {
+                        // Normal mode: perform actual lookup
+                        lookupResult = await findMatchingPlayers(firstName, lastName);
+                    }
+
+                    if (lookupResult.matches.length > 0) {
+                        setPlayerMatches(lookupResult.matches);
+                        if (lookupResult.matches.length === 1) {
+                            setPlayerMatch(lookupResult.matches[0]);
                         } else {
                             setPlayerMatch(null);
-                            setPlayerMatches([]);
                         }
-
-                        setCurrentStep("result");
-                        setCurrentStepNumber(2);
-                        setLoading(false);
-                        console.log("🔧 Loading state reset to false after successful lookup");
-                    } catch (error) {
-                        console.error("❌ Player lookup failed:", error);
-                        // If lookup fails, ask for name again
-                        setCurrentStep("form");
-                        setCurrentStepNumber(1);
+                    } else {
+                        setPlayerMatch(null);
+                        setPlayerMatches([]);
                     }
-                } else {
-                    console.log("📝 No name available - showing form after checking step");
-                    console.log("🔍 This means getUserName returned null/empty names");
-                    // No name in profile - show form after the checking step
-                    // Add a small delay to show the checking step with explanations
-                    setTimeout(() => {
-                        setCurrentStep("form");
-                        setCurrentStepNumber(1);
-                        setLoading(false);
-                    }, 2000); // 2 second delay to show the checking step
-                    return; // Don't set loading to false here, let setTimeout handle it
+
+                    setCurrentStep("result");
+                    setCurrentStepNumber(2);
+                    setLoading(false);
+                } catch (error) {
+                    console.error("Error searching for players:", error);
+                    setError("Failed to search for matching players");
+                    setLoading(false);
                 }
-            } catch (err) {
-                console.error("Error during auto lookup:", err);
+            } else {
+                // No name in profile - show form
                 setCurrentStep("form");
                 setCurrentStepNumber(1);
                 setLoading(false);
             }
-        };
-
-        if (userId) {
-            performAutoLookup();
+        } catch (err) {
+            console.error("Error during manual lookup:", err);
+            setCurrentStep("form");
+            setCurrentStepNumber(1);
+            setLoading(false);
         }
-    }, [userId, forceRefresh, testMode]);
+    }, [userId, testMode]);
+
+    // Expose the manual lookup function to parent components via ref
+    useImperativeHandle(ref, () => ({
+        triggerLookup: performManualLookup
+    }), [performManualLookup]);
+
+    // Removed automatic lookup on mount - users must manually trigger the flow
+    // This prevents automatic player claiming and allows the notification system to work
+    // useEffect(() => {
+    const performAutoLookup = async () => {
+        setLoading(true);
+        setCurrentStep("checking");
+        setCurrentStepNumber(1);
+
+        try {
+            // Get profile data - no caching
+            const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("profile_claim_status, claimed_player_id")
+                .eq("id", userId)
+                .single();
+
+            if (error) throw error;
+
+            // Profile data is now cached and error-free
+
+            // If already completed, show success
+            if (profile.profile_claim_status === "claimed") {
+                console.log("✅ User already has claimed player - showing success");
+                const { firstName, lastName } = await getUserName(userId);
+                setPlayerMatch({
+                    id: profile.claimed_player_id || '',
+                    first_name: firstName || '',
+                    last_name: lastName || '',
+                    is_hidden: false,
+                    is_active: true,
+                    claimed_by_user_id: userId,
+                    is_demo_player: false
+                });
+                setClaimedPlayerId(profile.claimed_player_id);
+                setIsClaimSuccess(true);
+                setCurrentStep("success");
+                setCurrentStepNumber(3);
+                setLoading(false);
+                return;
+            }
+
+            if (profile.profile_claim_status === "creation_requested") {
+                setIsClaimSuccess(false);
+                setCurrentStep("success");
+                setCurrentStepNumber(3);
+                setLoading(false);
+                return;
+            }
+
+            // Get user's name from profile or user_metadata (with auto-sync for Gmail users)
+            const { firstName, lastName } = await getUserName(userId);
+            console.log("🔍 Debug - getUserName result:", { firstName, lastName, userId });
+
+            // Always perform lookup, even if user doesn't have a name yet
+            // This ensures consistent experience for all users
+            if (firstName && lastName) {
+                console.log("🔍 Auto lookup - User has name:", firstName, lastName);
+                console.log("🔍 Skipping form, going directly to lookup");
+
+                setUserData({
+                    firstName: firstName,
+                    lastName: lastName
+                });
+
+                // Perform player lookup (checks both name orders)
+                try {
+                    let lookupResult;
+
+                    if (testMode === 'match') {
+                        // Test mode: simulate single match found
+                        console.log("🧪 Test Mode: Simulating single match found");
+                        const mockMatch: PlayerMatch = {
+                            id: 'test-player-1',
+                            first_name: firstName,
+                            last_name: lastName,
+                            is_hidden: false,
+                            is_active: true,
+                            claimed_by_user_id: null,
+                            is_demo_player: false
+                        };
+                        lookupResult = { matches: [mockMatch] };
+                    } else if (testMode === 'multiple') {
+                        // Test mode: simulate multiple matches found
+                        console.log("🧪 Test Mode: Simulating multiple matches found");
+                        const mockMatches: PlayerMatch[] = [
+                            {
+                                id: 'test-player-1',
+                                first_name: firstName,
+                                last_name: lastName,
+                                is_hidden: false,
+                                is_active: true,
+                                claimed_by_user_id: null,
+                                is_demo_player: false
+                            },
+                            {
+                                id: 'test-player-2',
+                                first_name: firstName,
+                                last_name: lastName + ' Jr.',
+                                is_hidden: false,
+                                is_active: true,
+                                claimed_by_user_id: null,
+                                is_demo_player: false
+                            }
+                        ];
+                        lookupResult = { matches: mockMatches };
+                    } else {
+                        // Normal mode: perform actual lookup (cached)
+                        console.log("🔍 Performing debug lookup for:", firstName, lastName);
+                        await debugPlayerLookup(firstName, lastName);
+                        lookupResult = await findMatchingPlayers(firstName, lastName);
+                    }
+
+                    // Show results (match found or not found)
+                    if (lookupResult.matches.length > 0) {
+                        setPlayerMatches(lookupResult.matches);
+                        if (lookupResult.matches.length === 1) {
+                            setPlayerMatch(lookupResult.matches[0]);
+                        }
+                    } else {
+                        setPlayerMatch(null);
+                        setPlayerMatches([]);
+                    }
+
+                    setCurrentStep("result");
+                    setCurrentStepNumber(2);
+                    setLoading(false);
+                    console.log("🔧 Loading state reset to false after successful lookup");
+                } catch (error) {
+                    console.error("❌ Player lookup failed:", error);
+                    // If lookup fails, ask for name again
+                    setCurrentStep("form");
+                    setCurrentStepNumber(1);
+                }
+            } else {
+                console.log("📝 No name available - showing form after checking step");
+                console.log("🔍 This means getUserName returned null/empty names");
+                // No name in profile - show form after the checking step
+                // Add a small delay to show the checking step with explanations
+                setTimeout(() => {
+                    setCurrentStep("form");
+                    setCurrentStepNumber(1);
+                    setLoading(false);
+                }, 2000); // 2 second delay to show the checking step
+                return; // Don't set loading to false here, let setTimeout handle it
+            }
+        } catch (err) {
+            console.error("Error during auto lookup:", err);
+            setCurrentStep("form");
+            setCurrentStepNumber(1);
+            setLoading(false);
+        }
+    };
+
+    // if (userId) {
+    //     performAutoLookup();
+    // }
+    // }, [userId, forceRefresh, testMode]);
 
     const handleFormSubmit = useCallback(async (data: {
         firstName: string;
@@ -450,7 +594,8 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onClose, onRef
         handleCreateProfile,
         handleBackToForm,
         handleBackFromReview,
-        onComplete
+        onComplete,
+        onClose,
     ]);
 
     // Loading state
@@ -598,5 +743,7 @@ export function ProfileClaimFlowNew({ userId, onComplete, onSkip, onClose, onRef
             </div>
         </div>
     );
-}
+});
+
+ProfileClaimFlowNew.displayName = 'ProfileClaimFlowNew';
 

@@ -49,11 +49,7 @@ export function useProfileClaim(userId: string | null) {
         // Check if user needs to complete profile setup
         // Only show profile claim flow for users who explicitly have pending status
         // Don't automatically show it for new users - make it optional
-        const needsSetup =
-          profile.profile_claim_status === "pending" ||
-          !profile.first_name ||
-          !profile.last_name ||
-          !profile.terms_accepted;
+        const needsSetup = profile.profile_claim_status === "pending";
 
         setStatus({
           needsProfileSetup: needsSetup,

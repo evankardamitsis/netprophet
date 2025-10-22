@@ -61,8 +61,7 @@ export default function AuthCallbackPage() {
                         if (!profileError && profile) {
                             // Only redirect to profile setup if user has explicitly pending status
                             // Don't automatically redirect new users - make profile claiming optional
-                            const needsSetup = profile.profile_claim_status === "pending" ||
-                                !profile.first_name || !profile.last_name || !profile.terms_accepted;
+                            const needsSetup = profile.profile_claim_status === "pending";
 
                             if (needsSetup) {
                                 router.push(`/${lang}/auth/profile-setup`);

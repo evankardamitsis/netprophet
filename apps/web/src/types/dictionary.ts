@@ -562,6 +562,14 @@ export interface Dictionary {
     allNotificationsDeleted: string;
     failedToDeleteAll: string;
   };
+  profileClaimNotification: {
+    title: string;
+    message: string;
+    getStarted: string;
+    maybeLater: string;
+    reminderTitle: string;
+    reminderMessage: string;
+  };
   toast: {
     placingPrediction: string;
     predictionPlaced: string;

@@ -213,7 +213,8 @@ export function TopNavigation({
         if (userRef.current && userPowerUps.length === 0 && !powerUpsLoading) {
             loadUserPowerUps();
         }
-    }, [userRef.current?.id, powerUpsLoading, userPowerUps.length]); // Include all dependencies
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userRef.current?.id]); // Only depend on user ID to prevent infinite loop
 
 
 

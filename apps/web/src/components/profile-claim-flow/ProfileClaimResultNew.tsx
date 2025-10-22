@@ -153,7 +153,7 @@ export function ProfileClaimResultNew({
                         >
                             <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                             <span className="hidden sm:inline">{dict.profileSetup?.multipleMatches?.createInstead || "None of these - Create New"}</span>
-                            <span className="sm:hidden">Create New</span>
+                            <span className="sm:hidden">{dict.profileSetup?.multipleMatches?.createInstead || "Create New"}</span>
                         </Button>
 
                         <div className="pt-2 sm:pt-3 lg:pt-4 border-t border-gray-200 space-y-2 sm:space-y-2.5 lg:space-y-3">

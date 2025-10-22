@@ -7,7 +7,7 @@ let globalUser: User | null = null;
 let globalSession: Session | null = null;
 let globalLoading = true;
 let authInitialized = false;
-let playerLookupChecked = false;
+// Removed playerLookupChecked variable - no longer needed
 
 // Global auth listeners to avoid multiple subscriptions
 let authStateChangeSubscription: any = null;
@@ -15,34 +15,7 @@ let authListeners: Set<
   (user: User | null, session: Session | null, loading: boolean) => void
 > = new Set();
 
-// Function to check for automatic player lookup
-const checkPlayerLookup = async (userId: string) => {
-  // Only run once per session
-  if (playerLookupChecked) return;
-  playerLookupChecked = true;
-
-  try {
-    const { data, error } = await supabase.rpc(
-      "check_and_claim_player_for_user",
-      {
-        user_id: userId,
-      }
-    );
-
-    if (error) {
-      console.error("Player lookup error:", error);
-      return;
-    }
-
-    if (data?.success && data?.status === "auto_claimed") {
-      console.log("Player automatically claimed:", data);
-      // Optionally refresh the page or update UI
-      window.location.reload();
-    }
-  } catch (error) {
-    console.error("Error checking player lookup:", error);
-  }
-};
+// Removed automatic player lookup function to allow notification system to work
 
 // Initialize auth system once globally
 const initializeAuth = async () => {
@@ -95,12 +68,11 @@ const setupAuthListener = () => {
       if (event === "SIGNED_IN" && session) {
         globalSession = session;
         globalUser = session.user;
-        // Check for automatic player lookup after successful login
-        checkPlayerLookup(session.user.id);
+        // Note: Removed automatic player lookup to allow notification system to work
+        // checkPlayerLookup(session.user.id);
       } else if (event === "SIGNED_OUT") {
         globalSession = null;
         globalUser = null;
-        playerLookupChecked = false;
       } else if (event === "TOKEN_REFRESHED" && session) {
         globalSession = session;
         globalUser = session.user;
@@ -166,7 +138,6 @@ export function useAuth() {
       // Clear global and local state immediately
       globalUser = null;
       globalSession = null;
-      playerLookupChecked = false;
 
       // Notify all listeners immediately
       authListeners.forEach((listener) => {

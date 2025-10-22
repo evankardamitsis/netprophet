@@ -564,6 +564,16 @@ export default function MyProfilePage() {
                                     <span className="mr-2">📖</span>
                                     {dict?.profile?.helpAndFaq || 'Help & FAQ'}
                                 </Button>
+                                {isAdmin && (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start border-purple-600 text-purple-300 hover:bg-purple-900/20 hover:text-purple-200"
+                                        onClick={() => router.push(`/${lang}/test-profile-claim-dashboard`)}
+                                    >
+                                        <span className="mr-2">🧪</span>
+                                        {lang === 'el' ? 'Δοκιμές Προφίλ' : 'Profile Test Scenarios'}
+                                    </Button>
+                                )}
                                 <div className="border-t border-slate-600 pt-3">
                                     <Button
                                         variant="destructive"
