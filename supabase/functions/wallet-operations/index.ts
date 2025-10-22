@@ -301,6 +301,7 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
       .update({
         balance: newBalance,
         has_received_welcome_bonus: true,
+        has_tournament_pass: true, // Grant tournament pass with welcome bonus
       })
       .eq("id", user.id);
 

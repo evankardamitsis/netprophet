@@ -91,11 +91,9 @@ export function useProfileClaim(userId: string | null) {
         throw new Error(`Failed to fetch profile: ${error.message}`);
       }
 
-      const needsSetup =
-        profile.profile_claim_status === "pending" ||
-        !profile.first_name ||
-        !profile.last_name ||
-        !profile.terms_accepted;
+      // Only show profile setup if user has explicitly pending status
+      // Don't automatically show it for new users - make it optional
+      const needsSetup = profile.profile_claim_status === "pending";
 
       setStatus({
         needsProfileSetup: needsSetup,

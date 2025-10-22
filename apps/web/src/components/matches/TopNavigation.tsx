@@ -200,7 +200,7 @@ export function TopNavigation({
 
             setPowerUpsLoading(true);
             try {
-                const powerUps = await fetchUserPowerUps(userRef.current!.id);
+                const powerUps = await fetchUserPowerUps(userRef.current.id);
                 setUserPowerUps(powerUps);
             } catch (error) {
                 console.error('Error loading user power-ups:', error);
@@ -251,6 +251,7 @@ export function TopNavigation({
             return total + powerUp.quantity;
         }, 0);
     }, [userPowerUps]);
+
 
     useEffect(() => {
         if (!accountDropdownOpen) return;

@@ -14,19 +14,14 @@ import { gradients, shadows, borders, transitions, animations, cx, typography } 
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { LowBalanceNotification } from '@/components/matches/LowBalanceNotification';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfileClaim } from '@/hooks/useProfileClaim';
-import { useProfileSetupModal } from '@/context/ProfileSetupModalContext';
-import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 
 
 
 export default function DashboardPage() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { showProfileSetup, setShowProfileSetup } = useProfileSetupModal();
     const { slipCollapsed, resetSlipState } = usePredictionSlip();
     const { user } = useAuth();
-    const { needsProfileSetup, loading: profileLoading } = useProfileClaim(user?.id || null);
     const { dict } = useDictionary();
 
     // Use the shared matches hook
@@ -40,12 +35,8 @@ export default function DashboardPage() {
         error
     } = useMatches();
 
-    // Show profile setup modal if needed
-    useEffect(() => {
-        if (!profileLoading && needsProfileSetup && user) {
-            setShowProfileSetup(true);
-        }
-    }, [needsProfileSetup, profileLoading, user, setShowProfileSetup]);
+    // Profile setup is now completely optional - only triggered by notification
+    // No automatic profile setup modal on matches page
 
     // Get featured matches (top 3 upcoming matches with highest odds)
     const getFeaturedMatches = (matches: Match[]): Match[] => {

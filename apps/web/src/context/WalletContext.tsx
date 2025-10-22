@@ -540,8 +540,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     return newState;
                 });
 
-                // The database is already updated by the wallet operations service
-                // No need for duplicate updates
+                // Sync with database to ensure consistency
+                await syncWalletWithDatabase();
 
                 if (showToasts) {
                     toast.success((dict?.toast?.welcomeBonusClaimed || '🎉 Welcome bonus claimed! +{amount} 🌕').replace('{amount}', bonusAmount.toString()), {
