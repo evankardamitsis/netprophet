@@ -20,11 +20,10 @@ export function ProfileClaimNotification() {
     const hasCheckedRef = useRef(false);
 
     useEffect(() => {
-        if (!user || hasCheckedRef.current) return;
+        if (!user) return;
 
         const checkProfileStatus = async () => {
             try {
-                hasCheckedRef.current = true;
 
                 // Check both profile data and welcome bonus status directly from database
                 const { data: profile, error } = await supabase
@@ -73,8 +72,8 @@ export function ProfileClaimNotification() {
             }
         };
 
-        // Use a shorter delay and only run once per user change
-        const timer = setTimeout(checkProfileStatus, 500);
+        // Use a shorter delay and run when welcome bonus status changes
+        const timer = setTimeout(checkProfileStatus, 100); // Reduced delay
         return () => clearTimeout(timer);
     }, [user, wallet.hasReceivedWelcomeBonus]); // Include all dependencies
 

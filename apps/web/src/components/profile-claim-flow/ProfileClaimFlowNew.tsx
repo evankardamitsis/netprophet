@@ -44,12 +44,12 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
 
     // Initialize the flow to start with the checking step (lookup) but only when manually triggered
     useEffect(() => {
-        if (userId) {
+        if (userId && currentStep !== "success") {
             setCurrentStep("checking");
             setCurrentStepNumber(1);
             setLoading(false);
         }
-    }, [userId]);
+    }, [userId, currentStep]);
 
     // Manual lookup function that can be called from notification or profile page
     const performManualLookup = useCallback(async () => {
