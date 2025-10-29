@@ -386,25 +386,31 @@ export default function MyPicksPage() {
                                 <>
                                     <BetHistoryTable bets={resolvedBets} dict={dict} />
                                     {totalPages > 1 && (
-                                        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6 pt-6 border-t border-purple-500/30">
+                                        <div className="flex flex-row justify-center items-center gap-1.5 sm:gap-2 mt-6 pt-6 border-t border-purple-500/30">
                                             <Button
                                                 variant="outline"
-                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                onClick={() => {
+                                                    setCurrentPage(prev => Math.max(1, prev - 1));
+                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                }}
                                                 disabled={currentPage === 1}
-                                                className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
+                                                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all flex-shrink-0"
                                             >
                                                 ← Previous
                                             </Button>
-                                            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30 whitespace-nowrap">
-                                                <span className="text-white text-sm font-bold">
+                                            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-2 sm:px-4 py-2 border border-purple-500/30 whitespace-nowrap flex-shrink-0">
+                                                <span className="text-white text-xs sm:text-sm font-bold">
                                                     Page <span className="text-purple-300">{currentPage}</span> of <span className="text-purple-300">{totalPages}</span>
                                                 </span>
                                             </div>
                                             <Button
                                                 variant="outline"
-                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                onClick={() => {
+                                                    setCurrentPage(prev => Math.min(totalPages, prev + 1));
+                                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                }}
                                                 disabled={currentPage === totalPages}
-                                                className="px-4 py-2 text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
+                                                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all flex-shrink-0"
                                             >
                                                 Next →
                                             </Button>
