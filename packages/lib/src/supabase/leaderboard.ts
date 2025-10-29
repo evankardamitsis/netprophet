@@ -170,9 +170,21 @@ export class LeaderboardService {
     // Check for active streak multipliers for all users
     const entriesWithPowerUps = await Promise.all(
       stats.map(async (entry: any, index: number) => {
-        const hasStreakMultiplier = await hasActiveStreakMultiplier(
-          entry.user_id
-        );
+        let hasStreakMultiplier = false;
+        if (entry.user_id) {
+          try {
+            hasStreakMultiplier = await hasActiveStreakMultiplier(
+              entry.user_id
+            );
+          } catch (error) {
+            console.error(
+              `Error checking streak multiplier for user ${entry.user_id}:`,
+              error
+            );
+            // Continue with false if there's an error
+            hasStreakMultiplier = false;
+          }
+        }
         return {
           userId: entry.user_id,
           username: entry.username,
@@ -216,9 +228,21 @@ export class LeaderboardService {
     // Check for active streak multipliers for all users
     const entriesWithPowerUps = await Promise.all(
       stats.map(async (entry: any, index: number) => {
-        const hasStreakMultiplier = await hasActiveStreakMultiplier(
-          entry.user_id
-        );
+        let hasStreakMultiplier = false;
+        if (entry.user_id) {
+          try {
+            hasStreakMultiplier = await hasActiveStreakMultiplier(
+              entry.user_id
+            );
+          } catch (error) {
+            console.error(
+              `Error checking streak multiplier for user ${entry.user_id}:`,
+              error
+            );
+            // Continue with false if there's an error
+            hasStreakMultiplier = false;
+          }
+        }
         return {
           userId: entry.user_id,
           username: entry.username,

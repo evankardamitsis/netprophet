@@ -14,7 +14,7 @@ import { PasswordInput } from '@/components/PasswordInput';
 
 // Component that uses useSearchParams - wrapped in Suspense
 function AuthFormWithSearchParams() {
-    const [mode, setMode] = useState<'signin' | 'register'>('signin');
+    const [mode, setMode] = useState<'signin' | 'register'>('register');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
@@ -31,8 +31,8 @@ function AuthFormWithSearchParams() {
     // Check URL parameters to set initial mode
     useEffect(() => {
         const tab = searchParams.get('tab');
-        if (tab === 'register') {
-            setMode('register');
+        if (tab === 'signin') {
+            setMode('signin');
         }
     }, [searchParams]);
 
@@ -134,12 +134,19 @@ function AuthFormWithSearchParams() {
                     {/* Title */}
                     <div className="text-center mb-8">
                         <h1 className="text-2xl font-bold text-white mb-2">
-                            {lang === 'el' ? 'Καλώς ήρθες' : 'Welcome back'}
+                            {mode === 'register'
+                                ? (lang === 'el' ? 'Καλώς ήρθες' : 'Welcome')
+                                : (lang === 'el' ? 'Καλώς ήρθες' : 'Welcome back')
+                            }
                         </h1>
                         <p className="text-white/80">
-                            {lang === 'el'
-                                ? 'Συνδέσου για να ξεκινήσεις τις προβλέψεις σου'
-                                : 'Sign in to start making predictions'
+                            {mode === 'register'
+                                ? (lang === 'el'
+                                    ? 'Εγγράψου για να ξεκινήσεις τις προβλέψεις σου'
+                                    : 'Sign up to start making predictions')
+                                : (lang === 'el'
+                                    ? 'Συνδέσου για να ξεκινήσεις τις προβλέψεις σου'
+                                    : 'Sign in to start making predictions')
                             }
                         </p>
                     </div>
@@ -150,15 +157,6 @@ function AuthFormWithSearchParams() {
                             <CardTitle className="text-center text-lg">
                                 <div className="flex bg-slate-100 rounded-lg p-1">
                                     <button
-                                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${mode === 'signin'
-                                            ? 'bg-blue-600 text-white shadow-md font-semibold'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                                            }`}
-                                        onClick={() => setMode('signin')}
-                                    >
-                                        {lang === 'el' ? 'Σύνδεση' : 'Sign In'}
-                                    </button>
-                                    <button
                                         className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${mode === 'register'
                                             ? 'bg-blue-600 text-white shadow-md font-semibold'
                                             : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -166,6 +164,15 @@ function AuthFormWithSearchParams() {
                                         onClick={() => setMode('register')}
                                     >
                                         {lang === 'el' ? 'Εγγραφή' : 'Register'}
+                                    </button>
+                                    <button
+                                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${mode === 'signin'
+                                            ? 'bg-blue-600 text-white shadow-md font-semibold'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                            }`}
+                                        onClick={() => setMode('signin')}
+                                    >
+                                        {lang === 'el' ? 'Σύνδεση' : 'Sign In'}
                                     </button>
                                 </div>
                             </CardTitle>

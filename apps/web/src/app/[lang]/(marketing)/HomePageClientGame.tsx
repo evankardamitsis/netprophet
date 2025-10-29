@@ -152,12 +152,12 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                         {/* Left - Title & CTA */}
                         <div className="w-full lg:w-[35%] text-center lg:text-left space-y-6 sm:space-y-6 lg:pr-8 relative z-10 ">
                             {/* Subtitle */}
-                            <p className="text-xs lg:text-base text-white/80 font-medium inline-block px-3 py-1.5 sm:px-3 sm:py-1.5 rounded-full" style={{ backgroundColor: 'rgba(190, 5, 161, 0.3)' }}>
+                            {/* <p className="text-xs lg:text-base text-white/80 font-medium inline-block px-3 py-1.5 sm:px-3 sm:py-1.5 rounded-full" style={{ backgroundColor: 'rgba(190, 5, 161, 0.3)' }}>
                                 {lang === 'el'
                                     ? '"Πόσο καλά νομίζεις ότι ξέρεις το παιχνίδι;"'
                                     : 'How well can you read the game?'
                                 }
-                            </p>
+                            </p> */}
 
                             {/* Title */}
                             <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-black text-white leading-tight">
@@ -493,7 +493,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
             {/* Live Tournament Results Section */}
             <section className="py-12 sm:py-16 lg:py-20 relative">
                 <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
+                    <div className="text-left mb-12">
                         <h2 className="text-5xl font-black text-white mb-4 drop-shadow-lg">
                             {lang === 'el' ? '🏆 Όλα τα Τουρνουά' : '🏆 All Tournaments'}
                         </h2>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -60,6 +60,7 @@ export default function ResultsPage() {
     const [tournamentTotals, setTournamentTotals] = useState<Record<string, number>>({});
     const [allTournamentNames, setAllTournamentNames] = useState<string[]>([]);
     const resultsPerPage = 10;
+    const pageHeaderRef = useRef<HTMLDivElement>(null);
 
     // Load match results with optimized batch query and caching
     const loadResults = async (preserveSelection = false) => {
@@ -144,21 +145,21 @@ export default function ResultsPage() {
             score += ` (${setScores.join(', ')})`;
         }
 
-        // Add tiebreak information if available
+        // Add tiebreak information if available (very condensed for mobile)
         const tiebreaks = [];
-        if (match.set1_tiebreak_score) tiebreaks.push(`Set 1 TB: ${match.set1_tiebreak_score}`);
-        if (match.set2_tiebreak_score) tiebreaks.push(`Set 2 TB: ${match.set2_tiebreak_score}`);
-        if (match.set3_tiebreak_score) tiebreaks.push(`Set 3 TB: ${match.set3_tiebreak_score}`);
-        if (match.set4_tiebreak_score) tiebreaks.push(`Set 4 TB: ${match.set4_tiebreak_score}`);
-        if (match.set5_tiebreak_score) tiebreaks.push(`Set 5 TB: ${match.set5_tiebreak_score}`);
+        if (match.set1_tiebreak_score) tiebreaks.push(`TB1:${match.set1_tiebreak_score}`);
+        if (match.set2_tiebreak_score) tiebreaks.push(`TB2:${match.set2_tiebreak_score}`);
+        if (match.set3_tiebreak_score) tiebreaks.push(`TB3:${match.set3_tiebreak_score}`);
+        if (match.set4_tiebreak_score) tiebreaks.push(`TB4:${match.set4_tiebreak_score}`);
+        if (match.set5_tiebreak_score) tiebreaks.push(`TB5:${match.set5_tiebreak_score}`);
 
         if (tiebreaks.length > 0) {
-            score += ` - ${tiebreaks.join(', ')}`;
+            score += ` (${tiebreaks.join(',')})`;
         }
 
         // Add super tiebreak if available
         if (match.super_tiebreak_score) {
-            score += ` - Super TB: ${match.super_tiebreak_score}`;
+            score += ` STB:${match.super_tiebreak_score}`;
         }
 
         return score;
@@ -227,6 +228,17 @@ export default function ResultsPage() {
 
             // Update page state
             setTournamentPages(prev => ({ ...prev, [tournamentName]: page }));
+
+            // Scroll to top after state updates
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if (pageHeaderRef.current) {
+                        pageHeaderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                }, 200);
+            });
         } catch (err) {
             console.error('Error loading more results:', err);
         }
@@ -253,20 +265,20 @@ export default function ResultsPage() {
             <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
 
             {/* Back to Dashboard Button */}
-            <div className="max-w-6xl mx-auto px-6 pt-6 relative z-10">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 relative z-10">
                 <Button
                     variant="ghost"
                     onClick={() => router.push(`/${lang}/matches`)}
-                    className="mb-6 text-gray-300 hover:text-white hover:bg-slate-800/50 px-2 py-1 text-sm sm:px-3 sm:py-2 sm:text-base"
+                    className="mb-4 sm:mb-6 text-gray-300 hover:text-white hover:bg-slate-800/50 px-2 py-1 text-xs sm:text-sm"
                 >
                     {dict?.navigation?.backToMatches || '← Back to Matches'}
                 </Button>
             </div>
 
             {/* Content Area */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-4 sm:pb-6 relative z-10">
                 {/* Page Header */}
-                <div className="text-center mb-8 sm:mb-12">
+                <div ref={pageHeaderRef} className="text-center mb-8 sm:mb-12">
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
                         {dict?.results?.title || 'Match Results'}
                     </h1>
@@ -314,84 +326,81 @@ export default function ResultsPage() {
                         </Button>
                     </div>
                 ) : (
-                    <div className="space-y-6 sm:space-y-8">
+                    <div className="space-y-4 sm:space-y-6 md:space-y-8">
                         {results.map((tournament) => (
                             <div key={tournament.tournament_name} className="relative group">
                                 {/* Gradient border effect */}
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-3xl opacity-75 group-hover:opacity-100 blur transition duration-300"></div>
 
                                 <Card className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 border-0 shadow-xl rounded-2xl overflow-hidden">
-                                    <CardHeader className="pb-2 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/30">
-                                        <div className="flex items-center justify-between gap-3">
+                                    <CardHeader className="pb-2 sm:pb-3 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/30">
+                                        <div className="flex items-center justify-between gap-2 sm:gap-3">
                                             <div className="flex-1 min-w-0">
-                                                <CardTitle className="text-lg sm:text-xl font-black text-white mb-1 drop-shadow-lg truncate">
+                                                <CardTitle className="text-base sm:text-lg md:text-xl font-black text-white mb-1 drop-shadow-lg truncate">
                                                     🏆 {tournament.tournament_name}
                                                 </CardTitle>
                                                 <p className="text-purple-200 text-xs font-bold">
                                                     {tournament.matches.length} {dict?.results?.matches || 'matches'}
                                                 </p>
                                             </div>
-                                            <div className="hidden sm:block text-2xl opacity-30 flex-shrink-0">🎾</div>
+                                            <div className="hidden sm:block text-xl sm:text-2xl opacity-30 flex-shrink-0">🎾</div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="pt-3">
-                                        <div className="space-y-2">
+                                    <CardContent className="pt-2 sm:pt-3">
+                                        <div className="space-y-1.5 sm:space-y-2">
                                             {tournament.matches.map((match) => {
                                                 const isPlayerAWinner = match.winner_name === match.player_a_name;
                                                 const isPlayerBWinner = match.winner_name === match.player_b_name;
 
                                                 return (
                                                     <div key={match.id} className="relative group/item">
-                                                        <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl p-3 border border-purple-500/30 hover:border-purple-400/50 transition-all">
-                                                            {/* Date, Round and Category Badge */}
-                                                            <div className="flex justify-between items-center gap-2 mb-2">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="flex items-center gap-1">
-                                                                        <span className="text-purple-300 text-xs font-bold">📅</span>
-                                                                        <p className="text-purple-200 text-xs font-bold">
-                                                                            {new Date(match.updated_at).toLocaleDateString('en-GB', {
-                                                                                day: 'numeric',
-                                                                                month: 'short'
-                                                                            })}
-                                                                        </p>
-                                                                    </div>
+                                                        <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border border-purple-500/30 hover:border-purple-400/50 transition-all">
+                                                            {/* Top Row: Date, Round, Category */}
+                                                            <div className="flex items-center justify-between gap-2 mb-2.5">
+                                                                <div className="flex items-center gap-1.5 text-xs flex-wrap">
+                                                                    <p className="text-purple-200 font-bold">
+                                                                        {new Date(match.updated_at).toLocaleDateString('en-GB', {
+                                                                            day: 'numeric',
+                                                                            month: 'short'
+                                                                        })}
+                                                                    </p>
                                                                     {match.round && (
-                                                                        <span className="text-purple-300 text-xs font-bold">
+                                                                        <span className="text-purple-300 font-bold">
                                                                             • {match.round}
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg whitespace-nowrap">
+                                                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold shadow-lg whitespace-nowrap">
                                                                     {match.category_name}
                                                                 </span>
                                                             </div>
 
-                                                            {/* Players and Score - Compact Layout */}
-                                                            <div className="flex items-center justify-between gap-3">
-                                                                {/* Player A */}
-                                                                <div className="flex-1 text-center">
-                                                                    <div className={`font-bold text-sm mb-1 truncate ${isPlayerAWinner ? '!text-green-500' : 'text-gray-400'}`}>
+                                                            {/* Players and Score Layout */}
+                                                            <div className="flex items-start gap-2 sm:gap-3">
+                                                                {/* Player A - Full Width */}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className={`font-bold text-xs sm:text-sm break-words ${isPlayerAWinner ? '!text-green-500' : 'text-gray-400'}`}>
                                                                         {match.player_a_name}
                                                                     </div>
-                                                                    <div className="text-xs text-purple-300 font-bold">
-                                                                        NTRP {match.player_a_ntrp.toFixed(1)}
+                                                                    <div className="text-[10px] sm:text-xs text-purple-300 font-bold mt-0.5">
+                                                                        <span className="hidden sm:inline">NTRP </span>{match.player_a_ntrp.toFixed(1)}
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Score - Centered */}
-                                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-purple-500/30 flex-shrink-0">
-                                                                    <div className="text-xs font-bold text-white text-center">
+                                                                {/* Score - Compact Vertical */}
+                                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded px-2 sm:px-3 py-1 border border-purple-500/30 flex-shrink-0 self-center">
+                                                                    <div className="text-[10px] sm:text-xs font-bold text-white text-center whitespace-nowrap">
                                                                         {formatScore(match)}
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Player B */}
-                                                                <div className="flex-1 text-center">
-                                                                    <div className={`font-bold text-sm mb-1 truncate ${isPlayerBWinner ? '!text-green-500' : 'text-gray-400'}`}>
+                                                                {/* Player B - Full Width */}
+                                                                <div className="flex-1 min-w-0 text-right">
+                                                                    <div className={`font-bold text-xs sm:text-sm break-words ${isPlayerBWinner ? '!text-green-500' : 'text-gray-400'}`}>
                                                                         {match.player_b_name}
                                                                     </div>
-                                                                    <div className="text-xs text-purple-300 font-bold">
-                                                                        NTRP {match.player_b_ntrp.toFixed(1)}
+                                                                    <div className="text-[10px] sm:text-xs text-purple-300 font-bold mt-0.5">
+                                                                        <span className="hidden sm:inline">NTRP </span>{match.player_b_ntrp.toFixed(1)}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -410,17 +419,17 @@ export default function ResultsPage() {
                                             if (totalPages <= 1) return null;
 
                                             return (
-                                                <div className="flex flex-col sm:flex-row justify-center items-center gap-2 mt-4 pt-4 border-t border-purple-500/30">
+                                                <div className="flex flex-row justify-center items-center gap-1.5 sm:gap-2 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-purple-500/30">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={() => loadMoreResults(tournament.tournament_name, currentPage - 1)}
                                                         disabled={currentPage === 1}
-                                                        className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
+                                                        className="px-2 sm:px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all flex-shrink-0"
                                                     >
                                                         ← Previous
                                                     </Button>
-                                                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-purple-500/30 whitespace-nowrap">
+                                                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1.5 border border-purple-500/30 whitespace-nowrap flex-shrink-0">
                                                         <span className="text-white text-xs font-bold">
                                                             Page <span className="text-purple-300">{currentPage}</span> of <span className="text-purple-300">{totalPages}</span>
                                                         </span>
@@ -430,7 +439,7 @@ export default function ResultsPage() {
                                                         size="sm"
                                                         onClick={() => loadMoreResults(tournament.tournament_name, currentPage + 1)}
                                                         disabled={currentPage === totalPages}
-                                                        className="px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all w-full sm:w-auto"
+                                                        className="px-2 sm:px-3 py-1.5 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all flex-shrink-0"
                                                     >
                                                         Next →
                                                     </Button>
