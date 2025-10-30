@@ -37,7 +37,7 @@ export function useProfileClaim(userId: string | null) {
         const { data: profile, error } = await supabase
           .from("profiles")
           .select(
-            "first_name, last_name, terms_accepted, profile_claim_status, claimed_player_id"
+            "first_name, last_name, terms_accepted, profile_claim_status, claimed_player_id, profile_claim_completed_at"
           )
           .eq("id", userId)
           .single();
@@ -46,10 +46,24 @@ export function useProfileClaim(userId: string | null) {
           throw new Error(`Failed to fetch profile: ${error.message}`);
         }
 
-        // Check if user needs to complete profile setup
-        // Only show profile claim flow for users who explicitly have pending status
-        // Don't automatically show it for new users - make it optional
-        const needsSetup = profile.profile_claim_status === "pending";
+        // Also detect if a player is already claimed by this user
+        const { data: claimedPlayers } = await supabase
+          .from("players")
+          .select("id")
+          .eq("claimed_by_user_id", userId)
+          .limit(1);
+
+        const hasClaimedPlayer = !!(
+          claimedPlayers && claimedPlayers.length > 0
+        );
+
+        // Determine whether setup is still needed
+        // If there is a claimed player or a completion timestamp, do not show the flow even if status says pending
+        const needsSetup =
+          profile.profile_claim_status === "pending" &&
+          !profile.claimed_player_id &&
+          !hasClaimedPlayer &&
+          !profile.profile_claim_completed_at;
 
         setStatus({
           needsProfileSetup: needsSetup,
@@ -82,7 +96,7 @@ export function useProfileClaim(userId: string | null) {
       const { data: profile, error } = await supabase
         .from("profiles")
         .select(
-          "first_name, last_name, terms_accepted, profile_claim_status, claimed_player_id"
+          "first_name, last_name, terms_accepted, profile_claim_status, claimed_player_id, profile_claim_completed_at"
         )
         .eq("id", userId)
         .single();
@@ -91,9 +105,21 @@ export function useProfileClaim(userId: string | null) {
         throw new Error(`Failed to fetch profile: ${error.message}`);
       }
 
-      // Only show profile setup if user has explicitly pending status
-      // Don't automatically show it for new users - make it optional
-      const needsSetup = profile.profile_claim_status === "pending";
+      // Also detect if a player is already claimed by this user
+      const { data: claimedPlayers } = await supabase
+        .from("players")
+        .select("id")
+        .eq("claimed_by_user_id", userId)
+        .limit(1);
+
+      const hasClaimedPlayer = !!(claimedPlayers && claimedPlayers.length > 0);
+
+      // Only show profile setup if pending AND nothing is already claimed and no completion timestamp
+      const needsSetup =
+        profile.profile_claim_status === "pending" &&
+        !profile.claimed_player_id &&
+        !hasClaimedPlayer &&
+        !profile.profile_claim_completed_at;
 
       setStatus({
         needsProfileSetup: needsSetup,

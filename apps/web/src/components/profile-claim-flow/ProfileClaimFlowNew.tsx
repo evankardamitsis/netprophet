@@ -42,14 +42,7 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
     const [isClaimSuccess, setIsClaimSuccess] = useState(true); // true if claimed, false if created
     const { dict } = useDictionary();
 
-    // Initialize the flow to start with the checking step (lookup) but only when manually triggered
-    useEffect(() => {
-        if (userId && currentStep !== "success") {
-            setCurrentStep("checking");
-            setCurrentStepNumber(1);
-            setLoading(false);
-        }
-    }, [userId, currentStep]);
+    // Removed auto-reset effect: we now start checking ONLY when triggerLookup() is called
 
     // Manual lookup function that can be called from notification or profile page
     const performManualLookup = useCallback(async () => {
@@ -61,7 +54,7 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
             // Get profile data
             const { data: profile, error } = await supabase
                 .from("profiles")
-                .select("profile_claim_status, claimed_player_id")
+                .select("profile_claim_status, claimed_player_id, profile_claim_completed_at")
                 .eq("id", userId)
                 .single();
 
@@ -94,6 +87,56 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
                 setCurrentStepNumber(3);
                 setLoading(false);
                 return;
+            }
+
+            // Self-heal: if completion timestamp exists or a player is already claimed by this user, reconcile profile
+            try {
+                // Check if any player is already claimed by this user
+                const { data: claimedPlayers } = await supabase
+                    .from("players")
+                    .select("id, first_name, last_name, is_hidden, is_active, claimed_by_user_id")
+                    .eq("claimed_by_user_id", userId)
+                    .limit(1);
+
+                const existingClaimedPlayer = claimedPlayers && claimedPlayers.length > 0 ? claimedPlayers[0] : null;
+
+                if ((profile as any).profile_claim_completed_at || existingClaimedPlayer) {
+                    const resolvedPlayerId = existingClaimedPlayer?.id || profile.claimed_player_id;
+                    if (resolvedPlayerId) {
+                        // Update profile row to the correct claimed state
+                        await supabase
+                            .from("profiles")
+                            .update({
+                                profile_claim_status: "claimed",
+                                claimed_player_id: resolvedPlayerId,
+                                profile_claim_completed_at: new Date().toISOString(),
+                                terms_accepted: true,
+                                terms_accepted_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                            })
+                            .eq("id", userId);
+
+                        const { firstName, lastName } = await getUserName(userId);
+                        setPlayerMatch({
+                            id: resolvedPlayerId,
+                            first_name: firstName || existingClaimedPlayer?.first_name || "",
+                            last_name: lastName || existingClaimedPlayer?.last_name || "",
+                            is_hidden: false,
+                            is_active: true,
+                            claimed_by_user_id: userId,
+                            is_demo_player: false,
+                        });
+                        setClaimedPlayerId(resolvedPlayerId);
+                        setIsClaimSuccess(true);
+                        setCurrentStep("success");
+                        setCurrentStepNumber(3);
+                        setLoading(false);
+                        if (onRefresh) setTimeout(() => onRefresh(), 300);
+                        return;
+                    }
+                }
+            } catch (reconcileErr) {
+                console.warn("Profile self-heal skipped due to error:", reconcileErr);
             }
 
             // Get user's name from profile or user_metadata
@@ -147,6 +190,28 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
                     }
 
                     if (lookupResult.matches.length > 0) {
+                        // If completion timestamp exists but claimed_player_id is missing, and there's exactly one match,
+                        // auto-claim that match to reconcile state and advance the flow
+                        if ((profile as any).profile_claim_completed_at && !profile.claimed_player_id && lookupResult.matches.length === 1) {
+                            try {
+                                const playerIdToClaim = lookupResult.matches[0].id;
+                                setLoading(true);
+                                const { data, error } = await supabase.rpc("handle_player_claim", {
+                                    user_id: userId,
+                                    player_id: playerIdToClaim,
+                                });
+                                if (error || !data?.success) throw error || new Error('Failed to auto-claim');
+                                setClaimedPlayerId(playerIdToClaim);
+                                setIsClaimSuccess(true);
+                                setCurrentStep("success");
+                                setCurrentStepNumber(3);
+                                if (onRefresh) setTimeout(() => onRefresh(), 500);
+                                setLoading(false);
+                                return;
+                            } catch (e) {
+                                console.warn('Auto-claim reconciliation failed, falling back to result step:', e);
+                            }
+                        }
                         setPlayerMatches(lookupResult.matches);
                         if (lookupResult.matches.length === 1) {
                             setPlayerMatch(lookupResult.matches[0]);
@@ -178,7 +243,7 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
             setCurrentStepNumber(1);
             setLoading(false);
         }
-    }, [userId, testMode]);
+    }, [userId, testMode, onRefresh]);
 
     // Expose the manual lookup function to parent components via ref
     useImperativeHandle(ref, () => ({
@@ -197,7 +262,7 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
             // Get profile data - no caching
             const { data: profile, error } = await supabase
                 .from("profiles")
-                .select("profile_claim_status, claimed_player_id")
+                .select("profile_claim_status, claimed_player_id, profile_claim_completed_at")
                 .eq("id", userId)
                 .single();
 
@@ -232,6 +297,54 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
                 setCurrentStepNumber(3);
                 setLoading(false);
                 return;
+            }
+
+            // Self-heal: if completion timestamp exists or a player is already claimed by this user, reconcile profile
+            try {
+                const { data: claimedPlayers } = await supabase
+                    .from("players")
+                    .select("id, first_name, last_name, is_hidden, is_active, claimed_by_user_id")
+                    .eq("claimed_by_user_id", userId)
+                    .limit(1);
+
+                const existingClaimedPlayer = claimedPlayers && claimedPlayers.length > 0 ? claimedPlayers[0] : null;
+
+                if ((profile as any).profile_claim_completed_at || existingClaimedPlayer) {
+                    const resolvedPlayerId = existingClaimedPlayer?.id || profile.claimed_player_id;
+                    if (resolvedPlayerId) {
+                        await supabase
+                            .from("profiles")
+                            .update({
+                                profile_claim_status: "claimed",
+                                claimed_player_id: resolvedPlayerId,
+                                profile_claim_completed_at: new Date().toISOString(),
+                                terms_accepted: true,
+                                terms_accepted_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString(),
+                            })
+                            .eq("id", userId);
+
+                        const { firstName, lastName } = await getUserName(userId);
+                        setPlayerMatch({
+                            id: resolvedPlayerId,
+                            first_name: firstName || existingClaimedPlayer?.first_name || "",
+                            last_name: lastName || existingClaimedPlayer?.last_name || "",
+                            is_hidden: false,
+                            is_active: true,
+                            claimed_by_user_id: userId,
+                            is_demo_player: false,
+                        });
+                        setClaimedPlayerId(resolvedPlayerId);
+                        setIsClaimSuccess(true);
+                        setCurrentStep("success");
+                        setCurrentStepNumber(3);
+                        setLoading(false);
+                        if (onRefresh) setTimeout(() => onRefresh(), 300);
+                        return;
+                    }
+                }
+            } catch (reconcileErr) {
+                console.warn("Profile self-heal skipped due to error:", reconcileErr);
             }
 
             // Get user's name from profile or user_metadata (with auto-sync for Gmail users)
@@ -299,6 +412,28 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
 
                     // Show results (match found or not found)
                     if (lookupResult.matches.length > 0) {
+                        // If completion timestamp exists but claimed_player_id is missing, and there's exactly one match,
+                        // auto-claim that match to reconcile state and advance the flow
+                        if ((profile as any).profile_claim_completed_at && !profile.claimed_player_id && lookupResult.matches.length === 1) {
+                            try {
+                                const playerIdToClaim = lookupResult.matches[0].id;
+                                setLoading(true);
+                                const { data, error } = await supabase.rpc("handle_player_claim", {
+                                    user_id: userId,
+                                    player_id: playerIdToClaim,
+                                });
+                                if (error || !data?.success) throw error || new Error('Failed to auto-claim');
+                                setClaimedPlayerId(playerIdToClaim);
+                                setIsClaimSuccess(true);
+                                setCurrentStep("success");
+                                setCurrentStepNumber(3);
+                                if (onRefresh) setTimeout(() => onRefresh(), 500);
+                                setLoading(false);
+                                return;
+                            } catch (e) {
+                                console.warn('Auto-claim reconciliation failed, falling back to result step:', e);
+                            }
+                        }
                         setPlayerMatches(lookupResult.matches);
                         if (lookupResult.matches.length === 1) {
                             setPlayerMatch(lookupResult.matches[0]);
