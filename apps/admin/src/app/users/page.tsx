@@ -254,7 +254,7 @@ export default function UsersPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-start">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">Users ({users.length})</h1>
                     <p className="text-gray-600 mt-2">
                         Manage user accounts and permissions
                     </p>

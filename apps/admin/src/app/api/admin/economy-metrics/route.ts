@@ -47,6 +47,8 @@ async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
       averageCoinsResult,
       totalUsersResult,
       activeUsersResult,
+      sevenDayActiveUsersResult,
+      averageConsecutiveLoginsResult,
       coinFlowResult,
       inflowBreakdownResult,
       outflowBreakdownResult,
@@ -85,7 +87,21 @@ async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
         ),
       ]),
       Promise.race([
-        supabase.rpc("get_active_users_count"),
+        supabase.rpc("get_active_users_count", { time_period: timePeriod }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_7day_active_users_count"),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), timeoutMs)
+        ),
+      ]),
+      Promise.race([
+        supabase.rpc("get_average_consecutive_logins", {
+          time_period: timePeriod,
+        }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error("Timeout")), timeoutMs)
         ),
@@ -139,6 +155,8 @@ async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
       averageCoinsResult,
       totalUsersResult,
       activeUsersResult,
+      sevenDayActiveUsersResult,
+      averageConsecutiveLoginsResult,
       coinFlowResult,
       inflowBreakdownResult,
       outflowBreakdownResult,
@@ -220,6 +238,16 @@ async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
     const activeUsers = getData(activeUsersResult, {
       active_users_count: 0,
       previous_period_count: 0,
+      percentage_change: 0,
+    });
+    const sevenDayActiveUsers = getData(sevenDayActiveUsersResult, {
+      seven_day_active_users_count: 0,
+      previous_period_count: 0,
+      percentage_change: 0,
+    });
+    const averageConsecutiveLogins = getData(averageConsecutiveLoginsResult, {
+      average_consecutive_logins: 0,
+      previous_period_average: 0,
       percentage_change: 0,
     });
 
@@ -319,6 +347,15 @@ async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
           payingUsers: Number(payingUsers?.paying_users_count || 0),
           totalUsers: Number(totalUsers?.total_users_count || 0),
           activeUsers: Number(activeUsers?.active_users_count || 0),
+          sevenDayActiveUsers: Number(
+            sevenDayActiveUsers?.seven_day_active_users_count || 0
+          ),
+          averageConsecutiveLogins:
+            Math.round(
+              Number(
+                averageConsecutiveLogins?.average_consecutive_logins || 0
+              ) * 100
+            ) / 100,
           averageCoinBalance: Math.round(
             Number(averageCoins?.average_coins_per_user || 0)
           ),
@@ -336,6 +373,12 @@ async function fetchEconomyMetrics(timePeriod: string, supabase: any) {
           coinsBurnedChange: Number(coinsBurned?.percentage_change || 0),
           payingUsersChange: Number(payingUsers?.percentage_change || 0),
           activeUsersChange: Number(activeUsers?.percentage_change || 0),
+          sevenDayActiveUsersChange: Number(
+            sevenDayActiveUsers?.percentage_change || 0
+          ),
+          averageConsecutiveLoginsChange: Number(
+            averageConsecutiveLogins?.percentage_change || 0
+          ),
           averageCoinsChange: Number(averageCoins?.percentage_change || 0),
         },
         charts: {

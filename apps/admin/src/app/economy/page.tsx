@@ -336,9 +336,14 @@ export default function EconomyPage() {
                 </Card>
 
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-gray-600">Active Users</CardTitle>
-                        <Activity className="h-4 w-4 text-emerald-600" />
+                    <CardHeader className="pb-2">
+                        <div className="flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-sm font-medium text-gray-600">Active Users</CardTitle>
+                            <Activity className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                            Users who placed predictions within the selected time period
+                        </p>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.activeUsers)}</div>
@@ -350,7 +355,55 @@ export default function EconomyPage() {
                                     {(data?.trends?.activeUsersChange || 0) >= 0 ? "+" : ""}{(data?.trends?.activeUsersChange || 0).toFixed(1)}%
                                 </span>
                             )}
-                            {timeFilter !== 'all' && ` from last 14 days`}
+                            {timeFilter !== 'all' && ` from last ${timeFilter}`}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <div className="flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-sm font-medium text-gray-600">7-Day Active Users (7DAU)</CardTitle>
+                            <Users className="h-4 w-4 text-cyan-600" />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                            Unique users who logged in at least once in the past 7 days
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">{formatNumber(data?.summary?.sevenDayActiveUsers)}</div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            <span className={(data?.trends?.sevenDayActiveUsersChange || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                                {(data?.trends?.sevenDayActiveUsersChange || 0) >= 0 ? "+" : ""}{(data?.trends?.sevenDayActiveUsersChange || 0).toFixed(1)}%
+                            </span>
+                            {' from previous 7 days'}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="pb-2">
+                        <div className="flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-sm font-medium text-gray-600">Avg. Consecutive Logins</CardTitle>
+                            <TrendingUp className="h-4 w-4 text-pink-600" />
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                            Average of each user&apos;s maximum consecutive login streak within the selected time period
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-gray-900">{(data?.summary?.averageConsecutiveLogins || 0).toFixed(1)}</div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            {timeFilter === 'all' ? (
+                                <span>All time average</span>
+                            ) : (
+                                <>
+                                    <span className={(data?.trends?.averageConsecutiveLoginsChange || 0) >= 0 ? "text-green-600" : "text-red-600"}>
+                                        {(data?.trends?.averageConsecutiveLoginsChange || 0) >= 0 ? "+" : ""}{(data?.trends?.averageConsecutiveLoginsChange || 0).toFixed(1)}%
+                                    </span>
+                                    {` from last ${timeFilter}`}
+                                </>
+                            )}
                         </p>
                     </CardContent>
                 </Card>
