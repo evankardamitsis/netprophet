@@ -17,15 +17,11 @@ const faqData: Record<string, FAQItem[]> = {
     en: [
         {
             question: "What is NetProphet?",
-            answer: "NetProphet is a tennis prediction platform where you can place predictions on real tennis matches. You earn coins for correct predictions and can climb the leaderboard."
+            answer: "NetProphet is a sports prediction game where you can place predictions on amateur matches and tournaments. You earn coins for correct predictions and climb the leaderboard."
         },
         {
             question: "How do I earn coins?",
-            answer: "You earn coins by making correct predictions on tennis matches. The amount of coins you win depends on the odds of your prediction - higher odds mean higher rewards."
-        },
-        {
-            question: "How are the odds calculated?",
-            answer: "Our odds are calculated using advanced algorithms that consider player NTRP ratings, recent form, head-to-head records, surface preferences, and other statistical factors."
+            answer: "You earn coins by making correct predictions on amateur matches and tournaments. The amount of coins you win depends on the odds of your prediction - higher odds mean higher rewards."
         },
         {
             question: "Can I withdraw my coins?",
@@ -46,23 +42,23 @@ const faqData: Record<string, FAQItem[]> = {
         {
             question: "How do I change my profile information?",
             answer: "You can update your profile information by going to your account settings after logging in."
+        },
+        {
+            question: "How do I buy coins?",
+            answer: "You can buy coins in the Store, where you can see the available packages and buy them."
         }
     ],
     el: [
         {
             question: "Τι είναι το NetProphet;",
-            answer: "Το NetProphet είναι ένα παιχνίδι προβλέψεων τένις όπου μπορείτε να κάνετε προβλέψεις σε πραγματικούς αγώνες. Κερδίζετε νομίσματα για σωστές προβλέψεις και μπορείτε να ανεβείτε στον πίνακα κατάταξης."
+            answer: "Το NetProphet είναι ένα παιχνίδι προβλέψεων όπου μπορείτε να κάνετε προβλέψεις σε ερασιτεχνικούς αγώνες. Κερδίζετε νομίσματα για σωστές προβλέψεις και μπορείτε να ανεβείτε στον πίνακα κατάταξης."
         },
         {
             question: "Πώς κερδίζω νομίσματα;",
             answer: "Κερδίζετε νομίσματα κάνοντας σωστές προβλέψεις σε αγώνες. Το ποσό των νομισμάτων που κερδίζετε εξαρτάται από τις αποδόσεις της πρόβλεψής σας - υψηλότερες αποδόσεις σημαίνουν υψηλότερες ανταμοιβές."
         },
         {
-            question: "Πώς υπολογίζονται οι αποδόσεις;",
-            answer: "Οι αποδόσεις μας υπολογίζονται χρησιμοποιώντας προηγμένους αλγόριθμους που λαμβάνουν υπόψη τις βαθμολογίες NTRP των παικτών, την πρόσφατη φόρμα, τα ρεκόρ μεταξύ τους, τις προτιμήσεις επιφάνειας και άλλους στατιστικούς παράγοντες."
-        },
-        {
-            question: "Μπορώ να αποσύρω τα νομίσματά μου;",
+            question: "Μπορώ να κάνω cash out;",
             answer: "Όχι, τα νομίσματα δεν μπορούν να αποσυρθούν. Χρησιμοποιούνται μόνο για αγορές στην εφαρμογή και δεν μετατρέπονται σε πραγματικά χρήματα."
         },
         {
@@ -80,6 +76,10 @@ const faqData: Record<string, FAQItem[]> = {
         {
             question: "Πώς αλλάζω τις πληροφορίες του προφίλ μου;",
             answer: "Μπορείτε να ενημερώσετε τις πληροφορίες του προφίλ σας πηγαίνοντας στις ρυθμίσεις λογαριασμού μετά τη σύνδεση."
+        },
+        {
+            question: "Πώς μπορώ να αγοράσω νομίσματα;",
+            answer: "Μπορείτε να αγοράσετε νομίσματα στην σελίδα Κατάστημα, όπου μπορείτε να δείτε τα διαθέσιμα πακέτα και να τα αγοράσετε."
         }
     ]
 };
