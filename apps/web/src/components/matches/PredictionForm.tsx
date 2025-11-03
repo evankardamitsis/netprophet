@@ -501,18 +501,6 @@ export function PredictionForm({
                     borders.rounded.sm,
                     !formPredictions.winner ? "border-yellow-400/60 border-2 animate-pulse" : "border-slate-700/50"
                 )}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{
-                    opacity: 1,
-                    y: 0,
-                    ...((!formPredictions.winner) && {
-                        boxShadow: ['0 0 0 0 rgba(250, 204, 21, 0.4)', '0 0 20px rgba(250, 204, 21, 0.3)', '0 0 0 0 rgba(250, 204, 21, 0.4)']
-                    })
-                }}
-                transition={{
-                    duration: 0.3,
-                    boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
-                }}
             >
                 <div className="flex items-center space-x-2 mb-2">
                     <h3 className={cx(typography.body.md, "font-bold text-white")}>
