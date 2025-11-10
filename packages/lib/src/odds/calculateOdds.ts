@@ -96,32 +96,103 @@ export function calculateOdds(
   // Calculate base probability from factors with NTRP-heavy weighting
   let player1Score = 0.5; // Start at 50%
 
-  // Apply factor adjustments with significantly increased NTRP weight
-  player1Score += factors.ntrpAdvantage * 0.35; // Significantly increased from 0.18
-  player1Score += factors.formAdvantage * 0.1; // Reduced to make room for NTRP
-  player1Score += factors.surfaceAdvantage * 0.08; // Reduced
-  player1Score += factors.headToHeadAdvantage * 0.1; // Reduced
-  player1Score += factors.experienceAdvantage * 0.05; // Reduced
-  player1Score += factors.momentumAdvantage * 0.03; // Reduced
+  const ntrpDiff = Math.abs(player1.ntrpRating - player2.ntrpRating);
+  const baseRating = Math.min(player1.ntrpRating, player2.ntrpRating);
+  let ntrpWeight = 0.25; // base
+
+  if (ntrpDiff >= 1.5) {
+    ntrpWeight = baseRating >= 4.0 ? 0.6 : 0.55;
+  } else if (ntrpDiff >= 1.0) {
+    if (baseRating >= 4.0) {
+      ntrpWeight = 0.55;
+    } else if (baseRating >= 3.5) {
+      ntrpWeight = 0.5;
+    } else {
+      ntrpWeight = 0.45;
+    }
+  } else if (ntrpDiff >= 0.5) {
+    ntrpWeight = 0.35;
+  }
+
+  const remainingWeight = 1 - ntrpWeight;
+  const totalH2HMatches = h2hRecord
+    ? (h2hRecord.wins ?? 0) + (h2hRecord.losses ?? 0)
+    : 0;
+
+  let headToHeadWeight = 0;
+  if (totalH2HMatches > 0) {
+    const baseH2HWeight = 0.08;
+    const matchBonus = Math.min(0.12, totalH2HMatches * 0.02);
+    const maxH2HWeight = Math.min(0.2, baseH2HWeight + matchBonus);
+    headToHeadWeight = Math.min(remainingWeight * 0.4, maxH2HWeight);
+  }
+
+  const otherFactors = 4; // form, surface, experience, momentum
+  const otherWeightPool = Math.max(remainingWeight - headToHeadWeight, 0);
+  const otherFactorWeight =
+    otherFactors > 0 ? otherWeightPool / otherFactors : 0;
+
+  player1Score += factors.ntrpAdvantage * ntrpWeight;
+  player1Score += factors.formAdvantage * otherFactorWeight;
+  player1Score += factors.surfaceAdvantage * otherFactorWeight;
+  player1Score += factors.experienceAdvantage * otherFactorWeight;
+  player1Score += factors.momentumAdvantage * otherFactorWeight;
+  player1Score += factors.headToHeadAdvantage * headToHeadWeight;
+
+  if (h2hRecord && totalH2HMatches >= 2) {
+    const h2hWinRate = totalH2HMatches ? h2hRecord.wins / totalH2HMatches : 0.5;
+    const ratingDiffAdjustment = ntrpDiff <= 0.5 ? 1 - ntrpDiff * 0.8 : 0.6;
+    const blendStrength = Math.max(
+      0,
+      Math.min(0.85, (0.25 + totalH2HMatches * 0.08) * ratingDiffAdjustment)
+    );
+    player1Score =
+      player1Score * (1 - blendStrength) + h2hWinRate * blendStrength;
+  }
 
   // Add uncertainty factor to prevent extreme results
   const uncertaintyFactor = 0.05; // 5% uncertainty
   const randomFactor = (Math.random() - 0.5) * uncertaintyFactor;
   player1Score += randomFactor;
 
+  if (h2hRecord && totalH2HMatches >= 2) {
+    const player1Wins = h2hRecord.wins ?? 0;
+    const player2Wins = h2hRecord.losses ?? 0;
+    if (player1Wins !== player2Wins) {
+      const h2hTilt = Math.min(
+        0.2,
+        Math.abs(player1Wins - player2Wins) * 0.025 + totalH2HMatches * 0.01
+      );
+      if (player1Wins > player2Wins && player1Score < 0.5 + h2hTilt) {
+        player1Score = 0.5 + h2hTilt;
+      } else if (player2Wins > player1Wins && player1Score > 0.5 - h2hTilt) {
+        player1Score = 0.5 - h2hTilt;
+      }
+    }
+  }
+
   // Dynamic bounds based on NTRP difference - allow more extreme results for significant rating gaps
-  const ntrpDiff = Math.abs(player1.ntrpRating - player2.ntrpRating);
   let minBound = 0.15;
   let maxBound = 0.85;
 
-  if (ntrpDiff >= 0.5) {
+  if (ntrpDiff < 0.2) {
+    minBound = 0.35;
+    maxBound = 0.65;
+  } else if (ntrpDiff < 0.35) {
+    minBound = 0.3;
+    maxBound = 0.7;
+  } else if (ntrpDiff >= 1.5) {
+    // For very large differences (1.5+), allow even more extreme results
+    minBound = 0.05; // 5%
+    maxBound = 0.95; // 95%
+  } else if (ntrpDiff >= 1.0) {
+    // For large differences (1.0+), allow more extreme results
+    minBound = 0.1; // 10%
+    maxBound = 0.9; // 90%
+  } else if (ntrpDiff >= 0.5) {
     // For significant NTRP differences, allow more extreme probabilities
     minBound = 0.1; // 10%
     maxBound = 0.9; // 90%
-  } else if (ntrpDiff >= 1.0) {
-    // For very large differences (1.0+), allow even more extreme results
-    minBound = 0.05; // 5%
-    maxBound = 0.95; // 95%
   }
 
   player1Score = Math.max(minBound, Math.min(maxBound, player1Score));
@@ -336,8 +407,10 @@ function calculateHeadToHeadAdvantage(
       recentBonus = h2hRecord.lastMatchResult === "W" ? 0.05 : -0.05; // Reduced from 0.1/-0.1
     }
   }
-  const h2hAdvantage = (p1H2HWinRate - 0.5) * 1.5 + recentBonus; // Reduced from 2
-  return Math.tanh(h2hAdvantage);
+  const matchVolumeBoost = Math.min(0.4, totalMatches * 0.05);
+  const rawAdvantage =
+    (p1H2HWinRate - 0.5) * (0.8 + matchVolumeBoost) + recentBonus;
+  return Math.tanh(rawAdvantage * 1.1);
 }
 
 function calculateExperienceAdvantage(

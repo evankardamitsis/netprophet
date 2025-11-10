@@ -642,12 +642,29 @@ export async function getHeadToHeadRecord(
 
     const record = data[0];
 
+    const player1IsRecordA = record.player_a_id === player1Id;
+    const player1Wins = player1IsRecordA
+      ? record.player_a_wins
+      : record.player_b_wins;
+    const player1Losses = player1IsRecordA
+      ? record.player_b_wins
+      : record.player_a_wins;
+
+    let lastMatchResult: "W" | "L" | undefined;
+    if (record.last_match_result === "A" || record.last_match_result === "B") {
+      const playerAWonLast = record.last_match_result === "A";
+      const player1WonLast = player1IsRecordA
+        ? playerAWonLast
+        : !playerAWonLast;
+      lastMatchResult = player1WonLast ? "W" : "L";
+    }
+
     // Convert to the format expected by the odds calculation algorithm
     return {
-      wins: record.player_a_wins,
-      losses: record.player_b_wins,
-      lastMatchResult: record.last_match_result === "A" ? "W" : "L",
-      lastMatchDate: record.last_match_date,
+      wins: player1Wins,
+      losses: player1Losses,
+      lastMatchResult,
+      lastMatchDate: record.last_match_date || undefined,
     };
   } catch (error) {
     console.error("Error fetching head-to-head record:", error);

@@ -109,29 +109,74 @@ function calculateOdds(
     ntrpWeight = 0.35; // 35% weight for 0.5+ differences
   }
 
-  // Adjust other weights to maintain total of 100%
   const remainingWeight = 1.0 - ntrpWeight;
-  const otherFactorsWeight = remainingWeight / 5; // Distribute among 5 other factors
+  const totalH2hMatches = (h2hRecord?.wins ?? 0) + (h2hRecord?.losses ?? 0);
+
+  let headToHeadWeight = 0;
+  if (totalH2hMatches > 0) {
+    const baseH2HWeight = 0.08;
+    const matchBonus = Math.min(0.12, totalH2hMatches * 0.02);
+    const maxH2HWeight = Math.min(0.2, baseH2HWeight + matchBonus);
+    headToHeadWeight = Math.min(remainingWeight * 0.4, maxH2HWeight);
+  }
+
+  const otherFactors = 4; // form, surface, experience, momentum
+  const otherWeightPool = Math.max(remainingWeight - headToHeadWeight, 0);
+  const otherFactorsWeight =
+    otherFactors > 0 ? otherWeightPool / otherFactors : 0;
 
   player1Score += factors.ntrpAdvantage * ntrpWeight;
   player1Score += factors.formAdvantage * otherFactorsWeight;
   player1Score += factors.surfaceAdvantage * otherFactorsWeight;
-  player1Score += factors.headToHeadAdvantage * otherFactorsWeight;
   player1Score += factors.experienceAdvantage * otherFactorsWeight;
   player1Score += factors.momentumAdvantage * otherFactorsWeight;
+  player1Score += factors.headToHeadAdvantage * headToHeadWeight;
+
+  if (h2hRecord && totalH2hMatches >= 2) {
+    const h2hWinRate = totalH2hMatches
+      ? (h2hRecord.wins ?? 0) / totalH2hMatches
+      : 0.5;
+    const ratingDiffAdjustment = ntrpDiff <= 0.5 ? 1 - ntrpDiff * 0.8 : 0.6;
+    const blendStrength = Math.max(
+      0,
+      Math.min(0.85, (0.25 + totalH2hMatches * 0.08) * ratingDiffAdjustment)
+    );
+    player1Score =
+      player1Score * (1 - blendStrength) + h2hWinRate * blendStrength;
+  }
 
   // Add uncertainty factor to prevent extreme results
   const uncertaintyFactor = 0.05; // 5% uncertainty
   const randomFactor = (Math.random() - 0.5) * uncertaintyFactor;
   player1Score += randomFactor;
 
-  // Dynamic bounds based on NTRP difference - allow more extreme results for significant rating gaps
+  if (h2hRecord && totalH2hMatches >= 2) {
+    const player1Wins = h2hRecord.wins ?? 0;
+    const player2Wins = h2hRecord.losses ?? 0;
+    if (player1Wins !== player2Wins) {
+      const h2hTilt = Math.min(
+        0.2,
+        Math.abs(player1Wins - player2Wins) * 0.025 + totalH2hMatches * 0.01
+      );
+      if (player1Wins > player2Wins && player1Score < 0.5 + h2hTilt) {
+        player1Score = 0.5 + h2hTilt;
+      } else if (player2Wins > player1Wins && player1Score > 0.5 - h2hTilt) {
+        player1Score = 0.5 - h2hTilt;
+      }
+    }
+  }
 
+  // Dynamic bounds based on NTRP difference - allow more extreme results for significant rating gaps
   let minBound = 0.2; // 20%
   let maxBound = 0.8; // 80%
 
-  // Allow more extreme results for significant NTRP differences
-  if (ntrpDiff >= 1.5) {
+  if (ntrpDiff < 0.2) {
+    minBound = 0.35;
+    maxBound = 0.65;
+  } else if (ntrpDiff < 0.35) {
+    minBound = 0.3;
+    maxBound = 0.7;
+  } else if (ntrpDiff >= 1.5) {
     // For very large differences (1.5+), allow extreme results
     minBound = 0.05; // 5%
     maxBound = 0.95; // 95%
@@ -355,8 +400,10 @@ function calculateHeadToHeadAdvantage(
       recentBonus = h2hRecord.lastMatchResult === "W" ? 0.05 : -0.05; // Reduced from 0.08 to 0.05
     }
   }
-  const h2hAdvantage = (p1H2HWinRate - 0.5) * 1.2 + recentBonus; // Reduced from 2.0 to 1.2
-  return Math.tanh(h2hAdvantage);
+  const matchVolumeBoost = Math.min(0.4, totalMatches * 0.05);
+  const rawAdvantage =
+    (p1H2HWinRate - 0.5) * (0.8 + matchVolumeBoost) + recentBonus;
+  return Math.tanh(rawAdvantage * 1.1);
 }
 
 function calculateExperienceAdvantage(
@@ -676,6 +723,14 @@ serve(async (req) => {
 
         // Fetch head-to-head record
         let h2hRecord: H2HRecordInput | undefined;
+        let rawH2hRecord: {
+          player_a_id: string;
+          player_b_id: string;
+          player_a_wins: number;
+          player_b_wins: number;
+          last_match_result: string | null;
+          last_match_date: string | null;
+        } | null = null;
         try {
           const { data: h2hData, error: h2hError } = await supabaseClient.rpc(
             "get_head_to_head_record",
@@ -686,23 +741,79 @@ serve(async (req) => {
           );
 
           if (!h2hError && h2hData && h2hData.length > 0) {
-            const record = h2hData[0];
-            h2hRecord = {
-              wins: record.player_a_wins,
-              losses: record.player_b_wins,
-              lastMatchResult: record.last_match_result === "A" ? "W" : "L",
-              lastMatchDate: record.last_match_date,
-            };
+            rawH2hRecord = h2hData[0];
           }
         } catch (h2hError) {
           console.error("Error fetching head-to-head record:", h2hError);
           // Continue without head-to-head data if there's an error
         }
 
-        // Determine which player should be player1 (higher NTRP) and player2 (lower NTRP)
-        const player1IsHigherRated = playerA.ntrpRating >= playerB.ntrpRating;
+        const h2hFavorA = !!(
+          rawH2hRecord &&
+          rawH2hRecord.player_a_wins > rawH2hRecord.player_b_wins
+        );
+        const h2hFavorB = !!(
+          rawH2hRecord &&
+          rawH2hRecord.player_b_wins > rawH2hRecord.player_a_wins
+        );
+
+        const favoredPlayerId =
+          rawH2hRecord &&
+          rawH2hRecord.player_a_wins !== rawH2hRecord.player_b_wins
+            ? rawH2hRecord.player_a_wins > rawH2hRecord.player_b_wins
+              ? rawH2hRecord.player_a_id
+              : rawH2hRecord.player_b_id
+            : null;
+
+        const defaultPlayer1IsHigherRated =
+          playerA.ntrpRating >= playerB.ntrpRating;
+
+        let player1IsHigherRated = defaultPlayer1IsHigherRated;
+        if (favoredPlayerId) {
+          if (favoredPlayerId === playerA.id) {
+            player1IsHigherRated = true;
+          } else if (favoredPlayerId === playerB.id) {
+            player1IsHigherRated = false;
+          }
+        }
+
         const player1 = player1IsHigherRated ? playerA : playerB;
         const player2 = player1IsHigherRated ? playerB : playerA;
+
+        if (rawH2hRecord) {
+          const player1IsRecordA = rawH2hRecord.player_a_id === player1.id;
+          const player1IsRecordB = rawH2hRecord.player_b_id === player1.id;
+
+          if (player1IsRecordA || player1IsRecordB) {
+            const player1Wins = player1IsRecordA
+              ? rawH2hRecord.player_a_wins
+              : rawH2hRecord.player_b_wins;
+            const player1Losses = player1IsRecordA
+              ? rawH2hRecord.player_b_wins
+              : rawH2hRecord.player_a_wins;
+
+            let lastMatchResult: "W" | "L" | undefined;
+            if (
+              rawH2hRecord.last_match_result === "A" ||
+              rawH2hRecord.last_match_result === "B"
+            ) {
+              const playerAWon = rawH2hRecord.last_match_result === "A";
+              const player1WonLast = player1IsRecordA
+                ? playerAWon
+                : !playerAWon;
+              lastMatchResult = player1WonLast ? "W" : "L";
+            }
+
+            h2hRecord = {
+              wins: player1Wins,
+              losses: player1Losses,
+              lastMatchResult,
+              lastMatchDate: rawH2hRecord.last_match_date || undefined,
+            };
+          } else {
+            h2hRecord = undefined;
+          }
+        }
 
         // Calculate odds using embedded algorithm with head-to-head data
         const oddsResult = calculateOdds(player1, player2, context, h2hRecord);
@@ -734,8 +845,8 @@ serve(async (req) => {
             matchId: match.id,
             success: true,
             odds: {
-              player_a: oddsResult.player1Odds,
-              player_b: oddsResult.player2Odds,
+              player_a: odds_a,
+              player_b: odds_b,
               confidence: oddsResult.confidence,
             },
           });
