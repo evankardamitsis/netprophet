@@ -381,6 +381,7 @@
     "betSuccessMessage": "Your prediction has been successfully placed and is now active.",
     "viewMyPicks": "View My Picks",
     "errorPlacingBetCheckBalance": "Error placing {type} prediction(s). Please check your balance and try again.",
+    "cannotPlacePredictionOnOwnMatch": "You cannot place predictions on matches you are participating in.",
     "needSafeBetTokens": "You need {cost} safe prediction tokens to use this feature. You have {tokens}.",
     "parlayBetDescription": "Parlay prediction - {count} predictions - {odds}x odds",
     "individualBetDescription": "{name} - {multiplier}x multiplier",

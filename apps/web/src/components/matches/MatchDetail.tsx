@@ -341,12 +341,12 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
         setHasFormChanged(true);
     };
 
-    const handleSubmitPredictions = () => {
+    const handleSubmitPredictions = async () => {
         const predictionText = buildPredictionText(formPredictions);
 
         if (predictionText) {
             // Add prediction to slip (bet amount will be set in the slip)
-            addPrediction({
+            await addPrediction({
                 matchId: match.id,
                 match,
                 prediction: formPredictions,

@@ -9,6 +9,9 @@ import {
     removeFromSessionStorage,
     clearAllFormPredictions
 } from '@/lib/sessionStorage';
+import { supabase } from '@netprophet/lib';
+import { toast } from 'sonner';
+import { useDictionary } from '@/context/DictionaryContext';
 
 // Add PredictionOptions type
 export interface PredictionOptions {
@@ -57,7 +60,7 @@ export interface OutrightsPredictionItem extends Omit<PredictionItem, 'predictio
 interface PredictionSlipContextType {
     predictions: StructuredPredictionItem[];
     outrightsPredictions: OutrightsPredictionItem[];
-    addPrediction: (item: StructuredPredictionItem) => void;
+    addPrediction: (item: StructuredPredictionItem) => Promise<void>;
     addOutrightsPrediction: (item: OutrightsPredictionItem) => void;
     removePrediction: (matchId: string) => void;
     removeOutrightsPrediction: (matchId: string) => void;
@@ -80,7 +83,7 @@ interface PredictionSlipContextType {
 const PredictionSlipContext = createContext<PredictionSlipContextType>({
     predictions: [],
     outrightsPredictions: [],
-    addPrediction: () => { },
+    addPrediction: async () => { },
     addOutrightsPrediction: () => { },
     removePrediction: () => { },
     removeOutrightsPrediction: () => { },
@@ -153,6 +156,8 @@ function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
 }
 
 export function PredictionSlipProvider({ children }: { children: React.ReactNode }) {
+    const { dict } = useDictionary();
+    
     // Initialize state from session storage
     const [predictions, setPredictions] = useState<StructuredPredictionItem[]>(() => {
         const stored = loadFromSessionStorage(SESSION_KEYS.PREDICTIONS, []);
@@ -223,7 +228,41 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
         }
     }, [predictions.length, outrightsPredictions.length]);
 
-    const addPrediction = (item: StructuredPredictionItem) => {
+    const addPrediction = async (item: StructuredPredictionItem) => {
+        // Validate that user is not a participant in this match
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Get user's profile to check claimed_player_id
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('claimed_player_id')
+                    .eq('id', user.id)
+                    .single();
+
+                const claimedPlayerId = profile?.claimed_player_id;
+                
+                if (claimedPlayerId) {
+                    // Check if user is participating in this match
+                    const match = item.match;
+                    if (match && match.player_a_id && match.player_b_id) {
+                        const isParticipant = 
+                            match.player_a_id === claimedPlayerId || 
+                            match.player_b_id === claimedPlayerId;
+
+                        if (isParticipant) {
+                            toast.error(dict?.matches?.cannotPlacePredictionOnOwnMatch || 'You cannot place predictions on matches you are participating in.');
+                            return;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error validating participant conflict:', error);
+            // Don't block adding prediction if validation fails - let backend handle it
+        }
+
+        // If validation passes, add the prediction
         setPredictions(prev => {
             const exists = prev.find(p => p.matchId === item.matchId);
             if (exists) {

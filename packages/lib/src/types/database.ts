@@ -503,6 +503,7 @@ export type Database = {
           accuracy_percentage: number | null;
           avatar_url: string | null;
           balance: number | null;
+          claimed_player_id: string | null;
           best_winning_streak: number | null;
           created_at: string | null;
           current_winning_streak: number | null;
@@ -531,6 +532,7 @@ export type Database = {
           accuracy_percentage?: number | null;
           avatar_url?: string | null;
           balance?: number | null;
+          claimed_player_id?: string | null;
           best_winning_streak?: number | null;
           created_at?: string | null;
           current_winning_streak?: number | null;
@@ -559,6 +561,7 @@ export type Database = {
           accuracy_percentage?: number | null;
           avatar_url?: string | null;
           balance?: number | null;
+          claimed_player_id?: string | null;
           best_winning_streak?: number | null;
           created_at?: string | null;
           current_winning_streak?: number | null;

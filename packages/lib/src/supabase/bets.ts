@@ -56,6 +56,84 @@ export interface BetStats {
 }
 
 export class BetsService {
+  private static async assertUserNotParticipant(
+    userId: string,
+    matchIds: string[]
+  ) {
+    const uniqueMatchIds = Array.from(new Set(matchIds)).filter(Boolean);
+    if (uniqueMatchIds.length === 0) {
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("claimed_player_id")
+      .eq("id", userId)
+      .single();
+
+    if (profileError && profileError.code !== "PGRST116") {
+      console.error("Error fetching profile for bet validation:", profileError);
+      throw new Error(
+        `Failed to validate profile: ${profileError.message || "Unknown error"}`
+      );
+    }
+
+    const claimedPlayerId = profile?.claimed_player_id;
+    if (!claimedPlayerId) {
+      console.log("No claimed_player_id found, skipping participant validation");
+      return;
+    }
+
+    console.log("Validating participant conflict:", {
+      userId,
+      claimedPlayerId,
+      matchIds: uniqueMatchIds,
+    });
+
+    const { data: matches, error: matchesError } = await supabase
+      .from("matches")
+      .select("id, player_a_id, player_b_id")
+      .in("id", uniqueMatchIds);
+
+    if (matchesError) {
+      console.error("Error fetching matches for bet validation:", matchesError);
+      throw new Error(
+        `Failed to validate matches: ${matchesError.message || "Unknown error"}`
+      );
+    }
+
+    if (!matches || matches.length === 0) {
+      console.warn(
+        "No matches found for validation. Match IDs:",
+        uniqueMatchIds
+      );
+      // Don't throw error - matches might not be synced yet
+      return;
+    }
+
+    console.log("Found matches for validation:", matches);
+
+    // Check each match for conflicts
+    for (const match of matches) {
+      if (
+        match.player_a_id === claimedPlayerId ||
+        match.player_b_id === claimedPlayerId
+      ) {
+        console.error("Participant conflict detected:", {
+          matchId: match.id,
+          claimedPlayerId,
+          player_a_id: match.player_a_id,
+          player_b_id: match.player_b_id,
+        });
+        throw new Error(
+          "You cannot place predictions on matches you are participating in."
+        );
+      }
+    }
+
+    console.log("Participant validation passed - no conflicts found");
+  }
+
   /**
    * Create a new bet
    */
@@ -92,6 +170,10 @@ export class BetsService {
       status: "active",
     };
 
+    await BetsService.assertUserNotParticipant(sessionData.session.user.id, [
+      betData.matchId,
+    ]);
+
     console.log("Insert data object:", insertData);
     console.log("Insert data JSON:", JSON.stringify(insertData, null, 2));
 
@@ -120,17 +202,23 @@ export class BetsService {
     if (!sessionData.session) {
       throw new Error("User must be authenticated to create a parlay bet");
     }
+    const userId = sessionData.session.user.id;
 
     // Generate a unique parlay ID
     const parlayId = crypto.randomUUID();
     const createdBets: Bet[] = [];
+
+    await BetsService.assertUserNotParticipant(
+      userId,
+      parlayData.predictions.map((p) => p.matchId).filter(Boolean)
+    );
 
     // First, create the parlay record
     const { data: parlayRecord, error: parlayError } = await supabase
       .from("parlays")
       .insert({
         id: parlayId,
-        user_id: sessionData.session.user.id,
+        user_id: userId,
         total_stake: parlayData.totalStake,
         base_odds: parlayData.baseOdds,
         final_odds: parlayData.finalOdds,
@@ -162,7 +250,7 @@ export class BetsService {
       const { data, error } = await supabase
         .from("bets")
         .insert({
-          user_id: sessionData.session.user.id,
+          user_id: userId,
           match_id: matchId,
           bet_amount: parlayData.totalStake, // Use total stake for each bet
           multiplier: parlayData.finalOdds, // Use final parlay odds

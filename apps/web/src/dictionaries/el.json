@@ -336,6 +336,7 @@
     "betSuccessMessage": "Η πρόβλεψή σου έχει τοποθετηθεί επιτυχώς και είναι τώρα ενεργή.",
     "viewMyPicks": "Δες τις Προβλέψεις σου",
     "errorPlacingBetCheckBalance": "Σφάλμα κατά την τοποθέτηση προβλέψεων {type}. Παρακαλώ έλεγξε το υπόλοιπό σου και δοκίμασε ξανά.",
+    "cannotPlacePredictionOnOwnMatch": "Δεν μπορείς να τοποθετήσεις προβλέψεις σε αγώνες στους οποίους συμμετέχεις.",
     "needSafeBetTokens": "Χρειάζεσαι {cost} token ασφαλής προβλέψης για αυτή τη λειτουργία. Έχεις {tokens}.",
     "parlayBetDescription": "Προβλέψη παρολί - {count} προβλέψεις - {odds}x πιθανότητες",
     "individualBetDescription": "{name} - {multiplier}x πολλαπλασιαστής",

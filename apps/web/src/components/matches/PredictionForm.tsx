@@ -585,26 +585,18 @@ export function PredictionForm({
                     <motion.div
                         ref={matchResultRef}
                         className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showMatchResultPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
-                        animate={showMatchResultPulse ? {
-                            scale: [1, 1.02, 1],
-                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
-                        } : {}}
-                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
-
                     >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                             <div className="flex items-center space-x-2">
                                 <h3 className="text-sm font-bold text-white">{dict?.matches?.matchResult || 'Match Result'}</h3>
-                                <motion.div
+                                <div
                                     className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${formPredictions.matchResult
                                         ? 'bg-green-600/20 text-green-300 border-green-500/30'
                                         : 'bg-slate-700/20 text-slate-400 border-slate-600/30'
                                         }`}
-                                    animate={formPredictions.matchResult ? { scale: [1, 1.1, 1] } : {}}
-                                    transition={{ duration: 0.3 }}
                                 >
                                     <span>+0.2x</span>
-                                </motion.div>
+                                </div>
                             </div>
                             <div className="bg-purple-600/20 text-purple-300 text-xs font-bold px-2 py-1 rounded-full border border-purple-500/30">
                                 {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
@@ -790,16 +782,14 @@ export function PredictionForm({
                                         const displayBonus = setScoresCount > 0 ? currentBonus : maxBonus;
 
                                         return (
-                                            <motion.div
+                                            <div
                                                 className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${setScoresCount > 0
                                                     ? 'bg-green-600/20 text-green-300 border-green-500/30'
                                                     : 'bg-slate-700/20 text-slate-400 border-slate-600/30'
                                                     }`}
-                                                animate={setScoresCount > 0 ? { scale: [1, 1.1, 1] } : {}}
-                                                transition={{ duration: 0.3 }}
                                             >
                                                 <span>+{displayBonus.toFixed(1)}x</span>
-                                            </motion.div>
+                                            </div>
                                         );
                                     })()}
                                 </div>
@@ -840,12 +830,6 @@ export function PredictionForm({
                         <motion.div
                             ref={setWinnersRef}
                             className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSetWinnersPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
-                            animate={showSetWinnersPulse ? {
-                                scale: [1, 1.02, 1],
-                                boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
-                            } : {}}
-                            transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
-
                         >
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center space-x-2">
@@ -865,16 +849,14 @@ export function PredictionForm({
                                         const displayBonus = setWinnersCount > 0 ? currentBonus : maxBonus;
 
                                         return (
-                                            <motion.div
+                                            <div
                                                 className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${setWinnersCount > 0
                                                     ? 'bg-green-600/20 text-green-300 border-green-500/30'
                                                     : 'bg-slate-700/20 text-slate-400 border-slate-600/30'
                                                     }`}
-                                                animate={setWinnersCount > 0 ? { scale: [1, 1.1, 1] } : {}}
-                                                transition={{ duration: 0.3 }}
                                             >
                                                 <span>+{displayBonus.toFixed(1)}x</span>
-                                            </motion.div>
+                                            </div>
                                         );
                                     })()}
                                 </div>
@@ -979,12 +961,6 @@ export function PredictionForm({
                     <motion.div
                         ref={setScoresRef}
                         className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSetScoresPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
-                        animate={showSetScoresPulse ? {
-                            scale: [1, 1.02, 1],
-                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
-                        } : {}}
-                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
-
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -997,16 +973,14 @@ export function PredictionForm({
                                     const displayBonus = setScoresCount > 0 ? currentBonus : maxBonus;
 
                                     return (
-                                        <motion.div
+                                        <div
                                             className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${setScoresCount > 0
                                                 ? 'bg-green-600/20 text-green-300 border-green-500/30'
                                                 : 'bg-slate-700/20 text-slate-400 border-slate-600/30'
                                                 }`}
-                                            animate={setScoresCount > 0 ? { scale: [1, 1.1, 1] } : {}}
-                                            transition={{ duration: 0.3 }}
                                         >
                                             <span>+{displayBonus.toFixed(1)}x</span>
-                                        </motion.div>
+                                        </div>
                                     );
                                 })()}
                             </div>
@@ -1054,12 +1028,6 @@ export function PredictionForm({
                     <motion.div
                         ref={setTiebreaksRef}
                         className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showTiebreaksPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
-                        animate={showTiebreaksPulse ? {
-                            scale: [1, 1.02, 1],
-                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
-                        } : {}}
-                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
-
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -1074,16 +1042,14 @@ export function PredictionForm({
                                     const displayBonus = tiebreakPredictionsCount > 0 ? currentBonus : maxBonus;
 
                                     return (
-                                        <motion.div
+                                        <div
                                             className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${tiebreakPredictionsCount > 0
                                                 ? 'bg-green-600/20 text-green-300 border-green-500/30'
                                                 : 'bg-slate-700/20 text-slate-400 border-slate-600/30'
                                                 }`}
-                                            animate={tiebreakPredictionsCount > 0 ? { scale: [1, 1.1, 1] } : {}}
-                                            transition={{ duration: 0.3 }}
                                         >
                                             <span>+{displayBonus.toFixed(1)}x</span>
-                                        </motion.div>
+                                        </div>
                                     );
                                 })()}
                             </div>
@@ -1224,12 +1190,6 @@ export function PredictionForm({
                     <motion.div
                         ref={superTiebreakRef}
                         className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSuperTiebreakPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
-                        animate={showSuperTiebreakPulse ? {
-                            scale: [1, 1.02, 1],
-                            boxShadow: ['0 0 0 0 rgba(255, 255, 0, 0.7)', '0 0 20px rgba(255, 255, 0, 0.5)', '0 0 0 0 rgba(255, 255, 0, 0)']
-                        } : {}}
-                        transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}
-
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -1242,16 +1202,14 @@ export function PredictionForm({
                                     const displayBonus = superTiebreakScoreCount > 0 ? currentBonus : maxBonus;
 
                                     return (
-                                        <motion.div
+                                        <div
                                             className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center space-x-1 transition-all duration-300 ${superTiebreakScoreCount > 0
                                                 ? 'bg-green-600/20 text-green-300 border-green-500/30'
                                                 : 'bg-slate-700/20 text-slate-400 border-slate-600/30'
                                                 }`}
-                                            animate={superTiebreakScoreCount > 0 ? { scale: [1, 1.1, 1] } : {}}
-                                            transition={{ duration: 0.3 }}
                                         >
                                             <span>+{displayBonus.toFixed(1)}x</span>
-                                        </motion.div>
+                                        </div>
                                     );
                                 })()}
                             </div>

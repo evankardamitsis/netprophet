@@ -127,6 +127,12 @@ serve(async (req) => {
   }
 });
 
+const isValidUUID = (value?: string | null) =>
+  typeof value === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
+
 async function handlePlaceBet(supabase: any, user: any, body: any) {
   const { amount, matchId, description } = body;
 
@@ -145,7 +151,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
   // Check user balance
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("balance")
+    .select("balance, claimed_player_id")
     .eq("id", user.id)
     .single();
 
@@ -156,7 +162,8 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
     throw new Error(`Failed to load profile: ${profileError.message}`);
   }
 
-  if (!profile) {
+  let activeProfile = profile;
+  if (!activeProfile) {
     console.log("No profile found, creating one with default balance");
     // Create profile with 0 balance - users get welcome bonus instead
     const { data: newProfile, error: createError } = await supabase
@@ -174,7 +181,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
         referral_bonus_earned: 0,
         leaderboard_prizes_earned: 0,
       })
-      .select("balance")
+      .select("balance, claimed_player_id")
       .single();
 
     if (createError) {
@@ -189,16 +196,84 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
         `Insufficient balance: ${newProfile.balance} < ${amount}`
       );
     }
+    activeProfile = newProfile;
   } else {
     console.log("Existing profile balance:", profile.balance);
 
-    if (profile.balance < amount) {
-      throw new Error(`Insufficient balance: ${profile.balance} < ${amount}`);
+    if (activeProfile.balance < amount) {
+      throw new Error(
+        `Insufficient balance: ${activeProfile.balance} < ${amount}`
+      );
+    }
+  }
+
+  const claimedPlayerId = activeProfile?.claimed_player_id;
+  
+  // Always validate if we have a claimed player and a matchId
+  // The matchId might be a placeholder (like "1") from the frontend,
+  // but if it's a valid UUID, we should validate
+  if (claimedPlayerId && matchId) {
+    const isMatchIdUUID = isValidUUID(matchId);
+    
+    console.log("Participant validation check:", {
+      claimedPlayerId,
+      matchId,
+      isMatchIdUUID,
+    });
+
+    if (isMatchIdUUID) {
+      const { data: match, error: matchError } = await supabase
+        .from("matches")
+        .select("player_a_id, player_b_id")
+        .eq("id", matchId)
+        .maybeSingle();
+
+      if (matchError) {
+        console.error("Failed to fetch match for conflict check:", matchError);
+        throw new Error(
+          "Unable to validate match participants. Please try again."
+        );
+      }
+
+      if (match) {
+        console.log("Match found for validation:", {
+          matchId: match.id,
+          player_a_id: match.player_a_id,
+          player_b_id: match.player_b_id,
+          claimedPlayerId,
+        });
+
+        if (
+          match.player_a_id === claimedPlayerId ||
+          match.player_b_id === claimedPlayerId
+        ) {
+          console.error("Participant conflict detected in wallet-operations:", {
+            matchId: match.id,
+            claimedPlayerId,
+            player_a_id: match.player_a_id,
+            player_b_id: match.player_b_id,
+          });
+          throw new Error(
+            "You cannot place predictions on matches you are participating in."
+          );
+        }
+        console.log("Participant validation passed in wallet-operations");
+      } else {
+        console.warn(
+          "Match not found for validation (may be a placeholder or unsynced match):",
+          matchId
+        );
+      }
+    } else {
+      console.log(
+        "Skipping participant validation because matchId is not a UUID (likely a placeholder):",
+        matchId
+      );
     }
   }
 
   // Update balance and create transaction
-  const currentBalance = profile ? profile.balance : 0;
+  const currentBalance = activeProfile ? activeProfile.balance : 0;
   const newBalance = currentBalance - amount;
 
   const { error: updateError } = await supabase

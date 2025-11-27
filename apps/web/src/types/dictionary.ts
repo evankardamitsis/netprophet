@@ -135,6 +135,7 @@ export interface Dictionary {
     predictionsReadyForParlay?: string;
     combineAllPredictions?: string;
     placeIndividualBets?: string;
+    cannotPlacePredictionOnOwnMatch?: string;
     parlayBenefits?: string;
     addOneMorePrediction?: string;
     unlockParlayMode?: string;
