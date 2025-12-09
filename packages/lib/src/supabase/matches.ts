@@ -95,6 +95,54 @@ export async function getMatch(id: string) {
                 current_streak,
                 streak_type
             ),
+            player_a1:players!matches_player_a1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
+            player_a2:players!matches_player_a2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
+            player_b1:players!matches_player_b1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
+            player_b2:players!matches_player_b2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
             winner:players!matches_winner_id_fkey (
                 id,
                 first_name,
@@ -141,6 +189,34 @@ export async function createMatch(match: MatchInsert) {
                 ntrp_rating,
                 surface_preference
             ),
+            player_a1:players!matches_player_a1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_a2:players!matches_player_a2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b1:players!matches_player_b1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b2:players!matches_player_b2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
             winner:players!matches_winner_id_fkey (
                 id,
                 first_name,
@@ -181,6 +257,34 @@ export async function updateMatch(id: string, updates: MatchUpdate) {
                 surface_preference
             ),
             player_b:players!matches_player_b_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_a1:players!matches_player_a1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_a2:players!matches_player_a2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b1:players!matches_player_b1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b2:players!matches_player_b2_id_fkey (
                 id,
                 first_name,
                 last_name,
@@ -313,6 +417,34 @@ export async function getMatchesByTournament(tournamentId: string) {
                 surface_preference
             ),
             player_b:players!matches_player_b_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_a1:players!matches_player_a1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_a2:players!matches_player_a2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b1:players!matches_player_b1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference
+            ),
+            player_b2:players!matches_player_b2_id_fkey (
                 id,
                 first_name,
                 last_name,

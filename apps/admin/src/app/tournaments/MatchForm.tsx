@@ -18,14 +18,28 @@ import { fetchActivePlayers } from '@netprophet/lib/supabase/players';
 
 // Zod schema for form validation
 const matchFormSchema = z.object({
-    player_a_id: z.string().min(1, 'Player A is required'),
-    player_b_id: z.string().min(1, 'Player B is required'),
+    match_type: z.enum(['singles', 'doubles']),
+    player_a_id: z.string().optional(),
+    player_b_id: z.string().optional(),
+    player_a1_id: z.string().optional(),
+    player_a2_id: z.string().optional(),
+    player_b1_id: z.string().optional(),
+    player_b2_id: z.string().optional(),
     tournament_id: z.string().optional(),
     category_id: z.string().optional(),
     round: z.enum(['Round of 64', 'Round of 32', 'Round of 16', 'Quarterfinals', 'Semifinals', 'Finals']).optional(),
     status: z.enum(['upcoming', 'live', 'finished', 'cancelled']),
     start_time: z.string().min(1, 'Start time is required'),
     lock_time: z.string().optional(),
+}).refine((data) => {
+    if (data.match_type === 'singles') {
+        return data.player_a_id && data.player_b_id;
+    } else {
+        return data.player_a1_id && data.player_a2_id && data.player_b1_id && data.player_b2_id;
+    }
+}, {
+    message: 'All required players must be selected',
+    path: ['match_type']
 });
 
 type MatchFormData = z.infer<typeof matchFormSchema>;
@@ -69,8 +83,13 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
             const lockDateTime = match.lock_time ? new Date(match.lock_time) : undefined;
 
             return {
+                match_type: match.match_type || 'singles',
                 player_a_id: match.player_a_id || match.player_a?.id || '',
                 player_b_id: match.player_b_id || match.player_b?.id || '',
+                player_a1_id: match.player_a1_id || match.player_a1?.id || '',
+                player_a2_id: match.player_a2_id || match.player_a2?.id || '',
+                player_b1_id: match.player_b1_id || match.player_b1?.id || '',
+                player_b2_id: match.player_b2_id || match.player_b2?.id || '',
                 tournament_id: match.tournament_id || '',
                 category_id: match.category_id || '',
                 round: match.round || undefined,
@@ -81,8 +100,13 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
         } else if (currentTournament) {
             // Create mode - use current tournament
             return {
+                match_type: 'singles',
                 player_a_id: '',
                 player_b_id: '',
+                player_a1_id: '',
+                player_a2_id: '',
+                player_b1_id: '',
+                player_b2_id: '',
                 tournament_id: currentTournament.id,
                 category_id: '',
                 round: undefined,
@@ -93,8 +117,13 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
         } else {
             // Default empty form
             return {
+                match_type: 'singles',
                 player_a_id: '',
                 player_b_id: '',
+                player_a1_id: '',
+                player_a2_id: '',
+                player_b1_id: '',
+                player_b2_id: '',
                 tournament_id: '',
                 category_id: '',
                 round: undefined,
@@ -198,10 +227,9 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
     // Handle form submission
     const handleSubmit = form.handleSubmit((data) => {
         // Convert empty strings to null for UUID fields
-        const submitData = {
+        const submitData: any = {
             ...data,
-            player_a_id: data.player_a_id || null,
-            player_b_id: data.player_b_id || null,
+            match_type: data.match_type,
             tournament_id: data.tournament_id === 'none' || !data.tournament_id ? null : data.tournament_id,
             category_id: data.category_id === 'none' || !data.category_id ? null : data.category_id,
             round: data.round || null,
@@ -209,6 +237,23 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
             odds_a: match?.odds_a || null,
             odds_b: match?.odds_b || null
         };
+
+        // Set player fields based on match type
+        if (data.match_type === 'singles') {
+            submitData.player_a_id = data.player_a_id || null;
+            submitData.player_b_id = data.player_b_id || null;
+            submitData.player_a1_id = null;
+            submitData.player_a2_id = null;
+            submitData.player_b1_id = null;
+            submitData.player_b2_id = null;
+        } else {
+            submitData.player_a_id = null;
+            submitData.player_b_id = null;
+            submitData.player_a1_id = data.player_a1_id || null;
+            submitData.player_a2_id = data.player_a2_id || null;
+            submitData.player_b1_id = data.player_b1_id || null;
+            submitData.player_b2_id = data.player_b2_id || null;
+        }
 
         onSubmit(submitData);
     });
@@ -219,9 +264,43 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
         label: `${player.firstName} ${player.lastName} (NTRP: ${player.ntrpRating})`
     }));
 
+    const isDoubles = watchedValues.match_type === 'doubles';
+
     return (
         <form onSubmit={handleSubmit} className="space-y-8 p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Match Type Selector */}
+                <div className="space-y-3 md:col-span-2">
+                    <Label htmlFor="match_type" className="text-base font-semibold">Match Type *</Label>
+                    <Select
+                        value={watchedValues.match_type || 'singles'}
+                        onValueChange={(value) => {
+                            setValue('match_type', value as 'singles' | 'doubles');
+                            // Clear player fields when switching match type
+                            if (value === 'singles') {
+                                setValue('player_a1_id', '');
+                                setValue('player_a2_id', '');
+                                setValue('player_b1_id', '');
+                                setValue('player_b2_id', '');
+                            } else {
+                                setValue('player_a_id', '');
+                                setValue('player_b_id', '');
+                            }
+                        }}
+                    >
+                        <SelectTrigger className="h-12 text-base">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="singles" className="text-base py-3">Singles</SelectItem>
+                            <SelectItem value="doubles" className="text-base py-3">Doubles</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Singles Players */}
+                {!isDoubles && (
+                    <>
                 <SearchableSelect
                     value={watchedValues.player_a_id || ''}
                     onValueChange={(value) => setValue('player_a_id', value)}
@@ -247,6 +326,75 @@ export function MatchForm({ match, tournaments, currentTournament, categories, o
                     loadingText="Loading players..."
                     errorText={playersError}
                 />
+                    </>
+                )}
+
+                {/* Doubles Players */}
+                {isDoubles && (
+                    <>
+                        <div className="md:col-span-2">
+                            <Label className="text-base font-semibold mb-3 block">Team A</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <SearchableSelect
+                                    value={watchedValues.player_a1_id || ''}
+                                    onValueChange={(value) => setValue('player_a1_id', value)}
+                                    placeholder="Select Team A Player 1"
+                                    label="Team A Player 1 *"
+                                    disabled={loading}
+                                    error={errors.player_a1_id?.message as string | null}
+                                    items={playerItems}
+                                    loading={loading}
+                                    loadingText="Loading players..."
+                                    errorText={playersError}
+                                />
+
+                                <SearchableSelect
+                                    value={watchedValues.player_a2_id || ''}
+                                    onValueChange={(value) => setValue('player_a2_id', value)}
+                                    placeholder="Select Team A Player 2"
+                                    label="Team A Player 2 *"
+                                    disabled={loading}
+                                    error={errors.player_a2_id?.message as string | null}
+                                    items={playerItems}
+                                    loading={loading}
+                                    loadingText="Loading players..."
+                                    errorText={playersError}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <Label className="text-base font-semibold mb-3 block">Team B</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <SearchableSelect
+                                    value={watchedValues.player_b1_id || ''}
+                                    onValueChange={(value) => setValue('player_b1_id', value)}
+                                    placeholder="Select Team B Player 1"
+                                    label="Team B Player 1 *"
+                                    disabled={loading}
+                                    error={errors.player_b1_id?.message as string | null}
+                                    items={playerItems}
+                                    loading={loading}
+                                    loadingText="Loading players..."
+                                    errorText={playersError}
+                                />
+
+                                <SearchableSelect
+                                    value={watchedValues.player_b2_id || ''}
+                                    onValueChange={(value) => setValue('player_b2_id', value)}
+                                    placeholder="Select Team B Player 2"
+                                    label="Team B Player 2 *"
+                                    disabled={loading}
+                                    error={errors.player_b2_id?.message as string | null}
+                                    items={playerItems}
+                                    loading={loading}
+                                    loadingText="Loading players..."
+                                    errorText={playersError}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 {currentTournament ? (
                     <div className="space-y-3">

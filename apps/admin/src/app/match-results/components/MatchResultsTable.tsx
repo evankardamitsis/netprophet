@@ -170,6 +170,18 @@ export function MatchResultsTable({
                                         return (
                                             <TableRow key={match.id}>
                                                 <TableCell className="min-w-[200px]">
+                                                    {match.match_type === 'doubles' ? (
+                                                        <>
+                                                            <div className="font-medium text-sm sm:text-base">
+                                                                {match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name}
+                                                            </div>
+                                                            <div className="text-xs sm:text-sm text-muted-foreground">vs</div>
+                                                            <div className="font-medium text-sm sm:text-base">
+                                                                {match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        <>
                                                     <div className="font-medium text-sm sm:text-base">
                                                         {match.player_a.first_name} {match.player_a.last_name}
                                                     </div>
@@ -177,6 +189,8 @@ export function MatchResultsTable({
                                                     <div className="font-medium text-sm sm:text-base">
                                                         {match.player_b.first_name} {match.player_b.last_name}
                                                     </div>
+                                                        </>
+                                                    )}
                                                     {/* Show tournament on mobile */}
                                                     <div className="sm:hidden mt-2">
                                                         <div className="text-xs text-muted-foreground">Tournament:</div>

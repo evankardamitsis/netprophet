@@ -21,6 +21,7 @@ interface MatchDetails {
         last_match_result?: string;
     } | null;
     format: string;
+    matchType?: 'singles' | 'doubles';
 }
 
 interface Match {
@@ -41,6 +42,25 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     const router = useRouter();
     const params = useParams();
     const [isExpanded, setIsExpanded] = useState(true); // Default expanded on large screens
+
+    const isDoubles = details.matchType === 'doubles';
+
+    // Helper to format player/team name for display
+    const formatName = (name: string, isCompact: boolean = false) => {
+        if (isDoubles) {
+            // For doubles, show full team name or truncate if too long
+            if (isCompact && name.length > 20) {
+                return name.substring(0, 17) + '...';
+            }
+            return name;
+        }
+        // For singles, show last name on compact view
+        if (isCompact) {
+            const parts = name.split(' ');
+            return parts.length > 1 ? parts[parts.length - 1] : name;
+        }
+        return name;
+    };
 
     // Auto-expand on large screens, collapse on small screens
     useEffect(() => {
@@ -126,13 +146,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                         <div className="text-left min-w-0">
                             <button
                                 onClick={() => navigateToPlayer(player1Id)}
-                                disabled={!player1Id}
-                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player1Id
+                                disabled={!player1Id || isDoubles}
+                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player1Id && !isDoubles
                                     ? 'text-white hover:text-purple-300 cursor-pointer'
                                     : 'text-white cursor-default'
                                     }`}
                             >
-                                {details.player1.name.split(' ')[1]}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
+                                {formatName(details.player1.name, true)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
                             </button>
                             <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                         </div>
@@ -142,13 +162,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                         <div className="text-right min-w-0">
                             <button
                                 onClick={() => navigateToPlayer(player2Id)}
-                                disabled={!player2Id}
-                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player2Id
+                                disabled={!player2Id || isDoubles}
+                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player2Id && !isDoubles
                                     ? 'text-white hover:text-purple-300 cursor-pointer'
                                     : 'text-white cursor-default'
                                     }`}
                             >
-                                {details.player2.name.split(' ')[1]}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
+                                {formatName(details.player2.name, true)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
                             </button>
                             <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                         </div>
@@ -187,13 +207,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             <div className="text-left">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
-                                    disabled={!player1Id}
-                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player1Id
+                                    disabled={!player1Id || isDoubles}
+                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player1Id && !isDoubles
                                         ? 'text-white hover:text-purple-300 cursor-pointer'
                                         : 'text-white cursor-default'
                                         }`}
                                 >
-                                    {details.player1.name}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
+                                    {formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
                                 </button>
                                 <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                             </div>
@@ -201,13 +221,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             <div className="text-left">
                                 <button
                                     onClick={() => navigateToPlayer(player2Id)}
-                                    disabled={!player2Id}
-                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player2Id
+                                    disabled={!player2Id || isDoubles}
+                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player2Id && !isDoubles
                                         ? 'text-white hover:text-purple-300 cursor-pointer'
                                         : 'text-white cursor-default'
                                         }`}
                                 >
-                                    {details.player2.name}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
+                                    {formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
                                 </button>
                                 <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                             </div>
@@ -246,13 +266,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
-                                    disabled={!player1Id}
-                                    className={`text-white font-medium text-left transition-colors ${player1Id
+                                    disabled={!player1Id || isDoubles}
+                                    className={`text-white font-medium text-left transition-colors ${player1Id && !isDoubles
                                         ? 'hover:text-purple-300 cursor-pointer'
                                         : 'cursor-default'
                                         }`}
                                 >
-                                    {details.player1.name}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
+                                    {formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
                                 </button>
                                 <div className="text-gray-400">
                                     {dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}
@@ -261,13 +281,13 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
                                 <button
                                     onClick={() => navigateToPlayer(player2Id)}
-                                    disabled={!player2Id}
-                                    className={`text-white text-left font-medium transition-colors ${player2Id
+                                    disabled={!player2Id || isDoubles}
+                                    className={`text-white text-left font-medium transition-colors ${player2Id && !isDoubles
                                         ? 'hover:text-purple-300 cursor-pointer'
                                         : 'cursor-default'
                                         }`}
                                 >
-                                    {details.player2.name}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
+                                    {formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
                                 </button>
                                 <div className="text-gray-400">
                                     {dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}

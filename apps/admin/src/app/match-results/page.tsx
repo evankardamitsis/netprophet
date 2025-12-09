@@ -36,6 +36,7 @@ export default function MatchResultsPage() {
     ).filter((date): date is string => date !== null))].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
     const [formData, setFormData] = useState<FormData>({
         winner_id: '',
+        match_winner_team: '',
         match_result: '',
         set1_score: '',
         set2_score: '',
@@ -47,13 +48,19 @@ export default function MatchResultsPage() {
         set3_winner_id: '',
         set4_winner_id: '',
         set5_winner_id: '',
+        set1_winner_team: '',
+        set2_winner_team: '',
+        set3_winner_team: '',
+        set4_winner_team: '',
+        set5_winner_team: '',
         set1_tiebreak_score: '',
         set2_tiebreak_score: '',
         set3_tiebreak_score: '',
         set4_tiebreak_score: '',
         set5_tiebreak_score: '',
         super_tiebreak_score: '',
-        super_tiebreak_winner_id: ''
+        super_tiebreak_winner_id: '',
+        super_tiebreak_winner_team: ''
     });
 
     useEffect(() => {
@@ -69,6 +76,10 @@ export default function MatchResultsPage() {
                     *,
                     player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
                     player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
+                    player_a1:players!matches_player_a1_id_fkey(id, first_name, last_name),
+                    player_a2:players!matches_player_a2_id_fkey(id, first_name, last_name),
+                    player_b1:players!matches_player_b1_id_fkey(id, first_name, last_name),
+                    player_b2:players!matches_player_b2_id_fkey(id, first_name, last_name),
                     tournaments:tournaments!matches_tournament_id_fkey(id, name, matches_type)
                 `)
                 .order('start_time', { ascending: true });
@@ -78,6 +89,7 @@ export default function MatchResultsPage() {
             // Transform the data to match our interface
             const transformedMatches = (matchesData || []).map((match: any) => ({
                 id: match.id,
+                match_type: match.match_type || 'singles',
                 player_a: {
                     id: match.player_a?.id || '',
                     first_name: match.player_a?.first_name || '',
@@ -88,6 +100,26 @@ export default function MatchResultsPage() {
                     first_name: match.player_b?.first_name || '',
                     last_name: match.player_b?.last_name || ''
                 },
+                player_a1: match.player_a1 ? {
+                    id: match.player_a1.id,
+                    first_name: match.player_a1.first_name,
+                    last_name: match.player_a1.last_name
+                } : null,
+                player_a2: match.player_a2 ? {
+                    id: match.player_a2.id,
+                    first_name: match.player_a2.first_name,
+                    last_name: match.player_a2.last_name
+                } : null,
+                player_b1: match.player_b1 ? {
+                    id: match.player_b1.id,
+                    first_name: match.player_b1.first_name,
+                    last_name: match.player_b1.last_name
+                } : null,
+                player_b2: match.player_b2 ? {
+                    id: match.player_b2.id,
+                    first_name: match.player_b2.first_name,
+                    last_name: match.player_b2.last_name
+                } : null,
                 tournaments: Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments,
                 status: match.status,
                 start_time: match.start_time,
@@ -126,6 +158,7 @@ export default function MatchResultsPage() {
         setSelectedMatch(match);
         setFormData({
             winner_id: '',
+            match_winner_team: '',
             match_result: '',
             set1_score: '',
             set2_score: '',
@@ -137,13 +170,19 @@ export default function MatchResultsPage() {
             set3_winner_id: '',
             set4_winner_id: '',
             set5_winner_id: '',
+            set1_winner_team: '',
+            set2_winner_team: '',
+            set3_winner_team: '',
+            set4_winner_team: '',
+            set5_winner_team: '',
             set1_tiebreak_score: '',
             set2_tiebreak_score: '',
             set3_tiebreak_score: '',
             set4_tiebreak_score: '',
             set5_tiebreak_score: '',
             super_tiebreak_score: '',
-            super_tiebreak_winner_id: ''
+            super_tiebreak_winner_id: '',
+            super_tiebreak_winner_team: ''
         });
         setIsAddDialogOpen(true);
     };
@@ -154,7 +193,8 @@ export default function MatchResultsPage() {
 
         setSelectedMatch(match);
         setFormData({
-            winner_id: result.winner_id,
+            winner_id: result.winner_id || '',
+            match_winner_team: (result as any).match_winner_team || '',
             match_result: result.match_result,
             set1_score: result.set1_score || '',
             set2_score: result.set2_score || '',
@@ -166,13 +206,19 @@ export default function MatchResultsPage() {
             set3_winner_id: result.set3_winner_id || '',
             set4_winner_id: result.set4_winner_id || '',
             set5_winner_id: result.set5_winner_id || '',
+            set1_winner_team: (result as any).set1_winner_team || '',
+            set2_winner_team: (result as any).set2_winner_team || '',
+            set3_winner_team: (result as any).set3_winner_team || '',
+            set4_winner_team: (result as any).set4_winner_team || '',
+            set5_winner_team: (result as any).set5_winner_team || '',
             set1_tiebreak_score: result.set1_tiebreak_score || '',
             set2_tiebreak_score: result.set2_tiebreak_score || '',
             set3_tiebreak_score: result.set3_tiebreak_score || '',
             set4_tiebreak_score: result.set4_tiebreak_score || '',
             set5_tiebreak_score: result.set5_tiebreak_score || '',
             super_tiebreak_score: result.super_tiebreak_score || '',
-            super_tiebreak_winner_id: result.super_tiebreak_winner_id || ''
+            super_tiebreak_winner_id: result.super_tiebreak_winner_id || '',
+            super_tiebreak_winner_team: (result as any).super_tiebreak_winner_team || ''
         });
         setIsEditDialogOpen(true);
     };
@@ -182,6 +228,8 @@ export default function MatchResultsPage() {
 
         setIsSubmitting(true);
         try {
+            const isDoubles = selectedMatch.match_type === 'doubles';
+
             // Helper function to clear regular set score if tiebreak exists
             const getSetScore = (setNum: number) => {
                 const tiebreakScore = formData[`set${setNum}_tiebreak_score` as keyof typeof formData];
@@ -194,28 +242,56 @@ export default function MatchResultsPage() {
                 return regularScore || null;
             };
 
-            const resultData = {
+            const resultData: any = {
                 match_id: selectedMatch.id,
-                winner_id: formData.winner_id,
                 match_result: formData.match_result,
                 set1_score: getSetScore(1),
                 set2_score: getSetScore(2),
                 set3_score: getSetScore(3),
                 set4_score: getSetScore(4),
                 set5_score: getSetScore(5),
-                set1_winner_id: formData.set1_winner_id || null,
-                set2_winner_id: formData.set2_winner_id || null,
-                set3_winner_id: formData.set3_winner_id || null,
-                set4_winner_id: formData.set4_winner_id || null,
-                set5_winner_id: formData.set5_winner_id || null,
                 set1_tiebreak_score: formData.set1_tiebreak_score || null,
                 set2_tiebreak_score: formData.set2_tiebreak_score || null,
                 set3_tiebreak_score: formData.set3_tiebreak_score || null,
                 set4_tiebreak_score: formData.set4_tiebreak_score || null,
                 set5_tiebreak_score: formData.set5_tiebreak_score || null,
                 super_tiebreak_score: formData.super_tiebreak_score || null,
-                super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null
             };
+
+            // Handle singles vs doubles fields
+            if (isDoubles) {
+                resultData.match_winner_team = formData.match_winner_team || null;
+                resultData.winner_id = null; // Doubles doesn't use winner_id
+                resultData.set1_winner_team = formData.set1_winner_team || null;
+                resultData.set2_winner_team = formData.set2_winner_team || null;
+                resultData.set3_winner_team = formData.set3_winner_team || null;
+                resultData.set4_winner_team = formData.set4_winner_team || null;
+                resultData.set5_winner_team = formData.set5_winner_team || null;
+                resultData.super_tiebreak_winner_team = formData.super_tiebreak_winner_team || null;
+                resultData.super_tiebreak_winner_id = null;
+                // Clear singles fields
+                resultData.set1_winner_id = null;
+                resultData.set2_winner_id = null;
+                resultData.set3_winner_id = null;
+                resultData.set4_winner_id = null;
+                resultData.set5_winner_id = null;
+            } else {
+                resultData.winner_id = formData.winner_id;
+                resultData.match_winner_team = null; // Singles doesn't use match_winner_team
+                resultData.set1_winner_id = formData.set1_winner_id || null;
+                resultData.set2_winner_id = formData.set2_winner_id || null;
+                resultData.set3_winner_id = formData.set3_winner_id || null;
+                resultData.set4_winner_id = formData.set4_winner_id || null;
+                resultData.set5_winner_id = formData.set5_winner_id || null;
+                resultData.super_tiebreak_winner_id = formData.super_tiebreak_winner_id || null;
+                resultData.super_tiebreak_winner_team = null;
+                // Clear doubles fields
+                resultData.set1_winner_team = null;
+                resultData.set2_winner_team = null;
+                resultData.set3_winner_team = null;
+                resultData.set4_winner_team = null;
+                resultData.set5_winner_team = null;
+            }
 
             console.log('Submitting match result:', resultData);
             const { data, error } = await MatchResultsService.createMatchResult(resultData);
@@ -253,28 +329,57 @@ export default function MatchResultsPage() {
                 return regularScore || null;
             };
 
-            const resultData = {
-                match_id: selectedMatch.id,
-                winner_id: formData.winner_id,
+            const isDoubles = selectedMatch.match_type === 'doubles';
+
+            const resultData: any = {
                 match_result: formData.match_result,
                 set1_score: getSetScore(1),
                 set2_score: getSetScore(2),
                 set3_score: getSetScore(3),
                 set4_score: getSetScore(4),
                 set5_score: getSetScore(5),
-                set1_winner_id: formData.set1_winner_id || null,
-                set2_winner_id: formData.set2_winner_id || null,
-                set3_winner_id: formData.set3_winner_id || null,
-                set4_winner_id: formData.set4_winner_id || null,
-                set5_winner_id: formData.set5_winner_id || null,
                 set1_tiebreak_score: formData.set1_tiebreak_score || null,
                 set2_tiebreak_score: formData.set2_tiebreak_score || null,
                 set3_tiebreak_score: formData.set3_tiebreak_score || null,
                 set4_tiebreak_score: formData.set4_tiebreak_score || null,
                 set5_tiebreak_score: formData.set5_tiebreak_score || null,
                 super_tiebreak_score: formData.super_tiebreak_score || null,
-                super_tiebreak_winner_id: formData.super_tiebreak_winner_id || null
             };
+
+            // Handle singles vs doubles fields
+            if (isDoubles) {
+                resultData.match_winner_team = formData.match_winner_team || null;
+                resultData.winner_id = null; // Doubles doesn't use winner_id
+                resultData.set1_winner_team = formData.set1_winner_team || null;
+                resultData.set2_winner_team = formData.set2_winner_team || null;
+                resultData.set3_winner_team = formData.set3_winner_team || null;
+                resultData.set4_winner_team = formData.set4_winner_team || null;
+                resultData.set5_winner_team = formData.set5_winner_team || null;
+                resultData.super_tiebreak_winner_team = formData.super_tiebreak_winner_team || null;
+                resultData.super_tiebreak_winner_id = null;
+                // Clear singles fields
+                resultData.set1_winner_id = null;
+                resultData.set2_winner_id = null;
+                resultData.set3_winner_id = null;
+                resultData.set4_winner_id = null;
+                resultData.set5_winner_id = null;
+            } else {
+                resultData.winner_id = formData.winner_id;
+                resultData.match_winner_team = null; // Singles doesn't use match_winner_team
+                resultData.set1_winner_id = formData.set1_winner_id || null;
+                resultData.set2_winner_id = formData.set2_winner_id || null;
+                resultData.set3_winner_id = formData.set3_winner_id || null;
+                resultData.set4_winner_id = formData.set4_winner_id || null;
+                resultData.set5_winner_id = formData.set5_winner_id || null;
+                resultData.super_tiebreak_winner_id = formData.super_tiebreak_winner_id || null;
+                resultData.super_tiebreak_winner_team = null;
+                // Clear doubles fields
+                resultData.set1_winner_team = null;
+                resultData.set2_winner_team = null;
+                resultData.set3_winner_team = null;
+                resultData.set4_winner_team = null;
+                resultData.set5_winner_team = null;
+            }
 
             console.log('Updating match result:', resultData);
             const { data, error } = await MatchResultsService.updateMatchResult(selectedMatch.id, resultData);

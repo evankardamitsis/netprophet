@@ -49,6 +49,7 @@ interface PredictionFormProps {
     formPredictions: PredictionOptions;
     onPredictionChange: (type: keyof PredictionOptions, value: string) => void;
     details: MatchDetails;
+    isDoubles?: boolean;
     isBestOf5: boolean;
     isAmateurFormat: boolean;
     setsToShowFromResult: number;
@@ -66,6 +67,7 @@ export function PredictionForm({
     formPredictions,
     onPredictionChange,
     details,
+    isDoubles = false,
     isBestOf5,
     isAmateurFormat,
     setsToShowFromResult,
@@ -86,6 +88,13 @@ export function PredictionForm({
     const setScoresRef = useRef<HTMLDivElement>(null);
     const setTiebreaksRef = useRef<HTMLDivElement>(null);
     const superTiebreakRef = useRef<HTMLDivElement>(null);
+
+    // Helper to display names (use full team name for doubles)
+    const displayName = (name: string) => {
+        if (isDoubles) return name;
+        const parts = name.trim().split(' ');
+        return parts.length > 1 ? parts[parts.length - 1] : name;
+    };
 
     // Save form predictions to session storage whenever they change
     useEffect(() => {
@@ -520,7 +529,6 @@ export function PredictionForm({
                         className={cx(
                             "p-2 border",
                             borders.rounded.sm,
-                            transitions.default,
                             locked
                                 ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                 : (formPredictions.winner === details.player1.name
@@ -531,7 +539,7 @@ export function PredictionForm({
                         whileTap={!locked ? { scale: 0.95 } : {}}
                     >
                         <div className="text-sm font-semibold truncate">
-                            {details.player1.name.split(' ')[1]}
+                            {displayName(details.player1.name)}
                             {details.player1.ntrpRating && (
                                 <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
                             )}
@@ -544,7 +552,6 @@ export function PredictionForm({
                         className={cx(
                             "p-2 border",
                             borders.rounded.sm,
-                            transitions.default,
                             locked
                                 ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                 : (formPredictions.winner === details.player2.name
@@ -555,7 +562,7 @@ export function PredictionForm({
                         whileTap={!locked ? { scale: 0.95 } : {}}
                     >
                         <div className="text-sm font-semibold truncate">
-                            {details.player2.name.split(' ')[1]}
+                            {displayName(details.player2.name)}
                             {details.player2.ntrpRating && (
                                 <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
                             )}
@@ -602,7 +609,7 @@ export function PredictionForm({
                                 {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3'}
                             </div>
                         </div>
-                        <p className="text-xs text-gray-400 mb-2">{dict?.matches?.howWillWin?.replace('{player}', formPredictions.winner.split(' ')[1]) || `How will ${formPredictions.winner.split(' ')[1]} win the match?`}</p>
+                        <p className="text-xs text-gray-400 mb-2">{dict?.matches?.howWillWin?.replace('{player}', displayName(formPredictions.winner)) || `How will ${displayName(formPredictions.winner)} win the match?`}</p>
                         <div className="grid grid-cols-2 gap-2">
                             {isBestOf5 ? (
                                 <>
@@ -611,7 +618,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-0' ? '' : '3-0')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '3-0'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -624,7 +631,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-1' ? '' : '3-1')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '3-1'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -637,7 +644,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '3-2' ? '' : '3-2')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '3-2'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -653,7 +660,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-3' ? '' : '0-3')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '0-3'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -666,7 +673,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-3' ? '' : '1-3')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '1-3'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -679,7 +686,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-3' ? '' : '2-3')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '2-3'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -699,7 +706,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-0' ? '' : '2-0')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '2-0'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -712,7 +719,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '2-1' ? '' : '2-1')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '2-1'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -728,7 +735,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '0-2' ? '' : '0-2')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '0-2'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -741,7 +748,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleMatchResultChange(formPredictions.matchResult === '1-2' ? '' : '1-2')}
                                                 disabled={locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (formPredictions.matchResult === '1-2'
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -798,7 +805,7 @@ export function PredictionForm({
                                 </div>
                             </div>
                             <p className="text-xs text-gray-400 mb-2">
-                                {dict?.matches?.predictExactScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Predict the exact score for each set. ${formPredictions.winner.split(' ')[1]} wins all sets.`}
+                                {dict?.matches?.predictExactScore?.replace('{player}', displayName(formPredictions.winner)) || `Predict the exact score for each set. ${displayName(formPredictions.winner)} wins all sets.`}
                             </p>
                             {Array.from({
                                 length: (() => {
@@ -819,7 +826,7 @@ export function PredictionForm({
 
                                 return (
                                     <div key={i} className="space-y-1.5 mb-2">
-                                        <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {setWinner.split(' ')[1]} {dict?.matches?.wins || 'wins'}</h4>
+                                        <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {displayName(setWinner)} {dict?.matches?.wins || 'wins'}</h4>
                                         {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                                     </div>
                                 );
@@ -866,8 +873,8 @@ export function PredictionForm({
                                 {['2-1', '1-2'].includes(formPredictions.matchResult) ?
                                     ` ${dict?.matches?.selectOneSetWinner || 'Select one set winner. The other will be automatically selected.'}` :
                                     formPredictions.winner === details.player1.name ?
-                                        ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', details.player1.name.split(' ')[1]).replace('{sets1}', formPredictions.matchResult.split('-')[0]).replace('{player2}', details.player2.name.split(' ')[1]).replace('{sets2}', formPredictions.matchResult.split('-')[1]) || `${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets, ${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets`}` :
-                                        ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', details.player2.name.split(' ')[1]).replace('{sets1}', formPredictions.matchResult.split('-')[1]).replace('{player2}', details.player1.name.split(' ')[1]).replace('{sets2}', formPredictions.matchResult.split('-')[0]) || `${details.player2.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[1]} sets, ${details.player1.name.split(' ')[1]} wins ${formPredictions.matchResult.split('-')[0]} sets`}`
+                                        ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', displayName(details.player1.name)).replace('{sets1}', formPredictions.matchResult.split('-')[0]).replace('{player2}', displayName(details.player2.name)).replace('{sets2}', formPredictions.matchResult.split('-')[1]) || `${displayName(details.player1.name)} wins ${formPredictions.matchResult.split('-')[0]} sets, ${displayName(details.player2.name)} wins ${formPredictions.matchResult.split('-')[1]} sets`}` :
+                                        ` ${dict?.matches?.winsSetsDescription?.replace('{player1}', displayName(details.player2.name)).replace('{sets1}', formPredictions.matchResult.split('-')[1]).replace('{player2}', displayName(details.player1.name)).replace('{sets2}', formPredictions.matchResult.split('-')[0]) || `${displayName(details.player2.name)} wins ${formPredictions.matchResult.split('-')[1]} sets, ${displayName(details.player1.name)} wins ${formPredictions.matchResult.split('-')[0]} sets`}`
                                 }
                             </p>
                             {Array.from({ length: setsToShowFromResult }, (_, i) => {
@@ -916,7 +923,7 @@ export function PredictionForm({
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player1.name ? '' : details.player1.name)}
                                                 disabled={!canPlayer1Win || locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (currentWinner === details.player1.name
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -925,13 +932,13 @@ export function PredictionForm({
                                                             : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed')
                                                     }`}
                                             >
-                                                {details.player1.name.split(' ')[1]}
+                                                {displayName(details.player1.name)}
                                                 {!canPlayer1Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
                                             </button>
                                             <button
                                                 onClick={() => handleSetWinnerSelection(i + 1, currentWinner === details.player2.name ? '' : details.player2.name)}
                                                 disabled={!canPlayer2Win || locked}
-                                                className={`p-2 rounded-lg border transition-colors ${locked
+                                                className={`p-2 rounded-lg border ${locked
                                                     ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                     : (currentWinner === details.player2.name
                                                         ? 'bg-purple-600 border-purple-600 text-white'
@@ -940,7 +947,7 @@ export function PredictionForm({
                                                             : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed')
                                                     }`}
                                             >
-                                                {details.player2.name.split(' ')[1]}
+                                                {displayName(details.player2.name)}
                                                 {!canPlayer2Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
                                             </button>
                                         </div>
@@ -996,7 +1003,7 @@ export function PredictionForm({
 
                             return (
                                 <div key={i} className="space-y-1.5 mb-2">
-                                    <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {setWinner.split(' ')[1]} {dict?.matches?.wins || 'wins'}</h4>
+                                    <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {displayName(setWinner)} {dict?.matches?.wins || 'wins'}</h4>
                                     {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
                                 </div>
                             );
@@ -1223,11 +1230,11 @@ export function PredictionForm({
                         <div className="space-y-2 mb-3">
                             <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakWinner || 'Super Tiebreak Winner'}</h4>
                             <p className="text-xs text-gray-400 mb-2">
-                                {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', formPredictions.winner.split(' ')[1]) || `The super tiebreak winner must be ${formPredictions.winner.split(' ')[1]} to match your overall prediction.`}
+                                {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', displayName(formPredictions.winner)) || `The super tiebreak winner must be ${displayName(formPredictions.winner)} to match your overall prediction.`}
                             </p>
                             <div className="grid grid-cols-1 gap-2">
                                 <div className="p-2 rounded-lg border bg-purple-600/20 border-purple-500/30 text-purple-300">
-                                    <div className="text-sm font-semibold">{formPredictions.winner.split(' ')[1]}</div>
+                                    <div className="text-sm font-semibold">{displayName(formPredictions.winner)}</div>
                                     <div className="text-xs text-purple-400">{dict?.matches?.winsSuperTiebreak || 'Wins super tiebreak (pre-selected)'}</div>
                                 </div>
                             </div>
@@ -1236,7 +1243,7 @@ export function PredictionForm({
                         {/* Super Tiebreak Score */}
                         {formPredictions.superTieBreakWinner && (
                             <div className="space-y-1.5">
-                                <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakScore?.replace('{player}', formPredictions.winner.split(' ')[1]) || `Super Tiebreak Score - ${formPredictions.winner.split(' ')[1]} ${dict?.matches?.wins || 'wins'}`}</h4>
+                                <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakScore?.replace('{player}', displayName(formPredictions.winner)) || `Super Tiebreak Score - ${displayName(formPredictions.winner)} ${dict?.matches?.wins || 'wins'}`}</h4>
                                 <select
                                     value={formPredictions.superTieBreakScore}
                                     onChange={(e) => onPredictionChange('superTieBreakScore', e.target.value)}
@@ -1292,21 +1299,21 @@ export function PredictionForm({
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={() => onPredictionChange('acesLeader', formPredictions.acesLeader === details.player1.name ? '' : details.player1.name)}
-                        className={`p-3 rounded-lg border transition-colors ${formPredictions.acesLeader === details.player1.name
+                        className={`p-3 rounded-lg border ${formPredictions.acesLeader === details.player1.name
                             ? 'bg-purple-600 border-purple-600 text-white'
                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                             }`}
                     >
-                        {details.player1.name.split(' ')[1]}
+                                                {displayName(details.player1.name)}
                     </button>
                     <button
                         onClick={() => onPredictionChange('acesLeader', formPredictions.acesLeader === details.player2.name ? '' : details.player2.name)}
-                        className={`p-3 rounded-lg border transition-colors ${formPredictions.acesLeader === details.player2.name
+                        className={`p-3 rounded-lg border ${formPredictions.acesLeader === details.player2.name
                             ? 'bg-purple-600 border-purple-600 text-white'
                             : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
                             }`}
                     >
-                        {details.player2.name.split(' ')[1]}
+                                                {displayName(details.player2.name)}
                     </button>
                 </div>
             </div> */}

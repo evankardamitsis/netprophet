@@ -101,6 +101,30 @@ export function TournamentMatchesTable({
         return 'TBD';
     };
 
+    const getTeamName = (match: Match) => {
+        if (match.match_type === 'doubles') {
+            const player1 = match.player_a1;
+            const player2 = match.player_a2;
+            if (player1 && player2) {
+                return `${player1.first_name} ${player1.last_name} & ${player2.first_name} ${player2.last_name}`;
+            }
+            return 'TBD';
+        }
+        return getPlayerName(match.player_a);
+    };
+
+    const getTeamBName = (match: Match) => {
+        if (match.match_type === 'doubles') {
+            const player1 = match.player_b1;
+            const player2 = match.player_b2;
+            if (player1 && player2) {
+                return `${player1.first_name} ${player1.last_name} & ${player2.first_name} ${player2.last_name}`;
+            }
+            return 'TBD';
+        }
+        return getPlayerName(match.player_b);
+    };
+
     // Handle status change confirmation
     const handleConfirmStatusChange = () => {
         if (pendingStatusChange) {
@@ -152,38 +176,50 @@ export function TournamentMatchesTable({
         },
         {
             accessorKey: "player_a",
-            header: ({ column }) => {
+            header: ({ column, table }) => {
+                const firstMatch = table.getRowModel().rows[0]?.original;
+                const headerLabel = firstMatch?.match_type === 'doubles' ? 'Team A' : 'Player A';
                 return (
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     >
-                        Player A
+                        {headerLabel}
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 );
             },
             cell: ({ row }) => {
-                const player = row.getValue("player_a") as any;
-                return <div className="font-medium">{getPlayerName(player)}</div>;
+                const match = row.original;
+                return (
+                    <div className="font-medium">
+                        {match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a)}
+                    </div>
+                );
             },
         },
         {
             accessorKey: "player_b",
-            header: ({ column }) => {
+            header: ({ column, table }) => {
+                const firstMatch = table.getRowModel().rows[0]?.original;
+                const headerLabel = firstMatch?.match_type === 'doubles' ? 'Team B' : 'Player B';
                 return (
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     >
-                        Player B
+                        {headerLabel}
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                 );
             },
             cell: ({ row }) => {
-                const player = row.getValue("player_b") as any;
-                return <div className="font-medium">{getPlayerName(player)}</div>;
+                const match = row.original;
+                return (
+                    <div className="font-medium">
+                        {match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b)}
+                    </div>
+                );
             },
         },
         {
@@ -213,8 +249,8 @@ export function TournamentMatchesTable({
                     }
 
                     // Get match name for display
-                    const playerAName = getPlayerName(match.player_a);
-                    const playerBName = getPlayerName(match.player_b);
+                    const playerAName = match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a);
+                    const playerBName = match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b);
                     const matchName = `${playerAName} vs ${playerBName}`;
 
                     // Show confirmation modal for other status changes
@@ -628,8 +664,8 @@ export function TournamentMatchesTable({
 
                                     if (matchesWithoutOdds.length > 0) {
                                         const matchNames = matchesWithoutOdds.map(match => {
-                                            const playerA = getPlayerName(match.player_a);
-                                            const playerB = getPlayerName(match.player_b);
+                                            const playerA = match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a);
+                                            const playerB = match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b);
                                             return `${playerA} vs ${playerB}`;
                                         }).join(', ');
 
@@ -774,11 +810,11 @@ export function TournamentMatchesTable({
                                         />
                                         <div className="flex-1 min-w-0">
                                             <div className="font-medium text-sm text-gray-900 truncate">
-                                                {getPlayerName(match.player_a)}
+                                                {match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a)}
                                             </div>
                                             <div className="text-xs text-gray-500 text-center">vs</div>
                                             <div className="font-medium text-sm text-gray-900 truncate">
-                                                {getPlayerName(match.player_b)}
+                                                {match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b)}
                                             </div>
                                         </div>
                                     </div>
@@ -813,8 +849,8 @@ export function TournamentMatchesTable({
                                                 onEditMatch(match);
                                                 return;
                                             }
-                                            const playerAName = getPlayerName(match.player_a);
-                                            const playerBName = getPlayerName(match.player_b);
+                                            const playerAName = match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a);
+                                            const playerBName = match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b);
                                             const matchName = `${playerAName} vs ${playerBName}`;
                                             setPendingStatusChange({
                                                 matchId: match.id,

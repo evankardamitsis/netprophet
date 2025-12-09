@@ -123,6 +123,8 @@ export interface Dictionary {
     tiebreakScores: string;
     player1: string;
     player2: string;
+    teamA?: string;
+    teamB?: string;
     vs: string;
     format: string;
     amateurFormat: string;

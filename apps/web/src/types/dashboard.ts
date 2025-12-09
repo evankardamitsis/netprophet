@@ -31,10 +31,15 @@ export interface Category {
 
 export interface Match {
   id: string;
+  match_type: "singles" | "doubles";
   tournament_id: string | null;
   category_id: string | null;
   player_a_id: string | null;
+  player_a1_id: string | null;
+  player_a2_id: string | null;
   player_b_id: string | null;
+  player_b1_id: string | null;
+  player_b2_id: string | null;
   winner_id: string | null;
   status: string;
   round:
@@ -56,10 +61,18 @@ export interface Match {
   tournament_categories?: Category;
   player_a?: Player;
   player_b?: Player;
+  // Doubles players
+  player_a1?: Player;
+  player_a2?: Player;
+  player_b1?: Player;
+  player_b2?: Player;
   // Computed properties for web app compatibility
   tournament: string;
   player1: { name: string; odds: number };
   player2: { name: string; odds: number };
+  // For doubles matches, these represent teams
+  team1?: { name: string; odds: number; players: Player[] };
+  team2?: { name: string; odds: number; players: Player[] };
   time: string;
   status_display: "live" | "upcoming" | "finished";
   points: number;

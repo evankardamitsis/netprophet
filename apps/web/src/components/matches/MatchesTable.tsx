@@ -23,6 +23,34 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
 
+    const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2') => {
+        const formatPlayerLine = (player: any) => {
+            if (!player) return 'TBD (N/A)';
+            const ntrp = player?.ntrp_rating ? player.ntrp_rating.toFixed(1) : 'N/A';
+            return `${player.first_name ?? ''} ${player.last_name ?? ''}`.trim() + ` (${ntrp})`;
+        };
+
+        const renderDoublesLines = (players?: any[]) => {
+            const [p1, p2] = players || [];
+            return (
+                <div className="flex flex-col text-xs text-white leading-tight space-y-0.5">
+                    <span className="truncate">{formatPlayerLine(p1)}</span>
+                    <span className="truncate">{formatPlayerLine(p2)}</span>
+                </div>
+            );
+        };
+
+        const isTeam1 = side === 'team1';
+        if (match.match_type !== 'doubles') {
+            const player = isTeam1 ? match.player1 : match.player2;
+            const rating = isTeam1 ? match.player_a?.ntrp_rating : match.player_b?.ntrp_rating;
+            const ratingText = rating ? rating.toFixed(1) : 'N/A';
+            return `${player.name} (${ratingText})`;
+        }
+        const players = isTeam1 ? match.team1?.players : match.team2?.players;
+        return renderDoublesLines(players);
+    }, []);
+
     // Table state
     const [globalFilter, setGlobalFilter] = useState('');
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -118,18 +146,20 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                             <div className="flex items-center space-x-2">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                        <div className="text-white font-medium truncate">{match.player1.name}</div>
+                                        <div className="text-white font-medium truncate">
+                                            {getDisplayName(match, 'team1')}
+                                        </div>
                                         <div className="text-2xl font-bold text-white ml-2">{match.player1.odds.toFixed(2)}</div>
                                     </div>
-                                    <div className="text-xs text-gray-400">NTRP {match.player_a?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
                                 </div>
                                 <div className="text-gray-500 font-bold text-xs mx-2">VS</div>
                                 <div className="flex-1 min-w-0 text-right">
                                     <div className="flex items-center justify-between">
                                         <div className="text-2xl font-bold text-white mr-2">{match.player2.odds.toFixed(2)}</div>
-                                        <div className="text-white font-medium truncate">{match.player2.name}</div>
+                                        <div className="text-white font-medium truncate">
+                                            {getDisplayName(match, 'team2')}
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-gray-400">NTRP {match.player_b?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
                                 </div>
                             </div>
                             {underdog && (
@@ -178,7 +208,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 enableColumnFilter: false,
             },
         ],
-        [onSelectMatch, dict, isUnderdog]
+        [onSelectMatch, dict, isUnderdog, getDisplayName]
     );
 
     const table = useReactTable({
@@ -367,8 +397,9 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                                 {/* Players and odds - Left aligned */}
                                                 <div className="flex items-center justify-between">
                                                     <div className="min-w-0">
-                                                        <div className="text-white font-medium text-xs truncate">{match.player1.name}</div>
-                                                        <div className="text-xs text-gray-400">NTRP {match.player_a?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
+                                                        <div className="text-white font-medium text-xs truncate">
+                                                            {getDisplayName(match, 'team1')}
+                                                        </div>
                                                     </div>
                                                     <div className="text-lg font-bold text-white ml-2">{match.player1.odds.toFixed(2)}</div>
                                                 </div>
@@ -377,8 +408,9 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
 
                                                 <div className="flex items-center justify-between">
                                                     <div className="min-w-0">
-                                                        <div className="text-white font-medium text-xs truncate">{match.player2.name}</div>
-                                                        <div className="text-xs text-gray-400">NTRP {match.player_b?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
+                                                        <div className="text-white font-medium text-xs truncate">
+                                                            {getDisplayName(match, 'team2')}
+                                                        </div>
                                                     </div>
                                                     <div className="text-lg font-bold text-white ml-2">{match.player2.odds.toFixed(2)}</div>
                                                 </div>

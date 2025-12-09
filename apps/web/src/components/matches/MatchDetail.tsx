@@ -68,18 +68,24 @@ function saveFormPredictionsToSession(matchId: string, predictions: PredictionOp
 
 // Create match details from actual match data
 const createMatchDetails = (match: Match) => {
+    const isDoubles = match.match_type === 'doubles';
+    const player1Name = isDoubles ? (match.team1?.name || match.player1.name) : match.player1.name;
+    const player2Name = isDoubles ? (match.team2?.name || match.player2.name) : match.player2.name;
+    const player1Odds = isDoubles ? (match.team1?.odds ?? match.player1.odds) : match.player1.odds;
+    const player2Odds = isDoubles ? (match.team2?.odds ?? match.player2.odds) : match.player2.odds;
+
     return {
         tournament: match.tournament,
         player1: {
-            name: match.player1.name,
-            odds: match.player1.odds,
+            name: player1Name,
+            odds: player1Odds,
             wins: match.player_a?.wins || 0,
             losses: match.player_a?.losses || 0,
             ntrpRating: match.player_a?.ntrp_rating
         },
         player2: {
-            name: match.player2.name,
-            odds: match.player2.odds,
+            name: player2Name,
+            odds: player2Odds,
             wins: match.player_b?.wins || 0,
             losses: match.player_b?.losses || 0,
             ntrpRating: match.player_b?.ntrp_rating
@@ -89,7 +95,8 @@ const createMatchDetails = (match: Match) => {
         headToHeadData: null, // Will be populated by useEffect
         surface: match.tournaments?.surface || 'Unknown',
         round: match.round || '',
-        format: match.tournaments?.matches_type || 'best-of-3' // Use the tournament's matches_type
+        format: match.tournaments?.matches_type || 'best-of-3', // Use the tournament's matches_type
+        matchType: match.match_type || 'singles'
     };
 };
 
@@ -599,6 +606,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                             formPredictions={formPredictions}
                                             onPredictionChange={handlePredictionChange}
                                             details={detailsWithH2H}
+                                            isDoubles={match.match_type === 'doubles'}
                                             isBestOf5={isBestOf5}
                                             isAmateurFormat={isAmateurFormat}
                                             setsToShowFromResult={setsToShowFromResult}

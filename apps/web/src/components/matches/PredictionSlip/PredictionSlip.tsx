@@ -410,17 +410,30 @@ export function PredictionSlip({
         return formattedPrediction;
     }
 
-    function formatPredictionDisplay(prediction: any) {
+    function formatPredictionDisplay(prediction: any, match?: any) {
         // Handle case where prediction might be undefined or null
         if (!prediction) {
             return dict?.matches?.noPrediction || 'No prediction';
         }
 
+        const isDoubles = match?.match_type === 'doubles';
+
+        // Helper to format winner name - show full name for doubles, last name for singles
+        const formatWinnerName = (winner: string) => {
+            if (!winner) return '';
+            if (isDoubles) {
+                // For doubles, show full team name
+                return winner;
+            }
+            // For singles, show last name only
+            return winner.split(' ').pop() || winner;
+        };
+
         const parts = [];
 
         // Winner
         if (prediction.winner) {
-            const winnerName = prediction.winner.split(' ').pop(); // Get last name only
+            const winnerName = formatWinnerName(prediction.winner);
             parts.push(`${dict?.matches?.winner || 'Winner'}: ${winnerName}`);
         }
 
@@ -431,19 +444,19 @@ export function PredictionSlip({
 
         // Set Winners (only show if not automatically determined by match result)
         if (prediction.set1Winner && !['2-0', '0-2', '3-0', '0-3'].includes(prediction.matchResult)) {
-            parts.push(`Set 1: ${prediction.set1Winner.split(' ').pop()}`);
+            parts.push(`Set 1: ${formatWinnerName(prediction.set1Winner)}`);
         }
         if (prediction.set2Winner && !['2-0', '0-2', '3-0', '0-3'].includes(prediction.matchResult)) {
-            parts.push(`Set 2: ${prediction.set2Winner.split(' ').pop()}`);
+            parts.push(`Set 2: ${formatWinnerName(prediction.set2Winner)}`);
         }
         if (prediction.set3Winner) {
-            parts.push(`Set 3: ${prediction.set3Winner.split(' ').pop()}`);
+            parts.push(`Set 3: ${formatWinnerName(prediction.set3Winner)}`);
         }
         if (prediction.set4Winner) {
-            parts.push(`Set 4: ${prediction.set4Winner.split(' ').pop()}`);
+            parts.push(`Set 4: ${formatWinnerName(prediction.set4Winner)}`);
         }
         if (prediction.set5Winner) {
-            parts.push(`Set 5: ${prediction.set5Winner.split(' ').pop()}`);
+            parts.push(`Set 5: ${formatWinnerName(prediction.set5Winner)}`);
         }
 
         // Set Scores
@@ -473,7 +486,7 @@ export function PredictionSlip({
 
         // Super Tiebreak
         if (prediction.superTieBreakWinner) {
-            const winnerName = prediction.superTieBreakWinner.split(' ').pop();
+            const winnerName = formatWinnerName(prediction.superTieBreakWinner);
             parts.push(`Super TB: ${winnerName}`);
         }
         if (prediction.superTieBreakScore) {
@@ -728,7 +741,7 @@ export function PredictionSlip({
                                     walletBalance={wallet.balance}
                                     onRemovePrediction={handleRemovePrediction}
                                     onUpdateBetAmount={updatePredictionBetAmount}
-                                    formatPredictionDisplay={formatPredictionDisplay}
+                                    formatPredictionDisplay={(prediction) => formatPredictionDisplay(prediction, item.match)}
                                     dict={dict}
                                     hasDoublePointsMatchPowerUp={hasDoublePointsMatchPowerUp && (doublePointsMatchId === null || doublePointsMatchId === item.matchId)}
                                     isUsingDoublePointsMatch={doublePointsMatchId === item.matchId}
