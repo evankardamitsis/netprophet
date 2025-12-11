@@ -34,7 +34,13 @@ export async function fetchOptimizedTournamentResults(): Promise<{
                 id,
                 tournament_id,
                 status,
+                round,
                 start_time,
+                match_type,
+                player_a1_id,
+                player_a2_id,
+                player_b1_id,
+                player_b2_id,
                 updated_at,
                 player_a_id,
                 player_b_id,
@@ -53,6 +59,30 @@ export async function fetchOptimizedTournamentResults(): Promise<{
                     ntrp_rating
                 ),
                 player_b:players!matches_player_b_id_fkey (
+                    id,
+                    first_name,
+                    last_name,
+                    ntrp_rating
+                ),
+                player_a1:players!matches_player_a1_id_fkey (
+                    id,
+                    first_name,
+                    last_name,
+                    ntrp_rating
+                ),
+                player_a2:players!matches_player_a2_id_fkey (
+                    id,
+                    first_name,
+                    last_name,
+                    ntrp_rating
+                ),
+                player_b1:players!matches_player_b1_id_fkey (
+                    id,
+                    first_name,
+                    last_name,
+                    ntrp_rating
+                ),
+                player_b2:players!matches_player_b2_id_fkey (
                     id,
                     first_name,
                     last_name,
@@ -139,7 +169,13 @@ export async function fetchTournamentPage(
         `
         id,
         status,
+        round,
         start_time,
+        match_type,
+        player_a1_id,
+        player_a2_id,
+        player_b1_id,
+        player_b2_id,
         updated_at,
         player_a_id,
         player_b_id,
@@ -148,6 +184,10 @@ export async function fetchTournamentPage(
         tournament_categories(name),
         player_a:players!matches_player_a_id_fkey(id, first_name, last_name, ntrp_rating),
         player_b:players!matches_player_b_id_fkey(id, first_name, last_name, ntrp_rating),
+        player_a1:players!matches_player_a1_id_fkey(id, first_name, last_name, ntrp_rating),
+        player_a2:players!matches_player_a2_id_fkey(id, first_name, last_name, ntrp_rating),
+        player_b1:players!matches_player_b1_id_fkey(id, first_name, last_name, ntrp_rating),
+        player_b2:players!matches_player_b2_id_fkey(id, first_name, last_name, ntrp_rating),
         match_results(
           match_result,
           set1_score,
@@ -271,14 +311,52 @@ export function transformMatchData(match: any): any {
   const playerB = Array.isArray(match.player_b)
     ? match.player_b[0]
     : match.player_b;
-  const playerAName =
-    `${playerA?.first_name || ""} ${playerA?.last_name || ""}`.trim() ||
-    "Unknown Player";
-  const playerBName =
-    `${playerB?.first_name || ""} ${playerB?.last_name || ""}`.trim() ||
-    "Unknown Player";
-  const playerANtrp = playerA?.ntrp_rating || 0;
-  const playerBNtrp = playerB?.ntrp_rating || 0;
+  const playerA1 = Array.isArray(match.player_a1)
+    ? match.player_a1[0]
+    : match.player_a1;
+  const playerA2 = Array.isArray(match.player_a2)
+    ? match.player_a2[0]
+    : match.player_a2;
+  const playerB1 = Array.isArray(match.player_b1)
+    ? match.player_b1[0]
+    : match.player_b1;
+  const playerB2 = Array.isArray(match.player_b2)
+    ? match.player_b2[0]
+    : match.player_b2;
+
+  const getName = (p: any) =>
+    `${p?.first_name || ""} ${p?.last_name || ""}`.trim() || null;
+
+  const buildTeamName = (p1: any, p2: any) => {
+    const names = [getName(p1), getName(p2)].filter(Boolean);
+    if (names.length === 2) return `${names[0]} & ${names[1]}`;
+    return names[0] || null;
+  };
+
+  const averageNtrp = (players: any[]) => {
+    const ratings = players
+      .map((p) => (p?.ntrp_rating !== undefined ? p.ntrp_rating : null))
+      .filter((v) => typeof v === "number");
+    if (!ratings.length) return 0;
+    const sum = ratings.reduce((acc, v) => acc + (v || 0), 0);
+    return sum / ratings.length;
+  };
+
+  const isDoubles = (match.match_type || "singles") === "doubles";
+
+  const playerAName = isDoubles
+    ? buildTeamName(playerA1, playerA2) || "Unknown Team"
+    : getName(playerA) || "Unknown Player";
+  const playerBName = isDoubles
+    ? buildTeamName(playerB1, playerB2) || "Unknown Team"
+    : getName(playerB) || "Unknown Player";
+
+  const playerANtrp = isDoubles
+    ? averageNtrp([playerA1, playerA2])
+    : playerA?.ntrp_rating || 0;
+  const playerBNtrp = isDoubles
+    ? averageNtrp([playerB1, playerB2])
+    : playerB?.ntrp_rating || 0;
 
   // Get the match result data
   const matchResultData = Array.isArray(match.match_results)
@@ -288,10 +366,20 @@ export function transformMatchData(match: any): any {
   // Determine winner name based on winner_id in match_results
   let winnerName = "TBD";
   if (matchResultData?.winner_id) {
-    // Check if winner is player A or player B
-    if (matchResultData.winner_id === match.player_a_id) {
+    const teamAIds = [
+      match.player_a_id,
+      match.player_a1_id,
+      match.player_a2_id,
+    ].filter(Boolean);
+    const teamBIds = [
+      match.player_b_id,
+      match.player_b1_id,
+      match.player_b2_id,
+    ].filter(Boolean);
+
+    if (teamAIds.includes(matchResultData.winner_id)) {
       winnerName = playerAName;
-    } else if (matchResultData.winner_id === match.player_b_id) {
+    } else if (teamBIds.includes(matchResultData.winner_id)) {
       winnerName = playerBName;
     }
   }
@@ -300,6 +388,7 @@ export function transformMatchData(match: any): any {
     id: match.id,
     tournament_name: tournamentName,
     category_name: categoryName,
+    round: match.round || null,
     player_a_name: playerAName,
     player_a_ntrp: playerANtrp,
     player_b_name: playerBName,

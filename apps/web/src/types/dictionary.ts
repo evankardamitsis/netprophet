@@ -218,6 +218,9 @@ export interface Dictionary {
     headToHead?: string;
     losses?: string;
     leads?: string;
+    matchTypeAll?: string;
+    matchTypeSingles?: string;
+    matchTypeDoubles?: string;
     powerUps?: {
       safeSingleSlip: string;
       safeParlaySlip: string;

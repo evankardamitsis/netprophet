@@ -7,15 +7,36 @@ type BetWithMatch = Bet & {
   match: {
     player_a_id: string;
     player_b_id: string;
+    player_a1_id?: string | null;
+    player_a2_id?: string | null;
+    player_b1_id?: string | null;
+    player_b2_id?: string | null;
+    match_type?: "singles" | "doubles";
     start_time: string;
-    player_a: {
+    player_a?: {
       first_name: string;
       last_name: string;
-    };
-    player_b: {
+    } | null;
+    player_b?: {
       first_name: string;
       last_name: string;
-    };
+    } | null;
+    player_a1?: {
+      first_name: string;
+      last_name: string;
+    } | null;
+    player_a2?: {
+      first_name: string;
+      last_name: string;
+    } | null;
+    player_b1?: {
+      first_name: string;
+      last_name: string;
+    } | null;
+    player_b2?: {
+      first_name: string;
+      last_name: string;
+    } | null;
   };
 };
 
@@ -80,7 +101,9 @@ export class BetsService {
 
     const claimedPlayerId = profile?.claimed_player_id;
     if (!claimedPlayerId) {
-      console.log("No claimed_player_id found, skipping participant validation");
+      console.log(
+        "No claimed_player_id found, skipping participant validation"
+      );
       return;
     }
 
@@ -461,13 +484,33 @@ export class BetsService {
           match:matches(
             player_a_id,
             player_b_id,
+            player_a1_id,
+            player_a2_id,
+            player_b1_id,
+            player_b2_id,
+            match_type,
             start_time,
-
             player_a:players!matches_player_a_id_fkey(
               first_name,
               last_name
             ),
             player_b:players!matches_player_b_id_fkey(
+              first_name,
+              last_name
+            ),
+            player_a1:players!matches_player_a1_id_fkey(
+              first_name,
+              last_name
+            ),
+            player_a2:players!matches_player_a2_id_fkey(
+              first_name,
+              last_name
+            ),
+            player_b1:players!matches_player_b1_id_fkey(
+              first_name,
+              last_name
+            ),
+            player_b2:players!matches_player_b2_id_fkey(
               first_name,
               last_name
             )

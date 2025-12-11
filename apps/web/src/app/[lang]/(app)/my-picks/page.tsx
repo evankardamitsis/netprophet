@@ -100,27 +100,155 @@ export default function MyPicksPage() {
                     prediction = bet.prediction;
                 }
 
-                const match = bet.match;
+                type PlayerLite = { first_name?: string; last_name?: string; name?: string };
+                type MatchLite = {
+                    match_type?: 'singles' | 'doubles';
+                    player_a?: PlayerLite | PlayerLite[];
+                    player_b?: PlayerLite | PlayerLite[];
+                    player_a1?: PlayerLite | PlayerLite[];
+                    player_a2?: PlayerLite | PlayerLite[];
+                    player_b1?: PlayerLite | PlayerLite[];
+                    player_b2?: PlayerLite | PlayerLite[];
+                    // Derived fields that exist on the matches list
+                    player1?: { name?: string };
+                    player2?: { name?: string };
+                    team1?: { name?: string; players?: PlayerLite[] };
+                    team2?: { name?: string; players?: PlayerLite[] };
+                };
+
+                const normalizePlayer = (player?: PlayerLite | PlayerLite[]) => {
+                    if (!player) return null;
+                    const resolved = Array.isArray(player) ? player[0] : player;
+                    if (!resolved) return null;
+                    // Some match transforms provide a combined name string
+                    if (resolved.name) {
+                        const [first, ...rest] = resolved.name.split(' ');
+                        const last = rest.join(' ');
+                        return { first_name: first, last_name: last };
+                    }
+                    const first = resolved.first_name || '';
+                    const last = resolved.last_name || '';
+                    if (!first && !last) return null;
+                    return { first_name: first, last_name: last };
+                };
+
+                const matchRaw = (bet.match || {}) as MatchLite;
+                const match = {
+                    ...matchRaw,
+                    player_a: normalizePlayer(matchRaw.player_a) || undefined,
+                    player_b: normalizePlayer(matchRaw.player_b) || undefined,
+                    player_a1: normalizePlayer(matchRaw.player_a1) || undefined,
+                    player_a2: normalizePlayer(matchRaw.player_a2) || undefined,
+                    player_b1: normalizePlayer(matchRaw.player_b1) || undefined,
+                    player_b2: normalizePlayer(matchRaw.player_b2) || undefined,
+                };
+                const matchHasData = Object.values(match).some(Boolean);
                 let matchTitle = 'Unknown Match';
                 let matchTitleShort = 'Unknown Match';
 
-                if (match && match.player_a && match.player_b) {
-                    const playerAName = `${match.player_a.first_name} ${match.player_a.last_name}`;
-                    const playerBName = `${match.player_b.first_name} ${match.player_b.last_name}`;
+                const formatPlayerName = (player: any, short = false) => {
+                    if (!player) return 'TBD';
+                    const first = player.first_name || '';
+                    const last = player.last_name || '';
+                    if (short) {
+                        const initial = first ? `${first.charAt(0)}.` : '';
+                        return `${initial} ${last}`.trim();
+                    }
+                    return `${first} ${last}`.trim() || 'TBD';
+                };
 
-                    // On mobile: first letter of first name + full last name
-                    const playerAShort = `${match.player_a.first_name.charAt(0)}. ${match.player_a.last_name}`;
-                    const playerBShort = `${match.player_b.first_name.charAt(0)}. ${match.player_b.last_name}`;
+                const getPlayerFullName = (player?: PlayerLite) => {
+                    if (!player) return 'TBD';
+                    const first = player.first_name || '';
+                    const last = player.last_name || '';
+                    const full = `${first} ${last}`.trim();
+                    return full || 'TBD';
+                };
 
+                const getPlayersForTeam = (teamPlayers?: PlayerLite[], fallback1?: PlayerLite, fallback2?: PlayerLite) => {
+                    const normalized = teamPlayers?.map(p => normalizePlayer(p) || p).filter(Boolean) || [];
+                    if (normalized.length) return normalized;
+                    return [fallback1, fallback2].filter(Boolean);
+                };
+
+                const hasAnyTeamPlayers =
+                    (match.team1?.players && match.team1.players.length > 0) ||
+                    (match.team2?.players && match.team2.players.length > 0) ||
+                    match.player_a1 || match.player_a2 || match.player_b1 || match.player_b2;
+                const hasAnyTeamIds =
+                    (match as any).player_a1_id || (match as any).player_a2_id || (match as any).player_b1_id || (match as any).player_b2_id;
+                const isDoubles = (match.match_type || (hasAnyTeamPlayers ? 'doubles' : 'singles')) === 'doubles' || hasAnyTeamPlayers || hasAnyTeamIds;
+
+                const team1Players = getPlayersForTeam(match.team1?.players, match.player_a1, match.player_a2);
+                const team2Players = getPlayersForTeam(match.team2?.players, match.player_b1, match.player_b2);
+
+                // Build computed names similar to MatchesList transform so we mirror table display
+                const teamAName = isDoubles && team1Players.length === 2
+                    ? `${getPlayerFullName(team1Players[0] as PlayerLite)} & ${getPlayerFullName(team1Players[1] as PlayerLite)}`
+                    : getPlayerFullName(match.player_a as PlayerLite);
+
+                const teamBName = isDoubles && team2Players.length === 2
+                    ? `${getPlayerFullName(team2Players[0] as PlayerLite)} & ${getPlayerFullName(team2Players[1] as PlayerLite)}`
+                    : getPlayerFullName(match.player_b as PlayerLite);
+
+                const setFromTeamPlayers = () => {
+                    const teamA = team1Players.length
+                        ? team1Players.map(p => formatPlayerName(p, false)).join(' / ')
+                        : (match.team1?.name || teamAName || 'Team A');
+                    const teamB = team2Players.length
+                        ? team2Players.map(p => formatPlayerName(p, false)).join(' / ')
+                        : (match.team2?.name || teamBName || 'Team B');
+                    const teamAShort = team1Players.length
+                        ? team1Players.map(p => formatPlayerName(p, true)).join(' / ')
+                        : (match.team1?.name || teamAName || 'Team A');
+                    const teamBShort = team2Players.length
+                        ? team2Players.map(p => formatPlayerName(p, true)).join(' / ')
+                        : (match.team2?.name || teamBName || 'Team B');
+                    matchTitle = `${teamA} vs ${teamB}`;
+                    matchTitleShort = `${teamAShort} vs ${teamBShort}`;
+                };
+
+                const setFromPlayerNames = (playerAName: string, playerBName: string) => {
+                    const playerAShort = playerAName.split(' ').length > 1 ? `${playerAName.split(' ')[0][0]}. ${playerAName.split(' ').slice(1).join(' ')}` : playerAName;
+                    const playerBShort = playerBName.split(' ').length > 1 ? `${playerBName.split(' ')[0][0]}. ${playerBName.split(' ').slice(1).join(' ')}` : playerBName;
                     matchTitle = `${playerAName} vs ${playerBName}`;
                     matchTitleShort = `${playerAShort} vs ${playerBShort}`;
+                };
+
+                if (matchHasData && isDoubles && (team1Players.length || team2Players.length)) {
+                    setFromTeamPlayers();
+                } else if (matchHasData && isDoubles) {
+                    matchTitle = match.team1?.name && match.team2?.name ? `${match.team1.name} vs ${match.team2.name}` : `${teamAName} vs ${teamBName}`;
+                    matchTitleShort = matchTitle;
+                } else if (matchHasData && (match.player1?.name || match.player2?.name)) {
+                    setFromPlayerNames(match.player1?.name || 'Player A', match.player2?.name || 'Player B');
+                } else if (matchHasData && (match.player_a || match.player_b)) {
+                    setFromPlayerNames(
+                        formatPlayerName(match.player_a, false) || 'Player A',
+                        formatPlayerName(match.player_b, false) || 'Player B'
+                    );
+                } else if (matchHasData && isDoubles) {
+                    matchTitle = 'Team A vs Team B';
+                    matchTitleShort = matchTitle;
+                } else if (matchHasData && (match as any).player_a_id && (match as any).player_b_id) {
+                    matchTitle = 'Player A vs Player B';
+                    matchTitleShort = matchTitle;
                 } else if (bet.match_id) {
-                    // If we have a match_id but no match data, show the match ID
-                    matchTitle = `Match ${bet.match_id.slice(0, 8)}...`;
-                    matchTitleShort = `Match ${bet.match_id.slice(0, 8)}...`;
+                    if (prediction.winner) {
+                        matchTitle = prediction.winner;
+                        matchTitleShort = prediction.winner;
+                    } else {
+                        matchTitle = `Match ${bet.match_id.slice(0, 8)}...`;
+                        matchTitleShort = `Match ${bet.match_id.slice(0, 8)}...`;
+                    }
                 } else {
                     matchTitle = 'Unknown Match';
                     matchTitleShort = 'Unknown Match';
+                }
+
+                if (prediction.winner && (matchTitle === 'Unknown Match' || matchTitle.startsWith('Match '))) {
+                    matchTitle = prediction.winner;
+                    matchTitleShort = prediction.winner;
                 }
 
                 const createdDate = new Date(bet.created_at);
