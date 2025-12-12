@@ -14,81 +14,135 @@ export default function PrivacyPolicyPage() {
             <Header lang={lang} />
 
             <div className="max-w-4xl mx-auto px-4 py-12">
-                <h1 className="text-4xl font-bold mb-8 text-center">
-                    {lang === 'el' ? 'Πολιτική Απορρήτου' : 'Privacy Policy'}
-                </h1>
+                <h1 className="text-4xl font-bold mb-8 text-center">Πολιτική Απορρήτου</h1>
 
-                <div className="prose prose-invert max-w-none">
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-8 border border-slate-700/50">
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '1. Συλλογή Πληροφοριών' : '1. Information Collection'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Συλλέγουμε πληροφορίες που μας παρέχετε άμεσα, όπως όταν δημιουργείτε λογαριασμό, συμπληρώνετε φόρμες ή επικοινωνείτε μαζί μας.'
-                                : 'We collect information you provide directly to us, such as when you create an account, fill out forms, or communicate with us.'
-                            }
-                        </p>
+                <div className="space-y-8 text-sm text-gray-100">
+                    <section className="space-y-3">
+                        <p>Αυτή η Πολιτική Απορρήτου περιγράφει τον τρόπο με τον οποίο η Monad Labs E.E χειρίζεται τις πληροφορίες και τα δεδομένα που παρέχετε σε μας για να μπορούμε να διαχειριζόμαστε τη σχέση σας με το NetProphet. Θα διαχειριζόμαστε οποιαδήποτε προσωπικά στοιχεία παρέχονται σε μας ή διαφορετικά διατηρούνται από μας σχετικά με εσάς, κατά τον τρόπο που ορίζεται σε αυτή την Πολιτική Απορρήτου. Οι πληροφορίες μπορούν να παρέχονται μέσω της ιστοσελίδας της NetProphet (η &quot;Ιστοσελίδα&quot;), τηλεφωνικών κλήσεων ή οποιουδήποτε άλλου μέσου.</p>
+                        <p>Με την αποδοχή της πολιτικής απορρήτου, συμφωνείτε ότι κατανοείτε και αποδέχεστε τη χρήση των προσωπικών σας στοιχείων όπως ορίζεται σε αυτή την Πολιτική Απορρήτου. Αν δεν συμφωνείτε με τους όρους αυτής της Πολιτικής Απορρήτου, παρακαλούμε μην χρησιμοποιείτε την Ιστοσελίδα ή παρέχετε σε μας τα προσωπικά σας στοιχεία.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '2. Χρήση Πληροφοριών' : '2. Use of Information'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Χρησιμοποιούμε τις πληροφορίες που συλλέγουμε για να παρέχουμε, να λειτουργούμε και να βελτιώνουμε τις υπηρεσίες μας.'
-                                : 'We use the information we collect to provide, operate, and improve our services.'
-                            }
-                        </p>
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Ποιοι είμαστε</h2>
+                        <p>Οι αναφορές σε αυτήν την Πολιτική Απορρήτου σε &quot;NetProphet&quot;, &quot;εμείς&quot;, &quot;εμάς&quot; ή &quot;μας&quot; σχετίζονται με την Monad Labs E.E, μια εταιρεία που έχει οργανωθεί υπό τους νόμους της Ελλάδας, με ΑΦΜ 803034999‬ και με το εγγεγραμμένο γραφείο της στη διεύθυνση Αμφικτυονιων 28 15236, Νέα Πεντέλη, Αθήνα (&quot;Εταιρεία&quot;) (λειτουργώντας ως “NetProphet”). Ελέγχουμε τους τρόπους συλλογής των Προσωπικών Δεδομένων σας και τους σκοπούς για τους οποίους χρησιμοποιούνται τα προσωπικά σας δεδομένα από την NetProphet, ενεργώντας ως “υπεύθυνος επεξεργασίας δεδομένων”.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '3. Κοινοποίηση Πληροφοριών' : '3. Information Sharing'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Δεν πουλάμε, ενοικιάζουμε ή διανέμουμε τις προσωπικές σας πληροφορίες σε τρίτους χωρίς τη συναίνεσή σας.'
-                                : 'We do not sell, rent, or distribute your personal information to third parties without your consent.'
-                            }
-                        </p>
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Επικοινωνία μαζί μας</h2>
+                        <p>Εάν έχετε οποιεσδήποτε ανησυχίες ή θέλετε περισσότερες λεπτομέρειες σχετικά με το πώς επεξεργαζόμαστε τα προσωπικά σας δεδομένα, μπορείτε να επικοινωνήσετε μαζί μας χρησιμοποιώντας το hello@netprophetapp.com.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '4. Ασφάλεια Δεδομένων' : '4. Data Security'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Εφαρμόζουμε κατάλληλα τεχνικά και οργανωτικά μέτρα για την προστασία των προσωπικών σας δεδομένων.'
-                                : 'We implement appropriate technical and organizational measures to protect your personal data.'
-                            }
-                        </p>
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Προστατεύοντας τα Προσωπικά σας Δεδομένα</h2>
+                        <p>Νόμιμοι λόγοι επεξεργασίας:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Για να εκπληρώσουμε σύμβαση</li>
+                            <li>Νομική υποχρέωση</li>
+                            <li>Συγκατάθεση</li>
+                            <li>Νόμιμο συμφέρον</li>
+                            <li>Δημόσιο συμφέρον</li>
+                            <li>Ζωτικά συμφέροντα</li>
+                        </ul>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '5. Cookies' : '5. Cookies'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Χρησιμοποιούμε cookies και παρόμοιες τεχνολογίες για να βελτιώσουμε την εμπειρία σας στην ιστοσελίδα μας.'
-                                : 'We use cookies and similar technologies to improve your experience on our website.'
-                            }
-                        </p>
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Νόμιμα Συμφέροντα</h2>
+                        <p>Όταν υπάρχει επιχειρηματικός/εμπορικός λόγος, διασφαλίζουμε δίκαιη επεξεργασία και ενημερώνουμε για τα νόμιμα συμφέροντα και τις αντιρρήσεις σας, με επιτακτικούς λόγους που ενδέχεται να υπερτερούν.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '6. Επικοινωνία' : '6. Contact'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Εάν έχετε ερωτήσεις σχετικά με αυτή την πολιτική απορρήτου, επικοινωνήστε μαζί μας στο privacy@netprophet.com'
-                                : 'If you have questions about this privacy policy, please contact us at privacy@netprophet.com'
-                            }
-                        </p>
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Διατήρηση Δεδομένων</h2>
+                        <p>Διατήρηση όσο είστε πελάτης. Μετά, για ελάχιστο απαιτούμενο χρόνο για σκοπούς πολιτικής/νομικές υποχρεώσεις· πιθανή παράταση για τεχνικούς λόγους.</p>
+                    </section>
 
-                        <div className="mt-8 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-                            <p className="text-sm text-yellow-200">
-                                {lang === 'el'
-                                    ? 'Αυτή είναι μια δείγμα πολιτική απορρήτου. Θα ενημερωθεί με πλήρεις λεπτομέρειες στο μέλλον.'
-                                    : 'This is a sample privacy policy. It will be updated with full details in the future.'
-                                }
-                            </p>
-                        </div>
-                    </div>
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Γιατί επεξεργαζόμαστε</h2>
+                        <p>Η μη παροχή δεδομένων μπορεί να εμποδίζει νομικές υποχρεώσεις, συμβάσεις ή υπηρεσίες λογαριασμού, και ενδέχεται να μη μπορούμε να προσφέρουμε προϊόντα/υπηρεσίες.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Πληροφορίες που συλλέγονται</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Φόρμες/υποβολές μέσω Ιστοσελίδας ή email</li>
+                            <li>Αλληλογραφία (ιστοσελίδα, email, τηλέφωνο, άλλα μέσα)</li>
+                            <li>Απαντήσεις σε έρευνες/έρευνα πελατών</li>
+                            <li>Συναλλαγές (ιστοσελίδα, τηλέφωνο, άλλα μέσα)</li>
+                            <li>Δεδομένα επισκέψεων (κίνηση, τοποθεσία, ιστολόγοι, επικοινωνία)</li>
+                            <li>Δημόσιες πηγές (αναζητήσεις, μητρώα, ΜΜΕ) όπου λογικό και χωρίς να θίγονται δικαιώματα</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Τηλεφωνικές Κλήσεις</h2>
+                        <p>Κλήσεις προς/από Κέντρο Επικοινωνίας Πελατών καταγράφονται για εκπαίδευση, ασφάλεια, επίλυση ερωτημάτων.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Λειτουργίες Κοινωνικής Δικτύωσης</h2>
+                        <p>Συμμετοχή σε λειτουργίες (π.χ. chat rooms) μπορεί να αποθηκευτεί/καταγραφεί/επεξεργαστεί.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Cookies</h2>
+                        <p>Δείτε την πολιτική cookies για περισσότερα.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Κοινοποίηση Δεδομένων</h2>
+                        <p>Δυνατή κοινοποίηση εντός ομίλου Monad Labs E.E και σε:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Φορείς επιβολής νόμου/ρυθμιστικές αρχές</li>
+                            <li>Οργανισμούς πιστωτικής αναφοράς</li>
+                            <li>Οργανισμούς πρόληψης απάτης</li>
+                            <li>Οργανισμούς επαλήθευσης ταυτότητας</li>
+                            <li>Αθλητικούς φορείς</li>
+                            <li>Οργανισμούς που σας συστήνουν σε μας</li>
+                            <li>Τρίτους κατόπιν αιτήματος/άδειάς σας</li>
+                            <li>Τρίτους απαραίτητους για προϊόντα/υπηρεσίες που ζητάτε</li>
+                        </ul>
+                        <p>Σε μεταφορά εκτός ΕΟΧ απαιτούνται κατάλληλες διασφαλίσεις.</p>
+                        <p>Δυνατή αποκάλυψη σε συνδεδεμένες/θυγατρικές, εταίρους ή διαδόχους κεφαλαίου.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Μεταφορά Δεδομένων εκτός ΕΟΧ</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Με ρητή συγκατάθεσή σας</li>
+                            <li>Απαραίτητο για σύμβαση</li>
+                            <li>Νόμιμο καθήκον/υποχρέωση</li>
+                        </ul>
+                        <p>Προστασία με ίδια πρότυπα όπως ΕΟΧ μέσω:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Χώρα με ισοδύναμη προστασία κατά EC</li>
+                            <li>Συμβάσεις που απαιτούν προστασία δεδομένων</li>
+                            <li>Βασικές συμβατικές ρήτρες/δεσμευτικοί εταιρικοί κανόνες/άλλη αποδεκτή μέθοδο</li>
+                        </ul>
+                        <p>Σε περιπτώσεις νόμιμης υποχρέωσης, ενδέχεται να υπάρχει περιορισμένος έλεγχος προστασίας.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Τα δικαιώματά σας</h2>
+                        <p>Υποστήριξη για άσκηση δικαιωμάτων:</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Ανάκληση συγκατάθεσης (χωρίς αναδρομική ακύρωση)</li>
+                            <li>Καταγγελία σε Αρχή Προστασίας Δεδομένων</li>
+                            <li>Πρόσβαση στα δεδομένα</li>
+                            <li>Διόρθωση εσφαλμένων/παρωχημένων</li>
+                            <li>Διαγραφή</li>
+                            <li>Περιορισμός επεξεργασίας</li>
+                            <li>Μεταφορά συγκεκριμένων δεδομένων (“δικαίωμα μεταφοράς”)</li>
+                            <li>Αντίρρηση σε επεξεργασία βάσει νόμιμου συμφέροντος</li>
+                            <li>Αμφισβήτηση αυτοματοποιημένης απόφασης/αίτημα ανθρώπινης επανεξέτασης</li>
+                        </ul>
+                        <p>Περισσότερα: hello@netprophetapp.com.</p>
+                    </section>
+
+                    <section className="space-y-3">
+                        <h2 className="text-2xl font-semibold">Αλλαγές στην Πολιτική Απορρήτου</h2>
+                        <p>Η πολιτική μπορεί να ενημερώνεται· ελέγχετε τακτικά.</p>
+                        <p>Σε σημαντικές αλλαγές, ενημέρωση εκ των προτέρων (email/ιστοσελίδα/άλλα κανάλια) με χρόνο εξέτασης.</p>
+                        <p>Χωρίς επιβολή σημαντικών αλλαγών χωρίς ρητή συγκατάθεση. Αν δεν αποδεχθείτε εντός προθεσμίας, ενδέχεται να μην παρέχονται προϊόντα/υπηρεσίες.</p>
+                    </section>
                 </div>
             </div>
 

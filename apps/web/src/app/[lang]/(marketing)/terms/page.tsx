@@ -15,100 +15,198 @@ export default function TermsOfUsePage() {
 
             <div className="max-w-4xl mx-auto px-4 py-12">
                 <h1 className="text-4xl font-bold mb-8 text-center">
-                    {lang === 'el' ? 'Όροι Χρήσης' : 'Terms of Use'}
+                    Όροι Χρήσης
                 </h1>
 
-                <div className="prose prose-invert max-w-none">
-                    <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-8 border border-slate-700/50">
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '1. Αποδοχή των Όρων' : '1. Acceptance of Terms'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Με την πρόσβαση και χρήση της ιστοσελίδας NetProphet, αποδέχεστε αυτούς τους όρους χρήσης.'
-                                : 'By accessing and using the NetProphet website, you accept these terms of use.'
-                            }
-                        </p>
+                <div className="space-y-8">
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">1. Ορισμοί</h2>
+                        <ol className="list-decimal list-inside space-y-2">
+                            <li>«Ηλεκτρονικός Λογαριασμός Παίκτη (ΗΛΠ)» ή «Ηλεκτρονικός Λογαριασμός σας»: ο λογαριασμός σας.</li>
+                            <li>«Ιστότοπος»: Ο διαδικτυακός τόπος μέσω του οποίου φιλοξενείται το παιχνίδι, ανήκει στον Κάτοχο Άδειας και έχει ονομασία χώρου (domain name) netprophet.gr και netprophetapp.com.</li>
+                            <li>«Μέσο Πληρωμής»: κάθε μέσο για αγορά εικονικών νομισμάτων/προϊόντων, σύμφωνα με τις κείμενες διατάξεις.</li>
+                            <li>«Όροι»: Οι όροι της παρούσας Σύμβασης Προσχώρησης.</li>
+                            <li>«Παίκτης» ή «Εσείς»: το φυσικό πρόσωπο αντισυμβαλλόμενο της Monad Labs E.E.</li>
+                            <li>«Ερασιτέχνης Αθλητής» ή «Ερασιτεχνική Ομάδα»: ιδιώτης ή ομάδα που συμμετέχει ονομαστικά στο παιχνίδι.</li>
+                            <li>«Παικτική Δραστηριότητα»: Το σύνολο των σχετικών με τη Συμμετοχή Σας στοιχείων.</li>
+                            <li>«Πολιτική Προστασίας Προσωπικών Δεδομένων»: Η πολιτική της Εταιρίας για συλλογή/χρήση/προστασία δεδομένων.</li>
+                            <li>«Σύμβαση Προσχώρησης» ή «Σύμβαση»: η παρούσα σύμβαση μεταξύ Monad Labs Ε.Ε (Netprophet) και εσάς.</li>
+                            <li>«Συμμετοχή»: Η καταχώριση και επικύρωση των επιλογών του Παίκτη σε κάθε Παιχνίδι.</li>
+                            <li>«Συνεργάτης» ή «Affiliate»: συνεργάτης που προωθεί την Εταιρία, υπαγόμενος στον Νόμο.</li>
+                            <li>«Νόμισμα»: Εικονικό νόμισμα (coin) που χρησιμοποιείται μόνο εντός του παιχνιδιού.</li>
+                        </ol>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '2. Περιγραφή Υπηρεσίας' : '2. Service Description'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Το NetProphet είναι μια πλατφόρμα πρόβλεψης τένις που επιτρέπει στους χρήστες να κάνουν προβλέψεις για αγώνες τένις.'
-                                : 'NetProphet is a tennis prediction platform that allows users to make predictions on tennis matches.'
-                            }
-                        </p>
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">2. Σκοπός και αντικείμενο της Σύμβασης</h2>
+                        <p>2.1 Η Σύμβαση συνάπτεται μεταξύ Monad Labs E.E και εσάς για συμμετοχή στο παιχνίδι, ορίζοντας δικαιώματα/υποχρεώσεις βάσει Ρυθμιστικού Πλαισίου.</p>
+                        <p>2.2 Συμβάλλεστε με τη Monad Labs E.E, έδρα Αθήνα, ΑΦΜ 803034999‬, Αμφικτυονίων 28, Νέα Πεντέλη, email hello@netprophetapp.com, ιστότοπος www.netprophet.gr.</p>
+                        <p>2.3 Συμμετοχή στο Παιχνίδι σύμφωνα με ισχύον πλαίσιο. Αποδέχεστε Όρους, Πολιτική Προστασίας Δεδομένων και λοιπές πολιτικές.</p>
+                        <p>2.4 Η Πολιτική Προστασίας Προσωπικών Δεδομένων: www.netprophet.gr/privacy-policy.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '3. Ευθύνη Χρήστη' : '3. User Responsibility'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Οι χρήστες είναι υπεύθυνοι για την ασφάλεια των λογαριασμών τους και πρέπει να χρησιμοποιούν την υπηρεσία νόμιμα.'
-                                : 'Users are responsible for the security of their accounts and must use the service legally.'
-                            }
-                        </p>
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">3. Σύναψη - Τροποποίηση</h2>
+                        <p>3.1 Η Σύμβαση συνάπτεται με ηλεκτρονική αποδοχή των Όρων. </p>
+                        <p>3.2 Σε τροποποίηση, ενημέρωση κατά την πρώτη σύνδεση μετά την ανάρτηση.</p>
+                        <p>3.3 Αποδοχή τροποποιημένης Σύμβασης με αποδοχή Όρων στην επόμενη σύνδεση.</p>
+                        <p>3.4 Αν δεν αποδεχθείτε, η Σύμβαση λύεται και εφαρμόζονται οι όροι για κλείσιμο/εκκαθάριση.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '4. Απαγορευμένες Δραστηριότητες' : '4. Prohibited Activities'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Απαγορεύεται η χρήση της υπηρεσίας για παράνομες δραστηριότητες, παραβίαση πνευματικών δικαιωμάτων ή παρεμβασία στην λειτουργία της πλατφόρμας.'
-                                : 'It is prohibited to use the service for illegal activities, copyright infringement, or interference with the platform\'s operation.'
-                            }
-                        </p>
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">4. Προσφερόμενες Υπηρεσίες</h2>
+                        <p>4.1 Παιχνίδι προβλέψεων σε ερασιτεχνικά γεγονότα, παρουσίαση αποτελεσμάτων, στατιστικών και ιστορικών στοιχείων με συγκατάθεση.</p>
+                        <p>4.2 Κανόνες ανά παιχνίδι στον Οδηγό Παιχνιδιών: www.netprophet.gr/rules.</p>
+                        <p>4.3 Συμμετοχή συνεπάγεται αποδοχή Οδηγού Παιχνιδιού.</p>
+                    </section>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '5. Διακοπή Υπηρεσίας' : '5. Service Termination'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Διατηρούμε το δικαίωμα να διακόψουμε ή να αναστείλουμε λογαριασμούς που παραβιάζουν αυτούς τους όρους.'
-                                : 'We reserve the right to terminate or suspend accounts that violate these terms.'
-                            }
-                        </p>
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">5. Συμμετοχή στο Παιχνίδι</h2>
+                        <h3 className="text-lg font-semibold">5.1 Ηλεκτρονικός Λογαριασμός</h3>
+                        <p>Μοναδικός ΗΛΠ ανά Παίκτη. Απαιτεί συμπλήρωση αίτησης: όνομα, επώνυμο, email, password. Υποχρέωση ενημέρωσης στοιχείων, διαθέσιμο λογισμικό/υλικό.</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Χρήση μοναδικού username+password, τεκμήριο χρήσης και αποδοχής Όρων.</li>
+                            <li>Τήρηση ασφαλείας, αλλαγές κωδικού, ειδοποίηση σε απώλεια/παράνομη χρήση.</li>
+                            <li>Τροποποίηση στοιχείων σύνδεσης όταν απαιτείται από πολιτική ασφαλείας.</li>
+                            <li>Επαλήθευση ταυτότητας επαναλαμβάνεται όταν υπάρχουν αμφιβολίες.</li>
+                            <li>Εργαλεία επαλήθευσης και αξιολόγηση μοτίβων δραστηριότητας.</li>
+                            <li>Δυνατότητα ισχυρής ταυτοποίησης (2FA/SCA).</li>
+                            <li>Πρόσβαση σε υπόλοιπο, ιστορικό, συναλλαγές μέσω ΗΛΠ.</li>
+                            <li>Τήρηση αρχείων 10 έτη, σύμφωνα με Προστασία Δεδομένων.</li>
+                            <li>Διαχείριση λειτουργικών/ασφαλείας κινδύνων.</li>
+                            <li>Ευθύνη χρήστη για πράξεις/παραλείψεις.</li>
+                            <li>Πληροφορίες μόνο για προσωπική χρήση· απαγορεύεται διανομή/εκμετάλλευση.</li>
+                            <li>Χρήση cookies για εμπειρία· δυνατότητα άρνησης εκτός απαραίτητων.</li>
+                        </ul>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '6. Αποποίηση Ευθύνης' : '6. Disclaimer'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Η υπηρεσία παρέχεται "ως έχει" χωρίς εγγυήσεις. Δεν ευθυνόμαστε για απώλειες που προκύπτουν από τη χρήση της υπηρεσίας.'
-                                : 'The service is provided "as is" without warranties. We are not liable for losses arising from the use of the service.'
-                            }
-                        </p>
+                        <h3 className="text-lg font-semibold">5.2 Ερασιτέχνες Αθλητές/Ομάδες</h3>
+                        <p>Συλλογή/επεξεργασία δεδομένων ταυτότητας/απόδοσης για σκοπούς προβολής και λειτουργίας Παιχνιδιού με ενημέρωση και δικαιώματα βάσει ΓΚΠΔ.</p>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '7. Αλλαγές στους Όρους' : '7. Changes to Terms'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Διατηρούμε το δικαίωμα να τροποποιούμε αυτούς τους όρους οποιαδήποτε στιγμή. Οι αλλαγές θα δημοσιεύονται σε αυτή τη σελίδα.'
-                                : 'We reserve the right to modify these terms at any time. Changes will be posted on this page.'
-                            }
-                        </p>
+                        <h3 className="text-lg font-semibold">5.3 Διοργανωτές</h3>
+                        <p>Παροχή στοιχείων διοργανώσεων, με ενημέρωση συμμετεχόντων και νόμιμη βάση επεξεργασίας. Monad Labs ως υπεύθυνος επεξεργασίας με μέτρα ασφαλείας.</p>
 
-                        <h2 className="text-2xl font-semibold mb-4">
-                            {lang === 'el' ? '8. Επικοινωνία' : '8. Contact'}
-                        </h2>
-                        <p className="mb-4">
-                            {lang === 'el'
-                                ? 'Εάν έχετε ερωτήσεις σχετικά με αυτούς τους όρους, επικοινωνήστε μαζί μας στο legal@netprophet.com'
-                                : 'If you have questions about these terms, please contact us at legal@netprophet.com'
-                            }
-                        </p>
+                        <h3 className="text-lg font-semibold">5.4 Επιβραβεύσεις/Πιστότητα</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Προγράμματα επιβράβευσης/πιστότητας, όροι ανακοινώνονται, ισχύουν ομοιόμορφα.</li>
+                            <li>Δυνατότητα κατάργησης/τροποποίησης προγράμματος, χωρίς μεταγενέστερη ανάκληση ήδη χορηγηθείσας επιβράβευσης εκτός σφάλματος/δόλου.</li>
+                            <li>Νομίσματα/Εικονικά Αντικείμενα: ψηφιακό περιεχόμενο μόνο εντός NetProphet, όχι χρήμα/αξία, μη εξαργυρώσιμα. Παρέχουν περιορισμένο, ανακλητό δικαίωμα χρήσης. Δυνατότητα τροποποίησης απόκτησης/εξαργύρωσης/διαθεσιμότητας, αφαίρεσης σε παραβάσεις, χωρίς αποζημίωση.</li>
+                        </ul>
 
-                        <div className="mt-8 p-4 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-                            <p className="text-sm text-yellow-200">
-                                {lang === 'el'
-                                    ? 'Αυτοί είναι δείγμα όροι χρήσης. Θα ενημερωθούν με πλήρεις λεπτομέρειες στο μέλλον.'
-                                    : 'These are sample terms of use. They will be updated with full details in the future.'
-                                }
-                            </p>
-                        </div>
-                    </div>
+                        <h3 className="text-lg font-semibold">5.5 Αποκλεισμός Παικτών</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Αίτηση παύσης/κλεισίματος μέσω ΗΛΠ.</li>
+                            <li>Κλείσιμο λογαριασμού, εκκαθάριση βάσει Πολιτικής Απορρήτου· νέα δημιουργία κατόπιν αίτησης.</li>
+                            <li>Χωρίς εμπορική επικοινωνία σε αποκλεισμένους.</li>
+                            <li>Δικαίωμα αποκλεισμού από Monad Labs σε προβληματική συμπεριφορά.</li>
+                        </ul>
+
+                        <h3 className="text-lg font-semibold">5.6 Μεταφορές Χρημάτων</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Αγορές εικονικών προϊόντων/συνδρομών μέσω Monad Labs E.E. και παρόχων πληρωμών εντός ΕΕ/ΕΟΧ.</li>
+                            <li>Έλεγχος νομιμότητας/εγκυρότητας συναλλαγών.</li>
+                            <li>Δικαίωμα άρνησης/ακύρωσης συναλλαγής αν υπάρχουν στοιχεία αμφισβήτησης.</li>
+                        </ul>
+
+                        <h3 className="text-lg font-semibold">5.7 Ακύρωση Γεγονότων/Συμμετοχών/Συναλλαγών</h3>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Έλεγχος στοιχείων που θίγουν ακεραιότητα γεγονότος.</li>
+                            <li>Ακύρωση προσφοράς/αναστολή διευθέτησης με επαρκή στοιχεία αμφισβήτησης ή ύποπτων συναλλαγών.</li>
+                            <li>Ακύρωση σε ανθρώπινο/τεχνικό σφάλμα.</li>
+                            <li>Ομοιόμορφη εφαρμογή πολιτικής, έγκαιρη λήψη μέτρων.</li>
+                            <li>Ειδικότερες περιπτώσεις ακύρωσης στον Οδηγό Παιχνιδιού.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">6. Προστασία Δεδομένων Προσωπικού Χαρακτήρα</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Πολιτική βάσει ΓΚΠΔ και Ν. 4624/2019: www.netprophet.gr/privacy-policy.</li>
+                            <li>Νομική βάση: σύναψη/εκτέλεση Σύμβασης· δυνατότητα αυτοματοποιημένης επεξεργασίας/προφίλ.</li>
+                            <li>Τήρηση ΓΚΠΔ, μέτρα ασφαλείας, μη κοινοποίηση χωρίς συγκατάθεση εκτός νόμιμων εξαιρέσεων.</li>
+                            <li>Ανάκληση συγκατάθεσης ανά πάσα στιγμή (χωρίς αναδρομική επίδραση).</li>
+                            <li>Ενημέρωση σε τροποποίηση σκοπών/κατηγοριών δεδομένων, αλλιώς λύση Σύμβασης.</li>
+                            <li>Υποχρέωση επικαιροποίησης στοιχείων.</li>
+                            <li>Αποδοχή Πολιτικής Προστασίας Προσωπικών Δεδομένων ως προϋπόθεση σύναψης Σύμβασης.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">7. Περιορισμός Ευθύνης</h2>
+                        <p>Η Monad Labs E.E δεν ευθύνεται για τεχνικά προβλήματα, βλάβες, παρεμβολές, διακοπές/ακυρώσεις γεγονότων, λάθη καταχώρησης/αποθήκευσης/μετάδοσης, εκτός αν οφείλονται σε βαρεία αμέλεια ή δόλο της/υπαλλήλων/προστηθέντων.</p>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">8. Εξυπηρέτηση Πελατών</h2>
+                        <p>Ώρες: Δευτέρα - Κυριακή 09:00 - 17:00</p>
+                        <p>Email: hello@netprophetapp.com</p>
+                        <p>Έγκαιρη/έγκυρη εξυπηρέτηση. Ενημέρωση αν ηχογραφείται ή αξιολογείται. Χωρίς χρεώσεις πέραν παρόχου.</p>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">9. Επικοινωνία - Ενημέρωση Πελατών</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Ενημέρωση μέσω Λογαριασμού ή email στη δηλωθείσα διεύθυνση.</li>
+                            <li>Παραλαβή ειδοποίησης κατά την ημερομηνία μετάδοσης.</li>
+                            <li>Όχι πολλαπλά emails ταυτόχρονα.</li>
+                            <li>Εμπορική επικοινωνία μόνο με προηγούμενη συγκατάθεση.</li>
+                            <li>Δυνατότητα διακοπής εμπορικής επικοινωνίας (ανάκληση συγκατάθεσης).</li>
+                            <li>Η ανωτέρω επικοινωνία θεωρείται έγγραφη.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">10. Πνευματική Ιδιοκτησία</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Αποκλειστική δικαιούχος σήματος «NetProphet», domains και περιεχομένου η Monad Labs E.E.· δεν αποκτάτε δικαιώματα.</li>
+                            <li>Ιδιοκτησία Monad Labs E.E ή συνεργατών/τρίτων με άδεια.</li>
+                            <li>Απαγόρευση αναπαραγωγής/μετατροπής/αντιγραφής/αναδημοσίευσης κ.λπ. χωρίς έγγραφη συναίνεση.</li>
+                            <li>Απαγορεύεται εμπορική χρήση/εκμετάλλευση χωρίς έγγραφη συναίνεση.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">11. Επίλυση διαφορών</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Αποκλειστική αρμοδιότητα: δικαστήρια Αθηνών.</li>
+                            <li>Υποχρέωση προσπάθειας φιλικής διευθέτησης.</li>
+                            <li>Σε μη φιλική διευθέτηση: προσφυγή σε Φορείς ΕΕΔ.</li>
+                            <li>Η επίλυση δεν αναιρεί δικαίωμα προσφυγής, εκτός αν υπάρχει παραίτηση.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">13. Αποδεικτική Ισχύς</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Ηλεκτρονικά αρχεία/καταχωρίσεις αποτελούν πλήρη απόδειξη χρόνου/περιεχομένου. Αποθήκευση στο ΚΠΣ αποτελεί πλήρη απόδειξη.</li>
+                            <li>Στοιχεία ΚΠΣ και λογιστικά/εποπτικά βιβλία (έντυπα/ηλεκτρονικά) έχουν πλήρη αποδεικτική ισχύ.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">14. Εκχώρηση</h2>
+                        <p>Απαγορεύεται εκχώρηση/μεταβίβαση δικαιωμάτων/υποχρεώσεων σε τρίτους.</p>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">15. Διάρκεια Ισχύος - Καταγγελία</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Διάρκεια όσο παρέχονται νόμιμα οι υπηρεσίες και εσείς τις χρησιμοποιείτε νόμιμα.</li>
+                            <li>Καταγγελία οποτεδήποτε από τα μέρη χωρίς προειδοποίηση.</li>
+                            <li>Καταγγελία με αίτηση κλεισίματος ή κλείσιμο από Monad Labs βάσει όρων/διατάξεων.</li>
+                            <li>Κοινοποίηση καταγγελίας συνεπάγεται λύση, κλείσιμο, εκκαθάριση Λογαριασμού.</li>
+                        </ul>
+                    </section>
+
+                    <section className="space-y-3 text-sm text-gray-100">
+                        <h2 className="text-2xl font-semibold">16. Λοιποί Όροι</h2>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li>Όροι, πολιτικές και παραπομπές αποτελούν πλήρη συμφωνία.</li>
+                            <li>Ό,τι δεν ρυθμίζεται, διέπεται από κείμενες διατάξεις που υπερισχύουν αντίθετων όρων.</li>
+                            <li>Ακυρότητα/ανίσχυρο όρου δεν επηρεάζει τους λοιπούς.</li>
+                            <li>Δικαίωμα αναπροσαρμογής άκυρου όρου ώστε να αρθεί λόγος ακυρότητας.</li>
+                            <li>Διέπεται από Ελληνικό Δίκαιο· αρμοδιότητα Δικαστηρίων Αθηνών.</li>
+                        </ul>
+                    </section>
                 </div>
             </div>
 

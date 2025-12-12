@@ -16,6 +16,7 @@ import { ProfileSetupModalProvider, useProfileSetupModal } from '@/context/Profi
 import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { ProfileClaimNotification } from '@/components/ProfileClaimNotification';
 import { NavigationLoader } from '@/components/NavigationLoader';
+import { AppFooter } from '@/components/AppFooter';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -134,6 +135,7 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                                 <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90 backdrop-blur-sm">
                                     {children}
                                 </div>
+                                <AppFooter lang={lang} />
                             </div>
 
                             {/* Global Prediction Slip - overlay on smaller screens, drawer on xl+ */}
