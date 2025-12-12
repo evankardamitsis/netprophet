@@ -101,24 +101,24 @@ export default function MatchResultsPage() {
                     last_name: match.player_b?.last_name || ''
                 },
                 player_a1: match.player_a1 ? {
-                    id: match.player_a1.id,
-                    first_name: match.player_a1.first_name,
-                    last_name: match.player_a1.last_name
+                    id: match.player_a1.id || '',
+                    first_name: match.player_a1.first_name || '',
+                    last_name: match.player_a1.last_name || ''
                 } : null,
                 player_a2: match.player_a2 ? {
-                    id: match.player_a2.id,
-                    first_name: match.player_a2.first_name,
-                    last_name: match.player_a2.last_name
+                    id: match.player_a2.id || '',
+                    first_name: match.player_a2.first_name || '',
+                    last_name: match.player_a2.last_name || ''
                 } : null,
                 player_b1: match.player_b1 ? {
-                    id: match.player_b1.id,
-                    first_name: match.player_b1.first_name,
-                    last_name: match.player_b1.last_name
+                    id: match.player_b1.id || '',
+                    first_name: match.player_b1.first_name || '',
+                    last_name: match.player_b1.last_name || ''
                 } : null,
                 player_b2: match.player_b2 ? {
-                    id: match.player_b2.id,
-                    first_name: match.player_b2.first_name,
-                    last_name: match.player_b2.last_name
+                    id: match.player_b2.id || '',
+                    first_name: match.player_b2.first_name || '',
+                    last_name: match.player_b2.last_name || ''
                 } : null,
                 tournaments: Array.isArray(match.tournaments) ? match.tournaments[0] : match.tournaments,
                 status: match.status,

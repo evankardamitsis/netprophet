@@ -48,9 +48,9 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     // Helper to format player/team name for display
     const formatName = (name: string, isCompact: boolean = false) => {
         if (isDoubles) {
-            // For doubles, show full team name or truncate if too long
-            if (isCompact && name.length > 20) {
-                return name.substring(0, 17) + '...';
+            // For doubles, keep the full team name; optionally truncate the whole string
+            if (isCompact && name.length > 24) {
+                return name.substring(0, 21) + '...';
             }
             return name;
         }
