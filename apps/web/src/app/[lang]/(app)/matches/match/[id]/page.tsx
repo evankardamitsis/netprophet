@@ -15,10 +15,15 @@ async function fetchMatch(id: string): Promise<Match | null> {
         .from('matches')
         .select(`
             id,
+            match_type,
             tournament_id,
             category_id,
             player_a_id,
             player_b_id,
+            player_a1_id,
+            player_a2_id,
+            player_b1_id,
+            player_b2_id,
             winner_id,
             status,
             round,
@@ -52,7 +57,55 @@ async function fetchMatch(id: string): Promise<Match | null> {
                 current_streak,
                 streak_type
             ),
+            player_a1:players!matches_player_a1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
+            player_a2:players!matches_player_a2_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
             player_b:players!matches_player_b_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
+            player_b1:players!matches_player_b1_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating,
+                surface_preference,
+                wins,
+                losses,
+                last5,
+                current_streak,
+                streak_type
+            ),
+            player_b2:players!matches_player_b2_id_fkey (
                 id,
                 first_name,
                 last_name,
@@ -94,12 +147,25 @@ async function fetchMatch(id: string): Promise<Match | null> {
         status_display = 'live';
     }
 
+    const isDoubles = (rawMatch.match_type || 'singles') === 'doubles';
+    const teamAName = isDoubles && rawMatch.player_a1 && rawMatch.player_a2
+        ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
+        : getPlayerName(rawMatch.player_a);
+    const teamBName = isDoubles && rawMatch.player_b1 && rawMatch.player_b2
+        ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
+        : getPlayerName(rawMatch.player_b);
+
     const transformedMatch = {
         id: rawMatch.id,
+        match_type: rawMatch.match_type || 'singles',
         tournament_id: rawMatch.tournament_id,
         category_id: rawMatch.category_id,
         player_a_id: rawMatch.player_a_id,
         player_b_id: rawMatch.player_b_id,
+        player_a1_id: rawMatch.player_a1_id || null,
+        player_a2_id: rawMatch.player_a2_id || null,
+        player_b1_id: rawMatch.player_b1_id || null,
+        player_b2_id: rawMatch.player_b2_id || null,
         winner_id: rawMatch.winner_id,
         status: rawMatch.status,
         round: rawMatch.round,
@@ -112,16 +178,22 @@ async function fetchMatch(id: string): Promise<Match | null> {
         tournament_categories: Array.isArray(rawMatch.tournament_categories) ? rawMatch.tournament_categories[0] : rawMatch.tournament_categories,
         player_a: rawMatch.player_a,
         player_b: rawMatch.player_b,
+        player_a1: rawMatch.player_a1,
+        player_a2: rawMatch.player_a2,
+        player_b1: rawMatch.player_b1,
+        player_b2: rawMatch.player_b2,
         // Computed properties for web app compatibility
         tournament: (Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0]?.name : rawMatch.tournaments?.name) || 'Unknown Tournament',
         player1: {
-            name: getPlayerName(rawMatch.player_a),
+            name: teamAName,
             odds: rawMatch.odds_a || 1.0
         },
         player2: {
-            name: getPlayerName(rawMatch.player_b),
+            name: teamBName,
             odds: rawMatch.odds_b || 1.0
         },
+        team1: isDoubles ? { name: teamAName, odds: rawMatch.odds_a || 1.0, players: [rawMatch.player_a1, rawMatch.player_a2].filter(Boolean) } : undefined,
+        team2: isDoubles ? { name: teamBName, odds: rawMatch.odds_b || 1.0, players: [rawMatch.player_b1, rawMatch.player_b2].filter(Boolean) } : undefined,
         time: rawMatch.start_time ? new Date(rawMatch.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : 'TBD',
         status_display,
         points: 0, // Points are calculated dynamically

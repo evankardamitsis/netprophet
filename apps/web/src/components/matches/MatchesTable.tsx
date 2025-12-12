@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, ReactNode } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, flexRender, ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/react-table';
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
@@ -22,6 +22,36 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
+    const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'singles' | 'doubles'>('all');
+
+    const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2'): ReactNode => {
+        const formatPlayerLine = (player: any) => {
+            if (!player) return 'TBD (N/A)';
+            const ntrp = player?.ntrp_rating ? player.ntrp_rating.toFixed(1) : 'N/A';
+            return `${(player.first_name ?? '').trim()} ${(player.last_name ?? '').trim()}`.trim() + ` (${ntrp})`;
+        };
+
+        const renderDoublesLines = (players?: any[]) => {
+            const [p1, p2] = players || [];
+            if (!p1 && !p2) return 'TBD (N/A)';
+            return (
+                <div className="flex flex-col text-xs text-white leading-tight space-y-0.5">
+                    <span className="truncate">{formatPlayerLine(p1)}</span>
+                    <span className="truncate">{formatPlayerLine(p2)}</span>
+                </div>
+            );
+        };
+
+        const isTeam1 = side === 'team1';
+        if (match.match_type !== 'doubles') {
+            const player = isTeam1 ? match.player1 : match.player2;
+            const rating = isTeam1 ? match.player_a?.ntrp_rating : match.player_b?.ntrp_rating;
+            const ratingText = rating ? rating.toFixed(1) : 'N/A';
+            return `${player.name} (${ratingText})`;
+        }
+        const players = isTeam1 ? match.team1?.players : match.team2?.players;
+        return renderDoublesLines(players);
+    }, []);
 
     // Table state
     const [globalFilter, setGlobalFilter] = useState('');
@@ -118,18 +148,20 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                             <div className="flex items-center space-x-2">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                        <div className="text-white font-medium truncate">{match.player1.name}</div>
+                                        <div className="text-white font-medium truncate">
+                                            {getDisplayName(match, 'team1')}
+                                        </div>
                                         <div className="text-2xl font-bold text-white ml-2">{match.player1.odds.toFixed(2)}</div>
                                     </div>
-                                    <div className="text-xs text-gray-400">NTRP {match.player_a?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
                                 </div>
                                 <div className="text-gray-500 font-bold text-xs mx-2">VS</div>
                                 <div className="flex-1 min-w-0 text-right">
                                     <div className="flex items-center justify-between">
                                         <div className="text-2xl font-bold text-white mr-2">{match.player2.odds.toFixed(2)}</div>
-                                        <div className="text-white font-medium truncate">{match.player2.name}</div>
+                                        <div className="text-white font-medium truncate">
+                                            {getDisplayName(match, 'team2')}
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-gray-400">NTRP {match.player_b?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
                                 </div>
                             </div>
                             {underdog && (
@@ -178,11 +210,16 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 enableColumnFilter: false,
             },
         ],
-        [onSelectMatch, dict, isUnderdog]
+        [onSelectMatch, dict, isUnderdog, getDisplayName]
     );
 
+    const filteredMatches = useMemo(() => {
+        if (matchTypeFilter === 'all') return matches;
+        return matches.filter(match => match.match_type === matchTypeFilter);
+    }, [matches, matchTypeFilter]);
+
     const table = useReactTable({
-        data: matches,
+        data: filteredMatches,
         columns,
         state: {
             sorting,
@@ -224,9 +261,32 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 <span className={cx(typography.body.sm, "ml-2 text-gray-400 text-xs xs:text-sm")}>({table.getFilteredRowModel().rows.length})</span>
             </h2>
 
-            {/* Search and Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="w-full sm:flex-1 sm:max-w-md">
+            {/* Filters and search */}
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-2xl px-2 py-1">
+                        {[
+                            { key: 'all', label: dict?.matches?.matchTypeAll || 'All' },
+                            { key: 'singles', label: dict?.matches?.matchTypeSingles || 'Singles' },
+                            { key: 'doubles', label: dict?.matches?.matchTypeDoubles || 'Doubles' },
+                        ].map(option => (
+                            <Button
+                                key={option.key}
+                                variant="outline"
+                                onClick={() => setMatchTypeFilter(option.key as 'all' | 'singles' | 'doubles')}
+                                className={cx(
+                                    "px-3 py-1 text-xs font-semibold rounded-xl border-slate-600",
+                                    matchTypeFilter === option.key
+                                        ? "bg-purple-600/90 text-white border-purple-500"
+                                        : "bg-transparent text-gray-200 hover:bg-slate-700"
+                                )}
+                            >
+                                {option.label}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+                <div className="w-full lg:flex-1 lg:max-w-md">
                     <input
                         type="text"
                         placeholder="Search matches by tournament, players, category..."
@@ -235,47 +295,10 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                         className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-2xl text-white placeholder-gray-400 placeholder:text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={() => table.setPageIndex(0)}
-                        disabled={!table.getCanPreviousPage()}
-                        className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
-                    >
-                        {'<<'}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                        className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
-                    >
-                        {'<'}
-                    </Button>
-                    <span className="px-2 text-sm text-gray-300">
-                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                    </span>
-                    <Button
-                        variant="outline"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                        className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
-                    >
-                        {'>'}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                        disabled={!table.getCanNextPage()}
-                        className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
-                    >
-                        {'>>'}
-                    </Button>
-                </div>
             </div>
 
             {/* Desktop Table View */}
-            {matches.length > 0 && (
+            {filteredMatches.length > 0 && (
                 <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden">
                         <thead>
@@ -367,8 +390,9 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                                 {/* Players and odds - Left aligned */}
                                                 <div className="flex items-center justify-between">
                                                     <div className="min-w-0">
-                                                        <div className="text-white font-medium text-xs truncate">{match.player1.name}</div>
-                                                        <div className="text-xs text-gray-400">NTRP {match.player_a?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
+                                                        <div className="text-white font-medium text-xs truncate">
+                                                            {getDisplayName(match, 'team1')}
+                                                        </div>
                                                     </div>
                                                     <div className="text-lg font-bold text-white ml-2">{match.player1.odds.toFixed(2)}</div>
                                                 </div>
@@ -377,8 +401,9 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
 
                                                 <div className="flex items-center justify-between">
                                                     <div className="min-w-0">
-                                                        <div className="text-white font-medium text-xs truncate">{match.player2.name}</div>
-                                                        <div className="text-xs text-gray-400">NTRP {match.player_b?.ntrp_rating?.toFixed(1) || 'N/A'}</div>
+                                                        <div className="text-white font-medium text-xs truncate">
+                                                            {getDisplayName(match, 'team2')}
+                                                        </div>
                                                     </div>
                                                     <div className="text-lg font-bold text-white ml-2">{match.player2.odds.toFixed(2)}</div>
                                                 </div>
@@ -427,8 +452,51 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 </div>
             </div>
 
+            {/* Pagination */}
+            {filteredMatches.length > 0 && (
+                <div className="flex justify-end">
+                    <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-2xl px-3 py-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => table.setPageIndex(0)}
+                            disabled={!table.getCanPreviousPage()}
+                            className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
+                        >
+                            {'<<'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => table.previousPage()}
+                            disabled={!table.getCanPreviousPage()}
+                            className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
+                        >
+                            {'<'}
+                        </Button>
+                        <span className="px-2 text-sm text-gray-300">
+                            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                        </span>
+                        <Button
+                            variant="outline"
+                            onClick={() => table.nextPage()}
+                            disabled={!table.getCanNextPage()}
+                            className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
+                        >
+                            {'>'}
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                            disabled={!table.getCanNextPage()}
+                            className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700 px-2 py-1 text-sm rounded-xl"
+                        >
+                            {'>>'}
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             {/* No matches state */}
-            {matches.length === 0 && (
+            {filteredMatches.length === 0 && (
                 <div className="text-center py-12">
                     <div className="text-6xl mb-4">🎾</div>
                     <h2 className="text-2xl font-semibold mb-2 text-white">No Matches Available</h2>

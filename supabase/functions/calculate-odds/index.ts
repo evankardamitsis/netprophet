@@ -60,8 +60,26 @@ interface OddsResult {
     experienceAdvantage: number;
     momentumAdvantage: number;
     headToHeadAdvantage: number;
+    partnershipBonus?: number; // For doubles only
+    teamChemistry?: number; // For doubles only
   };
   recommendations: string[];
+}
+
+interface DoublesH2HRecord {
+  team_a_wins: number;
+  team_b_wins: number;
+  total_matches: number;
+  last_match_result?: "A" | "B";
+  last_match_date?: string;
+}
+
+interface PartnershipRecord {
+  total_matches: number;
+  wins: number;
+  losses: number;
+  win_rate: number;
+  last_match_date?: string;
 }
 
 interface H2HRecordInput {
@@ -534,6 +552,507 @@ function generateRecommendations(
   return recommendations.slice(0, 3);
 }
 
+// ============================================================================
+// DOUBLES ODDS CALCULATION
+// ============================================================================
+
+/**
+ * Calculate win probabilities and odds for a doubles tennis match
+ * Uses weighted averages to combine two players' stats into team stats
+ */
+function calculateDoublesOdds(
+  teamA: { player1: PlayerOddsData; player2: PlayerOddsData },
+  teamB: { player1: PlayerOddsData; player2: PlayerOddsData },
+  context: MatchContext,
+  doublesH2H?: DoublesH2HRecord,
+  partnershipA?: PartnershipRecord,
+  partnershipB?: PartnershipRecord
+): OddsResult {
+  // Combine players into team stats using weighted averages (stronger player weighted more)
+  const teamAStats = combinePlayerStats(teamA.player1, teamA.player2);
+  const teamBStats = combinePlayerStats(teamB.player1, teamB.player2);
+
+  // Calculate partnership bonuses
+  const partnershipBonusA = calculatePartnershipBonus(partnershipA);
+  const partnershipBonusB = calculatePartnershipBonus(partnershipB);
+  const partnershipAdvantage = partnershipBonusA - partnershipBonusB;
+
+  // Calculate team chemistry (from partnership win rate)
+  const teamChemistryA = calculateTeamChemistry(partnershipA);
+  const teamChemistryB = calculateTeamChemistry(partnershipB);
+  const chemistryAdvantage = teamChemistryA - teamChemistryB;
+
+  // Calculate doubles H2H advantage
+  const doublesH2HAdvantage = calculateDoublesH2HAdvantage(doublesH2H);
+
+  // Calculate factors using team stats
+  const factors = calculateDoublesFactors(
+    teamAStats,
+    teamBStats,
+    context,
+    doublesH2HAdvantage,
+    partnershipAdvantage,
+    chemistryAdvantage
+  );
+
+  // Calculate base probability from factors with NTRP-heavy weighting (same as singles)
+  let teamAScore = 0.5; // Start at 50%
+
+  const ntrpDiff = Math.abs(teamAStats.ntrpRating - teamBStats.ntrpRating);
+  const baseRating = Math.min(teamAStats.ntrpRating, teamBStats.ntrpRating);
+  let ntrpWeight = 0.25; // Base weight
+
+  if (ntrpDiff >= 1.5) {
+    if (baseRating >= 4.0) {
+      ntrpWeight = 0.6;
+    } else {
+      ntrpWeight = 0.55;
+    }
+  } else if (ntrpDiff >= 1.0) {
+    if (baseRating >= 4.0) {
+      ntrpWeight = 0.55;
+    } else if (baseRating >= 3.5) {
+      ntrpWeight = 0.5;
+    } else {
+      ntrpWeight = 0.45;
+    }
+  } else if (ntrpDiff >= 0.5) {
+    ntrpWeight = 0.35;
+  }
+
+  const remainingWeight = 1.0 - ntrpWeight;
+  const totalH2hMatches = doublesH2H?.total_matches ?? 0;
+
+  let headToHeadWeight = 0;
+  if (totalH2hMatches > 0) {
+    const baseH2HWeight = 0.08;
+    const matchBonus = Math.min(0.12, totalH2hMatches * 0.02);
+    const maxH2HWeight = Math.min(0.2, baseH2HWeight + matchBonus);
+    headToHeadWeight = Math.min(remainingWeight * 0.4, maxH2HWeight);
+  }
+
+  // Partnership bonus gets separate weight (5% of remaining)
+  const partnershipWeight = Math.min(0.05, remainingWeight * 0.1);
+  const otherFactors = 4; // form, surface, experience, momentum
+  const otherWeightPool = Math.max(
+    remainingWeight - headToHeadWeight - partnershipWeight,
+    0
+  );
+  const otherFactorsWeight =
+    otherFactors > 0 ? otherWeightPool / otherFactors : 0;
+
+  teamAScore += factors.ntrpAdvantage * ntrpWeight;
+  teamAScore += factors.formAdvantage * otherFactorsWeight;
+  teamAScore += factors.surfaceAdvantage * otherFactorsWeight;
+  teamAScore += factors.experienceAdvantage * otherFactorsWeight;
+  teamAScore += factors.momentumAdvantage * otherFactorsWeight;
+  teamAScore += factors.headToHeadAdvantage * headToHeadWeight;
+  teamAScore += factors.partnershipBonus! * partnershipWeight;
+
+  // Apply chemistry to form advantage
+  teamAScore += chemistryAdvantage * otherFactorsWeight * 0.5;
+
+  // Blend with doubles H2H if available
+  if (doublesH2H && totalH2hMatches >= 2) {
+    const h2hWinRate =
+      totalH2hMatches > 0 ? doublesH2H.team_a_wins / totalH2hMatches : 0.5;
+    const ratingDiffAdjustment = ntrpDiff <= 0.5 ? 1 - ntrpDiff * 0.8 : 0.6;
+    const blendStrength = Math.max(
+      0,
+      Math.min(0.85, (0.25 + totalH2hMatches * 0.08) * ratingDiffAdjustment)
+    );
+    teamAScore = teamAScore * (1 - blendStrength) + h2hWinRate * blendStrength;
+  }
+
+  // Add uncertainty factor
+  const uncertaintyFactor = 0.05;
+  const randomFactor = (Math.random() - 0.5) * uncertaintyFactor;
+  teamAScore += randomFactor;
+
+  // Apply H2H tilt if available
+  if (doublesH2H && totalH2hMatches >= 2) {
+    const teamAWins = doublesH2H.team_a_wins ?? 0;
+    const teamBWins = doublesH2H.team_b_wins ?? 0;
+    if (teamAWins !== teamBWins) {
+      const h2hTilt = Math.min(
+        0.2,
+        Math.abs(teamAWins - teamBWins) * 0.025 + totalH2hMatches * 0.01
+      );
+      if (teamAWins > teamBWins && teamAScore < 0.5 + h2hTilt) {
+        teamAScore = 0.5 + h2hTilt;
+      } else if (teamBWins > teamAWins && teamAScore > 0.5 - h2hTilt) {
+        teamAScore = 0.5 - h2hTilt;
+      }
+    }
+  }
+
+  // Dynamic bounds (same as singles)
+  let minBound = 0.2;
+  let maxBound = 0.8;
+
+  if (ntrpDiff < 0.2) {
+    minBound = 0.35;
+    maxBound = 0.65;
+  } else if (ntrpDiff < 0.35) {
+    minBound = 0.3;
+    maxBound = 0.7;
+  } else if (ntrpDiff >= 1.5) {
+    minBound = 0.05;
+    maxBound = 0.95;
+  } else if (ntrpDiff >= 1.0) {
+    minBound = 0.1;
+    maxBound = 0.9;
+  } else if (ntrpDiff >= 0.5) {
+    minBound = 0.15;
+    maxBound = 0.85;
+  }
+
+  teamAScore = Math.max(minBound, Math.min(maxBound, teamAScore));
+  const teamBScore = 1 - teamAScore;
+
+  // Calculate decimal odds with margin
+  const margin = 0.05;
+  const teamAOdds = (1 / teamAScore) * (1 + margin);
+  const teamBOdds = (1 / teamBScore) * (1 + margin);
+
+  // Calculate confidence
+  const confidence = calculateDoublesConfidence(
+    teamAStats,
+    teamBStats,
+    factors,
+    partnershipA,
+    partnershipB,
+    doublesH2H
+  );
+
+  // Generate recommendations
+  const recommendations = generateDoublesRecommendations(
+    teamA,
+    teamB,
+    factors,
+    context,
+    partnershipA,
+    partnershipB,
+    doublesH2H
+  );
+
+  return {
+    player1WinProbability: teamAScore,
+    player2WinProbability: teamBScore,
+    player1Odds: Math.round(teamAOdds * 100) / 100,
+    player2Odds: Math.round(teamBOdds * 100) / 100,
+    confidence,
+    factors: {
+      ...factors,
+      partnershipBonus: factors.partnershipBonus,
+      teamChemistry: chemistryAdvantage,
+    },
+    recommendations,
+  };
+}
+
+/**
+ * Combine two players' stats into team stats using weighted averages
+ * Stronger player (higher NTRP) gets 60% weight, weaker gets 40%
+ */
+function combinePlayerStats(
+  player1: PlayerOddsData,
+  player2: PlayerOddsData
+): PlayerOddsData {
+  // Determine stronger and weaker player
+  const stronger = player1.ntrpRating >= player2.ntrpRating ? player1 : player2;
+  const weaker = player1.ntrpRating >= player2.ntrpRating ? player2 : player1;
+
+  // Weighted averages
+  const ntrpRating = stronger.ntrpRating * 0.6 + weaker.ntrpRating * 0.4;
+  const wins = Math.round(stronger.wins * 0.6 + weaker.wins * 0.4);
+  const losses = Math.round(stronger.losses * 0.6 + weaker.losses * 0.4);
+
+  // Form: weighted average of last5
+  const recentWeights = [0.4, 0.25, 0.2, 0.1, 0.05];
+  const strongerForm = stronger.last5.reduce(
+    (sum, result, index) =>
+      sum + (result === "W" ? recentWeights[index] || 0 : 0),
+    0
+  );
+  const weakerForm = weaker.last5.reduce(
+    (sum, result, index) =>
+      sum + (result === "W" ? recentWeights[index] || 0 : 0),
+    0
+  );
+  const combinedForm = strongerForm * 0.6 + weakerForm * 0.4;
+  // Convert back to last5 array (approximate)
+  const last5: ("W" | "L")[] = [];
+  for (let i = 0; i < 5; i++) {
+    last5.push(combinedForm > 0.5 ? "W" : "L");
+  }
+
+  // Surface: best of both (if one has 70%, team gets 70%)
+  const getSurfaceWinRate = (
+    player: PlayerOddsData,
+    surface: string
+  ): number => {
+    if (!player.surfaceWinRates) {
+      return player.surfacePreference === surface ? 0.65 : 0.35;
+    }
+    switch (surface) {
+      case "Hard Court":
+        return player.surfaceWinRates.hardCourt || 0.5;
+      case "Clay Court":
+        return player.surfaceWinRates.clayCourt || 0.5;
+      case "Grass Court":
+        return player.surfaceWinRates.grassCourt || 0.5;
+      default:
+        return 0.5;
+    }
+  };
+  const strongerSurface = getSurfaceWinRate(
+    stronger,
+    stronger.surfacePreference
+  );
+  const weakerSurface = getSurfaceWinRate(weaker, weaker.surfacePreference);
+  const surfaceWinRates = {
+    hardCourt: Math.max(strongerSurface, weakerSurface),
+    clayCourt: Math.max(strongerSurface, weakerSurface),
+    grassCourt: Math.max(strongerSurface, weakerSurface),
+  };
+
+  // Experience: average
+  const age = Math.round(stronger.age * 0.5 + weaker.age * 0.5);
+  const totalMatches =
+    stronger.wins + stronger.losses + weaker.wins + weaker.losses;
+
+  // Momentum: average
+  const strongerMomentum =
+    stronger.streakType === "W"
+      ? Math.sqrt(stronger.currentStreak)
+      : -Math.sqrt(stronger.currentStreak);
+  const weakerMomentum =
+    weaker.streakType === "W"
+      ? Math.sqrt(weaker.currentStreak)
+      : -Math.sqrt(weaker.currentStreak);
+  const avgMomentum = (strongerMomentum + weakerMomentum) / 2;
+  const currentStreak = Math.abs(avgMomentum);
+  const streakType: "W" | "L" = avgMomentum >= 0 ? "W" : "L";
+
+  return {
+    id: `${stronger.id}-${weaker.id}`, // Combined ID
+    firstName: `${stronger.firstName} & ${weaker.firstName}`,
+    lastName: `${stronger.lastName} & ${weaker.lastName}`,
+    ntrpRating,
+    wins,
+    losses,
+    last5,
+    currentStreak,
+    streakType,
+    surfacePreference: stronger.surfacePreference, // Use stronger player's preference
+    surfaceWinRates,
+    aggressiveness: (stronger.aggressiveness + weaker.aggressiveness) / 2,
+    stamina: (stronger.stamina + weaker.stamina) / 2,
+    consistency: (stronger.consistency + weaker.consistency) / 2,
+    age,
+    hand: stronger.hand, // Use stronger player's hand
+    club: stronger.club,
+    notes: `${stronger.notes || ""} / ${weaker.notes || ""}`,
+  };
+}
+
+/**
+ * Calculate partnership bonus based on matches played together
+ * 0-4 matches: No bonus
+ * 5-9 matches: +1% per 5 matches (max +1%)
+ * 10-19 matches: +2% per 5 matches (max +3%)
+ * 20+ matches: +3% per 5 matches (max +10%)
+ */
+function calculatePartnershipBonus(partnership?: PartnershipRecord): number {
+  if (!partnership || partnership.total_matches === 0) {
+    return 0;
+  }
+
+  const matches = partnership.total_matches;
+
+  if (matches < 5) {
+    return 0;
+  } else if (matches < 10) {
+    return 0.01; // +1%
+  } else if (matches < 20) {
+    const bonus = Math.floor(matches / 5) * 0.01;
+    return Math.min(0.03, bonus); // Max +3%
+  } else {
+    const bonus = Math.floor(matches / 5) * 0.03;
+    return Math.min(0.1, bonus); // Max +10%
+  }
+}
+
+/**
+ * Calculate team chemistry from partnership win rate
+ * Win rate > 0.6: +5% chemistry bonus
+ * Win rate 0.5-0.6: +2% chemistry bonus
+ * Win rate < 0.4: -2% chemistry penalty
+ * No partnership: 0% (neutral)
+ */
+function calculateTeamChemistry(partnership?: PartnershipRecord): number {
+  if (!partnership || partnership.total_matches < 5) {
+    return 0; // Need at least 5 matches together
+  }
+
+  const winRate = partnership.win_rate;
+
+  if (winRate > 0.6) {
+    return 0.05; // +5%
+  } else if (winRate >= 0.5) {
+    return 0.02; // +2%
+  } else if (winRate < 0.4) {
+    return -0.02; // -2% penalty
+  }
+
+  return 0; // Neutral for 0.4-0.5
+}
+
+/**
+ * Calculate doubles H2H advantage
+ */
+function calculateDoublesH2HAdvantage(doublesH2H?: DoublesH2HRecord): number {
+  if (!doublesH2H || doublesH2H.total_matches === 0) {
+    return 0;
+  }
+
+  const totalMatches = doublesH2H.total_matches;
+  const teamAWinRate = doublesH2H.team_a_wins / totalMatches;
+
+  let recentBonus = 0;
+  if (doublesH2H.last_match_result && doublesH2H.last_match_date) {
+    const lastMatchDate = new Date(doublesH2H.last_match_date);
+    const daysSince =
+      (Date.now() - lastMatchDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSince < 180) {
+      recentBonus = doublesH2H.last_match_result === "A" ? 0.05 : -0.05;
+    }
+  }
+
+  const matchVolumeBoost = Math.min(0.4, totalMatches * 0.05);
+  const rawAdvantage =
+    (teamAWinRate - 0.5) * (0.8 + matchVolumeBoost) + recentBonus;
+
+  return Math.tanh(rawAdvantage * 1.1);
+}
+
+/**
+ * Calculate doubles factors
+ */
+function calculateDoublesFactors(
+  teamA: PlayerOddsData,
+  teamB: PlayerOddsData,
+  context: MatchContext,
+  doublesH2HAdvantage: number,
+  partnershipAdvantage: number,
+  chemistryAdvantage: number
+) {
+  return {
+    ntrpAdvantage: calculateNTRPAdvantage(teamA, teamB),
+    formAdvantage: calculateFormAdvantage(teamA, teamB),
+    surfaceAdvantage: calculateSurfaceAdvantage(teamA, teamB, context.surface),
+    experienceAdvantage: calculateExperienceAdvantage(teamA, teamB),
+    momentumAdvantage: calculateMomentumAdvantage(teamA, teamB),
+    headToHeadAdvantage: doublesH2HAdvantage,
+    partnershipBonus: partnershipAdvantage,
+  };
+}
+
+/**
+ * Calculate confidence for doubles matches
+ */
+function calculateDoublesConfidence(
+  teamA: PlayerOddsData,
+  teamB: PlayerOddsData,
+  factors: any,
+  partnershipA?: PartnershipRecord,
+  partnershipB?: PartnershipRecord,
+  doublesH2H?: DoublesH2HRecord
+): number {
+  let confidence = 0.6;
+
+  const teamAMatches = teamA.wins + teamA.losses;
+  const teamBMatches = teamB.wins + teamB.losses;
+
+  if (teamAMatches >= 15 && teamBMatches >= 15) confidence += 0.15;
+  if (teamAMatches >= 30 && teamBMatches >= 30) confidence += 0.1;
+
+  if (teamA.surfaceWinRates && teamB.surfaceWinRates) confidence += 0.05;
+
+  if (doublesH2H && doublesH2H.total_matches > 0) confidence += 0.1;
+
+  // Partnership history bonus
+  if (partnershipA && partnershipA.total_matches >= 10) confidence += 0.05;
+  if (partnershipB && partnershipB.total_matches >= 10) confidence += 0.05;
+
+  const factorVariance =
+    Math.abs(factors.ntrpAdvantage) +
+    Math.abs(factors.formAdvantage) +
+    Math.abs(factors.surfaceAdvantage) +
+    Math.abs(factors.headToHeadAdvantage);
+
+  if (factorVariance > 0.6) confidence += 0.1;
+  if (factorVariance > 1.0) confidence += 0.05;
+
+  return Math.max(0.3, Math.min(0.95, confidence));
+}
+
+/**
+ * Generate recommendations for doubles matches
+ */
+function generateDoublesRecommendations(
+  teamA: { player1: PlayerOddsData; player2: PlayerOddsData },
+  teamB: { player1: PlayerOddsData; player2: PlayerOddsData },
+  factors: any,
+  context: MatchContext,
+  partnershipA?: PartnershipRecord,
+  partnershipB?: PartnershipRecord,
+  doublesH2H?: DoublesH2HRecord
+): string[] {
+  const recommendations: string[] = [];
+
+  // Doubles H2H
+  if (doublesH2H && doublesH2H.total_matches > 0) {
+    const teamAWinRate = (
+      (doublesH2H.team_a_wins / doublesH2H.total_matches) *
+      100
+    ).toFixed(0);
+    recommendations.push(
+      `Team A leads H2H ${doublesH2H.team_a_wins}-${doublesH2H.team_b_wins} (${teamAWinRate}% win rate)`
+    );
+  }
+
+  // Partnership history
+  if (partnershipA && partnershipA.total_matches >= 5) {
+    const winRate = (partnershipA.win_rate * 100).toFixed(0);
+    recommendations.push(
+      `Team A partnership: ${partnershipA.wins}-${partnershipA.losses} (${winRate}% win rate)`
+    );
+  }
+
+  if (partnershipB && partnershipB.total_matches >= 5) {
+    const winRate = (partnershipB.win_rate * 100).toFixed(0);
+    recommendations.push(
+      `Team B partnership: ${partnershipB.wins}-${partnershipB.losses} (${winRate}% win rate)`
+    );
+  }
+
+  // NTRP advantage
+  if (Math.abs(factors.ntrpAdvantage) > 0.1) {
+    const stronger = factors.ntrpAdvantage > 0 ? "Team A" : "Team B";
+    recommendations.push(`${stronger} has NTRP advantage`);
+  }
+
+  // Surface advantage
+  if (Math.abs(factors.surfaceAdvantage) > 0.1) {
+    const advantaged = factors.surfaceAdvantage > 0 ? "Team A" : "Team B";
+    recommendations.push(`${advantaged} excels on ${context.surface}`);
+  }
+
+  return recommendations.slice(0, 3);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -606,11 +1125,13 @@ serve(async (req) => {
     }
 
     // OPTIMIZATION: Replace N+1 pattern with single batch query
+    // Fetch both singles and doubles players
     const { data: matches, error: matchesError } = await supabaseClient
       .from("matches")
       .select(
         `
         id,
+        match_type,
         tournaments!inner (
           surface
         ),
@@ -630,6 +1151,66 @@ serve(async (req) => {
           notes
         ),
         player_b:players!matches_player_b_id_fkey (
+          id,
+          first_name,
+          last_name,
+          ntrp_rating,
+          surface_preference,
+          wins,
+          losses,
+          last5,
+          current_streak,
+          streak_type,
+          age,
+          hand,
+          notes
+        ),
+        player_a1:players!matches_player_a1_id_fkey (
+          id,
+          first_name,
+          last_name,
+          ntrp_rating,
+          surface_preference,
+          wins,
+          losses,
+          last5,
+          current_streak,
+          streak_type,
+          age,
+          hand,
+          notes
+        ),
+        player_a2:players!matches_player_a2_id_fkey (
+          id,
+          first_name,
+          last_name,
+          ntrp_rating,
+          surface_preference,
+          wins,
+          losses,
+          last5,
+          current_streak,
+          streak_type,
+          age,
+          hand,
+          notes
+        ),
+        player_b1:players!matches_player_b1_id_fkey (
+          id,
+          first_name,
+          last_name,
+          ntrp_rating,
+          surface_preference,
+          wins,
+          losses,
+          last5,
+          current_streak,
+          streak_type,
+          age,
+          hand,
+          notes
+        ),
+        player_b2:players!matches_player_b2_id_fkey (
           id,
           first_name,
           last_name,
@@ -668,189 +1249,436 @@ serve(async (req) => {
           continue;
         }
 
-        if (!match.player_a || !match.player_b || !match.tournaments) {
-          results.push({ matchId: match.id, error: "Incomplete match data" });
-          continue;
-        }
+        const matchType = match.match_type || "singles";
 
-        // Convert to PlayerOddsData format
-        const playerA: PlayerOddsData = {
-          id: match.player_a.id,
-          firstName: match.player_a.first_name,
-          lastName: match.player_a.last_name,
-          ntrpRating: match.player_a.ntrp_rating || 3.0,
-          wins: match.player_a.wins || 0,
-          losses: match.player_a.losses || 0,
-          last5: match.player_a.last5 || ["W", "W", "L", "W", "L"],
-          currentStreak: match.player_a.current_streak || 0,
-          streakType: match.player_a.streak_type || "W",
-          surfacePreference: match.player_a.surface_preference || "Hard Court",
-          aggressiveness: 5,
-          stamina: 5,
-          consistency: 5,
-          age: match.player_a.age || 25,
-          hand: match.player_a.hand || "right",
-          club: "Default Club",
-          notes: match.player_a.notes || "",
-        };
+        // Route to singles or doubles algorithm
+        if (matchType === "doubles") {
+          // Doubles match processing
+          if (
+            !match.player_a1 ||
+            !match.player_a2 ||
+            !match.player_b1 ||
+            !match.player_b2 ||
+            !match.tournaments
+          ) {
+            results.push({
+              matchId: match.id,
+              error: "Incomplete doubles match data",
+            });
+            continue;
+          }
 
-        const playerB: PlayerOddsData = {
-          id: match.player_b.id,
-          firstName: match.player_b.first_name,
-          lastName: match.player_b.last_name,
-          ntrpRating: match.player_b.ntrp_rating || 3.0,
-          wins: match.player_b.wins || 0,
-          losses: match.player_b.losses || 0,
-          last5: match.player_b.last5 || ["L", "W", "W", "L", "W"],
-          currentStreak: match.player_b.current_streak || 0,
-          streakType: match.player_b.streak_type || "W",
-          surfacePreference: match.player_b.surface_preference || "Hard Court",
-          aggressiveness: 5,
-          stamina: 5,
-          consistency: 5,
-          age: match.player_b.age || 25,
-          hand: match.player_b.hand || "right",
-          club: "Default Club",
-          notes: match.player_b.notes || "",
-        };
+          // Convert to PlayerOddsData format
+          const playerA1: PlayerOddsData = {
+            id: match.player_a1.id,
+            firstName: match.player_a1.first_name,
+            lastName: match.player_a1.last_name,
+            ntrpRating: match.player_a1.ntrp_rating || 3.0,
+            wins: match.player_a1.wins || 0,
+            losses: match.player_a1.losses || 0,
+            last5: match.player_a1.last5 || ["W", "W", "L", "W", "L"],
+            currentStreak: match.player_a1.current_streak || 0,
+            streakType: match.player_a1.streak_type || "W",
+            surfacePreference:
+              match.player_a1.surface_preference || "Hard Court",
+            aggressiveness: 5,
+            stamina: 5,
+            consistency: 5,
+            age: match.player_a1.age || 25,
+            hand: match.player_a1.hand || "right",
+            club: "Default Club",
+            notes: match.player_a1.notes || "",
+          };
 
-        const context: MatchContext = {
-          surface: match.tournaments.surface as
-            | "Hard Court"
-            | "Clay Court"
-            | "Grass Court",
-        };
+          const playerA2: PlayerOddsData = {
+            id: match.player_a2.id,
+            firstName: match.player_a2.first_name,
+            lastName: match.player_a2.last_name,
+            ntrpRating: match.player_a2.ntrp_rating || 3.0,
+            wins: match.player_a2.wins || 0,
+            losses: match.player_a2.losses || 0,
+            last5: match.player_a2.last5 || ["W", "W", "L", "W", "L"],
+            currentStreak: match.player_a2.current_streak || 0,
+            streakType: match.player_a2.streak_type || "W",
+            surfacePreference:
+              match.player_a2.surface_preference || "Hard Court",
+            aggressiveness: 5,
+            stamina: 5,
+            consistency: 5,
+            age: match.player_a2.age || 25,
+            hand: match.player_a2.hand || "right",
+            club: "Default Club",
+            notes: match.player_a2.notes || "",
+          };
 
-        // Fetch head-to-head record
-        let h2hRecord: H2HRecordInput | undefined;
-        let rawH2hRecord: {
-          player_a_id: string;
-          player_b_id: string;
-          player_a_wins: number;
-          player_b_wins: number;
-          last_match_result: string | null;
-          last_match_date: string | null;
-        } | null = null;
-        try {
-          const { data: h2hData, error: h2hError } = await supabaseClient.rpc(
-            "get_head_to_head_record",
-            {
-              p_player_1_id: playerA.id,
-              p_player_2_id: playerB.id,
+          const playerB1: PlayerOddsData = {
+            id: match.player_b1.id,
+            firstName: match.player_b1.first_name,
+            lastName: match.player_b1.last_name,
+            ntrpRating: match.player_b1.ntrp_rating || 3.0,
+            wins: match.player_b1.wins || 0,
+            losses: match.player_b1.losses || 0,
+            last5: match.player_b1.last5 || ["L", "W", "W", "L", "W"],
+            currentStreak: match.player_b1.current_streak || 0,
+            streakType: match.player_b1.streak_type || "W",
+            surfacePreference:
+              match.player_b1.surface_preference || "Hard Court",
+            aggressiveness: 5,
+            stamina: 5,
+            consistency: 5,
+            age: match.player_b1.age || 25,
+            hand: match.player_b1.hand || "right",
+            club: "Default Club",
+            notes: match.player_b1.notes || "",
+          };
+
+          const playerB2: PlayerOddsData = {
+            id: match.player_b2.id,
+            firstName: match.player_b2.first_name,
+            lastName: match.player_b2.last_name,
+            ntrpRating: match.player_b2.ntrp_rating || 3.0,
+            wins: match.player_b2.wins || 0,
+            losses: match.player_b2.losses || 0,
+            last5: match.player_b2.last5 || ["L", "W", "W", "L", "W"],
+            currentStreak: match.player_b2.current_streak || 0,
+            streakType: match.player_b2.streak_type || "W",
+            surfacePreference:
+              match.player_b2.surface_preference || "Hard Court",
+            aggressiveness: 5,
+            stamina: 5,
+            consistency: 5,
+            age: match.player_b2.age || 25,
+            hand: match.player_b2.hand || "right",
+            club: "Default Club",
+            notes: match.player_b2.notes || "",
+          };
+
+          const context: MatchContext = {
+            surface: match.tournaments.surface as
+              | "Hard Court"
+              | "Clay Court"
+              | "Grass Court",
+          };
+
+          // Fetch doubles H2H record
+          let doublesH2H: DoublesH2HRecord | undefined;
+          try {
+            const { data: h2hData, error: h2hError } = await supabaseClient.rpc(
+              "get_doubles_h2h_record",
+              {
+                p_team_a_p1_id: playerA1.id,
+                p_team_a_p2_id: playerA2.id,
+                p_team_b_p1_id: playerB1.id,
+                p_team_b_p2_id: playerB2.id,
+              }
+            );
+
+            if (!h2hError && h2hData && h2hData.length > 0) {
+              const record = h2hData[0];
+              doublesH2H = {
+                team_a_wins: record.team_a_wins,
+                team_b_wins: record.team_b_wins,
+                total_matches: record.total_matches,
+                last_match_result:
+                  record.last_match_result === "A"
+                    ? "A"
+                    : record.last_match_result === "B"
+                      ? "B"
+                      : undefined,
+                last_match_date: record.last_match_date || undefined,
+              };
             }
+          } catch (h2hError) {
+            console.error("Error fetching doubles H2H record:", h2hError);
+          }
+
+          // Fetch partnership records
+          let partnershipA: PartnershipRecord | undefined;
+          let partnershipB: PartnershipRecord | undefined;
+
+          try {
+            // Team A partnership
+            const { data: partnershipAData, error: partnershipAError } =
+              await supabaseClient.rpc("get_partnership_record", {
+                p_player_1_id: playerA1.id,
+                p_player_2_id: playerA2.id,
+              });
+
+            if (
+              !partnershipAError &&
+              partnershipAData &&
+              partnershipAData.length > 0
+            ) {
+              const record = partnershipAData[0];
+              partnershipA = {
+                total_matches: record.total_matches,
+                wins: record.wins,
+                losses: record.losses,
+                win_rate: parseFloat(record.win_rate),
+                last_match_date: record.last_match_date || undefined,
+              };
+            }
+          } catch (partnershipError) {
+            console.error("Error fetching partnership A:", partnershipError);
+          }
+
+          try {
+            // Team B partnership
+            const { data: partnershipBData, error: partnershipBError } =
+              await supabaseClient.rpc("get_partnership_record", {
+                p_player_1_id: playerB1.id,
+                p_player_2_id: playerB2.id,
+              });
+
+            if (
+              !partnershipBError &&
+              partnershipBData &&
+              partnershipBData.length > 0
+            ) {
+              const record = partnershipBData[0];
+              partnershipB = {
+                total_matches: record.total_matches,
+                wins: record.wins,
+                losses: record.losses,
+                win_rate: parseFloat(record.win_rate),
+                last_match_date: record.last_match_date || undefined,
+              };
+            }
+          } catch (partnershipError) {
+            console.error("Error fetching partnership B:", partnershipError);
+          }
+
+          // Calculate doubles odds
+          const oddsResult = calculateDoublesOdds(
+            { player1: playerA1, player2: playerA2 },
+            { player1: playerB1, player2: playerB2 },
+            context,
+            doublesH2H,
+            partnershipA,
+            partnershipB
           );
 
-          if (!h2hError && h2hData && h2hData.length > 0) {
-            rawH2hRecord = h2hData[0];
-          }
-        } catch (h2hError) {
-          console.error("Error fetching head-to-head record:", h2hError);
-          // Continue without head-to-head data if there's an error
-        }
+          // Update the match with calculated odds (odds_a = team A, odds_b = team B)
+          const { error: updateError } = await supabaseClient
+            .from("matches")
+            .update({
+              odds_a: oddsResult.player1Odds,
+              odds_b: oddsResult.player2Odds,
+            })
+            .eq("id", match.id);
 
-        const h2hFavorA = !!(
-          rawH2hRecord &&
-          rawH2hRecord.player_a_wins > rawH2hRecord.player_b_wins
-        );
-        const h2hFavorB = !!(
-          rawH2hRecord &&
-          rawH2hRecord.player_b_wins > rawH2hRecord.player_a_wins
-        );
-
-        const favoredPlayerId =
-          rawH2hRecord &&
-          rawH2hRecord.player_a_wins !== rawH2hRecord.player_b_wins
-            ? rawH2hRecord.player_a_wins > rawH2hRecord.player_b_wins
-              ? rawH2hRecord.player_a_id
-              : rawH2hRecord.player_b_id
-            : null;
-
-        const defaultPlayer1IsHigherRated =
-          playerA.ntrpRating >= playerB.ntrpRating;
-
-        let player1IsHigherRated = defaultPlayer1IsHigherRated;
-        if (favoredPlayerId) {
-          if (favoredPlayerId === playerA.id) {
-            player1IsHigherRated = true;
-          } else if (favoredPlayerId === playerB.id) {
-            player1IsHigherRated = false;
-          }
-        }
-
-        const player1 = player1IsHigherRated ? playerA : playerB;
-        const player2 = player1IsHigherRated ? playerB : playerA;
-
-        if (rawH2hRecord) {
-          const player1IsRecordA = rawH2hRecord.player_a_id === player1.id;
-          const player1IsRecordB = rawH2hRecord.player_b_id === player1.id;
-
-          if (player1IsRecordA || player1IsRecordB) {
-            const player1Wins = player1IsRecordA
-              ? rawH2hRecord.player_a_wins
-              : rawH2hRecord.player_b_wins;
-            const player1Losses = player1IsRecordA
-              ? rawH2hRecord.player_b_wins
-              : rawH2hRecord.player_a_wins;
-
-            let lastMatchResult: "W" | "L" | undefined;
-            if (
-              rawH2hRecord.last_match_result === "A" ||
-              rawH2hRecord.last_match_result === "B"
-            ) {
-              const playerAWon = rawH2hRecord.last_match_result === "A";
-              const player1WonLast = player1IsRecordA
-                ? playerAWon
-                : !playerAWon;
-              lastMatchResult = player1WonLast ? "W" : "L";
-            }
-
-            h2hRecord = {
-              wins: player1Wins,
-              losses: player1Losses,
-              lastMatchResult,
-              lastMatchDate: rawH2hRecord.last_match_date || undefined,
-            };
+          if (updateError) {
+            results.push({
+              matchId: match.id,
+              error: "Failed to update match odds",
+            });
           } else {
-            h2hRecord = undefined;
+            results.push({
+              matchId: match.id,
+              success: true,
+              odds: {
+                team_a: oddsResult.player1Odds,
+                team_b: oddsResult.player2Odds,
+                confidence: oddsResult.confidence,
+              },
+            });
           }
-        }
-
-        // Calculate odds using embedded algorithm with head-to-head data
-        const oddsResult = calculateOdds(player1, player2, context, h2hRecord);
-
-        // Map the calculated odds back to the correct players (A and B)
-        const odds_a = player1IsHigherRated
-          ? oddsResult.player1Odds
-          : oddsResult.player2Odds;
-        const odds_b = player1IsHigherRated
-          ? oddsResult.player2Odds
-          : oddsResult.player1Odds;
-
-        // Update the match with calculated odds
-        const { error: updateError } = await supabaseClient
-          .from("matches")
-          .update({
-            odds_a: odds_a,
-            odds_b: odds_b,
-          })
-          .eq("id", match.id);
-
-        if (updateError) {
-          results.push({
-            matchId: match.id,
-            error: "Failed to update match odds",
-          });
         } else {
-          results.push({
-            matchId: match.id,
-            success: true,
-            odds: {
-              player_a: odds_a,
-              player_b: odds_b,
-              confidence: oddsResult.confidence,
-            },
-          });
-        }
+          // Singles match processing (existing logic)
+          if (!match.player_a || !match.player_b || !match.tournaments) {
+            results.push({
+              matchId: match.id,
+              error: "Incomplete match data",
+            });
+            continue;
+          }
+
+          // Convert to PlayerOddsData format
+          const playerA: PlayerOddsData = {
+            id: match.player_a.id,
+            firstName: match.player_a.first_name,
+            lastName: match.player_a.last_name,
+            ntrpRating: match.player_a.ntrp_rating || 3.0,
+            wins: match.player_a.wins || 0,
+            losses: match.player_a.losses || 0,
+            last5: match.player_a.last5 || ["W", "W", "L", "W", "L"],
+            currentStreak: match.player_a.current_streak || 0,
+            streakType: match.player_a.streak_type || "W",
+            surfacePreference:
+              match.player_a.surface_preference || "Hard Court",
+            aggressiveness: 5,
+            stamina: 5,
+            consistency: 5,
+            age: match.player_a.age || 25,
+            hand: match.player_a.hand || "right",
+            club: "Default Club",
+            notes: match.player_a.notes || "",
+          };
+
+          const playerB: PlayerOddsData = {
+            id: match.player_b.id,
+            firstName: match.player_b.first_name,
+            lastName: match.player_b.last_name,
+            ntrpRating: match.player_b.ntrp_rating || 3.0,
+            wins: match.player_b.wins || 0,
+            losses: match.player_b.losses || 0,
+            last5: match.player_b.last5 || ["L", "W", "W", "L", "W"],
+            currentStreak: match.player_b.current_streak || 0,
+            streakType: match.player_b.streak_type || "W",
+            surfacePreference:
+              match.player_b.surface_preference || "Hard Court",
+            aggressiveness: 5,
+            stamina: 5,
+            consistency: 5,
+            age: match.player_b.age || 25,
+            hand: match.player_b.hand || "right",
+            club: "Default Club",
+            notes: match.player_b.notes || "",
+          };
+
+          const context: MatchContext = {
+            surface: match.tournaments.surface as
+              | "Hard Court"
+              | "Clay Court"
+              | "Grass Court",
+          };
+
+          // Fetch head-to-head record
+          let h2hRecord: H2HRecordInput | undefined;
+          let rawH2hRecord: {
+            player_a_id: string;
+            player_b_id: string;
+            player_a_wins: number;
+            player_b_wins: number;
+            last_match_result: string | null;
+            last_match_date: string | null;
+          } | null = null;
+          try {
+            const { data: h2hData, error: h2hError } = await supabaseClient.rpc(
+              "get_head_to_head_record",
+              {
+                p_player_1_id: playerA.id,
+                p_player_2_id: playerB.id,
+              }
+            );
+
+            if (!h2hError && h2hData && h2hData.length > 0) {
+              rawH2hRecord = h2hData[0];
+            }
+          } catch (h2hError) {
+            console.error("Error fetching head-to-head record:", h2hError);
+            // Continue without head-to-head data if there's an error
+          }
+
+          const h2hFavorA = !!(
+            rawH2hRecord &&
+            rawH2hRecord.player_a_wins > rawH2hRecord.player_b_wins
+          );
+          const h2hFavorB = !!(
+            rawH2hRecord &&
+            rawH2hRecord.player_b_wins > rawH2hRecord.player_a_wins
+          );
+
+          const favoredPlayerId =
+            rawH2hRecord &&
+            rawH2hRecord.player_a_wins !== rawH2hRecord.player_b_wins
+              ? rawH2hRecord.player_a_wins > rawH2hRecord.player_b_wins
+                ? rawH2hRecord.player_a_id
+                : rawH2hRecord.player_b_id
+              : null;
+
+          const defaultPlayer1IsHigherRated =
+            playerA.ntrpRating >= playerB.ntrpRating;
+
+          let player1IsHigherRated = defaultPlayer1IsHigherRated;
+          if (favoredPlayerId) {
+            if (favoredPlayerId === playerA.id) {
+              player1IsHigherRated = true;
+            } else if (favoredPlayerId === playerB.id) {
+              player1IsHigherRated = false;
+            }
+          }
+
+          const player1 = player1IsHigherRated ? playerA : playerB;
+          const player2 = player1IsHigherRated ? playerB : playerA;
+
+          if (rawH2hRecord) {
+            const player1IsRecordA = rawH2hRecord.player_a_id === player1.id;
+            const player1IsRecordB = rawH2hRecord.player_b_id === player1.id;
+
+            if (player1IsRecordA || player1IsRecordB) {
+              const player1Wins = player1IsRecordA
+                ? rawH2hRecord.player_a_wins
+                : rawH2hRecord.player_b_wins;
+              const player1Losses = player1IsRecordA
+                ? rawH2hRecord.player_b_wins
+                : rawH2hRecord.player_a_wins;
+
+              let lastMatchResult: "W" | "L" | undefined;
+              if (
+                rawH2hRecord.last_match_result === "A" ||
+                rawH2hRecord.last_match_result === "B"
+              ) {
+                const playerAWon = rawH2hRecord.last_match_result === "A";
+                const player1WonLast = player1IsRecordA
+                  ? playerAWon
+                  : !playerAWon;
+                lastMatchResult = player1WonLast ? "W" : "L";
+              }
+
+              h2hRecord = {
+                wins: player1Wins,
+                losses: player1Losses,
+                lastMatchResult,
+                lastMatchDate: rawH2hRecord.last_match_date || undefined,
+              };
+            } else {
+              h2hRecord = undefined;
+            }
+          }
+
+          // Calculate odds using embedded algorithm with head-to-head data
+          const oddsResult = calculateOdds(
+            player1,
+            player2,
+            context,
+            h2hRecord
+          );
+
+          // Map the calculated odds back to the correct players (A and B)
+          const odds_a = player1IsHigherRated
+            ? oddsResult.player1Odds
+            : oddsResult.player2Odds;
+          const odds_b = player1IsHigherRated
+            ? oddsResult.player2Odds
+            : oddsResult.player1Odds;
+
+          // Update the match with calculated odds
+          const { error: updateError } = await supabaseClient
+            .from("matches")
+            .update({
+              odds_a: odds_a,
+              odds_b: odds_b,
+            })
+            .eq("id", match.id);
+
+          if (updateError) {
+            results.push({
+              matchId: match.id,
+              error: "Failed to update match odds",
+            });
+          } else {
+            results.push({
+              matchId: match.id,
+              success: true,
+              odds: {
+                player_a: odds_a,
+                player_b: odds_b,
+                confidence: oddsResult.confidence,
+              },
+            });
+          }
+        } // End of else block for singles
       } catch (error) {
         results.push({ matchId: match.id, error: error.message });
       }

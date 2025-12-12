@@ -278,10 +278,15 @@ export type Database = {
           id: string;
           lock_time: string | null;
           locked: boolean | null;
+          match_type: "singles" | "doubles";
           odds_a: number | null;
           odds_b: number | null;
           player_a_id: string | null;
+          player_a1_id: string | null;
+          player_a2_id: string | null;
           player_b_id: string | null;
+          player_b1_id: string | null;
+          player_b2_id: string | null;
           points_value: number | null;
           processed: boolean | null;
           round:
@@ -306,10 +311,15 @@ export type Database = {
           id?: string;
           lock_time?: string | null;
           locked?: boolean | null;
+          match_type?: "singles" | "doubles";
           odds_a?: number | null;
           odds_b?: number | null;
           player_a_id?: string | null;
+          player_a1_id?: string | null;
+          player_a2_id?: string | null;
           player_b_id?: string | null;
+          player_b1_id?: string | null;
+          player_b2_id?: string | null;
           points_value?: number | null;
           processed?: boolean | null;
           round?:
@@ -334,10 +344,15 @@ export type Database = {
           id?: string;
           lock_time?: string | null;
           locked?: boolean | null;
+          match_type?: "singles" | "doubles";
           odds_a?: number | null;
           odds_b?: number | null;
           player_a_id?: string | null;
+          player_a1_id?: string | null;
+          player_a2_id?: string | null;
           player_b_id?: string | null;
+          player_b1_id?: string | null;
+          player_b2_id?: string | null;
           points_value?: number | null;
           processed?: boolean | null;
           round?:
@@ -432,6 +447,12 @@ export type Database = {
           aggressiveness: number;
           consistency: number;
           current_streak: number;
+          doubles_current_streak: number;
+          doubles_last5: string[];
+          doubles_last_match_date: string | null;
+          doubles_losses: number;
+          doubles_streak_type: string;
+          doubles_wins: number;
           fatigue_level: number | null;
           first_name: string;
           hand: string;
@@ -455,6 +476,12 @@ export type Database = {
           aggressiveness?: number;
           consistency?: number;
           current_streak?: number;
+          doubles_current_streak?: number;
+          doubles_last5?: string[];
+          doubles_last_match_date?: string | null;
+          doubles_losses?: number;
+          doubles_streak_type?: string;
+          doubles_wins?: number;
           fatigue_level?: number | null;
           first_name: string;
           hand: string;
@@ -478,6 +505,12 @@ export type Database = {
           aggressiveness?: number;
           consistency?: number;
           current_streak?: number;
+          doubles_current_streak?: number;
+          doubles_last5?: string[];
+          doubles_last_match_date?: string | null;
+          doubles_losses?: number;
+          doubles_streak_type?: string;
+          doubles_wins?: number;
           fatigue_level?: number | null;
           first_name?: string;
           hand?: string;

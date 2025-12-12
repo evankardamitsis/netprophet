@@ -25,8 +25,13 @@ export interface Tournament {
 // Match Types
 export interface Match {
   id: string;
+  match_type: "singles" | "doubles";
   player_a_id: string | null;
+  player_a1_id: string | null;
+  player_a2_id: string | null;
   player_b_id: string | null;
+  player_b1_id: string | null;
+  player_b2_id: string | null;
   tournament_id: string | null;
   category_id: string | null;
   round:
@@ -65,6 +70,35 @@ export interface Match {
     surface_preference: string;
   } | null;
   player_b?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    ntrp_rating: number;
+    surface_preference: string;
+  } | null;
+  // Doubles players
+  player_a1?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    ntrp_rating: number;
+    surface_preference: string;
+  } | null;
+  player_a2?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    ntrp_rating: number;
+    surface_preference: string;
+  } | null;
+  player_b1?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    ntrp_rating: number;
+    surface_preference: string;
+  } | null;
+  player_b2?: {
     id: string;
     first_name: string;
     last_name: string;

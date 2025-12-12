@@ -18,31 +18,55 @@ interface MatchResultFormProps {
 export function MatchResultForm({ formData, setFormData, match, onSubmit, submitLabel, isLoading = false }: MatchResultFormProps) {
     if (!match) return null;
 
+    const isDoubles = match.match_type === 'doubles';
     const isAmateurFormat = match.tournaments?.matches_type === 'best-of-3-super-tiebreak';
     const isBestOf5 = match.tournaments?.matches_type === 'best-of-5';
 
     // Smart form logic functions
-    const handleMatchWinnerChange = (winnerId: string) => {
-        const newFormData = { ...formData, winner_id: winnerId };
+    const handleMatchWinnerChange = (winnerId: string, winnerTeam?: string) => {
+        const newFormData: any = { ...formData };
+
+        if (isDoubles && winnerTeam) {
+            newFormData.match_winner_team = winnerTeam;
+            // For doubles, we don't use winner_id, but keep it for compatibility
+            newFormData.winner_id = '';
+        } else {
+            newFormData.winner_id = winnerId;
+            newFormData.match_winner_team = '';
+        }
 
         // Auto-populate set winners based on match result
         if (formData.match_result) {
-            const updatedData = autoPopulateSetWinners(newFormData, winnerId, formData.match_result);
-            // Auto-set super tiebreak winner to match winner
-            updatedData.super_tiebreak_winner_id = winnerId;
+            const updatedData = isDoubles
+                ? autoPopulateSetWinnersDoubles(newFormData, winnerTeam || '', formData.match_result)
+                : autoPopulateSetWinners(newFormData, winnerId, formData.match_result);
+            // Auto-set super tiebreak winner
+            if (isDoubles && winnerTeam) {
+                updatedData.super_tiebreak_winner_team = winnerTeam;
+            } else {
+                updatedData.super_tiebreak_winner_id = winnerId;
+            }
             setFormData(updatedData);
         } else {
-            // Auto-set super tiebreak winner to match winner
-            newFormData.super_tiebreak_winner_id = winnerId;
+            // Auto-set super tiebreak winner
+            if (isDoubles && winnerTeam) {
+                newFormData.super_tiebreak_winner_team = winnerTeam;
+            } else {
+                newFormData.super_tiebreak_winner_id = winnerId;
+            }
             setFormData(newFormData);
         }
     };
 
     const handleMatchResultChange = (matchResult: string) => {
-        const newFormData = { ...formData, match_result: matchResult };
+        const newFormData: any = { ...formData, match_result: matchResult };
 
         // Auto-populate set winners based on match winner
-        if (formData.winner_id) {
+        if (isDoubles && formData.match_winner_team) {
+            const updatedData = autoPopulateSetWinnersDoubles(newFormData, formData.match_winner_team, matchResult);
+            const finalData = autoPopulateSetScores(updatedData, matchResult);
+            setFormData(finalData);
+        } else if (!isDoubles && formData.winner_id) {
             const updatedData = autoPopulateSetWinners(newFormData, formData.winner_id, matchResult);
             const finalData = autoPopulateSetScores(updatedData, matchResult);
             setFormData(finalData);
@@ -75,6 +99,28 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
         return data;
     };
 
+    const autoPopulateSetWinnersDoubles = (data: any, winnerTeam: string, matchResult: string) => {
+        const [winnerSets, loserSets] = matchResult.split('-').map(Number);
+
+        // Only auto-populate for straight sets results (2-0, 0-2, 3-0, 0-3)
+        const isStraightSets = loserSets === 0;
+
+        if (isStraightSets) {
+            // For straight sets, winner team won all sets
+            for (let i = 1; i <= winnerSets; i++) {
+                data[`set${i}_winner_team`] = winnerTeam;
+            }
+        } else {
+            // For non-straight sets, don't auto-populate - let user choose
+            // Clear any existing set winners
+            for (let i = 1; i <= winnerSets + loserSets; i++) {
+                data[`set${i}_winner_team`] = '';
+            }
+        }
+
+        return data;
+    };
+
     const autoPopulateSetScores = (data: any, matchResult: string) => {
         const [winnerSets, loserSets] = matchResult.split('-').map(Number);
         const totalSets = winnerSets + loserSets;
@@ -89,18 +135,27 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                 continue;
             }
 
-            if (data[`set${i}_winner_id`] === data.winner_id) {
-                data[`set${i}_score`] = '6-4';
+            if (isDoubles) {
+                const setWinnerTeam = data[`set${i}_winner_team`];
+                if (setWinnerTeam === data.match_winner_team) {
+                    data[`set${i}_score`] = '6-4';
+                } else {
+                    data[`set${i}_score`] = '4-6';
+                }
             } else {
-                data[`set${i}_score`] = '4-6';
+                if (data[`set${i}_winner_id`] === data.winner_id) {
+                    data[`set${i}_score`] = '6-4';
+                } else {
+                    data[`set${i}_score`] = '4-6';
+                }
             }
         }
 
         return data;
     };
 
-    const getSetScoreOptions = (setWinnerId: string) => {
-        if (!setWinnerId) {
+    const getSetScoreOptions = (setWinnerId?: string, setWinnerTeam?: string) => {
+        if (!setWinnerId && !setWinnerTeam) {
             return [
                 { value: '6-0', label: '6-0' },
                 { value: '6-1', label: '6-1' },
@@ -119,10 +174,12 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
             ];
         }
 
-        const isPlayerAWinner = setWinnerId === match.player_a.id;
+        const isTeamAWinner = isDoubles
+            ? setWinnerTeam === 'team_a'
+            : setWinnerId === match.player_a.id;
 
-        if (isPlayerAWinner) {
-            // Player A wins - show scores where first number > second number
+        if (isTeamAWinner) {
+            // Team A wins - show scores where first number > second number
             return [
                 { value: '6-0', label: '6-0' },
                 { value: '6-1', label: '6-1' },
@@ -133,7 +190,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                 { value: '7-6', label: '7-6' }
             ];
         } else {
-            // Player B wins - show scores where second number > first number
+            // Team B wins - show scores where second number > first number
             return [
                 { value: '0-6', label: '0-6' },
                 { value: '1-6', label: '1-6' },
@@ -147,12 +204,15 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     const getMatchResultOptions = () => {
-        if (!formData.winner_id) return [];
+        if (isDoubles && !formData.match_winner_team) return [];
+        if (!isDoubles && !formData.winner_id) return [];
 
-        const isPlayerAWinner = formData.winner_id === match.player_a.id;
+        const isTeamAWinner = isDoubles
+            ? formData.match_winner_team === 'team_a'
+            : formData.winner_id === match.player_a.id;
 
         if (isBestOf5) {
-            return isPlayerAWinner ? [
+            return isTeamAWinner ? [
                 { value: '3-0', label: '3-0 (Straight sets)' },
                 { value: '3-1', label: '3-1 (Four sets)' },
                 { value: '3-2', label: '3-2 (Five sets)' }
@@ -162,7 +222,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                 { value: '2-3', label: '2-3 (Five sets)' }
             ];
         } else {
-            return isPlayerAWinner ? [
+            return isTeamAWinner ? [
                 { value: '2-0', label: '2-0 (Straight sets)' },
                 { value: '2-1', label: isAmateurFormat ? '2-1 (Super tiebreak)' : '2-1 (Three sets)' }
             ] : [
@@ -194,7 +254,8 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     const getSuperTiebreakScoreOptions = () => {
-        if (!formData.winner_id) {
+        const hasWinner = isDoubles ? formData.match_winner_team : formData.winner_id;
+        if (!hasWinner) {
             return [
                 { value: '10-0', label: '10-0' },
                 { value: '10-1', label: '10-1' },
@@ -219,10 +280,12 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
             ];
         }
 
-        const isPlayerAWinner = formData.winner_id === match.player_a.id;
+        const isTeamAWinner = isDoubles
+            ? formData.match_winner_team === 'team_a'
+            : formData.winner_id === match.player_a.id;
 
-        if (isPlayerAWinner) {
-            // Player A wins - show scores where first number > second number
+        if (isTeamAWinner) {
+            // Team A wins - show scores where first number > second number
             return [
                 { value: '10-0', label: '10-0' },
                 { value: '10-1', label: '10-1' },
@@ -236,7 +299,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                 { value: '10-9', label: '10-9' }
             ];
         } else {
-            // Player B wins - show scores where second number > first number
+            // Team B wins - show scores where second number > first number
             return [
                 { value: '0-10', label: '0-10' },
                 { value: '1-10', label: '1-10' },
@@ -261,37 +324,70 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-2">
                             <span className="text-white text-lg">🏆</span>
                         </div>
-                        Match Winner
+                        Match Winner {isDoubles && '(Team)'}
                     </h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
-                        onClick={() => handleMatchWinnerChange(formData.winner_id === match.player_a.id ? '' : match.player_a.id)}
-                        className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.winner_id === match.player_a.id
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                            }`}
-                    >
-                        <div className="text-base sm:text-lg font-bold text-center">
-                            {match.player_a.first_name} {match.player_a.last_name}
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => handleMatchWinnerChange(formData.winner_id === match.player_b.id ? '' : match.player_b.id)}
-                        className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.winner_id === match.player_b.id
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                            }`}
-                    >
-                        <div className="text-base sm:text-lg font-bold text-center">
-                            {match.player_b.first_name} {match.player_b.last_name}
-                        </div>
-                    </button>
-                </div>
+                {isDoubles ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                            onClick={() => handleMatchWinnerChange('', formData.match_winner_team === 'team_a' ? '' : 'team_a')}
+                            className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_winner_team === 'team_a'
+                                ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                                : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                                }`}
+                        >
+                            <div className="text-base sm:text-lg font-bold text-center">
+                                Team A
+                            </div>
+                            <div className="text-xs sm:text-sm text-center mt-1 opacity-80">
+                                {match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name}
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => handleMatchWinnerChange('', formData.match_winner_team === 'team_b' ? '' : 'team_b')}
+                            className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_winner_team === 'team_b'
+                                ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                                : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                                }`}
+                        >
+                            <div className="text-base sm:text-lg font-bold text-center">
+                                Team B
+                            </div>
+                            <div className="text-xs sm:text-sm text-center mt-1 opacity-80">
+                                {match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name}
+                            </div>
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                            onClick={() => handleMatchWinnerChange(formData.winner_id === match.player_a.id ? '' : match.player_a.id)}
+                            className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.winner_id === match.player_a.id
+                                ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                                : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                                }`}
+                        >
+                            <div className="text-base sm:text-lg font-bold text-center">
+                                {match.player_a.first_name} {match.player_a.last_name}
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => handleMatchWinnerChange(formData.winner_id === match.player_b.id ? '' : match.player_b.id)}
+                            className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.winner_id === match.player_b.id
+                                ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
+                                : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                                }`}
+                        >
+                            <div className="text-base sm:text-lg font-bold text-center">
+                                {match.player_b.first_name} {match.player_b.last_name}
+                            </div>
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Mobile-Optimized Match Result Selection */}
-            {formData.winner_id && (
+            {(isDoubles ? formData.match_winner_team : formData.winner_id) && (
                 <div className="p-4 sm:p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
                     <div className="mb-4">
                         <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -307,7 +403,12 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                         </div>
                     </div>
                     <p className="text-sm sm:text-base text-gray-600 mb-4">
-                        How will <span className="font-semibold text-gray-900">{formData.winner_id === match.player_a.id ? match.player_a.first_name : match.player_b.first_name}</span> win the match?
+                        How will <span className="font-semibold text-gray-900">
+                            {isDoubles
+                                ? (formData.match_winner_team === 'team_a' ? 'Team A' : 'Team B')
+                                : (formData.winner_id === match.player_a.id ? match.player_a.first_name : match.player_b.first_name)
+                            }
+                        </span> win the match?
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {getMatchResultOptions().map((option) => (
@@ -342,16 +443,27 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                     <div className="space-y-3">
                         {Array.from({ length: getSetsToShow() }, (_, i) => {
                             const setNum = i + 1;
-                            const setWinner = formData[`set${setNum}_winner_id`];
-                            const winnerName = setWinner === match.player_a.id
-                                ? `${match.player_a.first_name} ${match.player_a.last_name}`
-                                : `${match.player_b.first_name} ${match.player_b.last_name}`;
+                            const setWinnerId = formData[`set${setNum}_winner_id`];
+                            const setWinnerTeam = formData[`set${setNum}_winner_team`];
+
+                            let winnerName = '';
+                            if (isDoubles) {
+                                if (setWinnerTeam === 'team_a') {
+                                    winnerName = `Team A (${match.player_a1?.first_name} ${match.player_a1?.last_name} & ${match.player_a2?.first_name} ${match.player_a2?.last_name})`;
+                                } else if (setWinnerTeam === 'team_b') {
+                                    winnerName = `Team B (${match.player_b1?.first_name} ${match.player_b1?.last_name} & ${match.player_b2?.first_name} ${match.player_b2?.last_name})`;
+                                }
+                            } else {
+                                winnerName = setWinnerId === match.player_a.id
+                                    ? `${match.player_a.first_name} ${match.player_a.last_name}`
+                                    : `${match.player_b.first_name} ${match.player_b.last_name}`;
+                            }
 
                             return (
                                 <div key={setNum} className="border rounded-lg p-3 space-y-3">
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-semibold text-gray-900 text-sm">Set {setNum}</h4>
-                                        {setWinner && (
+                                        {(setWinnerId || setWinnerTeam) && (
                                             <span className="text-xs text-gray-400">
                                                 {winnerName} wins
                                             </span>
@@ -360,26 +472,49 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="space-y-2">
                                             <Label className="text-xs text-gray-400">Winner</Label>
-                                            <Select
-                                                value={formData[`set${setNum}_winner_id`]}
-                                                onValueChange={(value) => {
-                                                    // Clear the score when winner changes
-                                                    const newFormData = { ...formData, [`set${setNum}_winner_id`]: value, [`set${setNum}_score`]: '' };
-                                                    setFormData(newFormData);
-                                                }}
-                                            >
-                                                <SelectTrigger className="h-9">
-                                                    <SelectValue placeholder="Select winner" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value={match.player_a.id}>
-                                                        {match.player_a.first_name} {match.player_a.last_name}
-                                                    </SelectItem>
-                                                    <SelectItem value={match.player_b.id}>
-                                                        {match.player_b.first_name} {match.player_b.last_name}
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            {isDoubles ? (
+                                                <Select
+                                                    value={setWinnerTeam || ''}
+                                                    onValueChange={(value) => {
+                                                        // Clear the score when winner changes
+                                                        const newFormData: any = { ...formData, [`set${setNum}_winner_team`]: value, [`set${setNum}_score`]: '' };
+                                                        setFormData(newFormData);
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-9">
+                                                        <SelectValue placeholder="Select winner" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="team_a">
+                                                            Team A ({match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name})
+                                                        </SelectItem>
+                                                        <SelectItem value="team_b">
+                                                            Team B ({match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name})
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <Select
+                                                    value={setWinnerId}
+                                                    onValueChange={(value) => {
+                                                        // Clear the score when winner changes
+                                                        const newFormData = { ...formData, [`set${setNum}_winner_id`]: value, [`set${setNum}_score`]: '' };
+                                                        setFormData(newFormData);
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-9">
+                                                        <SelectValue placeholder="Select winner" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value={match.player_a.id}>
+                                                            {match.player_a.first_name} {match.player_a.last_name}
+                                                        </SelectItem>
+                                                        <SelectItem value={match.player_b.id}>
+                                                            {match.player_b.first_name} {match.player_b.last_name}
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-xs text-gray-400">Score</Label>
@@ -391,7 +526,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                                     <SelectValue placeholder="Select score" />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    {getSetScoreOptions(formData[`set${setNum}_winner_id`]).map((option) => (
+                                                    {getSetScoreOptions(setWinnerId, setWinnerTeam).map((option) => (
                                                         <SelectItem key={option.value} value={option.value}>
                                                             {option.label}
                                                         </SelectItem>
@@ -489,9 +624,14 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                             </Select>
                         </div>
                         <div className="text-xs text-gray-400">
-                            Winner: {formData.winner_id === match.player_a.id ?
-                                `${match.player_a.first_name} ${match.player_a.last_name}` :
-                                `${match.player_b.first_name} ${match.player_b.last_name}`}
+                            Winner: {isDoubles
+                                ? (formData.match_winner_team === 'team_a'
+                                    ? `Team A (${match.player_a1?.first_name} ${match.player_a1?.last_name} & ${match.player_a2?.first_name} ${match.player_a2?.last_name})`
+                                    : `Team B (${match.player_b1?.first_name} ${match.player_b1?.last_name} & ${match.player_b2?.first_name} ${match.player_b2?.last_name})`)
+                                : (formData.winner_id === match.player_a.id
+                                    ? `${match.player_a.first_name} ${match.player_a.last_name}`
+                                    : `${match.player_b.first_name} ${match.player_b.last_name}`)
+                            }
                         </div>
                     </div>
                 </div>

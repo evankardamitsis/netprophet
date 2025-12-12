@@ -154,25 +154,43 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                                     <div className="flex items-center justify-between mb-2 xs:mb-3">
                                         <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 min-w-0">
                                             <div className="truncate">
-                                                {match.player1.name.split(' ').length > 1
-                                                    ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
-                                                    : match.player1.name
-                                                }
+                                                {match.match_type === 'doubles' ? (
+                                                    match.player1.name
+                                                ) : (
+                                                    match.player1.name.split(' ').length > 1
+                                                        ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
+                                                        : match.player1.name
+                                                )}
                                             </div>
                                             <div className="text-xs text-gray-400 font-medium">
-                                                NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
+                                                {match.match_type === 'doubles' ? (
+                                                    match.team1?.players?.[0]?.ntrp_rating && match.team1?.players?.[1]?.ntrp_rating
+                                                        ? `NTRP ${((match.team1.players[0].ntrp_rating + match.team1.players[1].ntrp_rating) / 2).toFixed(1)}`
+                                                        : 'N/A'
+                                                ) : (
+                                                    `NTRP ${match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}`
+                                                )}
                                             </div>
                                         </div>
                                         <div className="text-slate-500 text-xs font-bold mx-1 xs:mx-2 flex-shrink-0">VS</div>
                                         <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 text-right min-w-0">
                                             <div className="truncate">
-                                                {match.player2.name.split(' ').length > 1
-                                                    ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
-                                                    : match.player2.name
-                                                }
+                                                {match.match_type === 'doubles' ? (
+                                                    match.player2.name
+                                                ) : (
+                                                    match.player2.name.split(' ').length > 1
+                                                        ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
+                                                        : match.player2.name
+                                                )}
                                             </div>
                                             <div className="text-xs text-gray-400 font-medium">
-                                                NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
+                                                {match.match_type === 'doubles' ? (
+                                                    match.team2?.players?.[0]?.ntrp_rating && match.team2?.players?.[1]?.ntrp_rating
+                                                        ? `NTRP ${((match.team2.players[0].ntrp_rating + match.team2.players[1].ntrp_rating) / 2).toFixed(1)}`
+                                                        : 'N/A'
+                                                ) : (
+                                                    `NTRP ${match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}`
+                                                )}
                                             </div>
                                         </div>
                                     </div>

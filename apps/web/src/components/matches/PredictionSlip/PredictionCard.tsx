@@ -13,7 +13,7 @@ interface PredictionCardProps {
     walletBalance: number;
     onRemovePrediction: (matchId: string) => void;
     onUpdateBetAmount: (matchId: string, amount: number) => void;
-    formatPredictionDisplay: (prediction: any) => string;
+    formatPredictionDisplay: (prediction: any, match?: any) => string;
     dict?: any;
     hasDoublePointsMatchPowerUp?: boolean;
     isUsingDoublePointsMatch?: boolean;
@@ -55,10 +55,13 @@ export function PredictionCard({
                                 <div className="w-1 h-1 bg-purple-400 rounded-full flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                     <h4 className="text-xs font-bold text-white truncate">
-                                        {item.match.player1.name.split(' ').pop()} vs {item.match.player2.name.split(' ').pop()}
+                                        {item.match.match_type === 'doubles'
+                                            ? `${item.match.player1.name} vs ${item.match.player2.name}`
+                                            : `${item.match.player1.name.split(' ').pop()} vs ${item.match.player2.name.split(' ').pop()}`
+                                        }
                                     </h4>
                                     <p className="text-xs text-slate-400 truncate">
-                                        {formatPredictionDisplay(item.prediction)}
+                                        {formatPredictionDisplay(item.prediction, item.match)}
                                     </p>
                                 </div>
                             </div>
@@ -136,7 +139,10 @@ export function PredictionCard({
                                 </div>
                             </div>
                             <h4 className="text-sm font-bold text-white leading-tight">
-                                {item.match.player1.name.split(' ').pop()} vs {item.match.player2.name.split(' ').pop()}
+                                {item.match.match_type === 'doubles'
+                                    ? `${item.match.player1.name} vs ${item.match.player2.name}`
+                                    : `${item.match.player1.name.split(' ').pop()} vs ${item.match.player2.name.split(' ').pop()}`
+                                }
                             </h4>
                         </div>
                         <div className="flex items-center space-x-1 ml-2">

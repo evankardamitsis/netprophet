@@ -62,6 +62,37 @@ export default function ResultsPage() {
     const resultsPerPage = 10;
     const pageHeaderRef = useRef<HTMLDivElement>(null);
 
+    const splitScore = (score?: string | null) => {
+        if (!score) return { a: '', b: '' };
+        const [a = '', b = ''] = score.split('-').map(part => part.trim());
+        return { a, b };
+    };
+
+    const getSetScores = (match: MatchResult) => {
+        const scores = [
+            match.set1_score,
+            match.set2_score,
+            match.set3_score,
+            match.set4_score,
+            match.set5_score,
+        ].filter(Boolean);
+        return scores.map(splitScore);
+    };
+
+    const getSetWins = (setScores: Array<{ a: string; b: string }>) => {
+        let winsA = 0;
+        let winsB = 0;
+        setScores.forEach(set => {
+            const a = parseInt(set.a, 10);
+            const b = parseInt(set.b, 10);
+            if (Number.isFinite(a) && Number.isFinite(b)) {
+                if (a > b) winsA += 1;
+                else if (b > a) winsB += 1;
+            }
+        });
+        return { winsA, winsB };
+    };
+
     // Load match results with optimized batch query and caching
     const loadResults = async (preserveSelection = false) => {
         try {
@@ -228,17 +259,6 @@ export default function ResultsPage() {
 
             // Update page state
             setTournamentPages(prev => ({ ...prev, [tournamentName]: page }));
-
-            // Scroll to top after state updates
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    if (pageHeaderRef.current) {
-                        pageHeaderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    } else {
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                }, 200);
-            });
         } catch (err) {
             console.error('Error loading more results:', err);
         }
@@ -347,61 +367,113 @@ export default function ResultsPage() {
                                         </div>
                                     </CardHeader>
                                     <CardContent className="pt-2 sm:pt-3">
-                                        <div className="space-y-1.5 sm:space-y-2">
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3">
                                             {tournament.matches.map((match) => {
                                                 const isPlayerAWinner = match.winner_name === match.player_a_name;
                                                 const isPlayerBWinner = match.winner_name === match.player_b_name;
+                                                const setScores = getSetScores(match);
+                                                const superTie = splitScore(match.super_tiebreak_score);
+                                                const showSuperTie = Boolean(match.super_tiebreak_score);
+                                                const totalColumns = Math.max(setScores.length, 1) + (showSuperTie ? 1 : 0);
+                                                const { winsA, winsB } = getSetWins(setScores);
+                                                const isPendingResult =
+                                                    !match.match_result ||
+                                                    match.match_result.trim() === '' ||
+                                                    match.match_result.trim() === (dict?.results?.resultsPending || 'Results pending');
 
                                                 return (
                                                     <div key={match.id} className="relative group/item">
                                                         <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border border-purple-500/30 hover:border-purple-400/50 transition-all">
-                                                            {/* Top Row: Date, Round, Category */}
-                                                            <div className="flex items-center justify-between gap-2 mb-2.5">
-                                                                <div className="flex items-center gap-1.5 text-xs flex-wrap">
-                                                                    <p className="text-purple-200 font-bold">
+                                                            {/* Top Row: Meta */}
+                                                            <div className="flex items-center justify-between gap-2 mb-2">
+                                                                <div className="flex items-center gap-2 text-[10px] sm:text-xs flex-wrap">
+                                                                    <span className="bg-slate-700/70 text-purple-200 font-bold px-2 py-0.5 rounded-full border border-purple-500/30">
+                                                                        {match.status === 'finished' ? (dict?.results?.finished || 'Finished') : match.status}
+                                                                    </span>
+                                                                    {match.round && (
+                                                                        <span className="text-purple-300 font-bold">
+                                                                            {match.round}
+                                                                        </span>
+                                                                    )}
+                                                                    <span className="text-gray-400 font-semibold">
                                                                         {new Date(match.updated_at).toLocaleDateString('en-GB', {
                                                                             day: 'numeric',
                                                                             month: 'short'
                                                                         })}
-                                                                    </p>
-                                                                    {match.round && (
-                                                                        <span className="text-purple-300 font-bold">
-                                                                            • {match.round}
-                                                                        </span>
-                                                                    )}
+                                                                    </span>
                                                                 </div>
                                                                 <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold shadow-lg whitespace-nowrap">
                                                                     {match.category_name}
                                                                 </span>
                                                             </div>
 
-                                                            {/* Players and Score Layout */}
-                                                            <div className="flex items-start gap-2 sm:gap-3">
-                                                                {/* Player A - Full Width */}
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className={`font-bold text-xs sm:text-sm break-words ${isPlayerAWinner ? '!text-green-500' : 'text-gray-400'}`}>
-                                                                        {match.player_a_name}
+                                                            {/* Players and Score Layout - vertical names, inline scores */}
+                                                            <div className="flex items-center gap-3">
+                                                                {/* Player names stacked */}
+                                                                <div className="flex flex-col min-w-0 flex-1 gap-1">
+                                                                    <div className={`${isPlayerAWinner ? 'font-bold !text-green-500' : 'font-normal text-gray-400'} text-xs sm:text-sm break-words`}>
+                                                                        {match.player_a_name}{' '}
+                                                                        <span className="text-[10px] sm:text-xs text-purple-300 font-semibold">
+                                                                            ({match.player_a_ntrp.toFixed(1)})
+                                                                        </span>
                                                                     </div>
-                                                                    <div className="text-[10px] sm:text-xs text-purple-300 font-bold mt-0.5">
-                                                                        <span className="hidden sm:inline">NTRP </span>{match.player_a_ntrp.toFixed(1)}
+                                                                    <div className={`${isPlayerBWinner ? 'font-bold !text-green-500' : 'font-normal text-gray-200'} text-xs sm:text-sm break-words`}>
+                                                                        {match.player_b_name}{' '}
+                                                                        <span className="text-[10px] sm:text-xs text-purple-300 font-semibold">
+                                                                            ({match.player_b_ntrp.toFixed(1)})
+                                                                        </span>
                                                                     </div>
                                                                 </div>
 
-                                                                {/* Score - Compact Vertical */}
-                                                                <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded px-2 sm:px-3 py-1 border border-purple-500/30 flex-shrink-0 self-center">
-                                                                    <div className="text-[10px] sm:text-xs font-bold text-white text-center whitespace-nowrap">
-                                                                        {formatScore(match)}
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Player B - Full Width */}
-                                                                <div className="flex-1 min-w-0 text-right">
-                                                                    <div className={`font-bold text-xs sm:text-sm break-words ${isPlayerBWinner ? '!text-green-500' : 'text-gray-400'}`}>
-                                                                        {match.player_b_name}
-                                                                    </div>
-                                                                    <div className="text-[10px] sm:text-xs text-purple-300 font-bold mt-0.5">
-                                                                        <span className="hidden sm:inline">NTRP </span>{match.player_b_ntrp.toFixed(1)}
-                                                                    </div>
+                                                                {/* Scores aligned center */}
+                                                                <div className="flex-shrink-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-lg border border-purple-500/20 px-3 py-2">
+                                                                    {isPendingResult ? (
+                                                                        <div className="text-center text-xs sm:text-sm font-bold text-white">
+                                                                            {dict?.results?.resultsPending || 'Αναμονή αποτελεσμάτων'}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <div
+                                                                                className="grid text-center text-[10px] sm:text-xs font-bold text-purple-200 mb-1"
+                                                                                style={{ gridTemplateColumns: `repeat(${totalColumns + 1}, minmax(26px, 42px))` }}
+                                                                            >
+                                                                                <div>Sets</div>
+                                                                                {setScores.map((_, idx) => (
+                                                                                    <div key={`h-${match.id}-${idx}`}>{idx + 1}</div>
+                                                                                ))}
+                                                                                {showSuperTie && <div>STB</div>}
+                                                                            </div>
+                                                                            <div
+                                                                                className="grid text-center text-xs sm:text-sm font-bold text-white"
+                                                                                style={{ gridTemplateColumns: `repeat(${totalColumns + 1}, minmax(26px, 42px))` }}
+                                                                            >
+                                                                                <div className={`${isPlayerAWinner ? 'text-green-400' : 'text-gray-400'}`}>{winsA}</div>
+                                                                                {setScores.map((set, idx) => (
+                                                                                    <div key={`a-${match.id}-${idx}`} className="px-1">
+                                                                                        {set.a}
+                                                                                    </div>
+                                                                                ))}
+                                                                                {showSuperTie && <div className="px-1">{superTie.a}</div>}
+                                                                            </div>
+                                                                            <div
+                                                                                className="grid text-center text-xs sm:text-sm font-bold text-white mt-1"
+                                                                                style={{ gridTemplateColumns: `repeat(${totalColumns + 1}, minmax(26px, 42px))` }}
+                                                                            >
+                                                                                <div className={`${isPlayerBWinner ? 'text-green-400' : 'text-white'}`}>{winsB}</div>
+                                                                                {setScores.map((set, idx) => (
+                                                                                    <div key={`b-${match.id}-${idx}`} className="px-1">
+                                                                                        {set.b}
+                                                                                    </div>
+                                                                                ))}
+                                                                                {showSuperTie && <div className="px-1">{superTie.b}</div>}
+                                                                            </div>
+                                                                            {setScores.length === 0 && !showSuperTie && (
+                                                                                <div className="text-center text-xs sm:text-sm font-bold text-white mt-1">
+                                                                                    {formatScore(match)}
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
