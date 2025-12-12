@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, ReactNode } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, flexRender, ColumnDef, SortingState, ColumnFiltersState } from '@tanstack/react-table';
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
@@ -24,15 +24,16 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
     const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'singles' | 'doubles'>('all');
 
-    const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2') => {
+    const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2'): ReactNode => {
         const formatPlayerLine = (player: any) => {
             if (!player) return 'TBD (N/A)';
             const ntrp = player?.ntrp_rating ? player.ntrp_rating.toFixed(1) : 'N/A';
-            return `${player.first_name ?? ''} ${player.last_name ?? ''}`.trim() + ` (${ntrp})`;
+            return `${(player.first_name ?? '').trim()} ${(player.last_name ?? '').trim()}`.trim() + ` (${ntrp})`;
         };
 
         const renderDoublesLines = (players?: any[]) => {
             const [p1, p2] = players || [];
+            if (!p1 && !p2) return 'TBD (N/A)';
             return (
                 <div className="flex flex-col text-xs text-white leading-tight space-y-0.5">
                     <span className="truncate">{formatPlayerLine(p1)}</span>
