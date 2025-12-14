@@ -8,7 +8,9 @@ import { useDictionary } from "@/context/DictionaryContext";
 interface ProfileCreationReviewProps {
     initialFirstName: string;
     initialLastName: string;
-    onConfirm: (firstName: string, lastName: string) => void;
+    initialDateOfBirth?: string;
+    initialPlayingHand?: 'left' | 'right';
+    onConfirm: (firstName: string, lastName: string, dateOfBirth?: string, playingHand?: 'left' | 'right') => void;
     onBack: () => void;
     loading: boolean;
 }
@@ -16,6 +18,8 @@ interface ProfileCreationReviewProps {
 export function ProfileCreationReview({
     initialFirstName,
     initialLastName,
+    initialDateOfBirth,
+    initialPlayingHand,
     onConfirm,
     onBack,
     loading
@@ -41,7 +45,7 @@ export function ProfileCreationReview({
             return;
         }
 
-        onConfirm(firstName.trim(), lastName.trim());
+        onConfirm(firstName.trim(), lastName.trim(), initialDateOfBirth, initialPlayingHand);
     };
 
     return (

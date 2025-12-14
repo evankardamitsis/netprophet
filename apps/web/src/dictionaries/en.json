@@ -70,6 +70,12 @@
       "aboutPlayerProfilesOptional": "✨ You can skip this and continue as a NetProphet user anytime!",
       "firstName": "First Name",
       "lastName": "Last Name",
+      "dateOfBirth": "Date of Birth",
+      "dominantHand": "Dominant Hand",
+      "handRight": "Right",
+      "handLeft": "Left",
+      "age": "Age",
+      "yearsOld": "years old",
       "firstNamePlaceholder": "Enter your first name",
       "lastNamePlaceholder": "Enter your last name",
       "termsLabel": "I accept the terms and conditions",
@@ -77,6 +83,10 @@
       "errors": {
         "firstNameRequired": "First name is required",
         "lastNameRequired": "Last name is required",
+        "dateOfBirthRequired": "Date of birth is required",
+        "dateOfBirthInvalid": "Please enter a valid date of birth",
+        "ageTooYoung": "You must be at least 16 years old",
+        "dominantHandRequired": "Dominant hand is required",
         "termsRequired": "You must accept the terms and conditions"
       }
     },
@@ -592,6 +602,7 @@
     "earnRewards": "Earn rewards and prizes",
     "trackStats": "Track your performance statistics",
     "startAthleteSetup": "Start Athlete Setup",
+    "awaitingApproval": "Awaiting Approval",
     "playerProfile": "Player Profile",
     "playerActive": "Player Profile Active",
     "playerActiveDesc": "You are registered as a tennis player"

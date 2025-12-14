@@ -214,14 +214,13 @@ function SuccessModalContent({ lang }: { lang: string }) {
 }
 
 function ProfileSetupModalContent() {
-    const { showProfileSetup, setShowProfileSetup, profileRefreshKey, testMode } = useProfileSetupModal();
+    const { showProfileSetup, setShowProfileSetup, profileRefreshKey } = useProfileSetupModal();
 
     return (
         <ProfileSetupModal
             isOpen={showProfileSetup}
             onClose={() => setShowProfileSetup(false)}
             forceRefresh={profileRefreshKey}
-            testMode={testMode}
         />
     );
 }

@@ -28,7 +28,7 @@ export default function MyProfilePage() {
     const { dict } = useDictionary();
     const { wallet } = useWallet();
     const { isWalletSyncing } = useWalletData(); // Load complete wallet data
-    const { refreshStatus } = useProfileClaim(user?.id || null);
+    const { refreshStatus, profileClaimStatus } = useProfileClaim(user?.id || null);
     const [profileStats, setProfileStats] = useState({
         totalCoins: 0,
         totalWins: 0,
@@ -128,18 +128,29 @@ export default function MyProfilePage() {
 
     const handleStartPlayerSetup = async () => {
         try {
-            // Reset user's profile claim status from 'skipped' to 'pending'
-            // This allows them to go through the full flow again
-            const { error } = await supabase
+            // Clear any previous status (skipped, pending, creation_requested) to allow fresh start
+            // Don't set to 'pending' here - the flow will handle status after form submission
+            // Only clear if status is not 'claimed' (user should keep their claimed profile)
+            const { data: currentProfile } = await supabase
                 .from('profiles')
-                .update({
-                    profile_claim_status: 'pending',
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', user?.id);
+                .select('profile_claim_status, claimed_player_id')
+                .eq('id', user?.id)
+                .single();
 
-            if (error) {
-                console.error('Error resetting profile claim status:', error);
+            // Only clear status if user doesn't have a claimed player
+            // This allows restarting the flow even if they previously requested creation
+            if (currentProfile && !currentProfile.claimed_player_id) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({
+                        profile_claim_status: null, // Clear to allow fresh start
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', user?.id);
+
+                if (error) {
+                    console.error('Error resetting profile claim status:', error);
+                }
             }
 
             // Refresh the profile claim status
@@ -147,10 +158,10 @@ export default function MyProfilePage() {
                 refreshStatus();
             }
 
-            // Force ProfileClaimFlow to re-check for matching players
+            // Force ProfileClaimFlow to re-check
             setProfileRefreshKey(profileRefreshKey + 1);
 
-            // Open the modal
+            // Open the modal - flow will show form first
             setShowProfileSetup(true);
         } catch (err) {
             console.error('Error starting player setup:', err);
@@ -482,9 +493,15 @@ export default function MyProfilePage() {
                                     </ul>
                                     <Button
                                         onClick={handleStartPlayerSetup}
-                                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                                        disabled={profileClaimStatus === 'creation_requested'}
+                                        className={`w-full ${profileClaimStatus === 'creation_requested'
+                                            ? 'bg-gray-600 hover:bg-gray-600 cursor-not-allowed opacity-60'
+                                            : 'bg-purple-600 hover:bg-purple-700'
+                                            } text-white`}
                                     >
-                                        {(dict as any)?.profile?.startPlayerSetup || 'Start Player Setup'}
+                                        {profileClaimStatus === 'creation_requested'
+                                            ? (dict as any)?.profile?.awaitingApproval || 'Awaiting Approval'
+                                            : (dict as any)?.profile?.startAthleteSetup || 'Start Athlete Setup'}
                                     </Button>
                                 </div>
                             </CardContent>

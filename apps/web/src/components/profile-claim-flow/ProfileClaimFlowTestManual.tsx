@@ -6,7 +6,7 @@ import { ProfileClaimFlowNew } from "./ProfileClaimFlowNew";
 
 export function ProfileClaimFlowTestManual() {
     const [testUserId, setTestUserId] = useState<string>("");
-    const [testMode, setTestMode] = useState<'normal' | 'match' | 'multiple'>('normal');
+    // Removed testMode - flow is now simplified and always shows form first
     const [forceRefresh, setForceRefresh] = useState(0);
     const [showFlow, setShowFlow] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -89,7 +89,6 @@ export function ProfileClaimFlowTestManual() {
                     </div>
                     <div className="text-sm text-gray-800">
                         <p><strong>User ID:</strong> {testUserId}</p>
-                        <p><strong>Test Mode:</strong> {testMode}</p>
                         {userInfo && (
                             <>
                                 <p><strong>Email:</strong> {userInfo.email}</p>
@@ -115,7 +114,6 @@ export function ProfileClaimFlowTestManual() {
                         loadUserInfo();
                     }}
                     forceRefresh={forceRefresh}
-                    testMode={testMode}
                 />
             </div>
         );
@@ -126,41 +124,15 @@ export function ProfileClaimFlowTestManual() {
             <h2 className="text-2xl font-bold mb-4 text-gray-900">Manual Profile Claim Flow Test</h2>
             <p className="text-gray-800 mb-6">Enter a specific User ID to test the ProfileClaimFlowNew component</p>
 
-            {/* Test Mode Selection */}
+            {/* Info Box */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-lg font-semibold mb-3 text-gray-900">Test Mode</h3>
-                <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="testMode"
-                            value="normal"
-                            checked={testMode === 'normal'}
-                            onChange={(e) => setTestMode(e.target.value as any)}
-                        />
-                        <span className="text-gray-900">Normal (Real lookup)</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="testMode"
-                            value="match"
-                            checked={testMode === 'match'}
-                            onChange={(e) => setTestMode(e.target.value as any)}
-                        />
-                        <span className="text-gray-900">Test Match (Single match)</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="testMode"
-                            value="multiple"
-                            checked={testMode === 'multiple'}
-                            onChange={(e) => setTestMode(e.target.value as any)}
-                        />
-                        <span className="text-gray-900">Test Multiple (Multiple matches)</span>
-                    </label>
-                </div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900">New Simplified Flow</h3>
+                <p className="text-sm text-gray-800 mb-2">
+                    The flow now always shows the form first to collect: First Name, Last Name, Date of Birth, and Playing Hand.
+                </p>
+                <p className="text-sm text-gray-800">
+                    After form submission, it searches the database and shows results (match found, no match, or multiple matches).
+                </p>
             </div>
 
             {/* User ID Input */}

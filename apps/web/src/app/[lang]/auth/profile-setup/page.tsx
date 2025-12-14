@@ -15,17 +15,8 @@ export default function ProfileSetupPage() {
     const { needsProfileSetup, loading: profileLoading, error, refreshStatus } = useProfileClaim(user?.id || null);
     const flowRef = useRef<any>(null);
 
-    // Trigger lookup when component mounts
-    useEffect(() => {
-        if (user && flowRef.current) {
-            // Small delay to ensure component is mounted
-            setTimeout(() => {
-                if (flowRef.current?.triggerLookup) {
-                    flowRef.current.triggerLookup();
-                }
-            }, 100);
-        }
-    }, [user]);
+    // No longer triggering lookup - form shows immediately
+    // Lookup will happen when user submits the form
 
     useEffect(() => {
         if (!authLoading && !user) {

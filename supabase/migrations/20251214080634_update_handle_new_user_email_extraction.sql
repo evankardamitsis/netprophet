@@ -1,5 +1,5 @@
--- Ensure handle_new_user sends admin email for all new registrations
--- This migration ensures admin notifications work for both OAuth and email/password signups
+-- Update handle_new_user function to extract names from email as fallback
+-- This migration adds email-based name extraction for Google OAuth users who don't provide names
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -95,7 +95,11 @@ BEGIN
         true, -- Enable 2FA by default
         NEW.created_at,
         NEW.updated_at
-    );
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), profiles.first_name),
+        last_name = COALESCE(NULLIF(EXCLUDED.last_name, ''), profiles.last_name),
+        updated_at = EXCLUDED.updated_at;
     
     -- Send admin notification for new user registration
     PERFORM send_admin_alert_email(
@@ -161,4 +165,4 @@ GRANT EXECUTE ON FUNCTION send_admin_alert_email(TEXT, TEXT, JSONB) TO service_r
 GRANT EXECUTE ON FUNCTION send_welcome_email_to_user(TEXT, UUID, TEXT) TO service_role;
 
 -- Add comment
-COMMENT ON FUNCTION public.handle_new_user() IS 'Creates profile and sends admin/welcome emails for new users (both OAuth and email/password registrations)';
+COMMENT ON FUNCTION public.handle_new_user() IS 'Creates profile and sends admin/welcome emails for new users (both OAuth and email/password registrations). Extracts names from email as fallback for OAuth users.';

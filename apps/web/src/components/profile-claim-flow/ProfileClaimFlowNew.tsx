@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHan
 import { Loader2, X } from "lucide-react";
 import { supabase } from "@netprophet/lib";
 import { useDictionary } from "@/context/DictionaryContext";
-import { StepIndicator } from "./StepIndicator";
 import { ProfileClaimFormNew } from "./ProfileClaimFormNew";
 import { ProfileClaimResultNew } from "./ProfileClaimResultNew";
 import { ProfileClaimSuccessNew } from "./ProfileClaimSuccessNew";
@@ -12,6 +11,7 @@ import { ProfileCreationReview } from "./ProfileCreationReview";
 import { PlayerMatch } from "./types";
 import { findMatchingPlayers, getUserName } from "@/lib/playerLookup";
 import { debugPlayerLookup } from "@/lib/debugPlayerLookup";
+import { calculateAgeFromDOB } from "@/lib/dateUtils";
 // Removed cache imports - using direct function calls
 
 interface ProfileClaimFlowNewProps {
@@ -21,13 +21,12 @@ interface ProfileClaimFlowNewProps {
     onClose?: () => void;
     onRefresh?: () => void;
     forceRefresh?: number;
-    testMode?: 'normal' | 'match' | 'multiple';
 }
 
 type FlowStep = "checking" | "form" | "result" | "reviewCreation" | "success";
 
-export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ userId, onComplete, onSkip, onClose, onRefresh, forceRefresh, testMode = 'normal' }, ref) => {
-    const [currentStep, setCurrentStep] = useState<FlowStep>("checking");
+export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ userId, onComplete, onSkip, onClose, onRefresh, forceRefresh = 'normal' }, ref) => {
+    const [currentStep, setCurrentStep] = useState<FlowStep>("form");
     const [currentStepNumber, setCurrentStepNumber] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -36,479 +35,157 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
     const [userData, setUserData] = useState<{
         firstName: string;
         lastName: string;
+        dateOfBirth?: string;
+        playingHand?: 'left' | 'right';
     } | null>(null);
     const [cameFromForm, setCameFromForm] = useState(false);
     const [claimedPlayerId, setClaimedPlayerId] = useState<string | null>(null);
     const [isClaimSuccess, setIsClaimSuccess] = useState(true); // true if claimed, false if created
     const { dict } = useDictionary();
 
-    // Removed auto-reset effect: we now start checking ONLY when triggerLookup() is called
-
-    // Manual lookup function that can be called from notification or profile page
-    const performManualLookup = useCallback(async () => {
-        setLoading(true);
-        setCurrentStep("checking");
-        setCurrentStepNumber(1);
-
-        try {
-            // Get profile data
-            const { data: profile, error } = await supabase
-                .from("profiles")
-                .select("profile_claim_status, claimed_player_id, profile_claim_completed_at")
-                .eq("id", userId)
-                .single();
-
-            if (error) throw error;
-
-            // If already completed, show success
-            if (profile.profile_claim_status === "claimed") {
-                console.log("✅ User already has claimed player - showing success");
-                const { firstName, lastName } = await getUserName(userId);
-                setPlayerMatch({
-                    id: profile.claimed_player_id || '',
-                    first_name: firstName || '',
-                    last_name: lastName || '',
-                    is_hidden: false,
-                    is_active: true,
-                    claimed_by_user_id: userId,
-                    is_demo_player: false
-                });
-                setClaimedPlayerId(profile.claimed_player_id);
-                setIsClaimSuccess(true);
-                setCurrentStep("success");
-                setCurrentStepNumber(3);
-                setLoading(false);
-                return;
-            }
-
-            if (profile.profile_claim_status === "creation_requested") {
-                setIsClaimSuccess(false);
-                setCurrentStep("success");
-                setCurrentStepNumber(3);
-                setLoading(false);
-                return;
-            }
-
-            // Self-heal: if completion timestamp exists or a player is already claimed by this user, reconcile profile
+    // Check status on mount - only to see if user already completed or has pending request
+    // No lookup happens here - lookup only happens after form submission
+    useEffect(() => {
+        const checkInitialStatus = async () => {
             try {
-                // Check if any player is already claimed by this user
-                const { data: claimedPlayers } = await supabase
-                    .from("players")
-                    .select("id, first_name, last_name, is_hidden, is_active, claimed_by_user_id")
-                    .eq("claimed_by_user_id", userId)
-                    .limit(1);
+                const { data: profile, error } = await supabase
+                    .from("profiles")
+                    .select("profile_claim_status, claimed_player_id, profile_claim_completed_at, first_name, last_name")
+                    .eq("id", userId)
+                    .single();
 
-                const existingClaimedPlayer = claimedPlayers && claimedPlayers.length > 0 ? claimedPlayers[0] : null;
-
-                if ((profile as any).profile_claim_completed_at || existingClaimedPlayer) {
-                    const resolvedPlayerId = existingClaimedPlayer?.id || profile.claimed_player_id;
-                    if (resolvedPlayerId) {
-                        // Update profile row to the correct claimed state
-                        await supabase
-                            .from("profiles")
-                            .update({
-                                profile_claim_status: "claimed",
-                                claimed_player_id: resolvedPlayerId,
-                                profile_claim_completed_at: new Date().toISOString(),
-                                terms_accepted: true,
-                                terms_accepted_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString(),
-                            })
-                            .eq("id", userId);
-
-                        const { firstName, lastName } = await getUserName(userId);
-                        setPlayerMatch({
-                            id: resolvedPlayerId,
-                            first_name: firstName || existingClaimedPlayer?.first_name || "",
-                            last_name: lastName || existingClaimedPlayer?.last_name || "",
-                            is_hidden: false,
-                            is_active: true,
-                            claimed_by_user_id: userId,
-                            is_demo_player: false,
-                        });
-                        setClaimedPlayerId(resolvedPlayerId);
-                        setIsClaimSuccess(true);
-                        setCurrentStep("success");
-                        setCurrentStepNumber(3);
-                        setLoading(false);
-                        if (onRefresh) setTimeout(() => onRefresh(), 300);
-                        return;
-                    }
+                if (error) {
+                    console.error("Error checking profile status:", error);
+                    // If error, just show form
+                    return;
                 }
-            } catch (reconcileErr) {
-                console.warn("Profile self-heal skipped due to error:", reconcileErr);
-            }
 
-            // Get user's name from profile or user_metadata
-            const { firstName, lastName } = await getUserName(userId);
-
-            if (firstName && lastName) {
-                setUserData({ firstName, lastName });
-
-                // Perform player lookup
-                try {
-                    let lookupResult;
-
-                    if (testMode === 'match') {
-                        // Test mode: simulate single match found
-                        const mockMatch: PlayerMatch = {
-                            id: 'test-player-1',
-                            first_name: firstName,
-                            last_name: lastName,
-                            is_hidden: false,
-                            is_active: true,
-                            claimed_by_user_id: null,
-                            is_demo_player: false
-                        };
-                        lookupResult = { matches: [mockMatch] };
-                    } else if (testMode === 'multiple') {
-                        // Test mode: simulate multiple matches found
-                        const mockMatches: PlayerMatch[] = [
-                            {
-                                id: 'test-player-1',
-                                first_name: firstName,
-                                last_name: lastName,
-                                is_hidden: false,
-                                is_active: true,
-                                claimed_by_user_id: null,
-                                is_demo_player: false
-                            },
-                            {
-                                id: 'test-player-2',
-                                first_name: firstName,
-                                last_name: lastName + ' Jr.',
-                                is_hidden: false,
-                                is_active: true,
-                                claimed_by_user_id: null,
-                                is_demo_player: false
-                            }
-                        ];
-                        lookupResult = { matches: mockMatches };
-                    } else {
-                        // Normal mode: perform actual lookup
-                        lookupResult = await findMatchingPlayers(firstName, lastName);
-                    }
-
-                    if (lookupResult.matches.length > 0) {
-                        // If completion timestamp exists but claimed_player_id is missing, and there's exactly one match,
-                        // auto-claim that match to reconcile state and advance the flow
-                        if ((profile as any).profile_claim_completed_at && !profile.claimed_player_id && lookupResult.matches.length === 1) {
-                            try {
-                                const playerIdToClaim = lookupResult.matches[0].id;
-                                setLoading(true);
-                                const { data, error } = await supabase.rpc("handle_player_claim", {
-                                    user_id: userId,
-                                    player_id: playerIdToClaim,
-                                });
-                                if (error || !data?.success) throw error || new Error('Failed to auto-claim');
-                                setClaimedPlayerId(playerIdToClaim);
-                                setIsClaimSuccess(true);
-                                setCurrentStep("success");
-                                setCurrentStepNumber(3);
-                                if (onRefresh) setTimeout(() => onRefresh(), 500);
-                                setLoading(false);
-                                return;
-                            } catch (e) {
-                                console.warn('Auto-claim reconciliation failed, falling back to result step:', e);
-                            }
-                        }
-                        setPlayerMatches(lookupResult.matches);
-                        if (lookupResult.matches.length === 1) {
-                            setPlayerMatch(lookupResult.matches[0]);
-                        } else {
-                            setPlayerMatch(null);
-                        }
-                    } else {
-                        setPlayerMatch(null);
-                        setPlayerMatches([]);
-                    }
-
-                    setCurrentStep("result");
-                    setCurrentStepNumber(2);
-                    setLoading(false);
-                } catch (error) {
-                    console.error("Error searching for players:", error);
-                    setError("Failed to search for matching players");
-                    setLoading(false);
+                // If already claimed, show success
+                if (profile.profile_claim_status === "claimed") {
+                    console.log("✅ User already has claimed player - showing success");
+                    const { firstName, lastName } = await getUserName(userId);
+                    setPlayerMatch({
+                        id: profile.claimed_player_id || '',
+                        first_name: firstName || '',
+                        last_name: lastName || '',
+                        is_hidden: false,
+                        is_active: true,
+                        claimed_by_user_id: userId,
+                        is_demo_player: false
+                    });
+                    setClaimedPlayerId(profile.claimed_player_id);
+                    setIsClaimSuccess(true);
+                    setCurrentStep("success");
+                    setCurrentStepNumber(3);
+                    return;
                 }
-            } else {
-                // No name in profile - show form
-                setCurrentStep("form");
-                setCurrentStepNumber(1);
-                setLoading(false);
-            }
-        } catch (err) {
-            console.error("Error during manual lookup:", err);
-            setCurrentStep("form");
-            setCurrentStepNumber(1);
-            setLoading(false);
-        }
-    }, [userId, testMode, onRefresh]);
 
-    // Expose the manual lookup function to parent components via ref
+                // If creation_requested, show success screen (pending application)
+                if (profile.profile_claim_status === "creation_requested") {
+                    console.log("📋 User has creation request - showing success screen");
+                    setIsClaimSuccess(false);
+                    setCurrentStep("success");
+                    setCurrentStepNumber(3);
+                    return;
+                }
+
+                // For all other cases, show the form (already set as initial state)
+                // Pre-fill with existing name if available
+                if (profile.first_name || profile.last_name) {
+                    setUserData({
+                        firstName: profile.first_name || '',
+                        lastName: profile.last_name || ''
+                    });
+                }
+            } catch (err) {
+                console.error("Error checking initial status:", err);
+                // On error, just show form (already set as initial state)
+            }
+        };
+
+        checkInitialStatus();
+    }, [userId]);
+
+    // No longer exposing triggerLookup - form shows immediately, lookup happens on form submit
     useImperativeHandle(ref, () => ({
-        triggerLookup: performManualLookup
-    }), [performManualLookup]);
+        // Empty - no lookup trigger needed
+    }), []);
 
-    // Removed automatic lookup on mount - users must manually trigger the flow
-    // This prevents automatic player claiming and allows the notification system to work
-    // useEffect(() => {
-    const performAutoLookup = async () => {
-        setLoading(true);
-        setCurrentStep("checking");
-        setCurrentStepNumber(1);
-
-        try {
-            // Get profile data - no caching
-            const { data: profile, error } = await supabase
-                .from("profiles")
-                .select("profile_claim_status, claimed_player_id, profile_claim_completed_at")
-                .eq("id", userId)
-                .single();
-
-            if (error) throw error;
-
-            // Profile data is now cached and error-free
-
-            // If already completed, show success
-            if (profile.profile_claim_status === "claimed") {
-                console.log("✅ User already has claimed player - showing success");
-                const { firstName, lastName } = await getUserName(userId);
-                setPlayerMatch({
-                    id: profile.claimed_player_id || '',
-                    first_name: firstName || '',
-                    last_name: lastName || '',
-                    is_hidden: false,
-                    is_active: true,
-                    claimed_by_user_id: userId,
-                    is_demo_player: false
-                });
-                setClaimedPlayerId(profile.claimed_player_id);
-                setIsClaimSuccess(true);
-                setCurrentStep("success");
-                setCurrentStepNumber(3);
-                setLoading(false);
-                return;
-            }
-
-            if (profile.profile_claim_status === "creation_requested") {
-                setIsClaimSuccess(false);
-                setCurrentStep("success");
-                setCurrentStepNumber(3);
-                setLoading(false);
-                return;
-            }
-
-            // Self-heal: if completion timestamp exists or a player is already claimed by this user, reconcile profile
-            try {
-                const { data: claimedPlayers } = await supabase
-                    .from("players")
-                    .select("id, first_name, last_name, is_hidden, is_active, claimed_by_user_id")
-                    .eq("claimed_by_user_id", userId)
-                    .limit(1);
-
-                const existingClaimedPlayer = claimedPlayers && claimedPlayers.length > 0 ? claimedPlayers[0] : null;
-
-                if ((profile as any).profile_claim_completed_at || existingClaimedPlayer) {
-                    const resolvedPlayerId = existingClaimedPlayer?.id || profile.claimed_player_id;
-                    if (resolvedPlayerId) {
-                        await supabase
-                            .from("profiles")
-                            .update({
-                                profile_claim_status: "claimed",
-                                claimed_player_id: resolvedPlayerId,
-                                profile_claim_completed_at: new Date().toISOString(),
-                                terms_accepted: true,
-                                terms_accepted_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString(),
-                            })
-                            .eq("id", userId);
-
-                        const { firstName, lastName } = await getUserName(userId);
-                        setPlayerMatch({
-                            id: resolvedPlayerId,
-                            first_name: firstName || existingClaimedPlayer?.first_name || "",
-                            last_name: lastName || existingClaimedPlayer?.last_name || "",
-                            is_hidden: false,
-                            is_active: true,
-                            claimed_by_user_id: userId,
-                            is_demo_player: false,
-                        });
-                        setClaimedPlayerId(resolvedPlayerId);
-                        setIsClaimSuccess(true);
-                        setCurrentStep("success");
-                        setCurrentStepNumber(3);
-                        setLoading(false);
-                        if (onRefresh) setTimeout(() => onRefresh(), 300);
-                        return;
-                    }
-                }
-            } catch (reconcileErr) {
-                console.warn("Profile self-heal skipped due to error:", reconcileErr);
-            }
-
-            // Get user's name from profile or user_metadata (with auto-sync for Gmail users)
-            const { firstName, lastName } = await getUserName(userId);
-            console.log("🔍 Debug - getUserName result:", { firstName, lastName, userId });
-
-            // Always perform lookup, even if user doesn't have a name yet
-            // This ensures consistent experience for all users
-            if (firstName && lastName) {
-                console.log("🔍 Auto lookup - User has name:", firstName, lastName);
-                console.log("🔍 Skipping form, going directly to lookup");
-
-                setUserData({
-                    firstName: firstName,
-                    lastName: lastName
-                });
-
-                // Perform player lookup (checks both name orders)
-                try {
-                    let lookupResult;
-
-                    if (testMode === 'match') {
-                        // Test mode: simulate single match found
-                        console.log("🧪 Test Mode: Simulating single match found");
-                        const mockMatch: PlayerMatch = {
-                            id: 'test-player-1',
-                            first_name: firstName,
-                            last_name: lastName,
-                            is_hidden: false,
-                            is_active: true,
-                            claimed_by_user_id: null,
-                            is_demo_player: false
-                        };
-                        lookupResult = { matches: [mockMatch] };
-                    } else if (testMode === 'multiple') {
-                        // Test mode: simulate multiple matches found
-                        console.log("🧪 Test Mode: Simulating multiple matches found");
-                        const mockMatches: PlayerMatch[] = [
-                            {
-                                id: 'test-player-1',
-                                first_name: firstName,
-                                last_name: lastName,
-                                is_hidden: false,
-                                is_active: true,
-                                claimed_by_user_id: null,
-                                is_demo_player: false
-                            },
-                            {
-                                id: 'test-player-2',
-                                first_name: firstName,
-                                last_name: lastName + ' Jr.',
-                                is_hidden: false,
-                                is_active: true,
-                                claimed_by_user_id: null,
-                                is_demo_player: false
-                            }
-                        ];
-                        lookupResult = { matches: mockMatches };
-                    } else {
-                        // Normal mode: perform actual lookup (cached)
-                        console.log("🔍 Performing debug lookup for:", firstName, lastName);
-                        await debugPlayerLookup(firstName, lastName);
-                        lookupResult = await findMatchingPlayers(firstName, lastName);
-                    }
-
-                    // Show results (match found or not found)
-                    if (lookupResult.matches.length > 0) {
-                        // If completion timestamp exists but claimed_player_id is missing, and there's exactly one match,
-                        // auto-claim that match to reconcile state and advance the flow
-                        if ((profile as any).profile_claim_completed_at && !profile.claimed_player_id && lookupResult.matches.length === 1) {
-                            try {
-                                const playerIdToClaim = lookupResult.matches[0].id;
-                                setLoading(true);
-                                const { data, error } = await supabase.rpc("handle_player_claim", {
-                                    user_id: userId,
-                                    player_id: playerIdToClaim,
-                                });
-                                if (error || !data?.success) throw error || new Error('Failed to auto-claim');
-                                setClaimedPlayerId(playerIdToClaim);
-                                setIsClaimSuccess(true);
-                                setCurrentStep("success");
-                                setCurrentStepNumber(3);
-                                if (onRefresh) setTimeout(() => onRefresh(), 500);
-                                setLoading(false);
-                                return;
-                            } catch (e) {
-                                console.warn('Auto-claim reconciliation failed, falling back to result step:', e);
-                            }
-                        }
-                        setPlayerMatches(lookupResult.matches);
-                        if (lookupResult.matches.length === 1) {
-                            setPlayerMatch(lookupResult.matches[0]);
-                        }
-                    } else {
-                        setPlayerMatch(null);
-                        setPlayerMatches([]);
-                    }
-
-                    setCurrentStep("result");
-                    setCurrentStepNumber(2);
-                    setLoading(false);
-                    console.log("🔧 Loading state reset to false after successful lookup");
-                } catch (error) {
-                    console.error("❌ Player lookup failed:", error);
-                    // If lookup fails, ask for name again
-                    setCurrentStep("form");
-                    setCurrentStepNumber(1);
-                }
-            } else {
-                console.log("📝 No name available - showing form after checking step");
-                console.log("🔍 This means getUserName returned null/empty names");
-                // No name in profile - show form after the checking step
-                // Add a small delay to show the checking step with explanations
-                setTimeout(() => {
-                    setCurrentStep("form");
-                    setCurrentStepNumber(1);
-                    setLoading(false);
-                }, 2000); // 2 second delay to show the checking step
-                return; // Don't set loading to false here, let setTimeout handle it
-            }
-        } catch (err) {
-            console.error("Error during auto lookup:", err);
-            setCurrentStep("form");
-            setCurrentStepNumber(1);
-            setLoading(false);
-        }
-    };
-
-    // if (userId) {
-    //     performAutoLookup();
-    // }
-    // }, [userId, forceRefresh, testMode]);
+    // Simplified flow: Always show form first (removed complex auto-lookup logic)
 
     const handleFormSubmit = useCallback(async (data: {
         firstName: string;
         lastName: string;
+        dateOfBirth: string;
+        playingHand: 'left' | 'right';
         termsAccepted: boolean;
     }) => {
         setLoading(true);
         setError(null);
-        setUserData({ firstName: data.firstName, lastName: data.lastName });
+
+        // Log received data for verification
+        console.log("📝 Form data received:", {
+            firstName: data.firstName,
+            lastName: data.lastName,
+            dateOfBirth: data.dateOfBirth,
+            playingHand: data.playingHand,
+            termsAccepted: data.termsAccepted
+        });
+
+        setUserData({
+            firstName: data.firstName,
+            lastName: data.lastName,
+            dateOfBirth: data.dateOfBirth,
+            playingHand: data.playingHand
+        });
 
         try {
-            // Update user profile - don't set to pending immediately for Gmail users
-            // Let the lookup process determine the appropriate status
-            const { error: updateError } = await supabase
-                .from("profiles")
-                .update({
-                    first_name: data.firstName,
-                    last_name: data.lastName,
-                    terms_accepted: true,
-                    terms_accepted_at: new Date().toISOString(),
-                    // Don't set profile_claim_status to "pending" here
-                    // Let the lookup result determine the status
-                })
-                .eq("id", userId);
+            // Calculate age from date of birth (handles DD/MM/YYYY format)
+            const age = calculateAgeFromDOB(data.dateOfBirth);
+            console.log("🔢 Calculated age:", age);
 
-            if (updateError) {
-                throw new Error(`Failed to update profile: ${updateError.message}`);
+            // Don't update profile yet - only store in state and user_metadata for lookup
+            // Profile will be updated only when user confirms profile creation request
+            // Store dateOfBirth and playingHand in user_metadata temporarily for lookup
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+                await supabase.auth.updateUser({
+                    data: {
+                        ...userData.user.user_metadata,
+                        date_of_birth: data.dateOfBirth,
+                        playing_hand: data.playingHand,
+                        age: age
+                    }
+                });
+                console.log("💾 Stored in user_metadata (temporary):", {
+                    date_of_birth: data.dateOfBirth,
+                    playing_hand: data.playingHand,
+                    age: age
+                });
             }
 
-            // Search for matching players using helper (checks both name orders) - cached
+            // Search for matching players using name (age and hand can be used for filtering/ranking)
             try {
+                console.log("🔍 Searching for players with:", {
+                    firstName: data.firstName,
+                    lastName: data.lastName
+                });
                 const lookupResult = await findMatchingPlayers(data.firstName, data.lastName);
+                console.log("✅ Lookup result:", {
+                    matchesFound: lookupResult.matches.length,
+                    matches: lookupResult.matches.map(m => ({ id: m.id, name: `${m.first_name} ${m.last_name}` }))
+                });
+
+                // Filter matches by age (within ±2 years) and hand if available
+                // This helps prioritize more relevant matches
+                let filteredMatches = lookupResult.matches;
+                if (filteredMatches.length > 0) {
+                    filteredMatches = filteredMatches.map(match => {
+                        // We'll need to get age and hand from the player data
+                        // For now, just return all matches and let the user choose
+                        return match;
+                    });
+                }
 
                 setCameFromForm(true);
 
@@ -519,21 +196,16 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
                     } else {
                         setPlayerMatch(null);
                     }
+                    setCurrentStep("result");
+                    setCurrentStepNumber(2);
                 } else {
                     setPlayerMatch(null);
                     setPlayerMatches([]);
-                    // Only set to pending when no matches found and user needs to take action
-                    await supabase
-                        .from("profiles")
-                        .update({
-                            profile_claim_status: "pending",
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq("id", userId);
+                    // Show result step to allow them to create profile
+                    // Don't set to pending here - let them decide to create or skip
+                    setCurrentStep("result");
+                    setCurrentStepNumber(2);
                 }
-
-                setCurrentStep("result");
-                setCurrentStepNumber(2);
             } catch (err) {
                 console.error("Error searching for players:", err);
                 setError("Failed to search for matching players");
@@ -588,11 +260,50 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
         setLoading(false); // Ensure loading state is reset when showing review
     }, []);
 
-    const handleCreateProfile = useCallback(async (firstName: string, lastName: string) => {
+    const handleCreateProfile = useCallback(async (firstName: string, lastName: string, dateOfBirth?: string, playingHand?: 'left' | 'right') => {
         setLoading(true);
         setError(null);
 
         try {
+            // Calculate age if DOB provided (handles DD/MM/YYYY format)
+            let age: number | undefined;
+            if (dateOfBirth) {
+                age = calculateAgeFromDOB(dateOfBirth);
+            }
+
+            // NOW update the profile with user's information (only when they confirm)
+            const { error: profileUpdateError } = await supabase
+                .from("profiles")
+                .update({
+                    first_name: firstName,
+                    last_name: lastName,
+                    terms_accepted: true,
+                    terms_accepted_at: new Date().toISOString(),
+                })
+                .eq("id", userId);
+
+            if (profileUpdateError) {
+                throw new Error(`Failed to update profile: ${profileUpdateError.message}`);
+            }
+
+            console.log("✅ Profile updated with user information");
+
+            // Store DOB and hand in user metadata for admin reference
+            if (dateOfBirth || playingHand) {
+                const { data: userData } = await supabase.auth.getUser();
+                if (userData?.user) {
+                    await supabase.auth.updateUser({
+                        data: {
+                            ...userData.user.user_metadata,
+                            date_of_birth: dateOfBirth,
+                            playing_hand: playingHand,
+                            age: age
+                        }
+                    });
+                }
+            }
+
+            // Request profile creation
             const { data, error } = await supabase.rpc("handle_profile_creation_request", {
                 user_id: userId,
                 user_first_name: firstName,
@@ -607,18 +318,36 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
                 throw new Error(data?.message || "Failed to request profile creation");
             }
 
+            // Update status to creation_requested
+            const updateData: any = {
+                profile_claim_status: "creation_requested",
+                updated_at: new Date().toISOString()
+            };
+
+            const { error: updateError } = await supabase
+                .from("profiles")
+                .update(updateData)
+                .eq("id", userId);
+
+            if (updateError) {
+                console.error("Error updating profile status:", updateError);
+                throw new Error(`Failed to update profile status: ${updateError.message}`);
+            }
+
+            console.log("✅ Profile creation requested - status updated to 'creation_requested'");
+
+            // Set success state - don't call onRefresh() here as it might cause re-renders
+            // The status is already updated, and we're showing the success screen
             setIsClaimSuccess(false);
             setCurrentStep("success");
             setCurrentStepNumber(3);
-            if (onRefresh) {
-                onRefresh();
-            }
+            setLoading(false); // Ensure loading is false so success screen shows immediately
         } catch (err) {
             setError(err instanceof Error ? err.message : "An unexpected error occurred");
         } finally {
             setLoading(false);
         }
-    }, [userId, onRefresh]);
+    }, [userId]);
 
     const handleBackFromReview = useCallback(() => {
         setCurrentStep("result");
@@ -695,6 +424,8 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
                 <ProfileCreationReview
                     initialFirstName={userData.firstName}
                     initialLastName={userData.lastName}
+                    initialDateOfBirth={(userData as any).dateOfBirth}
+                    initialPlayingHand={(userData as any).playingHand}
                     onConfirm={handleCreateProfile}
                     onBack={handleBackFromReview}
                     loading={loading}
@@ -865,13 +596,6 @@ export const ProfileClaimFlowNew = forwardRef<any, ProfileClaimFlowNewProps>(({ 
 
     return (
         <div className="w-full h-full flex flex-col">
-            {/* Step Indicator - Hide on success step */}
-            {currentStep !== "success" && (
-                <div className="flex-shrink-0 mb-2 sm:mb-3">
-                    <StepIndicator currentStep={currentStepNumber} />
-                </div>
-            )}
-
             {/* Current Step Content */}
             <div className="flex-1 flex items-center justify-center">
                 {stepContent}

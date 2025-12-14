@@ -100,24 +100,60 @@ export async function getUserName(
 
     // If still no names, try OAuth fields (Google, GitHub, etc.)
     if (!metadataFirstName || !metadataLastName) {
-      const fullName =
-        user?.user_metadata?.full_name ||
-        user?.user_metadata?.name ||
-        user?.user_metadata?.display_name ||
-        user?.user_metadata?.given_name ||
-        user?.user_metadata?.family_name ||
-        null;
+      // Try given_name and family_name first (Google OAuth)
+      const givenName = user?.user_metadata?.given_name || null;
+      const familyName = user?.user_metadata?.family_name || null;
 
-      if (fullName) {
-        const nameParts = fullName.trim().split(" ");
-        if (nameParts.length >= 2) {
-          firstName = nameParts[0];
-          lastName = nameParts[nameParts.length - 1];
+      if (givenName && familyName) {
+        firstName = givenName;
+        lastName = familyName;
+      } else {
+        const fullName =
+          user?.user_metadata?.full_name ||
+          user?.user_metadata?.name ||
+          user?.user_metadata?.display_name ||
+          null;
+
+        if (fullName) {
+          const nameParts = fullName.trim().split(" ");
+          if (nameParts.length >= 2) {
+            firstName = nameParts[0];
+            lastName = nameParts[nameParts.length - 1];
+          }
         }
       }
     } else {
       firstName = metadataFirstName;
       lastName = metadataLastName;
+    }
+
+    // Last resort: try to extract from email address
+    if ((!firstName || !lastName) && user?.email) {
+      try {
+        // Extract local part of email (before @)
+        const emailLocalPart = user.email.split("@")[0];
+        // Remove dots, underscores, and hyphens, then split by spaces
+        const cleanedEmail = emailLocalPart.replace(/[._-]/g, " ");
+        const emailParts = cleanedEmail
+          .trim()
+          .split(/\s+/)
+          .filter((part) => part.length > 0);
+
+        if (emailParts.length >= 2) {
+          // Capitalize first letter of each part
+          const capitalize = (str: string) =>
+            str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+          firstName = firstName || capitalize(emailParts[0]);
+          lastName = lastName || capitalize(emailParts[emailParts.length - 1]);
+        } else if (emailParts.length === 1 && !firstName) {
+          firstName =
+            emailParts[0].charAt(0).toUpperCase() +
+            emailParts[0].slice(1).toLowerCase();
+        }
+      } catch (e) {
+        // Silently fail if email parsing fails
+        console.warn("Failed to extract name from email:", e);
+      }
     }
 
     // If we found names in metadata but not in profile, sync them

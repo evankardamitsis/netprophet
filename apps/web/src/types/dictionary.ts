@@ -457,6 +457,12 @@ export interface Dictionary {
       aboutPlayerProfilesOptional?: string;
       firstName: string;
       lastName: string;
+      dateOfBirth?: string;
+      dominantHand?: string;
+      handRight?: string;
+      handLeft?: string;
+      age?: string;
+      yearsOld?: string;
       firstNamePlaceholder: string;
       lastNamePlaceholder: string;
       termsLabel: string;
@@ -464,6 +470,10 @@ export interface Dictionary {
       errors: {
         firstNameRequired: string;
         lastNameRequired: string;
+        dateOfBirthRequired?: string;
+        dateOfBirthInvalid?: string;
+        ageTooYoung?: string;
+        dominantHandRequired?: string;
         termsRequired: string;
       };
     };

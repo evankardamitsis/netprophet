@@ -7,8 +7,6 @@ interface ProfileSetupModalContextType {
     setShowProfileSetup: (show: boolean) => void;
     profileRefreshKey: number;
     setProfileRefreshKey: (key: number) => void;
-    testMode: 'normal' | 'match' | 'multiple';
-    setTestMode: (mode: 'normal' | 'match' | 'multiple') => void;
 }
 
 const ProfileSetupModalContext = createContext<ProfileSetupModalContextType>({
@@ -16,8 +14,6 @@ const ProfileSetupModalContext = createContext<ProfileSetupModalContextType>({
     setShowProfileSetup: () => { },
     profileRefreshKey: 0,
     setProfileRefreshKey: () => { },
-    testMode: 'normal',
-    setTestMode: () => { },
 });
 
 export function useProfileSetupModal() {
@@ -27,7 +23,6 @@ export function useProfileSetupModal() {
 export function ProfileSetupModalProvider({ children }: { children: React.ReactNode }) {
     const [showProfileSetup, setShowProfileSetup] = useState(false);
     const [profileRefreshKey, setProfileRefreshKey] = useState(0);
-    const [testMode, setTestMode] = useState<'normal' | 'match' | 'multiple'>('normal');
 
     return (
         <ProfileSetupModalContext.Provider value={{
@@ -35,8 +30,6 @@ export function ProfileSetupModalProvider({ children }: { children: React.ReactN
             setShowProfileSetup,
             profileRefreshKey,
             setProfileRefreshKey,
-            testMode,
-            setTestMode,
         }}>
             {children}
         </ProfileSetupModalContext.Provider>

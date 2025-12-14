@@ -11,26 +11,16 @@ interface ProfileSetupModalProps {
     isOpen: boolean;
     onClose: () => void;
     forceRefresh?: number;
-    testMode?: 'normal' | 'match' | 'multiple';
 }
 
-export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'normal' }: ProfileSetupModalProps) {
+export function ProfileSetupModal({ isOpen, onClose, forceRefresh }: ProfileSetupModalProps) {
     const { user } = useAuth();
     const { needsProfileSetup, loading, refreshStatus } = useProfileClaim(user?.id || null);
     const { dict } = useDictionary();
     const flowRef = useRef<any>(null);
 
-    // Trigger lookup when modal opens
-    useEffect(() => {
-        if (isOpen && flowRef.current) {
-            // Small delay to ensure component is mounted
-            setTimeout(() => {
-                if (flowRef.current?.triggerLookup) {
-                    flowRef.current.triggerLookup();
-                }
-            }, 100);
-        }
-    }, [isOpen]);
+    // No longer triggering lookup - form shows immediately
+    // Lookup will happen when user submits the form
 
     // Prevent background scrolling when modal is open
     useEffect(() => {
@@ -129,7 +119,6 @@ export function ProfileSetupModal({ isOpen, onClose, forceRefresh, testMode = 'n
                         onClose={onClose}
                         onRefresh={refreshStatus}
                         forceRefresh={forceRefresh}
-                        testMode={testMode}
                     />
                 </div>
             </div>

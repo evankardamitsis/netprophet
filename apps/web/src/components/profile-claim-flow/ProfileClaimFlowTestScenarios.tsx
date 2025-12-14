@@ -78,7 +78,7 @@ export function ProfileClaimFlowTestScenarios() {
     const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
     const [testUserId, setTestUserId] = useState<string | null>(null);
     const [showFlow, setShowFlow] = useState(false);
-    const [testMode, setTestMode] = useState<'normal' | 'match' | 'multiple'>('normal');
+    // Removed testMode - flow is now simplified and always shows form first
     const [forceRefresh, setForceRefresh] = useState(0);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -246,7 +246,6 @@ export function ProfileClaimFlowTestScenarios() {
                         <p><strong>Scenario:</strong> {selectedScenarioData?.name}</p>
                         <p><strong>Description:</strong> {selectedScenarioData?.description}</p>
                         <p><strong>User ID:</strong> {testUserId}</p>
-                        <p><strong>Test Mode:</strong> {testMode}</p>
                     </div>
                 </div>
                 <ProfileClaimFlowNew
@@ -261,7 +260,6 @@ export function ProfileClaimFlowTestScenarios() {
                     }}
                     onRefresh={() => { }}
                     forceRefresh={forceRefresh}
-                    testMode={testMode}
                 />
             </div>
         );
@@ -271,41 +269,15 @@ export function ProfileClaimFlowTestScenarios() {
         <div className="p-6 max-w-4xl mx-auto bg-white">
             <h2 className="text-2xl font-bold mb-4 text-gray-900">Profile Claim Flow Test Scenarios</h2>
 
-            {/* Test Mode Selection */}
+            {/* Info Box */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-lg font-semibold mb-3 text-gray-900">Test Mode</h3>
-                <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="testMode"
-                            value="normal"
-                            checked={testMode === 'normal'}
-                            onChange={(e) => setTestMode(e.target.value as any)}
-                        />
-                        <span className="text-gray-900">Normal (Real lookup)</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="testMode"
-                            value="match"
-                            checked={testMode === 'match'}
-                            onChange={(e) => setTestMode(e.target.value as any)}
-                        />
-                        <span className="text-gray-900">Test Match (Single match)</span>
-                    </label>
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="radio"
-                            name="testMode"
-                            value="multiple"
-                            checked={testMode === 'multiple'}
-                            onChange={(e) => setTestMode(e.target.value as any)}
-                        />
-                        <span className="text-gray-900">Test Multiple (Multiple matches)</span>
-                    </label>
-                </div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-900">New Simplified Flow</h3>
+                <p className="text-sm text-gray-800 mb-2">
+                    The flow now always shows the form first to collect: First Name, Last Name, Date of Birth, and Playing Hand.
+                </p>
+                <p className="text-sm text-gray-800">
+                    After form submission, it searches the database and shows results (match found, no match, or multiple matches).
+                </p>
             </div>
 
             {/* Test Scenarios */}
@@ -375,10 +347,11 @@ export function ProfileClaimFlowTestScenarios() {
             <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded">
                 <h4 className="font-semibold mb-2 text-gray-900">How to Test:</h4>
                 <ol className="list-decimal list-inside space-y-1 text-sm text-gray-800">
-                    <li>Select a test mode (Normal, Test Match, or Test Multiple)</li>
                     <li>Choose a scenario and click &quot;Create &amp; Test&quot;</li>
                     <li>This will create a real user in your database with the scenario data</li>
                     <li>Click &quot;Test Flow&quot; to see the ProfileClaimFlowNew component in action</li>
+                    <li>The flow will show a form asking for: First Name, Last Name, Date of Birth, and Playing Hand</li>
+                    <li>Fill out the form and submit to test the lookup functionality</li>
                     <li>Test different scenarios to see how the flow behaves</li>
                     <li>Delete test users when done to clean up</li>
                 </ol>

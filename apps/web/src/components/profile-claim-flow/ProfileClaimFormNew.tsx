@@ -11,11 +11,14 @@ import {
     suggestGreekNames,
     formatNameForDisplay
 } from "@/lib/greeklishUtils";
+import { calculateAgeFromDOB, formatDateToDDMMYYYY, formatDateToISO } from "@/lib/dateUtils";
 
 interface ProfileClaimFormNewProps {
     onComplete: (data: {
         firstName: string;
         lastName: string;
+        dateOfBirth: string; // YYYY-MM-DD format
+        playingHand: 'left' | 'right';
         termsAccepted: boolean;
     }) => void;
     onCancel: () => void;
@@ -24,12 +27,17 @@ interface ProfileClaimFormNewProps {
     initialValues?: {
         firstName: string;
         lastName: string;
+        dateOfBirth?: string;
+        playingHand?: 'left' | 'right';
     };
 }
 
 export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = false, initialValues }: ProfileClaimFormNewProps) {
     const [firstName, setFirstName] = useState(initialValues?.firstName || "");
     const [lastName, setLastName] = useState(initialValues?.lastName || "");
+    // Keep date in DD/MM/YYYY format for display
+    const [dateOfBirth, setDateOfBirth] = useState(initialValues?.dateOfBirth || "");
+    const [playingHand, setPlayingHand] = useState<'left' | 'right'>(initialValues?.playingHand || 'right');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [suggestions, setSuggestions] = useState<{
@@ -74,6 +82,10 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
         setShowSuggestions(prev => ({ ...prev, [field]: false }));
     };
 
+    const calculateAge = (dob: string): number => {
+        return calculateAgeFromDOB(dob);
+    };
+
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
@@ -89,6 +101,26 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
             newErrors.lastName = "Please enter a valid surname (Greek or Greeklish)";
         }
 
+        if (!dateOfBirth) {
+            newErrors.dateOfBirth = dict.profileSetup.form.errors.dateOfBirthRequired || "Date of birth is required";
+        } else {
+            // Validate DD/MM/YYYY format
+            if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateOfBirth)) {
+                newErrors.dateOfBirth = dict.profileSetup.form.errors.dateOfBirthInvalid || "Please enter date in DD/MM/YYYY format";
+            } else {
+                const age = calculateAge(dateOfBirth);
+                if (age < 16) {
+                    newErrors.dateOfBirth = dict.profileSetup.form.errors.ageTooYoung || "You must be at least 16 years old";
+                } else if (age > 80) {
+                    newErrors.dateOfBirth = dict.profileSetup.form.errors.dateOfBirthInvalid || "Please enter a valid date of birth";
+                }
+            }
+        }
+
+        if (!playingHand) {
+            newErrors.playingHand = dict.profileSetup.form.errors.dominantHandRequired || "Dominant hand is required";
+        }
+
         if (!termsAccepted) {
             newErrors.terms = dict.profileSetup.form.errors.termsRequired;
         }
@@ -101,9 +133,12 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
         e.preventDefault();
 
         if (validateForm()) {
+            // Date is already in DD/MM/YYYY format from the text input
             onComplete({
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
+                dateOfBirth: dateOfBirth.trim(), // Already in DD/MM/YYYY format
+                playingHand,
                 termsAccepted,
             });
         }
@@ -111,39 +146,39 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
 
     return (
         <div className="w-full h-full flex items-center justify-center">
-            <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-[500px] max-h-[85vh]">
-                {/* Header with Icon */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-6 flex-shrink-0 relative">
+            <div className="w-full max-w-2xl bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header with Icon - More Compact */}
+                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0 relative">
                     {/* Close Button */}
                     {onClose && (
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors p-1"
+                            className="absolute top-3 right-3 sm:top-4 sm:right-4 text-white hover:text-gray-200 transition-colors p-1"
                             aria-label="Close"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     )}
 
-                    <div className="flex items-center justify-center mb-3">
-                        <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-4 ring-white/30">
-                            <User className="w-6 h-6 text-white" />
+                    <div className="flex items-center justify-center mb-2">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 sm:ring-3 ring-white/30">
+                            <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                     </div>
-                    <h2 className="text-xl font-bold text-white text-center">
+                    <h2 className="text-lg sm:text-xl font-bold text-white text-center">
                         {dict.profileSetup.form.title}
                     </h2>
-                    <p className="text-purple-100 text-center mt-2 text-sm">
+                    <p className="text-purple-100 text-center mt-1 text-xs sm:text-sm">
                         {dict.profileSetup.form.description}
                     </p>
                 </div>
 
-                {/* Form Content */}
-                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-5 lg:space-y-6">
+                {/* Form Content - Reduced Padding and Spacing */}
+                <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5 space-y-3 sm:space-y-3.5">
 
                     {/* First Name */}
-                    <div className="space-y-2">
-                        <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700">
+                    <div className="space-y-1.5">
+                        <label htmlFor="firstName" className="block text-xs sm:text-sm font-semibold text-gray-700">
                             {dict.profileSetup.form.firstName}
                         </label>
                         <div className="relative">
@@ -159,7 +194,7 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                                 }}
                                 placeholder={dict.profileSetup.form.firstNamePlaceholder}
                                 className={`
-                                    w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-base
+                                    w-full px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg border-2 transition-all duration-200 text-sm sm:text-base
                                     text-gray-900 placeholder-gray-400 bg-white
                                     focus:outline-none focus:ring-2
                                     ${errors.firstName
@@ -192,8 +227,8 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                     </div>
 
                     {/* Last Name */}
-                    <div className="space-y-2">
-                        <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700">
+                    <div className="space-y-1.5">
+                        <label htmlFor="lastName" className="block text-xs sm:text-sm font-semibold text-gray-700">
                             {dict.profileSetup.form.lastName}
                         </label>
                         <div className="relative">
@@ -209,7 +244,7 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                                 }}
                                 placeholder={dict.profileSetup.form.lastNamePlaceholder}
                                 className={`
-                                    w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-base
+                                    w-full px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg border-2 transition-all duration-200 text-sm sm:text-base
                                     text-gray-900 placeholder-gray-400 bg-white
                                     focus:outline-none focus:ring-2
                                     ${errors.lastName
@@ -241,8 +276,103 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                         )}
                     </div>
 
+                    {/* Date of Birth */}
+                    <div className="space-y-1.5">
+                        <label htmlFor="dateOfBirth" className="block text-xs sm:text-sm font-semibold text-gray-700">
+                            {dict.profileSetup.form.dateOfBirth || "Date of Birth"}
+                        </label>
+                        <input
+                            id="dateOfBirth"
+                            type="text"
+                            value={dateOfBirth}
+                            placeholder="DD/MM/YYYY"
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                let value = e.target.value;
+                                // Remove any non-digit characters except slashes
+                                value = value.replace(/[^\d/]/g, '');
+
+                                // Auto-format as user types: DD/MM/YYYY
+                                if (value.length > 2 && value[2] !== '/') {
+                                    value = value.slice(0, 2) + '/' + value.slice(2);
+                                }
+                                if (value.length > 5 && value[5] !== '/') {
+                                    value = value.slice(0, 5) + '/' + value.slice(5);
+                                }
+                                // Limit to DD/MM/YYYY format (10 characters)
+                                if (value.length > 10) {
+                                    value = value.slice(0, 10);
+                                }
+
+                                setDateOfBirth(value);
+                                if (errors.dateOfBirth) {
+                                    setErrors({ ...errors, dateOfBirth: '' });
+                                }
+                            }}
+                            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                                // Validate format on blur
+                                const value = e.target.value;
+                                if (value && !/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+                                    setErrors({ ...errors, dateOfBirth: dict.profileSetup.form.errors.dateOfBirthInvalid || "Please enter date in DD/MM/YYYY format" });
+                                }
+                            }}
+                            className={`
+                                w-full px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg border-2 transition-all duration-200 text-sm sm:text-base
+                                text-gray-900 bg-white
+                                focus:outline-none focus:ring-2
+                                ${errors.dateOfBirth
+                                    ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                                    : "border-gray-200 focus:border-purple-500 focus:ring-purple-100"
+                                }
+                            `}
+                        />
+                        {errors.dateOfBirth && (
+                            <p className="text-sm text-red-600 font-medium flex items-center gap-1">
+                                <span className="text-red-500">⚠</span> {errors.dateOfBirth}
+                            </p>
+                        )}
+                        {dateOfBirth && !errors.dateOfBirth && (
+                            <p className="text-xs text-gray-500">
+                                {dict.profileSetup.form.age || "Age"}: {calculateAge(dateOfBirth)} {dict.profileSetup.form.yearsOld || "years old"}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Dominant Hand */}
+                    <div className="space-y-1.5">
+                        <label htmlFor="playingHand" className="block text-xs sm:text-sm font-semibold text-gray-700">
+                            {dict.profileSetup.form.dominantHand || "Dominant Hand"}
+                        </label>
+                        <select
+                            id="playingHand"
+                            value={playingHand}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                setPlayingHand(e.target.value as 'left' | 'right');
+                                if (errors.playingHand) {
+                                    setErrors({ ...errors, playingHand: '' });
+                                }
+                            }}
+                            className={`
+                                w-full px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg border-2 transition-all duration-200 text-sm sm:text-base
+                                text-gray-900 bg-white
+                                focus:outline-none focus:ring-2
+                                ${errors.playingHand
+                                    ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                                    : "border-gray-200 focus:border-purple-500 focus:ring-purple-100"
+                                }
+                            `}
+                        >
+                            <option value="right">{dict.profileSetup.form.handRight || "Right"}</option>
+                            <option value="left">{dict.profileSetup.form.handLeft || "Left"}</option>
+                        </select>
+                        {errors.playingHand && (
+                            <p className="text-sm text-red-600 font-medium flex items-center gap-1">
+                                <span className="text-red-500">⚠</span> {errors.playingHand}
+                            </p>
+                        )}
+                    </div>
+
                     {/* Terms Checkbox */}
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                         <label className="flex items-start gap-3 cursor-pointer group">
                             <div className="relative flex items-center">
                                 <input
@@ -276,19 +406,19 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3">
                         <Button
                             type="button"
                             variant="outline"
                             onClick={onCancel}
-                            className="flex-1 py-3 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all text-sm"
+                            className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all text-xs sm:text-sm"
                             disabled={loading}
                         >
                             {(dict as any)?.profileSetup?.skipForNow || "Skip for Now"}
                         </Button>
                         <Button
                             type="submit"
-                            className="flex-1 py-3 rounded-lg font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all transform hover:scale-[1.02] text-sm"
+                            className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all transform hover:scale-[1.02] text-xs sm:text-sm"
                             disabled={loading}
                         >
                             {loading ? (
