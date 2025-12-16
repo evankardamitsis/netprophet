@@ -406,16 +406,7 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={onCancel}
-                            className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all text-xs sm:text-sm"
-                            disabled={loading}
-                        >
-                            {(dict as any)?.profileSetup?.skipForNow || "Skip for Now"}
-                        </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-3 pb-4 sm:pb-0">
                         <Button
                             type="submit"
                             className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all transform hover:scale-[1.02] text-xs sm:text-sm"
@@ -429,6 +420,15 @@ export function ProfileClaimFormNew({ onComplete, onCancel, onClose, loading = f
                             ) : (
                                 (dict as any)?.profileSetup?.continue || "Continue"
                             )}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onCancel}
+                            className="flex-1 py-2 sm:py-2.5 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all text-xs sm:text-sm"
+                            disabled={loading}
+                        >
+                            {(dict as any)?.profileSetup?.skipForNow || "Skip for Now"}
                         </Button>
                     </div>
                 </form>

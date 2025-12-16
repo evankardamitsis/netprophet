@@ -166,7 +166,7 @@ export function ProfileCreationReview({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="space-y-2 sm:space-y-2.5 lg:space-y-3 pt-2 sm:pt-3 lg:pt-4">
+                    <div className="space-y-2 sm:space-y-2.5 lg:space-y-3 pt-2 sm:pt-3 lg:pt-4 pb-4 sm:pb-0">
                         <Button
                             onClick={handleConfirm}
                             disabled={loading}

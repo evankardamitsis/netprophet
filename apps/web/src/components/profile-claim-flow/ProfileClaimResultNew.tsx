@@ -350,7 +350,7 @@ export function ProfileClaimResultNew({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="space-y-2 sm:space-y-2.5 lg:space-y-3">
+                    <div className="space-y-2 sm:space-y-2.5 lg:space-y-3 pb-4 sm:pb-0">
                         <Button
                             onClick={handleCreateProfile}
                             disabled={actionLoading || loading}

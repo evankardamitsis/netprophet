@@ -21,48 +21,36 @@ interface PlayerLookupResult {
 
 /**
  * Search for matching players in the database
- * Tries both normal order (firstName, lastName) and reversed order (lastName, firstName)
- * to handle cases where names might be entered in different orders
+ * Prioritizes last name matching - searches by last name first, then filters/ranks by first name
  */
 export async function findMatchingPlayers(
   firstName: string,
   lastName: string
 ): Promise<PlayerLookupResult> {
-  // Try normal order first
-  const { data: matches1, error: searchError1 } = await supabase.rpc(
+  // Primary search: Use last name as the primary search criterion
+  // The database function should prioritize surname matching
+  const { data: matches, error: searchError } = await supabase.rpc(
     "find_matching_players",
     {
       search_name: firstName,
-      search_surname: lastName,
+      search_surname: lastName, // Last name is the primary search field
     }
   );
 
-  // Try reversed order as fallback
-  const { data: matches2, error: searchError2 } = await supabase.rpc(
-    "find_matching_players",
-    {
-      search_name: lastName,
-      search_surname: firstName,
-    }
-  );
-
-  // If both searches failed, throw error
-  if (searchError1 && searchError2) {
+  if (searchError) {
     throw new Error("Failed to search for matching players");
   }
 
-  // Combine results from both searches, removing duplicates
-  const allMatches = [...(matches1 || []), ...(matches2 || [])];
-  const uniqueMatches = allMatches.filter(
-    (match, index, self) => index === self.findIndex((m) => m.id === match.id)
-  );
+  // If no matches found with last name, return empty
+  // The database function should handle surname-first matching internally
+  const uniqueMatches = matches || [];
 
   return {
     matches: uniqueMatches,
-    searchedNormalOrder: !searchError1,
-    searchedReversedOrder: !searchError2,
-    normalOrderMatches: matches1?.length || 0,
-    reversedOrderMatches: matches2?.length || 0,
+    searchedNormalOrder: true,
+    searchedReversedOrder: false,
+    normalOrderMatches: uniqueMatches.length,
+    reversedOrderMatches: 0,
   };
 }
 
