@@ -34,7 +34,9 @@ export default function NewPlayerPage() {
         aggressiveness: 5,
         stamina: 5,
         consistency: 5,
-        age: 25,
+        // IMPORTANT: Do not assume a default age.
+        // Admins should set this explicitly using the athlete's date of birth from the request email.
+        age: 0,
         hand: 'right',
         notes: '',
         lastMatchDate: '',
@@ -46,6 +48,7 @@ export default function NewPlayerPage() {
     });
     const [loading, setLoading] = useState(false);
     const [notifying, setNotifying] = useState(false);
+    const [autoFillLoading, setAutoFillLoading] = useState(false);
 
     const handleSave = async () => {
         setLoading(true);
@@ -117,6 +120,48 @@ export default function NewPlayerPage() {
         newLast5[index] = result;
         setPlayer(prev => ({ ...prev, last5: newLast5 }));
     };
+
+    // Auto-fill age and hand from user's registration data when claimedByUserId is set
+    useEffect(() => {
+        const fetchAthleteMetadata = async () => {
+            if (!player.claimedByUserId) return;
+
+            setAutoFillLoading(true);
+            try {
+                const res = await fetch(
+                    `/api/admin/user-athlete-metadata?userId=${encodeURIComponent(
+                        player.claimedByUserId
+                    )}`
+                );
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    console.error('Failed to fetch athlete metadata:', data.error);
+                    toast.error(
+                        data.error || 'Failed to fetch athlete registration details'
+                    );
+                    return;
+                }
+
+                setPlayer(prev => ({
+                    ...prev,
+                    age: typeof data.age === 'number' && data.age > 0 ? data.age : prev.age,
+                    hand: data.hand === 'left' || data.hand === 'right' ? data.hand : prev.hand,
+                }));
+
+                toast.success('Prefilled age and dominant hand from athlete request');
+            } catch (error) {
+                console.error('Error fetching athlete metadata:', error);
+                toast.error('Failed to fetch athlete registration details');
+            } finally {
+                setAutoFillLoading(false);
+            }
+        };
+
+        fetchAthleteMetadata();
+        // Only re-run when claimedByUserId changes
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [player.claimedByUserId]);
 
     const getWinRate = (wins: number, losses: number) => {
         const total = wins + losses;

@@ -50,6 +50,7 @@ export default function PlayersPage() {
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [rowSelection, setRowSelection] = useState({});
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
@@ -74,12 +75,18 @@ export default function PlayersPage() {
                                 currentSort?.id === 'currentStreak' ? 'current_streak' :
                                     currentSort?.id === 'age' ? 'age' : 'last_name';
 
+            const isActiveFilter =
+                statusFilter === 'active' ? true :
+                    statusFilter === 'inactive' ? false :
+                        undefined;
+
             const result = await fetchPlayersPaginated(
                 page,
                 pageSize,
                 sortBy,
                 currentSort?.desc ? 'desc' : 'asc',
-                searchTerm || debouncedGlobalFilter
+                searchTerm || debouncedGlobalFilter,
+                isActiveFilter
             );
 
             setPlayers(result.players);
@@ -93,7 +100,7 @@ export default function PlayersPage() {
             setLoading(false);
             setSearching(false);
         }
-    }, [sorting, pageSize, debouncedGlobalFilter]);
+    }, [sorting, pageSize, debouncedGlobalFilter, statusFilter]);
 
     // Fetch players on mount and when dependencies change
     useEffect(() => {
@@ -289,6 +296,14 @@ export default function PlayersPage() {
                     );
                 },
                 enableSorting: true,
+                enableColumnFilter: true,
+                // Custom filter for active / inactive toggle
+                filterFn: (row, columnId, filterValue) => {
+                    // If no filter set, show all
+                    if (filterValue === undefined || filterValue === null) return true;
+                    const value = row.getValue<boolean>('isActive');
+                    return value === filterValue;
+                },
             },
             {
                 id: 'actions',
@@ -626,8 +641,8 @@ export default function PlayersPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="mb-4 space-y-4">
-                        {/* Search and Page Size - Mobile First */}
-                        <div className="flex flex-col sm:flex-row gap-4">
+                        {/* Search, Status Filter and Page Size - Mobile First */}
+                        <div className="flex flex-col lg:flex-row gap-4">
                             <div className="relative w-full sm:max-w-xs">
                                 <Input
                                     placeholder="Search by name..."
@@ -641,22 +656,67 @@ export default function PlayersPage() {
                                     </div>
                                 )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-600">Page size:</span>
-                                <select
-                                    value={pageSize}
-                                    onChange={(e) => {
-                                        const newPageSize = parseInt(e.target.value);
-                                        setPageSize(newPageSize);
-                                        fetchPlayersData(1);
-                                    }}
-                                    className="border rounded px-2 py-1 text-sm"
-                                >
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
-                                    <option value={100}>100</option>
-                                </select>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
+                                {/* Active / Inactive filter */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 whitespace-nowrap">Κατάσταση:</span>
+                                    <div className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setStatusFilter('all');
+                                            }}
+                                            className={`px-3 py-1.5 text-xs sm:text-sm ${statusFilter === 'all'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            Όλοι
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setStatusFilter('active');
+                                            }}
+                                            className={`px-3 py-1.5 text-xs sm:text-sm border-l border-gray-200 ${statusFilter === 'active'
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            Ενεργοί
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setStatusFilter('inactive');
+                                            }}
+                                            className={`px-3 py-1.5 text-xs sm:text-sm border-l border-gray-200 ${statusFilter === 'inactive'
+                                                ? 'bg-gray-700 text-white'
+                                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            Ανενεργοί
+                                        </button>
+                                    </div>
+                                </div>
+                                {/* Page size selector */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-600 whitespace-nowrap">Page size:</span>
+                                    <select
+                                        value={pageSize}
+                                        onChange={(e) => {
+                                            const newPageSize = parseInt(e.target.value);
+                                            setPageSize(newPageSize);
+                                            fetchPlayersData(1);
+                                        }}
+                                        className="border rounded px-2 py-1 text-sm"
+                                    >
+                                        <option value={10}>10</option>
+                                        <option value={20}>20</option>
+                                        <option value={50}>50</option>
+                                        <option value={100}>100</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 

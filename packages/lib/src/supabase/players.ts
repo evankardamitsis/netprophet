@@ -112,7 +112,8 @@ export async function fetchPlayersPaginated(
   pageSize: number = 20,
   sortBy?: string,
   sortOrder: "asc" | "desc" = "asc",
-  searchTerm?: string
+  searchTerm?: string,
+  isActiveFilter?: boolean
 ) {
   let query = supabase.from(TABLE).select("*", { count: "exact" });
 
@@ -123,6 +124,11 @@ export async function fetchPlayersPaginated(
     query = query.or(
       `first_name_normalized.like.%${searchValue}%,last_name_normalized.like.%${searchValue}%`
     );
+  }
+
+  // Filter by active / inactive status at DB level if requested
+  if (typeof isActiveFilter === "boolean") {
+    query = query.eq("is_active", isActiveFilter);
   }
 
   // Add sorting
