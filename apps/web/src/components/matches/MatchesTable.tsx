@@ -351,105 +351,116 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 </div>
             )}
 
-            {/* Mobile Table View */}
-            <div className="lg:hidden">
-                <div className="bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden">
-                    <table className="w-full text-xs">
-                        <thead>
-                            <tr className="border-b border-slate-700">
-                                <th className="text-left p-2 text-gray-300 font-semibold w-16">Time</th>
-                                <th className="text-left p-2 text-gray-300 font-semibold">Match</th>
-                                <th className="text-center p-2 text-gray-300 font-semibold w-28">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-700">
-                            {table.getRowModel().rows.map((row, index) => {
-                                const match = row.original;
-                                const underdog = isUnderdog(match);
-                                const isLastRow = index === table.getRowModel().rows.length - 1;
+            {/* Mobile Table View (optimized for many rows, row is tap target) */}
+            <div className="lg:hidden overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/80">
+                <table className="w-full text-xs">
+                    <thead>
+                        <tr className="border-b border-slate-700">
+                            <th className="text-left px-3 py-2 text-gray-300 font-semibold w-16">Time</th>
+                            <th className="text-left px-3 py-2 text-gray-300 font-semibold">Match</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                        {table.getRowModel().rows.map((row, index) => {
+                            const match = row.original;
+                            const underdog = isUnderdog(match);
+                            const isLastRow = index === table.getRowModel().rows.length - 1;
 
-                                return (
-                                    <tr
-                                        key={row.id}
-                                        className={`hover:bg-slate-800/50 transition-colors ${underdog ? 'bg-orange-500/5 border-l-4 border-l-orange-500' : ''}`}
+                            const isClickable = !match.locked;
+
+                            return (
+                                <tr
+                                    key={row.id}
+                                    className={cx(
+                                        "transition-colors",
+                                        isClickable && "hover:bg-slate-800/70 cursor-pointer",
+                                        !isClickable && "opacity-70",
+                                        underdog && "bg-orange-500/5 border-l-4 border-l-orange-500"
+                                    )}
+                                    onClick={() => {
+                                        if (isClickable) {
+                                            onSelectMatch(match);
+                                        }
+                                    }}
+                                    role={isClickable ? "button" : undefined}
+                                    aria-disabled={!isClickable}
+                                >
+                                    {/* Time */}
+                                    <td
+                                        className={cx(
+                                            "px-3 py-3 align-top text-gray-200 w-16",
+                                            isLastRow ? "rounded-bl-2xl" : ""
+                                        )}
                                     >
-                                        {/* Time */}
-                                        <td className={`p-2 text-gray-300 w-16 ${isLastRow ? 'rounded-bl-2xl' : ''}`}>
-                                            <div className="font-medium text-xs">{formatTime(match.startTime)}</div>
-                                            <div className="text-xs text-gray-500">{formatDate(match.startTime)}</div>
-                                        </td>
+                                        <div className="font-semibold text-xs leading-tight">
+                                            {formatTime(match.startTime)}
+                                        </div>
+                                        <div className="text-[11px] text-gray-500 leading-tight">
+                                            {formatDate(match.startTime)}
+                                        </div>
+                                    </td>
 
-                                        {/* Match - Compact */}
-                                        <td className="p-2">
-                                            <div className="space-y-1">
-                                                {/* Tournament info */}
-                                                <div className="text-xs text-gray-400 truncate">
-                                                    {match.tournament} • {match.tournament_categories?.name || ''}
-                                                </div>
+                                    {/* Match content (entire cell is tap target) */}
+                                    <td
+                                        className={cx(
+                                            "px-3 py-3 align-top",
+                                            isLastRow ? "rounded-br-2xl" : ""
+                                        )}
+                                    >
+                                        <div className="space-y-1.5">
+                                            {/* Tournament info */}
+                                            <div className="text-xs text-gray-400 truncate">
+                                                {match.tournament} • {match.tournament_categories?.name || ''}
+                                            </div>
 
-                                                {/* Players and odds - Left aligned */}
-                                                <div className="flex items-center justify-between">
-                                                    <div className="min-w-0">
-                                                        <div className="text-white font-medium text-xs truncate">
-                                                            {getDisplayName(match, 'team1')}
+                                            {/* Players / odds with clear affordance */}
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex-1 min-w-0 space-y-1">
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <div className="min-w-0">
+                                                            <div className="text-white font-medium text-xs truncate">
+                                                                {getDisplayName(match, 'team1')}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-xs font-bold text-white whitespace-nowrap">
+                                                            {match.player1.odds.toFixed(2)}
                                                         </div>
                                                     </div>
-                                                    <div className="text-lg font-bold text-white ml-2">{match.player1.odds.toFixed(2)}</div>
-                                                </div>
-
-                                                <div className="text-center text-gray-500 font-bold text-xs">VS</div>
-
-                                                <div className="flex items-center justify-between">
-                                                    <div className="min-w-0">
-                                                        <div className="text-white font-medium text-xs truncate">
-                                                            {getDisplayName(match, 'team2')}
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <div className="min-w-0">
+                                                            <div className="text-white font-medium text-xs truncate">
+                                                                {getDisplayName(match, 'team2')}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-xs font-bold text-white whitespace-nowrap">
+                                                            {match.player2.odds.toFixed(2)}
                                                         </div>
                                                     </div>
-                                                    <div className="text-lg font-bold text-white ml-2">{match.player2.odds.toFixed(2)}</div>
+                                                    {underdog && (
+                                                        <div className="text-[11px] text-orange-400 font-semibold">
+                                                            🔥 UNDERDOG
+                                                        </div>
+                                                    )}
                                                 </div>
 
-                                                {underdog && (
-                                                    <div className="text-center">
-                                                        <span className="inline-flex items-center px-1 py-0.5 text-xs font-bold text-orange-400 bg-orange-500/10 rounded-full">
-                                                            🔥
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                {/* Compact affordance icon to suggest row opens */}
+                                                <div className="flex-shrink-0 flex items-center">
+                                                    {isClickable ? (
+                                                        <div className="w-7 h-7 rounded-full border border-purple-500/70 bg-purple-500/15 flex items-center justify-center text-xs text-purple-100">
+                                                            <span>›</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[11px] text-gray-500">Locked</span>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </td>
-
-                                        {/* Action - Compact button */}
-                                        <td className={`p-2 text-center w-28 ${isLastRow ? 'rounded-br-2xl' : ''}`}>
-                                            <div className="h-full flex items-center justify-center">
-                                                {!match.locked ? (
-                                                    <motion.button
-                                                        className={cx(
-                                                            "w-full px-1 py-2 text-xs font-semibold text-white rounded-lg",
-                                                            gradients.purple,
-                                                            borders.rounded.sm,
-                                                            transitions.default,
-                                                            shadows.glow.purple,
-                                                            "hover:scale-105 active:scale-95"
-                                                        )}
-                                                        onClick={() => onSelectMatch(match)}
-                                                        whileHover={{ scale: 1.05 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                    >
-                                                        {dict?.sidebar?.makePrediction || 'Βάλε Προβλέψεις'}
-                                                    </motion.button>
-                                                ) : (
-                                                    <div className="w-full px-1 py-2 text-xs text-center text-gray-500 bg-slate-800/50 rounded-lg">
-                                                        Locked
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
             </div>
 
             {/* Pagination */}
