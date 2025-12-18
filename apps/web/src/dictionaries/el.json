@@ -355,6 +355,7 @@
     "viewMyPicks": "Δες τις Προβλέψεις σου",
     "errorPlacingBetCheckBalance": "Σφάλμα κατά την τοποθέτηση προβλέψεων {type}. Παρακαλώ έλεγξε το υπόλοιπό σου και δοκίμασε ξανά.",
     "cannotPlacePredictionOnOwnMatch": "Δεν μπορείς να τοποθετήσεις προβλέψεις σε αγώνες στους οποίους συμμετέχεις.",
+    "searchPlaceholder": "Αναζήτηση αγώνων, παίκτες, κατηγορίες...",
     "needSafeBetTokens": "Χρειάζεσαι {cost} token ασφαλής προβλέψης για αυτή τη λειτουργία. Έχεις {tokens}.",
     "parlayBetDescription": "Προβλέψη παρολί - {count} προβλέψεις - {odds}x πιθανότητες",
     "individualBetDescription": "{name} - {multiplier}x πολλαπλασιαστής",
@@ -433,7 +434,7 @@
   },
   "sidebar": {
     "live": "Ζωντανα",
-    "upcoming": "Επερχομενοι",
+    "upcoming": "Επερχόμενοι",
     "liveMatches": "Ζωντανοί Αγώνες",
     "expandSidebar": "Επέκταση πλαϊνής μπάρας",
     "locked": "ΚΛΕΙΔΩΜΕΝΟ",

@@ -57,6 +57,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const [globalFilter, setGlobalFilter] = useState('');
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [showMobileSearch, setShowMobileSearch] = useState(false);
 
     // Format time for display
     const formatTime = (startTime: string | Date) => {
@@ -262,8 +263,8 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
             </h2>
 
             {/* Filters and search */}
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col lg:flex-row gap-3 lg:gap-4 items-start lg:items-center justify-between">
+                <div className="flex flex-wrap items-center gap-2">
                     <div className="flex items-center gap-2 bg-slate-800/50 border border-slate-700 rounded-2xl px-2 py-1">
                         {[
                             { key: 'all', label: dict?.matches?.matchTypeAll || 'All' },
@@ -285,17 +286,63 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                             </Button>
                         ))}
                     </div>
+                    {/* Mobile search toggle icon */}
+                    <button
+                        type="button"
+                        className="lg:hidden ml-1 inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-600 bg-slate-800/70 text-gray-200 hover:bg-slate-700 hover:text-white transition-colors"
+                        onClick={() => setShowMobileSearch(prev => !prev)}
+                        aria-label="Search matches"
+                    >
+                        <svg
+                            className="w-4 h-4"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle
+                                cx="11"
+                                cy="11"
+                                r="6"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                            />
+                            <line
+                                x1="15.5"
+                                y1="15.5"
+                                x2="20"
+                                y2="20"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                            />
+                        </svg>
+                    </button>
                 </div>
-                <div className="w-full lg:flex-1 lg:max-w-md">
+                {/* Desktop search input */}
+                <div className="hidden lg:block w-full lg:flex-1 lg:max-w-md">
                     <input
                         type="text"
-                        placeholder="Search matches by tournament, players, category..."
+                        placeholder={(dict as any)?.matches?.searchPlaceholder || "Search matches by tournament, players, category..."}
                         value={globalFilter}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800/50 border border-slate-600 rounded-2xl text-white placeholder-gray-400 placeholder:text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
                     />
                 </div>
             </div>
+
+            {/* Mobile expanded search input (shown on tap) */}
+            {showMobileSearch && (
+                <div className="lg:hidden w-full">
+                    <input
+                        type="text"
+                        autoFocus
+                        placeholder={(dict as any)?.matches?.searchPlaceholder || "Search matches by tournament, players, category..."}
+                        value={globalFilter}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-800/70 border border-slate-600 rounded-2xl text-white placeholder-gray-400 placeholder:text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                    />
+                </div>
+            )}
 
             {/* Desktop Table View */}
             {filteredMatches.length > 0 && (

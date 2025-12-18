@@ -221,6 +221,7 @@ export interface Dictionary {
     matchTypeAll?: string;
     matchTypeSingles?: string;
     matchTypeDoubles?: string;
+    searchPlaceholder?: string;
     powerUps?: {
       safeSingleSlip: string;
       safeParlaySlip: string;
