@@ -198,18 +198,21 @@ export function suggestGreekNames(greeklish: string): string[] {
 
 /**
  * Validates if a name input is likely to be a valid Greek or Greeklish name
+ * Now includes Greek accented characters (ά, έ, ή, ί, ό, ύ, ώ, etc.)
  */
 export function isValidGreekName(name: string): boolean {
   if (!name || name.trim().length < 2) return false;
 
   const trimmed = name.trim();
 
-  // Must contain only Greek characters, Latin characters, or spaces
-  const validCharsRegex = /^[α-ωΑ-Ωa-zA-Z\s]+$/;
+  // Must contain only Greek characters (including accents), Latin characters, or spaces
+  // Includes: α-ω, Α-Ω, άέήίόύώΐΰ, ΆΈΉΊΌΎΏΪΫ, and Latin a-z, A-Z
+  const validCharsRegex = /^[α-ωΑ-ΩάέήίόύώΐΰΆΈΉΊΌΎΏΪΫa-zA-Z\s]+$/;
   if (!validCharsRegex.test(trimmed)) return false;
 
   // Must not be all numbers or special characters
-  const hasLetters = /[α-ωΑ-Ωa-zA-Z]/.test(trimmed);
+  // Check for any letters (Greek with or without accents, or Latin)
+  const hasLetters = /[α-ωΑ-ΩάέήίόύώΐΰΆΈΉΊΌΎΏΪΫa-zA-Z]/.test(trimmed);
   if (!hasLetters) return false;
 
   return true;
