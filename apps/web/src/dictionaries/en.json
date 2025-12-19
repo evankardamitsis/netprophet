@@ -181,6 +181,7 @@
   "matches": {
     "title": "Tennis Matches",
     "noMatches": "No matches available",
+    "noMatchesDescription": "There are currently no matches available. Check back later for upcoming tennis matches and tournaments.",
     "loading": "Monitor live tennis events and place your predictions",
     "selectMatch": "Select a Match",
     "selectMatchDescription": "Choose a match from the sidebar to view details and make predictions",

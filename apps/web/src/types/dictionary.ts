@@ -58,6 +58,7 @@ export interface Dictionary {
   matches: {
     title: string;
     noMatches: string;
+    noMatchesDescription: string;
     loading: string;
     selectMatch: string;
     selectMatchDescription: string;

@@ -50,6 +50,7 @@ interface TournamentMatchesTableProps {
     matches: Match[];
     onEditMatch: (match: Match) => void;
     onDeleteMatch: (id: string) => void;
+    onBulkDeleteMatches?: (matchIds: string[]) => Promise<void>;
     onCalculateOdds: (matchIds: string[]) => void;
     onSyncToWeb: (matchIds: string[]) => void;
     onRemoveFromWeb: (matchIds: string[]) => void;
@@ -64,6 +65,7 @@ export function TournamentMatchesTable({
     matches,
     onEditMatch,
     onDeleteMatch,
+    onBulkDeleteMatches,
     onCalculateOdds,
     onSyncToWeb,
     onRemoveFromWeb,
@@ -92,6 +94,10 @@ export function TournamentMatchesTable({
         currentStatus: string;
         matchName: string;
     } | null>(null);
+
+    // Bulk delete confirmation modal state
+    const [showBulkDeleteModal, setShowBulkDeleteModal] = React.useState(false);
+    const [isDeleting, setIsDeleting] = React.useState(false);
 
     const getPlayerName = (player: any) => {
         if (player?.first_name && player?.last_name) {
@@ -639,14 +645,11 @@ export function TournamentMatchesTable({
                                 Calculate Odds
                             </Button>
                             <Button
-                                onClick={() => {
-                                    if (confirm(`Are you sure you want to delete ${selectedMatches.length} match(es)? This action cannot be undone.`)) {
-                                        selectedMatches.forEach(matchId => onDeleteMatch(matchId));
-                                    }
-                                }}
+                                onClick={() => setShowBulkDeleteModal(true)}
                                 size="sm"
                                 variant="outline"
                                 className="border-red-600 text-red-600 hover:bg-red-50 text-xs sm:text-sm"
+                                disabled={isDeleting}
                             >
                                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                                 <span className="hidden sm:inline">Delete Selected</span>
@@ -1053,6 +1056,98 @@ export function TournamentMatchesTable({
                             className="bg-blue-600 hover:bg-blue-700"
                         >
                             Confirm Change
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk Delete Confirmation Modal */}
+            <Dialog open={showBulkDeleteModal} onOpenChange={setShowBulkDeleteModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Confirm Bulk Delete</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete {selectedMatches.length} match{selectedMatches.length !== 1 ? 'es' : ''}? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="bg-red-50 p-3 rounded-md border border-red-200">
+                            <p className="text-sm text-red-800">
+                                <strong>Warning:</strong> This will permanently delete {selectedMatches.length} match{selectedMatches.length !== 1 ? 'es' : ''} from the tournament.
+                            </p>
+                            <p className="text-xs text-red-700 mt-2">
+                                All associated data, bets, and predictions will also be removed. This action cannot be undone.
+                            </p>
+                        </div>
+                        {(() => {
+                            const selectedMatchObjects = filteredMatches.filter(match =>
+                                selectedMatches.includes(match.id)
+                            );
+                            if (selectedMatchObjects.length > 0 && selectedMatchObjects.length <= 5) {
+                                return (
+                                    <div className="bg-gray-50 p-3 rounded-md border">
+                                        <p className="text-xs font-medium text-gray-700 mb-2">Matches to be deleted:</p>
+                                        <ul className="text-xs text-gray-600 space-y-1">
+                                            {selectedMatchObjects.map(match => {
+                                                const playerA = match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a);
+                                                const playerB = match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b);
+                                                return (
+                                                    <li key={match.id}>• {playerA} vs {playerB}</li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })()}
+                    </div>
+                    <DialogFooter className="sm:justify-start">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowBulkDeleteModal(false)}
+                            disabled={isDeleting}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={async () => {
+                                setIsDeleting(true);
+                                try {
+                                    if (onBulkDeleteMatches) {
+                                        // Use bulk delete handler if provided
+                                        await onBulkDeleteMatches(selectedMatches);
+                                    } else {
+                                        // Fallback: delete matches one by one
+                                        // This will show individual confirmation dialogs
+                                        for (const matchId of selectedMatches) {
+                                            onDeleteMatch(matchId);
+                                        }
+                                    }
+
+                                    // Clear selection after deletion
+                                    onSelectionChange([]);
+                                    setRowSelection({});
+                                    setShowBulkDeleteModal(false);
+                                } catch (error) {
+                                    console.error('Error during bulk delete:', error);
+                                } finally {
+                                    setIsDeleting(false);
+                                }
+                            }}
+                            className="bg-red-600 hover:bg-red-700"
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    <span>Deleting...</span>
+                                </div>
+                            ) : (
+                                'Delete All'
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -13,6 +13,7 @@ interface TournamentMatchesProps {
     onAddMatch: () => void;
     onEditMatch: (match: Match) => void;
     onDeleteMatch: (id: string) => void;
+    onBulkDeleteMatches?: (matchIds: string[]) => Promise<void>;
     onCalculateOdds: (matchIds: string[]) => void;
     onSyncToWeb: (matchIds: string[]) => void;
     onRemoveFromWeb: (matchIds: string[]) => void;
@@ -26,6 +27,7 @@ export function TournamentMatches({
     onAddMatch,
     onEditMatch,
     onDeleteMatch,
+    onBulkDeleteMatches,
     onCalculateOdds,
     onSyncToWeb,
     onRemoveFromWeb,
@@ -48,6 +50,7 @@ export function TournamentMatches({
                     matches={matches}
                     onEditMatch={onEditMatch}
                     onDeleteMatch={onDeleteMatch}
+                    onBulkDeleteMatches={onBulkDeleteMatches}
                     onCalculateOdds={onCalculateOdds}
                     onSyncToWeb={onSyncToWeb}
                     onRemoveFromWeb={onRemoveFromWeb}

@@ -37,7 +37,6 @@ import { TournamentCategories } from './components/TournamentCategories';
 import { ParticipantsTable } from './components/ParticipantsTable';
 import { getStatusColor, getSurfaceColor, getGenderColor, formatTime } from './utils/tournamentHelpers';
 import { Tournament, Match, Category, TournamentParticipant } from '@/types';
-import router from 'next/router';
 import { CategoryForm } from '../CategoryForm';
 import { PlayerOddsData, MatchContext, calculateOdds } from '@netprophet/lib';
 
@@ -199,6 +198,32 @@ export default function TournamentPage() {
         } finally {
             setShowDeleteWarning(false);
             setMatchToDelete(null);
+        }
+    };
+
+    const handleBulkDeleteMatches = async (matchIds: string[]) => {
+        const results = await Promise.allSettled(
+            matchIds.map(id => deleteMatch(id))
+        );
+
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
+
+        // Log failed deletions for debugging
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                console.error(`Failed to delete match ${matchIds[index]}:`, result.reason);
+            }
+        });
+
+        loadTournamentData();
+
+        if (failed === 0) {
+            toast.success(`${successful} match${successful !== 1 ? 'es' : ''} deleted successfully!`);
+        } else if (successful > 0) {
+            toast.warning(`${successful} match${successful !== 1 ? 'es' : ''} deleted, ${failed} failed`);
+        } else {
+            toast.error(`Failed to delete matches. They may have already been deleted.`);
         }
     };
 
@@ -636,6 +661,7 @@ export default function TournamentPage() {
                                 setShowMatchForm(true);
                             }}
                             onDeleteMatch={handleDeleteMatch}
+                            onBulkDeleteMatches={handleBulkDeleteMatches}
                             onCalculateOdds={handleCalculateOdds}
                             onSyncToWeb={handleSyncToWeb}
                             onRemoveFromWeb={handleRemoveFromWeb}

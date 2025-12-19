@@ -265,8 +265,7 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                                         </p>
 
                                         <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/80 p-4 rounded-lg mb-4 border border-slate-600/30">
-                                            <p className="text-green-400 text-sm font-semibold flex items-center gap-2">
-                                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                                            <p className="text-green-400 text-sm font-semibold">
                                                 {getTranslatedEffect(powerUp.name) || powerUp.effect}
                                             </p>
                                         </div>

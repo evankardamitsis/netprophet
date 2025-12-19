@@ -148,22 +148,29 @@ export default function DashboardPage() {
 
                         {/* Content Section */}
                         <div className="px-3 xs:px-4 sm:px-5 md:px-6 relative z-10">
-                            {/* All Matches - Grid for Live, Table for Upcoming */}
-                            <AllMatches
-                                liveMatches={liveMatches}
-                                upcomingMatches={upcomingMatches}
-                                onSelectMatch={handleSelectMatch}
-                                sidebarOpen={sidebarOpen}
-                                slipCollapsed={slipCollapsed}
-                            />
-
-                            {/* No Matches State */}
-                            {matches.length === 0 && (
-                                <div className="text-center py-12">
-                                    <div className="text-6xl mb-4">🎾</div>
-                                    <h2 className="text-2xl font-semibold mb-2 text-white">{dict?.matches?.noMatches || 'No Tennis Matches Available'}</h2>
-                                    <p className="text-gray-400">{dict?.matches?.loading || 'Check back later for upcoming tennis matches'}</p>
+                            {/* Show empty state when no matches */}
+                            {matches.length === 0 && !isLoading ? (
+                                <div className="flex flex-col items-center justify-center py-16 md:py-24 min-h-[400px]">
+                                    <div className="relative mb-8">
+                                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-yellow-500/20 rounded-full blur-3xl animate-pulse"></div>
+                                        <div className="relative text-8xl md:text-9xl">🎾</div>
+                                    </div>
+                                    <h2 className={cx(typography.heading.lg, "text-white mb-3 text-center")}>
+                                        {dict?.matches?.noMatches || 'No Tennis Matches Available'}
+                                    </h2>
+                                    <p className={cx(typography.body.md, "text-gray-400 text-center max-w-md")}>
+                                        {(dict?.matches as any)?.noMatchesDescription || 'There are currently no matches available. Check back later for upcoming tennis matches and tournaments.'}
+                                    </p>
                                 </div>
+                            ) : (
+                                /* All Matches - Grid for Live, Table for Upcoming */
+                                <AllMatches
+                                    liveMatches={liveMatches}
+                                    upcomingMatches={upcomingMatches}
+                                    onSelectMatch={handleSelectMatch}
+                                    sidebarOpen={sidebarOpen}
+                                    slipCollapsed={slipCollapsed}
+                                />
                             )}
                         </div>
                     </div>
