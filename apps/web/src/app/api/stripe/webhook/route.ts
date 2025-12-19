@@ -5,7 +5,13 @@ import { headers } from "next/headers";
 
 // Using Supabase's built-in rate limiting instead of custom implementation
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Use live keys in production, test keys in development
+const isProduction = process.env.NODE_ENV === "production";
+const stripeSecretKey = isProduction
+  ? process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY!
+  : process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY!;
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2025-07-30.basil",
 });
 
@@ -17,7 +23,11 @@ const supabase =
     ? createClient(supabaseUrl, supabaseServiceKey)
     : null;
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Use live webhook secret in production, test in development
+const endpointSecret = isProduction
+  ? process.env.STRIPE_WEBHOOK_SECRET_LIVE || process.env.STRIPE_WEBHOOK_SECRET!
+  : process.env.STRIPE_WEBHOOK_SECRET_TEST ||
+    process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(request: NextRequest) {
   // Using Supabase's built-in rate limiting - no custom rate limiting needed

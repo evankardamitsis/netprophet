@@ -160,11 +160,40 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // After auth/profile deletion, clean up any linked player records
+    // If this fails, log but don't block user deletion (cleanup-only step)
+    try {
+      const { error: playerCleanupError } = await supabase
+        .from("players")
+        .update({
+          claimed_by_user_id: null,
+          is_active: false,
+        })
+        .eq("claimed_by_user_id", id);
+
+      if (playerCleanupError) {
+        console.error("Error cleaning up linked players for deleted user:", {
+          userId: id,
+          error: playerCleanupError,
+        });
+      } else {
+        console.log(
+          "Successfully cleaned up linked players for deleted user:",
+          { userId: id }
+        );
+      }
+    } catch (cleanupError) {
+      console.error(
+        "Unexpected error during player cleanup for deleted user:",
+        cleanupError
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
         message:
-          "User successfully deleted from both database and authentication system.",
+          "User successfully deleted and any linked athlete profiles were deactivated and unlinked.",
       },
       { status: 200 }
     );

@@ -38,6 +38,13 @@ export async function findMatchingPlayers(
   );
 
   if (searchError) {
+    // Log full Supabase error details for debugging in case of failures
+    console.error("❌ find_matching_players RPC failed:", {
+      message: searchError.message,
+      details: (searchError as any).details,
+      hint: (searchError as any).hint,
+      code: (searchError as any).code,
+    });
     throw new Error("Failed to search for matching players");
   }
 

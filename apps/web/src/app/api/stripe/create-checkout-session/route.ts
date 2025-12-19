@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-import { request } from "http";
 // Using Supabase's built-in rate limiting instead of custom implementation
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Use live keys in production, test keys in development
+const isProduction = process.env.NODE_ENV === "production";
+const stripeSecretKey = isProduction
+  ? process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY!
+  : process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY!;
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2025-07-30.basil",
 });
 
@@ -20,7 +25,18 @@ export async function POST(request: NextRequest) {
   // Using Supabase's built-in rate limiting - no custom rate limiting needed
 
   try {
-    const { packId, userId } = await request.json();
+    const { packId, userId, lang: langFromBody } = await request.json();
+
+    // Extract language from request: prefer body param, then Referer header, default to "en"
+    let lang = langFromBody || "en";
+    const referer = request.headers.get("referer");
+    if (!langFromBody && referer) {
+      // Extract lang from URL like /en/rewards or /el/rewards
+      const langMatch = referer.match(/\/(en|el)\//);
+      if (langMatch) {
+        lang = langMatch[1];
+      }
+    }
 
     // Validate required fields
     if (!packId || !userId) {
@@ -93,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "revolut_pay"],
       line_items: [
         {
           price_data: {
@@ -109,8 +125,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${request.nextUrl.origin}/en/matches/rewards?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${request.nextUrl.origin}/en/matches/rewards?canceled=true`,
+      success_url: `${request.nextUrl.origin}/${lang}/rewards?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${request.nextUrl.origin}/${lang}/rewards?canceled=true`,
       metadata: {
         userId,
         packId,
@@ -121,6 +137,12 @@ export async function POST(request: NextRequest) {
       customer_email: profile.email, // Pre-fill customer email
       locale: "auto", // or 'en', 'es', 'fr', etc.
       submit_type: "pay", // Button text
+      // Enable automatic payment methods (Apple Pay, Google Pay are automatically enabled with "card")
+      payment_method_options: {
+        card: {
+          request_three_d_secure: "automatic", // Required for Apple Pay/Google Pay
+        },
+      },
     });
 
     return NextResponse.json({ sessionId: session.id });
