@@ -138,8 +138,22 @@ function calculateOdds(
     headToHeadWeight = Math.min(remainingWeight * 0.4, maxH2HWeight);
   }
 
+  // Special case: When NTRP is the same (or very close) and no H2H, reduce other factors significantly
+  // This keeps odds closer together (e.g., 1.85-2.15 instead of 1.62-3.00)
+  const isSameNTRP = ntrpDiff < 0.1; // Consider ratings within 0.1 as "same"
+  const hasNoH2H = totalH2hMatches === 0;
+  const shouldReduceOtherFactors = isSameNTRP && hasNoH2H;
+
   const otherFactors = 4; // form, surface, experience, momentum
-  const otherWeightPool = Math.max(remainingWeight - headToHeadWeight, 0);
+  let otherWeightPool = Math.max(remainingWeight - headToHeadWeight, 0);
+
+  // Reduce other factors weight when NTRP is same and no H2H
+  if (shouldReduceOtherFactors) {
+    // Reduce other factors to only 30% of their normal weight
+    // This keeps the odds much closer together
+    otherWeightPool = otherWeightPool * 0.3;
+  }
+
   const otherFactorsWeight =
     otherFactors > 0 ? otherWeightPool / otherFactors : 0;
 
@@ -188,7 +202,14 @@ function calculateOdds(
   let minBound = 0.2; // 20%
   let maxBound = 0.8; // 80%
 
-  if (ntrpDiff < 0.2) {
+  // Special case: When NTRP is the same (or very close) and no H2H, keep odds much closer
+  // This prevents extreme odds like 1.62 vs 3.00, keeping them around 1.85-2.15 range
+  if (shouldReduceOtherFactors) {
+    // Tighter bounds: 0.42-0.58 probability range = ~1.72-2.38 odds range
+    // This ensures odds stay much closer together
+    minBound = 0.42;
+    maxBound = 0.58;
+  } else if (ntrpDiff < 0.2) {
     minBound = 0.35;
     maxBound = 0.65;
   } else if (ntrpDiff < 0.35) {
@@ -686,25 +707,96 @@ function calculateDoublesOdds(
     }
   }
 
-  // Dynamic bounds (same as singles)
+  // Dynamic bounds for doubles - allow more extreme odds when teams have significant NTRP differences
+  // Especially when one team has a significantly lower-rated player
   let minBound = 0.2;
   let maxBound = 0.8;
 
-  if (ntrpDiff < 0.2) {
-    minBound = 0.35;
-    maxBound = 0.65;
-  } else if (ntrpDiff < 0.35) {
-    minBound = 0.3;
-    maxBound = 0.7;
-  } else if (ntrpDiff >= 1.5) {
-    minBound = 0.05;
-    maxBound = 0.95;
-  } else if (ntrpDiff >= 1.0) {
-    minBound = 0.1;
-    maxBound = 0.9;
-  } else if (ntrpDiff >= 0.5) {
-    minBound = 0.15;
-    maxBound = 0.85;
+  // Calculate minimum NTRP in each team to detect weak links
+  const teamAMinNTRP = Math.min(
+    teamA.player1.ntrpRating,
+    teamA.player2.ntrpRating
+  );
+  const teamBMinNTRP = Math.min(
+    teamB.player1.ntrpRating,
+    teamB.player2.ntrpRating
+  );
+  const minNTRPDiff = Math.abs(teamAMinNTRP - teamBMinNTRP);
+
+  // Calculate maximum NTRP in each team
+  const teamAMaxNTRP = Math.max(
+    teamA.player1.ntrpRating,
+    teamA.player2.ntrpRating
+  );
+  const teamBMaxNTRP = Math.max(
+    teamB.player1.ntrpRating,
+    teamB.player2.ntrpRating
+  );
+
+  // Check if one team has a significantly weaker player (weak link)
+  const hasWeakLink = minNTRPDiff >= 0.5;
+  const weakLinkDiff = minNTRPDiff;
+
+  // Determine which team has the weak link and check if they have a high-rated player (4.5+) to compensate
+  let weakLinkPenalty = 0;
+  if (hasWeakLink) {
+    const teamAHasWeakLink = teamAMinNTRP < teamBMinNTRP;
+    const weakLinkTeam = teamAHasWeakLink ? teamA : teamB;
+    const weakLinkTeamMaxNTRP = teamAHasWeakLink ? teamAMaxNTRP : teamBMaxNTRP;
+
+    // If the weak link team doesn't have a 4.5+ player, apply additional penalty
+    // This makes the weak link have more negative impact in doubles
+    if (weakLinkTeamMaxNTRP < 4.5) {
+      // Calculate penalty based on weak link difference
+      // Larger weak link + no high-rated player = bigger penalty
+      const basePenalty = weakLinkDiff * 0.08; // Base 8% per 1.0 NTRP difference (reduced from 15%)
+      const noHighRatedBonus = (4.5 - weakLinkTeamMaxNTRP) * 0.05; // Additional 5% per 0.1 below 4.5 (reduced from 10%)
+      weakLinkPenalty = Math.min(0.15, basePenalty + noHighRatedBonus); // Cap at 15% penalty (reduced from 25%)
+
+      // Apply penalty to the team with the weak link
+      if (teamAHasWeakLink) {
+        teamAScore -= weakLinkPenalty;
+      } else {
+        teamAScore += weakLinkPenalty;
+      }
+    }
+  }
+
+  // When there's a weak link, allow more extreme bounds based on the weak link difference
+  // Make bounds slightly more extreme if weak link team has no 4.5+ player
+  if (hasWeakLink) {
+    const teamAHasWeakLink = teamAMinNTRP < teamBMinNTRP;
+    const weakLinkTeamMaxNTRP = teamAHasWeakLink ? teamAMaxNTRP : teamBMaxNTRP;
+    const hasNoHighRatedPlayer = weakLinkTeamMaxNTRP < 4.5;
+
+    if (weakLinkDiff >= 1.5) {
+      minBound = hasNoHighRatedPlayer ? 0.05 : 0.05;
+      maxBound = hasNoHighRatedPlayer ? 0.95 : 0.95;
+    } else if (weakLinkDiff >= 1.0) {
+      minBound = hasNoHighRatedPlayer ? 0.08 : 0.1;
+      maxBound = hasNoHighRatedPlayer ? 0.92 : 0.9;
+    } else if (weakLinkDiff >= 0.5) {
+      minBound = hasNoHighRatedPlayer ? 0.12 : 0.15;
+      maxBound = hasNoHighRatedPlayer ? 0.88 : 0.85;
+    }
+  } else {
+    // No weak link - use tighter bounds based on average NTRP difference
+    if (ntrpDiff < 0.2) {
+      minBound = 0.35;
+      maxBound = 0.65;
+    } else if (ntrpDiff < 0.35) {
+      minBound = 0.3;
+      maxBound = 0.7;
+    } else if (ntrpDiff >= 1.5) {
+      minBound = 0.05;
+      maxBound = 0.95;
+    } else if (ntrpDiff >= 1.0) {
+      minBound = 0.1;
+      maxBound = 0.9;
+    } else if (ntrpDiff >= 0.5) {
+      minBound = 0.15;
+      maxBound = 0.85;
+    }
   }
 
   teamAScore = Math.max(minBound, Math.min(maxBound, teamAScore));

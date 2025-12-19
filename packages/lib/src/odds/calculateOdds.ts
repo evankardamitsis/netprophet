@@ -127,8 +127,22 @@ export function calculateOdds(
     headToHeadWeight = Math.min(remainingWeight * 0.4, maxH2HWeight);
   }
 
+  // Special case: When NTRP is the same (or very close) and no H2H, reduce other factors significantly
+  // This keeps odds closer together (e.g., 1.85-2.15 instead of 1.62-3.00)
+  const isSameNTRP = ntrpDiff < 0.1; // Consider ratings within 0.1 as "same"
+  const hasNoH2H = totalH2HMatches === 0;
+  const shouldReduceOtherFactors = isSameNTRP && hasNoH2H;
+
   const otherFactors = 4; // form, surface, experience, momentum
-  const otherWeightPool = Math.max(remainingWeight - headToHeadWeight, 0);
+  let otherWeightPool = Math.max(remainingWeight - headToHeadWeight, 0);
+
+  // Reduce other factors weight when NTRP is same and no H2H
+  if (shouldReduceOtherFactors) {
+    // Reduce other factors to only 30% of their normal weight
+    // This keeps the odds much closer together
+    otherWeightPool = otherWeightPool * 0.3;
+  }
+
   const otherFactorWeight =
     otherFactors > 0 ? otherWeightPool / otherFactors : 0;
 
@@ -175,7 +189,14 @@ export function calculateOdds(
   let minBound = 0.15;
   let maxBound = 0.85;
 
-  if (ntrpDiff < 0.2) {
+  // Special case: When NTRP is the same (or very close) and no H2H, keep odds much closer
+  // This prevents extreme odds like 1.62 vs 3.00, keeping them around 1.85-2.15 range
+  if (shouldReduceOtherFactors) {
+    // Tighter bounds: 0.42-0.58 probability range = ~1.72-2.38 odds range
+    // This ensures odds stay much closer together
+    minBound = 0.42;
+    maxBound = 0.58;
+  } else if (ntrpDiff < 0.2) {
     minBound = 0.35;
     maxBound = 0.65;
   } else if (ntrpDiff < 0.35) {
