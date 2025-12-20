@@ -33,6 +33,20 @@ export function PromotionalHero({
 
     // Promotional content items - Mixed layout
     const promotionalItems = [
+        // Coin packs promotion - Tennis themed (moved to first position)
+        {
+            type: 'promo',
+            id: 'coin-packs',
+            title: lang === 'el' ? 'Coin Packs' : 'Coin Packs',
+            subtitle: lang === 'el' ? 'Αγόρασε νομίσματα' : 'Buy Coins',
+            time: lang === 'el' ? 'Ειδικές προσφορές' : 'Special Offers',
+            players: [],
+            image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGxhd3d1OTdkNWxiOXBjNzl5N2dycmxoa2M4NWl0Z3VnaHo1YjVndSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xUPGcJaL5ODxniWMNO/giphy.gif', // Coins dropping animation
+            action: () => router.push(`/${lang}/shop`),
+            actionText: lang === 'el' ? 'Αγόρασε' : 'Buy Now',
+            secondaryAction: null,
+            secondaryActionText: ''
+        },
         // Featured Match 1
         ...(featuredMatches && featuredMatches[0] ? [{
             type: 'match',
@@ -81,20 +95,6 @@ export function PromotionalHero({
             secondaryAction: null,
             secondaryActionText: ''
         }] : []),
-        // Coin packs promotion - Tennis themed
-        {
-            type: 'promo',
-            id: 'coin-packs',
-            title: lang === 'el' ? 'Coin Packs' : 'Coin Packs',
-            subtitle: lang === 'el' ? 'Αγόρασε νομίσματα' : 'Buy Coins',
-            time: lang === 'el' ? 'Ειδικές προσφορές' : 'Special Offers',
-            players: [],
-            image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGxhd3d1OTdkNWxiOXBjNzl5N2dycmxoa2M4NWl0Z3VnaHo1YjVndSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xUPGcJaL5ODxniWMNO/giphy.gif', // Coins dropping animation
-            action: () => router.push(`/${lang}/shop`),
-            actionText: lang === 'el' ? 'Αγόρασε' : 'Buy Now',
-            secondaryAction: null,
-            secondaryActionText: ''
-        },
         // Featured Match 3
         ...(featuredMatches && featuredMatches[2] ? [{
             type: 'match',
