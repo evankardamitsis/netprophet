@@ -189,6 +189,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create in-app notification for user deletion
+    try {
+      const userEmail = profile?.email || "Unknown";
+      const { error: notificationError } = await supabase.rpc(
+        "create_admin_notification",
+        {
+          p_type: "user_deleted",
+          p_title: "User Deleted",
+          p_message: `User ${userEmail} has been deleted by admin`,
+          p_severity: "warning",
+          p_metadata: {
+            user_id: id,
+            email: userEmail,
+            deleted_by: currentUserId,
+          },
+        }
+      );
+      if (notificationError) {
+        console.error(
+          "Error creating deletion notification:",
+          notificationError
+        );
+      }
+    } catch (notificationError) {
+      // Don't fail user deletion if notification creation fails
+      console.error("Error creating deletion notification:", notificationError);
+    }
+
     return NextResponse.json(
       {
         success: true,

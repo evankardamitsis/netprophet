@@ -56,6 +56,37 @@ export async function POST(
       );
     }
 
+    // Create in-app notification for profile activation
+    try {
+      const playerName = `${player.first_name} ${player.last_name}`;
+      const { error: notificationError } = await supabase.rpc(
+        "create_admin_notification",
+        {
+          p_type: "profile_activated",
+          p_title: "Profile Activated",
+          p_message: `Athlete profile activated for ${playerName}`,
+          p_severity: "success",
+          p_metadata: {
+            user_id: player.claimed_by_user_id,
+            player_id: playerId,
+            player_name: playerName,
+          },
+        }
+      );
+      if (notificationError) {
+        console.error(
+          "Error creating activation notification:",
+          notificationError
+        );
+      }
+    } catch (notificationError) {
+      // Don't fail if notification creation fails
+      console.error(
+        "Error creating activation notification:",
+        notificationError
+      );
+    }
+
     return NextResponse.json({
       success: true,
       message: `Profile activation notification sent to user for ${player.first_name} ${player.last_name}`,

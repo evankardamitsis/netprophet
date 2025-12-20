@@ -24,7 +24,7 @@ import {
     Bell,
     Mail,
     Settings,
-    Eye
+    Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -80,8 +80,15 @@ const menuItems: MenuItem[] = [
         ]
     },
     { href: '/logs', label: 'Logs', icon: FileText },
-    { href: '/notifications', label: 'Notifications', icon: Bell },
-    { href: '/admin-notifications', label: 'Admin Notifications', icon: Bell },
+    {
+        href: '/notifications',
+        label: 'Notifications',
+        icon: Bell,
+        children: [
+            { href: '/notifications', label: 'Notification Templates', icon: Settings },
+            { href: '/admin-notifications', label: 'Email Processing', icon: Mail }
+        ]
+    },
     { href: '/odds-demo', label: 'Odds Demo', icon: Brain }
 ];
 
