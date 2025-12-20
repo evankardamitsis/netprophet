@@ -249,6 +249,17 @@ export interface Dictionary {
     };
   };
   athletes: {
+    deletePhoto: string;
+    uploadPhoto: string;
+    changePhoto: string;
+    uploading: string;
+    photoDeleteError: string;
+    photoDeletedSuccess: string;
+    confirmDeletePhoto: string;
+    photoUploadError: string;
+    photoUploadSuccess: string;
+    fileTooLarge: string;
+    invalidFileType: string;
     years: string;
     handed: string;
     left: string;

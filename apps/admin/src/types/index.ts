@@ -166,6 +166,7 @@ export interface Player {
   lastMatchDate?: string;
   injuryStatus?: string;
   seasonalForm?: any;
+  photoUrl?: string | null;
 }
 
 // Participant Types

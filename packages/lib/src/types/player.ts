@@ -37,6 +37,7 @@ export interface Player {
   lastMatchDate?: string; // ISO date string
   injuryStatus?: "healthy" | "minor" | "major";
   seasonalForm?: number; // 0-1, season win rate
+  photoUrl?: string | null; // URL to the athlete photo
   isActive?: boolean; // Whether the player is active and can participate in matches
   isHidden?: boolean; // Whether the player is hidden from public view
   isDemoPlayer?: boolean; // Whether this is a demo player

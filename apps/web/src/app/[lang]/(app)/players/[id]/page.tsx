@@ -2,21 +2,46 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Player, fetchPlayerById, getPlayerMatchHistory } from '@netprophet/lib';
+import { Player, fetchPlayerById, getPlayerMatchHistory, updatePlayer, uploadAthletePhoto, deleteAthletePhoto, supabase } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
-import { Card, CardContent } from '@netprophet/ui';
+import { Card, CardContent, Button } from '@netprophet/ui';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
+
+// Icon components
+function EditIcon({ className = "h-5 w-5" }: { className?: string }) {
+    return (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+    );
+}
+
+function TrashIcon({ className = "h-5 w-5" }: { className?: string }) {
+    return (
+        <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+    );
+}
 
 export default function PlayerDetailPage() {
     // TESTING HOT RELOAD WITH NEXT.JS 15.0.3
     const params = useParams();
     const router = useRouter();
     const { dict } = useDictionary();
+    const { user } = useAuth();
     const [player, setPlayer] = useState<Player | null>(null);
     const [loading, setLoading] = useState(true);
     const [matchHistory, setMatchHistory] = useState<any[]>([]);
+    const [isOwnerOrAdmin, setIsOwnerOrAdmin] = useState(false);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [showDeletePhotoModal, setShowDeletePhotoModal] = useState(false);
 
     const playerId = params.id as string;
 
@@ -33,7 +58,25 @@ export default function PlayerDetailPage() {
 
                 // Handle player data
                 if (fetchedPlayer.status === 'fulfilled') {
-                    setPlayer(fetchedPlayer.value);
+                    const playerData = fetchedPlayer.value;
+                    setPlayer(playerData);
+                    // Set photo preview if exists
+                    if (playerData.photoUrl) {
+                        setPhotoPreview(playerData.photoUrl);
+                    }
+                    // Check if user is owner or admin
+                    if (user) {
+                        const isOwner = playerData.claimedByUserId === user.id;
+                        // Check if user is admin
+                        const { data: profile } = await supabase
+                            .from('profiles')
+                            .select('is_admin')
+                            .eq('id', user.id)
+                            .single();
+                        const userIsAdmin = profile?.is_admin || false;
+                        setIsAdmin(userIsAdmin);
+                        setIsOwnerOrAdmin(isOwner || userIsAdmin);
+                    }
                 } else {
                     console.error('Error loading player:', fetchedPlayer.reason);
                 }
@@ -55,7 +98,7 @@ export default function PlayerDetailPage() {
         if (playerId) {
             loadPlayer();
         }
-    }, [playerId]);
+    }, [playerId, user]);
 
     if (loading) {
         return (
@@ -164,6 +207,107 @@ export default function PlayerDetailPage() {
         }
     };
 
+    const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file || !player) return;
+
+        // Security check: Verify user is owner or admin
+        if (!isOwnerOrAdmin) {
+            toast.error('You do not have permission to edit this photo.');
+            event.target.value = '';
+            return;
+        }
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error(dict?.athletes?.invalidFileType || 'Invalid file type. Allowed: JPEG, PNG, WEBP');
+            event.target.value = '';
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error(dict?.athletes?.fileTooLarge || 'File size exceeds 5MB limit');
+            event.target.value = '';
+            return;
+        }
+
+        setUploadingPhoto(true);
+
+        try {
+            // Create preview
+            const previewUrl = URL.createObjectURL(file);
+            setPhotoPreview(previewUrl);
+
+            // Upload to storage
+            const result = await uploadAthletePhoto(file, player.id);
+
+            if (result.success && result.publicUrl) {
+                // Update player with new photo URL
+                await updatePlayer(player.id, { photoUrl: result.publicUrl });
+                setPlayer(prev => prev ? { ...prev, photoUrl: result.publicUrl } : null);
+                toast.success(dict?.athletes?.photoUploadSuccess || 'Photo uploaded successfully!');
+            } else {
+                setPhotoPreview(player.photoUrl || null);
+                toast.error(result.error || (dict?.athletes?.photoUploadError || 'Failed to upload photo'));
+            }
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            setPhotoPreview(player.photoUrl || null);
+            toast.error(dict?.athletes?.photoUploadError || 'Error uploading photo');
+        } finally {
+            setUploadingPhoto(false);
+            // Reset input
+            event.target.value = '';
+        }
+    };
+
+    const handlePhotoDelete = async () => {
+        if (!player?.photoUrl || !player.id) return;
+
+        // Security check: Verify user is owner or admin
+        if (!isOwnerOrAdmin) {
+            toast.error('You do not have permission to delete this photo.');
+            return;
+        }
+
+        setShowDeletePhotoModal(true);
+    };
+
+    const confirmPhotoDelete = async () => {
+        if (!player?.photoUrl || !player.id) return;
+
+        // Security check: Verify user is owner or admin
+        if (!isOwnerOrAdmin) {
+            toast.error('You do not have permission to delete this photo.');
+            setShowDeletePhotoModal(false);
+            return;
+        }
+
+        try {
+            setUploadingPhoto(true);
+            // Extract file path from URL
+            const urlParts = player.photoUrl.split('/athlete-photos/');
+            if (urlParts.length > 1) {
+                const filePath = urlParts[1];
+                await deleteAthletePhoto(filePath);
+            }
+
+            // Update player to remove photo URL
+            await updatePlayer(player.id, { photoUrl: null });
+            setPlayer(prev => prev ? { ...prev, photoUrl: null } : null);
+            setPhotoPreview(null);
+            setShowDeletePhotoModal(false);
+            toast.success(dict?.athletes?.photoDeletedSuccess || 'Photo deleted successfully');
+        } catch (error) {
+            console.error('Error deleting photo:', error);
+            toast.error(dict?.athletes?.photoDeleteError || 'Error deleting photo');
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
     return (
         <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
             {/* Decorative circles */}
@@ -185,9 +329,9 @@ export default function PlayerDetailPage() {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-3xl opacity-40 group-hover:opacity-60 blur transition"></div>
                         <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-purple-500/30">
-                            <div className="flex flex-col gap-6">
-                                {/* Top Row: Name and Basic Info */}
-                                <div>
+                            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:items-center">
+                                {/* Left Side: Name and Basic Info (50% on large screens) */}
+                                <div className="flex-1 lg:w-1/2 flex flex-col justify-center">
                                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 drop-shadow-lg">
                                         {player.firstName} {player.lastName}
                                     </h1>
@@ -200,26 +344,91 @@ export default function PlayerDetailPage() {
                                             NTRP {player.ntrpRating.toFixed(1)}
                                         </span>
                                     </div>
+
+                                    {/* Upload controls if no photo exists */}
+                                    {!photoPreview && isOwnerOrAdmin && (
+                                        <div className="mt-4">
+                                            <label
+                                                htmlFor="photo-upload-web-no-photo"
+                                                className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg cursor-pointer transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.athletes?.uploadPhoto || 'Upload Photo')}
+                                            </label>
+                                            <input
+                                                id="photo-upload-web-no-photo"
+                                                type="file"
+                                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                onChange={handlePhotoUpload}
+                                                disabled={uploadingPhoto}
+                                                className="hidden"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Surface Information Badges */}
+                                    <div className="flex flex-col gap-4 mt-6">
+                                        <div>
+                                            <div className="text-xs text-purple-300 mb-2 font-bold">
+                                                {dict?.athletes?.preferredSurface || 'Preferred Surface'}
+                                            </div>
+                                            <div className={`inline-block px-4 py-2 rounded-full text-sm font-bold border shadow-lg ${getSurfaceColor(player.surfacePreference)}`}>
+                                                {player.surfacePreference}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs text-purple-300 mb-2 font-bold">
+                                                Specialization
+                                            </div>
+                                            <span className={`inline-block px-4 py-2 rounded-full text-sm font-black ${getSurfaceTitleColor(player.surfacePreference)} shadow-lg`}>
+                                                {getSurfaceTitle(player.surfacePreference)}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Bottom Row: Surface Information */}
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-4 border-t border-purple-500/30">
-                                    <div className="flex-1">
-                                        <div className="text-xs text-purple-300 mb-2 font-bold">
-                                            {dict?.athletes?.preferredSurface || 'Preferred Surface'}
+                                {/* Right Side: Hero Photo (50% on large screens) */}
+                                <div className="lg:w-1/2 lg:flex-shrink-0">
+                                    {photoPreview ? (
+                                        <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-xl bg-slate-800">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={photoPreview}
+                                                alt={`${player.firstName} ${player.lastName}`}
+                                                className="absolute inset-0 w-full h-full object-cover object-center"
+                                            />
+                                            {isOwnerOrAdmin && (
+                                                <div className="absolute top-4 right-4 flex gap-2 z-10">
+                                                    <label
+                                                        htmlFor="photo-upload-web"
+                                                        className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-purple-600/90 to-pink-600/90 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg cursor-pointer transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm shadow-lg"
+                                                        title={uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.athletes?.changePhoto || 'Change Photo')}
+                                                    >
+                                                        <EditIcon className="h-5 w-5" />
+                                                    </label>
+                                                    <input
+                                                        id="photo-upload-web"
+                                                        type="file"
+                                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                        onChange={handlePhotoUpload}
+                                                        disabled={uploadingPhoto}
+                                                        className="hidden"
+                                                    />
+                                                    <button
+                                                        onClick={handlePhotoDelete}
+                                                        disabled={uploadingPhoto}
+                                                        className="w-10 h-10 flex items-center justify-center bg-red-600/90 hover:bg-red-700 text-white rounded-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm shadow-lg"
+                                                        title={dict?.athletes?.deletePhoto || 'Delete'}
+                                                    >
+                                                        <TrashIcon className="h-5 w-5" />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className={`inline-block px-4 py-2 rounded-full text-sm font-bold border shadow-lg ${getSurfaceColor(player.surfacePreference)}`}>
-                                            {player.surfacePreference}
+                                    ) : (
+                                        <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl bg-gradient-to-br from-purple-600/30 to-pink-600/30 border-2 border-purple-500/30 flex items-center justify-center">
+                                            <span className="text-6xl">🎾</span>
                                         </div>
-                                    </div>
-                                    <div className="sm:text-right">
-                                        <div className="text-xs text-purple-300 mb-2 font-bold">
-                                            Specialization
-                                        </div>
-                                        <span className={`inline-block px-4 py-2 rounded-full text-sm font-black ${getSurfaceTitleColor(player.surfacePreference)} shadow-lg`}>
-                                            {getSurfaceTitle(player.surfacePreference)}
-                                        </span>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -575,6 +784,40 @@ export default function PlayerDetailPage() {
                     </div>
                 )}
             </div>
+
+            {/* Delete Photo Confirmation Modal */}
+            {showDeletePhotoModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 rounded-lg max-w-md w-full p-6 border border-slate-700">
+                        <h3 className="text-xl font-bold text-white mb-4">
+                            {dict?.athletes?.deletePhoto || 'Delete Photo'}
+                        </h3>
+                        <p className="text-gray-300 mb-6">
+                            {dict?.athletes?.confirmDeletePhoto || 'Are you sure you want to delete this photo?'}
+                        </p>
+                        <div className="flex gap-3">
+                            <Button
+                                onClick={() => setShowDeletePhotoModal(false)}
+                                variant="outline"
+                                className="flex-1 border-slate-600"
+                                disabled={uploadingPhoto}
+                            >
+                                {dict?.common?.cancel || 'Cancel'}
+                            </Button>
+                            <Button
+                                onClick={confirmPhotoDelete}
+                                disabled={uploadingPhoto}
+                                className="flex-1 bg-red-600 hover:bg-red-700"
+                            >
+                                {uploadingPhoto
+                                    ? (dict?.athletes?.uploading || 'Deleting...')
+                                    : (dict?.athletes?.deletePhoto || 'Delete')
+                                }
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

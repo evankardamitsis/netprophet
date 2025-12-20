@@ -464,6 +464,7 @@ export type Database = {
           losses: number;
           notes: string | null;
           ntrp_rating: number;
+          photo_url: string | null;
           seasonal_form: number | null;
           stamina: number;
           streak_type: string;
@@ -493,6 +494,7 @@ export type Database = {
           losses?: number;
           notes?: string | null;
           ntrp_rating: number;
+          photo_url?: string | null;
           seasonal_form?: number | null;
           stamina?: number;
           streak_type: string;
@@ -522,6 +524,7 @@ export type Database = {
           losses?: number;
           notes?: string | null;
           ntrp_rating?: number;
+          photo_url?: string | null;
           seasonal_form?: number | null;
           stamina?: number;
           streak_type?: string;

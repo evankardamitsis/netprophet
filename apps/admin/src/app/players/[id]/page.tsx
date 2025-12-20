@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@netprophet/lib/types/player';
 import { insertPlayer, updatePlayer, fetchPlayerById, fetchPlayers } from '@netprophet/lib/supabase/players';
+import { uploadAthletePhoto, deleteAthletePhoto } from '@netprophet/lib';
 import { toast } from 'sonner';
 
 // Mock data for demo
@@ -51,6 +52,8 @@ export default function PlayerEditPage() {
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(!isNew);
     const [notifying, setNotifying] = useState(false);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isNew) {
@@ -74,6 +77,10 @@ export default function PlayerEditPage() {
                     ...fetchedPlayer,
                     last5: normalizedLast5 as ('W' | 'L')[]
                 });
+                // Set photo preview if photo exists
+                if (fetchedPlayer.photoUrl) {
+                    setPhotoPreview(fetchedPlayer.photoUrl);
+                }
                 setInitialLoading(false);
             }).catch((error) => {
                 console.error('Error fetching player:', error);
@@ -199,6 +206,83 @@ export default function PlayerEditPage() {
         }));
     };
 
+    const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Μη έγκυρος τύπος αρχείου. Επιτρέπονται: JPEG, PNG, WEBP');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Το αρχείο υπερβαίνει το όριο 5MB');
+            return;
+        }
+
+        // For new players, we need to save first to get an ID
+        if (isNew || !player.id) {
+            toast.error('Παρακαλώ αποθηκεύστε πρώτα τον παίκτη πριν ανεβάσετε φωτογραφία');
+            return;
+        }
+
+        setUploadingPhoto(true);
+
+        try {
+            // Create preview
+            const previewUrl = URL.createObjectURL(file);
+            setPhotoPreview(previewUrl);
+
+            // Upload to storage
+            const result = await uploadAthletePhoto(file, player.id);
+
+            if (result.success && result.publicUrl) {
+                // Update player with new photo URL
+                await updatePlayer(player.id, { photoUrl: result.publicUrl });
+                setPlayer(prev => ({ ...prev, photoUrl: result.publicUrl }));
+                toast.success('Η φωτογραφία ανέβηκε επιτυχώς!');
+            } else {
+                setPhotoPreview(player.photoUrl || null);
+                toast.error(result.error || 'Αποτυχία ανέβασματος φωτογραφίας');
+            }
+        } catch (error) {
+            console.error('Error uploading photo:', error);
+            setPhotoPreview(player.photoUrl || null);
+            toast.error('Σφάλμα κατά το ανέβασμα της φωτογραφίας');
+        } finally {
+            setUploadingPhoto(false);
+            // Reset input
+            event.target.value = '';
+        }
+    };
+
+    const handlePhotoDelete = async () => {
+        if (!player.photoUrl || !player.id) return;
+
+        if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε τη φωτογραφία;')) {
+            try {
+                // Extract file path from URL
+                const urlParts = player.photoUrl.split('/athlete-photos/');
+                if (urlParts.length > 1) {
+                    const filePath = urlParts[1];
+                    await deleteAthletePhoto(filePath);
+                }
+
+                // Update player to remove photo URL
+                await updatePlayer(player.id, { photoUrl: null });
+                setPlayer(prev => ({ ...prev, photoUrl: null }));
+                setPhotoPreview(null);
+                toast.success('Η φωτογραφία διαγράφηκε επιτυχώς');
+            } catch (error) {
+                console.error('Error deleting photo:', error);
+                toast.error('Σφάλμα κατά τη διαγραφή της φωτογραφίας');
+            }
+        }
+    };
+
     const calculateStreakFromLast5 = (last5: string[]): { currentStreak: number; streakType: 'W' | 'L' } => {
         if (last5.length === 0) return { currentStreak: 0, streakType: 'L' };
 
@@ -305,6 +389,52 @@ export default function PlayerEditPage() {
                             <p className="text-xs text-gray-500 mt-1">
                                 💡 Αν συνδέεις προφίλ με user request, κάνε paste το User ID από το email
                             </p>
+                        </div>
+
+                        {/* Photo Upload Section */}
+                        <div>
+                            <Label>Φωτογραφία Αθλητή</Label>
+                            <div className="mt-2 space-y-3">
+                                {photoPreview && (
+                                    <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-300">
+                                        <img
+                                            src={photoPreview}
+                                            alt={`${player.firstName} ${player.lastName}`}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex gap-2">
+                                    <label
+                                        htmlFor="photo-upload"
+                                        className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {uploadingPhoto ? 'Ανέβασμα...' : photoPreview ? 'Αλλαγή Φωτογραφίας' : 'Ανέβασμα Φωτογραφίας'}
+                                    </label>
+                                    <input
+                                        id="photo-upload"
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        onChange={handlePhotoUpload}
+                                        disabled={uploadingPhoto || isNew}
+                                        className="hidden"
+                                    />
+                                    {photoPreview && !isNew && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={handlePhotoDelete}
+                                            disabled={uploadingPhoto}
+                                        >
+                                            Διαγραφή
+                                        </Button>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    Μέγιστο μέγεθος: 5MB. Επιτρέπονται: JPEG, PNG, WEBP
+                                    {isNew && ' (Αποθηκεύστε πρώτα τον παίκτη)'}
+                                </p>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">

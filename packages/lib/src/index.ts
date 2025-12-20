@@ -69,6 +69,16 @@ export {
   getPlayerMatchHistory,
 } from "./supabase/players";
 
+// Storage utilities for athlete photos
+export {
+  uploadAthletePhoto,
+  getAthletePhotoUrl,
+  deleteAthletePhoto,
+  deleteAllPlayerPhotos,
+  photoExists,
+} from "./supabase/storage";
+export type { UploadPhotoResult, DeletePhotoResult } from "./supabase/storage";
+
 // Match Status Constants
 export {
   MATCH_STATUSES,
