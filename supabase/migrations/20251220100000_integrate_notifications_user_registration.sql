@@ -114,22 +114,28 @@ BEGIN
     );
     
     -- Create in-app notification for user registration
-    PERFORM create_admin_notification(
-        'user_registration',
-        'New User Registration',
-        'A new user has registered: ' || NEW.email,
-        'info',
-        jsonb_build_object(
-            'user_id', NEW.id,
-            'email', NEW.email,
-            'first_name', user_first_name,
-            'last_name', user_last_name,
-            'registration_type', CASE 
-                WHEN NEW.raw_user_meta_data->>'firstName' IS NOT NULL THEN 'email_password'
-                ELSE 'oauth'
-            END
-        )
-    );
+    BEGIN
+        PERFORM create_admin_notification(
+            'user_registration',
+            'New User Registration',
+            'A new user has registered: ' || NEW.email,
+            'info',
+            jsonb_build_object(
+                'user_id', NEW.id,
+                'email', NEW.email,
+                'first_name', user_first_name,
+                'last_name', user_last_name,
+                'registration_type', CASE 
+                    WHEN NEW.raw_user_meta_data->>'firstName' IS NOT NULL THEN 'email_password'
+                    ELSE 'oauth'
+                END
+            )
+        );
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Log the error but don't fail user creation
+            RAISE LOG 'Error creating admin notification for user registration %: %', NEW.email, SQLERRM;
+    END;
     
     -- Send welcome email to the new user
     PERFORM send_welcome_email_to_user(

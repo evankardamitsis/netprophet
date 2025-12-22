@@ -121,7 +121,7 @@ export function PromotionalHero({
             time: lang === 'el' ? 'Πλήρης Ιστορικό' : 'Complete History',
             players: [],
             image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHM4ZzlyODZ2ZjZmNDJxMGRxYXAyY2liemUzdThnODJpaGVhbXc3OSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/tDQlA2505j56E2YEv8/giphy.gif', // Tennis tournament results animation
-            action: () => router.push(`/${lang}/tournaments`),
+            action: () => router.push(`/${lang}/results`),
             actionText: lang === 'el' ? 'Όλα τα Αποτελέσματα' : 'All Results',
             secondaryAction: null,
             secondaryActionText: ''

@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { requireAdmin } from "@/lib/adminAuth";
+import { supabase } from "@netprophet/lib";
 
 // PATCH - Mark notification as read
 export async function PATCH(
@@ -12,12 +9,29 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Authenticate and authorize admin user
+    const authResult = await requireAdmin(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
+    }
+
+    const adminUserId = authResult.userId;
     const resolvedParams = await params;
     const { id } = resolvedParams;
 
-    // Use the database function to mark as read
+    // Initialize Supabase client with service role key
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Use the database function to mark as read, passing the admin user ID
     const { data, error } = await supabase.rpc("mark_notification_read", {
       p_notification_id: id,
+      p_user_id: adminUserId,
     });
 
     if (error) {

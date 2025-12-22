@@ -119,12 +119,22 @@ export default function InAppNotificationsPage() {
     const fetchNotifications = async () => {
         try {
             setLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
+
             const params = new URLSearchParams();
             if (filterType !== 'all') params.append('type', filterType);
             if (filterSeverity !== 'all') params.append('severity', filterSeverity);
             if (filterRead !== 'all') params.append('is_read', filterRead === 'read' ? 'true' : 'false');
 
-            const response = await fetch(`/api/admin/in-app-notifications?${params.toString()}`);
+            const response = await fetch(`/api/admin/in-app-notifications?${params.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch notifications');
             }
@@ -142,8 +152,17 @@ export default function InAppNotificationsPage() {
 
     const markAsRead = async (id: string) => {
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
+
             const response = await fetch(`/api/admin/in-app-notifications/${id}`, {
                 method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
             });
 
             if (!response.ok) {
@@ -167,8 +186,17 @@ export default function InAppNotificationsPage() {
 
     const markAllAsRead = async () => {
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
+
             const response = await fetch('/api/admin/in-app-notifications/mark-all-read', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
             });
 
             if (!response.ok) {
