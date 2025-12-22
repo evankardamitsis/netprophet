@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Player, fetchPlayerById, getPlayerMatchHistory, updatePlayer, uploadAthletePhoto, deleteAthletePhoto, supabase } from '@netprophet/lib';
+import { Player, fetchPlayerById, getPlayerMatchHistory, updatePlayer, uploadAthletePhoto, deleteAthletePhoto, supabase, TransactionsService } from '@netprophet/lib';
 import { useDictionary } from '@/context/DictionaryContext';
 import { Card, CardContent, Button } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useWallet } from '@/context/WalletContext';
+import CoinIcon from '@/components/CoinIcon';
 import { toast } from 'sonner';
 
 // Prevent static generation for this page
@@ -34,6 +36,7 @@ export default function PlayerDetailPage() {
     const router = useRouter();
     const { dict } = useDictionary();
     const { user } = useAuth();
+    const { updateBalance } = useWallet();
     const [player, setPlayer] = useState<Player | null>(null);
     const [loading, setLoading] = useState(true);
     const [matchHistory, setMatchHistory] = useState<any[]>([]);
@@ -41,6 +44,7 @@ export default function PlayerDetailPage() {
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isOwner, setIsOwner] = useState(false);
     const [showDeletePhotoModal, setShowDeletePhotoModal] = useState(false);
 
     const playerId = params.id as string;
@@ -66,7 +70,8 @@ export default function PlayerDetailPage() {
                     }
                     // Check if user is owner or admin
                     if (user) {
-                        const isOwner = playerData.claimedByUserId === user.id;
+                        const userIsOwner = playerData.claimedByUserId === user.id;
+                        setIsOwner(userIsOwner);
                         // Check if user is admin
                         const { data: profile } = await supabase
                             .from('profiles')
@@ -75,7 +80,7 @@ export default function PlayerDetailPage() {
                             .single();
                         const userIsAdmin = profile?.is_admin || false;
                         setIsAdmin(userIsAdmin);
-                        setIsOwnerOrAdmin(isOwner || userIsAdmin);
+                        setIsOwnerOrAdmin(userIsOwner || userIsAdmin);
                     }
                 } else {
                     console.error('Error loading player:', fetchedPlayer.reason);
@@ -244,10 +249,36 @@ export default function PlayerDetailPage() {
             const result = await uploadAthletePhoto(file, player.id);
 
             if (result.success && result.publicUrl) {
+                // Check if this is the first photo upload (player had no photo before upload started)
+                const hadNoPhotoBefore = !player.photoUrl;
+
                 // Update player with new photo URL
                 await updatePlayer(player.id, { photoUrl: result.publicUrl });
                 setPlayer(prev => prev ? { ...prev, photoUrl: result.publicUrl } : null);
-                toast.success(dict?.athletes?.photoUploadSuccess || 'Photo uploaded successfully!');
+
+                // Award 10 coins for first photo upload (only to owners, not admins, and only once ever)
+                if (hadNoPhotoBefore && isOwner && !isAdmin && user) {
+                    // Check if user has already received this reward
+                    try {
+                        const transactions = await TransactionsService.getRecentTransactions(100);
+                        const hasReceivedReward = transactions.some(
+                            t => t.description === 'Photo upload reward' && t.amount === 10
+                        );
+
+                        if (!hasReceivedReward) {
+                            updateBalance(10, 'daily_login', 'Photo upload reward');
+                            toast.success('Photo uploaded! You earned 10 coins! 🎉');
+                        } else {
+                            toast.success(dict?.athletes?.photoUploadSuccess || 'Photo uploaded successfully!');
+                        }
+                    } catch (error) {
+                        console.error('Error checking photo upload reward:', error);
+                        // If we can't check, don't award to be safe
+                        toast.success(dict?.athletes?.photoUploadSuccess || 'Photo uploaded successfully!');
+                    }
+                } else {
+                    toast.success(dict?.athletes?.photoUploadSuccess || 'Photo uploaded successfully!');
+                }
             } else {
                 setPhotoPreview(player.photoUrl || null);
                 toast.error(result.error || (dict?.athletes?.photoUploadError || 'Failed to upload photo'));
@@ -329,9 +360,9 @@ export default function PlayerDetailPage() {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-3xl opacity-40 group-hover:opacity-60 blur transition"></div>
                         <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-purple-500/30">
-                            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:items-center">
-                                {/* Left Side: Name and Basic Info (50% on large screens) */}
-                                <div className="flex-1 lg:w-1/2 flex flex-col justify-center">
+                            <div className={`flex flex-col ${photoPreview ? 'lg:flex-row gap-6 lg:gap-8 lg:items-center' : ''}`}>
+                                {/* Left Side: Name and Basic Info (50% on large screens if photo exists, full width if not) */}
+                                <div className={`flex-1 flex flex-col justify-center ${photoPreview ? 'lg:w-1/2' : ''}`}>
                                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 drop-shadow-lg">
                                         {player.firstName} {player.lastName}
                                     </h1>
@@ -347,13 +378,20 @@ export default function PlayerDetailPage() {
 
                                     {/* Upload controls if no photo exists */}
                                     {!photoPreview && isOwnerOrAdmin && (
-                                        <div className="mt-4">
+                                        <div className="mt-4 flex items-center gap-2">
                                             <label
                                                 htmlFor="photo-upload-web-no-photo"
                                                 className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg cursor-pointer transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.athletes?.uploadPhoto || 'Upload Photo')}
                                             </label>
+                                            {/* Incentive for owners only */}
+                                            {isOwner && !isAdmin && (
+                                                <div className="flex items-center gap-1 text-yellow-400">
+                                                    <span className="text-sm font-bold">+10</span>
+                                                    <CoinIcon className="h-4 w-4" />
+                                                </div>
+                                            )}
                                             <input
                                                 id="photo-upload-web-no-photo"
                                                 type="file"
@@ -386,9 +424,9 @@ export default function PlayerDetailPage() {
                                     </div>
                                 </div>
 
-                                {/* Right Side: Hero Photo (50% on large screens) */}
-                                <div className="lg:w-1/2 lg:flex-shrink-0">
-                                    {photoPreview ? (
+                                {/* Right Side: Hero Photo (50% on large screens) - Only render if photo exists */}
+                                {photoPreview && (
+                                    <div className="lg:w-1/2 lg:flex-shrink-0">
                                         <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-xl bg-slate-800">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
@@ -424,12 +462,8 @@ export default function PlayerDetailPage() {
                                                 </div>
                                             )}
                                         </div>
-                                    ) : (
-                                        <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl bg-gradient-to-br from-purple-600/30 to-pink-600/30 border-2 border-purple-500/30 flex items-center justify-center">
-                                            <span className="text-6xl">🎾</span>
-                                        </div>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
