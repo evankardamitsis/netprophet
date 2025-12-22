@@ -68,7 +68,6 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                 <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
                     {dict.rewards.coinTopUpPacks}
                 </h3>
-                <p className="text-gray-400 text-md">{dict.rewards.coinTopUpDescription}</p>
             </div>
 
             {loading ? (
@@ -131,7 +130,9 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                 )}
 
                                 <CardHeader className="pb-2 md:pb-3 relative z-10">
-                                    <CardTitle className="text-xs md:text-base text-center font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mt-4">{pack.name}</CardTitle>
+                                    <CardTitle className="text-xs md:text-base text-center font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mt-4">
+                                        {pack.name} {totalCoins.toLocaleString()}
+                                    </CardTitle>
                                     <div className="text-center mt-1 md:mt-2">
                                         <div className="text-lg md:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">€{pack.priceEuro}</div>
                                     </div>
@@ -143,10 +144,7 @@ export function CoinTopUpSection({ onTopUp }: CoinTopUpSectionProps) {
                                             <div className="animate-pulse">
                                                 <CoinIcon size={32} />
                                             </div>
-                                            <span className="text-base md:text-xl font-bold text-white">{pack.baseCoins.toLocaleString()}</span>
-                                        </div>
-                                        <div className="text-xs md:text-base font-bold text-white bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                                            {totalCoins.toLocaleString()} {dict.rewards.total}
+                                            <span className="text-base md:text-xl font-bold text-white">{totalCoins.toLocaleString()}</span>
                                         </div>
                                     </div>
                                     <Button
