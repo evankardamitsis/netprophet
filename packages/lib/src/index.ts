@@ -112,3 +112,13 @@ export type {
   EmailTemplateVariable,
   EmailTemplateVersion,
 } from "./supabase/emailTemplateService";
+
+// MailerLite Service (Marketing Automation - separate from transactional emails)
+export {
+  MailerLiteService,
+  mailerLiteService,
+} from "./supabase/mailerliteService";
+export type {
+  MailerLiteSubscriber,
+  MailerLiteWorkflow,
+} from "./supabase/mailerliteService";
