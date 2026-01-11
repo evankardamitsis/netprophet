@@ -19,6 +19,26 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
 
+    // Helper function to format player name
+    const formatPlayerName = (player: any) => {
+        if (!player) return 'TBD';
+        const first = player.first_name || '';
+        const last = player.last_name || '';
+        return `${first} ${last}`.trim() || 'TBD';
+    };
+
+    // Helper function to render doubles player names vertically
+    const renderDoublesNames = (players?: any[], alignRight = false) => {
+        const [p1, p2] = players || [];
+        if (!p1 && !p2) return 'TBD';
+        return (
+            <div className={`flex flex-col leading-tight space-y-0.5 ${alignRight ? 'items-end' : ''}`}>
+                <div className="truncate">{formatPlayerName(p1)}</div>
+                <div className="truncate">{formatPlayerName(p2)}</div>
+            </div>
+        );
+    };
+
     if (liveMatches.length === 0) {
         return null;
     }
@@ -152,16 +172,16 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
 
                                     {/* Player names with NTRP ratings */}
                                     <div className="flex items-center justify-between mb-2 xs:mb-3">
-                                        <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 min-w-0">
-                                            <div className="truncate">
-                                                {match.match_type === 'doubles' ? (
-                                                    match.player1.name
-                                                ) : (
-                                                    match.player1.name.split(' ').length > 1
+                                        <div className="text-white font-semibold text-xs xs:text-sm flex-1 min-w-0">
+                                            {match.match_type === 'doubles' ? (
+                                                renderDoublesNames(match.team1?.players)
+                                            ) : (
+                                                <div className="truncate">
+                                                    {match.player1.name.split(' ').length > 1
                                                         ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
-                                                        : match.player1.name
-                                                )}
-                                            </div>
+                                                        : match.player1.name}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-gray-400 font-medium">
                                                 {match.match_type === 'doubles' ? (
                                                     match.team1?.players?.[0]?.ntrp_rating && match.team1?.players?.[1]?.ntrp_rating
@@ -173,16 +193,16 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                                             </div>
                                         </div>
                                         <div className="text-slate-500 text-xs font-bold mx-1 xs:mx-2 flex-shrink-0">VS</div>
-                                        <div className="text-white font-semibold text-xs xs:text-sm truncate flex-1 text-right min-w-0">
-                                            <div className="truncate">
-                                                {match.match_type === 'doubles' ? (
-                                                    match.player2.name
-                                                ) : (
-                                                    match.player2.name.split(' ').length > 1
+                                        <div className="text-white font-semibold text-xs xs:text-sm flex-1 text-right min-w-0">
+                                            {match.match_type === 'doubles' ? (
+                                                renderDoublesNames(match.team2?.players, true)
+                                            ) : (
+                                                <div className="truncate">
+                                                    {match.player2.name.split(' ').length > 1
                                                         ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
-                                                        : match.player2.name
-                                                )}
-                                            </div>
+                                                        : match.player2.name}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-gray-400 font-medium">
                                                 {match.match_type === 'doubles' ? (
                                                     match.team2?.players?.[0]?.ntrp_rating && match.team2?.players?.[1]?.ntrp_rating
@@ -238,9 +258,23 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                                     <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
                                         {/* Team 1 */}
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">{match.player1.name}</div>
+                                            {match.match_type === 'doubles' ? (
+                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words">
+                                                    {renderDoublesNames(match.team1?.players)}
+                                                </div>
+                                            ) : (
+                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">
+                                                    {match.player1.name}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-gray-400 font-medium">
-                                                NTRP {match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}
+                                                {match.match_type === 'doubles' ? (
+                                                    match.team1?.players?.[0]?.ntrp_rating && match.team1?.players?.[1]?.ntrp_rating
+                                                        ? `NTRP ${((match.team1.players[0].ntrp_rating + match.team1.players[1].ntrp_rating) / 2).toFixed(1)}`
+                                                        : 'N/A'
+                                                ) : (
+                                                    `NTRP ${match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}`
+                                                )}
                                             </div>
                                         </div>
 
@@ -251,9 +285,23 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
 
                                         {/* Team 2 */}
                                         <div className="flex-1 text-right min-w-0">
-                                            <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">{match.player2.name}</div>
+                                            {match.match_type === 'doubles' ? (
+                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words">
+                                                    {renderDoublesNames(match.team2?.players, true)}
+                                                </div>
+                                            ) : (
+                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">
+                                                    {match.player2.name}
+                                                </div>
+                                            )}
                                             <div className="text-xs text-gray-400 font-medium">
-                                                NTRP {match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}
+                                                {match.match_type === 'doubles' ? (
+                                                    match.team2?.players?.[0]?.ntrp_rating && match.team2?.players?.[1]?.ntrp_rating
+                                                        ? `NTRP ${((match.team2.players[0].ntrp_rating + match.team2.players[1].ntrp_rating) / 2).toFixed(1)}`
+                                                        : 'N/A'
+                                                ) : (
+                                                    `NTRP ${match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}`
+                                                )}
                                             </div>
                                         </div>
                                     </div>
