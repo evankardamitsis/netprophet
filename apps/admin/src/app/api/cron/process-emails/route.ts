@@ -28,8 +28,8 @@ export async function GET(request: NextRequest) {
       .eq("template", "admin_alert")
       .eq("type", "admin")
       .eq("status", "pending")
-      .gte("sent_at", thirtyMinutesAgo)
-      .order("sent_at", { ascending: true })
+      .gte("created_at", thirtyMinutesAgo)
+      .order("created_at", { ascending: true })
       .limit(50); // Process up to 50 emails at a time
 
     if (fetchError) {

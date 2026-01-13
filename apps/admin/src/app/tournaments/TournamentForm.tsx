@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tournament, TournamentFormData } from '@/types';
 
 interface TournamentFormProps {
@@ -30,7 +31,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
         max_participants: '',
         tournament_type: 'singles',
         format: 'knockout',
-        matches_type: tournament?.matches_type || 'best-of-3'
+        matches_type: tournament?.matches_type || 'best-of-3',
+        is_team_tournament: tournament?.is_team_tournament || false
     });
 
     useEffect(() => {
@@ -49,7 +51,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 max_participants: tournament.max_participants?.toString() || '',
                 tournament_type: tournament.tournament_type,
                 format: tournament.format,
-                matches_type: tournament.matches_type || 'best-of-3'
+                matches_type: tournament.matches_type || 'best-of-3',
+                is_team_tournament: tournament.is_team_tournament || false
             });
         }
     }, [tournament]);
@@ -82,7 +85,8 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
             prize_pool: prizePool,
             entry_fee: entryFee,
             buy_in_fee: buyInFee,
-            max_participants: maxParticipants
+            max_participants: maxParticipants,
+            is_team_tournament: formData.is_team_tournament
         };
 
 
@@ -278,6 +282,29 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                         min="1"
                         className="h-12 text-base"
                     />
+                </div>
+            </div>
+
+            <div className="space-y-4 sm:space-y-6">
+                <div className="flex items-center space-x-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                    <Checkbox
+                        id="is_team_tournament"
+                        checked={formData.is_team_tournament}
+                        onCheckedChange={(checked) =>
+                            setFormData(prev => ({ ...prev, is_team_tournament: checked === true }))
+                        }
+                    />
+                    <div className="flex-1">
+                        <Label
+                            htmlFor="is_team_tournament"
+                            className="text-base font-semibold cursor-pointer"
+                        >
+                            Team Tournament
+                        </Label>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            When enabled, this tournament will use teams instead of categories. Teams are groups of players that compete together.
+                        </p>
+                    </div>
                 </div>
             </div>
 

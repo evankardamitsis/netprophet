@@ -16,6 +16,7 @@ export interface Tournament {
   tournament_type: string;
   format: string;
   matches_type: string;
+  is_team_tournament: boolean;
   tournament_categories?: Array<{
     id: string;
     name: string;
@@ -298,6 +299,7 @@ export interface TournamentFormData {
   tournament_type: string;
   format: string;
   matches_type: string;
+  is_team_tournament: boolean;
 }
 
 export interface CategoryFormData {

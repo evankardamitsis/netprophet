@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
       .eq("template", "admin_alert")
       .eq("type", "admin")
       .eq("status", "pending")
-      .gte("sent_at", thirtyMinutesAgo)
-      .order("to_email, sent_at", { ascending: false });
+      .gte("created_at", thirtyMinutesAgo)
+      .order("to_email, created_at", { ascending: false });
 
     if (fetchError) {
       console.error("Error fetching email logs:", fetchError);
