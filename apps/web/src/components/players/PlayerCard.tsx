@@ -122,39 +122,23 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
                     </div>
                 </div>
 
-                {/* Last 5 Matches and Current Streak */}
-                <div className="mb-4 flex items-start justify-between gap-4">
-                    {/* Last 5 Matches */}
-                    <div className="flex-1">
-                        <div className="text-xs text-gray-400 mb-2">
-                            {dict?.athletes?.last5 || 'Last 5 Matches'}
-                        </div>
-                        <div className="flex gap-1">
-                            {player.last5.map((result: string, idx: number) => (
-                                <div
-                                    key={idx}
-                                    className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${result === 'W'
-                                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                        }`}
-                                >
-                                    {result}
-                                </div>
-                            ))}
-                        </div>
+                {/* Last 5 Matches */}
+                <div className="mb-4">
+                    <div className="text-xs text-gray-400 mb-2">
+                        {dict?.athletes?.last5 || 'Last 5 Matches'}
                     </div>
-
-                    {/* Current Streak */}
-                    <div className="flex-1">
-                        <div className="text-xs text-gray-400 mb-2">
-                            {dict?.athletes?.currentStreak || 'Current Streak'}
-                        </div>
-                        <div className={`text-sm font-bold ${getStreakColor(player.currentStreak, player.streakType)}`}>
-                            {player.currentStreak} {player.streakType === 'W'
-                                ? (player.currentStreak === 1 ? (dict?.athletes?.win || 'Win') : (dict?.athletes?.wins || 'Wins'))
-                                : (player.currentStreak === 1 ? (dict?.athletes?.loss || 'Loss') : (dict?.athletes?.losses || 'Losses'))
-                            }
-                        </div>
+                    <div className="flex gap-1">
+                        {player.last5.map((result: string, idx: number) => (
+                            <div
+                                key={idx}
+                                className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${result === 'W'
+                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                    }`}
+                            >
+                                {result}
+                            </div>
+                        ))}
                     </div>
                 </div>
 
