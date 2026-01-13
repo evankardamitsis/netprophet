@@ -83,7 +83,13 @@ export default function TournamentPage() {
                 getTournamentParticipants(tournamentId)
             ]);
 
-            setTournament(tournamentData as Tournament);
+            // Ensure boolean conversion - handle various truthy values
+            const tournamentWithBoolean = {
+                ...tournamentData,
+                is_team_tournament: tournamentData.is_team_tournament === true || tournamentData.is_team_tournament === 'true' || tournamentData.is_team_tournament === 1
+            };
+            console.log('Setting tournament state with is_team_tournament:', tournamentWithBoolean.is_team_tournament, 'from original:', tournamentData.is_team_tournament);
+            setTournament(tournamentWithBoolean as Tournament);
             setMatches(matchesData as any);
             setParticipants(participantsData as any);
 
@@ -96,7 +102,14 @@ export default function TournamentPage() {
             if (tournamentData.is_team_tournament) {
                 try {
                     const teamsData = await getTournamentTeams(tournamentId);
-                    setTeams(teamsData as any);
+                    console.log('Loaded teams data:', teamsData);
+                    // Map team_members to members for consistency with TypeScript interface
+                    const mappedTeams = teamsData?.map((team: any) => ({
+                        ...team,
+                        members: team.team_members || []
+                    })) || [];
+                    console.log('Mapped teams:', mappedTeams);
+                    setTeams(mappedTeams as any);
                 } catch (error) {
                     console.error('Error loading teams:', error);
                     // Don't show error toast, teams might not exist yet
@@ -290,6 +303,7 @@ export default function TournamentPage() {
 
     const handleCreateTeam = async (teamData: any) => {
         try {
+            console.log('Creating team with data:', { ...teamData, tournament_id: tournamentId });
             await createTournamentTeam({
                 ...teamData,
                 tournament_id: tournamentId
@@ -720,6 +734,7 @@ export default function TournamentPage() {
                                 tournament={tournament}
                                 matches={matches}
                                 participants={participants}
+                                teams={teams}
                                 onAddMatch={() => setShowMatchForm(true)}
                                 onViewAllMatches={() => { }}
                                 getStatusColor={getStatusColor}
@@ -781,11 +796,23 @@ export default function TournamentPage() {
                     )}
 
                     <TabsContent value="participants" className="mt-0">
-                        <ParticipantsTable
-                            participants={participants}
-                            tournamentName={tournament?.name || ''}
-                            matches={matches}
-                        />
+                        {tournament ? (
+                            (() => {
+                                const isTeam = tournament.is_team_tournament === true;
+                                console.log('Rendering ParticipantsTable with tournament.is_team_tournament:', tournament.is_team_tournament, 'isTeam:', isTeam);
+                                return (
+                                    <ParticipantsTable
+                                        participants={participants}
+                                        tournamentName={tournament.name}
+                                        matches={matches}
+                                        isTeamTournament={isTeam}
+                                        teams={teams}
+                                    />
+                                );
+                            })()
+                        ) : (
+                            <div className="text-center py-8">Loading tournament data...</div>
+                        )}
                     </TabsContent>
 
 

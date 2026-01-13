@@ -381,6 +381,7 @@ export async function createTournamentTeam(team: {
   tournament_id: string;
   name: string;
   captain_id: string | null;
+  captain_name: string | null;
   member_ids: string[];
 }) {
   // First create the team
@@ -390,6 +391,7 @@ export async function createTournamentTeam(team: {
       tournament_id: team.tournament_id,
       name: team.name,
       captain_id: team.captain_id,
+      captain_name: team.captain_name,
     })
     .select()
     .single();
@@ -403,15 +405,25 @@ export async function createTournamentTeam(team: {
       player_id,
     }));
 
-    const { error: membersError } = await supabase
+    console.log("Inserting team members:", members);
+    const { data: insertedMembers, error: membersError } = await supabase
       .from("team_members")
-      .insert(members);
+      .insert(members)
+      .select();
 
-    if (membersError) throw membersError;
+    if (membersError) {
+      console.error("Error inserting team members:", membersError);
+      throw membersError;
+    }
+    console.log("Successfully inserted team members:", insertedMembers);
+  } else {
+    console.log("No team members to insert (member_ids is empty or undefined)");
   }
 
   // Return the team with all relations
-  return getTournamentTeam(teamData.id);
+  const teamWithDetails = await getTournamentTeam(teamData.id);
+  console.log("Team with details after creation:", teamWithDetails);
+  return teamWithDetails;
 }
 
 export async function updateTournamentTeam(
@@ -419,6 +431,7 @@ export async function updateTournamentTeam(
   updates: {
     name?: string;
     captain_id?: string | null;
+    captain_name?: string | null;
     member_ids?: string[];
   }
 ) {
@@ -427,6 +440,8 @@ export async function updateTournamentTeam(
   if (updates.name !== undefined) teamUpdates.name = updates.name;
   if (updates.captain_id !== undefined)
     teamUpdates.captain_id = updates.captain_id;
+  if (updates.captain_name !== undefined)
+    teamUpdates.captain_name = updates.captain_name;
 
   if (Object.keys(teamUpdates).length > 0) {
     const { error: teamError } = await supabase

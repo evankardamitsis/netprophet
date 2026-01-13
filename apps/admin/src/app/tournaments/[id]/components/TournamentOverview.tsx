@@ -4,13 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Calendar, MapPin, Users, Clock } from 'lucide-react';
-import { Tournament, Match, TournamentParticipant } from '@/types';
+import { Tournament, Match, TournamentParticipant, Team } from '@/types';
 import { ParticipantsTable } from './ParticipantsTable';
 
 interface TournamentOverviewProps {
     tournament: Tournament;
     matches: Match[];
     participants: TournamentParticipant[];
+    teams?: Team[];
     onAddMatch: () => void;
     onViewAllMatches: () => void;
     getStatusColor: (status: string) => string;
@@ -21,6 +22,7 @@ export function TournamentOverview({
     tournament,
     matches,
     participants,
+    teams = [],
     onAddMatch,
     onViewAllMatches,
     getStatusColor,
@@ -223,12 +225,64 @@ export function TournamentOverview({
                 </div>
             </div>
 
-            {/* Participants Table */}
-            <ParticipantsTable
-                participants={participants}
-                tournamentName={tournament.name}
-                matches={matches}
-            />
+            {/* Participants Section */}
+            {tournament.is_team_tournament ? (
+                <Card className="border-0 shadow-xl bg-white">
+                    <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-gray-100 p-6">
+                        <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl p-3">
+                                <Users className="h-6 w-6 text-white" />
+                            </div>
+                            <span>Tournament Teams</span>
+                            <Badge variant="secondary" className="ml-2">
+                                {teams.length} {teams.length === 1 ? 'team' : 'teams'}
+                            </Badge>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        {teams.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {teams.map((team) => (
+                                    <Card key={team.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg font-semibold">
+                                                {team.name}
+                                            </CardTitle>
+                                            {(team.captain || team.captain_name) && (
+                                                <div className="text-sm text-gray-600 mt-1">
+                                                    <span className="font-medium">Captain: </span>
+                                                    {team.captain
+                                                        ? `${team.captain.first_name} ${team.captain.last_name}`
+                                                        : team.captain_name}
+                                                </div>
+                                            )}
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-sm text-gray-600">
+                                                <span className="font-medium">{team.members?.length || 0}</span> {team.members?.length === 1 ? 'member' : 'members'}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-8">
+                                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">No teams created yet</h3>
+                                <p className="text-gray-600 text-sm">
+                                    Create teams in the Teams tab
+                                </p>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            ) : (
+                <ParticipantsTable
+                    participants={participants}
+                    tournamentName={tournament.name}
+                    matches={matches}
+                />
+            )}
         </div>
     );
 } 

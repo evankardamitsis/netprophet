@@ -88,13 +88,15 @@ export function TournamentTeams({
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {team.captain && (
+                            {(team.captain || team.captain_name) && (
                                 <div className="text-sm">
                                     <span className="font-medium text-gray-600 dark:text-gray-400">Captain:</span>
                                     <span className="ml-2 font-semibold">
-                                        {team.captain.first_name} {team.captain.last_name}
+                                        {team.captain
+                                            ? `${team.captain.first_name} ${team.captain.last_name}`
+                                            : team.captain_name || 'N/A'}
                                     </span>
-                                    {team.captain.ntrp_rating && (
+                                    {team.captain?.ntrp_rating && (
                                         <span className="ml-2 text-gray-500">
                                             (NTRP {team.captain.ntrp_rating.toFixed(1)})
                                         </span>

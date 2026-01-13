@@ -321,6 +321,7 @@ export interface Team {
   tournament_id: string;
   name: string;
   captain_id: string | null;
+  captain_name: string | null;
   created_at: string | null;
   updated_at: string | null;
   captain?: {
@@ -360,6 +361,7 @@ export interface TeamMember {
 
 export interface TeamFormData {
   name: string;
-  captain_id: string;
+  captain_id: string | null;
+  captain_name: string | null;
   member_ids: string[];
 }
