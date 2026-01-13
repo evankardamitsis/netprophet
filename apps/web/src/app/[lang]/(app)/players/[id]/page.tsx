@@ -43,6 +43,8 @@ export default function PlayerDetailPage() {
     const [isOwnerOrAdmin, setIsOwnerOrAdmin] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
+    const [pendingPhotoPreview, setPendingPhotoPreview] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isOwner, setIsOwner] = useState(false);
     const [showDeletePhotoModal, setShowDeletePhotoModal] = useState(false);
@@ -212,7 +214,7 @@ export default function PlayerDetailPage() {
         }
     };
 
-    const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file || !player) return;
 
@@ -238,15 +240,23 @@ export default function PlayerDetailPage() {
             return;
         }
 
+        // Create preview and store file for later upload
+        const previewUrl = URL.createObjectURL(file);
+        setPendingPhotoFile(file);
+        setPendingPhotoPreview(previewUrl);
+
+        // Reset input
+        event.target.value = '';
+    };
+
+    const handleSavePhoto = async () => {
+        if (!pendingPhotoFile || !player) return;
+
         setUploadingPhoto(true);
 
         try {
-            // Create preview
-            const previewUrl = URL.createObjectURL(file);
-            setPhotoPreview(previewUrl);
-
             // Upload to storage
-            const result = await uploadAthletePhoto(file, player.id);
+            const result = await uploadAthletePhoto(pendingPhotoFile, player.id);
 
             if (result.success && result.publicUrl) {
                 // Check if this is the first photo upload (player had no photo before upload started)
@@ -255,6 +265,11 @@ export default function PlayerDetailPage() {
                 // Update player with new photo URL
                 await updatePlayer(player.id, { photoUrl: result.publicUrl });
                 setPlayer(prev => prev ? { ...prev, photoUrl: result.publicUrl } : null);
+
+                // Update preview to show the uploaded photo
+                setPhotoPreview(result.publicUrl);
+                setPendingPhotoFile(null);
+                setPendingPhotoPreview(null);
 
                 // Award 10 coins for first photo upload (only to owners, not admins, and only once ever)
                 if (hadNoPhotoBefore && isOwner && !isAdmin && user) {
@@ -280,18 +295,23 @@ export default function PlayerDetailPage() {
                     toast.success(dict?.athletes?.photoUploadSuccess || 'Photo uploaded successfully!');
                 }
             } else {
-                setPhotoPreview(player.photoUrl || null);
                 toast.error(result.error || (dict?.athletes?.photoUploadError || 'Failed to upload photo'));
             }
         } catch (error) {
             console.error('Error uploading photo:', error);
-            setPhotoPreview(player.photoUrl || null);
             toast.error(dict?.athletes?.photoUploadError || 'Error uploading photo');
         } finally {
             setUploadingPhoto(false);
-            // Reset input
-            event.target.value = '';
         }
+    };
+
+    const handleCancelPhoto = () => {
+        // Clean up preview URL
+        if (pendingPhotoPreview) {
+            URL.revokeObjectURL(pendingPhotoPreview);
+        }
+        setPendingPhotoFile(null);
+        setPendingPhotoPreview(null);
     };
 
     const handlePhotoDelete = async () => {
@@ -360,9 +380,9 @@ export default function PlayerDetailPage() {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-3xl opacity-40 group-hover:opacity-60 blur transition"></div>
                         <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-purple-500/30">
-                            <div className={`flex flex-col ${photoPreview ? 'lg:flex-row gap-6 lg:gap-8 lg:items-center' : ''}`}>
+                            <div className={`flex flex-col ${(photoPreview || pendingPhotoPreview) ? 'lg:flex-row gap-6 lg:gap-8 lg:items-center' : ''}`}>
                                 {/* Left Side: Name and Basic Info (50% on large screens if photo exists, full width if not) */}
-                                <div className={`flex-1 flex flex-col justify-center ${photoPreview ? 'lg:w-1/2' : ''}`}>
+                                <div className={`flex-1 flex flex-col justify-center ${(photoPreview || pendingPhotoPreview) ? 'lg:w-1/2' : ''}`}>
                                     <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4 drop-shadow-lg">
                                         {player.firstName} {player.lastName}
                                     </h1>
@@ -377,13 +397,13 @@ export default function PlayerDetailPage() {
                                     </div>
 
                                     {/* Upload controls if no photo exists */}
-                                    {!photoPreview && isOwnerOrAdmin && (
+                                    {!photoPreview && !pendingPhotoPreview && isOwnerOrAdmin && (
                                         <div className="mt-4 flex items-center gap-2">
                                             <label
                                                 htmlFor="photo-upload-web-no-photo"
                                                 className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm font-bold rounded-lg cursor-pointer transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                {uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.athletes?.uploadPhoto || 'Upload Photo')}
+                                                {dict?.athletes?.uploadPhoto || 'Upload Photo'}
                                             </label>
                                             {/* Incentive for owners only */}
                                             {isOwner && !isAdmin && (
@@ -396,10 +416,48 @@ export default function PlayerDetailPage() {
                                                 id="photo-upload-web-no-photo"
                                                 type="file"
                                                 accept="image/jpeg,image/jpg,image/png,image/webp"
-                                                onChange={handlePhotoUpload}
+                                                onChange={handlePhotoSelect}
                                                 disabled={uploadingPhoto}
                                                 className="hidden"
                                             />
+                                        </div>
+                                    )}
+
+                                    {/* Pending photo preview with Save/Cancel buttons */}
+                                    {pendingPhotoPreview && (
+                                        <div className="mt-4 space-y-3">
+                                            <div className="relative w-full max-w-xs h-48 rounded-xl overflow-hidden border-2 border-purple-500/50 shadow-xl bg-slate-800">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={pendingPhotoPreview}
+                                                    alt="Preview"
+                                                    className="absolute inset-0 w-full h-full object-cover object-center"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <Button
+                                                    onClick={handleSavePhoto}
+                                                    disabled={uploadingPhoto}
+                                                    className="px-6 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.common?.save || 'Save')}
+                                                </Button>
+                                                <Button
+                                                    onClick={handleCancelPhoto}
+                                                    disabled={uploadingPhoto}
+                                                    variant="outline"
+                                                    className="px-6 py-2 border-slate-600 text-slate-300 hover:bg-slate-700 font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {dict?.common?.cancel || 'Cancel'}
+                                                </Button>
+                                                {/* Show coin reward indicator for owners */}
+                                                {isOwner && !isAdmin && (
+                                                    <div className="flex items-center gap-1 text-yellow-400">
+                                                        <span className="text-sm font-bold">+10</span>
+                                                        <CoinIcon className="h-4 w-4" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
 
@@ -424,8 +482,8 @@ export default function PlayerDetailPage() {
                                     </div>
                                 </div>
 
-                                {/* Right Side: Hero Photo (50% on large screens) - Only render if photo exists */}
-                                {photoPreview && (
+                                {/* Right Side: Hero Photo (50% on large screens) - Only render if photo exists (not pending) */}
+                                {photoPreview && !pendingPhotoPreview && (
                                     <div className="lg:w-1/2 lg:flex-shrink-0">
                                         <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-xl bg-slate-800">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -439,7 +497,7 @@ export default function PlayerDetailPage() {
                                                     <label
                                                         htmlFor="photo-upload-web"
                                                         className="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-purple-600/90 to-pink-600/90 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg cursor-pointer transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm shadow-lg"
-                                                        title={uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.athletes?.changePhoto || 'Change Photo')}
+                                                        title={dict?.athletes?.changePhoto || 'Change Photo'}
                                                     >
                                                         <EditIcon className="h-5 w-5" />
                                                     </label>
@@ -447,7 +505,7 @@ export default function PlayerDetailPage() {
                                                         id="photo-upload-web"
                                                         type="file"
                                                         accept="image/jpeg,image/jpg,image/png,image/webp"
-                                                        onChange={handlePhotoUpload}
+                                                        onChange={handlePhotoSelect}
                                                         disabled={uploadingPhoto}
                                                         className="hidden"
                                                     />
@@ -461,6 +519,47 @@ export default function PlayerDetailPage() {
                                                     </button>
                                                 </div>
                                             )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Pending photo preview in header area */}
+                                {pendingPhotoPreview && (
+                                    <div className="lg:w-1/2 lg:flex-shrink-0">
+                                        <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl overflow-hidden border-2 border-yellow-500/50 shadow-xl bg-slate-800">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={pendingPhotoPreview}
+                                                alt="Preview"
+                                                className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
+                                            />
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm">
+                                                <p className="text-white font-bold text-lg">Preview</p>
+                                                <div className="flex items-center gap-3">
+                                                    <Button
+                                                        onClick={handleSavePhoto}
+                                                        disabled={uploadingPhoto}
+                                                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                                    >
+                                                        {uploadingPhoto ? (dict?.athletes?.uploading || 'Uploading...') : (dict?.common?.save || 'Save')}
+                                                    </Button>
+                                                    <Button
+                                                        onClick={handleCancelPhoto}
+                                                        disabled={uploadingPhoto}
+                                                        variant="outline"
+                                                        className="px-6 py-3 border-slate-400 text-white hover:bg-slate-700 font-bold rounded-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                                    >
+                                                        {dict?.common?.cancel || 'Cancel'}
+                                                    </Button>
+                                                </div>
+                                                {/* Show coin reward indicator for owners */}
+                                                {isOwner && !isAdmin && (
+                                                    <div className="flex items-center gap-2 text-yellow-400 mt-2">
+                                                        <span className="text-base font-bold">Earn +10</span>
+                                                        <CoinIcon className="h-5 w-5" />
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
