@@ -22,7 +22,11 @@ import {
     createTournamentCategory,
     updateTournamentCategory,
     deleteTournamentCategory,
-    getTournamentParticipants
+    getTournamentParticipants,
+    getTournamentTeams,
+    createTournamentTeam,
+    updateTournamentTeam,
+    deleteTournamentTeam
 } from '@netprophet/lib/supabase/tournaments';
 import { getMatchesByTournament, createMatch, updateMatch, deleteMatch, getMatches, calculateMatchOddsSecure, syncMatchesToWeb, removeMatchesFromWeb } from '@netprophet/lib/supabase/matches';
 import { supabase } from '@netprophet/lib';
@@ -34,10 +38,12 @@ import { WarningModal } from '@/components/ui/warning-modal';
 import { TournamentOverview } from './components/TournamentOverview';
 import { TournamentMatches } from './components/TournamentMatches';
 import { TournamentCategories } from './components/TournamentCategories';
+import { TournamentTeams } from './components/TournamentTeams';
 import { ParticipantsTable } from './components/ParticipantsTable';
 import { getStatusColor, getSurfaceColor, getGenderColor, formatTime } from './utils/tournamentHelpers';
-import { Tournament, Match, Category, TournamentParticipant } from '@/types';
+import { Tournament, Match, Category, TournamentParticipant, Team } from '@/types';
 import { CategoryForm } from '../CategoryForm';
+import { TeamModal } from '../TeamModal';
 import { PlayerOddsData, MatchContext, calculateOdds } from '@netprophet/lib';
 
 export default function TournamentPage() {
@@ -48,16 +54,19 @@ export default function TournamentPage() {
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [matches, setMatches] = useState<Match[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [teams, setTeams] = useState<Team[]>([]);
     const [participants, setParticipants] = useState<TournamentParticipant[]>([]);
     const [loading, setLoading] = useState(true);
     const [showMatchForm, setShowMatchForm] = useState(false);
     const [showTournamentForm, setShowTournamentForm] = useState(false);
     const [showCategoryForm, setShowCategoryForm] = useState(false);
+    const [showTeamForm, setShowTeamForm] = useState(false);
     const [showDeleteWarning, setShowDeleteWarning] = useState(false);
     const [matchToDelete, setMatchToDelete] = useState<string | null>(null);
     const [editingMatch, setEditingMatch] = useState<Match | null>(null);
     const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [editingTeam, setEditingTeam] = useState<Team | null>(null);
     const [activeTab, setActiveTab] = useState<string>('overview');
     const [creatingMatch, setCreatingMatch] = useState(false);
 
@@ -81,6 +90,17 @@ export default function TournamentPage() {
             // Set categories from the tournament data if available
             if (tournamentData.tournament_categories) {
                 setCategories(tournamentData.tournament_categories as any);
+            }
+
+            // Load teams if this is a team tournament
+            if (tournamentData.is_team_tournament) {
+                try {
+                    const teamsData = await getTournamentTeams(tournamentId);
+                    setTeams(teamsData as any);
+                } catch (error) {
+                    console.error('Error loading teams:', error);
+                    // Don't show error toast, teams might not exist yet
+                }
             }
         } catch (error) {
             console.error('Error loading tournament data:', error);
@@ -265,6 +285,47 @@ export default function TournamentPage() {
         } catch (error) {
             console.error('Error deleting category:', error);
             toast.error('Failed to delete category');
+        }
+    };
+
+    const handleCreateTeam = async (teamData: any) => {
+        try {
+            await createTournamentTeam({
+                ...teamData,
+                tournament_id: tournamentId
+            });
+            setShowTeamForm(false);
+            loadTournamentData();
+            toast.success('Team created successfully!');
+        } catch (error) {
+            console.error('Error creating team:', error);
+            toast.error('Failed to create team');
+        }
+    };
+
+    const handleUpdateTeam = async (teamData: any) => {
+        if (!editingTeam) return;
+        try {
+            await updateTournamentTeam(editingTeam.id, teamData);
+            setShowTeamForm(false);
+            setEditingTeam(null);
+            loadTournamentData();
+            toast.success('Team updated successfully!');
+        } catch (error) {
+            console.error('Error updating team:', error);
+            toast.error('Failed to update team');
+        }
+    };
+
+    const handleDeleteTeam = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this team?')) return;
+        try {
+            await deleteTournamentTeam(id);
+            loadTournamentData();
+            toast.success('Team deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting team:', error);
+            toast.error('Failed to delete team');
         }
     };
 
@@ -611,18 +672,33 @@ export default function TournamentPage() {
                                     </Badge>
                                 )}
                             </TabsTrigger>
-                            <TabsTrigger
-                                value="categories"
-                                className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
-                            >
-                                <Tag className="h-4 w-4 flex-shrink-0" />
-                                <span>Categories</span>
-                                {categories.length > 0 && (
-                                    <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
-                                        {categories.length}
-                                    </Badge>
-                                )}
-                            </TabsTrigger>
+                            {tournament?.is_team_tournament ? (
+                                <TabsTrigger
+                                    value="teams"
+                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
+                                >
+                                    <Users className="h-4 w-4 flex-shrink-0" />
+                                    <span>Teams</span>
+                                    {teams.length > 0 && (
+                                        <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                            {teams.length}
+                                        </Badge>
+                                    )}
+                                </TabsTrigger>
+                            ) : (
+                                <TabsTrigger
+                                    value="categories"
+                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
+                                >
+                                    <Tag className="h-4 w-4 flex-shrink-0" />
+                                    <span>Categories</span>
+                                    {categories.length > 0 && (
+                                        <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                            {categories.length}
+                                        </Badge>
+                                    )}
+                                </TabsTrigger>
+                            )}
                             <TabsTrigger
                                 value="participants"
                                 className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 data-[state=inactive]:hover:bg-gray-100 rounded-lg transition-all duration-200 shadow-sm"
@@ -671,21 +747,38 @@ export default function TournamentPage() {
                         />
                     </TabsContent>
 
-                    <TabsContent value="categories" className="mt-0">
-                        <TournamentCategories
-                            categories={categories}
-                            onAddCategory={() => {
-                                setEditingCategory(null);
-                                setShowCategoryForm(true);
-                            }}
-                            onEditCategory={(category) => {
-                                setEditingCategory(category);
-                                setShowCategoryForm(true);
-                            }}
-                            onDeleteCategory={handleDeleteCategory}
-                            getGenderColor={getGenderColor}
-                        />
-                    </TabsContent>
+                    {tournament?.is_team_tournament ? (
+                        <TabsContent value="teams" className="mt-0">
+                            <TournamentTeams
+                                teams={teams}
+                                onAddTeam={() => {
+                                    setEditingTeam(null);
+                                    setShowTeamForm(true);
+                                }}
+                                onEditTeam={(team) => {
+                                    setEditingTeam(team);
+                                    setShowTeamForm(true);
+                                }}
+                                onDeleteTeam={handleDeleteTeam}
+                            />
+                        </TabsContent>
+                    ) : (
+                        <TabsContent value="categories" className="mt-0">
+                            <TournamentCategories
+                                categories={categories}
+                                onAddCategory={() => {
+                                    setEditingCategory(null);
+                                    setShowCategoryForm(true);
+                                }}
+                                onEditCategory={(category) => {
+                                    setEditingCategory(category);
+                                    setShowCategoryForm(true);
+                                }}
+                                onDeleteCategory={handleDeleteCategory}
+                                getGenderColor={getGenderColor}
+                            />
+                        </TabsContent>
+                    )}
 
                     <TabsContent value="participants" className="mt-0">
                         <ParticipantsTable
@@ -734,6 +827,19 @@ export default function TournamentPage() {
                     category={editingCategory}
                     onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
                 />
+
+                {tournament && (
+                    <TeamModal
+                        isOpen={showTeamForm}
+                        onClose={() => {
+                            setShowTeamForm(false);
+                            setEditingTeam(null);
+                        }}
+                        tournamentId={tournamentId}
+                        team={editingTeam}
+                        onSubmit={editingTeam ? handleUpdateTeam : handleCreateTeam}
+                    />
+                )}
 
                 <WarningModal
                     isOpen={showDeleteWarning}

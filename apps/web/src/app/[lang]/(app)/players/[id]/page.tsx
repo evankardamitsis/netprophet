@@ -45,6 +45,8 @@ export default function PlayerDetailPage() {
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null);
     const [pendingPhotoPreview, setPendingPhotoPreview] = useState<string | null>(null);
+    const [croppedPhotoFile, setCroppedPhotoFile] = useState<File | null>(null);
+    const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number; aspectRatio: number } | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isOwner, setIsOwner] = useState(false);
     const [showDeletePhotoModal, setShowDeletePhotoModal] = useState(false);
@@ -240,13 +242,129 @@ export default function PlayerDetailPage() {
             return;
         }
 
-        // Create preview and store file for later upload
+        // Load image to get dimensions and auto-crop to 4:3
+        const img = new Image();
         const previewUrl = URL.createObjectURL(file);
-        setPendingPhotoFile(file);
-        setPendingPhotoPreview(previewUrl);
+
+        img.onload = async () => {
+            const width = img.width;
+            const height = img.height;
+            const aspectRatio = width / height;
+            const targetRatio = 4 / 3; // Target aspect ratio for athlete cards
+
+            setImageDimensions({ width, height, aspectRatio });
+
+            // Auto-crop to 4:3 aspect ratio (center crop) if needed
+            if (Math.abs(aspectRatio - targetRatio) > 0.05) {
+                // Only crop if significantly different from 4:3
+                const croppedFile = await cropImageTo4x3(img, file);
+                if (croppedFile) {
+                    const croppedPreviewUrl = URL.createObjectURL(croppedFile);
+                    setCroppedPhotoFile(croppedFile);
+                    setPendingPhotoFile(croppedFile); // Use cropped file for upload
+                    setPendingPhotoPreview(croppedPreviewUrl);
+
+                    // Clean up original preview
+                    URL.revokeObjectURL(previewUrl);
+
+                    // Show info toast
+                    toast.success('Image automatically cropped to 4:3 ratio for optimal display', { duration: 4000 });
+                } else {
+                    // Fallback if cropping fails
+                    setPendingPhotoFile(file);
+                    setPendingPhotoPreview(previewUrl);
+                }
+            } else {
+                // Already close to 4:3, use original
+                setPendingPhotoFile(file);
+                setPendingPhotoPreview(previewUrl);
+            }
+        };
+
+        img.onerror = () => {
+            toast.error('Failed to load image. Please try another file.');
+            event.target.value = '';
+            URL.revokeObjectURL(previewUrl);
+        };
+
+        img.src = previewUrl;
 
         // Reset input
         event.target.value = '';
+    };
+
+    // Function to crop image to 4:3 aspect ratio (center crop)
+    const cropImageTo4x3 = async (img: HTMLImageElement, originalFile: File): Promise<File | null> => {
+        try {
+            const targetRatio = 4 / 3;
+            const sourceRatio = img.width / img.height;
+
+            let cropWidth = img.width;
+            let cropHeight = img.height;
+            let cropX = 0;
+            let cropY = 0;
+
+            // Calculate crop dimensions to get 4:3 ratio
+            if (sourceRatio > targetRatio) {
+                // Image is wider than 4:3 - crop width (center horizontally)
+                cropHeight = img.height;
+                cropWidth = img.height * targetRatio;
+                cropX = (img.width - cropWidth) / 2; // Center horizontally
+                cropY = 0;
+            } else {
+                // Image is taller than 4:3 - crop height (center vertically)
+                cropWidth = img.width;
+                cropHeight = img.width / targetRatio;
+                cropX = 0;
+                cropY = (img.height - cropHeight) / 2; // Center vertically
+            }
+
+            // Create canvas and crop
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return null;
+
+            // Set canvas size to target dimensions (use original resolution or scale down if too large)
+            const maxDimension = 2000; // Max width/height to keep file size reasonable
+            let outputWidth = cropWidth;
+            let outputHeight = cropHeight;
+
+            if (cropWidth > maxDimension || cropHeight > maxDimension) {
+                const scale = Math.min(maxDimension / cropWidth, maxDimension / cropHeight);
+                outputWidth = cropWidth * scale;
+                outputHeight = cropHeight * scale;
+            }
+
+            canvas.width = outputWidth;
+            canvas.height = outputHeight;
+
+            // Draw cropped image
+            ctx.drawImage(
+                img,
+                cropX, cropY, cropWidth, cropHeight, // Source crop area
+                0, 0, outputWidth, outputHeight // Destination size
+            );
+
+            // Convert canvas to blob
+            return new Promise<File | null>((resolve) => {
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const fileExtension = originalFile.name.split('.').pop() || 'jpg';
+                        const croppedFile = new File(
+                            [blob],
+                            `cropped-${Date.now()}.${fileExtension}`,
+                            { type: originalFile.type }
+                        );
+                        resolve(croppedFile);
+                    } else {
+                        resolve(null);
+                    }
+                }, originalFile.type, 0.92); // 0.92 quality for JPEG
+            });
+        } catch (error) {
+            console.error('Error cropping image:', error);
+            return null;
+        }
     };
 
     const handleSavePhoto = async () => {
@@ -263,8 +381,19 @@ export default function PlayerDetailPage() {
                 const hadNoPhotoBefore = !player.photoUrl;
 
                 // Update player with new photo URL
-                await updatePlayer(player.id, { photoUrl: result.publicUrl });
-                setPlayer(prev => prev ? { ...prev, photoUrl: result.publicUrl } : null);
+                try {
+                    const updatedPlayer = await updatePlayer(player.id, { photoUrl: result.publicUrl });
+                    if (!updatedPlayer) {
+                        throw new Error('Failed to update player - no data returned');
+                    }
+                    console.log('Player photo_url updated successfully:', updatedPlayer.photoUrl);
+                    setPlayer(prev => prev ? { ...prev, photoUrl: result.publicUrl } : null);
+                } catch (updateError) {
+                    console.error('Error updating player photo_url:', updateError);
+                    toast.error('Photo uploaded but failed to update player record. Please refresh the page.');
+                    // Still update local state so user sees the photo
+                    setPlayer(prev => prev ? { ...prev, photoUrl: result.publicUrl } : null);
+                }
 
                 // Update preview to show the uploaded photo
                 setPhotoPreview(result.publicUrl);
@@ -306,12 +435,17 @@ export default function PlayerDetailPage() {
     };
 
     const handleCancelPhoto = () => {
-        // Clean up preview URL
+        // Clean up preview URLs
         if (pendingPhotoPreview) {
             URL.revokeObjectURL(pendingPhotoPreview);
         }
+        if (croppedPhotoFile) {
+            // Clean up cropped file blob URL if it exists
+            setCroppedPhotoFile(null);
+        }
         setPendingPhotoFile(null);
         setPendingPhotoPreview(null);
+        setImageDimensions(null);
     };
 
     const handlePhotoDelete = async () => {
@@ -426,14 +560,70 @@ export default function PlayerDetailPage() {
                                     {/* Pending photo preview with Save/Cancel buttons */}
                                     {pendingPhotoPreview && (
                                         <div className="mt-4 space-y-3">
-                                            <div className="relative w-full max-w-xs h-48 rounded-xl overflow-hidden border-2 border-purple-500/50 shadow-xl bg-slate-800">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
-                                                    src={pendingPhotoPreview}
-                                                    alt="Preview"
-                                                    className="absolute inset-0 w-full h-full object-cover object-center"
-                                                />
+                                            {/* Image Info and Recommendations */}
+                                            {imageDimensions && (
+                                                <div className="bg-slate-800/50 rounded-lg p-3 border border-purple-500/30">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                                                        <div className="text-sm">
+                                                            <span className="text-purple-300 font-bold">Dimensions: </span>
+                                                            <span className="text-white">{imageDimensions.width} × {imageDimensions.height}px</span>
+                                                            {croppedPhotoFile && (
+                                                                <span className="text-green-400 text-xs ml-2">(auto-cropped)</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-sm">
+                                                            <span className="text-purple-300 font-bold">Aspect Ratio: </span>
+                                                            <span className="text-white">{imageDimensions.aspectRatio.toFixed(2)}:1</span>
+                                                            {Math.abs(imageDimensions.aspectRatio - (4 / 3)) <= 0.05 && (
+                                                                <span className="text-green-400 text-xs ml-2">(4:3)</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {(() => {
+                                                        const targetRatio = 4 / 3;
+                                                        const ratioDifference = Math.abs(imageDimensions.aspectRatio - targetRatio) / targetRatio;
+                                                        const isOptimal = ratioDifference <= 0.05; // Within 5% of 4:3
+
+                                                        if (isOptimal) {
+                                                            return (
+                                                                <div className="text-xs text-green-400 font-bold">
+                                                                    ✅ Perfect! Image automatically cropped to 4:3 ratio for optimal display on athlete cards
+                                                                </div>
+                                                            );
+                                                        } else {
+                                                            return (
+                                                                <div className="text-xs text-yellow-400 font-bold">
+                                                                    ⚠️ For best results, use a 4:3 ratio image (e.g., 800×600, 1200×900, 1600×1200px)
+                                                                </div>
+                                                            );
+                                                        }
+                                                    })()}
+                                                </div>
+                                            )}
+
+                                            {/* Preview with 4:3 crop guide */}
+                                            <div className="relative w-full max-w-md mx-auto">
+                                                <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border-2 border-purple-500/50 shadow-xl bg-slate-800">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={pendingPhotoPreview}
+                                                        alt="Preview"
+                                                        className="w-full h-full object-cover object-center"
+                                                    />
+                                                    {/* Success indicator - image is already cropped */}
+                                                    {imageDimensions && Math.abs(imageDimensions.aspectRatio - (4 / 3)) <= 0.05 && (
+                                                        <div className="absolute top-2 right-2 bg-green-600/90 text-white text-xs px-2 py-1 rounded font-bold flex items-center gap-1">
+                                                            ✓ Auto-cropped
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-purple-300 text-center mt-2">
+                                                    {imageDimensions && Math.abs(imageDimensions.aspectRatio - (4 / 3)) <= 0.05
+                                                        ? 'Image automatically cropped to 4:3 ratio - ready to upload!'
+                                                        : 'This is how your photo will appear on athlete cards'}
+                                                </p>
                                             </div>
+
                                             <div className="flex items-center gap-3">
                                                 <Button
                                                     onClick={handleSavePhoto}
@@ -525,15 +715,62 @@ export default function PlayerDetailPage() {
 
                                 {/* Pending photo preview in header area */}
                                 {pendingPhotoPreview && (
-                                    <div className="lg:w-1/2 lg:flex-shrink-0">
-                                        <div className="relative w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl overflow-hidden border-2 border-yellow-500/50 shadow-xl bg-slate-800">
+                                    <div className="lg:w-1/2 lg:flex-shrink-0 space-y-3">
+                                        {/* Image Info and Recommendations */}
+                                        {imageDimensions && (
+                                            <div className="bg-slate-800/80 rounded-lg p-3 border border-yellow-500/30 backdrop-blur-sm">
+                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                                                    <div className="text-sm">
+                                                        <span className="text-yellow-300 font-bold">Dimensions: </span>
+                                                        <span className="text-white">{imageDimensions.width} × {imageDimensions.height}px</span>
+                                                        {croppedPhotoFile && (
+                                                            <span className="text-green-400 text-xs ml-2">(auto-cropped)</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="text-sm">
+                                                        <span className="text-yellow-300 font-bold">Aspect Ratio: </span>
+                                                        <span className="text-white">{imageDimensions.aspectRatio.toFixed(2)}:1</span>
+                                                        {Math.abs(imageDimensions.aspectRatio - (4 / 3)) <= 0.05 && (
+                                                            <span className="text-green-400 text-xs ml-2">(4:3)</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {(() => {
+                                                    const targetRatio = 4 / 3;
+                                                    const ratioDifference = Math.abs(imageDimensions.aspectRatio - targetRatio) / targetRatio;
+                                                    const isOptimal = ratioDifference <= 0.05; // Within 5% of 4:3
+
+                                                    if (isOptimal) {
+                                                        return (
+                                                            <div className="text-xs text-green-400 font-bold">
+                                                                ✅ Perfect! Image automatically cropped to 4:3 ratio for optimal display on athlete cards
+                                                            </div>
+                                                        );
+                                                    } else {
+                                                        return (
+                                                            <div className="text-xs text-yellow-400 font-bold">
+                                                                ⚠️ For best results, use a 4:3 ratio image (e.g., 800×600, 1200×900, 1600×1200px)
+                                                            </div>
+                                                        );
+                                                    }
+                                                })()}
+                                            </div>
+                                        )}
+
+                                        <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border-2 border-yellow-500/50 shadow-xl bg-slate-800">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img
                                                 src={pendingPhotoPreview}
                                                 alt="Preview"
-                                                className="absolute inset-0 w-full h-full object-cover object-center opacity-80"
+                                                className="absolute inset-0 w-full h-full object-cover object-center"
                                             />
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm">
+                                            {/* Success indicator - image is already cropped */}
+                                            {imageDimensions && Math.abs(imageDimensions.aspectRatio - (4 / 3)) <= 0.05 && (
+                                                <div className="absolute top-2 right-2 bg-green-600/90 text-white text-xs px-2 py-1 rounded font-bold flex items-center gap-1 z-20">
+                                                    ✓ Auto-cropped
+                                                </div>
+                                            )}
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/30 backdrop-blur-sm">
                                                 <p className="text-white font-bold text-lg">Preview</p>
                                                 <div className="flex items-center gap-3">
                                                     <Button
@@ -561,6 +798,9 @@ export default function PlayerDetailPage() {
                                                 )}
                                             </div>
                                         </div>
+                                        <p className="text-xs text-purple-300 text-center">
+                                            This is how your photo will appear on athlete cards (4:3 aspect ratio)
+                                        </p>
                                     </div>
                                 )}
                             </div>

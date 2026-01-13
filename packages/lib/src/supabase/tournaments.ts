@@ -309,3 +309,169 @@ export async function syncTournamentParticipants(tournamentId: string) {
   if (error) throw error;
   return { success: true };
 }
+
+// Tournament Teams Management
+export async function getTournamentTeams(tournamentId: string) {
+  const { data, error } = await supabase
+    .from("tournament_teams")
+    .select(
+      `
+            *,
+            captain:players!tournament_teams_captain_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating
+            ),
+            team_members (
+                id,
+                player_id,
+                player:players (
+                    id,
+                    first_name,
+                    last_name,
+                    ntrp_rating,
+                    age,
+                    surface_preference
+                )
+            )
+        `
+    )
+    .eq("tournament_id", tournamentId)
+    .order("name");
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getTournamentTeam(id: string) {
+  const { data, error } = await supabase
+    .from("tournament_teams")
+    .select(
+      `
+            *,
+            captain:players!tournament_teams_captain_id_fkey (
+                id,
+                first_name,
+                last_name,
+                ntrp_rating
+            ),
+            team_members (
+                id,
+                player_id,
+                player:players (
+                    id,
+                    first_name,
+                    last_name,
+                    ntrp_rating,
+                    age,
+                    surface_preference
+                )
+            )
+        `
+    )
+    .eq("id", id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function createTournamentTeam(team: {
+  tournament_id: string;
+  name: string;
+  captain_id: string | null;
+  member_ids: string[];
+}) {
+  // First create the team
+  const { data: teamData, error: teamError } = await supabase
+    .from("tournament_teams")
+    .insert({
+      tournament_id: team.tournament_id,
+      name: team.name,
+      captain_id: team.captain_id,
+    })
+    .select()
+    .single();
+
+  if (teamError) throw teamError;
+
+  // Then add team members if any
+  if (team.member_ids && team.member_ids.length > 0) {
+    const members = team.member_ids.map((player_id) => ({
+      team_id: teamData.id,
+      player_id,
+    }));
+
+    const { error: membersError } = await supabase
+      .from("team_members")
+      .insert(members);
+
+    if (membersError) throw membersError;
+  }
+
+  // Return the team with all relations
+  return getTournamentTeam(teamData.id);
+}
+
+export async function updateTournamentTeam(
+  id: string,
+  updates: {
+    name?: string;
+    captain_id?: string | null;
+    member_ids?: string[];
+  }
+) {
+  // Update team basic info
+  const teamUpdates: any = {};
+  if (updates.name !== undefined) teamUpdates.name = updates.name;
+  if (updates.captain_id !== undefined)
+    teamUpdates.captain_id = updates.captain_id;
+
+  if (Object.keys(teamUpdates).length > 0) {
+    const { error: teamError } = await supabase
+      .from("tournament_teams")
+      .update(teamUpdates)
+      .eq("id", id);
+
+    if (teamError) throw teamError;
+  }
+
+  // Update team members if provided
+  if (updates.member_ids !== undefined) {
+    // Delete existing members
+    const { error: deleteError } = await supabase
+      .from("team_members")
+      .delete()
+      .eq("team_id", id);
+
+    if (deleteError) throw deleteError;
+
+    // Add new members
+    if (updates.member_ids.length > 0) {
+      const members = updates.member_ids.map((player_id) => ({
+        team_id: id,
+        player_id,
+      }));
+
+      const { error: membersError } = await supabase
+        .from("team_members")
+        .insert(members);
+
+      if (membersError) throw membersError;
+    }
+  }
+
+  // Return the updated team with all relations
+  return getTournamentTeam(id);
+}
+
+export async function deleteTournamentTeam(id: string) {
+  // Team members will be deleted automatically due to CASCADE
+  const { error } = await supabase
+    .from("tournament_teams")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}

@@ -314,3 +314,52 @@ export interface CategoryFormData {
   entry_fee: string;
   prize_pool: string;
 }
+
+// Team Types
+export interface Team {
+  id: string;
+  tournament_id: string;
+  name: string;
+  captain_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  captain?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    ntrp_rating: number;
+  } | null;
+  members?: Array<{
+    id: string;
+    player_id: string;
+    player?: {
+      id: string;
+      first_name: string;
+      last_name: string;
+      ntrp_rating: number;
+      age: number;
+      surface_preference: string;
+    } | null;
+  }> | null;
+}
+
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  player_id: string;
+  created_at: string | null;
+  player?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    ntrp_rating: number;
+    age: number;
+    surface_preference: string;
+  } | null;
+}
+
+export interface TeamFormData {
+  name: string;
+  captain_id: string;
+  member_ids: string[];
+}

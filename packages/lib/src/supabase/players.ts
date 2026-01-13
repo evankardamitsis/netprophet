@@ -49,47 +49,66 @@ function mapPlayer(row: any): Player {
 
 // Map Player object from camelCase to snake_case for DB writes
 function toDbPlayer(player: Partial<Player>): any {
-  const dbPlayer: any = {
-    first_name: player.firstName,
-    last_name: player.lastName,
-    ntrp_rating: player.ntrpRating,
-    wins: player.wins,
-    losses: player.losses,
-    last5: player.last5,
-    current_streak: player.currentStreak,
-    streak_type: player.streakType,
-    surface_preference: player.surfacePreference,
-    surface_win_rates: player.surfaceWinRates,
-    // Surface-specific stats
-    hard_wins: player.hardWins,
-    hard_losses: player.hardLosses,
-    hard_matches: player.hardMatches,
-    hard_win_rate: player.hardWinRate,
-    clay_wins: player.clayWins,
-    clay_losses: player.clayLosses,
-    clay_matches: player.clayMatches,
-    clay_win_rate: player.clayWinRate,
-    grass_wins: player.grassWins,
-    grass_losses: player.grassLosses,
-    grass_matches: player.grassMatches,
-    grass_win_rate: player.grassWinRate,
-    // General stats
-    aggressiveness: player.aggressiveness,
-    stamina: player.stamina,
-    consistency: player.consistency,
-    age: player.age,
-    hand: player.hand,
-    notes: player.notes,
-    last_match_date: player.lastMatchDate,
-    injury_status: player.injuryStatus,
-    seasonal_form: player.seasonalForm,
-    photo_url: player.photoUrl,
-    is_active: player.isActive,
-    is_hidden: player.isHidden,
-    is_demo_player: player.isDemoPlayer,
-    claimed_by_user_id: player.claimedByUserId,
-    claimed_at: player.claimedAt,
-  };
+  const dbPlayer: any = {};
+
+  // Only include fields that are explicitly provided (not undefined)
+  if (player.firstName !== undefined) dbPlayer.first_name = player.firstName;
+  if (player.lastName !== undefined) dbPlayer.last_name = player.lastName;
+  if (player.ntrpRating !== undefined) dbPlayer.ntrp_rating = player.ntrpRating;
+  if (player.wins !== undefined) dbPlayer.wins = player.wins;
+  if (player.losses !== undefined) dbPlayer.losses = player.losses;
+  if (player.last5 !== undefined) dbPlayer.last5 = player.last5;
+  if (player.currentStreak !== undefined)
+    dbPlayer.current_streak = player.currentStreak;
+  if (player.streakType !== undefined) dbPlayer.streak_type = player.streakType;
+  if (player.surfacePreference !== undefined)
+    dbPlayer.surface_preference = player.surfacePreference;
+  if (player.surfaceWinRates !== undefined)
+    dbPlayer.surface_win_rates = player.surfaceWinRates;
+  // Surface-specific stats
+  if (player.hardWins !== undefined) dbPlayer.hard_wins = player.hardWins;
+  if (player.hardLosses !== undefined) dbPlayer.hard_losses = player.hardLosses;
+  if (player.hardMatches !== undefined)
+    dbPlayer.hard_matches = player.hardMatches;
+  if (player.hardWinRate !== undefined)
+    dbPlayer.hard_win_rate = player.hardWinRate;
+  if (player.clayWins !== undefined) dbPlayer.clay_wins = player.clayWins;
+  if (player.clayLosses !== undefined) dbPlayer.clay_losses = player.clayLosses;
+  if (player.clayMatches !== undefined)
+    dbPlayer.clay_matches = player.clayMatches;
+  if (player.clayWinRate !== undefined)
+    dbPlayer.clay_win_rate = player.clayWinRate;
+  if (player.grassWins !== undefined) dbPlayer.grass_wins = player.grassWins;
+  if (player.grassLosses !== undefined)
+    dbPlayer.grass_losses = player.grassLosses;
+  if (player.grassMatches !== undefined)
+    dbPlayer.grass_matches = player.grassMatches;
+  if (player.grassWinRate !== undefined)
+    dbPlayer.grass_win_rate = player.grassWinRate;
+  // General stats
+  if (player.aggressiveness !== undefined)
+    dbPlayer.aggressiveness = player.aggressiveness;
+  if (player.stamina !== undefined) dbPlayer.stamina = player.stamina;
+  if (player.consistency !== undefined)
+    dbPlayer.consistency = player.consistency;
+  if (player.age !== undefined) dbPlayer.age = player.age;
+  if (player.hand !== undefined) dbPlayer.hand = player.hand;
+  if (player.notes !== undefined) dbPlayer.notes = player.notes;
+  if (player.lastMatchDate !== undefined)
+    dbPlayer.last_match_date = player.lastMatchDate;
+  if (player.injuryStatus !== undefined)
+    dbPlayer.injury_status = player.injuryStatus;
+  if (player.seasonalForm !== undefined)
+    dbPlayer.seasonal_form = player.seasonalForm;
+  // photo_url can be null, so we need to check if the key exists (not just undefined)
+  if ("photoUrl" in player) dbPlayer.photo_url = player.photoUrl;
+  if (player.isActive !== undefined) dbPlayer.is_active = player.isActive;
+  if (player.isHidden !== undefined) dbPlayer.is_hidden = player.isHidden;
+  if (player.isDemoPlayer !== undefined)
+    dbPlayer.is_demo_player = player.isDemoPlayer;
+  if (player.claimedByUserId !== undefined)
+    dbPlayer.claimed_by_user_id = player.claimedByUserId;
+  if (player.claimedAt !== undefined) dbPlayer.claimed_at = player.claimedAt;
 
   // Only include id if it's not empty (let DB generate UUID if empty)
   if (player.id && player.id.trim() !== "") {
@@ -245,14 +264,24 @@ export async function bulkInsertPlayers(players: Player[]) {
 
 export async function updatePlayer(id: string, updates: Partial<Player>) {
   const dbUpdates = toDbPlayer(updates);
-  console.log("Updating player in DB:", dbUpdates);
+  console.log("Updating player in DB:", { id, updates: dbUpdates });
   const { data, error } = await supabase
     .from(TABLE)
     .update(dbUpdates)
     .eq("id", id)
     .select();
-  if (error) throw error;
-  return data?.[0] as unknown as Player;
+  if (error) {
+    console.error("Error updating player:", error);
+    throw error;
+  }
+  // Map the database response (snake_case) to Player type (camelCase)
+  const updatedPlayer = data?.[0] ? mapPlayer(data[0]) : null;
+  console.log("Player updated successfully:", {
+    id,
+    photo_url: dbUpdates.photo_url,
+    photoUrl: updatedPlayer?.photoUrl,
+  });
+  return updatedPlayer;
 }
 
 export async function deletePlayer(id: string) {
