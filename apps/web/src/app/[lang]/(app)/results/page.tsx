@@ -105,6 +105,7 @@ export default function ResultsPage() {
             // Transform data to expected format
             const tournamentResults: TournamentResults[] = tournaments.map(tournament => {
                 const matches = tournament.matches
+                    .filter(match => match.status !== 'cancelled') // Filter out cancelled matches
                     .slice(0, resultsPerPage) // Limit to first page
                     .map(transformMatchData)
                     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
@@ -209,6 +210,7 @@ export default function ResultsPage() {
                 setLoadingResults(true);
                 const tournamentMatches = await fetchTournamentPage(tournament, 1, resultsPerPage);
                 const matches = tournamentMatches
+                    .filter(match => match.status !== 'cancelled') // Filter out cancelled matches
                     .map(transformMatchData)
                     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
@@ -236,6 +238,7 @@ export default function ResultsPage() {
 
             // Transform matches data using utility function
             const matches = tournamentMatches
+                .filter(match => match.status !== 'cancelled') // Filter out cancelled matches
                 .map(transformMatchData)
                 .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 

@@ -107,6 +107,7 @@ export async function fetchOptimizedTournamentResults(): Promise<{
             `
       )
       .eq("status", "finished")
+      .neq("status", "cancelled")
       .order("updated_at", { ascending: false })
       .limit(100); // Restore reasonable limit for results
 
@@ -207,6 +208,7 @@ export async function fetchTournamentPage(
       `
       )
       .eq("status", "finished")
+      .neq("status", "cancelled")
       .eq("tournaments.name", tournamentName)
       .order("updated_at", { ascending: false })
       .range(start, end);

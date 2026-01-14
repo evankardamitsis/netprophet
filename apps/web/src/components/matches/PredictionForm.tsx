@@ -564,15 +564,15 @@ export function PredictionForm({
                         whileHover={!locked ? { scale: 1.05 } : {}}
                         whileTap={!locked ? { scale: 0.95 } : {}}
                     >
-                        <div className="flex flex-col items-center text-center">
-                            <div className="text-sm font-semibold break-words">
+                        <div className="flex flex-col items-start sm:items-center text-left sm:text-center">
+                            <div className="text-sm font-semibold break-words w-full">
                                 {displayName(details.player1.name)}
                                 {details.player1.ntrpRating && (
                                     <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
                                 )}
                             </div>
                             {details.player1.teamName && (
-                                <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words mt-0.5">{details.player1.teamName}</span>
+                                <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words mt-0.5 w-full">{details.player1.teamName}</span>
                             )}
                         </div>
                         <div className="text-xs text-yellow-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
@@ -592,15 +592,15 @@ export function PredictionForm({
                         whileHover={!locked ? { scale: 1.05 } : {}}
                         whileTap={!locked ? { scale: 0.95 } : {}}
                     >
-                        <div className="flex flex-col items-center text-center">
-                            <div className="text-sm font-semibold break-words">
+                        <div className="flex flex-col items-start sm:items-center text-left sm:text-center">
+                            <div className="text-sm font-semibold break-words w-full">
                                 {displayName(details.player2.name)}
                                 {details.player2.ntrpRating && (
                                     <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
                                 )}
                             </div>
                             {details.player2.teamName && (
-                                <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words mt-0.5">{details.player2.teamName}</span>
+                                <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words mt-0.5 w-full">{details.player2.teamName}</span>
                             )}
                         </div>
                         <div className="text-xs text-yellow-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
