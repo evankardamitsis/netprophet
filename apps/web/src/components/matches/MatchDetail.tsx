@@ -81,14 +81,16 @@ const createMatchDetails = (match: Match) => {
             odds: player1Odds,
             wins: match.player_a?.wins || 0,
             losses: match.player_a?.losses || 0,
-            ntrpRating: match.player_a?.ntrp_rating
+            ntrpRating: match.player_a?.ntrp_rating,
+            teamName: match.player1.teamName
         },
         player2: {
             name: player2Name,
             odds: player2Odds,
             wins: match.player_b?.wins || 0,
             losses: match.player_b?.losses || 0,
-            ntrpRating: match.player_b?.ntrp_rating
+            ntrpRating: match.player_b?.ntrp_rating,
+            teamName: match.player2.teamName
         },
         points: match.points,
         headToHead: `${match.player1.name} vs ${match.player2.name}`, // Will be updated with real data

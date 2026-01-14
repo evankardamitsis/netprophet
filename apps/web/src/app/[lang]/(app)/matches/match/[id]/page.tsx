@@ -179,18 +179,45 @@ async function fetchMatch(id: string): Promise<Match | null> {
         }
     };
 
-    // For team tournaments, get team names instead of player names
+    // For team tournaments, store team names separately
     let teamAName: string;
     let teamBName: string;
+    let teamANameForDisplay: string | null = null;
+    let teamBNameForDisplay: string | null = null;
 
-    if (isTeamTournament && !isDoubles) {
-        // For singles team tournaments, get team name for each player
-        const teamANameResult = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a_id);
-        const teamBNameResult = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b_id);
-        teamAName = teamANameResult || getPlayerName(rawMatch.player_a);
-        teamBName = teamBNameResult || getPlayerName(rawMatch.player_b);
+    if (isTeamTournament) {
+        if (!isDoubles) {
+            // For singles team tournaments, get team name for each player
+            teamANameForDisplay = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a_id);
+            teamBNameForDisplay = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b_id);
+            teamAName = getPlayerName(rawMatch.player_a);
+            teamBName = getPlayerName(rawMatch.player_b);
+        } else {
+            // For doubles team tournaments, get team name for each player pair
+            // Get team names for both players in each pair
+            const teamA1Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a1_id);
+            const teamA2Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a2_id);
+            const teamB1Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b1_id);
+            const teamB2Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b2_id);
+
+            // If both players are on the same team, use that team name
+            if (teamA1Result && teamA2Result && teamA1Result === teamA2Result) {
+                teamANameForDisplay = teamA1Result;
+            }
+            if (teamB1Result && teamB2Result && teamB1Result === teamB2Result) {
+                teamBNameForDisplay = teamB1Result;
+            }
+
+            // Always use player names for display
+            teamAName = rawMatch.player_a1 && rawMatch.player_a2
+                ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
+                : getPlayerName(rawMatch.player_a);
+            teamBName = rawMatch.player_b1 && rawMatch.player_b2
+                ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
+                : getPlayerName(rawMatch.player_b);
+        }
     } else {
-        // Regular tournament or doubles - use player names
+        // Regular tournament - use player names
         teamAName = isDoubles && rawMatch.player_a1 && rawMatch.player_a2
             ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
             : getPlayerName(rawMatch.player_a);
@@ -230,11 +257,13 @@ async function fetchMatch(id: string): Promise<Match | null> {
         tournament: (Array.isArray(rawMatch.tournaments) ? rawMatch.tournaments[0]?.name : rawMatch.tournaments?.name) || 'Unknown Tournament',
         player1: {
             name: teamAName,
-            odds: rawMatch.odds_a || 1.0
+            odds: rawMatch.odds_a || 1.0,
+            teamName: teamANameForDisplay
         },
         player2: {
             name: teamBName,
-            odds: rawMatch.odds_b || 1.0
+            odds: rawMatch.odds_b || 1.0,
+            teamName: teamBNameForDisplay
         },
         team1: isDoubles ? { name: teamAName, odds: rawMatch.odds_a || 1.0, players: [rawMatch.player_a1, rawMatch.player_a2].filter(Boolean) } : undefined,
         team2: isDoubles ? { name: teamBName, odds: rawMatch.odds_b || 1.0, players: [rawMatch.player_b1, rawMatch.player_b2].filter(Boolean) } : undefined,

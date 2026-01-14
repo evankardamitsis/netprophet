@@ -22,6 +22,7 @@ export interface Tournament {
   end_date?: string;
   status?: string;
   matches_type?: string;
+  is_team_tournament?: boolean;
 }
 
 export interface Category {
@@ -68,8 +69,8 @@ export interface Match {
   player_b2?: Player;
   // Computed properties for web app compatibility
   tournament: string;
-  player1: { name: string; odds: number };
-  player2: { name: string; odds: number };
+  player1: { name: string; odds: number; teamName?: string | null };
+  player2: { name: string; odds: number; teamName?: string | null };
   // For doubles matches, these represent teams
   team1?: { name: string; odds: number; players: Player[] };
   team2?: { name: string; odds: number; players: Player[] };

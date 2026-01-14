@@ -10,8 +10,8 @@ interface MatchDetails {
     tournament: string;
     round: string;
     surface: string;
-    player1: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
-    player2: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
+    player1: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number; teamName?: string | null };
+    player2: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number; teamName?: string | null };
     headToHead: string;
     headToHeadData?: {
         player_a_wins: number;
@@ -48,16 +48,35 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     // Helper to format player/team name for display
     const formatName = (name: string, isCompact: boolean = false) => {
         if (isDoubles) {
-            // For doubles, keep the full team name; optionally truncate the whole string
-            if (isCompact && name.length > 24) {
-                return name.substring(0, 21) + '...';
+            // For doubles, format each player name: "LASTNAME F. & LASTNAME F."
+            const formatPlayerName = (fullName: string) => {
+                const parts = fullName.trim().split(' ');
+                if (parts.length >= 2) {
+                    const lastName = parts[parts.length - 1];
+                    const firstName = parts[0];
+                    const firstInitial = firstName.charAt(0).toUpperCase();
+                    return `${lastName} ${firstInitial}.`;
+                }
+                return fullName;
+            };
+
+            // Split by " & " to get individual player names
+            if (name.includes(' & ')) {
+                const [player1, player2] = name.split(' & ');
+                return `${formatPlayerName(player1)} & ${formatPlayerName(player2)}`;
             }
             return name;
         }
-        // For singles, show last name on compact view
+        // For singles, show last name + first initial on compact view
         if (isCompact) {
-            const parts = name.split(' ');
-            return parts.length > 1 ? parts[parts.length - 1] : name;
+            const parts = name.trim().split(' ');
+            if (parts.length >= 2) {
+                const lastName = parts[parts.length - 1];
+                const firstName = parts[0];
+                const firstInitial = firstName.charAt(0).toUpperCase();
+                return `${lastName} ${firstInitial}.`;
+            }
+            return name;
         }
         return name;
     };
@@ -143,32 +162,38 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
 
                     {/* Bottom row - Players and odds */}
                     <div className="flex items-center justify-between gap-2">
-                        <div className="text-left min-w-0">
+                        <div className="text-left min-w-0 flex-1">
                             <button
                                 onClick={() => navigateToPlayer(player1Id)}
                                 disabled={!player1Id || isDoubles}
-                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player1Id && !isDoubles
+                                className={`text-xs font-medium mb-0.5 transition-colors w-full text-left ${player1Id && !isDoubles
                                     ? 'text-white hover:text-purple-300 cursor-pointer'
                                     : 'text-white cursor-default'
                                     }`}
                             >
-                                {formatName(details.player1.name, true)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
+                                <div className="flex flex-col">
+                                    <span className="break-words">{formatName(details.player1.name, true)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}</span>
+                                    {details.player1.teamName && <span className="text-orange-400 text-[10px] leading-tight break-words">{details.player1.teamName}</span>}
+                                </div>
                             </button>
                             <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                         </div>
 
                         <div className="text-xs text-gray-400 font-bold px-1">{dict?.matches?.vs || 'VS'}</div>
 
-                        <div className="text-right min-w-0">
+                        <div className="text-right min-w-0 flex-1">
                             <button
                                 onClick={() => navigateToPlayer(player2Id)}
                                 disabled={!player2Id || isDoubles}
-                                className={`text-xs font-medium truncate mb-0.5 transition-colors ${player2Id && !isDoubles
+                                className={`text-xs font-medium mb-0.5 transition-colors w-full text-right ${player2Id && !isDoubles
                                     ? 'text-white hover:text-purple-300 cursor-pointer'
                                     : 'text-white cursor-default'
                                     }`}
                             >
-                                {formatName(details.player2.name, true)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
+                                <div className="flex flex-col items-end">
+                                    <span className="break-words text-right">{formatName(details.player2.name, true)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}</span>
+                                    {details.player2.teamName && <span className="text-orange-400 text-[10px] leading-tight break-words text-right">{details.player2.teamName}</span>}
+                                </div>
                             </button>
                             <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
                         </div>
@@ -202,35 +227,42 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                     </div>
 
                     {/* Bottom section - Players and odds */}
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center justify-center gap-4">
-                            <div className="text-left">
-                                <button
-                                    onClick={() => navigateToPlayer(player1Id)}
-                                    disabled={!player1Id || isDoubles}
-                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player1Id && !isDoubles
-                                        ? 'text-white hover:text-purple-300 cursor-pointer'
-                                        : 'text-white cursor-default'
-                                        }`}
-                                >
-                                    {formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
-                                </button>
-                                <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
-                            </div>
-                            <div className="text-xs text-gray-400 font-bold text-center flex-shrink-0">{dict?.matches?.vs || 'VS'}</div>
-                            <div className="text-left">
-                                <button
-                                    onClick={() => navigateToPlayer(player2Id)}
-                                    disabled={!player2Id || isDoubles}
-                                    className={`text-xs font-medium leading-tight text-left transition-colors ${player2Id && !isDoubles
-                                        ? 'text-white hover:text-purple-300 cursor-pointer'
-                                        : 'text-white cursor-default'
-                                        }`}
-                                >
-                                    {formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
-                                </button>
-                                <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
-                            </div>
+                    <div className="flex flex-col gap-3">
+                        {/* Player 1 */}
+                        <div className="flex items-center justify-between gap-3">
+                            <button
+                                onClick={() => navigateToPlayer(player1Id)}
+                                disabled={!player1Id || isDoubles}
+                                className={`text-xs font-medium leading-tight text-left transition-colors flex-1 ${player1Id && !isDoubles
+                                    ? 'text-white hover:text-purple-300 cursor-pointer'
+                                    : 'text-white cursor-default'
+                                    }`}
+                            >
+                                <div className="flex flex-col">
+                                    <span className="break-words">{formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}</span>
+                                    {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player1.teamName}</span>}
+                                </div>
+                            </button>
+                            <div className="text-xs text-purple-400 font-bold flex-shrink-0">{details.player1.odds.toFixed(2)}x</div>
+                        </div>
+                        {/* VS separator */}
+                        <div className="text-xs text-gray-400 font-bold text-center">{dict?.matches?.vs || 'VS'}</div>
+                        {/* Player 2 */}
+                        <div className="flex items-center justify-between gap-3">
+                            <button
+                                onClick={() => navigateToPlayer(player2Id)}
+                                disabled={!player2Id || isDoubles}
+                                className={`text-xs font-medium leading-tight text-left transition-colors flex-1 ${player2Id && !isDoubles
+                                    ? 'text-white hover:text-purple-300 cursor-pointer'
+                                    : 'text-white cursor-default'
+                                    }`}
+                            >
+                                <div className="flex flex-col">
+                                    <span className="break-words">{formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}</span>
+                                    {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player2.teamName}</span>}
+                                </div>
+                            </button>
+                            <div className="text-xs text-purple-400 font-bold flex-shrink-0">{details.player2.odds.toFixed(2)}x</div>
                         </div>
                     </div>
                 </div>
@@ -263,31 +295,37 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                             }
                         </div>
                         <div className="grid grid-cols-1 gap-3 text-xs">
-                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
+                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5 min-w-0">
                                 <button
                                     onClick={() => navigateToPlayer(player1Id)}
                                     disabled={!player1Id || isDoubles}
-                                    className={`text-white font-medium text-left transition-colors ${player1Id && !isDoubles
+                                    className={`text-white font-medium text-left transition-colors w-full ${player1Id && !isDoubles
                                         ? 'hover:text-purple-300 cursor-pointer'
                                         : 'cursor-default'
                                         }`}
                                 >
-                                    {formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}
+                                    <div className="flex flex-col">
+                                        <span className="break-words">{formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}</span>
+                                        {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player1.teamName}</span>}
+                                    </div>
                                 </button>
                                 <div className="text-gray-400">
                                     {dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}
                                 </div>
                             </div>
-                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5">
+                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5 min-w-0">
                                 <button
                                     onClick={() => navigateToPlayer(player2Id)}
                                     disabled={!player2Id || isDoubles}
-                                    className={`text-white text-left font-medium transition-colors ${player2Id && !isDoubles
+                                    className={`text-white text-left font-medium transition-colors w-full ${player2Id && !isDoubles
                                         ? 'hover:text-purple-300 cursor-pointer'
                                         : 'cursor-default'
                                         }`}
                                 >
-                                    {formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}
+                                    <div className="flex flex-col">
+                                        <span className="break-words">{formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}</span>
+                                        {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player2.teamName}</span>}
+                                    </div>
                                 </button>
                                 <div className="text-gray-400">
                                     {dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}

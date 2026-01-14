@@ -37,8 +37,8 @@ interface PredictionOptions {
 }
 
 interface MatchDetails {
-    player1: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
-    player2: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number };
+    player1: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number; teamName?: string | null };
+    player2: { name: string; odds: number; wins: number; losses: number; ntrpRating?: number; teamName?: string | null };
     round: string;
     surface: string;
     format: string; // Add format field
@@ -89,11 +89,37 @@ export function PredictionForm({
     const setTiebreaksRef = useRef<HTMLDivElement>(null);
     const superTiebreakRef = useRef<HTMLDivElement>(null);
 
-    // Helper to display names (use full team name for doubles)
+    // Helper to display names (format compactly: last name + first initial)
     const displayName = (name: string) => {
-        if (isDoubles) return name;
+        if (isDoubles) {
+            // For doubles, format each player name: "LASTNAME F. & LASTNAME F."
+            const formatPlayerName = (fullName: string) => {
+                const parts = fullName.trim().split(' ');
+                if (parts.length >= 2) {
+                    const lastName = parts[parts.length - 1];
+                    const firstName = parts[0];
+                    const firstInitial = firstName.charAt(0).toUpperCase();
+                    return `${lastName} ${firstInitial}.`;
+                }
+                return fullName;
+            };
+
+            // Split by " & " to get individual player names
+            if (name.includes(' & ')) {
+                const [player1, player2] = name.split(' & ');
+                return `${formatPlayerName(player1)} & ${formatPlayerName(player2)}`;
+            }
+            return name;
+        }
+        // For singles, show last name + first initial
         const parts = name.trim().split(' ');
-        return parts.length > 1 ? parts[parts.length - 1] : name;
+        if (parts.length >= 2) {
+            const lastName = parts[parts.length - 1];
+            const firstName = parts[0];
+            const firstInitial = firstName.charAt(0).toUpperCase();
+            return `${lastName} ${firstInitial}.`;
+        }
+        return name;
     };
 
     // Save form predictions to session storage whenever they change
@@ -538,10 +564,15 @@ export function PredictionForm({
                         whileHover={!locked ? { scale: 1.05 } : {}}
                         whileTap={!locked ? { scale: 0.95 } : {}}
                     >
-                        <div className="text-sm font-semibold truncate">
-                            {displayName(details.player1.name)}
-                            {details.player1.ntrpRating && (
-                                <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
+                        <div className="flex flex-col items-center text-center">
+                            <div className="text-sm font-semibold break-words">
+                                {displayName(details.player1.name)}
+                                {details.player1.ntrpRating && (
+                                    <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
+                                )}
+                            </div>
+                            {details.player1.teamName && (
+                                <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words mt-0.5">{details.player1.teamName}</span>
                             )}
                         </div>
                         <div className="text-xs text-yellow-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
@@ -561,10 +592,15 @@ export function PredictionForm({
                         whileHover={!locked ? { scale: 1.05 } : {}}
                         whileTap={!locked ? { scale: 0.95 } : {}}
                     >
-                        <div className="text-sm font-semibold truncate">
-                            {displayName(details.player2.name)}
-                            {details.player2.ntrpRating && (
-                                <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
+                        <div className="flex flex-col items-center text-center">
+                            <div className="text-sm font-semibold break-words">
+                                {displayName(details.player2.name)}
+                                {details.player2.ntrpRating && (
+                                    <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
+                                )}
+                            </div>
+                            {details.player2.teamName && (
+                                <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words mt-0.5">{details.player2.teamName}</span>
                             )}
                         </div>
                         <div className="text-xs text-yellow-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
@@ -932,7 +968,10 @@ export function PredictionForm({
                                                             : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed')
                                                     }`}
                                             >
-                                                {displayName(details.player1.name)}
+                                                <div className="flex flex-col">
+                                                    <span className="break-words text-left">{displayName(details.player1.name)}</span>
+                                                    {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words text-left mt-0.5">{details.player1.teamName}</span>}
+                                                </div>
                                                 {!canPlayer1Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
                                             </button>
                                             <button
@@ -947,7 +986,10 @@ export function PredictionForm({
                                                             : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed')
                                                     }`}
                                             >
-                                                {displayName(details.player2.name)}
+                                                <div className="flex flex-col">
+                                                    <span className="break-words text-left">{displayName(details.player2.name)}</span>
+                                                    {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words text-left mt-0.5">{details.player2.teamName}</span>}
+                                                </div>
                                                 {!canPlayer2Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
                                             </button>
                                         </div>

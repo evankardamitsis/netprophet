@@ -25,32 +25,63 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'singles' | 'doubles'>('all');
 
     const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2'): ReactNode => {
+        const isTeamTournament = (match.tournaments as any)?.is_team_tournament === true;
+        const isTeam1 = side === 'team1';
+
         const formatPlayerLine = (player: any) => {
             if (!player) return 'TBD (N/A)';
             const ntrp = player?.ntrp_rating ? player.ntrp_rating.toFixed(1) : 'N/A';
             return `${(player.first_name ?? '').trim()} ${(player.last_name ?? '').trim()}`.trim() + ` (${ntrp})`;
         };
 
-        const renderDoublesLines = (players?: any[]) => {
-            const [p1, p2] = players || [];
-            if (!p1 && !p2) return 'TBD (N/A)';
+        const getTeamName = (match: Match, side: 'team1' | 'team2'): string | null => {
+            if (!isTeamTournament) return null;
+            const player = side === 'team1' ? match.player1 : match.player2;
+            // The team name is stored in player.name for team tournaments
+            // We need to get the actual team name, not the player name
+            // For now, we'll extract it from the match data if available
+            return null; // Will be handled by fetching team name separately
+        };
+
+        if (match.match_type !== 'doubles') {
+            const player = isTeam1 ? match.player_a : match.player_b;
+            const rating = isTeam1 ? match.player_a?.ntrp_rating : match.player_b?.ntrp_rating;
+            const ratingText = rating ? rating.toFixed(1) : 'N/A';
+            const playerName = player ? formatPlayerLine(player) : 'TBD (N/A)';
+
+            if (isTeamTournament) {
+                const teamName = isTeam1 ? match.player1.teamName : match.player2.teamName;
+                return (
+                    <div className="flex flex-col">
+                        <span className="text-white">{playerName}</span>
+                        {teamName && <span className="text-orange-400 text-xs">{teamName}</span>}
+                    </div>
+                );
+            }
+            return playerName;
+        }
+
+        // Doubles
+        const players = isTeam1 ? match.team1?.players : match.team2?.players;
+        const [p1, p2] = players || [];
+
+        if (isTeamTournament) {
+            const teamName = isTeam1 ? match.player1.teamName : match.player2.teamName;
             return (
                 <div className="flex flex-col text-xs text-white leading-tight space-y-0.5">
                     <span className="truncate">{formatPlayerLine(p1)}</span>
                     <span className="truncate">{formatPlayerLine(p2)}</span>
+                    {teamName && <span className="truncate text-orange-400 mt-0.5">{teamName}</span>}
                 </div>
             );
-        };
-
-        const isTeam1 = side === 'team1';
-        if (match.match_type !== 'doubles') {
-            const player = isTeam1 ? match.player1 : match.player2;
-            const rating = isTeam1 ? match.player_a?.ntrp_rating : match.player_b?.ntrp_rating;
-            const ratingText = rating ? rating.toFixed(1) : 'N/A';
-            return `${player.name} (${ratingText})`;
         }
-        const players = isTeam1 ? match.team1?.players : match.team2?.players;
-        return renderDoublesLines(players);
+
+        return (
+            <div className="flex flex-col text-xs text-white leading-tight space-y-0.5">
+                <span className="truncate">{formatPlayerLine(p1)}</span>
+                <span className="truncate">{formatPlayerLine(p2)}</span>
+            </div>
+        );
     }, []);
 
     // Table state
