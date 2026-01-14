@@ -616,11 +616,12 @@ function calculateDoublesOdds(
     chemistryAdvantage
   );
 
-  // Calculate base probability from factors with NTRP-heavy weighting (same as singles)
-  let teamAScore = 0.5; // Start at 50%
-
   const ntrpDiff = Math.abs(teamAStats.ntrpRating - teamBStats.ntrpRating);
   const baseRating = Math.min(teamAStats.ntrpRating, teamBStats.ntrpRating);
+  const totalH2hMatches = doublesH2H?.total_matches ?? 0;
+
+  // Calculate base probability from factors with NTRP-heavy weighting (same as singles)
+  let teamAScore = 0.5; // Start at 50%
   let ntrpWeight = 0.25; // Base weight
 
   if (ntrpDiff >= 1.5) {
@@ -642,7 +643,6 @@ function calculateDoublesOdds(
   }
 
   const remainingWeight = 1.0 - ntrpWeight;
-  const totalH2hMatches = doublesH2H?.total_matches ?? 0;
 
   let headToHeadWeight = 0;
   if (totalH2hMatches > 0) {
@@ -655,10 +655,24 @@ function calculateDoublesOdds(
   // Partnership bonus gets separate weight (5% of remaining)
   const partnershipWeight = Math.min(0.05, remainingWeight * 0.1);
   const otherFactors = 4; // form, surface, experience, momentum
-  const otherWeightPool = Math.max(
+  let otherWeightPool = Math.max(
     remainingWeight - headToHeadWeight - partnershipWeight,
     0
   );
+
+  // Special case: When teams have equal NTRP (or very close) and no H2H, reduce other factors significantly
+  // This keeps odds much closer together for equal teams (e.g., 1.35-1.50 instead of 1.97-2.25)
+  const isSameNTRP = ntrpDiff < 0.1; // Consider ratings within 0.1 as "same"
+  const hasNoH2H = totalH2hMatches === 0;
+  const shouldReduceOtherFactors = isSameNTRP && hasNoH2H;
+
+  // Reduce other factors weight when teams are equal and no H2H
+  if (shouldReduceOtherFactors) {
+    // Reduce other factors to only 15% of their normal weight
+    // This keeps the odds closer together but still allows for meaningful differences
+    otherWeightPool = otherWeightPool * 0.15;
+  }
+
   const otherFactorsWeight =
     otherFactors > 0 ? otherWeightPool / otherFactors : 0;
 
@@ -781,7 +795,15 @@ function calculateDoublesOdds(
     }
   } else {
     // No weak link - use tighter bounds based on average NTRP difference
-    if (ntrpDiff < 0.2) {
+    // Special case: When teams are equal (or very close) and no H2H, use tighter bounds
+    // This ensures odds start lower and stay closer together (e.g., 1.35-1.50 range)
+    if (shouldReduceOtherFactors) {
+      // Wider bounds: 0.45-0.55 probability range allows more variation
+      // With -30% margin (discount), this gives odds around 1.27-1.56
+      // The reduced other factors weight (15%) ensures odds stay relatively close together
+      minBound = 0.45;
+      maxBound = 0.55;
+    } else if (ntrpDiff < 0.2) {
       minBound = 0.35;
       maxBound = 0.65;
     } else if (ntrpDiff < 0.35) {
@@ -800,10 +822,29 @@ function calculateDoublesOdds(
   }
 
   teamAScore = Math.max(minBound, Math.min(maxBound, teamAScore));
+
+  // For equal teams, ensure minimum gap so odds differ by at least 0.1 in first decimal
+  // This prevents odds like 1.41 vs 1.39 and ensures meaningful difference
+  if (shouldReduceOtherFactors) {
+    const minGap = 0.05; // Minimum 5 percentage point difference
+    if (Math.abs(teamAScore - 0.5) < minGap) {
+      // Push away from 0.5 to ensure gap
+      if (teamAScore >= 0.5) {
+        teamAScore = Math.max(0.5 + minGap, teamAScore);
+      } else {
+        teamAScore = Math.min(0.5 - minGap, teamAScore);
+      }
+      // Ensure still within bounds
+      teamAScore = Math.max(minBound, Math.min(maxBound, teamAScore));
+    }
+  }
+
   const teamBScore = 1 - teamAScore;
 
   // Calculate decimal odds with margin
-  const margin = 0.05;
+  // For equal teams with no H2H, use a negative margin (discount) to get lower starting odds
+  // This makes the odds more attractive (lower) for equal teams
+  const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount for equal teams
   const teamAOdds = (1 / teamAScore) * (1 + margin);
   const teamBOdds = (1 / teamBScore) * (1 + margin);
 
