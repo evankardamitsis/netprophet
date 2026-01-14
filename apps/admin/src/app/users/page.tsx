@@ -274,43 +274,6 @@ export default function UsersPage() {
                             onChange={e => setGlobalFilter(e.target.value)}
                             className="max-w-xs"
                         />
-                        <div className="ml-auto flex gap-2">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.setPageIndex(0)}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                {'<<'}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.previousPage()}
-                                disabled={!table.getCanPreviousPage()}
-                            >
-                                {'<'}
-                            </Button>
-                            <span className="px-2 text-sm">
-                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                            </span>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.nextPage()}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                {'>'}
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                disabled={!table.getCanNextPage()}
-                            >
-                                {'>>'}
-                            </Button>
-                        </div>
                     </div>
                     {/* Desktop Table View */}
                     <div className="hidden lg:block overflow-x-auto">
@@ -431,6 +394,50 @@ export default function UsersPage() {
                                 </div>
                             );
                         })}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    <div className="mt-6 flex items-center justify-between pt-4 border-t">
+                        <div className="text-sm text-gray-600">
+                            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.setPageIndex(0)}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<<'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                            >
+                                {'<'}
+                            </Button>
+                            <span className="px-2 text-sm">
+                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                            </span>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                disabled={!table.getCanNextPage()}
+                            >
+                                {'>>'}
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
