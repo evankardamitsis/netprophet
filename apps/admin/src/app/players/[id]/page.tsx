@@ -467,6 +467,33 @@ export default function PlayerEditPage() {
                         </div>
 
                         <div>
+                            <Label htmlFor="gender">Φύλο</Label>
+                            <Select
+                                value={player.gender || undefined}
+                                onValueChange={(value: 'men' | 'women') => updatePlayerField('gender', value)}
+                            >
+                                <SelectTrigger className="bg-white">
+                                    <SelectValue placeholder="Επιλέξτε φύλο" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    <SelectItem value="men">Άνδρες</SelectItem>
+                                    <SelectItem value="women">Γυναίκες</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {player.gender && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => updatePlayerField('gender', null)}
+                                    className="mt-2 text-xs"
+                                >
+                                    Καθαρισμός
+                                </Button>
+                            )}
+                        </div>
+
+                        <div>
                             <Label htmlFor="notes">Σημειώσεις</Label>
                             <Textarea
                                 id="notes"

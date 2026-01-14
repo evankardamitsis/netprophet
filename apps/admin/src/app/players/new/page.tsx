@@ -296,6 +296,33 @@ export default function NewPlayerPage() {
                         </div>
 
                         <div>
+                            <Label htmlFor="gender">Φύλο</Label>
+                            <Select
+                                value={player.gender || undefined}
+                                onValueChange={(value: 'men' | 'women') => updatePlayer('gender', value)}
+                            >
+                                <SelectTrigger className="bg-white">
+                                    <SelectValue placeholder="Επιλέξτε φύλο" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="men">Άνδρες</SelectItem>
+                                    <SelectItem value="women">Γυναίκες</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {player.gender && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => updatePlayer('gender', null)}
+                                    className="mt-2 text-xs"
+                                >
+                                    Καθαρισμός
+                                </Button>
+                            )}
+                        </div>
+
+                        <div>
                             <Label htmlFor="notes">Σημειώσεις</Label>
                             <Textarea
                                 id="notes"

@@ -16,14 +16,6 @@ interface ParticipantsTableProps {
 }
 
 export function ParticipantsTable({ participants, tournamentName, matches, isTeamTournament = false, teams = [] }: ParticipantsTableProps) {
-    // Debug logging
-    console.log('ParticipantsTable props:', {
-        isTeamTournament,
-        teamsCount: teams.length,
-        teams,
-        participantsCount: participants.length
-    });
-
     const formatDate = (dateString: string | null) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString();

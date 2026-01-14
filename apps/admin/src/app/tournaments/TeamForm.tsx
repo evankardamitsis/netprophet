@@ -84,7 +84,6 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
             member_ids: formData.member_ids || [],
         };
 
-        console.log('Submitting team data:', submitData);
         onSubmit(submitData);
     };
 

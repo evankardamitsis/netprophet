@@ -12,7 +12,7 @@ export default function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedSurface, setSelectedSurface] = useState<string>('all');
+    const [selectedGender, setSelectedGender] = useState<string>('all');
     const { dict } = useDictionary();
 
     useEffect(() => {
@@ -32,22 +32,33 @@ export default function PlayersPage() {
     }, []);
 
     const filteredPlayers = useMemo(() => {
-        return players.filter(player => {
+        const filtered = players.filter(player => {
             const matchesSearch = searchTerm === '' ||
                 normalizeText(player.firstName).includes(normalizeText(searchTerm)) ||
                 normalizeText(player.lastName).includes(normalizeText(searchTerm));
 
-            const matchesSurface = selectedSurface === 'all' ||
-                player.surfacePreference.toLowerCase() === selectedSurface.toLowerCase();
+            // Filter by gender - access gender property directly from player object
+            const gender = (player as any).gender;
 
-            return matchesSearch && matchesSurface;
+            let matchesGender = true;
+
+            if (selectedGender === 'all') {
+                // Show all players regardless of gender
+                matchesGender = true;
+            } else if (selectedGender === 'men') {
+                // Only show players with gender === 'men'
+                matchesGender = gender === 'men';
+            } else if (selectedGender === 'women') {
+                // Only show players with gender === 'women'
+                matchesGender = gender === 'women';
+            }
+
+            return matchesSearch && matchesGender;
         });
-    }, [players, searchTerm, selectedSurface]);
 
-    const surfaces = useMemo(() => {
-        const uniqueSurfaces = Array.from(new Set(players.map(p => p.surfacePreference)));
-        return ['all', ...uniqueSurfaces];
-    }, [players]);
+
+        return filtered;
+    }, [players, searchTerm, selectedGender]);
 
     if (loading) {
         return (
@@ -100,18 +111,23 @@ export default function PlayersPage() {
                         </div>
                     </div>
 
-                    {/* Surface Filter */}
+                    {/* Gender Filter */}
                     <div className="flex flex-wrap gap-2 sm:gap-3">
-                        {surfaces.map((surface) => (
+                        {['all', 'men', 'women'].map((gender) => (
                             <button
-                                key={surface}
-                                onClick={() => setSelectedSurface(surface)}
-                                className={`px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all transform hover:scale-105 ${selectedSurface === surface
+                                key={gender}
+                                onClick={() => setSelectedGender(gender)}
+                                className={`px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all transform hover:scale-105 ${selectedGender === gender
                                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                                     : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/70 border border-slate-600/50'
                                     }`}
                             >
-                                {surface === 'all' ? (dict?.athletes?.allSurfaces || 'All Surfaces') : surface}
+                                {gender === 'all'
+                                    ? 'All'
+                                    : gender === 'men'
+                                        ? 'Men'
+                                        : 'Women'
+                                }
                             </button>
                         ))}
                     </div>

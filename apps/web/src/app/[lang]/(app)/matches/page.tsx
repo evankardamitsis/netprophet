@@ -105,6 +105,9 @@ export default function DashboardPage() {
             <WelcomeBonus />
 
 
+            {/* Low Balance Notification - Always render */}
+            <LowBalanceNotification />
+
             {selectedMatch ? (
                 <MatchDetail
                     match={selectedMatch}
@@ -114,16 +117,14 @@ export default function DashboardPage() {
                 />
             ) : (
                 <>
-                    {/* Promotional Hero Section */}
-                    {featuredMatches.length > 0 && (
-                        <div className="px-4 sm:px-6 lg:px-8 pt-4 pb-6">
-                            <PromotionalHero
-                                featuredMatches={featuredMatches}
-                                onSelectMatch={handleSelectMatch}
-                                lang={lang}
-                            />
-                        </div>
-                    )}
+                    {/* Promotional Hero Section - Always render */}
+                    <div className="px-4 sm:px-6 lg:px-8 pt-4 pb-6">
+                        <PromotionalHero
+                            featuredMatches={featuredMatches}
+                            onSelectMatch={handleSelectMatch}
+                            lang={lang}
+                        />
+                    </div>
 
                     {/* Main Content */}
                     <div className="flex flex-col w-full text-white relative">

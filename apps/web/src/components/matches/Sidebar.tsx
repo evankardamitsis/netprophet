@@ -103,7 +103,7 @@ function CountdownTimer({ lockTime, dict }: { lockTime: Date; dict?: Dictionary 
 
 // Live Match Banner component
 function LiveMatchBanner({ matches, dict }: { matches: Match[]; dict?: Dictionary }) {
-    const liveMatches = matches.filter(match => match.status_display === 'live' && !match.isLocked);
+    const liveMatches = matches.filter(match => match.status_display === 'live' && !match.isLocked && match.status !== 'cancelled');
 
     if (liveMatches.length === 0) return null;
 
@@ -275,12 +275,12 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                         <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
 
                             {/* Live matches */}
-                            {allMatches.filter(m => m.status_display === 'live').length > 0 && (
+                            {allMatches.filter(m => m.status_display === 'live' && m.status !== 'cancelled').length > 0 && (
                                 <div className={cx(typography.body.sm, "font-bold text-red-300 uppercase tracking-wide mb-1 px-1 bg-red-900/20 py-1 rounded")}>
                                     🔴 {dict?.sidebar?.live || 'Live'}
                                 </div>
                             )}
-                            {allMatches.filter(m => m.status_display === 'live').map((match, index) => (
+                            {allMatches.filter(m => m.status_display === 'live' && m.status !== 'cancelled').map((match, index) => (
                                 <motion.button
                                     key={match.id}
                                     initial={{ opacity: 0, x: -20 }}

@@ -19,6 +19,9 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
 
+    // Filter out cancelled matches
+    const filteredLiveMatches = liveMatches.filter(match => match.status !== 'cancelled');
+
     // Helper function to format player name
     const formatPlayerName = (player: any) => {
         if (!player) return 'TBD';
@@ -39,7 +42,7 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
         );
     };
 
-    if (liveMatches.length === 0) {
+    if (filteredLiveMatches.length === 0) {
         return null;
     }
 
@@ -49,7 +52,7 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                 <h2 className={cx(typography.heading.md, "text-white flex items-center text-sm xs:text-base sm:text-lg")}>
                     <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
                     {dict?.sidebar?.liveMatches || 'Live Matches'}
-                    <span className={cx(typography.body.sm, "ml-2 text-gray-400 text-xs xs:text-sm")}>({liveMatches.length})</span>
+                    <span className={cx(typography.body.sm, "ml-2 text-gray-400 text-xs xs:text-sm")}>({filteredLiveMatches.length})</span>
                 </h2>
                 {/* Navigation arrows for live matches - only visible on large screens */}
                 <div className="hidden lg:flex gap-2">
@@ -95,7 +98,7 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
             </div>
             <div className={`live-matches-container ${
                 // Locked matches on small screens: horizontal carousel with peek
-                liveMatches.some(m => m.locked)
+                filteredLiveMatches.some(m => m.locked)
                     ? 'flex gap-2 xs:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-2 xs:pb-3 pr-4 xs:pr-6 snap-x snap-mandatory'
                     : // Grid layout for active matches
                     'grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ' + (
@@ -106,7 +109,7 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                             'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
                     )
                 }`}>
-                {liveMatches.map((match) => (
+                {filteredLiveMatches.map((match) => (
                     <div
                         key={match.id}
                         className={cx(

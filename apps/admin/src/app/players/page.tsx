@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { WarningModal } from '@/components/ui/warning-modal';
 import Papa, { ParseError, ParseResult } from 'papaparse';
 import { Player } from '@netprophet/lib/types/player';
-import { bulkInsertPlayers, fetchPlayers, fetchPlayersPaginated, deletePlayer, updatePlayerStatus } from '@netprophet/lib/supabase/players';
+import { bulkInsertPlayers, fetchPlayers, fetchPlayersPaginated, deletePlayer, updatePlayerStatus, updatePlayer } from '@netprophet/lib/supabase/players';
 import { supabase } from '@netprophet/lib';
 import {
     useReactTable,
@@ -26,6 +26,7 @@ import {
 } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { normalizeText } from '@/lib/utils';
 
 export default function PlayersPage() {
@@ -42,6 +43,11 @@ export default function PlayersPage() {
     const [loading, setLoading] = useState(true);
     const [searching, setSearching] = useState(false);
     const [importing, setImporting] = useState(false);
+
+    // Bulk edit state
+    const [bulkEditModalOpen, setBulkEditModalOpen] = useState(false);
+    const [bulkEditGender, setBulkEditGender] = useState<'men' | 'women' | null | undefined>(undefined);
+    const [bulkUpdating, setBulkUpdating] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
     const debouncedGlobalFilter = useDebounce(globalFilter, 500); // Debounce search by 500ms
     const [sorting, setSorting] = useState<SortingState>([
@@ -50,11 +56,36 @@ export default function PlayersPage() {
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [rowSelection, setRowSelection] = useState({});
-    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>(() => {
+        // Load saved filter from localStorage on mount
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('playersStatusFilter');
+            if (saved === 'all' || saved === 'active' || saved === 'inactive') {
+                return saved;
+            }
+        }
+        return 'all';
+    });
 
     // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize, setPageSize] = useState(20);
+    const [currentPage, setCurrentPage] = useState(() => {
+        // Load saved page from localStorage on mount
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('playersCurrentPage');
+            const page = saved ? parseInt(saved, 10) : 1;
+            return page > 0 ? page : 1;
+        }
+        return 1;
+    });
+    const [pageSize, setPageSize] = useState(() => {
+        // Load saved page size from localStorage on mount
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('playersPageSize');
+            const size = saved ? parseInt(saved, 10) : 20;
+            return size > 0 ? size : 20;
+        }
+        return 20;
+    });
     const [totalCount, setTotalCount] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
 
@@ -93,6 +124,10 @@ export default function PlayersPage() {
             setTotalCount(result.totalCount);
             setTotalPages(result.totalPages);
             setCurrentPage(result.page);
+            // Save current page to localStorage
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('playersCurrentPage', result.page.toString());
+            }
         } catch (err) {
             console.error('Error fetching players:', err);
             toast.error('Failed to load players: ' + (err instanceof Error ? err.message : String(err)));
@@ -457,6 +492,71 @@ export default function PlayersPage() {
         }
     }
 
+    async function handleBulkEditGender() {
+        if (bulkEditGender === undefined) {
+            toast.error('Please select a gender');
+            return;
+        }
+
+        const selectedRowIndices = Object.keys(rowSelection);
+        const selectedPlayers = selectedRowIndices.map(index => players[parseInt(index)]);
+
+        if (selectedPlayers.length === 0) {
+            toast.error('No players selected');
+            return;
+        }
+
+        setBulkUpdating(true);
+        const loadingToast = toast.loading(`Updating gender for ${selectedPlayers.length} players...`);
+
+        try {
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Update players in parallel with a reasonable batch size
+            const batchSize = 10;
+            for (let i = 0; i < selectedPlayers.length; i += batchSize) {
+                const batch = selectedPlayers.slice(i, i + batchSize);
+                const updatePromises = batch.map(player =>
+                    updatePlayer(player.id, { gender: bulkEditGender as 'men' | 'women' | null })
+                        .then(() => {
+                            successCount++;
+                        })
+                        .catch((error) => {
+                            console.error(`Error updating player ${player.id}:`, error);
+                            errorCount++;
+                        })
+                );
+                await Promise.all(updatePromises);
+            }
+
+            // Clear selection and close modal
+            setRowSelection({});
+            setBulkEditModalOpen(false);
+            setBulkEditGender(undefined);
+
+            // Refetch players to show updated data
+            await fetchPlayersData(currentPage);
+
+            if (errorCount > 0) {
+                toast.warning(`Updated ${successCount} players. ${errorCount} failed.`, {
+                    id: loadingToast,
+                });
+            } else {
+                toast.success(`Successfully updated gender for ${successCount} players!`, {
+                    id: loadingToast,
+                });
+            }
+        } catch (err: any) {
+            console.error('Bulk edit error:', err);
+            toast.error(err.message || 'Bulk update failed', {
+                id: loadingToast,
+            });
+        } finally {
+            setBulkUpdating(false);
+        }
+    }
+
     const confirmDelete = async () => {
         if (deletingPlayer) {
             try {
@@ -528,13 +628,23 @@ export default function PlayersPage() {
                 </Button>
             </div>
 
-            {/* Bulk Upload Button and Modal */}
-            <button
-                className="mb-4 px-4 py-2 bg-blue-600 text-white rounded"
-                onClick={() => setImportModalOpen(true)}
-            >
-                Bulk Upload Players
-            </button>
+            {/* Bulk Actions */}
+            <div className="mb-4 flex flex-wrap gap-2">
+                <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                    onClick={() => setImportModalOpen(true)}
+                >
+                    Bulk Upload Players
+                </button>
+                {Object.keys(rowSelection).length > 0 && (
+                    <button
+                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        onClick={() => setBulkEditModalOpen(true)}
+                    >
+                        Bulk Edit Gender ({Object.keys(rowSelection).length} selected)
+                    </button>
+                )}
+            </div>
             {importModalOpen && (
                 <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded shadow-lg w-full max-w-3xl relative">
@@ -629,6 +739,83 @@ export default function PlayersPage() {
                 </div>
             )}
 
+            {/* Bulk Edit Gender Modal */}
+            {bulkEditModalOpen && (
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+                        {/* Close button */}
+                        <button
+                            className="absolute top-3 right-3 text-2xl text-gray-400 hover:text-gray-700"
+                            onClick={() => {
+                                setBulkEditModalOpen(false);
+                                setBulkEditGender(undefined);
+                            }}
+                            aria-label="Close"
+                            disabled={bulkUpdating}
+                        >
+                            &times;
+                        </button>
+                        <h2 className="text-xl font-bold mb-4">Bulk Edit Gender</h2>
+                        <p className="text-gray-600 mb-4">
+                            Update gender for {Object.keys(rowSelection).length} selected player(s)
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Gender
+                            </label>
+                            <Select
+                                value={bulkEditGender === null ? 'clear' : bulkEditGender || ''}
+                                onValueChange={(value) => {
+                                    if (value === 'clear') {
+                                        setBulkEditGender(null);
+                                    } else if (value === 'men' || value === 'women') {
+                                        setBulkEditGender(value);
+                                    } else {
+                                        setBulkEditGender(undefined);
+                                    }
+                                }}
+                                disabled={bulkUpdating}
+                            >
+                                <SelectTrigger className="bg-white">
+                                    <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="men">Άνδρες (Men)</SelectItem>
+                                    <SelectItem value="women">Γυναίκες (Women)</SelectItem>
+                                    <SelectItem value="clear">Καθαρισμός (Clear)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 transition-colors disabled:opacity-50"
+                                onClick={() => {
+                                    setBulkEditModalOpen(false);
+                                    setBulkEditGender(undefined);
+                                }}
+                                disabled={bulkUpdating}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                                onClick={handleBulkEditGender}
+                                disabled={bulkUpdating || bulkEditGender === undefined}
+                            >
+                                {bulkUpdating ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    `Update ${Object.keys(rowSelection).length} Player(s)`
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Players Table (TanStack Table) */}
             <Card className="transition-all duration-200 hover:shadow-lg">
                 <CardHeader>
@@ -659,12 +846,12 @@ export default function PlayersPage() {
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
                                 {/* Active / Inactive filter */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-600 whitespace-nowrap">Κατάσταση:</span>
                                     <div className="inline-flex rounded-md border border-gray-200 bg-white overflow-hidden">
                                         <button
                                             type="button"
                                             onClick={() => {
                                                 setStatusFilter('all');
+                                                localStorage.setItem('playersStatusFilter', 'all');
                                             }}
                                             className={`px-3 py-1.5 text-xs sm:text-sm ${statusFilter === 'all'
                                                 ? 'bg-blue-600 text-white'
@@ -677,6 +864,7 @@ export default function PlayersPage() {
                                             type="button"
                                             onClick={() => {
                                                 setStatusFilter('active');
+                                                localStorage.setItem('playersStatusFilter', 'active');
                                             }}
                                             className={`px-3 py-1.5 text-xs sm:text-sm border-l border-gray-200 ${statusFilter === 'active'
                                                 ? 'bg-green-600 text-white'
@@ -689,6 +877,7 @@ export default function PlayersPage() {
                                             type="button"
                                             onClick={() => {
                                                 setStatusFilter('inactive');
+                                                localStorage.setItem('playersStatusFilter', 'inactive');
                                             }}
                                             className={`px-3 py-1.5 text-xs sm:text-sm border-l border-gray-200 ${statusFilter === 'inactive'
                                                 ? 'bg-gray-700 text-white'
@@ -707,6 +896,10 @@ export default function PlayersPage() {
                                         onChange={(e) => {
                                             const newPageSize = parseInt(e.target.value);
                                             setPageSize(newPageSize);
+                                            // Save page size to localStorage
+                                            if (typeof window !== 'undefined') {
+                                                localStorage.setItem('playersPageSize', newPageSize.toString());
+                                            }
                                             fetchPlayersData(1);
                                         }}
                                         className="border rounded px-2 py-1 text-sm"
@@ -717,54 +910,6 @@ export default function PlayersPage() {
                                         <option value={100}>100</option>
                                     </select>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Pagination Info and Controls */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="text-sm text-gray-600">
-                                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} players
-                            </div>
-
-                            {/* Pagination Controls */}
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(1)}
-                                    disabled={currentPage === 1}
-                                    className="hidden sm:flex"
-                                >
-                                    {'<<'}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(currentPage - 1)}
-                                    disabled={currentPage === 1}
-                                >
-                                    {'<'}
-                                </Button>
-                                <span className="px-2 text-sm flex items-center whitespace-nowrap">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(currentPage + 1)}
-                                    disabled={currentPage >= totalPages}
-                                >
-                                    {'>'}
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => fetchPlayersData(totalPages)}
-                                    disabled={currentPage >= totalPages}
-                                    className="hidden sm:flex"
-                                >
-                                    {'>>'}
-                                </Button>
                             </div>
                         </div>
                     </div>
@@ -935,6 +1080,76 @@ export default function PlayersPage() {
                                 </div>
                             );
                         })}
+                    </div>
+
+                    {/* Pagination Info and Controls */}
+                    <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t">
+                        <div className="text-sm text-gray-600">
+                            Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} players
+                        </div>
+
+                        {/* Pagination Controls */}
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    fetchPlayersData(1);
+                                    if (typeof window !== 'undefined') {
+                                        localStorage.setItem('playersCurrentPage', '1');
+                                    }
+                                }}
+                                disabled={currentPage === 1}
+                                className="hidden sm:flex"
+                            >
+                                {'<<'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    const newPage = currentPage - 1;
+                                    fetchPlayersData(newPage);
+                                    if (typeof window !== 'undefined') {
+                                        localStorage.setItem('playersCurrentPage', newPage.toString());
+                                    }
+                                }}
+                                disabled={currentPage === 1}
+                            >
+                                {'<'}
+                            </Button>
+                            <span className="px-2 text-sm flex items-center whitespace-nowrap">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    const newPage = currentPage + 1;
+                                    fetchPlayersData(newPage);
+                                    if (typeof window !== 'undefined') {
+                                        localStorage.setItem('playersCurrentPage', newPage.toString());
+                                    }
+                                }}
+                                disabled={currentPage >= totalPages}
+                            >
+                                {'>'}
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                    fetchPlayersData(totalPages);
+                                    if (typeof window !== 'undefined') {
+                                        localStorage.setItem('playersCurrentPage', totalPages.toString());
+                                    }
+                                }}
+                                disabled={currentPage >= totalPages}
+                                className="hidden sm:flex"
+                            >
+                                {'>>'}
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>

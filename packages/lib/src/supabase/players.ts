@@ -4,7 +4,12 @@ import type { Player } from "../types/player";
 const TABLE = "players";
 
 function mapPlayer(row: any): Player {
-  return {
+  // Explicitly extract gender to ensure it's included
+  const genderValue: "men" | "women" | null =
+    row.gender === "men" ? "men" : row.gender === "women" ? "women" : null;
+
+  // Create player object - use spread operator to ensure gender is included
+  const playerObj: any = {
     id: row.id,
     firstName: row.first_name,
     lastName: row.last_name,
@@ -34,6 +39,7 @@ function mapPlayer(row: any): Player {
     consistency: row.consistency,
     age: row.age,
     hand: row.hand,
+    gender: genderValue,
     notes: row.notes,
     lastMatchDate: row.last_match_date,
     injuryStatus: row.injury_status,
@@ -45,6 +51,15 @@ function mapPlayer(row: any): Player {
     claimedByUserId: row.claimed_by_user_id,
     claimedAt: row.claimed_at,
   };
+
+  // Verify gender is in the object before type assertion
+  if (!("gender" in playerObj)) {
+    // Force add it if missing
+    playerObj.gender = genderValue;
+  }
+
+  const player = playerObj as Player;
+  return player;
 }
 
 // Map Player object from camelCase to snake_case for DB writes
@@ -93,6 +108,7 @@ function toDbPlayer(player: Partial<Player>): any {
     dbPlayer.consistency = player.consistency;
   if (player.age !== undefined) dbPlayer.age = player.age;
   if (player.hand !== undefined) dbPlayer.hand = player.hand;
+  if ("gender" in player) dbPlayer.gender = player.gender; // Can be null, so check if key exists
   if (player.notes !== undefined) dbPlayer.notes = player.notes;
   if (player.lastMatchDate !== undefined)
     dbPlayer.last_match_date = player.lastMatchDate;
@@ -358,6 +374,7 @@ export async function fetchActivePlayers() {
     console.error("[fetchActivePlayers] Supabase error:", error);
     throw error;
   }
+
   const mapped = (data ?? []).map(mapPlayer);
   return mapped;
 }

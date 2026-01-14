@@ -118,7 +118,7 @@ export function PromotionalHero({
             id: 'all-tournament-results',
             title: lang === 'el' ? 'Όλα τα Αποτελέσματα' : 'All Tournament Results',
             subtitle: lang === 'el' ? 'Εξερεύνησε όλες τις διοργανώσεις' : 'Explore All Tournaments',
-            time: lang === 'el' ? 'Πλήρης Ιστορικό' : 'Complete History',
+            time: lang === 'el' ? 'Πλήρες Ιστορικό' : 'Detailed History',
             players: [],
             image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHM4ZzlyODZ2ZjZmNDJxMGRxYXAyY2liemUzdThnODJpaGVhbXc3OSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/tDQlA2505j56E2YEv8/giphy.gif', // Tennis tournament results animation
             action: () => router.push(`/${lang}/results`),

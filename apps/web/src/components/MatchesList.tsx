@@ -21,8 +21,39 @@ type RawMatch = Database['public']['Tables']['matches']['Row'] & {
     player_b2?: any;
 };
 
+// Helper function to get team name for a player in a team tournament
+async function getTeamNameForPlayer(
+    tournamentId: string | null,
+    playerId: string | null
+): Promise<string | null> {
+    if (!tournamentId || !playerId) return null;
+
+    try {
+        // First get the team_id from team_members
+        const { data: teamMember } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('player_id', playerId)
+            .single();
+
+        if (!teamMember?.team_id) return null;
+
+        // Then get the team name from tournament_teams
+        const { data: team } = await supabase
+            .from('tournament_teams')
+            .select('name')
+            .eq('id', teamMember.team_id)
+            .eq('tournament_id', tournamentId)
+            .single();
+
+        return team?.name || null;
+    } catch (error) {
+        return null;
+    }
+}
+
 // Transform raw database match to web app format
-function transformMatch(rawMatch: RawMatch): Match {
+async function transformMatch(rawMatch: RawMatch): Promise<Match> {
     const getPlayerName = (player: RawMatch['player_a']) => {
         if (player?.first_name && player?.last_name) {
             return `${player.first_name} ${player.last_name}`;
@@ -44,14 +75,39 @@ function transformMatch(rawMatch: RawMatch): Match {
     }
 
     const isDoubles = (rawMatch.match_type || 'singles') === 'doubles';
+    const isTeamTournament = rawMatch.tournaments?.is_team_tournament === true;
 
-    const teamAName = isDoubles && rawMatch.player_a1 && rawMatch.player_a2
-        ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
-        : getPlayerName(rawMatch.player_a);
+    // For team tournaments, get team names instead of player names
+    let teamAName: string;
+    let teamBName: string;
 
-    const teamBName = isDoubles && rawMatch.player_b1 && rawMatch.player_b2
-        ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
-        : getPlayerName(rawMatch.player_b);
+    if (isTeamTournament) {
+        // For singles team tournaments, get team name for each player
+        if (!isDoubles) {
+            const teamANameResult = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a_id);
+            const teamBNameResult = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b_id);
+            teamAName = teamANameResult || getPlayerName(rawMatch.player_a);
+            teamBName = teamBNameResult || getPlayerName(rawMatch.player_b);
+        } else {
+            // For doubles team tournaments, we need to find teams for both players
+            // For now, use player names as fallback - we can enhance this later
+            teamAName = rawMatch.player_a1 && rawMatch.player_a2
+                ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
+                : getPlayerName(rawMatch.player_a);
+            teamBName = rawMatch.player_b1 && rawMatch.player_b2
+                ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
+                : getPlayerName(rawMatch.player_b);
+        }
+    } else {
+        // Regular tournament - use player names
+        teamAName = isDoubles && rawMatch.player_a1 && rawMatch.player_a2
+            ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
+            : getPlayerName(rawMatch.player_a);
+
+        teamBName = isDoubles && rawMatch.player_b1 && rawMatch.player_b2
+            ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
+            : getPlayerName(rawMatch.player_b);
+    }
 
     return {
         id: rawMatch.id,
@@ -130,7 +186,8 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
                 name,
                 surface,
                 location,
-                matches_type
+                matches_type,
+                is_team_tournament
             ),
             tournament_categories (
                 id,
@@ -215,7 +272,12 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
 
     if (error) throw error;
 
-    return (data || []).map((rawMatch: any) => transformMatch(rawMatch));
+    // Transform matches - now async because we need to fetch team names
+    const transformedMatches = await Promise.all(
+        (data || []).map((rawMatch: any) => transformMatch(rawMatch))
+    );
+
+    return transformedMatches;
 }
 
 
@@ -278,7 +340,7 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
     if (isLoading) return <div>{dict?.common?.loading || 'Loading matches...'}</div>;
     if (error) return <div>{dict?.common?.error || 'Error loading matches.'}</div>;
 
-    const liveMatches = matches.filter(m => m.status_display === 'live');
+    const liveMatches = matches.filter(m => m.status_display === 'live' && m.status !== 'cancelled');
     const upcomingMatches = matches.filter(m => m.status_display === 'upcoming');
 
     return (

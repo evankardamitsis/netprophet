@@ -30,17 +30,15 @@ export function AllMatches({
                 />
             </div>
 
-            {/* Upcoming Matches Section */}
-            {upcomingMatches.length > 0 && (
-                <div className="pb-6">
-                    <MatchesTable
-                        matches={upcomingMatches}
-                        onSelectMatch={onSelectMatch}
-                        sidebarOpen={sidebarOpen}
-                        slipCollapsed={slipCollapsed}
-                    />
-                </div>
-            )}
+            {/* Upcoming Matches Section - Always render to show empty state if needed */}
+            <div className="pb-6">
+                <MatchesTable
+                    matches={upcomingMatches}
+                    onSelectMatch={onSelectMatch}
+                    sidebarOpen={sidebarOpen}
+                    slipCollapsed={slipCollapsed}
+                />
+            </div>
         </div>
     );
 }

@@ -88,7 +88,6 @@ export default function TournamentPage() {
                 ...tournamentData,
                 is_team_tournament: tournamentData.is_team_tournament === true || tournamentData.is_team_tournament === 'true' || tournamentData.is_team_tournament === 1
             };
-            console.log('Setting tournament state with is_team_tournament:', tournamentWithBoolean.is_team_tournament, 'from original:', tournamentData.is_team_tournament);
             setTournament(tournamentWithBoolean as Tournament);
             setMatches(matchesData as any);
             setParticipants(participantsData as any);
@@ -102,13 +101,11 @@ export default function TournamentPage() {
             if (tournamentData.is_team_tournament) {
                 try {
                     const teamsData = await getTournamentTeams(tournamentId);
-                    console.log('Loaded teams data:', teamsData);
                     // Map team_members to members for consistency with TypeScript interface
                     const mappedTeams = teamsData?.map((team: any) => ({
                         ...team,
                         members: team.team_members || []
                     })) || [];
-                    console.log('Mapped teams:', mappedTeams);
                     setTeams(mappedTeams as any);
                 } catch (error) {
                     console.error('Error loading teams:', error);
@@ -303,7 +300,6 @@ export default function TournamentPage() {
 
     const handleCreateTeam = async (teamData: any) => {
         try {
-            console.log('Creating team with data:', { ...teamData, tournament_id: tournamentId });
             await createTournamentTeam({
                 ...teamData,
                 tournament_id: tournamentId
@@ -797,19 +793,13 @@ export default function TournamentPage() {
 
                     <TabsContent value="participants" className="mt-0">
                         {tournament ? (
-                            (() => {
-                                const isTeam = tournament.is_team_tournament === true;
-                                console.log('Rendering ParticipantsTable with tournament.is_team_tournament:', tournament.is_team_tournament, 'isTeam:', isTeam);
-                                return (
-                                    <ParticipantsTable
-                                        participants={participants}
-                                        tournamentName={tournament.name}
-                                        matches={matches}
-                                        isTeamTournament={isTeam}
-                                        teams={teams}
-                                    />
-                                );
-                            })()
+                            <ParticipantsTable
+                                participants={participants}
+                                tournamentName={tournament.name}
+                                matches={matches}
+                                isTeamTournament={tournament.is_team_tournament === true}
+                                teams={teams}
+                            />
                         ) : (
                             <div className="text-center py-8">Loading tournament data...</div>
                         )}

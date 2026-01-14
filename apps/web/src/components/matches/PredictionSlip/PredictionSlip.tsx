@@ -82,8 +82,8 @@ export function PredictionSlip({
     const { dict, lang } = useDictionary();
     const { user } = useAuth();
 
-    // Parlay state
-    const [isParlayMode, setIsParlayMode] = useState<boolean>(false);
+    // Parlay state (disabled for now)
+    const [isParlayMode] = useState<boolean>(false);
     const [userStreak, setUserStreak] = useState<number>(5); // Mock user streak - in real app this would come from user stats
 
     // Safe slip power-up state
@@ -102,13 +102,6 @@ export function PredictionSlip({
 
     // Track which cards are expanded (only the most recent one by default)
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
-
-    // Reset parlay mode if less than 2 predictions
-    useEffect(() => {
-        if (predictions.length < 2 && isParlayMode) {
-            setIsParlayMode(false);
-        }
-    }, [predictions.length, isParlayMode]);
 
     // Auto-expand the most recent prediction and collapse others
     useEffect(() => {
@@ -205,118 +198,59 @@ export function PredictionSlip({
     const parlayStake = getTotalIndividualStake;
 
     // Calculate parlay odds and winnings (only when in parlay mode)
-    const parlayCalculation = isParlayMode ? calculateParlayOdds(predictionItems, parlayStake, userStreak) : null;
-    const bonusDescriptions = isParlayMode ? getBonusDescription(predictionItems, userStreak) : [];
-    const parlayValidation = isParlayMode ? validateParlayBet(predictionItems, parlayStake, wallet.balance) : null;
+    const parlayCalculation = null;
+    const bonusDescriptions = [];
+    const parlayValidation = null;
 
     const handleSubmit = async () => {
         try {
             // Dynamic import to work around module resolution issue
             const { BetsService: BetsServiceModule } = await import('@netprophet/lib');
 
-            if (isParlayMode) {
-                // Parlay mode - place single parlay bet
-                if (!parlayValidation?.isValid) {
-                    alert(parlayValidation?.error || dict?.matches?.invalidParlayBet || 'Invalid parlay bet');
-                    return;
-                }
+            // Individual mode only - place separate bets for each prediction using existing betAmount
+            for (const prediction of predictions) {
+                const betAmount = prediction.betAmount || 0;
+                if (betAmount > 0) {
+                    const multiplier = prediction.multiplier || 1;
+                    const potentialWinnings = prediction.potentialWinnings || 0;
 
-                // Create parlay bet using the new parlay method
-                const parlayPredictions = predictionItems.map((item, index) => ({
-                    matchId: item.matchId.toString(),
-                    betAmount: item.points || 0,
-                    multiplier: (item.match.player1.odds + item.match.player2.odds) / 2,
-                    prediction: formatPrediction(item.prediction),
-                    description: `${item.match.player1.name} vs ${item.match.player2.name}`
-                }));
+                    const bet = await BetsServiceModule.createBet({
+                        matchId: prediction.matchId,
+                        betAmount: betAmount,
+                        multiplier: multiplier,
+                        potentialWinnings: potentialWinnings,
+                        prediction: formatPrediction(prediction.prediction),
+                        description: `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`
+                    });
 
-                const parlayBetResult = await BetsServiceModule.createParlayBet({
-                    predictions: parlayPredictions,
-                    totalStake: parlayStake,
-                    baseOdds: parlayCalculation!.baseOdds,
-                    finalOdds: parlayCalculation!.finalOdds,
-                    bonusMultiplier: parlayCalculation!.bonusMultiplier,
-                    streakBooster: parlayCalculation!.streakBooster,
-                    isSafeBet: false,
-                    safeBetCost: 0
-                });
-
-                // Use safe parlay power-up if enabled
-                if (isUsingSafeParlay && user?.id && parlayBetResult && parlayBetResult.length > 0) {
-                    try {
-                        await applySafeSlipPowerUp(user.id, 'safeParlay', parlayBetResult[0].id);
-                        toast.success(`${dict?.matches?.powerUps?.safeParlayApplied || 'Safe Parlay Slip power-up applied'}! 🛡️`);
-                    } catch (powerUpError) {
-                        console.error('Error using safe parlay power-up:', powerUpError);
-                        // Don't fail the bet placement if power-up usage fails
-                    }
-                }
-
-                // Use Double Points Match power-up if enabled for parlay (apply to the selected match)
-                if (doublePointsMatchId && user?.id) {
-                    try {
-                        await applyDoublePointsMatchPowerUp(user.id, doublePointsMatchId);
-                        toast.success(`${dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double Points Match power-up applied'}! 🎯`);
-                    } catch (powerUpError) {
-                        console.error('Error using Double Points Match power-up:', powerUpError);
-                        // Don't fail the bet placement if power-up usage fails
-                    }
-                }
-
-                // Update wallet balance
-                await placeBet(
-                    parlayStake,
-                    1, // Using a simple number for matchId
-                    `${dict?.matches?.parlayBetDescription?.replace('{count}', predictionItems.length.toString()).replace('{odds}', formatParlayOdds(parlayCalculation!.finalOdds)) || `Parlay bet - ${predictionItems.length} predictions - ${formatParlayOdds(parlayCalculation!.finalOdds)}x odds`}`
-                );
-
-
-            } else {
-                // Individual mode - place separate bets for each prediction using existing betAmount
-                for (const prediction of predictions) {
-                    const betAmount = prediction.betAmount || 0;
-                    if (betAmount > 0) {
-                        const multiplier = prediction.multiplier || 1;
-                        const potentialWinnings = prediction.potentialWinnings || 0;
-
-                        const bet = await BetsServiceModule.createBet({
-                            matchId: prediction.matchId,
-                            betAmount: betAmount,
-                            multiplier: multiplier,
-                            potentialWinnings: potentialWinnings,
-                            prediction: formatPrediction(prediction.prediction),
-                            description: `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`
-                        });
-
-                        // Use safe single power-up if enabled (only for the first bet if multiple)
-                        if (isUsingSafeSingle && user?.id && predictions.indexOf(prediction) === 0) {
-                            try {
-                                await applySafeSlipPowerUp(user.id, 'safeSingle', bet.id);
-                                toast.success(`${dict?.matches?.powerUps?.safeSingleApplied || 'Safe Slip power-up applied'}! 🛡️`);
-                            } catch (powerUpError) {
-                                console.error('Error using safe single power-up:', powerUpError);
-                                // Don't fail the bet placement if power-up usage fails
-                            }
+                    // Use safe single power-up if enabled (only for the first bet if multiple)
+                    if (isUsingSafeSingle && user?.id && predictions.indexOf(prediction) === 0) {
+                        try {
+                            await applySafeSlipPowerUp(user.id, 'safeSingle', bet.id);
+                            toast.success(`${dict?.matches?.powerUps?.safeSingleApplied || 'Safe Slip power-up applied'}! 🛡️`);
+                        } catch (powerUpError) {
+                            console.error('Error using safe single power-up:', powerUpError);
+                            // Don't fail the bet placement if power-up usage fails
                         }
-
-                        // Use Double Points Match power-up if enabled for this specific match
-                        if (doublePointsMatchId === prediction.matchId && user?.id) {
-                            try {
-                                await applyDoublePointsMatchPowerUp(user.id, prediction.matchId);
-                                toast.success(`${dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double Points Match power-up applied'}! 🎯`);
-                            } catch (powerUpError) {
-                                console.error('Error using Double Points Match power-up:', powerUpError);
-                                // Don't fail the bet placement if power-up usage fails
-                            }
-                        }
-
-                        // Update wallet balance
-                        await placeBet(
-                            betAmount,
-                            1, // Using a simple number for matchId
-                            `${dict?.matches?.individualBetDescription?.replace('{name}', `${prediction.match.player1.name} vs ${prediction.match.player2.name}`).replace('{multiplier}', multiplier.toFixed(2)) || `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`}`
-                        );
                     }
+
+                    // Use Double Points Match power-up if enabled for this specific match
+                    if (doublePointsMatchId === prediction.matchId && user?.id) {
+                        try {
+                            await applyDoublePointsMatchPowerUp(user.id, prediction.matchId);
+                            toast.success(`${dict?.matches?.powerUps?.doublePointsMatchApplied || 'Double Points Match power-up applied'}! 🎯`);
+                        } catch (powerUpError) {
+                            console.error('Error using Double Points Match power-up:', powerUpError);
+                            // Don't fail the bet placement if power-up usage fails
+                        }
+                    }
+
+                    // Update wallet balance
+                    await placeBet(
+                        betAmount,
+                        1, // Using a simple number for matchId
+                        `${dict?.matches?.individualBetDescription?.replace('{name}', `${prediction.match.player1.name} vs ${prediction.match.player2.name}`).replace('{multiplier}', multiplier.toFixed(2)) || `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`}`
+                    );
                 }
             }
 
@@ -505,12 +439,7 @@ export function PredictionSlip({
         return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
     };
 
-    const isParlayModeValid = () => {
-        const totalStake = getTotalIndividualStake;
-        // Check that all predictions have stakes >= MIN_BET
-        const allPredictionsHaveStakes = predictions.every(prediction => (prediction.betAmount || 0) >= COIN_CONSTANTS.MIN_BET);
-        return allPredictionsHaveStakes && totalStake > 0 && totalStake <= wallet.balance;
-    };
+    const isParlayModeValid = () => false;
 
     // Determine if any safe slip power-up is active for the current mode
     const isSafeSlipActive = (isParlayMode && isUsingSafeParlay) || (!isParlayMode && isUsingSafeSingle);
@@ -634,73 +563,29 @@ export function PredictionSlip({
                     <EmptyState dict={dict} />
                 ) : (
                     <>
-                        {/* Mode Toggle - Only show when 2+ predictions */}
-                        {predictions.length >= 2 && (
-                            <ParlayModeToggle
-                                predictionsCount={predictions.length}
-                                isParlayMode={isParlayMode}
-                                onToggleParlayMode={() => setIsParlayMode(!isParlayMode)}
-                                dict={dict}
-                            />
-                        )}
-
-                        {/* Encouragement message for single prediction */}
-                        {predictions.length === 1 && (
-                            <motion.div
-                                className="relative bg-gradient-to-r from-purple-600/20 via-blue-600/20 to-purple-600/20 rounded-xl p-3 border border-purple-500/30 backdrop-blur-sm"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                <div className="flex items-center space-x-3">
-                                    <motion.div
-                                        animate={{
-                                            scale: [1, 1.1, 1],
-                                            rotate: [0, 5, -5, 0],
-                                        }}
-                                        transition={{
-                                            duration: 2,
-                                            repeat: Infinity,
-                                            ease: 'easeInOut',
-                                        }}
-                                    >
-                                        <span className="text-2xl">🎯</span>
-                                    </motion.div>
-                                    <div className="text-white text-xs">
-                                        <span className="font-semibold text-purple-200">
-                                            {dict?.matches?.addOneMorePrediction || 'Add one more prediction'}
-                                        </span>
-                                        <p className="text-purple-300/80 mt-0.5">
-                                            {dict?.matches?.unlockParlayMode || 'to unlock exciting parlay mode with bonus rewards!'}
-                                        </p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Safe Slip Power-ups Section */}
+                        {/* Safe Slip Power-ups Section (parlay disabled, show singles only) */}
                         <SafeSlipPowerUps
-                            hasSafeParlayPowerUp={hasSafeParlayPowerUp}
+                            hasSafeParlayPowerUp={false}
                             hasSafeSinglePowerUp={hasSafeSinglePowerUp}
-                            isUsingSafeParlay={isUsingSafeParlay}
+                            isUsingSafeParlay={false}
                             isUsingSafeSingle={isUsingSafeSingle}
-                            onToggleSafeParlay={() => setIsUsingSafeParlay(!isUsingSafeParlay)}
+                            onToggleSafeParlay={() => { }}
                             onToggleSafeSingle={() => setIsUsingSafeSingle(!isUsingSafeSingle)}
                             predictionsCount={predictions.length}
-                            isParlayMode={isParlayMode}
+                            isParlayMode={false}
                             dict={dict}
                         />
 
-                        {/* Power-up Suggestions */}
+                        {/* Power-up Suggestions (parlay disabled) */}
                         <PowerUpSuggestions
                             predictionsCount={predictions.length}
                             totalStake={getTotalIndividualStake}
-                            isParlayMode={isParlayMode}
-                            parlayOdds={parlayCalculation?.finalOdds}
+                            isParlayMode={false}
+                            parlayOdds={undefined}
                             dict={dict}
                             lang={lang}
                             onPowerUpPurchased={handlePowerUpPurchased}
-                            hasSafeParlayPowerUp={hasSafeParlayPowerUp}
+                            hasSafeParlayPowerUp={false}
                             hasSafeSinglePowerUp={hasSafeSinglePowerUp}
                             hasDoublePointsMatchPowerUp={hasDoublePointsMatchPowerUp}
                         />

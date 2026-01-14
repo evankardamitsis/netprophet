@@ -39,7 +39,8 @@ async function fetchMatch(id: string): Promise<Match | null> {
                 name,
                 surface,
                 location,
-                matches_type
+                matches_type,
+                is_team_tournament
             ),
             tournament_categories (
                 id,
@@ -148,12 +149,55 @@ async function fetchMatch(id: string): Promise<Match | null> {
     }
 
     const isDoubles = (rawMatch.match_type || 'singles') === 'doubles';
-    const teamAName = isDoubles && rawMatch.player_a1 && rawMatch.player_a2
-        ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
-        : getPlayerName(rawMatch.player_a);
-    const teamBName = isDoubles && rawMatch.player_b1 && rawMatch.player_b2
-        ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
-        : getPlayerName(rawMatch.player_b);
+    const isTeamTournament = rawMatch.tournaments?.is_team_tournament === true;
+
+    // Helper function to get team name for a player
+    const getTeamNameForPlayer = async (tournamentId: string | null, playerId: string | null): Promise<string | null> => {
+        if (!tournamentId || !playerId || !isTeamTournament) return null;
+
+        try {
+            // First get the team_id from team_members
+            const { data: teamMember } = await supabase
+                .from('team_members')
+                .select('team_id')
+                .eq('player_id', playerId)
+                .single();
+
+            if (!teamMember?.team_id) return null;
+
+            // Then get the team name from tournament_teams
+            const { data: team } = await supabase
+                .from('tournament_teams')
+                .select('name')
+                .eq('id', teamMember.team_id)
+                .eq('tournament_id', tournamentId)
+                .single();
+
+            return team?.name || null;
+        } catch (error) {
+            return null;
+        }
+    };
+
+    // For team tournaments, get team names instead of player names
+    let teamAName: string;
+    let teamBName: string;
+
+    if (isTeamTournament && !isDoubles) {
+        // For singles team tournaments, get team name for each player
+        const teamANameResult = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a_id);
+        const teamBNameResult = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b_id);
+        teamAName = teamANameResult || getPlayerName(rawMatch.player_a);
+        teamBName = teamBNameResult || getPlayerName(rawMatch.player_b);
+    } else {
+        // Regular tournament or doubles - use player names
+        teamAName = isDoubles && rawMatch.player_a1 && rawMatch.player_a2
+            ? `${getPlayerName(rawMatch.player_a1)} & ${getPlayerName(rawMatch.player_a2)}`
+            : getPlayerName(rawMatch.player_a);
+        teamBName = isDoubles && rawMatch.player_b1 && rawMatch.player_b2
+            ? `${getPlayerName(rawMatch.player_b1)} & ${getPlayerName(rawMatch.player_b2)}`
+            : getPlayerName(rawMatch.player_b);
+    }
 
     const transformedMatch = {
         id: rawMatch.id,

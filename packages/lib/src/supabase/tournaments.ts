@@ -405,25 +405,18 @@ export async function createTournamentTeam(team: {
       player_id,
     }));
 
-    console.log("Inserting team members:", members);
-    const { data: insertedMembers, error: membersError } = await supabase
+    const { error: membersError } = await supabase
       .from("team_members")
-      .insert(members)
-      .select();
+      .insert(members);
 
     if (membersError) {
       console.error("Error inserting team members:", membersError);
       throw membersError;
     }
-    console.log("Successfully inserted team members:", insertedMembers);
-  } else {
-    console.log("No team members to insert (member_ids is empty or undefined)");
   }
 
   // Return the team with all relations
-  const teamWithDetails = await getTournamentTeam(teamData.id);
-  console.log("Team with details after creation:", teamWithDetails);
-  return teamWithDetails;
+  return getTournamentTeam(teamData.id);
 }
 
 export async function updateTournamentTeam(

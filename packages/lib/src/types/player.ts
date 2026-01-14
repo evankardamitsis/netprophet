@@ -33,6 +33,7 @@ export interface Player {
   consistency: number; // 1-10
   age: number; // 16-80
   hand: "left" | "right";
+  gender?: "men" | "women" | null; // Player gender for filtering
   notes?: string;
   lastMatchDate?: string; // ISO date string
   injuryStatus?: "healthy" | "minor" | "major";
