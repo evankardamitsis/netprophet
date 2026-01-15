@@ -187,6 +187,7 @@ export interface Profile {
   is_admin: boolean | null;
   created_at: string | null;
   balance?: number | null;
+  last_login?: string | null;
 }
 
 // Match Results Types

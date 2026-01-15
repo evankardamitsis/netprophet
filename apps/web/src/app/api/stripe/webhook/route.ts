@@ -119,6 +119,37 @@ export async function POST(request: NextRequest) {
           // Don't fail the webhook if transaction record fails
         }
 
+        // Get user email for notification
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", userId)
+          .single();
+
+        // Create admin notification for payment received
+        try {
+          await supabase.rpc("create_admin_notification", {
+            p_type: "payment_received",
+            p_severity: "success",
+            p_title: "Payment Received",
+            p_message: `Payment of ${coinsToAdd} coins received from user`,
+            p_metadata: {
+              user_id: userId,
+              user_email: profile?.email || "Unknown",
+              amount: coinsToAdd,
+              currency: "coins",
+              pack_id: packId,
+              stripe_session_id: session.id,
+            },
+          });
+        } catch (notificationError) {
+          console.error(
+            "Error creating payment notification:",
+            notificationError
+          );
+          // Don't fail the webhook if notification creation fails
+        }
+
         console.log(`Successfully added ${coinsToAdd} coins to user ${userId}`);
         break;
       }

@@ -22,19 +22,34 @@ export default function UsersPage() {
     const [editError, setEditError] = useState<string | null>(null);
     const [editSuccess, setEditSuccess] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
-    const [sorting, setSorting] = useState<SortingState>([]);
+    const [sorting, setSorting] = useState<SortingState>([{ id: 'created_at', desc: true }]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     useEffect(() => {
         const fetchUsers = async () => {
             setLoading(true);
             try {
-                const { data, error } = await supabase.from('profiles').select('*');
-                if (error) {
-                    setError(error.message);
-                } else {
-                    setUsers(data || []);
+                // Get the current session token
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
+                    throw new Error('No authentication token available');
                 }
+
+                // Fetch users with last login info from API route
+                const response = await fetch('/api/admin/users', {
+                    headers: {
+                        'Authorization': `Bearer ${session.access_token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+
+                const result = await response.json();
+                setUsers(result.users || []);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch users');
             } finally {
                 setLoading(false);
             }
@@ -79,7 +94,19 @@ export default function UsersPage() {
             {
                 accessorKey: 'created_at',
                 header: 'Created At',
-                cell: info => new Date(info.getValue()).toLocaleString(),
+                cell: info => {
+                    const value = info.getValue();
+                    return value ? new Date(value).toLocaleString() : '-';
+                },
+                enableSorting: true,
+            },
+            {
+                accessorKey: 'last_login',
+                header: 'Latest Login',
+                cell: info => {
+                    const value = info.getValue();
+                    return value ? new Date(value).toLocaleString() : 'Never';
+                },
                 enableSorting: true,
             },
             {
@@ -365,6 +392,12 @@ export default function UsersPage() {
                                             <span className="text-gray-500">Created:</span>
                                             <span className="font-medium">
                                                 {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between col-span-2">
+                                            <span className="text-gray-500">Latest Login:</span>
+                                            <span className="font-medium">
+                                                {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}
                                             </span>
                                         </div>
                                     </div>

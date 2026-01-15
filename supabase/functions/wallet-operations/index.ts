@@ -208,13 +208,13 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
   }
 
   const claimedPlayerId = activeProfile?.claimed_player_id;
-  
+
   // Always validate if we have a claimed player and a matchId
   // The matchId might be a placeholder (like "1") from the frontend,
   // but if it's a valid UUID, we should validate
   if (claimedPlayerId && matchId) {
     const isMatchIdUUID = isValidUUID(matchId);
-    
+
     console.log("Participant validation check:", {
       claimedPlayerId,
       matchId,
@@ -298,6 +298,39 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 
   if (transactionError) {
     console.error("Failed to record transaction:", transactionError);
+  }
+
+  // Create admin notification for large bets (>= 500 coins)
+  if (amount >= 500) {
+    try {
+      // Get user email for notification
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", user.id)
+        .single();
+
+      await supabase.rpc("create_admin_notification", {
+        p_type: "large_bet",
+        p_severity: "warning",
+        p_title: "Large Bet Placed",
+        p_message: `A large bet of ${amount} coins has been placed`,
+        p_metadata: {
+          user_id: user.id,
+          user_email: profile?.email || "Unknown",
+          amount: amount,
+          currency: "coins",
+          match_id: matchId,
+          description: description,
+        },
+      });
+    } catch (notificationError) {
+      console.error(
+        "Error creating large bet notification:",
+        notificationError
+      );
+      // Don't fail the bet if notification creation fails
+    }
   }
 
   // Get updated balance
