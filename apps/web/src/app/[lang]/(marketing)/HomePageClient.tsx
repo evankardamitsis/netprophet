@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Player } from '@netprophet/lib';
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Alert, AlertDescription } from '@netprophet/ui';
 import Header from '@/components/Header';
+import { InfoBar } from '@/components/InfoBar';
 import Footer from '@/components/Footer';
 import { FooterDisclaimer } from '@/components/FooterDisclaimer';
 import { PlayerCard } from '@/components/players/PlayerCard';
@@ -134,6 +135,10 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white">
+            {/* Info Bar */}
+            <div className="relative z-50">
+                <InfoBar lang={lang} />
+            </div>
             {/* Header */}
             <Header lang={lang} />
 

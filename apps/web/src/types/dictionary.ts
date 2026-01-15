@@ -6,6 +6,7 @@ export interface Dictionary {
     rewards: string;
     athletes: string;
     results: string;
+    tournaments: string;
     myProfile: string;
     howItWorks: string;
     backToMatches: string;
@@ -570,6 +571,40 @@ export interface Dictionary {
     finished: string;
     winner: string;
     resultsPending: string;
+  };
+  tournaments: {
+    title: string;
+    loadingTournaments: string;
+    loadingTournament: string;
+    tournamentNotFound: string;
+    backToResults: string;
+    backToTournaments: string;
+    overview: string;
+    teams: string;
+    standings: string;
+    results: string;
+    about: string;
+    totalTeams: string;
+    totalMatches: string;
+    completed: string;
+    live: string;
+    noTeamsYet: string;
+    noMatchesFound: string;
+    rank: string;
+    team: string;
+    win: string;
+    loss: string;
+    winPercentage: string;
+    matches: string;
+    round: string;
+    captain: string;
+    members: string;
+    player: string;
+    players: string;
+    exploreTournaments: string;
+    noTournamentsAvailable: string;
+    teamTournament: string;
+    status: string;
   };
   notifications: {
     title: string;

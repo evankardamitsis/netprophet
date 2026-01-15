@@ -418,6 +418,21 @@ export function TopNavigation({
                             {dict?.navigation?.results || 'Results'}
                         </motion.button>
                         <motion.button
+                            onClick={() => navigateWithFeedback(`/${currentLang}/tournaments`)}
+                            className={cx(
+                                "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
+                                borders.rounded.sm,
+                                transitions.default,
+                                pathname?.startsWith(`/${currentLang}/tournaments`)
+                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
+                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                            )}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            {dict?.navigation?.tournaments || 'Tournaments'}
+                        </motion.button>
+                        <motion.button
                             onClick={() => navigateWithFeedback(`/${currentLang}/my-picks`)}
                             className={cx(
                                 "px-1.5 xl:px-2.5 py-0.5 xl:py-1.5 font-semibold text-xs xl:text-sm",
@@ -810,6 +825,24 @@ export function TopNavigation({
                                         whileTap={{ scale: 0.98 }}
                                     >
                                         {dict?.navigation?.results || 'Results'}
+                                    </motion.button>
+                                    <motion.button
+                                        onClick={() => {
+                                            setMobileMenuOpen(false);
+                                            navigateWithFeedback(`/${currentLang}/tournaments`);
+                                        }}
+                                        className={cx(
+                                            "w-full text-left px-3 py-2 font-semibold text-base",
+                                            borders.rounded.sm,
+                                            transitions.default,
+                                            pathname?.startsWith(`/${currentLang}/tournaments`)
+                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
+                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                        )}
+                                        whileHover={{ x: 4 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.navigation?.tournaments || 'Tournaments'}
                                     </motion.button>
                                     <motion.button
                                         onClick={() => {

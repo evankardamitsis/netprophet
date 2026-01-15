@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Tournament, TournamentFormData } from '@/types';
 
 interface TournamentFormProps {
@@ -114,7 +114,11 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
 
                 <div className="space-y-2">
                     <Label htmlFor="status" className="text-base font-semibold">Status</Label>
-                    <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                    <Select
+                        key={`status-${tournament?.id || 'new'}-${formData.status}`}
+                        value={formData.status}
+                        onValueChange={(value) => handleInputChange('status', value)}
+                    >
                         <SelectTrigger className="h-12 text-base">
                             <SelectValue />
                         </SelectTrigger>
@@ -154,6 +158,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                 <div className="space-y-2">
                     <Label htmlFor="surface" className="text-base font-semibold">Surface</Label>
                     <Select
+                        key={`surface-${tournament?.id || 'new'}-${formData.surface || ''}`}
                         value={formData.surface || ''}
                         onValueChange={(value) => handleInputChange('surface', value)}
                     >
@@ -183,7 +188,11 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
 
                 <div className="space-y-2">
                     <Label htmlFor="tournament_type" className="text-base font-semibold">Tournament Type</Label>
-                    <Select value={formData.tournament_type} onValueChange={(value) => handleInputChange('tournament_type', value)}>
+                    <Select
+                        key={`tournament-type-${tournament?.id || 'new'}-${formData.tournament_type}`}
+                        value={formData.tournament_type}
+                        onValueChange={(value) => handleInputChange('tournament_type', value)}
+                    >
                         <SelectTrigger className="h-12 text-base">
                             <SelectValue />
                         </SelectTrigger>
@@ -197,7 +206,11 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
 
                 <div className="space-y-2">
                     <Label htmlFor="format" className="text-base font-semibold">Format</Label>
-                    <Select value={formData.format} onValueChange={(value) => handleInputChange('format', value)}>
+                    <Select
+                        key={`format-${tournament?.id || 'new'}-${formData.format}`}
+                        value={formData.format}
+                        onValueChange={(value) => handleInputChange('format', value)}
+                    >
                         <SelectTrigger className="h-12 text-base">
                             <SelectValue />
                         </SelectTrigger>
@@ -310,13 +323,10 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
 
             <div className="space-y-2">
                 <Label htmlFor="description" className="text-base font-semibold">Description</Label>
-                <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                <RichTextEditor
+                    value={formData.description || ''}
+                    onChange={(value) => handleInputChange('description', value)}
                     placeholder="Enter tournament description"
-                    rows={4}
-                    className="text-base resize-none"
                 />
             </div>
 

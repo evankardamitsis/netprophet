@@ -42,6 +42,7 @@ interface MatchResult {
 
 interface TournamentResults {
     tournament_name: string;
+    tournament_id?: string;
     matches: MatchResult[];
 }
 
@@ -112,6 +113,7 @@ export default function ResultsPage() {
 
                 return {
                     tournament_name: tournament.name,
+                    tournament_id: tournament.id,
                     matches
                 };
             });

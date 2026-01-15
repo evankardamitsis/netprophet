@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/matches/Sidebar';
 import { TopNavigation } from '@/components/matches/TopNavigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { MatchSelectContext } from '@/context/MatchSelectContext';
 import { PredictionSlip, FloatingPredictionButton } from '../components/matches/PredictionSlip/index';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
@@ -17,6 +18,7 @@ import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { ProfileClaimNotification } from '@/components/ProfileClaimNotification';
 import { NavigationLoader } from '@/components/NavigationLoader';
 import { AppFooter } from '@/components/AppFooter';
+import { InfoBar } from '@/components/InfoBar';
 
 import React from 'react';
 import type { ReactElement } from 'react';
@@ -95,6 +97,28 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
                     <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white overflow-hidden">
+                        {/* Fantasy Ace 2026 Banner */}
+                        <Link
+                            href={`/${lang}/tournaments/844fa43b-53c2-4116-9ba6-b41c7dd96c6b`}
+                            className="relative z-50 w-full block bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 border-b-2 border-yellow-500 shadow-lg hover:from-yellow-300 hover:via-yellow-200 hover:to-yellow-300 transition-all cursor-pointer active:scale-[0.98]"
+                        >
+                            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                                <div className="flex items-center justify-center gap-2">
+                                    <svg className="h-4 w-4 text-purple-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                    </svg>
+                                    <span className="font-black text-purple-900 text-sm sm:text-base tracking-wide">
+                                        FANTASY ACE 2026
+                                    </span>
+                                    <svg className="h-4 w-4 text-purple-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </Link>
+                        <div className="relative z-50">
+                            <InfoBar lang={lang} />
+                        </div>
                         <TopNavigation
                             userEmail={user?.email}
                             onMenuClick={() => setSidebarOpen(true)}
@@ -102,7 +126,7 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                             dict={dict}
                             lang={lang}
                         />
-                        <div className="flex h-[calc(100vh-64px)] min-h-0 relative">
+                        <div className="flex h-[calc(100vh-112px)] min-h-0 relative">
                             {/* Toggle button - only visible on xl+ */}
                             <button
                                 className="hidden xl:flex fixed top-1/2 -translate-y-1/2 z-40 items-center justify-center w-4 h-12 rounded-r-md transition-all duration-300 bg-slate-600/90 hover:bg-slate-700 backdrop-blur-sm border-r border-slate-500/60 hover:border-slate-400/70 shadow-lg hover:shadow-xl"

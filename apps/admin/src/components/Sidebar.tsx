@@ -89,6 +89,7 @@ const menuItems: MenuItem[] = [
             { href: '/admin-notifications', label: 'Email Processing', icon: Mail }
         ]
     },
+    { href: '/dynamic-fields', label: 'Dynamic Fields', icon: FileText },
     { href: '/odds-demo', label: 'Odds Demo', icon: Brain }
 ];
 
