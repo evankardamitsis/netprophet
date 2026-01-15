@@ -41,6 +41,29 @@ export async function getTournament(id: string) {
   return data;
 }
 
+// Import shared slug utility
+import { createSlug } from "../utils/slug";
+
+// Fetch tournament by slug (name-based URL)
+export async function getTournamentBySlug(slug: string) {
+  // Get all tournaments and find by matching slug
+  const { data, error } = await supabase.from("tournaments").select("*");
+
+  if (error) throw error;
+
+  // Find tournament where slug matches
+  const tournament = data?.find((t) => {
+    const tournamentSlug = createSlug(t.name || "");
+    return tournamentSlug === slug;
+  });
+
+  if (!tournament) {
+    throw new Error("Tournament not found");
+  }
+
+  return tournament;
+}
+
 export async function createTournament(tournament: TournamentInsert) {
   const { data, error } = await supabase
     .from("tournaments")

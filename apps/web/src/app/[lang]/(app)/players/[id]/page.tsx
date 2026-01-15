@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWallet } from '@/context/WalletContext';
 import CoinIcon from '@/components/CoinIcon';
 import { toast } from 'sonner';
+import { createSlug } from '@/lib/utils';
 
 // Prevent static generation for this page
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,7 @@ export default function PlayerDetailPage() {
     // TESTING HOT RELOAD WITH NEXT.JS 15.0.3
     const params = useParams();
     const router = useRouter();
+    const lang = params.lang as string || 'en';
     const { dict } = useDictionary();
     const { user } = useAuth();
     const { updateBalance } = useWallet();
@@ -58,11 +60,126 @@ export default function PlayerDetailPage() {
             try {
                 setLoading(true);
 
-                // Use parallel data fetching - no caching
-                const [fetchedPlayer, history] = await Promise.allSettled([
-                    fetchPlayerById(playerId),
-                    getPlayerMatchHistory(playerId)
-                ]);
+                // Fetch player by slug (or fallback to ID if it's a UUID)
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId);
+                let fetchedPlayerResult;
+
+                if (isUUID) {
+                    // Legacy support: if it's a UUID, fetch by ID
+                    fetchedPlayerResult = await Promise.allSettled([
+                        fetchPlayerById(playerId),
+                        getPlayerMatchHistory(playerId)
+                    ]);
+                } else {
+                    // Performance optimized: Use database function to find player by slug
+                    let playerData: any = null;
+
+                    // Try database function first (server-side slug matching)
+                    const { data: slugMatchData, error: slugError } = await supabase
+                        .rpc('get_player_by_slug', { slug_param: playerId });
+
+                    if (!slugError && slugMatchData && slugMatchData.length > 0) {
+                        playerData = slugMatchData[0];
+                    } else {
+                        // Fallback 1: Try to find by ID directly (in case it's actually an ID)
+                        const { data: idMatchData, error: idError } = await supabase
+                            .from("players")
+                            .select("*")
+                            .eq("id", playerId)
+                            .maybeSingle();
+
+                        if (!idError && idMatchData) {
+                            playerData = idMatchData;
+                        } else {
+                            // Fallback 2: Client-side slug matching (last resort, but limit query)
+                            const { data: limitedPlayers, error: playersError } = await supabase
+                                .from("players")
+                                .select("id, first_name, last_name")
+                                .limit(5000); // Reasonable limit for fallback
+
+                            if (playersError) {
+                                console.error('Error fetching players for slug lookup:', playersError);
+                                throw new Error(`Player not found with slug: ${playerId}`);
+                            }
+
+                            if (limitedPlayers && limitedPlayers.length > 0) {
+                                const foundPlayer = limitedPlayers.find((p: any) => {
+                                    if (!p.first_name || !p.last_name) return false;
+                                    const playerName = `${p.first_name} ${p.last_name}`.trim();
+                                    if (!playerName) return false;
+                                    const slug = createSlug(playerName);
+                                    return slug === playerId;
+                                });
+
+                                if (foundPlayer) {
+                                    // Fetch full player data by ID
+                                    const { data: fullPlayer, error: fullError } = await supabase
+                                        .from("players")
+                                        .select("*")
+                                        .eq("id", foundPlayer.id)
+                                        .single();
+
+                                    if (!fullError && fullPlayer) {
+                                        playerData = fullPlayer;
+                                    }
+                                }
+                            }
+
+                            if (!playerData) {
+                                // Enhanced error logging for debugging
+                                const sampleSlugs = limitedPlayers?.slice(0, 10).map((p: any) => {
+                                    if (!p.first_name || !p.last_name) return null;
+                                    const name = `${p.first_name} ${p.last_name}`.trim();
+                                    return { name, slug: createSlug(name) };
+                                }).filter(Boolean) || [];
+
+                                console.error('Player lookup failed:', {
+                                    searchedSlug: playerId,
+                                    slugError: slugError?.message,
+                                    idError: idError?.message,
+                                    limitedPlayersCount: limitedPlayers?.length || 0,
+                                    sampleSlugs,
+                                    suggestion: 'Check if player name matches slug generation logic'
+                                });
+                                throw new Error(`Player not found with slug or ID: ${playerId}`);
+                            }
+                        }
+                    }
+
+                    // Note: Once playerData is found, we use playerData.id for all internal operations
+                    // The slug is only for the URL readability/SEO
+
+                    // Map the player data to Player type
+                    const mappedPlayer = {
+                        id: playerData.id,
+                        firstName: playerData.first_name,
+                        lastName: playerData.last_name,
+                        age: playerData.age,
+                        ntrpRating: playerData.ntrp_rating,
+                        hand: playerData.handed,
+                        surfacePreference: playerData.surface_preference,
+                        wins: playerData.wins || 0,
+                        losses: playerData.losses || 0,
+                        last5: playerData.last5 || [],
+                        currentStreak: playerData.current_streak || 0,
+                        streakType: playerData.streak_type,
+                        aggressiveness: playerData.aggressiveness,
+                        stamina: playerData.stamina,
+                        consistency: playerData.consistency,
+                        injuryStatus: playerData.injury_status,
+                        isHidden: playerData.is_hidden,
+                        isActive: playerData.is_active,
+                        claimedByUserId: playerData.claimed_by_user_id,
+                        photoUrl: playerData.photo_url
+                    };
+
+                    fetchedPlayerResult = await Promise.allSettled([
+                        Promise.resolve(mappedPlayer),
+                        getPlayerMatchHistory(mappedPlayer.id)
+                    ]);
+                }
+
+                const [fetchedPlayer, history] = fetchedPlayerResult;
 
                 // Handle player data
                 if (fetchedPlayer.status === 'fulfilled') {
@@ -94,7 +211,7 @@ export default function PlayerDetailPage() {
                 if (history.status === 'fulfilled') {
                     // CRITICAL: Limit match history to prevent memory bloat
                     setMatchHistory(history.value.slice(0, 20));
-                } else {
+                } else if (history.status === 'rejected') {
                     console.error('Error loading match history:', history.reason);
                 }
             } catch (error) {
@@ -177,6 +294,7 @@ export default function PlayerDetailPage() {
     };
 
     const getSurfaceTitle = (surface: string) => {
+        if (!surface) return 'The Tennis Player';
         const surfaceLower = surface.toLowerCase().trim();
         switch (surfaceLower) {
             case 'hard':
@@ -523,7 +641,7 @@ export default function PlayerDetailPage() {
                                     <div className="flex flex-wrap items-center gap-3 text-base sm:text-lg text-purple-200">
                                         <span className="font-bold">{player.age} {dict?.athletes?.years || 'years'}</span>
                                         <span className="text-purple-400">•</span>
-                                        <span className="capitalize font-bold">{dict?.athletes?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.athletes?.handed || 'handed'}</span>
+                                        <span className="capitalize font-bold">{player.hand ? (dict?.athletes?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand) : 'N/A'} {dict?.athletes?.handed || 'handed'}</span>
                                         <span className="text-purple-400">•</span>
                                         <span className={`font-black ${getNTRPColor(player.ntrpRating)} text-xl`}>
                                             NTRP {player.ntrpRating.toFixed(1)}

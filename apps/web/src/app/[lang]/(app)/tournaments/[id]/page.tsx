@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { Trophy, Calendar, MapPin, Users, ChevronLeft, TrendingUp, Award, User, Crown, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useDictionary } from '@/context/DictionaryContext';
+import { createSlug } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,7 +66,7 @@ export default function TournamentPage() {
     const params = useParams();
     const router = useRouter();
     const { dict } = useDictionary();
-    const tournamentId = params.id as string;
+    const tournamentSlug = params.id as string;
     const lang = params?.lang;
 
     const [tournament, setTournament] = useState<any>(null);
@@ -79,9 +80,28 @@ export default function TournamentPage() {
         try {
             setLoading(true);
 
-            // Load tournament, teams, and matches in parallel
-            const [tournamentData, teamsData, matchesData] = await Promise.all([
-                getTournament(tournamentId),
+            // Fetch tournament by slug (or fallback to ID if it's a UUID)
+            let tournamentData;
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tournamentSlug);
+
+            if (isUUID) {
+                // Legacy support: if it's a UUID, fetch by ID
+                tournamentData = await getTournament(tournamentSlug);
+            } else {
+                // New: fetch by slug - need to get all tournaments and match slug
+                const allTournaments = await supabase.from("tournaments").select("*");
+                if (allTournaments.error) throw allTournaments.error;
+                tournamentData = allTournaments.data?.find((t: any) => {
+                    const slug = createSlug(t.name || '');
+                    return slug === tournamentSlug;
+                });
+                if (!tournamentData) throw new Error("Tournament not found");
+            }
+
+            const tournamentId = tournamentData.id;
+
+            // Load teams and matches in parallel
+            const [teamsData, matchesData] = await Promise.all([
                 getTournamentTeams(tournamentId).catch(() => []),
                 fetchTournamentMatches(tournamentId)
             ]);
@@ -100,13 +120,13 @@ export default function TournamentPage() {
         } finally {
             setLoading(false);
         }
-    }, [tournamentId]);
+    }, [tournamentSlug]);
 
     useEffect(() => {
-        if (tournamentId) {
+        if (tournamentSlug) {
             loadTournamentData();
         }
-    }, [tournamentId, loadTournamentData]);
+    }, [tournamentSlug, loadTournamentData]);
 
     const fetchTournamentMatches = async (tournamentId: string): Promise<any[]> => {
         const { data, error } = await supabase
@@ -507,7 +527,7 @@ export default function TournamentPage() {
                                             {team.captain?.id ? (
                                                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2">
                                                     <Link
-                                                        href={`/${lang}/players/${team.captain.id}`}
+                                                        href={`/${lang}/players/${createSlug(`${team.captain.first_name} ${team.captain.last_name}`)}`}
                                                         className="group/player flex items-center gap-2 hover:text-yellow-400 transition-colors flex-1 min-w-0"
                                                     >
                                                         <User className="h-4 w-4 text-white/60 group-hover/player:text-yellow-400 transition-colors flex-shrink-0" />
@@ -549,7 +569,7 @@ export default function TournamentPage() {
                                                     member.player?.id ? (
                                                         <Link
                                                             key={member.id}
-                                                            href={`/${lang}/players/${member.player.id}`}
+                                                            href={`/${lang}/players/${createSlug(`${member.player.first_name} ${member.player.last_name}`)}`}
                                                             className="group/member flex items-center gap-2 bg-white/5 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 border border-white/10 hover:border-yellow-400/30 rounded-lg p-3 transition-all duration-200"
                                                         >
                                                             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400/20 to-orange-400/20 border border-yellow-400/30 flex items-center justify-center">

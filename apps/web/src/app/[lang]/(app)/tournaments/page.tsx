@@ -6,6 +6,7 @@ import { getTournaments } from '@netprophet/lib';
 import { Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
 import { Trophy, Calendar, MapPin, Users, ArrowRight, Sparkles } from 'lucide-react';
 import { useDictionary } from '@/context/DictionaryContext';
+import { createSlug } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +93,7 @@ export default function TournamentsPage() {
                             <Card
                                 key={tournament.id}
                                 className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group"
-                                onClick={() => router.push(`/${lang}/tournaments/${tournament.id}`)}
+                                onClick={() => router.push(`/${lang}/tournaments/${createSlug(tournament.name)}`)}
                             >
                                 <CardHeader>
                                     <div className="flex items-start justify-between">

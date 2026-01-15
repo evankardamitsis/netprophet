@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -11,7 +11,11 @@ export function cn(...inputs: ClassValue[]) {
  */
 export function normalizeText(text: string): string {
   return text
-    .normalize('NFD') // Decompose characters with diacritics
-    .replace(/[\u0300-\u036f]/g, '') // Remove combining diacritical marks
+    .normalize("NFD") // Decompose characters with diacritics
+    .replace(/[\u0300-\u036f]/g, "") // Remove combining diacritical marks
     .toLowerCase();
 }
+
+// Re-export the shared slug utility from the lib package
+// This maintains backward compatibility for web app imports
+export { createSlug } from "@netprophet/lib";

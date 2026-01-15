@@ -213,6 +213,33 @@ export async function fetchPlayerById(id: string) {
   return mapPlayer(data);
 }
 
+// Import shared slug utility
+import { createSlug } from "../utils/slug";
+
+// Fetch player by slug (name-based URL)
+export async function fetchPlayerBySlug(slug: string) {
+  // Get all players and find by matching slug
+  const { data, error } = await supabase.from(TABLE).select("*");
+
+  if (error) {
+    console.error("[fetchPlayerBySlug] Supabase error:", error);
+    throw error;
+  }
+
+  // Find player where slug matches first_name + last_name
+  const player = data?.find((p) => {
+    const playerName = `${p.first_name || ""} ${p.last_name || ""}`.trim();
+    const playerSlug = createSlug(playerName);
+    return playerSlug === slug;
+  });
+
+  if (!player) {
+    throw new Error("Player not found");
+  }
+
+  return mapPlayer(player);
+}
+
 export async function insertPlayer(player: Player) {
   const dbPlayer = toDbPlayer(player);
   const { data, error } = await supabase

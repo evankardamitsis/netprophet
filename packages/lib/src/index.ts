@@ -20,6 +20,7 @@ export type { LeaderboardEntry, UserStats } from "./supabase/leaderboard";
 
 // Utilities
 export * from "./utils/validation";
+export { createSlug } from "./utils/slug";
 
 // Odds Calculation
 export * from "./odds/calculateOdds";
@@ -59,6 +60,7 @@ export {
   fetchPlayers,
   fetchActivePlayers,
   fetchPlayerById,
+  fetchPlayerBySlug,
   insertPlayer,
   bulkInsertPlayers,
   updatePlayer,

@@ -4,6 +4,7 @@ import { Player } from '@netprophet/lib';
 import { useRouter } from 'next/navigation';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useState } from 'react';
+import { createSlug } from '@/lib/utils';
 
 interface PlayerCardProps {
     player: Player;
@@ -12,7 +13,6 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, className = '', disableLink = false }: PlayerCardProps) {
-    const router = useRouter();
     const { dict, lang } = useDictionary();
     const [imageError, setImageError] = useState(false);
 
@@ -55,8 +55,26 @@ export function PlayerCard({ player, className = '', disableLink = false }: Play
         }
     };
 
+    const router = useRouter();
+
     const handleCardClick = () => {
-        if (!disableLink) {
+        if (!disableLink && player) {
+            // Always create slug from first and last name
+            const firstName = String(player.firstName || '').trim();
+            const lastName = String(player.lastName || '').trim();
+
+            // Create slug if we have both names
+            if (firstName.length > 0 && lastName.length > 0) {
+                const fullName = `${firstName} ${lastName}`;
+                const playerSlug = createSlug(fullName);
+                // Use slug if it's valid
+                if (playerSlug && playerSlug.length > 0) {
+                    router.push(`/${lang}/players/${playerSlug}`);
+                    return;
+                }
+            }
+
+            // Fallback to ID only if names are missing or slug creation fails
             router.push(`/${lang}/players/${player.id}`);
         }
     };
