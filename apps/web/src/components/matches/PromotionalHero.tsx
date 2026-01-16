@@ -42,7 +42,7 @@ export function PromotionalHero({
             time: lang === 'el' ? 'Ειδικές προσφορές' : 'Special Offers',
             players: [],
             image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGxhd3d1OTdkNWxiOXBjNzl5N2dycmxoa2M4NWl0Z3VnaHo1YjVndSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xUPGcJaL5ODxniWMNO/giphy.gif', // Coins dropping animation
-            action: () => router.push(`/${lang}/shop`),
+            action: () => router.push(`/${lang}/rewards`),
             actionText: lang === 'el' ? 'Αγόρασε' : 'Buy Now',
             secondaryAction: null,
             secondaryActionText: ''

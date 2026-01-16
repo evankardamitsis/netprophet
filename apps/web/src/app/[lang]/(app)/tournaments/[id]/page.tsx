@@ -88,14 +88,71 @@ export default function TournamentPage() {
                 // Legacy support: if it's a UUID, fetch by ID
                 tournamentData = await getTournament(tournamentSlug);
             } else {
-                // New: fetch by slug - need to get all tournaments and match slug
-                const allTournaments = await supabase.from("tournaments").select("*");
-                if (allTournaments.error) throw allTournaments.error;
-                tournamentData = allTournaments.data?.find((t: any) => {
-                    const slug = createSlug(t.name || '');
-                    return slug === tournamentSlug;
-                });
-                if (!tournamentData) throw new Error("Tournament not found");
+                // Performance optimized: Use database function to find tournament by slug
+                let foundTournament: any = null;
+
+                // Try database function first (server-side slug matching)
+                const { data: slugMatchData, error: slugError } = await supabase
+                    .rpc('get_tournament_by_slug', { slug_param: tournamentSlug });
+
+                if (!slugError && slugMatchData && slugMatchData.length > 0) {
+                    foundTournament = slugMatchData[0];
+                } else {
+                    // Fallback 1: Try to find by ID directly (in case it's actually an ID)
+                    const { data: idMatchData, error: idError } = await supabase
+                        .from("tournaments")
+                        .select("*")
+                        .eq("id", tournamentSlug)
+                        .maybeSingle();
+
+                    if (!idError && idMatchData) {
+                        foundTournament = idMatchData;
+                    } else {
+                        // Fallback 2: Client-side slug matching (last resort, but limit query)
+                        const { data: limitedTournaments, error: tournamentsError } = await supabase
+                            .from("tournaments")
+                            .select("id, name")
+                            .limit(5000); // Reasonable limit for fallback
+
+                        if (tournamentsError) {
+                            console.error('Error fetching tournaments for slug lookup:', tournamentsError);
+                            throw new Error(`Tournament not found with slug: ${tournamentSlug}`);
+                        }
+
+                        if (limitedTournaments && limitedTournaments.length > 0) {
+                            const matchedTournament = limitedTournaments.find((t: any) => {
+                                if (!t.name) return false;
+                                const slug = createSlug(t.name);
+                                return slug === tournamentSlug;
+                            });
+
+                            if (matchedTournament) {
+                                // Fetch full tournament data by ID
+                                const { data: fullTournament, error: fullError } = await supabase
+                                    .from("tournaments")
+                                    .select("*")
+                                    .eq("id", matchedTournament.id)
+                                    .single();
+
+                                if (!fullError && fullTournament) {
+                                    foundTournament = fullTournament;
+                                }
+                            }
+                        }
+
+                        if (!foundTournament) {
+                            console.error('Tournament lookup failed:', {
+                                searchedSlug: tournamentSlug,
+                                slugError: slugError?.message,
+                                idError: idError?.message,
+                                limitedTournamentsCount: limitedTournaments?.length || 0
+                            });
+                            throw new Error(`Tournament not found with slug or ID: ${tournamentSlug}`);
+                        }
+                    }
+                }
+
+                tournamentData = foundTournament;
             }
 
             const tournamentId = tournamentData.id;

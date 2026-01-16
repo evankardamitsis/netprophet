@@ -277,6 +277,113 @@ export default function UsersPage() {
         setEditLoading(false);
     };
 
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <div className="h-9 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+                        <div className="h-5 w-64 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="mb-4">
+                            <div className="h-10 w-full max-w-xs bg-gray-200 rounded animate-pulse"></div>
+                        </div>
+
+                        {/* Desktop Table Skeleton */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="min-w-full text-sm border">
+                                <thead>
+                                    <tr>
+                                        {[...Array(7)].map((_, i) => (
+                                            <th key={i} className="px-4 py-2 border-b">
+                                                <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[...Array(5)].map((_, i) => (
+                                        <tr key={i} className="border-b">
+                                            {[...Array(7)].map((_, j) => (
+                                                <td key={j} className="px-4 py-2">
+                                                    <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Card Skeleton */}
+                        <div className="lg:hidden space-y-3">
+                            {[...Array(3)].map((_, i) => (
+                                <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1 min-w-0 space-y-2">
+                                            <div className="h-5 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                                            <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                                        </div>
+                                        <div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[...Array(4)].map((_, j) => (
+                                            <div key={j} className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+                                        ))}
+                                    </div>
+                                    <div className="flex space-x-2 pt-2 border-t border-gray-100">
+                                        <div className="h-8 flex-1 bg-gray-200 rounded animate-pulse"></div>
+                                        <div className="h-8 flex-1 bg-gray-200 rounded animate-pulse"></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination Skeleton */}
+                        <div className="mt-6 flex items-center justify-between pt-4 border-t">
+                            <div className="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
+                            <div className="flex gap-2">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="h-9 w-12 bg-gray-200 rounded animate-pulse"></div>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+                        <p className="text-gray-600 mt-2">
+                            Manage user accounts and permissions
+                        </p>
+                    </div>
+                </div>
+                <Card>
+                    <CardContent className="py-6">
+                        <div className="text-red-600 text-center">
+                            <p className="font-semibold">Error loading users</p>
+                            <p className="text-sm mt-2">{error}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-start">

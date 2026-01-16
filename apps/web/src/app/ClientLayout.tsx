@@ -96,11 +96,11 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
             <NavigationLoader />
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
-                    <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white overflow-hidden">
-                        {/* Fantasy Ace 2026 Banner */}
+                    <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white flex flex-col overflow-hidden">
+                        {/* Fantasy Ace 2026 Banner - Fixed at top */}
                         <Link
                             href={`/${lang}/tournaments/844fa43b-53c2-4116-9ba6-b41c7dd96c6b`}
-                            className="relative z-50 w-full block bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 border-b-2 border-yellow-500 shadow-lg hover:from-yellow-300 hover:via-yellow-200 hover:to-yellow-300 transition-all cursor-pointer active:scale-[0.98]"
+                            className="relative z-[60] w-full flex-shrink-0 block bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 border-b-2 border-yellow-500 shadow-lg hover:from-yellow-300 hover:via-yellow-200 hover:to-yellow-300 transition-all cursor-pointer active:scale-[0.98]"
                         >
                             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-2">
                                 <div className="flex items-center justify-center gap-2">
@@ -116,17 +116,22 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                                 </div>
                             </div>
                         </Link>
-                        <div className="relative z-50">
+                        {/* InfoBar - Below banner */}
+                        <div className="relative z-[60] flex-shrink-0">
                             <InfoBar lang={lang} />
                         </div>
-                        <TopNavigation
-                            userEmail={user?.email}
-                            onMenuClick={() => setSidebarOpen(true)}
-                            onSignOut={handleSignOut}
-                            dict={dict}
-                            lang={lang}
-                        />
-                        <div className="flex h-[calc(100vh-112px)] min-h-0 relative">
+                        {/* TopNavigation - Below InfoBar, sticky */}
+                        <div className="relative z-[60] flex-shrink-0">
+                            <TopNavigation
+                                userEmail={user?.email}
+                                onMenuClick={() => setSidebarOpen(true)}
+                                onSignOut={handleSignOut}
+                                dict={dict}
+                                lang={lang}
+                            />
+                        </div>
+                        {/* Main content area - flex to fill remaining space */}
+                        <div className="flex flex-1 min-h-0 relative overflow-hidden">
                             {/* Toggle button - only visible on xl+ */}
                             <button
                                 className="hidden xl:flex fixed top-1/2 -translate-y-1/2 z-40 items-center justify-center w-4 h-12 rounded-r-md transition-all duration-300 bg-slate-600/90 hover:bg-slate-700 backdrop-blur-sm border-r border-slate-500/60 hover:border-slate-400/70 shadow-lg hover:shadow-xl"
@@ -143,8 +148,8 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                                 }
                             </button>
 
-                            {/* Sidebar - only visible on xl+ */}
-                            <div className={`hidden xl:block fixed top-16 left-0 bottom-0 transition-all duration-300 ease-in-out flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[400px]' : 'w-48'}`}>
+                            {/* Sidebar - only visible on xl+, positioned after TopNavigation */}
+                            <div className={`hidden xl:block fixed top-[112px] left-0 bottom-0 transition-all duration-300 ease-in-out flex-shrink-0 overflow-hidden ${sidebarOpen ? 'w-[400px]' : 'w-48'}`}>
                                 <Sidebar
                                     onClose={() => setSidebarOpen(false)}
                                     sidebarOpen={sidebarOpen}
@@ -156,8 +161,10 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
 
                             {/* Main content */}
                             <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out relative z-10`}>
-                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90 backdrop-blur-sm">
+                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90 backdrop-blur-sm pb-4 md:pb-0">
                                     {children}
+                                    {/* Bottom spacing for mobile to ensure footer/content isn't clipped */}
+                                    <div className="h-4 md:hidden" aria-hidden="true" />
                                 </div>
                                 <AppFooter lang={lang} />
                             </div>

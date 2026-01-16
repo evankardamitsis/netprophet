@@ -324,11 +324,11 @@ export function TopNavigation({
         <div className="relative">
             <header
                 className={cx(
-                    "w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-50 text-white",
+                    "w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-[55] text-white",
                     shadows.card,
-                    "border-b border-white/10"
+                    "border-b border-white/10",
+                    "bg-[#121A39]" // Ensure background color is set for proper sticky behavior
                 )}
-                style={{ backgroundColor: '#121A39' }}
             >
                 {/* Left Section - Logo and Menu */}
                 <div className="flex items-center gap-2 sm:gap-2">
