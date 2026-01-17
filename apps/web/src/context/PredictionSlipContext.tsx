@@ -157,7 +157,7 @@ function migratePredictions(predictions: any[]): StructuredPredictionItem[] {
 
 export function PredictionSlipProvider({ children }: { children: React.ReactNode }) {
     const { dict } = useDictionary();
-    
+
     // Initialize state from session storage
     const [predictions, setPredictions] = useState<StructuredPredictionItem[]>(() => {
         const stored = loadFromSessionStorage(SESSION_KEYS.PREDICTIONS, []);
@@ -241,16 +241,24 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
                     .single();
 
                 const claimedPlayerId = profile?.claimed_player_id;
-                
+
                 if (claimedPlayerId) {
-                    // Check if user is participating in this match
+                    // Check if user is participating in this match (singles or doubles)
                     const match = item.match;
-                    if (match && match.player_a_id && match.player_b_id) {
-                        const isParticipant = 
-                            match.player_a_id === claimedPlayerId || 
+                    if (match) {
+                        // Check singles players
+                        const isParticipantInSingles =
+                            match.player_a_id === claimedPlayerId ||
                             match.player_b_id === claimedPlayerId;
 
-                        if (isParticipant) {
+                        // Check doubles players (team A and team B)
+                        const isParticipantInDoubles =
+                            match.player_a1_id === claimedPlayerId ||
+                            match.player_a2_id === claimedPlayerId ||
+                            match.player_b1_id === claimedPlayerId ||
+                            match.player_b2_id === claimedPlayerId;
+
+                        if (isParticipantInSingles || isParticipantInDoubles) {
                             toast.error(dict?.matches?.cannotPlacePredictionOnOwnMatch || 'You cannot place predictions on matches you are participating in.');
                             return;
                         }

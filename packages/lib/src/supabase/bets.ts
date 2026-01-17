@@ -115,7 +115,7 @@ export class BetsService {
 
     const { data: matches, error: matchesError } = await supabase
       .from("matches")
-      .select("id, player_a_id, player_b_id")
+      .select("id, player_a_id, player_b_id, player_a1_id, player_a2_id, player_b1_id, player_b2_id")
       .in("id", uniqueMatchIds);
 
     if (matchesError) {
@@ -136,17 +136,30 @@ export class BetsService {
 
     console.log("Found matches for validation:", matches);
 
-    // Check each match for conflicts
+    // Check each match for conflicts (singles and doubles)
     for (const match of matches) {
-      if (
+      // Check singles players
+      const isParticipantInSingles = 
         match.player_a_id === claimedPlayerId ||
-        match.player_b_id === claimedPlayerId
-      ) {
+        match.player_b_id === claimedPlayerId;
+      
+      // Check doubles players (team A and team B)
+      const isParticipantInDoubles =
+        match.player_a1_id === claimedPlayerId ||
+        match.player_a2_id === claimedPlayerId ||
+        match.player_b1_id === claimedPlayerId ||
+        match.player_b2_id === claimedPlayerId;
+
+      if (isParticipantInSingles || isParticipantInDoubles) {
         console.error("Participant conflict detected:", {
           matchId: match.id,
           claimedPlayerId,
           player_a_id: match.player_a_id,
           player_b_id: match.player_b_id,
+          player_a1_id: match.player_a1_id,
+          player_a2_id: match.player_a2_id,
+          player_b1_id: match.player_b1_id,
+          player_b2_id: match.player_b2_id,
         });
         throw new Error(
           "You cannot place predictions on matches you are participating in."
