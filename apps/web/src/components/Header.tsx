@@ -158,16 +158,24 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                             )}
                         </div>
 
-                        {/* Start Now Button */}
+                        {/* Start Now and Login Buttons */}
                         {showStartButton && (
-                            <Button
-                                onClick={() => router.push(`/${lang}/auth/signin`)}
-                                style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
-                                className={`px-4 sm:px-8 py-2 sm:py-3 text-xs sm:text-base ${buttons.primary.className} shadow-lg`}
-                            >
-                                <span className="hidden sm:inline">{lang === 'el' ? 'Ξεκίνα τώρα!' : 'Play Now!'}</span>
-                                <span className="sm:hidden">{lang === 'el' ? 'Παίξε!' : 'Play!'}</span>
-                            </Button>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <Button
+                                    onClick={() => router.push(`/${lang}/auth/register`)}
+                                    style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                    className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base ${buttons.primary.className} shadow-lg`}
+                                >
+                                    <span className="hidden sm:inline">{lang === 'el' ? 'Ξεκίνα τώρα!' : 'Play Now!'}</span>
+                                    <span className="sm:hidden">{lang === 'el' ? 'Παίξε!' : 'Play!'}</span>
+                                </Button>
+                                <Button
+                                    onClick={() => router.push(`/${lang}/auth/signin`)}
+                                    className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base border-2 border-white/30 hover:bg-white/10 text-white backdrop-blur-md bg-transparent"
+                                >
+                                    {lang === 'el' ? 'Σύνδεση' : 'Login'}
+                                </Button>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -298,16 +306,27 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                                 <div className={`pt-4 border-t border-white/10 transition-all duration-300 transform ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : '-translate-x-4 opacity-0'
                                     }`}
                                     style={{ transitionDelay: isMobileMenuOpen ? '300ms' : '0ms' }}>
-                                    <Button
-                                        onClick={() => {
-                                            router.push(`/${lang}/auth/signin`);
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
-                                        className={`w-full text-lg py-4 ${buttons.primary.className} shadow-lg`}
-                                    >
-                                        {lang === 'el' ? 'Ξεκίνα τώρα!' : 'Play Now!'}
-                                    </Button>
+                                    <div className="space-y-3">
+                                        <Button
+                                            onClick={() => {
+                                                router.push(`/${lang}/auth/register`);
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
+                                            className={`w-full text-lg py-4 ${buttons.primary.className} shadow-lg`}
+                                        >
+                                            {lang === 'el' ? 'Ξεκίνα τώρα!' : 'Play Now!'}
+                                        </Button>
+                                        <Button
+                                            onClick={() => {
+                                                router.push(`/${lang}/auth/signin`);
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className="w-full text-lg py-4 border-2 border-white/30 hover:bg-white/10 text-white backdrop-blur-md bg-transparent"
+                                        >
+                                            {lang === 'el' ? 'Σύνδεση' : 'Login'}
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </nav>

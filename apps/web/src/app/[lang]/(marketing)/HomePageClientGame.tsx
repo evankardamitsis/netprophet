@@ -105,7 +105,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
     // Memoized button handlers
     const handlePlayNowClick = useCallback(() => {
-        router.push(`/${lang}/auth/signin`);
+        router.push(`/${lang}/auth/register`);
     }, [router, lang]);
 
     const handleHowItWorksClick = useCallback(() => {
@@ -320,7 +320,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
                     {/* CTA Button */}
                     <div className="text-center mt-12">
                         <Button
-                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            onClick={() => router.push(`/${lang}/auth/register`)}
                             size="lg"
                             style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                             className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}
@@ -373,7 +373,7 @@ export default function HomePageClientGame({ dict, lang }: HomePageClientProps) 
 
                         {/* CTA */}
                         <Button
-                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            onClick={() => router.push(`/${lang}/auth/register`)}
                             size="lg"
                             style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                             className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}

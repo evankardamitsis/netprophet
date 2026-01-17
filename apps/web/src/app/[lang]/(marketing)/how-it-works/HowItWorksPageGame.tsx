@@ -412,7 +412,7 @@ export default function HowItWorksPageGame() {
 
                         {/* CTA */}
                         <Button
-                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            onClick={() => router.push(`/${lang}/auth/register`)}
                             size="lg"
                             style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                             className={`text-xl px-10 py-6 ${buttons.primary.className} shadow-2xl`}

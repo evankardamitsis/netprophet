@@ -31,7 +31,7 @@ export default function Footer({ lang, dict }: FooterProps) {
 
     const handleProtectedLink = (path: string) => {
         if (!user) {
-            router.push(`/${lang}/auth/signin`);
+            router.push(`/${lang}/auth/register`);
         } else {
             router.push(path);
         }
@@ -54,7 +54,7 @@ export default function Footer({ lang, dict }: FooterProps) {
                             {lang === 'el' ? 'Το πιο διασκεδαστικό παιχνίδι προβλέψεων με ερασιτεχνικούς αγώνες και τουρνουά.' : 'The most exciting sports prediction game with amateur matches and tournaments.'}
                         </p>
                         <Button
-                            onClick={() => router.push(`/${lang}/auth/signin`)}
+                            onClick={() => router.push(`/${lang}/auth/register`)}
                             size="sm"
                             style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                             className={`${buttons.primary.className} shadow-lg`}

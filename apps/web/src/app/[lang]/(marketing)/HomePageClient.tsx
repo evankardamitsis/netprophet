@@ -165,7 +165,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                                 <Button
-                                    onClick={() => router.push(`/${lang}/auth/signin`)}
+                                    onClick={() => router.push(`/${lang}/auth/register`)}
                                     size="lg"
                                     style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                                     className={`text-sm sm:text-lg px-6 sm:px-8 py-3 sm:py-4 ${buttons.primary.className} shadow-lg`}
@@ -502,7 +502,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                             </div>
 
                             <Button
-                                onClick={() => router.push(`/${lang}/auth/signin`)}
+                                onClick={() => router.push(`/${lang}/auth/register`)}
                                 size="lg"
                                 style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
                                 className={`text-xl px-8 py-4 ${buttons.primary.className} shadow-xl`}

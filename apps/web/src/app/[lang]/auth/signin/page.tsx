@@ -1,42 +1,30 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 
 // Force dynamic rendering to avoid build-time context issues
 export const dynamic = 'force-dynamic';
 import { supabase } from '@netprophet/lib';
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
-import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useAuth } from '@/hooks/useAuth';
 import { PasswordInput } from '@/components/PasswordInput';
 
-// Component that uses useSearchParams - wrapped in Suspense
-function AuthFormWithSearchParams() {
-    const [mode, setMode] = useState<'signin' | 'register'>('register');
+// Component for signin only
+function SignInForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const router = useRouter();
     const params = useParams();
-    const searchParams = useSearchParams();
     const lang = params?.lang as 'en' | 'el' || 'el';
     const { dict } = useDictionary();
     const { signInWithPassword } = useAuth();
 
-    // Check URL parameters to set initial mode
-    useEffect(() => {
-        const tab = searchParams.get('tab');
-        if (tab === 'signin') {
-            setMode('signin');
-        }
-    }, [searchParams]);
-
-    const handleAuth = async (e: React.FormEvent) => {
+    const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setMessage('');
@@ -46,42 +34,11 @@ function AuthFormWithSearchParams() {
                 return;
             }
 
-            if (mode === 'signin') {
-                const result = await signInWithPassword(email, password);
-                if (result.error) {
-                    setMessage(typeof result.error === 'string' ? result.error : result.error.message);
-                } else if (result.success) {
-                    router.push(`/${lang}/matches`);
-                }
-
-            } else {
-                // For registration, we need to validate name fields
-                if (!firstName.trim() || !lastName.trim()) {
-                    setMessage(lang === 'el' ? 'Παρακαλώ συμπληρώστε το όνομα και το επώνυμο σας.' : 'Please fill in your first and last name.');
-                    return;
-                }
-
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: {
-                            firstName: firstName.trim(),
-                            lastName: lastName.trim()
-                        }
-                    }
-                });
-                if (error) {
-                    // Check if it's a password strength error and show a more user-friendly message
-                    if (error.message.includes('Password should be at least') ||
-                        error.message.includes('password') && error.message.includes('weak')) {
-                        setMessage(dict?.auth?.passwordTooWeak || 'Password is too weak. Please use a stronger password.');
-                    } else {
-                        setMessage(error.message);
-                    }
-                } else {
-                    setMessage(dict?.auth?.checkEmailToConfirm || 'Check your email to confirm your account!');
-                }
+            const result = await signInWithPassword(email, password);
+            if (result.error) {
+                setMessage(typeof result.error === 'string' ? result.error : result.error.message);
+            } else if (result.success) {
+                router.push(`/${lang}/matches`);
             }
         } catch (err: any) {
             setMessage('An unexpected error occurred.');
@@ -134,148 +91,51 @@ function AuthFormWithSearchParams() {
                     {/* Title */}
                     <div className="text-center mb-8">
                         <h1 className="text-2xl font-bold text-white mb-2">
-                            {mode === 'register'
-                                ? (lang === 'el' ? 'Καλώς ήρθες' : 'Welcome')
-                                : (lang === 'el' ? 'Καλώς ήρθες' : 'Welcome back')
-                            }
+                            {lang === 'el' ? 'Καλώς ήρθες' : 'Welcome back'}
                         </h1>
                         <p className="text-white/80">
-                            {mode === 'register'
-                                ? (lang === 'el'
-                                    ? 'Εγγράψου για να ξεκινήσεις τις προβλέψεις σου'
-                                    : 'Sign up to start making predictions')
-                                : (lang === 'el'
-                                    ? 'Συνδέσου για να ξεκινήσεις τις προβλέψεις σου'
-                                    : 'Sign in to start making predictions')
+                            {lang === 'el'
+                                ? 'Συνδέσου για να ξεκινήσεις τις προβλέψεις σου'
+                                : 'Sign in to start making predictions'
                             }
                         </p>
                     </div>
 
                     {/* Auth Card */}
-                    <Card className={`border-0 shadow-xl bg-white/80 backdrop-blur-sm ${mode === 'register' ? 'max-w-2xl' : 'max-w-md'}`}>
+                    <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm max-w-md">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-center text-lg">
-                                <div className="flex bg-slate-100 rounded-lg p-1">
-                                    <button
-                                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${mode === 'register'
-                                            ? 'bg-blue-600 text-white shadow-md font-semibold'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                                            }`}
-                                        onClick={() => setMode('register')}
-                                    >
-                                        {lang === 'el' ? 'Εγγραφή' : 'Register'}
-                                    </button>
-                                    <button
-                                        className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${mode === 'signin'
-                                            ? 'bg-blue-600 text-white shadow-md font-semibold'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                                            }`}
-                                        onClick={() => setMode('signin')}
-                                    >
-                                        {lang === 'el' ? 'Σύνδεση' : 'Sign In'}
-                                    </button>
-                                </div>
+                            <CardTitle className="text-center text-lg text-black">
+                                {lang === 'el' ? 'Σύνδεση' : 'Sign In'}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <form className="space-y-4" onSubmit={handleAuth}>
-                                {mode === 'register' ? (
-                                    <>
-                                        {/* Registration form - wider layout */}
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
-                                                    {lang === 'el' ? 'Όνομα' : 'First Name'}
-                                                </label>
-                                                <input
-                                                    id="firstName"
-                                                    name="firstName"
-                                                    type="text"
-                                                    autoComplete="given-name"
-                                                    required
-                                                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
-                                                    placeholder={lang === 'el' ? 'Όνομα' : 'First Name'}
-                                                    value={firstName}
-                                                    onChange={(e) => setFirstName(e.target.value)}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
-                                                    {lang === 'el' ? 'Επώνυμο' : 'Last Name'}
-                                                </label>
-                                                <input
-                                                    id="lastName"
-                                                    name="lastName"
-                                                    type="text"
-                                                    autoComplete="family-name"
-                                                    required
-                                                    className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
-                                                    placeholder={lang === 'el' ? 'Επώνυμο' : 'Last Name'}
-                                                    value={lastName}
-                                                    onChange={(e) => setLastName(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                                                {lang === 'el' ? 'Email' : 'Email'}
-                                            </label>
-                                            <input
-                                                id="email"
-                                                name="email"
-                                                type="email"
-                                                autoComplete="email"
-                                                required
-                                                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
-                                                placeholder={lang === 'el' ? 'Email' : 'Email'}
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                            />
-                                        </div>
-
-                                        <PasswordInput
-                                            id="password"
-                                            name="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder={lang === 'el' ? 'Κωδικός' : 'Password'}
-                                            autoComplete="new-password"
-                                            showRequirements={true}
-                                            lang={lang}
-                                        />
-                                    </>
-                                ) : (
-                                    <>
-                                        {/* Signin form - standard layout */}
-                                        <div>
-                                            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
-                                                {lang === 'el' ? 'Email' : 'Email'}
-                                            </label>
-                                            <input
-                                                id="email"
-                                                name="email"
-                                                type="email"
-                                                autoComplete="email"
-                                                required
-                                                className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
-                                                placeholder={lang === 'el' ? 'εισάγετε το email σας' : 'Enter your email'}
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                            />
-                                        </div>
-                                        <PasswordInput
-                                            id="password"
-                                            name="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder={lang === 'el' ? 'εισάγετε τον κωδικό σας' : 'Enter your password'}
-                                            autoComplete="current-password"
-                                            showRequirements={false}
-                                            lang={lang}
-                                        />
-                                    </>
-                                )}
+                            <form className="space-y-4" onSubmit={handleSignIn}>
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                                        {lang === 'el' ? 'Email' : 'Email'}
+                                    </label>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        autoComplete="email"
+                                        required
+                                        className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm text-black"
+                                        placeholder={lang === 'el' ? 'εισάγετε το email σας' : 'Enter your email'}
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </div>
+                                <PasswordInput
+                                    id="password"
+                                    name="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder={lang === 'el' ? 'εισάγετε τον κωδικό σας' : 'Enter your password'}
+                                    autoComplete="current-password"
+                                    showRequirements={false}
+                                    lang={lang}
+                                />
                                 <Button
                                     type="submit"
                                     disabled={loading}
@@ -284,15 +144,10 @@ function AuthFormWithSearchParams() {
                                     {loading ? (
                                         <div className="flex items-center justify-center">
                                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                                            {mode === 'signin'
-                                                ? (lang === 'el' ? 'Σύνδεση...' : 'Signing in...')
-                                                : (lang === 'el' ? 'Εγγραφή...' : 'Registering...')
-                                            }
+                                            {lang === 'el' ? 'Σύνδεση...' : 'Signing in...'}
                                         </div>
                                     ) : (
-                                        mode === 'signin'
-                                            ? (lang === 'el' ? 'Σύνδεση' : 'Sign In')
-                                            : (lang === 'el' ? 'Εγγραφή' : 'Register')
+                                        lang === 'el' ? 'Σύνδεση' : 'Sign In'
                                     )}
                                 </Button>
                             </form>
@@ -334,46 +189,29 @@ function AuthFormWithSearchParams() {
                                 )}
                             </Button>
 
-                            {/* Switch between signin/register */}
-                            {mode === 'register' && (
-                                <div className="text-center mt-4">
-                                    <p className="text-sm text-slate-600">
-                                        {lang === 'el' ? 'Έχεις ήδη λογαριασμό; ' : 'You already have an account? '}
-                                        <button
-                                            type="button"
-                                            onClick={() => setMode('signin')}
-                                            className="text-blue-600 hover:text-blue-700 font-medium underline"
-                                        >
-                                            {lang === 'el' ? 'Συνδέσου' : 'Log in'}
-                                        </button>
-                                    </p>
-                                </div>
-                            )}
-
-                            {mode === 'signin' && (
-                                <div className="text-center mt-4 space-y-2">
-                                    <p className="text-sm text-slate-600">
-                                        {lang === 'el' ? 'Δεν έχεις λογαριασμό; ' : "Don't have an account? "}
-                                        <button
-                                            type="button"
-                                            onClick={() => setMode('register')}
-                                            className="text-blue-600 hover:text-blue-700 font-medium underline"
-                                        >
-                                            {lang === 'el' ? 'Εγγράψου' : 'Sign up'}
-                                        </button>
-                                    </p>
-                                    <p className="text-sm text-slate-600">
-                                        {lang === 'el' ? 'Ξέχασες τον κωδικό σου; ' : 'Forgot your password? '}
-                                        <button
-                                            type="button"
-                                            onClick={() => router.push(`/${lang}/auth/forgot-password`)}
-                                            className="text-blue-600 hover:text-blue-700 font-medium underline"
-                                        >
-                                            {lang === 'el' ? 'Επαναφορά Κωδικού' : 'Reset Password'}
-                                        </button>
-                                    </p>
-                                </div>
-                            )}
+                            {/* Links to register and forgot password */}
+                            <div className="text-center mt-4 space-y-2">
+                                <p className="text-sm text-slate-600">
+                                    {lang === 'el' ? 'Δεν έχεις λογαριασμό; ' : "Don't have an account? "}
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push(`/${lang}/auth/register`)}
+                                        className="text-blue-600 hover:text-blue-700 font-medium underline"
+                                    >
+                                        {lang === 'el' ? 'Εγγράψου' : 'Sign up'}
+                                    </button>
+                                </p>
+                                <p className="text-sm text-slate-600">
+                                    {lang === 'el' ? 'Ξέχασες τον κωδικό σου; ' : 'Forgot your password? '}
+                                    <button
+                                        type="button"
+                                        onClick={() => router.push(`/${lang}/auth/forgot-password`)}
+                                        className="text-blue-600 hover:text-blue-700 font-medium underline"
+                                    >
+                                        {lang === 'el' ? 'Επαναφορά Κωδικού' : 'Reset Password'}
+                                    </button>
+                                </p>
+                            </div>
 
                             {/* Message */}
                             {message && (
@@ -402,8 +240,8 @@ function AuthFormWithSearchParams() {
     );
 }
 
-// Main export with Suspense boundary
-export default function AuthPage() {
+// Main export
+export default function SignInPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
@@ -413,7 +251,7 @@ export default function AuthPage() {
                 </div>
             </div>
         }>
-            <AuthFormWithSearchParams />
+            <SignInForm />
         </Suspense>
     );
 } 
