@@ -17,19 +17,15 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get recent pending admin emails (last 30 minutes to avoid processing old emails)
-    const thirtyMinutesAgo = new Date(
-      Date.now() - 30 * 60 * 1000
-    ).toISOString();
-
+    // Get pending admin emails (process all pending, including old ones)
+    // Remove the 30-minute filter to process all pending emails
     const { data: emailLogs, error: fetchError } = await supabase
       .from("email_logs")
       .select("*")
       .eq("template", "admin_alert")
       .eq("type", "admin")
       .eq("status", "pending")
-      .gte("created_at", thirtyMinutesAgo)
-      .order("created_at", { ascending: true })
+      .order("sent_at", { ascending: true })
       .limit(50); // Process up to 50 emails at a time
 
     if (fetchError) {

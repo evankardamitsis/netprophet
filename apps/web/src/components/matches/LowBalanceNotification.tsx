@@ -7,6 +7,7 @@ import { useWallet } from '@/context/WalletContext';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/useAuth';
 import { useCoinPacks } from '@/hooks/useCoinPacks';
+import { useDictionary } from '@/context/DictionaryContext';
 import { toast } from 'sonner';
 import CoinIcon from '@/components/CoinIcon';
 
@@ -30,11 +31,11 @@ const dismissNotification = () => {
 };
 
 interface LowBalanceNotificationProps {
-    lang?: 'en' | 'el';
+    lang?: 'en' | 'el'; // Keep prop for backward compatibility but prefer dictionary
 }
 
 export function LowBalanceNotification({
-    lang = 'en'
+    lang: propLang
 }: LowBalanceNotificationProps) {
     const [isVisible, setIsVisible] = useState(false);
     const [hasShown, setHasShown] = useState(false);
@@ -42,6 +43,9 @@ export function LowBalanceNotification({
     const { processPayment, isProcessing } = useStripePayment();
     const { user } = useAuth();
     const { coinPacks, loading: coinPacksLoading } = useCoinPacks();
+    // Get language from dictionary context, fallback to prop
+    const { lang: dictLang } = useDictionary();
+    const lang = dictLang || propLang || 'en';
 
     // Low balance thresholds (matching Wallet component)
     const isLowBalance = wallet.balance <= 200;
@@ -162,9 +166,9 @@ export function LowBalanceNotification({
                             ease: "easeInOut"
                         }
                     }}
-                    className="fixed top-4 right-4 z-[9999] max-w-xs"
+                    className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none"
                 >
-                    <div className={`${content.bgGradient} rounded-xl p-3 shadow-xl border border-white/20 relative backdrop-blur-sm overflow-hidden pointer-events-auto`}>
+                    <div className={`${content.bgGradient} rounded-xl p-3 shadow-xl border border-white/20 relative backdrop-blur-sm overflow-hidden pointer-events-auto max-w-xs mx-4`}>
                         <button
                             onClick={handleDismiss}
                             className="absolute top-2 right-2 text-white/60 hover:text-white text-xl leading-none p-2 rounded-full hover:bg-white/15 transition-all duration-200 z-50 pointer-events-auto min-w-[32px] min-h-[32px] flex items-center justify-center"

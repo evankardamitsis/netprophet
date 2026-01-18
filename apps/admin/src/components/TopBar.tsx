@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu, LogOut, User, Bell } from 'lucide-react';
+import { Menu, LogOut, User, Bell, CheckCheck } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { supabase } from '@netprophet/lib';
+import { toast } from 'sonner';
 import Logo from '@/components/Logo';
 
 interface TopBarProps {
@@ -105,6 +106,38 @@ export function TopBar({ userEmail, onMenuClick, onSignOut }: TopBarProps) {
         router.push('/in-app-notifications');
     };
 
+    const markAllAsRead = async () => {
+        if (unreadCount === 0) return;
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+                toast.error('No authentication token available');
+                return;
+            }
+
+            const response = await fetch('/api/admin/in-app-notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to mark all as read');
+            }
+
+            // Update local state
+            setRecentNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+            setUnreadCount(0);
+            toast.success('All notifications marked as read');
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+            toast.error('Failed to mark all as read');
+        }
+    };
+
     return (
         <div className="bg-white border-b border-gray-200 px-6 py-4">
             <div className="flex items-center justify-between">
@@ -158,7 +191,7 @@ export function TopBar({ userEmail, onMenuClick, onSignOut }: TopBarProps) {
                         </PopoverTrigger>
                         <PopoverContent className="w-80 p-0" align="end">
                             <div className="p-4 border-b">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between mb-2">
                                     <h3 className="font-semibold">Notifications</h3>
                                     {unreadCount > 0 && (
                                         <Badge variant="destructive" className="text-xs">
@@ -166,6 +199,17 @@ export function TopBar({ userEmail, onMenuClick, onSignOut }: TopBarProps) {
                                         </Badge>
                                     )}
                                 </div>
+                                {unreadCount > 0 && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full justify-start text-xs h-8"
+                                        onClick={markAllAsRead}
+                                    >
+                                        <CheckCheck className="h-3 w-3 mr-2" />
+                                        Mark all as read
+                                    </Button>
+                                )}
                             </div>
                             <div className="max-h-96 overflow-y-auto">
                                 {recentNotifications.length === 0 ? (

@@ -106,6 +106,10 @@ export interface Match {
     ntrp_rating: number;
     surface_preference: string;
   } | null;
+  match_results?: Array<{
+    id: string;
+    match_result: string;
+  }> | null;
 }
 
 // Category Types

@@ -27,19 +27,15 @@ export async function POST(request: NextRequest) {
 
     console.log("📧 Processing pending admin emails...");
 
-    // Get recent pending admin emails (last 30 minutes to avoid processing old emails)
-    const thirtyMinutesAgo = new Date(
-      Date.now() - 30 * 60 * 1000
-    ).toISOString();
-
+    // Get pending admin emails (process all pending, including old ones)
+    // Remove the 30-minute filter to process all pending emails
     const { data: emailLogs, error: fetchError } = await supabase
       .from("email_logs")
       .select("*")
       .eq("template", "admin_alert")
       .eq("type", "admin")
       .eq("status", "pending")
-      .gte("created_at", thirtyMinutesAgo)
-      .order("to_email, created_at", { ascending: false });
+      .order("sent_at", { ascending: true });
 
     if (fetchError) {
       console.error("Error fetching email logs:", fetchError);

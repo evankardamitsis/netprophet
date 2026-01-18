@@ -26,29 +26,49 @@ class ResendService {
     to: string | string[],
     subject: string,
     html: string,
-    text?: string
+    text?: string,
+    retries: number = 3
   ) {
-    const response = await fetch(`${this.baseUrl}/emails`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "NetProphet <noreply@netprophetapp.com>",
-        to: Array.isArray(to) ? to : [to],
-        subject,
-        html,
-        text,
-      }),
-    });
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const response = await fetch(`${this.baseUrl}/emails`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "NetProphet <noreply@netprophetapp.com>",
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+          text,
+        }),
+      });
 
-    if (!response.ok) {
+      if (response.ok) {
+        return await response.json();
+      }
+
+      // Handle rate limit errors (429) with exponential backoff
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("Retry-After");
+        const waitTime = retryAfter 
+          ? parseInt(retryAfter) * 1000 
+          : Math.pow(2, attempt) * 1000; // Exponential backoff: 1s, 2s, 4s
+        
+        if (attempt < retries - 1) {
+          console.log(`Rate limit hit, retrying in ${waitTime}ms (attempt ${attempt + 1}/${retries})`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+      }
+
+      // For other errors or final retry attempt
       const error = await response.text();
       throw new Error(`Failed to send email via Resend: ${error}`);
     }
 
-    return await response.json();
+    throw new Error("Failed to send email after retries");
   }
 }
 
@@ -196,8 +216,7 @@ serve(async (req) => {
         .select("*")
         .eq("status", "pending")
         .eq("type", "user")
-        .order("created_at", { ascending: true })
-        .limit(50);
+        .order("sent_at", { ascending: true });
 
       if (fetchError || !pendingEmails || pendingEmails.length === 0) {
         return new Response(
@@ -210,17 +229,36 @@ serve(async (req) => {
         );
       }
 
-      // Process all pending emails
+      // Process all pending emails with rate limiting
+      // Resend allows 2 requests per second, so we add 600ms delay between requests
       let processedCount = 0;
       let errorCount = 0;
 
-      for (const email of pendingEmails) {
+      for (let i = 0; i < pendingEmails.length; i++) {
+        const email = pendingEmails[i];
         try {
           await processEmail(email, supabaseClient, resendService);
           processedCount++;
+          
+          // Add delay between emails to respect rate limit (2 req/sec = 500ms minimum)
+          // Use 600ms to be safe
+          if (i < pendingEmails.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 600));
+          }
         } catch (error) {
           console.error(`Error processing email ${email.id}:`, error);
           errorCount++;
+          
+          // If rate limit error, add extra delay before continuing
+          if (error.message && error.message.includes("rate_limit")) {
+            console.log("Rate limit encountered, waiting 2 seconds before continuing...");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else {
+            // Small delay even for other errors to avoid hammering the API
+            if (i < pendingEmails.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 300));
+            }
+          }
         }
       }
 

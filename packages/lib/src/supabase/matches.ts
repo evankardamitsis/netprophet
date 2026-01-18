@@ -450,6 +450,10 @@ export async function getMatchesByTournament(tournamentId: string) {
                 last_name,
                 ntrp_rating,
                 surface_preference
+            ),
+            match_results (
+                id,
+                match_result
             )
         `
     )

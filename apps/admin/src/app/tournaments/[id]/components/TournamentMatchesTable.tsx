@@ -498,10 +498,12 @@ export function TournamentMatchesTable({
             cell: ({ row }) => {
                 const match = row.original;
                 const isFinished = match.status === MATCH_STATUSES.FINISHED || match.status === 'finished';
+                // Check if match has results - match_results is an array from the query
+                const hasResults = match.match_results && Array.isArray(match.match_results) && match.match_results.length > 0;
 
                 return (
                     <div className="flex items-center gap-2">
-                        {isFinished && onAddResult && (
+                        {isFinished && !hasResults && onAddResult && (
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -763,26 +765,32 @@ export function TournamentMatchesTable({
                         </TableHeader>
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
-                                        className={`
-                                            ${row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : "bg-red-50 border-l-4 border-l-red-500"}
+                                table.getRowModel().rows.map((row) => {
+                                    const match = row.original;
+                                    // Check if match has results
+                                    const hasResults = match.match_results && Array.isArray(match.match_results) && match.match_results.length > 0;
+
+                                    return (
+                                        <TableRow
+                                            key={row.id}
+                                            data-state={row.getIsSelected() && "selected"}
+                                            className={`
+                                            ${hasResults ? "bg-gray-100 border-l-4 border-l-gray-400" : (row.original.web_synced ? "bg-green-50 border-l-4 border-l-green-500" : "bg-red-50 border-l-4 border-l-red-500")}
                                             ${row.original.locked ? "bg-red-100 border-l-4 border-l-red-600" : ""}
                                             ${row.original.status === 'live' ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}
                                         `}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
+                                        >
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    );
+                                })
                             ) : (
                                 <TableRow>
                                     <TableCell
@@ -804,12 +812,14 @@ export function TournamentMatchesTable({
                     table.getRowModel().rows.map((row) => {
                         const match = row.original;
                         const isSelected = selectedMatches.includes(match.id);
+                        // Check if match has results
+                        const hasResults = match.match_results && Array.isArray(match.match_results) && match.match_results.length > 0;
 
                         return (
                             <div
                                 key={match.id}
-                                className={`border rounded-lg p-4 space-y-3 ${isSelected ? 'bg-blue-50 border-blue-200' : match.web_synced ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-                                    } ${match.web_synced ? "border-l-4 border-l-green-500" : "border-l-4 border-l-red-500"
+                                className={`border rounded-lg p-4 space-y-3 ${hasResults ? 'bg-gray-100 border-gray-300' : (isSelected ? 'bg-blue-50 border-blue-200' : match.web_synced ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200')
+                                    } ${hasResults ? "border-l-4 border-l-gray-400" : (match.web_synced ? "border-l-4 border-l-green-500" : "border-l-4 border-l-red-500")
                                     } ${match.locked ? "border-l-4 border-l-red-600 bg-red-100" : ""
                                     } ${match.status === 'live' ? "border-l-4 border-l-blue-500" : ""
                                     }`}
@@ -861,7 +871,7 @@ export function TournamentMatchesTable({
                                 </div>
 
                                 {/* Add Results Button - Below player names */}
-                                {(match.status === MATCH_STATUSES.FINISHED || match.status === 'finished') && onAddResult && (
+                                {(match.status === MATCH_STATUSES.FINISHED || match.status === 'finished') && !hasResults && onAddResult && (
                                     <div className="flex justify-start">
                                         <Button
                                             variant="outline"

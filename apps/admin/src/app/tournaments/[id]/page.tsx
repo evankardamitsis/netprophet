@@ -129,7 +129,7 @@ export default function TournamentPage() {
     // Initialize active tab from localStorage or URL params
     useEffect(() => {
         const savedTab = localStorage.getItem(`tournament-${tournamentId}-tab`);
-        if (savedTab && ['overview', 'matches', 'categories', 'participants'].includes(savedTab)) {
+        if (savedTab && ['overview', 'matches', 'categories', 'teams', 'participants'].includes(savedTab)) {
             setActiveTab(savedTab);
         }
     }, [tournamentId]);
@@ -503,7 +503,7 @@ export default function TournamentPage() {
         <div className="min-h-screen bg-gray-50/50">
             {/* Mobile-Optimized Header Section */}
             <div className="bg-white border-b border-gray-200 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 py-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                     {/* Mobile-First Back Button */}
                     <div className="mb-6">
                         <Button
@@ -606,7 +606,7 @@ export default function TournamentPage() {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10 space-y-6">
                 {/* Mobile-Optimized Tabs */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     {/* Mobile Tabs - Horizontal Scroll */}
@@ -632,18 +632,33 @@ export default function TournamentPage() {
                                         </Badge>
                                     )}
                                 </TabsTrigger>
-                                <TabsTrigger
-                                    value="categories"
-                                    className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
-                                >
-                                    <Tag className="h-4 w-4 flex-shrink-0" />
-                                    <span>Categories</span>
-                                    {categories.length > 0 && (
-                                        <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
-                                            {categories.length}
-                                        </Badge>
-                                    )}
-                                </TabsTrigger>
+                                {tournament?.is_team_tournament ? (
+                                    <TabsTrigger
+                                        value="teams"
+                                        className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
+                                    >
+                                        <Users className="h-4 w-4 flex-shrink-0" />
+                                        <span>Teams</span>
+                                        {teams.length > 0 && (
+                                            <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                                {teams.length}
+                                            </Badge>
+                                        )}
+                                    </TabsTrigger>
+                                ) : (
+                                    <TabsTrigger
+                                        value="categories"
+                                        className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"
+                                    >
+                                        <Tag className="h-4 w-4 flex-shrink-0" />
+                                        <span>Categories</span>
+                                        {categories.length > 0 && (
+                                            <Badge variant="secondary" className="ml-1 text-xs flex-shrink-0 bg-blue-100 text-blue-700 px-2 py-0.5">
+                                                {categories.length}
+                                            </Badge>
+                                        )}
+                                    </TabsTrigger>
+                                )}
                                 <TabsTrigger
                                     value="participants"
                                     className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-3 whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-xl transition-all duration-200 bg-white border border-gray-200 shadow-sm data-[state=inactive]:bg-white data-[state=inactive]:text-gray-700 hover:bg-gray-50"

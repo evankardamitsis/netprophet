@@ -104,10 +104,6 @@ export default function DashboardPage() {
         <div className="min-h-full">
             <WelcomeBonus />
 
-
-            {/* Low Balance Notification - Always render */}
-            <LowBalanceNotification />
-
             {selectedMatch ? (
                 <MatchDetail
                     match={selectedMatch}

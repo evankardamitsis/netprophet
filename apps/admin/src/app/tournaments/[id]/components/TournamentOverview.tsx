@@ -34,12 +34,50 @@ export function TournamentOverview({
         }
         return 'TBD';
     };
+
+    const getMatchDisplayName = (match: Match) => {
+        if (match.match_type === 'doubles') {
+            const playerA1 = match.player_a1;
+            const playerA2 = match.player_a2;
+            const playerB1 = match.player_b1;
+            const playerB2 = match.player_b2;
+
+            const teamA = (playerA1 && playerA2)
+                ? `${playerA1.first_name} ${playerA1.last_name} & ${playerA2.first_name} ${playerA2.last_name}`
+                : 'TBD';
+            const teamB = (playerB1 && playerB2)
+                ? `${playerB1.first_name} ${playerB1.last_name} & ${playerB2.first_name} ${playerB2.last_name}`
+                : 'TBD';
+
+            return `${teamA} vs ${teamB}`;
+        } else {
+            // Singles match
+            const playerA = getPlayerName(match.player_a);
+            const playerB = getPlayerName(match.player_b);
+            return `${playerA} vs ${playerB}`;
+        }
+    };
+
+    // Strip HTML tags from description and return plain text
+    const stripHtml = (html: string | null | undefined): string => {
+        if (!html) return '';
+        // Check if we're in the browser
+        if (typeof document !== 'undefined') {
+            // Create a temporary div element
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html;
+            // Get text content (strips all HTML tags)
+            return tmp.textContent || tmp.innerText || '';
+        }
+        // Fallback: simple regex-based stripping for SSR
+        return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').trim();
+    };
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-hidden">
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
                 {/* Mobile-Optimized Tournament Details Card */}
-                <div className="lg:col-span-2">
-                    <Card className="border-0 shadow-xl bg-white">
+                <div className="lg:col-span-2 overflow-hidden">
+                    <Card className="border-0 shadow-xl bg-white overflow-hidden">
                         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 p-6">
                             <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
                                 <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-3">
@@ -61,9 +99,9 @@ export function TournamentOverview({
 
                             {/* Description */}
                             {tournament.description && (
-                                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                                    <p className="text-gray-700 leading-relaxed text-base">
-                                        {tournament.description}
+                                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 overflow-hidden">
+                                    <p className="text-gray-700 leading-relaxed text-base break-words whitespace-pre-wrap overflow-wrap-anywhere">
+                                        {stripHtml(tournament.description)}
                                     </p>
                                 </div>
                             )}
@@ -175,8 +213,8 @@ export function TournamentOverview({
                                     {matches.slice(0, 5).map((match) => (
                                         <div key={match.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl hover:shadow-md transition-all duration-200">
                                             <div className="flex-1 min-w-0 pr-3">
-                                                <div className="font-semibold text-sm text-gray-900 truncate">
-                                                    {getPlayerName(match.player_a)} vs {getPlayerName(match.player_b)}
+                                                <div className="font-semibold text-sm text-gray-900 break-words">
+                                                    {getMatchDisplayName(match)}
                                                 </div>
                                                 <div className="text-xs text-gray-500 flex items-center gap-2 mt-1">
                                                     {match.round && (
