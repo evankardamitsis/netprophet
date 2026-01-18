@@ -233,14 +233,15 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
     return (
         <aside
             className={cx(
-                "h-full flex flex-col relative overflow-hidden",
+                "flex flex-col relative overflow-hidden",
                 transitions.default,
                 sidebarOpen
                     ? 'w-full max-w-[320px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[460px] xl:w-[400px] rounded-r-3xl'
                     : 'w-48 rounded-r-3xl'
             )}
             style={{
-                minHeight: '100vh',
+                height: '100%',
+                maxHeight: '100%',
                 backgroundColor: '#121A39'
             }}
         >
@@ -251,8 +252,8 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
 
             {sidebarOpen ? (
                 // Expanded view
-                <div className="flex flex-col h-full pt-2 px-2 pb-2 min-w-0 relative z-10">
-                    <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
+                <div className="flex flex-col h-full pt-2 px-2 pb-2 min-w-0 relative z-10 overflow-hidden" style={{ height: '100%', maxHeight: '100%' }}>
+                    <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar pr-1" style={{ maxHeight: '100%' }}>
                         <MatchesList onSelectMatch={onMatchSelect} dict={dict} lang={lang} />
                     </div>
                 </div>
@@ -260,9 +261,10 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                 // Compact view - clickable to expand
                 <div
                     className={cx(
-                        "flex flex-col h-full p-2 sm:p-3 min-w-0 cursor-pointer hover:bg-blue-800/20 rounded-3xl relative z-10",
+                        "flex flex-col h-full p-2 sm:p-3 min-w-0 cursor-pointer hover:bg-blue-800/20 rounded-3xl relative z-10 overflow-hidden",
                         transitions.default
                     )}
+                    style={{ height: '100%', maxHeight: '100%' }}
                     onClick={(e) => {
                         // Only expand if clicking on the container itself, not on match buttons
                         if (e.target === e.currentTarget) {
@@ -271,7 +273,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                     }}
                     title={dict?.sidebar?.expandSidebar || 'Click to expand sidebar'}
                 >
-                    <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto min-w-0 scrollbar-thin scrollbar-thumb-slate-600 hover:scrollbar-thumb-slate-500 custom-scrollbar pr-1 pb-2" style={{ maxHeight: '100%' }}>
                         <div className="flex flex-col gap-1 sm:gap-2 min-w-0">
 
                             {/* Live matches */}
@@ -348,25 +350,6 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                                 </motion.button>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Expand indicator - fixed at bottom */}
-                    <div className="flex-shrink-0 pt-2 px-2">
-                        <motion.div
-                            className={cx(
-                                "w-full p-2 flex items-center justify-center text-white",
-                                borders.rounded.sm,
-                                transitions.default,
-                                gradients.purple,
-                                shadows.card,
-                                "hover:opacity-90"
-                            )}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <ChevronRightIcon />
-                            <span className="ml-1 text-xs font-medium">Expand</span>
-                        </motion.div>
                     </div>
                 </div>
             )}

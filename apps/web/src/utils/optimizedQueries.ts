@@ -47,7 +47,8 @@ export async function fetchOptimizedTournamentResults(): Promise<{
                 winner_id,
                 tournaments!inner (
                     id,
-                    name
+                    name,
+                    is_team_tournament
                 ),
                 tournament_categories (
                     name
@@ -306,7 +307,7 @@ export function transformMatchData(match: any): any {
   const category = Array.isArray(match.tournament_categories)
     ? match.tournament_categories[0]
     : match.tournament_categories;
-  const categoryName = category?.name || "Unknown Category";
+  const categoryName = category?.name || null;
   const playerA = Array.isArray(match.player_a)
     ? match.player_a[0]
     : match.player_a;
@@ -386,9 +387,13 @@ export function transformMatchData(match: any): any {
     }
   }
 
+  const isTeamTournament = tournament?.is_team_tournament === true;
+
   return {
     id: match.id,
     tournament_name: tournamentName,
+    tournament_id: tournament?.id || null,
+    is_team_tournament: isTeamTournament,
     category_name: categoryName,
     round: match.round || null,
     player_a_name: playerAName,
@@ -411,6 +416,14 @@ export function transformMatchData(match: any): any {
     status: match.status,
     start_time: match.start_time,
     updated_at: match.updated_at,
+    // Include IDs for fetching team names
+    player_a_id: match.player_a_id,
+    player_b_id: match.player_b_id,
+    player_a1_id: match.player_a1_id,
+    player_a2_id: match.player_a2_id,
+    player_b1_id: match.player_b1_id,
+    player_b2_id: match.player_b2_id,
+    match_type: match.match_type,
   };
 }
 

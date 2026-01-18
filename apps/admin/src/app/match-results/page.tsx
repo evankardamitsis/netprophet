@@ -19,6 +19,7 @@ export default function MatchResultsPage() {
     const [matchResults, setMatchResults] = useState<MatchResultWithDetails[]>([]);
     const [filteredMatches, setFilteredMatches] = useState<Match[]>([]);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+    const [selectedMatchResult, setSelectedMatchResult] = useState<MatchResultWithDetails | null>(null);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -156,6 +157,7 @@ export default function MatchResultsPage() {
 
     const handleAddResult = (match: Match) => {
         setSelectedMatch(match);
+        setSelectedMatchResult(null);
         setFormData({
             winner_id: '',
             match_winner_team: '',
@@ -192,6 +194,7 @@ export default function MatchResultsPage() {
         if (!match) return;
 
         setSelectedMatch(match);
+        setSelectedMatchResult(result);
         setFormData({
             winner_id: result.winner_id || '',
             match_winner_team: (result as any).match_winner_team || '',
@@ -261,14 +264,29 @@ export default function MatchResultsPage() {
             // Handle singles vs doubles fields
             if (isDoubles) {
                 resultData.match_winner_team = formData.match_winner_team || null;
-                resultData.winner_id = null; // Doubles doesn't use winner_id
+                // For doubles, set winner_id to first player from winning team (required by NOT NULL constraint)
+                // This helps maintain backward compatibility while match_winner_team is the authoritative field
+                if (formData.match_winner_team === 'team_a' && selectedMatch.player_a1?.id) {
+                    resultData.winner_id = selectedMatch.player_a1.id;
+                } else if (formData.match_winner_team === 'team_b' && selectedMatch.player_b1?.id) {
+                    resultData.winner_id = selectedMatch.player_b1.id;
+                } else {
+                    throw new Error('Match winner team must be selected for doubles matches');
+                }
                 resultData.set1_winner_team = formData.set1_winner_team || null;
                 resultData.set2_winner_team = formData.set2_winner_team || null;
                 resultData.set3_winner_team = formData.set3_winner_team || null;
                 resultData.set4_winner_team = formData.set4_winner_team || null;
                 resultData.set5_winner_team = formData.set5_winner_team || null;
                 resultData.super_tiebreak_winner_team = formData.super_tiebreak_winner_team || null;
-                resultData.super_tiebreak_winner_id = null;
+                // Set super_tiebreak_winner_id to first player from winning team
+                if (formData.super_tiebreak_winner_team === 'team_a' && selectedMatch.player_a1?.id) {
+                    resultData.super_tiebreak_winner_id = selectedMatch.player_a1.id;
+                } else if (formData.super_tiebreak_winner_team === 'team_b' && selectedMatch.player_b1?.id) {
+                    resultData.super_tiebreak_winner_id = selectedMatch.player_b1.id;
+                } else {
+                    resultData.super_tiebreak_winner_id = null;
+                }
                 // Clear singles fields
                 resultData.set1_winner_id = null;
                 resultData.set2_winner_id = null;
@@ -349,14 +367,32 @@ export default function MatchResultsPage() {
             // Handle singles vs doubles fields
             if (isDoubles) {
                 resultData.match_winner_team = formData.match_winner_team || null;
-                resultData.winner_id = null; // Doubles doesn't use winner_id
+                // For doubles, set winner_id to first player from winning team (required by NOT NULL constraint)
+                // This helps maintain backward compatibility while match_winner_team is the authoritative field
+                if (formData.match_winner_team === 'team_a' && selectedMatch.player_a1?.id) {
+                    resultData.winner_id = selectedMatch.player_a1.id;
+                } else if (formData.match_winner_team === 'team_b' && selectedMatch.player_b1?.id) {
+                    resultData.winner_id = selectedMatch.player_b1.id;
+                } else if (selectedMatchResult?.winner_id) {
+                    // If updating and no winner team selected, keep existing winner_id
+                    resultData.winner_id = selectedMatchResult.winner_id;
+                } else {
+                    throw new Error('Match winner team must be selected for doubles matches');
+                }
                 resultData.set1_winner_team = formData.set1_winner_team || null;
                 resultData.set2_winner_team = formData.set2_winner_team || null;
                 resultData.set3_winner_team = formData.set3_winner_team || null;
                 resultData.set4_winner_team = formData.set4_winner_team || null;
                 resultData.set5_winner_team = formData.set5_winner_team || null;
                 resultData.super_tiebreak_winner_team = formData.super_tiebreak_winner_team || null;
-                resultData.super_tiebreak_winner_id = null;
+                // Set super_tiebreak_winner_id to first player from winning team
+                if (formData.super_tiebreak_winner_team === 'team_a' && selectedMatch.player_a1?.id) {
+                    resultData.super_tiebreak_winner_id = selectedMatch.player_a1.id;
+                } else if (formData.super_tiebreak_winner_team === 'team_b' && selectedMatch.player_b1?.id) {
+                    resultData.super_tiebreak_winner_id = selectedMatch.player_b1.id;
+                } else {
+                    resultData.super_tiebreak_winner_id = null;
+                }
                 // Clear singles fields
                 resultData.set1_winner_id = null;
                 resultData.set2_winner_id = null;
@@ -381,8 +417,12 @@ export default function MatchResultsPage() {
                 resultData.set5_winner_team = null;
             }
 
+            if (!selectedMatchResult) {
+                throw new Error('No match result selected for update');
+            }
+
             console.log('Updating match result:', resultData);
-            const { data, error } = await MatchResultsService.updateMatchResult(selectedMatch.id, resultData);
+            const { data, error } = await MatchResultsService.updateMatchResult(selectedMatchResult.id, resultData);
 
             if (error) {
                 console.error('MatchResultsService error:', error);
@@ -466,9 +506,9 @@ export default function MatchResultsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50/50">
-            <div className="container mx-auto px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+            <div className="container mx-auto px-2 sm:px-3 py-2 sm:py-3 space-y-2 sm:space-y-3">
                 {/* Mobile-First Header */}
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3">
                     <div className="text-center sm:text-left">
                         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
                             Match Results

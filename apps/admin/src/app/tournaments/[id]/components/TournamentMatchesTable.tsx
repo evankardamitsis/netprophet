@@ -13,7 +13,7 @@ import {
     useReactTable,
     VisibilityState,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2, Globe, Globe2, Lock } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Edit, Trash2, Globe, Globe2, Lock, FileText } from "lucide-react";
 import { MATCH_STATUSES, MATCH_STATUS_OPTIONS, type MatchStatus } from "@netprophet/lib";
 
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,7 @@ interface TournamentMatchesTableProps {
     formatTime: (timeString: string | null) => string;
     selectedMatches: string[];
     onSelectionChange: (matchIds: string[]) => void;
+    onAddResult?: (match: Match) => void;
 }
 
 export function TournamentMatchesTable({
@@ -73,7 +74,8 @@ export function TournamentMatchesTable({
     getStatusColor,
     formatTime,
     selectedMatches,
-    onSelectionChange
+    onSelectionChange,
+    onAddResult
 }: TournamentMatchesTableProps) {
     const [sorting, setSorting] = React.useState<SortingState>([
         {
@@ -495,29 +497,44 @@ export function TournamentMatchesTable({
             enableHiding: false,
             cell: ({ row }) => {
                 const match = row.original;
+                const isFinished = match.status === MATCH_STATUSES.FINISHED || match.status === 'finished';
 
                 return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditMatch(match)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Match
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => onDeleteMatch(match.id)}
-                                className="text-red-600 focus:text-red-600"
+                    <div className="flex items-center gap-2">
+                        {isFinished && onAddResult && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onAddResult(match)}
+                                className="text-xs sm:text-sm"
                             >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Match
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                                <span className="hidden sm:inline">Add Results</span>
+                                <span className="sm:hidden">Results</span>
+                            </Button>
+                        )}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onEditMatch(match)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Match
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => onDeleteMatch(match.id)}
+                                    className="text-red-600 focus:text-red-600"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Match
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 );
             },
         },
@@ -799,7 +816,7 @@ export function TournamentMatchesTable({
                             >
                                 {/* Header with checkbox and actions */}
                                 <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
                                         <Checkbox
                                             checked={isSelected}
                                             onCheckedChange={(checked) => {
@@ -809,14 +826,14 @@ export function TournamentMatchesTable({
                                                     onSelectionChange(selectedMatches.filter(id => id !== match.id));
                                                 }
                                             }}
-                                            className="flex-shrink-0"
+                                            className="flex-shrink-0 mt-1"
                                         />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-medium text-sm text-gray-900 truncate">
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                            <div className="font-medium text-sm text-gray-900 break-words">
                                                 {match.match_type === 'doubles' ? getTeamName(match) : getPlayerName(match.player_a)}
                                             </div>
                                             <div className="text-xs text-gray-500 text-center">vs</div>
-                                            <div className="font-medium text-sm text-gray-900 truncate">
+                                            <div className="font-medium text-sm text-gray-900 break-words">
                                                 {match.match_type === 'doubles' ? getTeamBName(match) : getPlayerName(match.player_b)}
                                             </div>
                                         </div>
@@ -842,6 +859,21 @@ export function TournamentMatchesTable({
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
+
+                                {/* Add Results Button - Below player names */}
+                                {(match.status === MATCH_STATUSES.FINISHED || match.status === 'finished') && onAddResult && (
+                                    <div className="flex justify-start">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => onAddResult(match)}
+                                            className="text-xs"
+                                        >
+                                            <FileText className="h-3 w-3 mr-1" />
+                                            Add Results
+                                        </Button>
+                                    </div>
+                                )}
 
                                 {/* Status and Round */}
                                 <div className="flex items-center justify-between">

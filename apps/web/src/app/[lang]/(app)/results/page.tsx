@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,11 +16,15 @@ export const dynamic = 'force-dynamic';
 interface MatchResult {
     id: string;
     tournament_name: string;
+    tournament_id?: string;
+    is_team_tournament?: boolean;
     category_name: string;
     player_a_name: string;
     player_a_ntrp: number;
     player_b_name: string;
     player_b_ntrp: number;
+    player_a_team_name?: string | null;
+    player_b_team_name?: string | null;
     winner_name: string;
     match_result: string;
     set1_score: string | null;
@@ -38,6 +42,14 @@ interface MatchResult {
     start_time: string;
     updated_at: string;
     round: string | null;
+    // IDs for fetching team names
+    player_a_id?: string | null;
+    player_b_id?: string | null;
+    player_a1_id?: string | null;
+    player_a2_id?: string | null;
+    player_b1_id?: string | null;
+    player_b2_id?: string | null;
+    match_type?: string;
 }
 
 interface TournamentResults {
@@ -94,8 +106,97 @@ export default function ResultsPage() {
         return { winsA, winsB };
     };
 
+    // Batch fetch team names for all players in matches
+    const fetchTeamNames = async (matches: MatchResult[]): Promise<Map<string, string>> => {
+        const teamNamesMap = new Map<string, string>();
+
+        // Collect all unique tournament_id + player_id combinations
+        const playerTournamentPairs = new Set<string>();
+
+        matches.forEach(match => {
+            if (!match.is_team_tournament || !match.tournament_id) return;
+
+            const isDoubles = match.match_type === 'doubles';
+
+            if (isDoubles) {
+                if (match.player_a1_id) {
+                    playerTournamentPairs.add(`${match.tournament_id}:${match.player_a1_id}`);
+                }
+                if (match.player_a2_id) {
+                    playerTournamentPairs.add(`${match.tournament_id}:${match.player_a2_id}`);
+                }
+                if (match.player_b1_id) {
+                    playerTournamentPairs.add(`${match.tournament_id}:${match.player_b1_id}`);
+                }
+                if (match.player_b2_id) {
+                    playerTournamentPairs.add(`${match.tournament_id}:${match.player_b2_id}`);
+                }
+            } else {
+                if (match.player_a_id) {
+                    playerTournamentPairs.add(`${match.tournament_id}:${match.player_a_id}`);
+                }
+                if (match.player_b_id) {
+                    playerTournamentPairs.add(`${match.tournament_id}:${match.player_b_id}`);
+                }
+            }
+        });
+
+        if (playerTournamentPairs.size === 0) return teamNamesMap;
+
+        // Fetch all team members in a single query
+        const playerIds = Array.from(playerTournamentPairs).map(pair => pair.split(':')[1]);
+        const { data: teamMembers } = await supabase
+            .from('team_members')
+            .select('player_id, team_id')
+            .in('player_id', playerIds);
+
+        if (!teamMembers || teamMembers.length === 0) return teamNamesMap;
+
+        // Get unique team IDs and tournament IDs
+        const teamIds = [...new Set(teamMembers.map(tm => tm.team_id))];
+        const tournamentIds = [...new Set(Array.from(playerTournamentPairs).map(pair => pair.split(':')[0]))];
+
+        // Fetch all tournament teams
+        const { data: tournamentTeams } = await supabase
+            .from('tournament_teams')
+            .select('id, name, tournament_id')
+            .in('id', teamIds)
+            .in('tournament_id', tournamentIds);
+
+        if (!tournamentTeams) return teamNamesMap;
+
+        // Create a map of team_id -> team name for each tournament
+        const teamNameMap = new Map<string, Map<string, string>>();
+        tournamentTeams.forEach(tt => {
+            if (!teamNameMap.has(tt.tournament_id)) {
+                teamNameMap.set(tt.tournament_id, new Map());
+            }
+            teamNameMap.get(tt.tournament_id)!.set(tt.id, tt.name);
+        });
+
+        // Build a map of player_id -> team_id
+        const playerTeamMap = new Map<string, string>();
+        teamMembers.forEach(tm => {
+            playerTeamMap.set(tm.player_id, tm.team_id);
+        });
+
+        // Build the final map of tournament_id:player_id -> team_name
+        Array.from(playerTournamentPairs).forEach(pair => {
+            const [tournamentId, playerId] = pair.split(':');
+            const teamId = playerTeamMap.get(playerId);
+            if (teamId) {
+                const teamName = teamNameMap.get(tournamentId)?.get(teamId);
+                if (teamName) {
+                    teamNamesMap.set(pair, teamName);
+                }
+            }
+        });
+
+        return teamNamesMap;
+    };
+
     // Load match results with optimized batch query and caching
-    const loadResults = async (preserveSelection = false) => {
+    const loadResults = useCallback(async (preserveSelection = false) => {
         try {
             setLoadingResults(true);
             setError(null);
@@ -104,11 +205,52 @@ export default function ResultsPage() {
             const { tournaments, totals } = await fetchOptimizedTournamentResults();
 
             // Transform data to expected format
-            const tournamentResults: TournamentResults[] = tournaments.map(tournament => {
+            const allMatches: MatchResult[] = [];
+            tournaments.forEach(tournament => {
                 const matches = tournament.matches
                     .filter(match => match.status !== 'cancelled') // Filter out cancelled matches
                     .slice(0, resultsPerPage) // Limit to first page
-                    .map(transformMatchData)
+                    .map(transformMatchData);
+                allMatches.push(...matches);
+            });
+
+            // Fetch team names for all matches that are team tournaments
+            const teamNamesMap = await fetchTeamNames(allMatches);
+
+            // Add team names to matches
+            allMatches.forEach(match => {
+                if (match.is_team_tournament && match.tournament_id) {
+                    const isDoubles = match.match_type === 'doubles';
+
+                    if (isDoubles) {
+                        // For doubles, if both players are on the same team, use that team name
+                        const teamA1 = match.player_a1_id ? teamNamesMap.get(`${match.tournament_id}:${match.player_a1_id}`) : null;
+                        const teamA2 = match.player_a2_id ? teamNamesMap.get(`${match.tournament_id}:${match.player_a2_id}`) : null;
+                        const teamB1 = match.player_b1_id ? teamNamesMap.get(`${match.tournament_id}:${match.player_b1_id}`) : null;
+                        const teamB2 = match.player_b2_id ? teamNamesMap.get(`${match.tournament_id}:${match.player_b2_id}`) : null;
+
+                        if (teamA1 && teamA2 && teamA1 === teamA2) {
+                            match.player_a_team_name = teamA1;
+                        }
+                        if (teamB1 && teamB2 && teamB1 === teamB2) {
+                            match.player_b_team_name = teamB1;
+                        }
+                    } else {
+                        // For singles, get team name for each player
+                        if (match.player_a_id) {
+                            match.player_a_team_name = teamNamesMap.get(`${match.tournament_id}:${match.player_a_id}`) || null;
+                        }
+                        if (match.player_b_id) {
+                            match.player_b_team_name = teamNamesMap.get(`${match.tournament_id}:${match.player_b_id}`) || null;
+                        }
+                    }
+                }
+            });
+
+            // Group matches back by tournament and sort
+            const tournamentResults: TournamentResults[] = tournaments.map(tournament => {
+                const matches = allMatches
+                    .filter(match => match.tournament_id === tournament.id)
                     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
                 return {
@@ -144,7 +286,7 @@ export default function ResultsPage() {
         } finally {
             setLoadingResults(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         if (!loading && !user) {
@@ -152,7 +294,7 @@ export default function ResultsPage() {
         } else if (user && !loading) {
             loadResults();
         }
-    }, [user, loading, router, lang]);
+    }, [user, loading, router, lang, loadResults]);
 
     const handleSignOut = async () => {
         await signOut();
@@ -374,17 +516,47 @@ export default function ResultsPage() {
                                     <CardContent className="pt-2 sm:pt-3">
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5 sm:gap-2 lg:gap-3">
                                             {tournament.matches.map((match) => {
+                                                const isPendingResult =
+                                                    !match.match_result ||
+                                                    match.match_result.trim() === '' ||
+                                                    match.match_result.trim() === (dict?.results?.resultsPending || 'Results pending');
                                                 const isPlayerAWinner = match.winner_name === match.player_a_name;
                                                 const isPlayerBWinner = match.winner_name === match.player_b_name;
                                                 const setScores = getSetScores(match);
                                                 const superTie = splitScore(match.super_tiebreak_score);
                                                 const showSuperTie = Boolean(match.super_tiebreak_score);
                                                 const totalColumns = Math.max(setScores.length, 1) + (showSuperTie ? 1 : 0);
-                                                const { winsA, winsB } = getSetWins(setScores);
-                                                const isPendingResult =
-                                                    !match.match_result ||
-                                                    match.match_result.trim() === '' ||
-                                                    match.match_result.trim() === (dict?.results?.resultsPending || 'Results pending');
+
+                                                // Parse match_result to get actual set wins
+                                                // match_result format is "sets_a-sets_b" (e.g., "2-1" means player A won 2 sets, player B won 1 set)
+                                                let winsA = 0;
+                                                let winsB = 0;
+                                                if (match.match_result && !isPendingResult) {
+                                                    const parts = match.match_result.split('-');
+                                                    if (parts.length === 2) {
+                                                        const setsA = parseInt(parts[0], 10);
+                                                        const setsB = parseInt(parts[1], 10);
+                                                        if (!isNaN(setsA) && !isNaN(setsB)) {
+                                                            winsA = setsA;
+                                                            winsB = setsB;
+                                                        } else {
+                                                            // Fallback to calculated wins if parsing fails
+                                                            const calculated = getSetWins(setScores);
+                                                            winsA = calculated.winsA;
+                                                            winsB = calculated.winsB;
+                                                        }
+                                                    } else {
+                                                        // Fallback to calculated wins if format is invalid
+                                                        const calculated = getSetWins(setScores);
+                                                        winsA = calculated.winsA;
+                                                        winsB = calculated.winsB;
+                                                    }
+                                                } else {
+                                                    // If no match_result or pending, use calculated wins
+                                                    const calculated = getSetWins(setScores);
+                                                    winsA = calculated.winsA;
+                                                    winsB = calculated.winsB;
+                                                }
 
                                                 return (
                                                     <div key={match.id} className="relative group/item">
@@ -392,9 +564,6 @@ export default function ResultsPage() {
                                                             {/* Top Row: Meta */}
                                                             <div className="flex items-center justify-between gap-2 mb-2">
                                                                 <div className="flex items-center gap-2 text-[10px] sm:text-xs flex-wrap">
-                                                                    <span className="bg-slate-700/70 text-purple-200 font-bold px-2 py-0.5 rounded-full border border-purple-500/30">
-                                                                        {match.status === 'finished' ? (dict?.results?.finished || 'Finished') : match.status}
-                                                                    </span>
                                                                     {match.round && (
                                                                         <span className="text-purple-300 font-bold">
                                                                             {match.round}
@@ -407,31 +576,37 @@ export default function ResultsPage() {
                                                                         })}
                                                                     </span>
                                                                 </div>
-                                                                <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold shadow-lg whitespace-nowrap">
-                                                                    {match.category_name}
-                                                                </span>
+                                                                {match.category_name && (
+                                                                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-bold shadow-lg whitespace-nowrap">
+                                                                        {match.category_name}
+                                                                    </span>
+                                                                )}
                                                             </div>
 
                                                             {/* Players and Score Layout - vertical names, inline scores */}
-                                                            <div className="flex items-center gap-3">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                                                                 {/* Player names stacked */}
                                                                 <div className="flex flex-col min-w-0 flex-1 gap-1">
                                                                     <div className={`${isPlayerAWinner ? 'font-bold !text-green-500' : 'font-normal text-gray-400'} text-xs sm:text-sm break-words`}>
-                                                                        {match.player_a_name}{' '}
-                                                                        <span className="text-[10px] sm:text-xs text-purple-300 font-semibold">
-                                                                            ({match.player_a_ntrp.toFixed(1)})
-                                                                        </span>
+                                                                        {match.player_a_name}
+                                                                        {match.player_a_team_name && (
+                                                                            <span className="block text-[10px] sm:text-xs text-purple-300 font-semibold mt-0.5">
+                                                                                {match.player_a_team_name}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                     <div className={`${isPlayerBWinner ? 'font-bold !text-green-500' : 'font-normal text-gray-200'} text-xs sm:text-sm break-words`}>
-                                                                        {match.player_b_name}{' '}
-                                                                        <span className="text-[10px] sm:text-xs text-purple-300 font-semibold">
-                                                                            ({match.player_b_ntrp.toFixed(1)})
-                                                                        </span>
+                                                                        {match.player_b_name}
+                                                                        {match.player_b_team_name && (
+                                                                            <span className="block text-[10px] sm:text-xs text-purple-300 font-semibold mt-0.5">
+                                                                                {match.player_b_team_name}
+                                                                            </span>
+                                                                        )}
                                                                     </div>
                                                                 </div>
 
                                                                 {/* Scores aligned center */}
-                                                                <div className="flex-shrink-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-lg border border-purple-500/20 px-3 py-2">
+                                                                <div className="flex-shrink-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-lg border border-purple-500/20 px-3 py-2 w-full sm:w-auto">
                                                                     {isPendingResult ? (
                                                                         <div className="text-center text-xs sm:text-sm font-bold text-white">
                                                                             {dict?.results?.resultsPending || 'Αναμονή αποτελεσμάτων'}

@@ -122,6 +122,34 @@ export function PredictionForm({
         return name;
     };
 
+    // Validate super tiebreak score
+    const validateSuperTiebreakScore = (score: string, player1Wins: boolean): boolean => {
+        if (!score || score.trim() === '') return true; // Empty is valid (optional)
+
+        // Match pattern: number-number (e.g., "10-8", "17-15")
+        const pattern = /^\d+-\d+$/;
+        if (!pattern.test(score.trim())) return false;
+
+        const [score1, score2] = score.trim().split('-').map(Number);
+
+        // Both scores must be valid numbers
+        if (isNaN(score1) || isNaN(score2)) return false;
+
+        // Winner must have at least 10 points
+        const winnerScore = Math.max(score1, score2);
+        if (winnerScore < 10) return false;
+
+        // Winner must win by at least 2 points
+        const diff = Math.abs(score1 - score2);
+        if (diff < 2) return false;
+
+        // Validate that the winner matches the predicted winner
+        if (player1Wins && score1 <= score2) return false;
+        if (!player1Wins && score2 <= score1) return false;
+
+        return true;
+    };
+
     // Save form predictions to session storage whenever they change
     useEffect(() => {
         const storageKey = `${SESSION_KEYS.FORM_PREDICTIONS}_${matchId}`;
@@ -1286,46 +1314,36 @@ export function PredictionForm({
                         {formPredictions.superTieBreakWinner && (
                             <div className="space-y-1.5">
                                 <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakScore?.replace('{player}', displayName(formPredictions.winner)) || `Super Tiebreak Score - ${displayName(formPredictions.winner)} ${dict?.matches?.wins || 'wins'}`}</h4>
-                                <select
-                                    value={formPredictions.superTieBreakScore}
-                                    onChange={(e) => onPredictionChange('superTieBreakScore', e.target.value)}
-                                    disabled={locked}
-                                    className={`w-full p-3 border rounded-lg text-sm ${locked
-                                        ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
-                                        : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
-                                        }`}
-                                >
-                                    <option value="">{dict?.matches?.selectSuperTiebreakScore || 'Select super tiebreak score'}</option>
-                                    {formPredictions.winner === details.player1.name ? (
-                                        // Player 1 wins - show scores where first number > second number
-                                        <>
-                                            <option value="10-0">10-0</option>
-                                            <option value="10-1">10-1</option>
-                                            <option value="10-2">10-2</option>
-                                            <option value="10-3">10-3</option>
-                                            <option value="10-4">10-4</option>
-                                            <option value="10-5">10-5</option>
-                                            <option value="10-6">10-6</option>
-                                            <option value="10-7">10-7</option>
-                                            <option value="10-8">10-8</option>
-                                            <option value="10-9">10-9</option>
-                                        </>
-                                    ) : (
-                                        // Player 2 wins - show scores where second number > first number
-                                        <>
-                                            <option value="0-10">0-10</option>
-                                            <option value="1-10">1-10</option>
-                                            <option value="2-10">2-10</option>
-                                            <option value="3-10">3-10</option>
-                                            <option value="4-10">4-10</option>
-                                            <option value="5-10">5-10</option>
-                                            <option value="6-10">6-10</option>
-                                            <option value="7-10">7-10</option>
-                                            <option value="8-10">8-10</option>
-                                            <option value="9-10">9-10</option>
-                                        </>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-gray-400">
+                                        {dict?.matches?.superTiebreakScoreLabel || 'Super Tiebreak Score'}
+                                        <span className="block text-xs text-gray-500 mt-1">
+                                            {dict?.matches?.superTiebreakScoreHelper || 'Format: 10-8, 17-15, etc. (Winner must win by 2 points, minimum 10 points to win)'}
+                                        </span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formPredictions.superTieBreakScore || ''}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            // Allow empty or valid format
+                                            if (value === '' || validateSuperTiebreakScore(value, formPredictions.winner === details.player1.name)) {
+                                                onPredictionChange('superTieBreakScore', value);
+                                            }
+                                        }}
+                                        placeholder={dict?.matches?.superTiebreakScorePlaceholder || 'e.g., 10-8, 17-15'}
+                                        disabled={locked}
+                                        className={`w-full p-3 border rounded-lg text-sm ${locked
+                                            ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
+                                            : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                                            }`}
+                                    />
+                                    {formPredictions.superTieBreakScore && !validateSuperTiebreakScore(formPredictions.superTieBreakScore, formPredictions.winner === details.player1.name) && (
+                                        <p className="text-xs text-red-500 mt-1">
+                                            {dict?.matches?.superTiebreakScoreError || 'Invalid score. Winner must have at least 10 points and win by 2 points (e.g., 10-8, 17-15).'}
+                                        </p>
                                     )}
-                                </select>
+                                </div>
                             </div>
                         )}
                     </motion.div>

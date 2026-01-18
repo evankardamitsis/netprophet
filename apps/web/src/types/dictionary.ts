@@ -113,6 +113,10 @@ export interface Dictionary {
     winsSuperTiebreak: string;
     superTiebreakScore: string;
     selectSuperTiebreakScore: string;
+    superTiebreakScoreLabel?: string;
+    superTiebreakScoreHelper?: string;
+    superTiebreakScorePlaceholder?: string;
+    superTiebreakScoreError?: string;
     winsSets: string;
     winsSetsDescription: string;
     makePredictionButton: string;

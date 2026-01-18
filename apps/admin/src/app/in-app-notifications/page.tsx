@@ -238,7 +238,7 @@ export default function InAppNotificationsPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto p-6">
+            <div className="container mx-auto p-3 sm:p-6">
                 <div className="flex items-center justify-center h-64">
                     <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
                 </div>
@@ -247,50 +247,52 @@ export default function InAppNotificationsPage() {
     }
 
     return (
-        <div className="container mx-auto p-6">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Bell className="h-8 w-8" />
-                        In-App Notifications
+        <div className="container mx-auto p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                <div className="flex-1 min-w-0">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2">
+                        <Bell className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 flex-shrink-0" />
+                        <span className="truncate">In-App Notifications</span>
                     </h1>
-                    <p className="text-gray-600 mt-2">
+                    <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
                         Track important system activities and events
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     {unreadCount > 0 && (
-                        <Badge variant="destructive" className="text-lg px-3 py-1">
+                        <Badge variant="destructive" className="text-sm sm:text-base px-2 sm:px-3 py-1 whitespace-nowrap">
                             {unreadCount} unread
                         </Badge>
                     )}
-                    <Button onClick={fetchNotifications} variant="outline" size="sm">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Refresh
+                    <Button onClick={fetchNotifications} variant="outline" size="sm" className="text-xs sm:text-sm">
+                        <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">Refresh</span>
+                        <span className="sm:hidden">Refresh</span>
                     </Button>
                     {unreadCount > 0 && (
-                        <Button onClick={markAllAsRead} variant="outline" size="sm">
-                            <CheckCheck className="h-4 w-4 mr-2" />
-                            Mark All Read
+                        <Button onClick={markAllAsRead} variant="outline" size="sm" className="text-xs sm:text-sm">
+                            <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                            <span className="hidden sm:inline">Mark All Read</span>
+                            <span className="sm:hidden">All Read</span>
                         </Button>
                     )}
                 </div>
             </div>
 
             {/* Filters */}
-            <Card className="mb-6">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
+            <Card className="mb-4 sm:mb-6">
+                <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
                         Filters
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <CardContent className="pt-0">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Type</label>
+                            <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Type</label>
                             <Select value={filterType} onValueChange={setFilterType}>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -304,9 +306,9 @@ export default function InAppNotificationsPage() {
                             </Select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Severity</label>
+                            <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Severity</label>
                             <Select value={filterSeverity} onValueChange={setFilterSeverity}>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -319,9 +321,9 @@ export default function InAppNotificationsPage() {
                             </Select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-2 block">Status</label>
+                            <label className="text-xs sm:text-sm font-medium mb-1.5 sm:mb-2 block">Status</label>
                             <Select value={filterRead} onValueChange={setFilterRead}>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -338,13 +340,13 @@ export default function InAppNotificationsPage() {
             {/* Notifications List */}
             {filteredNotifications.length === 0 ? (
                 <Card>
-                    <CardContent className="py-12 text-center">
-                        <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No notifications found</p>
+                    <CardContent className="py-8 sm:py-12 text-center">
+                        <Bell className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                        <p className="text-sm sm:text-base text-gray-600">No notifications found</p>
                     </CardContent>
                 </Card>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     {filteredNotifications.map((notification) => {
                         const severityInfo = severityConfig[notification.severity];
                         const SeverityIcon = severityInfo.icon;
@@ -357,37 +359,39 @@ export default function InAppNotificationsPage() {
                                     : ''
                                     }`}
                             >
-                                <CardContent className="p-6">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
+                                <CardContent className="p-3 sm:p-4 md:p-6">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                                                 <SeverityIcon
-                                                    className={`h-5 w-5 ${severityInfo.color.replace('bg-', 'text-').replace('-100', '-600')}`}
+                                                    className={`h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 ${severityInfo.color.replace('bg-', 'text-').replace('-100', '-600')}`}
                                                 />
-                                                <Badge className={severityInfo.color}>
+                                                <Badge className={`${severityInfo.color} text-xs sm:text-sm`}>
                                                     {notification.severity}
                                                 </Badge>
-                                                <Badge variant="outline">
-                                                    {typeLabels[notification.type] || notification.type}
+                                                <Badge variant="outline" className="text-xs sm:text-sm">
+                                                    <span className="truncate max-w-[120px] sm:max-w-none">
+                                                        {typeLabels[notification.type] || notification.type}
+                                                    </span>
                                                 </Badge>
                                                 {!notification.is_read && (
-                                                    <Badge variant="default" className="bg-blue-500">
+                                                    <Badge variant="default" className="bg-blue-500 text-xs sm:text-sm">
                                                         New
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <h3 className="text-lg font-semibold mb-1">
+                                            <h3 className="text-base sm:text-lg font-semibold mb-1 break-words">
                                                 {notification.title}
                                             </h3>
-                                            <p className="text-gray-600 mb-3">{notification.message}</p>
+                                            <p className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-3 break-words">{notification.message}</p>
                                             {Object.keys(notification.metadata).length > 0 && (
-                                                <div className="bg-gray-50 p-3 rounded-md text-sm mb-3">
-                                                    <pre className="text-xs overflow-x-auto">
+                                                <div className="bg-gray-50 dark:bg-gray-800 p-2 sm:p-3 rounded-md text-xs sm:text-sm mb-2 sm:mb-3">
+                                                    <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words">
                                                         {JSON.stringify(notification.metadata, null, 2)}
                                                     </pre>
                                                 </div>
                                             )}
-                                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-500">
                                                 <span>
                                                     {new Date(notification.created_at).toLocaleString()}
                                                 </span>
@@ -398,24 +402,26 @@ export default function InAppNotificationsPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 ml-4">
+                                        <div className="flex items-center gap-2 sm:ml-4 flex-shrink-0">
                                             {!notification.is_read && (
                                                 <Button
                                                     onClick={() => markAsRead(notification.id)}
                                                     variant="outline"
                                                     size="sm"
+                                                    className="text-xs sm:text-sm h-8 sm:h-9"
                                                 >
-                                                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                                                    Mark Read
+                                                    <CheckCircle2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                                                    <span className="hidden sm:inline">Mark Read</span>
                                                 </Button>
                                             )}
                                             <Button
                                                 onClick={() => deleteNotification(notification.id)}
                                                 variant="outline"
                                                 size="sm"
-                                                className="text-red-600 hover:text-red-700"
+                                                className="text-red-600 hover:text-red-700 h-8 sm:h-9 w-8 sm:w-auto px-2 sm:px-3"
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                                                <span className="hidden sm:inline ml-2">Delete</span>
                                             </Button>
                                         </div>
                                     </div>

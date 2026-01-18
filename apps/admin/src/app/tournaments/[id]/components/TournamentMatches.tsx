@@ -20,6 +20,7 @@ interface TournamentMatchesProps {
     onUpdateMatchStatus: (matchId: string, status: string) => void;
     getStatusColor: (status: string) => string;
     formatTime: (timeString: string | null) => string;
+    onAddResult?: (match: Match) => void;
 }
 
 export function TournamentMatches({
@@ -33,7 +34,8 @@ export function TournamentMatches({
     onRemoveFromWeb,
     onUpdateMatchStatus,
     getStatusColor,
-    formatTime
+    formatTime,
+    onAddResult
 }: TournamentMatchesProps) {
     const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
 
@@ -59,6 +61,7 @@ export function TournamentMatches({
                     formatTime={formatTime}
                     selectedMatches={selectedMatches}
                     onSelectionChange={setSelectedMatches}
+                    onAddResult={onAddResult}
                 />
             ) : (
                 <div className="flex flex-col items-center justify-center py-12 px-4">

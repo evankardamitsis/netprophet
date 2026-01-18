@@ -755,6 +755,10 @@ export default function TournamentPage() {
                             onUpdateMatchStatus={handleUpdateMatchStatus}
                             getStatusColor={getStatusColor}
                             formatTime={formatTime}
+                            onAddResult={(match) => {
+                                // Navigate to match-results page with the match ID
+                                router.push(`/match-results?matchId=${match.id}`);
+                            }}
                         />
                     </TabsContent>
 

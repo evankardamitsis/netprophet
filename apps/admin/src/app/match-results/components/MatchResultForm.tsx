@@ -1,6 +1,7 @@
 'use client';
 
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Match, FormData } from '../types';
@@ -253,72 +254,33 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
         return isAmateurFormat && ['2-1', '1-2'].includes(formData.match_result);
     };
 
-    const getSuperTiebreakScoreOptions = () => {
-        const hasWinner = isDoubles ? formData.match_winner_team : formData.winner_id;
-        if (!hasWinner) {
-            return [
-                { value: '10-0', label: '10-0' },
-                { value: '10-1', label: '10-1' },
-                { value: '10-2', label: '10-2' },
-                { value: '10-3', label: '10-3' },
-                { value: '10-4', label: '10-4' },
-                { value: '10-5', label: '10-5' },
-                { value: '10-6', label: '10-6' },
-                { value: '10-7', label: '10-7' },
-                { value: '10-8', label: '10-8' },
-                { value: '10-9', label: '10-9' },
-                { value: '0-10', label: '0-10' },
-                { value: '1-10', label: '1-10' },
-                { value: '2-10', label: '2-10' },
-                { value: '3-10', label: '3-10' },
-                { value: '4-10', label: '4-10' },
-                { value: '5-10', label: '5-10' },
-                { value: '6-10', label: '6-10' },
-                { value: '7-10', label: '7-10' },
-                { value: '8-10', label: '8-10' },
-                { value: '9-10', label: '9-10' }
-            ];
-        }
+    const validateSuperTiebreakScore = (score: string): boolean => {
+        if (!score || score.trim() === '') return true; // Empty is valid (optional)
 
-        const isTeamAWinner = isDoubles
-            ? formData.match_winner_team === 'team_a'
-            : formData.winner_id === match.player_a.id;
+        // Match pattern: number-number (e.g., "10-8", "17-15")
+        const pattern = /^\d+-\d+$/;
+        if (!pattern.test(score.trim())) return false;
 
-        if (isTeamAWinner) {
-            // Team A wins - show scores where first number > second number
-            return [
-                { value: '10-0', label: '10-0' },
-                { value: '10-1', label: '10-1' },
-                { value: '10-2', label: '10-2' },
-                { value: '10-3', label: '10-3' },
-                { value: '10-4', label: '10-4' },
-                { value: '10-5', label: '10-5' },
-                { value: '10-6', label: '10-6' },
-                { value: '10-7', label: '10-7' },
-                { value: '10-8', label: '10-8' },
-                { value: '10-9', label: '10-9' }
-            ];
-        } else {
-            // Team B wins - show scores where second number > first number
-            return [
-                { value: '0-10', label: '0-10' },
-                { value: '1-10', label: '1-10' },
-                { value: '2-10', label: '2-10' },
-                { value: '3-10', label: '3-10' },
-                { value: '4-10', label: '4-10' },
-                { value: '5-10', label: '5-10' },
-                { value: '6-10', label: '6-10' },
-                { value: '7-10', label: '7-10' },
-                { value: '8-10', label: '8-10' },
-                { value: '9-10', label: '9-10' }
-            ];
-        }
+        const [score1, score2] = score.trim().split('-').map(Number);
+
+        // Both scores must be valid numbers
+        if (isNaN(score1) || isNaN(score2)) return false;
+
+        // Winner must have at least 10 points
+        const winnerScore = Math.max(score1, score2);
+        if (winnerScore < 10) return false;
+
+        // Winner must win by at least 2 points
+        const diff = Math.abs(score1 - score2);
+        if (diff < 2) return false;
+
+        return true;
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 overflow-hidden">
             {/* Mobile-Optimized Match Winner Selection */}
-            <div className="p-4 sm:p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
+            <div className="p-3 sm:p-4 md:p-6 border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
                 <div className="mb-4">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
                         <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-2">
@@ -331,7 +293,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button
                             onClick={() => handleMatchWinnerChange('', formData.match_winner_team === 'team_a' ? '' : 'team_a')}
-                            className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_winner_team === 'team_a'
+                            className={`p-3 sm:p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_winner_team === 'team_a'
                                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
                                 : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                                 }`}
@@ -339,13 +301,13 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                             <div className="text-base sm:text-lg font-bold text-center">
                                 Team A
                             </div>
-                            <div className="text-xs sm:text-sm text-center mt-1 opacity-80">
+                            <div className="text-xs sm:text-sm text-center mt-1 opacity-80 break-words px-2">
                                 {match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name}
                             </div>
                         </button>
                         <button
                             onClick={() => handleMatchWinnerChange('', formData.match_winner_team === 'team_b' ? '' : 'team_b')}
-                            className={`p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_winner_team === 'team_b'
+                            className={`p-3 sm:p-4 border-2 rounded-xl transition-all duration-200 ${formData.match_winner_team === 'team_b'
                                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 border-purple-600 text-white shadow-lg transform scale-105'
                                 : 'border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
                                 }`}
@@ -353,7 +315,7 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                             <div className="text-base sm:text-lg font-bold text-center">
                                 Team B
                             </div>
-                            <div className="text-xs sm:text-sm text-center mt-1 opacity-80">
+                            <div className="text-xs sm:text-sm text-center mt-1 opacity-80 break-words px-2">
                                 {match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name}
                             </div>
                         </button>
@@ -430,17 +392,17 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
 
             {/* Set Details - Show for all match results */}
             {formData.match_result && (
-                <div className="p-4 border rounded-lg">
-                    <div className="mb-3">
-                        <h3 className="text-lg font-bold text-gray-900">Set Details</h3>
+                <div className="p-3 sm:p-4 border rounded-lg overflow-hidden">
+                    <div className="mb-2 sm:mb-3">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900">Set Details</h3>
                     </div>
-                    <p className="text-sm text-gray-400 mb-3">
+                    <p className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
                         {['3-0', '0-3', '2-0', '0-2'].includes(formData.match_result)
                             ? 'Predict the exact score for each set.'
                             : 'Who wins each set and predict the exact scores.'
                         }
                     </p>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                         {Array.from({ length: getSetsToShow() }, (_, i) => {
                             const setNum = i + 1;
                             const setWinnerId = formData[`set${setNum}_winner_id`];
@@ -449,9 +411,11 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                             let winnerName = '';
                             if (isDoubles) {
                                 if (setWinnerTeam === 'team_a') {
-                                    winnerName = `Team A (${match.player_a1?.first_name} ${match.player_a1?.last_name} & ${match.player_a2?.first_name} ${match.player_a2?.last_name})`;
+                                    const teamANames = `${match.player_a1?.first_name || ''} ${match.player_a1?.last_name || ''} & ${match.player_a2?.first_name || ''} ${match.player_a2?.last_name || ''}`.trim();
+                                    winnerName = teamANames ? `Team A (${teamANames})` : 'Team A';
                                 } else if (setWinnerTeam === 'team_b') {
-                                    winnerName = `Team B (${match.player_b1?.first_name} ${match.player_b1?.last_name} & ${match.player_b2?.first_name} ${match.player_b2?.last_name})`;
+                                    const teamBNames = `${match.player_b1?.first_name || ''} ${match.player_b1?.last_name || ''} & ${match.player_b2?.first_name || ''} ${match.player_b2?.last_name || ''}`.trim();
+                                    winnerName = teamBNames ? `Team B (${teamBNames})` : 'Team B';
                                 }
                             } else {
                                 winnerName = setWinnerId === match.player_a.id
@@ -460,17 +424,17 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                             }
 
                             return (
-                                <div key={setNum} className="border rounded-lg p-3 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="font-semibold text-gray-900 text-sm">Set {setNum}</h4>
+                                <div key={setNum} className="border rounded-lg p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3 overflow-hidden">
+                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
+                                        <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Set {setNum}</h4>
                                         {(setWinnerId || setWinnerTeam) && (
-                                            <span className="text-xs text-gray-400">
+                                            <span className="text-xs text-gray-400 break-words sm:text-right sm:flex-shrink-0 sm:max-w-[50%]">
                                                 {winnerName} wins
                                             </span>
                                         )}
                                     </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                        <div className="space-y-1.5 sm:space-y-2 min-w-0">
                                             <Label className="text-xs text-gray-400">Winner</Label>
                                             {isDoubles ? (
                                                 <Select
@@ -481,15 +445,19 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                                         setFormData(newFormData);
                                                     }}
                                                 >
-                                                    <SelectTrigger className="h-9">
-                                                        <SelectValue placeholder="Select winner" />
+                                                    <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm min-w-0 w-full">
+                                                        <SelectValue placeholder="Select winner" className="truncate" />
                                                     </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="team_a">
-                                                            Team A ({match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name})
+                                                    <SelectContent className="max-w-[90vw] sm:max-w-md">
+                                                        <SelectItem value="team_a" className="break-words">
+                                                            <span className="block break-words">
+                                                                Team A ({match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name})
+                                                            </span>
                                                         </SelectItem>
-                                                        <SelectItem value="team_b">
-                                                            Team B ({match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name})
+                                                        <SelectItem value="team_b" className="break-words">
+                                                            <span className="block break-words">
+                                                                Team B ({match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name})
+                                                            </span>
                                                         </SelectItem>
                                                     </SelectContent>
                                                 </Select>
@@ -502,8 +470,8 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                                         setFormData(newFormData);
                                                     }}
                                                 >
-                                                    <SelectTrigger className="h-9">
-                                                        <SelectValue placeholder="Select winner" />
+                                                    <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm min-w-0 w-full">
+                                                        <SelectValue placeholder="Select winner" className="truncate" />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value={match.player_a.id}>
@@ -516,14 +484,14 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                                 </Select>
                                             )}
                                         </div>
-                                        <div className="space-y-2">
+                                        <div className="space-y-1.5 sm:space-y-2 min-w-0">
                                             <Label className="text-xs text-gray-400">Score</Label>
                                             <Select
                                                 value={formData[`set${setNum}_score`]}
                                                 onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_score`]: value })}
                                             >
-                                                <SelectTrigger className="h-9">
-                                                    <SelectValue placeholder="Select score" />
+                                                <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm min-w-0 w-full">
+                                                    <SelectValue placeholder="Select score" className="truncate" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {getSetScoreOptions(setWinnerId, setWinnerTeam).map((option) => (
@@ -544,29 +512,29 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
 
             {/* Tiebreak Scores - Show only when tiebreak scores are selected */}
             {shouldShowTiebreaks() && (
-                <div className="p-4 border rounded-lg">
-                    <div className="mb-3">
-                        <h3 className="text-lg font-bold text-gray-900">Tiebreak Scores</h3>
+                <div className="p-3 sm:p-4 border rounded-lg overflow-hidden">
+                    <div className="mb-2 sm:mb-3">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900">Tiebreak Scores</h3>
                     </div>
-                    <p className="text-sm text-gray-400 mb-3">
+                    <p className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
                         You&apos;ve selected tiebreak scores for some sets. Here you can predict the detailed tiebreak scores within those sets.
                     </p>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                         {[1, 2, 3, 4, 5].map((setNum) => {
                             const setScore = formData[`set${setNum}_score`];
                             if (setScore !== '7-6' && setScore !== '6-7') return null;
 
                             return (
-                                <div key={setNum} className="border rounded-lg p-3 space-y-3">
-                                    <h4 className="font-semibold text-gray-900 text-sm">Set {setNum} Tiebreak</h4>
-                                    <div className="space-y-2">
+                                <div key={setNum} className="border rounded-lg p-2 sm:p-3 space-y-2 sm:space-y-3 overflow-hidden">
+                                    <h4 className="font-semibold text-gray-900 text-xs sm:text-sm">Set {setNum} Tiebreak</h4>
+                                    <div className="space-y-1.5 sm:space-y-2">
                                         <Label className="text-xs text-gray-400">Tiebreak Score</Label>
                                         <Select
                                             value={formData[`set${setNum}_tiebreak_score`]}
                                             onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_tiebreak_score`]: value })}
                                         >
-                                            <SelectTrigger className="h-9">
-                                                <SelectValue placeholder="Select tiebreak score" />
+                                            <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm min-w-0 w-full">
+                                                <SelectValue placeholder="Select tiebreak score" className="truncate" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="none">No tiebreak</SelectItem>
@@ -596,38 +564,43 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
 
             {/* Super Tiebreak - Only for amateur format when 2-1/1-2 is selected */}
             {shouldShowSuperTiebreak() && (
-                <div className="p-4 border rounded-lg">
-                    <div className="mb-3">
-                        <h3 className="text-lg font-bold text-gray-900">Super Tiebreak</h3>
+                <div className="p-3 sm:p-4 border rounded-lg overflow-hidden">
+                    <div className="mb-2 sm:mb-3">
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900">Super Tiebreak</h3>
                     </div>
-                    <p className="text-sm text-gray-400 mb-3">
+                    <p className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
                         Since this is a {formData.match_result} match in amateur format, there will be a 10-point super tiebreak instead of a 3rd set.
                     </p>
-                    <div className="space-y-3">
-                        <div className="space-y-2">
-                            <Label className="text-xs text-gray-400">Super Tiebreak Score</Label>
-                            <Select
-                                value={formData.super_tiebreak_score}
-                                onValueChange={(value) => setFormData({ ...formData, super_tiebreak_score: value })}
-                            >
-                                <SelectTrigger className="h-9">
-                                    <SelectValue placeholder="Select super tiebreak score" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">No super tiebreak</SelectItem>
-                                    {getSuperTiebreakScoreOptions().map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                    <div className="space-y-2 sm:space-y-3">
+                        <div className="space-y-1.5 sm:space-y-2">
+                            <Label className="text-xs text-gray-400">
+                                Super Tiebreak Score
+                                <span className="block text-xs text-gray-500 mt-1">
+                                    Format: 10-8, 17-15, etc. (Winner must win by 2 points, minimum 10 points to win)
+                                </span>
+                            </Label>
+                            <Input
+                                type="text"
+                                value={formData.super_tiebreak_score || ''}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    // Allow any input while typing - validation happens on blur/error display
+                                    setFormData({ ...formData, super_tiebreak_score: value });
+                                }}
+                                placeholder="e.g., 10-8, 17-15"
+                                className="h-8 sm:h-9 text-xs sm:text-sm"
+                            />
+                            {formData.super_tiebreak_score && !validateSuperTiebreakScore(formData.super_tiebreak_score) && (
+                                <p className="text-xs text-red-500 mt-1">
+                                    Invalid score. Winner must have at least 10 points and win by 2 points (e.g., 10-8, 17-15).
+                                </p>
+                            )}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-gray-400 break-words">
                             Winner: {isDoubles
                                 ? (formData.match_winner_team === 'team_a'
-                                    ? `Team A (${match.player_a1?.first_name} ${match.player_a1?.last_name} & ${match.player_a2?.first_name} ${match.player_a2?.last_name})`
-                                    : `Team B (${match.player_b1?.first_name} ${match.player_b1?.last_name} & ${match.player_b2?.first_name} ${match.player_b2?.last_name})`)
+                                    ? `Team A (${match.player_a1?.first_name || ''} ${match.player_a1?.last_name || ''} & ${match.player_a2?.first_name || ''} ${match.player_a2?.last_name || ''})`
+                                    : `Team B (${match.player_b1?.first_name || ''} ${match.player_b1?.last_name || ''} & ${match.player_b2?.first_name || ''} ${match.player_b2?.last_name || ''})`)
                                 : (formData.winner_id === match.player_a.id
                                     ? `${match.player_a.first_name} ${match.player_a.last_name}`
                                     : `${match.player_b.first_name} ${match.player_b.last_name}`)

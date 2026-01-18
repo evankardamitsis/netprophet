@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, LogOut, User, Bell } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -119,12 +120,18 @@ export function TopBar({ userEmail, onMenuClick, onSignOut }: TopBarProps) {
 
                 {/* Center - Logo and Page title (mobile only) */}
                 <div className="flex-1 lg:flex-none flex items-center justify-center lg:justify-start">
-                    <div className="lg:hidden flex items-center">
+                    <Link
+                        href="/"
+                        className="lg:hidden flex items-center hover:opacity-80 transition-opacity cursor-pointer no-underline"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    >
                         <Logo size="sm" showText={false} />
-                        <h2 className="text-lg font-semibold text-gray-900 ml-2">
+                        <span className="text-lg font-semibold text-gray-900 ml-2 pointer-events-none">
                             Admin Panel
-                        </h2>
-                    </div>
+                        </span>
+                    </Link>
                 </div>
 
                 {/* Right side - Notifications, User info and sign out */}

@@ -29,16 +29,16 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
             className={headerStyles.className}
             style={{ backgroundColor: headerStyles.bg }}
         >
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1600px] mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-20 relative">
                     {/* Mobile Menu Button and Logo (left) */}
-                    <div className="flex md:hidden items-center space-x-3 flex-shrink-0">
+                    <div className="flex md:hidden items-center space-x-1.5 flex-shrink-0 min-w-0">
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="text-white hover:text-[#F7E65D] transition-all duration-300 p-2 rounded-lg hover:bg-white/5"
+                            className="text-white hover:text-[#F7E65D] transition-all duration-300 p-1.5 rounded-lg hover:bg-white/5 flex-shrink-0"
                         >
                             <svg
-                                className={`w-6 h-6 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-90' : ''}`}
+                                className={`w-5 h-5 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-90' : ''}`}
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -60,7 +60,7 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                             </svg>
                         </button>
                         <div
-                            className="cursor-pointer"
+                            className="cursor-pointer scale-75 origin-left flex-shrink-0"
                             onClick={() => router.push(`/${lang}`)}
                         >
                             <Logo size="md" />
@@ -68,25 +68,27 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                     </div>
 
                     {/* Left Navigation (Desktop) */}
-                    <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 flex-1">
-                        <button
-                            onClick={() => router.push(`/${lang}/how-it-works`)}
-                            className="text-md font-bold text-white hover:text-[#F7E65D] transition-colors whitespace-nowrap px-3 py-2 rounded-xl"
-                        >
-                            {lang === 'el' ? 'Πώς Λειτουργεί' : 'How It Works'}
-                        </button>
-                        <button
-                            onClick={() => router.push(`/${lang}/faq`)}
-                            className="text-md font-bold text-white hover:text-[#F7E65D] transition-colors whitespace-nowrap px-3 py-2 rounded-xl"
-                        >
-                            FAQ
-                        </button>
-                        <button
-                            onClick={() => router.push(`/${lang}/contact`)}
-                            className="text-md font-bold text-white hover:text-[#F7E65D] transition-colors whitespace-nowrap px-3 py-2 rounded-xl"
-                        >
-                            {lang === 'el' ? 'Επικοινωνία' : 'Contact'}
-                        </button>
+                    <nav className="hidden md:flex items-center space-x-2 lg:space-x-4 xl:space-x-6 flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        <div className="flex gap-2 lg:gap-4 xl:gap-6 min-w-max">
+                            <button
+                                onClick={() => router.push(`/${lang}/how-it-works`)}
+                                className="text-xs md:text-sm lg:text-base font-bold text-white hover:text-[#F7E65D] transition-colors whitespace-nowrap px-2 md:px-2.5 lg:px-3 py-1.5 md:py-2 rounded-xl flex-shrink-0"
+                            >
+                                {lang === 'el' ? 'Πώς Λειτουργεί' : 'How It Works'}
+                            </button>
+                            <button
+                                onClick={() => router.push(`/${lang}/faq`)}
+                                className="text-xs md:text-sm lg:text-base font-bold text-white hover:text-[#F7E65D] transition-colors whitespace-nowrap px-2 md:px-2.5 lg:px-3 py-1.5 md:py-2 rounded-xl flex-shrink-0"
+                            >
+                                FAQ
+                            </button>
+                            <button
+                                onClick={() => router.push(`/${lang}/contact`)}
+                                className="text-xs md:text-sm lg:text-base font-bold text-white hover:text-[#F7E65D] transition-colors whitespace-nowrap px-2 md:px-2.5 lg:px-3 py-1.5 md:py-2 rounded-xl flex-shrink-0"
+                            >
+                                {lang === 'el' ? 'Επικοινωνία' : 'Contact'}
+                            </button>
+                        </div>
                     </nav>
 
                     {/* Center Logo (Desktop) */}
@@ -100,7 +102,7 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
                     </div>
 
                     {/* Right side - Language switch and Start Now button */}
-                    <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-auto">
+                    <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-shrink-0 ml-auto">
                         {/* Language Switch - Hidden on mobile */}
                         <div className="relative hidden md:block">
                             <button
@@ -160,18 +162,18 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
 
                         {/* Start Now and Login Buttons */}
                         {showStartButton && (
-                            <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3">
                                 <Button
                                     onClick={() => router.push(`/${lang}/auth/register`)}
                                     style={{ backgroundColor: buttons.primary.bg, color: buttons.primary.color }}
-                                    className={`px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base ${buttons.primary.className} shadow-lg`}
+                                    className={`px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-2.5 lg:py-3 text-[10px] sm:text-xs md:text-sm lg:text-base ${buttons.primary.className} shadow-lg whitespace-nowrap`}
                                 >
-                                    <span className="hidden sm:inline">{lang === 'el' ? 'Ξεκίνα τώρα!' : 'Play Now!'}</span>
-                                    <span className="sm:hidden">{lang === 'el' ? 'Παίξε!' : 'Play!'}</span>
+                                    <span className="hidden md:inline">{lang === 'el' ? 'Ξεκίνα τώρα!' : 'Play Now!'}</span>
+                                    <span className="md:hidden">{lang === 'el' ? 'Παίξε!' : 'Play!'}</span>
                                 </Button>
                                 <Button
                                     onClick={() => router.push(`/${lang}/auth/signin`)}
-                                    className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base border-2 border-white/30 hover:bg-white/10 text-white backdrop-blur-md bg-transparent"
+                                    className="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-2.5 lg:py-3 text-[10px] sm:text-xs md:text-sm lg:text-base border-2 border-white/30 hover:bg-white/10 text-white backdrop-blur-md bg-transparent whitespace-nowrap"
                                 >
                                     {lang === 'el' ? 'Σύνδεση' : 'Login'}
                                 </Button>

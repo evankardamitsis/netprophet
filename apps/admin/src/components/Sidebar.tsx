@@ -133,8 +133,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       `}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                    <Link href="/" className="hover:opacity-80 transition-opacity">
-                        <div className="hidden lg:flex items-center">
+                    <Link
+                        href="/"
+                        className="hover:opacity-80 transition-opacity cursor-pointer no-underline"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                        }}
+                    >
+                        <div className="hidden lg:flex items-center pointer-events-none">
                             <Logo size="sm" showText={false} />
                             <span className="text-xl font-bold text-gray-900 ml-2">Admin Panel</span>
                         </div>

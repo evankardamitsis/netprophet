@@ -29,13 +29,13 @@ export function TeamModal({ isOpen, onClose, tournamentId, team, onSubmit }: Tea
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="!max-w-[95vw] !w-[800px] !max-h-[95vh] overflow-y-auto sm:!max-w-[95vw]">
+            <DialogContent className="!max-w-[95vw] sm:!max-w-[90vw] md:!max-w-[800px] !w-full sm:!w-auto !max-h-[95vh] overflow-y-auto !m-4">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-semibold">
+                    <DialogTitle className="text-lg sm:text-xl font-semibold">
                         {team ? 'Edit Team' : 'Create New Team'}
                     </DialogTitle>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="py-2 sm:py-4">
                     <TeamForm
                         team={team}
                         tournamentId={tournamentId}

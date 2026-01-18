@@ -1,6 +1,5 @@
 import { supabase } from './client';
 import type { Database } from '../types/database';
-import { updatePlayerStatsFromMatchResult, reversePlayerStatsFromMatchResult } from './players';
 
 type MatchResult = Database['public']['Tables']['match_results']['Row'];
 type MatchResultInsert = Database['public']['Tables']['match_results']['Insert'];
@@ -60,6 +59,8 @@ export interface MatchResultWithDetails extends MatchResult {
 export class MatchResultsService {
   /**
    * Create a new match result
+   * Note: Player statistics are automatically updated via database triggers
+   * (trigger_update_player_stats_on_insert) which handle both singles and doubles matches
    */
   static async createMatchResult(data: MatchResultInsert): Promise<{ data: MatchResult | null; error: any }> {
     const { data: result, error } = await supabase
@@ -68,60 +69,18 @@ export class MatchResultsService {
       .select()
       .single();
 
-    if (error) {
-      return { data: null, error };
-    }
-
-    // Automatically update player statistics
-    if (result && data.winner_id) {
-      try {
-        // Get match details to find the loser and tournament surface
-        const { data: matchData, error: matchError } = await supabase
-          .from('matches')
-          .select(`
-            player_a_id, 
-            player_b_id,
-            tournaments(surface)
-          `)
-          .eq('id', data.match_id)
-          .single();
-
-        if (!matchError && matchData) {
-          const loserId = data.winner_id === matchData.player_a_id 
-            ? matchData.player_b_id 
-            : matchData.player_a_id;
-
-          if (loserId) {
-            const tournamentSurface = (matchData.tournaments as any)?.surface;
-            await updatePlayerStatsFromMatchResult(
-              data.match_id,
-              data.winner_id,
-              loserId,
-              new Date().toISOString(),
-              tournamentSurface
-            );
-          }
-        }
-      } catch (playerUpdateError) {
-        console.error('Error updating player stats:', playerUpdateError);
-        // Don't fail the match result creation if player stats update fails
-      }
-    }
+    // Database triggers automatically handle player stats updates for both singles and doubles matches
+    // See: trigger_update_player_stats_on_insert() in migrations
 
     return { data: result, error };
   }
 
   /**
    * Update an existing match result
+   * Note: Player statistics are automatically updated via database triggers
+   * (trigger_update_player_stats_on_update) which handle both singles and doubles matches
    */
   static async updateMatchResult(id: string, data: MatchResultUpdate): Promise<{ data: MatchResult | null; error: any }> {
-    // Get the current match result to compare
-    const { data: currentResult, error: fetchError } = await supabase
-      .from('match_results')
-      .select('winner_id, match_id')
-      .eq('id', id)
-      .single();
-
     const { data: result, error } = await supabase
       .from('match_results')
       .update(data)
@@ -129,45 +88,8 @@ export class MatchResultsService {
       .select()
       .single();
 
-    if (error) {
-      return { data: null, error };
-    }
-
-    // Only update player stats if the winner changed
-    if (result && data.winner_id && currentResult && data.winner_id !== currentResult.winner_id) {
-      try {
-        // Get match details to find the loser and tournament surface
-        const { data: matchData, error: matchError } = await supabase
-          .from('matches')
-          .select(`
-            player_a_id, 
-            player_b_id,
-            tournaments(surface)
-          `)
-          .eq('id', result.match_id)
-          .single();
-
-        if (!matchError && matchData) {
-          const loserId = data.winner_id === matchData.player_a_id 
-            ? matchData.player_b_id 
-            : matchData.player_a_id;
-
-          if (loserId) {
-            const tournamentSurface = (matchData.tournaments as any)?.surface;
-            await updatePlayerStatsFromMatchResult(
-              result.match_id,
-              data.winner_id,
-              loserId,
-              new Date().toISOString(),
-              tournamentSurface
-            );
-          }
-        }
-      } catch (playerUpdateError) {
-        console.error('Error updating player stats:', playerUpdateError);
-        // Don't fail the match result update if player stats update fails
-      }
-    }
+    // Database triggers automatically handle player stats updates for both singles and doubles matches
+    // See: trigger_update_player_stats_on_update() in migrations
 
     return { data: result, error };
   }
@@ -296,58 +218,17 @@ export class MatchResultsService {
 
   /**
    * Delete a match result
+   * Note: Player statistics are automatically reversed via database triggers
+   * (trigger_update_player_stats_on_delete) which handle both singles and doubles matches
    */
   static async deleteMatchResult(id: string): Promise<{ error: any }> {
-    // Get the match result details before deleting
-    const { data: resultToDelete, error: fetchError } = await supabase
-      .from('match_results')
-      .select('winner_id, match_id')
-      .eq('id', id)
-      .single();
-
     const { error } = await supabase
       .from('match_results')
       .delete()
       .eq('id', id);
 
-    if (error) {
-      return { error };
-    }
-
-    // Reverse player statistics if we successfully deleted the result
-    if (resultToDelete && resultToDelete.winner_id) {
-      try {
-        // Get match details to find the loser and tournament surface
-        const { data: matchData, error: matchError } = await supabase
-          .from('matches')
-          .select(`
-            player_a_id, 
-            player_b_id,
-            tournaments(surface)
-          `)
-          .eq('id', resultToDelete.match_id)
-          .single();
-
-        if (!matchError && matchData) {
-          const loserId = resultToDelete.winner_id === matchData.player_a_id 
-            ? matchData.player_b_id 
-            : matchData.player_a_id;
-
-          if (loserId) {
-            const tournamentSurface = (matchData.tournaments as any)?.surface;
-            await reversePlayerStatsFromMatchResult(
-              resultToDelete.match_id,
-              resultToDelete.winner_id,
-              loserId,
-              tournamentSurface
-            );
-          }
-        }
-      } catch (playerUpdateError) {
-        console.error('Error reversing player stats:', playerUpdateError);
-        // Don't fail the match result deletion if player stats reversal fails
-      }
-    }
+    // Database triggers automatically handle player stats reversal for both singles and doubles matches
+    // See: trigger_update_player_stats_on_delete() in migrations
 
     return { error };
   }

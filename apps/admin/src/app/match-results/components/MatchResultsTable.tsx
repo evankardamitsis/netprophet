@@ -156,7 +156,6 @@ export function MatchResultsTable({
                                     <TableRow>
                                         <TableHead className="min-w-[200px]">Players</TableHead>
                                         <TableHead className="min-w-[150px]">Tournament</TableHead>
-                                        <TableHead className="min-w-[120px]">Format</TableHead>
                                         <TableHead className="min-w-[100px]">Status</TableHead>
                                         <TableHead className="min-w-[150px]">Results</TableHead>
                                         <TableHead className="min-w-[120px]">Actions</TableHead>
@@ -172,23 +171,23 @@ export function MatchResultsTable({
                                                 <TableCell className="min-w-[200px]">
                                                     {match.match_type === 'doubles' ? (
                                                         <>
-                                                            <div className="font-medium text-sm sm:text-base">
-                                                                {match.player_a1?.first_name} {match.player_a1?.last_name} & {match.player_a2?.first_name} {match.player_a2?.last_name}
+                                                            <div className="font-medium text-sm sm:text-base break-words">
+                                                                {match.player_a1?.first_name || ''} {match.player_a1?.last_name || ''} & {match.player_a2?.first_name || ''} {match.player_a2?.last_name || ''}
                                                             </div>
                                                             <div className="text-xs sm:text-sm text-muted-foreground">vs</div>
-                                                            <div className="font-medium text-sm sm:text-base">
-                                                                {match.player_b1?.first_name} {match.player_b1?.last_name} & {match.player_b2?.first_name} {match.player_b2?.last_name}
+                                                            <div className="font-medium text-sm sm:text-base break-words">
+                                                                {match.player_b1?.first_name || ''} {match.player_b1?.last_name || ''} & {match.player_b2?.first_name || ''} {match.player_b2?.last_name || ''}
                                                             </div>
                                                         </>
                                                     ) : (
                                                         <>
-                                                    <div className="font-medium text-sm sm:text-base">
-                                                        {match.player_a.first_name} {match.player_a.last_name}
-                                                    </div>
-                                                    <div className="text-xs sm:text-sm text-muted-foreground">vs</div>
-                                                    <div className="font-medium text-sm sm:text-base">
-                                                        {match.player_b.first_name} {match.player_b.last_name}
-                                                    </div>
+                                                            <div className="font-medium text-sm sm:text-base break-words">
+                                                                {match.player_a?.first_name || ''} {match.player_a?.last_name || ''}
+                                                            </div>
+                                                            <div className="text-xs sm:text-sm text-muted-foreground">vs</div>
+                                                            <div className="font-medium text-sm sm:text-base break-words">
+                                                                {match.player_b?.first_name || ''} {match.player_b?.last_name || ''}
+                                                            </div>
                                                         </>
                                                     )}
                                                     {/* Show tournament on mobile */}
@@ -199,11 +198,6 @@ export function MatchResultsTable({
                                                 </TableCell>
                                                 <TableCell className="hidden sm:table-cell">
                                                     <div className="font-medium">{match.tournaments?.name || 'N/A'}</div>
-                                                </TableCell>
-                                                <TableCell className="hidden lg:table-cell">
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {match.tournaments?.matches_type || 'N/A'}
-                                                    </Badge>
                                                 </TableCell>
                                                 <TableCell className="min-w-[100px]">
                                                     <Badge className={`text-xs ${getStatusColor(match.status)}`}>
@@ -270,13 +264,27 @@ export function MatchResultsTable({
                                     <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-4 space-y-4 shadow-sm hover:shadow-md transition-shadow">
                                         {/* Players Section */}
                                         <div className="text-center space-y-2">
-                                            <div className="font-semibold text-base text-gray-900">
-                                                {match.player_a.first_name} {match.player_a.last_name}
-                                            </div>
-                                            <div className="text-sm text-gray-500 font-medium">VS</div>
-                                            <div className="font-semibold text-base text-gray-900">
-                                                {match.player_b.first_name} {match.player_b.last_name}
-                                            </div>
+                                            {match.match_type === 'doubles' ? (
+                                                <>
+                                                    <div className="font-semibold text-sm sm:text-base text-gray-900 break-words px-2">
+                                                        {(match.player_a1?.first_name || '')} {(match.player_a1?.last_name || '')} & {(match.player_a2?.first_name || '')} {(match.player_a2?.last_name || '')}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 font-medium">VS</div>
+                                                    <div className="font-semibold text-sm sm:text-base text-gray-900 break-words px-2">
+                                                        {(match.player_b1?.first_name || '')} {(match.player_b1?.last_name || '')} & {(match.player_b2?.first_name || '')} {(match.player_b2?.last_name || '')}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="font-semibold text-sm sm:text-base text-gray-900 break-words px-2">
+                                                        {(match.player_a?.first_name || 'TBD')} {(match.player_a?.last_name || '')}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 font-medium">VS</div>
+                                                    <div className="font-semibold text-sm sm:text-base text-gray-900 break-words px-2">
+                                                        {(match.player_b?.first_name || 'TBD')} {(match.player_b?.last_name || '')}
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
 
                                         {/* Tournament Info */}

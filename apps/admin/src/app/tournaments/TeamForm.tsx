@@ -115,24 +115,24 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
     }, [players, formData.member_ids, memberSearchTerm]);
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 border rounded-lg p-6 bg-white dark:bg-gray-900">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 border rounded-lg p-3 sm:p-6 bg-white dark:bg-gray-900">
             <div className="space-y-2">
-                <Label htmlFor="name" className="text-base font-semibold">Team Name *</Label>
+                <Label htmlFor="name" className="text-sm sm:text-base font-semibold">Team Name *</Label>
                 <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="Enter team name"
-                    className="h-12 text-base"
+                    className="h-10 sm:h-12 text-sm sm:text-base"
                     required
                 />
             </div>
 
             <div className="space-y-3">
-                <Label className="text-base font-semibold">Team Captain *</Label>
+                <Label className="text-sm sm:text-base font-semibold">Team Captain *</Label>
 
                 {/* Captain Mode Toggle */}
-                <div className="flex gap-2 mb-2">
+                <div className="flex flex-col sm:flex-row gap-2 mb-2">
                     <Button
                         type="button"
                         variant={captainMode === 'database' ? 'default' : 'outline'}
@@ -140,7 +140,7 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                             setCaptainMode('database');
                             setFormData(prev => ({ ...prev, captain_name: null }));
                         }}
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm"
                     >
                         Select from Database
                     </Button>
@@ -151,7 +151,7 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                             setCaptainMode('manual');
                             setFormData(prev => ({ ...prev, captain_id: null }));
                         }}
-                        className="flex-1"
+                        className="flex-1 text-xs sm:text-sm"
                     >
                         Enter Name Manually
                     </Button>
@@ -180,11 +180,11 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                         value={formData.captain_name || ''}
                         onChange={(e) => handleInputChange('captain_name', e.target.value)}
                         placeholder="Enter captain name"
-                        className="h-12 text-base"
+                        className="h-10 sm:h-12 text-sm sm:text-base"
                         required
                     />
                 )}
-                <p className="text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500">
                     {captainMode === 'database'
                         ? 'Select a captain from the players database. The captain can be a team member or an outsider.'
                         : 'Enter the captain name if they are not in the players database.'}
@@ -192,22 +192,22 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
             </div>
 
             <div className="space-y-4">
-                <Label className="text-base font-semibold">Team Members</Label>
+                <Label className="text-sm sm:text-base font-semibold">Team Members</Label>
 
                 {/* Selected Members */}
                 {selectedPlayers.length > 0 && (
                     <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Selected Members ({selectedPlayers.length})</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Selected Members ({selectedPlayers.length})</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 sm:max-h-48 overflow-y-auto border rounded-lg p-2 sm:p-3">
                             {selectedPlayers.map((player) => (
                                 <div
                                     key={player.id}
-                                    className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
+                                    className="flex items-center justify-between p-1.5 sm:p-2 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800"
                                 >
-                                    <span className="text-sm">
+                                    <span className="text-xs sm:text-sm truncate flex-1 min-w-0">
                                         {player.firstName} {player.lastName}
                                         {formData.captain_id === player.id && (
-                                            <span className="ml-2 text-xs font-bold text-blue-600 dark:text-blue-400">(Captain)</span>
+                                            <span className="ml-1 sm:ml-2 text-xs font-bold text-blue-600 dark:text-blue-400">(C)</span>
                                         )}
                                     </span>
                                     <Button
@@ -215,7 +215,7 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleMemberToggle(player.id)}
-                                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                        className="h-6 w-6 p-0 text-red-600 hover:text-red-700 flex-shrink-0 ml-1"
                                     >
                                         ×
                                     </Button>
@@ -228,22 +228,22 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                 {/* Available Players */}
                 <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Available Players</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Available Players</p>
                     </div>
 
                     {/* Search Input */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         <Input
                             type="text"
                             placeholder="Search players by name..."
                             value={memberSearchTerm}
                             onChange={(e) => setMemberSearchTerm(e.target.value)}
-                            className="pl-10 h-10"
+                            className="pl-8 sm:pl-10 h-9 sm:h-10 text-xs sm:text-sm"
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto border rounded-lg p-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 sm:max-h-64 overflow-y-auto border rounded-lg p-2 sm:p-3">
                         {loading ? (
                             <div className="col-span-2 text-center py-4 text-gray-500">Loading players...</div>
                         ) : availablePlayers.length === 0 ? (
@@ -256,9 +256,9 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                                     key={player.id}
                                     type="button"
                                     onClick={() => handleMemberToggle(player.id)}
-                                    className="text-left p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 transition-colors"
+                                    className="text-left p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 transition-colors"
                                 >
-                                    <div className="text-sm font-medium">
+                                    <div className="text-xs sm:text-sm font-medium truncate">
                                         {player.firstName} {player.lastName}
                                     </div>
                                     <div className="text-xs text-gray-500">
@@ -271,11 +271,11 @@ export function TeamForm({ team, tournamentId, onSubmit, onCancel }: TeamFormPro
                 </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={onCancel} className="h-12 px-6 text-base w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t">
+                <Button type="button" variant="outline" onClick={onCancel} className="h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto">
                     Cancel
                 </Button>
-                <Button type="submit" className="h-12 px-6 text-base w-full sm:w-auto">
+                <Button type="submit" className="h-10 sm:h-12 px-4 sm:px-6 text-sm sm:text-base w-full sm:w-auto">
                     {team ? 'Update Team' : 'Create Team'}
                 </Button>
             </div>
