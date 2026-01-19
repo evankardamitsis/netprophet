@@ -49,6 +49,20 @@ class ResendService {
         return await response.json();
       }
 
+      // Get error details for better diagnostics
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
+      }
+
+      // Log detailed error information for diagnostics
+      console.error(`[RESEND ERROR] Status: ${response.status}, Attempt: ${attempt + 1}/${retries}`);
+      console.error(`[RESEND ERROR] Response:`, errorData);
+      console.error(`[RESEND ERROR] Headers:`, Object.fromEntries(response.headers.entries()));
+
       // Handle rate limit errors (429) with exponential backoff
       if (response.status === 429) {
         const retryAfter = response.headers.get("Retry-After");
@@ -63,9 +77,22 @@ class ResendService {
         }
       }
 
+      // Check for quota limit errors (403 or messages containing quota/limit keywords)
+      const isQuotaError = 
+        response.status === 403 ||
+        (errorData.message && 
+         (errorData.message.toLowerCase().includes("quota") || 
+          errorData.message.toLowerCase().includes("daily limit") ||
+          errorData.message.toLowerCase().includes("reached 100%") ||
+          errorData.message.toLowerCase().includes("limit exceeded")));
+      
+      if (isQuotaError) {
+        console.error(`[QUOTA ERROR DETECTED] This is a Resend quota limit issue`);
+        throw new Error(`Resend quota limit reached: ${errorData.message || errorText}`);
+      }
+
       // For other errors or final retry attempt
-      const error = await response.text();
-      throw new Error(`Failed to send email via Resend: ${error}`);
+      throw new Error(`Failed to send email via Resend (${response.status}): ${errorText}`);
     }
 
     throw new Error("Failed to send email after retries");
@@ -175,15 +202,20 @@ async function processEmail(
       })
       .eq("id", emailLog.id);
   } catch (error) {
-    console.error(`Error processing email ${emailLog.id}:`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[EMAIL PROCESSING ERROR] Email ID: ${emailLog.id}`);
+    console.error(`[EMAIL PROCESSING ERROR] To: ${emailLog.to_email}`);
+    console.error(`[EMAIL PROCESSING ERROR] Template: ${emailLog.template}`);
+    console.error(`[EMAIL PROCESSING ERROR] Error:`, errorMessage);
+    console.error(`[EMAIL PROCESSING ERROR] Full Error:`, error);
 
-    // Mark as failed
+    // Mark as failed with detailed error message
     await supabaseClient
       .from("email_logs")
       .update({
         status: "failed",
         sent_at: new Date().toISOString(),
-        error_message: error.message,
+        error_message: errorMessage,
       })
       .eq("id", emailLog.id);
 

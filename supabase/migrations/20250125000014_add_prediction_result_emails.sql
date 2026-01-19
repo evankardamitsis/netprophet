@@ -2,10 +2,11 @@
 -- This migration creates a function to send emails when predictions are resolved
 -- Emails include detailed match results and explain why predictions were lost
 
--- Function to determine why a prediction was lost
+-- Function to determine why a prediction was lost (language-aware)
 CREATE OR REPLACE FUNCTION get_prediction_loss_reason(
     prediction JSONB,
-    match_result_id UUID
+    match_result_id UUID,
+    user_language TEXT DEFAULT 'en'
 )
 RETURNS TEXT AS $$
 DECLARE
@@ -14,6 +15,7 @@ DECLARE
     predicted_winner_name TEXT;
     predicted_winner_id UUID;
     actual_winner UUID;
+    actual_winner_name TEXT;
     predicted_result TEXT;
     actual_result TEXT;
     loss_reasons TEXT[];
@@ -25,6 +27,21 @@ DECLARE
     predicted_set_winner_id UUID;
     set_num INTEGER;
     match_result_record RECORD;
+    match_record RECORD;
+    actual_team_a_name TEXT;
+    actual_team_b_name TEXT;
+    predicted_is_team_a BOOLEAN;
+    predicted_is_team_b BOOLEAN;
+    actual_is_team_a BOOLEAN;
+    actual_is_team_b BOOLEAN;
+    winner_correct BOOLEAN;
+    predicted_normalized TEXT;
+    team_a_normalized TEXT;
+    team_b_normalized TEXT;
+    team_a_player1 TEXT;
+    team_a_player2 TEXT;
+    team_b_player1 TEXT;
+    team_b_player2 TEXT;
 BEGIN
     -- Get match result details
     SELECT *
@@ -33,39 +50,169 @@ BEGIN
     WHERE id = match_result_id;
 
     IF NOT FOUND THEN
-        RETURN 'Match result not found';
+        IF user_language = 'el' THEN
+            RETURN 'Το αποτέλεσμα αγώνα δεν βρέθηκε';
+        ELSE
+            RETURN 'Match result not found';
+        END IF;
     END IF;
+
+    -- Get match details to check if doubles and get team info
+    SELECT 
+        m.match_type,
+        m.player_a_id,
+        m.player_b_id,
+        m.player_a1_id,
+        m.player_a2_id,
+        m.player_b1_id,
+        m.player_b2_id,
+        TRIM(COALESCE(pa1.first_name || ' ' || pa1.last_name, '') || ' & ' || COALESCE(pa2.first_name || ' ' || pa2.last_name, '')) as team_a_name,
+        TRIM(COALESCE(pb1.first_name || ' ' || pb1.last_name, '') || ' & ' || COALESCE(pb2.first_name || ' ' || pb2.last_name, '')) as team_b_name
+    INTO match_record
+    FROM matches m
+        LEFT JOIN players pa1 ON m.player_a1_id = pa1.id
+        LEFT JOIN players pa2 ON m.player_a2_id = pa2.id
+        LEFT JOIN players pb1 ON m.player_b1_id = pb1.id
+        LEFT JOIN players pb2 ON m.player_b2_id = pb2.id
+    WHERE m.id = match_result_record.match_id;
 
     loss_reasons := ARRAY[]::TEXT[];
     prediction_type := COALESCE(prediction->>'type', 'winner');
     actual_winner := match_result_record.winner_id;
     actual_result := match_result_record.match_result;
 
+    -- Build team names for doubles comparison (remove empty parts)
+    IF match_record.match_type = 'doubles' THEN
+        actual_team_a_name := TRIM(REPLACE(REPLACE(match_record.team_a_name, ' & ', ' & '), '  ', ' '));
+        actual_team_b_name := TRIM(REPLACE(REPLACE(match_record.team_b_name, ' & ', ' & '), '  ', ' '));
+        
+        -- Determine which team actually won
+        IF match_result_record.match_winner_team = 'team_a' THEN
+            actual_is_team_a := true;
+            actual_is_team_b := false;
+        ELSIF match_result_record.match_winner_team = 'team_b' THEN
+            actual_is_team_a := false;
+            actual_is_team_b := true;
+        ELSIF actual_winner IS NOT NULL THEN
+            -- Use winner_id to determine team
+            actual_is_team_a := (actual_winner = match_record.player_a1_id OR actual_winner = match_record.player_a2_id);
+            actual_is_team_b := (actual_winner = match_record.player_b1_id OR actual_winner = match_record.player_b2_id);
+        ELSE
+            actual_is_team_a := false;
+            actual_is_team_b := false;
+        END IF;
+    END IF;
+
     -- Check winner prediction
     -- Note: Predictions store winner as player/team names (strings), not UUIDs
     IF prediction_type = 'winner' OR prediction ? 'winner' THEN
         predicted_winner_name := prediction->>'winner';
         
-        IF predicted_winner_name IS NOT NULL THEN
-            -- Try to convert to UUID first (in case it's already a UUID)
-            BEGIN
-                predicted_winner_id := predicted_winner_name::UUID;
-            EXCEPTION WHEN OTHERS THEN
-                -- If it's not a UUID, it's a player/team name - look it up
-                -- For doubles, the winner might be a team name like "Player1 & Player2"
-                -- For singles, it's a player name
-                SELECT id INTO predicted_winner_id
-                FROM players
-                WHERE CONCAT(first_name, ' ', last_name) = predicted_winner_name
-                LIMIT 1;
-            END;
+        IF predicted_winner_name IS NOT NULL AND actual_winner IS NOT NULL THEN
+            winner_correct := false;
             
-            -- If we found a predicted winner ID, compare with actual
-            IF predicted_winner_id IS NOT NULL AND predicted_winner_id != actual_winner THEN
-                loss_reasons := array_append(loss_reasons, 'Winner incorrect');
-            ELSIF predicted_winner_id IS NULL THEN
-                -- Player name not found, but still consider it incorrect if actual winner exists
-                loss_reasons := array_append(loss_reasons, 'Winner incorrect');
+            IF match_record.match_type = 'doubles' THEN
+                -- For doubles, compare team names or check if predicted winner is on the actual winning team
+                predicted_is_team_a := false;
+                predicted_is_team_b := false;
+                
+                -- Normalize team names for comparison (case-insensitive)
+                BEGIN
+                    predicted_normalized := UPPER(TRIM(REPLACE(predicted_winner_name, '  ', ' ')));
+                    team_a_normalized := UPPER(TRIM(REPLACE(actual_team_a_name, '  ', ' ')));
+                    team_b_normalized := UPPER(TRIM(REPLACE(actual_team_b_name, '  ', ' ')));
+                    
+                    -- Check exact match first
+                    IF predicted_normalized = team_a_normalized THEN
+                        predicted_is_team_a := true;
+                    ELSIF predicted_normalized = team_b_normalized THEN
+                        predicted_is_team_b := true;
+                    ELSE
+                        -- Check if predicted winner contains both player names from a team
+                        IF actual_team_a_name IS NOT NULL AND actual_team_a_name != '' THEN
+                            team_a_player1 := TRIM(SPLIT_PART(actual_team_a_name, ' & ', 1));
+                            team_a_player2 := TRIM(SPLIT_PART(actual_team_a_name, ' & ', 2));
+                            
+                            IF team_a_player1 != '' AND team_a_player2 != '' THEN
+                                predicted_is_team_a := (
+                                    predicted_normalized LIKE '%' || UPPER(team_a_player1) || '%' AND
+                                    predicted_normalized LIKE '%' || UPPER(team_a_player2) || '%'
+                                );
+                            END IF;
+                        END IF;
+                        
+                        -- Check team B if not team A
+                        IF NOT predicted_is_team_a AND actual_team_b_name IS NOT NULL AND actual_team_b_name != '' THEN
+                            team_b_player1 := TRIM(SPLIT_PART(actual_team_b_name, ' & ', 1));
+                            team_b_player2 := TRIM(SPLIT_PART(actual_team_b_name, ' & ', 2));
+                            
+                            IF team_b_player1 != '' AND team_b_player2 != '' THEN
+                                predicted_is_team_b := (
+                                    predicted_normalized LIKE '%' || UPPER(team_b_player1) || '%' AND
+                                    predicted_normalized LIKE '%' || UPPER(team_b_player2) || '%'
+                                );
+                            END IF;
+                        END IF;
+                    END IF;
+                EXCEPTION WHEN OTHERS THEN
+                    -- If comparison fails, try simple partial match
+                    predicted_is_team_a := (UPPER(predicted_winner_name) LIKE '%' || UPPER(actual_team_a_name) || '%');
+                    IF NOT predicted_is_team_a THEN
+                        predicted_is_team_b := (UPPER(predicted_winner_name) LIKE '%' || UPPER(actual_team_b_name) || '%');
+                    END IF;
+                END;
+                
+                -- If still not matched, try to find if predicted winner is a player on one of the teams
+                IF NOT predicted_is_team_a AND NOT predicted_is_team_b THEN
+                    BEGIN
+                        SELECT id INTO predicted_winner_id
+                        FROM players
+                        WHERE CONCAT(first_name, ' ', last_name) = predicted_winner_name
+                        LIMIT 1;
+                        
+                        IF predicted_winner_id IS NOT NULL THEN
+                            predicted_is_team_a := (predicted_winner_id = match_record.player_a1_id OR predicted_winner_id = match_record.player_a2_id);
+                            predicted_is_team_b := (predicted_winner_id = match_record.player_b1_id OR predicted_winner_id = match_record.player_b2_id);
+                        END IF;
+                    EXCEPTION WHEN OTHERS THEN
+                        NULL;
+                    END;
+                END IF;
+                
+                -- Compare predicted team with actual team
+                winner_correct := (
+                    (predicted_is_team_a AND actual_is_team_a) OR
+                    (predicted_is_team_b AND actual_is_team_b)
+                );
+            ELSE
+                -- For singles matches, compare player names or IDs
+                BEGIN
+                    predicted_winner_id := predicted_winner_name::UUID;
+                    -- It's a UUID, compare directly
+                    winner_correct := (predicted_winner_id = actual_winner);
+                EXCEPTION WHEN OTHERS THEN
+                    -- It's a name, look it up and compare
+                    SELECT id INTO predicted_winner_id
+                    FROM players
+                    WHERE CONCAT(first_name, ' ', last_name) = predicted_winner_name
+                    LIMIT 1;
+                    
+                    IF predicted_winner_id IS NOT NULL THEN
+                        winner_correct := (predicted_winner_id = actual_winner);
+                    ELSE
+                        -- Couldn't find player, assume incorrect
+                        winner_correct := false;
+                    END IF;
+                END;
+            END IF;
+            
+            -- Only add to loss reasons if winner is actually incorrect
+            IF NOT winner_correct THEN
+                IF user_language = 'el' THEN
+                    loss_reasons := array_append(loss_reasons, 'Ο νικητής ήταν λανθασμένος');
+                ELSE
+                    loss_reasons := array_append(loss_reasons, 'Winner was incorrect');
+                END IF;
             END IF;
         END IF;
     END IF;
@@ -74,8 +221,13 @@ BEGIN
     IF prediction_type = 'match_result' OR prediction ? 'matchResult' THEN
         predicted_result := prediction->>'matchResult';
         IF predicted_result IS NOT NULL AND predicted_result != actual_result THEN
-            loss_reasons := array_append(loss_reasons, 
-                format('Score incorrect: predicted %s, actual %s', predicted_result, actual_result));
+            IF user_language = 'el' THEN
+                loss_reasons := array_append(loss_reasons, 
+                    format('Το σκορ ήταν λανθασμένο: πρόβλεψες %s, πραγματικό %s', predicted_result, actual_result));
+            ELSE
+                loss_reasons := array_append(loss_reasons, 
+                    format('Score was incorrect: predicted %s, actual %s', predicted_result, actual_result));
+            END IF;
         END IF;
     END IF;
 
@@ -96,8 +248,13 @@ BEGIN
                 END CASE;
 
                 IF actual_set IS NOT NULL AND predicted_set != actual_set THEN
-                    loss_reasons := array_append(loss_reasons, 
-                        format('Set %s incorrect: predicted %s, actual %s', set_num::TEXT, predicted_set, actual_set));
+                    IF user_language = 'el' THEN
+                        loss_reasons := array_append(loss_reasons, 
+                            format('Set %s ήταν λανθασμένο: πρόβλεψες %s, πραγματικό %s', set_num::TEXT, predicted_set, actual_set));
+                    ELSE
+                        loss_reasons := array_append(loss_reasons, 
+                            format('Set %s was incorrect: predicted %s, actual %s', set_num::TEXT, predicted_set, actual_set));
+                    END IF;
                 END IF;
             END IF;
         END LOOP;
@@ -106,8 +263,13 @@ BEGIN
         IF prediction ? 'matchResult' THEN
             predicted_result := prediction->>'matchResult';
             IF predicted_result != actual_result THEN
-                loss_reasons := array_append(loss_reasons, 
-                    format('Match result incorrect: predicted %s, actual %s', predicted_result, actual_result));
+                IF user_language = 'el' THEN
+                    loss_reasons := array_append(loss_reasons, 
+                        format('Το αποτέλεσμα αγώνα ήταν λανθασμένο: πρόβλεψες %s, πραγματικό %s', predicted_result, actual_result));
+                ELSE
+                    loss_reasons := array_append(loss_reasons, 
+                        format('Match result was incorrect: predicted %s, actual %s', predicted_result, actual_result));
+                END IF;
             END IF;
         END IF;
     END IF;
@@ -143,8 +305,13 @@ BEGIN
                     IF actual_set_winner_id IS NOT NULL AND 
                        predicted_set_winner_id IS NOT NULL AND 
                        predicted_set_winner_id != actual_set_winner_id THEN
-                        loss_reasons := array_append(loss_reasons, 
-                            format('Set %s winner incorrect', set_num::TEXT));
+                        IF user_language = 'el' THEN
+                            loss_reasons := array_append(loss_reasons, 
+                                format('Ο νικητής Set %s ήταν λανθασμένος', set_num::TEXT));
+                        ELSE
+                            loss_reasons := array_append(loss_reasons, 
+                                format('Set %s winner was incorrect', set_num::TEXT));
+                        END IF;
                     END IF;
                 END IF;
             END IF;
@@ -157,8 +324,13 @@ BEGIN
         actual_set := match_result_record.super_tiebreak_score;
         
         IF actual_set IS NOT NULL AND predicted_set != actual_set THEN
-            loss_reasons := array_append(loss_reasons, 
-                format('Super tiebreak incorrect: predicted %s, actual %s', predicted_set, actual_set));
+            IF user_language = 'el' THEN
+                loss_reasons := array_append(loss_reasons, 
+                    format('Το super tiebreak ήταν λανθασμένο: πρόβλεψες %s, πραγματικό %s', predicted_set, actual_set));
+            ELSE
+                loss_reasons := array_append(loss_reasons, 
+                    format('Super tiebreak was incorrect: predicted %s, actual %s', predicted_set, actual_set));
+            END IF;
         END IF;
     END IF;
 
@@ -235,6 +407,7 @@ RETURNS void AS $$
 DECLARE
     user_email TEXT;
     user_language TEXT;
+    user_name TEXT;
     bet_record RECORD;
     match_result_record RECORD;
     match_details RECORD;
@@ -251,12 +424,28 @@ DECLARE
     match_result_details TEXT;
     loss_reason TEXT;
     prediction_summary TEXT;
+    predicted_winner_name TEXT;
+    actual_winner_name TEXT;
+    winnings_formatted TEXT;
+    predicted_result TEXT;
+    predicted_winner_text TEXT;
+    predicted_winner_id UUID;
+    actual_result TEXT;
+    match_player_a_id UUID;
+    match_player_b_id UUID;
+    match_player_a1_id UUID;
+    match_player_a2_id UUID;
+    match_player_b1_id UUID;
+    match_player_b2_id UUID;
 BEGIN
     RAISE LOG '[send_prediction_result_email] Starting for bet %, user %', bet_id, user_uuid;
     
-    -- Get user email and language preference
-    SELECT email, COALESCE(preferred_language, 'en')
-    INTO user_email, user_language
+    -- Get user email, name, and language preference
+    SELECT 
+        email, 
+        COALESCE(preferred_language, 'en'),
+        COALESCE(NULLIF(first_name, ''), SPLIT_PART(email, '@', 1))
+    INTO user_email, user_language, user_name
     FROM profiles
     WHERE id = user_uuid;
 
@@ -266,7 +455,7 @@ BEGIN
         RETURN;
     END IF;
     
-    RAISE LOG '[send_prediction_result_email] User email found: % (language: %)', user_email, user_language;
+    RAISE LOG '[send_prediction_result_email] User email found: % (language: %, name: %)', user_email, user_language, user_name;
 
     -- Get bet details
     SELECT b.*, b.prediction as bet_prediction
@@ -282,10 +471,16 @@ BEGIN
     
     RAISE LOG '[send_prediction_result_email] Bet found: match_id=%, status=%', bet_record.match_id, bet_record.status;
 
-    -- Get match details including all players
+    -- Get match details including all players and their IDs
     SELECT 
         m.id as match_id,
         m.match_type,
+        m.player_a_id,
+        m.player_b_id,
+        m.player_a1_id,
+        m.player_a2_id,
+        m.player_b1_id,
+        m.player_b2_id,
         t.name as tournament_name,
         COALESCE(pa.first_name || ' ' || pa.last_name, 'Player A') as player_a_name,
         COALESCE(pb.first_name || ' ' || pb.last_name, 'Player B') as player_b_name,
@@ -303,6 +498,14 @@ BEGIN
         LEFT JOIN players pb1 ON m.player_b1_id = pb1.id
         LEFT JOIN players pb2 ON m.player_b2_id = pb2.id
     WHERE m.id = bet_record.match_id;
+    
+    -- Store player IDs for easier access
+    match_player_a_id := match_details.player_a_id;
+    match_player_b_id := match_details.player_b_id;
+    match_player_a1_id := match_details.player_a1_id;
+    match_player_a2_id := match_details.player_a2_id;
+    match_player_b1_id := match_details.player_b1_id;
+    match_player_b2_id := match_details.player_b2_id;
 
     IF NOT FOUND THEN
         RAISE LOG '[send_prediction_result_email] Match not found for bet % (match_id: %)', bet_id, bet_record.match_id;
@@ -340,22 +543,118 @@ BEGIN
     -- Format match result details
     match_result_details := format_match_result_details(match_result_record.id);
 
-    -- Get loss reason if bet was lost
+    -- Get actual winner name
+    actual_winner_name := NULL;
+    
+    -- For doubles matches, check match_winner_team first (if available)
+    IF match_details.match_type = 'doubles' AND match_result_record.match_winner_team IS NOT NULL THEN
+        IF match_result_record.match_winner_team = 'team_a' THEN
+            actual_winner_name := COALESCE(
+                NULLIF(TRIM(match_details.player_a1_name || ' & ' || match_details.player_a2_name), '&'),
+                'Team A'
+            );
+        ELSIF match_result_record.match_winner_team = 'team_b' THEN
+            actual_winner_name := COALESCE(
+                NULLIF(TRIM(match_details.player_b1_name || ' & ' || match_details.player_b2_name), '&'),
+                'Team B'
+            );
+        END IF;
+    ELSIF match_result_record.winner_id IS NOT NULL THEN
+        -- First try to find the winner in players table
+        SELECT first_name || ' ' || last_name
+        INTO actual_winner_name
+        FROM players
+        WHERE id = match_result_record.winner_id;
+        
+        -- If not found, check which team/player the winner belongs to
+        IF actual_winner_name IS NULL OR actual_winner_name = '' THEN
+            IF match_details.match_type = 'doubles' THEN
+                -- Check which team the winner belongs to using stored IDs
+                IF match_result_record.winner_id = match_player_a1_id OR match_result_record.winner_id = match_player_a2_id THEN
+                    actual_winner_name := COALESCE(
+                        NULLIF(TRIM(match_details.player_a1_name || ' & ' || match_details.player_a2_name), '&'),
+                        'Team A'
+                    );
+                ELSIF match_result_record.winner_id = match_player_b1_id OR match_result_record.winner_id = match_player_b2_id THEN
+                    actual_winner_name := COALESCE(
+                        NULLIF(TRIM(match_details.player_b1_name || ' & ' || match_details.player_b2_name), '&'),
+                        'Team B'
+                    );
+                END IF;
+            ELSE
+                -- For singles matches, use stored IDs
+                IF match_result_record.winner_id = match_player_a_id THEN
+                    actual_winner_name := match_details.player_a_name;
+                ELSIF match_result_record.winner_id = match_player_b_id THEN
+                    actual_winner_name := match_details.player_b_name;
+                END IF;
+            END IF;
+        END IF;
+    END IF;
+    
+    -- Fallback if still NULL
+    IF actual_winner_name IS NULL OR actual_winner_name = '' THEN
+        -- Try to get from match result based on match_result (e.g., "2-1" means player A won)
+        IF match_result_record.match_result IS NOT NULL THEN
+            -- Parse match result to determine winner
+            IF match_details.match_type = 'doubles' THEN
+                actual_winner_name := COALESCE(
+                    NULLIF(match_details.player_a1_name || ' & ' || match_details.player_a2_name, ' & '),
+                    'Team A'
+                );
+            ELSE
+                actual_winner_name := COALESCE(match_details.player_a_name, 'Player A');
+            END IF;
+        ELSE
+            actual_winner_name := 'Winner';
+        END IF;
+    END IF;
+
+    -- Get predicted winner name from prediction
+    predicted_winner_name := NULL;
+    predicted_result := NULL;
+    IF bet_record.bet_prediction IS NOT NULL THEN
+        IF jsonb_typeof(bet_record.bet_prediction::JSONB) = 'object' THEN
+            -- Try to get winner name from prediction
+            IF (bet_record.bet_prediction::JSONB) ? 'winner' THEN
+                predicted_winner_text := (bet_record.bet_prediction::JSONB)->>'winner';
+                -- Try to parse as UUID first
+                BEGIN
+                    predicted_winner_id := predicted_winner_text::UUID;
+                    SELECT COALESCE(first_name || ' ' || last_name, 'Predicted Winner')
+                    INTO predicted_winner_name
+                    FROM players
+                    WHERE id = predicted_winner_id;
+                EXCEPTION WHEN OTHERS THEN
+                    -- If not UUID, it's a name - use it directly
+                    predicted_winner_name := predicted_winner_text;
+                END;
+            END IF;
+            
+            -- Get predicted result
+            IF (bet_record.bet_prediction::JSONB) ? 'matchResult' THEN
+                predicted_result := (bet_record.bet_prediction::JSONB)->>'matchResult';
+            END IF;
+        END IF;
+    END IF;
+
+    -- Get loss reason if bet was lost (pass language for localized messages)
     loss_reason := NULL;
     IF bet_status = 'lost' AND bet_record.bet_prediction IS NOT NULL AND match_result_record.id IS NOT NULL THEN
         loss_reason := get_prediction_loss_reason(
             bet_record.bet_prediction::JSONB,
-            match_result_record.id
+            match_result_record.id,
+            user_language
         );
     END IF;
 
     -- Format prediction summary
     IF bet_record.bet_prediction IS NOT NULL THEN
         IF jsonb_typeof(bet_record.bet_prediction::JSONB) = 'object' THEN
-            IF (bet_record.bet_prediction::JSONB) ? 'matchResult' THEN
-                prediction_summary := format('Predicted: %s', (bet_record.bet_prediction::JSONB)->>'matchResult');
-            ELSIF (bet_record.bet_prediction::JSONB) ? 'winner' THEN
-                prediction_summary := 'Predicted: Winner';
+            IF predicted_result IS NOT NULL THEN
+                prediction_summary := format('Predicted: %s', predicted_result);
+            ELSIF predicted_winner_name IS NOT NULL THEN
+                prediction_summary := format('Predicted Winner: %s', predicted_winner_name);
             ELSE
                 prediction_summary := 'See prediction details below';
             END IF;
@@ -366,6 +665,13 @@ BEGIN
         prediction_summary := 'No prediction details available';
     END IF;
 
+    -- Format winnings as currency (assuming cents, convert to euros)
+    IF winnings_amount > 0 THEN
+        winnings_formatted := format('€%.2f', winnings_amount / 100.0);
+    ELSE
+        winnings_formatted := '€0.00';
+    END IF;
+
     -- Determine template name
     template_name := CASE 
         WHEN bet_status = 'won' THEN 'prediction_result_won'
@@ -374,17 +680,46 @@ BEGIN
 
     tournament_name := COALESCE(match_details.tournament_name, '');
 
-    -- Build template variables
+    -- Ensure all variables have proper fallbacks
+    IF user_name IS NULL OR user_name = '' THEN
+        user_name := SPLIT_PART(user_email, '@', 1);
+    END IF;
+    
+    IF predicted_winner_name IS NULL OR predicted_winner_name = '' THEN
+        predicted_winner_name := 'Not specified';
+    END IF;
+    
+    IF actual_winner_name IS NULL OR actual_winner_name = '' THEN
+        actual_winner_name := 'Winner';
+    END IF;
+    
+    IF predicted_result IS NULL OR predicted_result = '' THEN
+        predicted_result := 'Not specified';
+    END IF;
+    
+    -- Set actual_result
+    actual_result := COALESCE(match_result_record.match_result, '');
+    IF actual_result = '' THEN
+        actual_result := 'See details below';
+    END IF;
+
+    -- Build template variables with explicit non-null values
     template_variables := jsonb_build_object(
+        'user_name', user_name,
         'match_name', match_display_text,
         'tournament_name', tournament_name,
-        'match_result', match_result_record.match_result,
-        'match_result_details', match_result_details,
-        'prediction_summary', prediction_summary,
+        'match_result', COALESCE(match_result_record.match_result, ''),
+        'match_result_details', COALESCE(match_result_details, ''),
+        'predicted_winner', predicted_winner_name,
+        'actual_winner', actual_winner_name,
+        'predicted_result', predicted_result,
+        'actual_result', actual_result,
+        'prediction_summary', COALESCE(prediction_summary, ''),
         'loss_reason', COALESCE(loss_reason, ''),
         'winnings', winnings_amount,
+        'winnings_formatted', winnings_formatted,
         'bet_amount', bet_record.bet_amount,
-        'prediction_details', bet_record.bet_prediction::TEXT
+        'prediction_details', COALESCE(bet_record.bet_prediction::TEXT, '')
     );
 
     -- Insert email log for processing
@@ -423,14 +758,14 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Grant permissions
 GRANT EXECUTE ON FUNCTION send_prediction_result_email(UUID, UUID, TEXT, INTEGER) TO service_role;
-GRANT EXECUTE ON FUNCTION get_prediction_loss_reason(JSONB, UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION get_prediction_loss_reason(JSONB, UUID, TEXT) TO service_role;
 GRANT EXECUTE ON FUNCTION format_match_result_details(UUID) TO service_role;
 
 -- Add comments
 COMMENT ON FUNCTION send_prediction_result_email(UUID, UUID, TEXT, INTEGER) IS 
 'Sends email to user when their prediction is resolved. Includes detailed match results and explains why predictions were lost.';
-COMMENT ON FUNCTION get_prediction_loss_reason(JSONB, UUID) IS 
-'Determines why a prediction was lost by comparing predicted values with actual match results.';
+COMMENT ON FUNCTION get_prediction_loss_reason(JSONB, UUID, TEXT) IS 
+'Determines why a prediction was lost by comparing predicted values with actual match results. Returns language-aware error messages (en/el).';
 COMMENT ON FUNCTION format_match_result_details(UUID) IS 
 'Formats match result details (set scores, super tiebreak) for display in emails.';
 

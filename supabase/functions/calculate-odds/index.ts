@@ -751,47 +751,66 @@ function calculateDoublesOdds(
   const hasWeakLink = minNTRPDiff >= 0.5;
   const weakLinkDiff = minNTRPDiff;
 
-  // Determine which team has the weak link and check if they have a high-rated player (4.5+) to compensate
+  // Determine which team has the weak link and check if they have a compensating player
+  // In doubles, a strong player can partially compensate for a weaker player
   let weakLinkPenalty = 0;
   if (hasWeakLink) {
     const teamAHasWeakLink = teamAMinNTRP < teamBMinNTRP;
     const weakLinkTeam = teamAHasWeakLink ? teamA : teamB;
     const weakLinkTeamMaxNTRP = teamAHasWeakLink ? teamAMaxNTRP : teamBMaxNTRP;
+    const weakLinkTeamWeightedAvg = teamAHasWeakLink ? teamAStats.ntrpRating : teamBStats.ntrpRating;
 
-    // If the weak link team doesn't have a 4.5+ player, apply additional penalty
-    // This makes the weak link have more negative impact in doubles
-    if (weakLinkTeamMaxNTRP < 4.5) {
-      // Calculate penalty based on weak link difference
-      // Larger weak link + no high-rated player = bigger penalty
-      const basePenalty = weakLinkDiff * 0.08; // Base 8% per 1.0 NTRP difference (reduced from 15%)
-      const noHighRatedBonus = (4.5 - weakLinkTeamMaxNTRP) * 0.05; // Additional 5% per 0.1 below 4.5 (reduced from 10%)
-      weakLinkPenalty = Math.min(0.15, basePenalty + noHighRatedBonus); // Cap at 15% penalty (reduced from 25%)
+    // Calculate penalty, but consider that a higher-rated teammate can compensate
+    // The penalty should be based on how much the weighted average is affected, not just the min NTRP
+    const compensationFactor = Math.max(0.5, Math.min(1.0, (weakLinkTeamMaxNTRP - 3.5) / 1.5)); // 0.5-1.0 based on max player (3.5 = 0.5, 5.0 = 1.0)
+    
+    // Reduce penalty significantly - a 4.0 player can help a 2.5 player a lot
+    // Base penalty is now much smaller and accounts for teammate compensation
+    const basePenalty = weakLinkDiff * 0.04 * (1 - compensationFactor * 0.5); // Reduced from 0.08, further reduced by compensation
+    weakLinkPenalty = Math.min(0.08, basePenalty); // Cap at 8% penalty (reduced from 15%)
 
-      // Apply penalty to the team with the weak link
-      if (teamAHasWeakLink) {
-        teamAScore -= weakLinkPenalty;
-      } else {
-        teamAScore += weakLinkPenalty;
-      }
+    // Apply penalty to the team with the weak link
+    if (teamAHasWeakLink) {
+      teamAScore -= weakLinkPenalty;
+    } else {
+      teamAScore += weakLinkPenalty;
     }
   }
 
-  // When there's a weak link, allow more extreme bounds based on the weak link difference
-  // Make bounds slightly more extreme if weak link team has no 4.5+ player
+  // When there's a weak link, use tighter bounds based on weighted average difference
+  // In doubles, the weighted average is more important than the min NTRP
+  // A strong teammate can compensate significantly for a weaker player
   if (hasWeakLink) {
     const teamAHasWeakLink = teamAMinNTRP < teamBMinNTRP;
     const weakLinkTeamMaxNTRP = teamAHasWeakLink ? teamAMaxNTRP : teamBMaxNTRP;
-    const hasNoHighRatedPlayer = weakLinkTeamMaxNTRP < 4.5;
-
-    if (weakLinkDiff >= 1.5) {
-      minBound = hasNoHighRatedPlayer ? 0.05 : 0.05;
-      maxBound = hasNoHighRatedPlayer ? 0.95 : 0.95;
+    const weakLinkTeamWeightedAvg = teamAHasWeakLink ? teamAStats.ntrpRating : teamBStats.ntrpRating;
+    
+    // Consider how much the stronger teammate compensates
+    // If the weak link team has a 4.0+ player, they compensate well
+    const compensationFactor = Math.max(0.3, Math.min(1.0, (weakLinkTeamMaxNTRP - 3.0) / 2.0)); // 0.3-1.0 based on max player
+    
+    // Use tighter bounds - consider weighted average more than weak link difference
+    // The actual gap in weighted average is what matters most
+    if (ntrpDiff >= 1.0) {
+      // Large average difference, but still not extreme due to compensation
+      minBound = 0.15 - (compensationFactor * 0.05); // 0.10-0.15 based on compensation
+      maxBound = 0.85 + (compensationFactor * 0.05); // 0.85-0.90
+    } else if (ntrpDiff >= 0.5) {
+      // Moderate average difference
+      minBound = 0.20 - (compensationFactor * 0.05); // 0.15-0.20
+      maxBound = 0.80 + (compensationFactor * 0.05); // 0.80-0.85
+    } else if (weakLinkDiff >= 1.5) {
+      // Large weak link but smaller average difference - use moderate bounds
+      minBound = 0.20 - (compensationFactor * 0.05); // 0.15-0.20
+      maxBound = 0.80 + (compensationFactor * 0.05); // 0.80-0.85
     } else if (weakLinkDiff >= 1.0) {
-      minBound = hasNoHighRatedPlayer ? 0.08 : 0.1;
-      maxBound = hasNoHighRatedPlayer ? 0.92 : 0.9;
+      // Moderate weak link
+      minBound = 0.25 - (compensationFactor * 0.05); // 0.20-0.25
+      maxBound = 0.75 + (compensationFactor * 0.05); // 0.75-0.80
     } else if (weakLinkDiff >= 0.5) {
-      minBound = hasNoHighRatedPlayer ? 0.12 : 0.15;
-      maxBound = hasNoHighRatedPlayer ? 0.88 : 0.85;
+      // Small weak link
+      minBound = 0.30 - (compensationFactor * 0.03); // 0.27-0.30
+      maxBound = 0.70 + (compensationFactor * 0.03); // 0.70-0.73
     }
   } else {
     // No weak link - use tighter bounds based on average NTRP difference
