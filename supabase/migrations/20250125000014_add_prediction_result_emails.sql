@@ -665,11 +665,11 @@ BEGIN
         prediction_summary := 'No prediction details available';
     END IF;
 
-    -- Format winnings as currency (assuming cents, convert to euros)
+    -- Format winnings as coins (winnings are in coins, not euros/cents)
     IF winnings_amount > 0 THEN
-        winnings_formatted := format('€%.2f', winnings_amount / 100.0);
+        winnings_formatted := format('%s coins', winnings_amount::TEXT);
     ELSE
-        winnings_formatted := '€0.00';
+        winnings_formatted := '0 coins';
     END IF;
 
     -- Determine template name
@@ -693,8 +693,10 @@ BEGIN
         actual_winner_name := 'Winner';
     END IF;
     
-    IF predicted_result IS NULL OR predicted_result = '' THEN
-        predicted_result := 'Not specified';
+    -- Don't set to 'Not specified' - leave it empty so it can be omitted from email
+    -- The email template will conditionally show this field
+    IF predicted_result IS NULL OR predicted_result = '' OR predicted_result = 'Not specified' THEN
+        predicted_result := '';  -- Empty string - will be omitted from email
     END IF;
     
     -- Set actual_result

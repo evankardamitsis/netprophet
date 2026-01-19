@@ -118,22 +118,69 @@ function renderTemplate(
 
   // Replace variables in HTML content
   let html = template.html_content;
+  
+  // Special handling for predicted_result - remove sections if empty
+  const predictedResultValue = mergedVariables['predicted_result'];
+  if (!predictedResultValue || predictedResultValue === '' || predictedResultValue === 'Not specified') {
+    // Remove table row containing predicted_result (for lost emails)
+    html = html.replace(
+      /<tr[^>]*>[\s\S]*?{{predicted_result}}[\s\S]*?<\/tr>/gi,
+      ''
+    );
+    // Remove paragraph containing predicted_result (for won emails)
+    html = html.replace(
+      /<p[^>]*style="[^"]*margin-top:[^"]*margin-bottom:[^"]*"[^>]*>[\s\S]*?<strong[^>]*>[\s\S]*?Predicted Result:[\s\S]*?<\/strong>[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
+      ''
+    );
+    html = html.replace(
+      /<p[^>]*style="[^"]*margin-top:[^"]*margin-bottom:[^"]*"[^>]*>[\s\S]*?<strong[^>]*>[\s\S]*?Προβλεπόμενο Αποτέλεσμα:[\s\S]*?<\/strong>[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
+      ''
+    );
+    // Also handle simpler patterns
+    html = html.replace(
+      /<p[^>]*>[\s\S]*?Predicted Result:[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
+      ''
+    );
+    html = html.replace(
+      /<p[^>]*>[\s\S]*?Προβλεπόμενο Αποτέλεσμα:[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
+      ''
+    );
+  }
+  
+  // Replace all variables
   Object.keys(mergedVariables).forEach((key) => {
     const placeholder = `{{${key}}}`;
+    const value = mergedVariables[key];
     html = html.replace(
-      new RegExp(placeholder, "g"),
-      String(mergedVariables[key] || "")
+      new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"),
+      String(value || "")
     );
   });
 
   // Replace variables in text content
   let text = template.text_content;
   if (text) {
+    // Special handling for predicted_result - remove lines if empty
+    const predictedResultValue = mergedVariables['predicted_result'];
+    if (!predictedResultValue || predictedResultValue === '' || predictedResultValue === 'Not specified') {
+      // Remove lines containing predicted_result
+      text = text.replace(
+        /.*Predicted Result:.*{{predicted_result}}.*\n?/gi,
+        ''
+      );
+      text = text.replace(
+        /.*Προβλεπόμενο Αποτέλεσμα:.*{{predicted_result}}.*\n?/gi,
+        ''
+      );
+    }
+    
+    // Replace all variables
     Object.keys(mergedVariables).forEach((key) => {
       const placeholder = `{{${key}}}`;
-      text = text!.replace(
-        new RegExp(placeholder, "g"),
-        String(mergedVariables[key] || "")
+      const value = mergedVariables[key];
+      text = text.replace(
+        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"),
+        String(value || "")
       );
     });
   }
