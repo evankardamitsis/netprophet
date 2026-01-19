@@ -56,6 +56,17 @@ interface MatchResult {
     winner_id?: string;
     winner_name?: string;
     match_result?: string;
+    set1_score?: string | null;
+    set2_score?: string | null;
+    set3_score?: string | null;
+    set4_score?: string | null;
+    set5_score?: string | null;
+    set1_tiebreak_score?: string | null;
+    set2_tiebreak_score?: string | null;
+    set3_tiebreak_score?: string | null;
+    set4_tiebreak_score?: string | null;
+    set5_tiebreak_score?: string | null;
+    super_tiebreak_score?: string | null;
     round: string | null;
     start_time: string;
     status: string;
@@ -238,7 +249,18 @@ export default function TournamentPage() {
                 ),
                 match_results (
                     match_result,
-                    winner_id
+                    winner_id,
+                    set1_score,
+                    set2_score,
+                    set3_score,
+                    set4_score,
+                    set5_score,
+                    set1_tiebreak_score,
+                    set2_tiebreak_score,
+                    set3_tiebreak_score,
+                    set4_tiebreak_score,
+                    set5_tiebreak_score,
+                    super_tiebreak_score
                 )
             `)
             .eq('tournament_id', tournamentId)
@@ -278,8 +300,8 @@ export default function TournamentPage() {
                 ? `${match.winner.first_name} ${match.winner.last_name}`
                 : null;
 
-            const matchResult = Array.isArray(match.match_results) && match.match_results.length > 0
-                ? match.match_results[0].match_result
+            const matchResultData = Array.isArray(match.match_results) && match.match_results.length > 0
+                ? match.match_results[0]
                 : null;
 
             return {
@@ -287,7 +309,20 @@ export default function TournamentPage() {
                 player_a_name: playerAName,
                 player_b_name: playerBName,
                 winner_name: winnerName,
-                match_result: matchResult
+                winner_id: matchResultData?.winner_id || match.winner_id || null,
+                match_result: matchResultData?.match_result || null,
+                set1_score: matchResultData?.set1_score || null,
+                set2_score: matchResultData?.set2_score || null,
+                set3_score: matchResultData?.set3_score || null,
+                set4_score: matchResultData?.set4_score || null,
+                set5_score: matchResultData?.set5_score || null,
+                set1_tiebreak_score: matchResultData?.set1_tiebreak_score || null,
+                set2_tiebreak_score: matchResultData?.set2_tiebreak_score || null,
+                set3_tiebreak_score: matchResultData?.set3_tiebreak_score || null,
+                set4_tiebreak_score: matchResultData?.set4_tiebreak_score || null,
+                set5_tiebreak_score: matchResultData?.set5_tiebreak_score || null,
+                super_tiebreak_score: matchResultData?.super_tiebreak_score || null,
+                match_results: match.match_results // Preserve for winner detection
             };
         });
     };
@@ -402,6 +437,37 @@ export default function TournamentPage() {
             month: 'long',
             day: 'numeric'
         });
+    };
+
+    const splitScore = (score?: string | null) => {
+        if (!score) return { a: '', b: '' };
+        const [a = '', b = ''] = score.split('-').map(part => part.trim());
+        return { a, b };
+    };
+
+    const getSetScores = (match: MatchResult) => {
+        const scores = [
+            match.set1_score,
+            match.set2_score,
+            match.set3_score,
+            match.set4_score,
+            match.set5_score,
+        ].filter(Boolean);
+        return scores.map(splitScore);
+    };
+
+    const getSetWins = (setScores: Array<{ a: string; b: string }>) => {
+        let winsA = 0;
+        let winsB = 0;
+        setScores.forEach(set => {
+            const a = parseInt(set.a, 10);
+            const b = parseInt(set.b, 10);
+            if (Number.isFinite(a) && Number.isFinite(b)) {
+                if (a > b) winsA += 1;
+                else if (b > a) winsB += 1;
+            }
+        });
+        return { winsA, winsB };
     };
 
     if (loading) {
@@ -689,7 +755,7 @@ export default function TournamentPage() {
                                             <th className="text-center py-2 px-1 sm:px-2 text-white/80 font-semibold text-xs sm:text-sm w-10 sm:w-auto">W</th>
                                             <th className="text-center py-2 px-1 sm:px-2 text-white/80 font-semibold text-xs sm:text-sm w-10 sm:w-auto">L</th>
                                             <th className="text-center py-2 px-1 sm:px-2 text-white/80 font-semibold text-xs sm:text-sm w-14 sm:w-auto">%</th>
-                                            <th className="text-center py-2 px-1 sm:px-2 text-white/80 font-semibold text-xs sm:text-sm w-12 sm:w-auto">M</th>
+                                            <th className="text-center py-2 px-1 sm:px-2 text-white/80 font-semibold text-xs sm:text-sm w-12 sm:w-auto">Points</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -706,7 +772,7 @@ export default function TournamentPage() {
                                                 <td className="py-2 px-1 sm:px-2 text-center text-white text-xs sm:text-sm">{team.wins}</td>
                                                 <td className="py-2 px-1 sm:px-2 text-center text-white text-xs sm:text-sm">{team.losses}</td>
                                                 <td className="py-2 px-1 sm:px-2 text-center text-white text-xs sm:text-sm">{team.winPercentage.toFixed(1)}%</td>
-                                                <td className="py-2 px-1 sm:px-2 text-center text-white/80 text-xs sm:text-sm">{team.matchesPlayed}</td>
+                                                <td className="py-2 px-1 sm:px-2 text-center text-white/80 text-xs sm:text-sm">{team.wins}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -725,42 +791,142 @@ export default function TournamentPage() {
                                 </CardContent>
                             </Card>
                         ) : (
-                            matches.map(match => (
-                                <Card key={match.id} className="bg-white/5 border-white/10">
-                                    <CardContent className="py-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-4 mb-2">
-                                                    <span className="text-white/60 text-sm">{match.round || dict?.tournaments?.round || 'Round'}</span>
-                                                    {match.status === 'finished' && (
-                                                        <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-semibold">
-                                                            {dict?.tournaments?.completed || dict?.results?.finished || 'Finished'}
-                                                        </span>
-                                                    )}
-                                                    {match.status === 'live' && (
-                                                        <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-semibold animate-pulse">
-                                                            {dict?.tournaments?.live || 'Live'}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="text-white">
-                                                    <div className={`${match.winner_name === match.player_a_name ? 'font-bold' : ''}`}>
+                            matches.map(match => {
+                                const isPendingResult =
+                                    !match.match_result ||
+                                    match.match_result.trim() === '' ||
+                                    match.match_result.trim() === (dict?.results?.resultsPending || 'Results pending');
+
+                                // Determine winner using winner_id (only for finished matches with results)
+                                const winnerId = match.winner_id;
+                                const hasResult = match.status === 'finished' && winnerId && match.match_result;
+
+                                // Check if winner is on team A (for singles or doubles)
+                                const isPlayerAWinner = hasResult && (
+                                    (match.match_type === 'doubles' && (winnerId === match.player_a1_id || winnerId === match.player_a2_id)) ||
+                                    (match.match_type !== 'doubles' && winnerId === match.player_a_id)
+                                );
+
+                                // Check if winner is on team B (for singles or doubles)
+                                const isPlayerBWinner = hasResult && (
+                                    (match.match_type === 'doubles' && (winnerId === match.player_b1_id || winnerId === match.player_b2_id)) ||
+                                    (match.match_type !== 'doubles' && winnerId === match.player_b_id)
+                                );
+                                const setScores = getSetScores(match);
+                                const superTie = splitScore(match.super_tiebreak_score);
+                                const showSuperTie = Boolean(match.super_tiebreak_score);
+                                const totalColumns = Math.max(setScores.length, 1) + (showSuperTie ? 1 : 0);
+
+                                // Parse match_result to get actual set wins
+                                let winsA = 0;
+                                let winsB = 0;
+                                if (match.match_result && !isPendingResult) {
+                                    const parts = match.match_result.split('-');
+                                    if (parts.length === 2) {
+                                        const setsA = parseInt(parts[0], 10);
+                                        const setsB = parseInt(parts[1], 10);
+                                        if (!isNaN(setsA) && !isNaN(setsB)) {
+                                            winsA = setsA;
+                                            winsB = setsB;
+                                        } else {
+                                            const calculated = getSetWins(setScores);
+                                            winsA = calculated.winsA;
+                                            winsB = calculated.winsB;
+                                        }
+                                    } else {
+                                        const calculated = getSetWins(setScores);
+                                        winsA = calculated.winsA;
+                                        winsB = calculated.winsB;
+                                    }
+                                } else {
+                                    const calculated = getSetWins(setScores);
+                                    winsA = calculated.winsA;
+                                    winsB = calculated.winsB;
+                                }
+
+                                return (
+                                    <Card key={match.id} className="bg-white/5 border-white/10">
+                                        <CardContent className="py-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                                {/* Left side: Round and status */}
+                                                {(match.round || match.status === 'live') && (
+                                                    <div className="flex items-center gap-4 mb-2 sm:mb-0">
+                                                        {match.round && (
+                                                            <span className="text-white/60 text-sm">{match.round}</span>
+                                                        )}
+                                                        {match.status === 'live' && (
+                                                            <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-semibold animate-pulse">
+                                                                {dict?.tournaments?.live || 'Live'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Player names */}
+                                                <div className="flex flex-col min-w-0 flex-1 gap-1">
+                                                    <div className={`${isPlayerAWinner ? 'font-bold text-green-400' : 'font-normal text-gray-400'} text-sm break-words`}>
                                                         {match.player_a_name}
                                                     </div>
-                                                    <div className={`${match.winner_name === match.player_b_name ? 'font-bold' : ''}`}>
+                                                    <div className={`${isPlayerBWinner ? 'font-bold text-green-400' : 'font-normal text-gray-200'} text-sm break-words`}>
                                                         {match.player_b_name}
                                                     </div>
                                                 </div>
-                                            </div>
-                                            {match.match_result && (
-                                                <div className="text-white/80 text-sm text-right">
-                                                    {match.match_result}
+
+                                                {/* Scores */}
+                                                <div className="flex-shrink-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-lg border border-purple-500/20 px-3 py-2 w-full sm:w-auto">
+                                                    {isPendingResult ? (
+                                                        <div className="text-center text-sm font-bold text-white">
+                                                            {dict?.results?.resultsPending || 'Results pending'}
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div
+                                                                className="grid text-center text-xs font-bold text-purple-200 mb-1"
+                                                                style={{ gridTemplateColumns: `repeat(${totalColumns + 1}, minmax(26px, 42px))` }}
+                                                            >
+                                                                <div>Sets</div>
+                                                                {setScores.map((_, idx) => (
+                                                                    <div key={`h-${match.id}-${idx}`}>{idx + 1}</div>
+                                                                ))}
+                                                                {showSuperTie && <div>STB</div>}
+                                                            </div>
+                                                            <div
+                                                                className="grid text-center text-sm font-bold text-white"
+                                                                style={{ gridTemplateColumns: `repeat(${totalColumns + 1}, minmax(26px, 42px))` }}
+                                                            >
+                                                                <div className={`${isPlayerAWinner ? 'text-green-400' : 'text-gray-400'}`}>{winsA}</div>
+                                                                {setScores.map((set, idx) => (
+                                                                    <div key={`a-${match.id}-${idx}`} className="px-1">
+                                                                        {set.a}
+                                                                    </div>
+                                                                ))}
+                                                                {showSuperTie && <div className="px-1">{superTie.a}</div>}
+                                                            </div>
+                                                            <div
+                                                                className="grid text-center text-sm font-bold text-white mt-1"
+                                                                style={{ gridTemplateColumns: `repeat(${totalColumns + 1}, minmax(26px, 42px))` }}
+                                                            >
+                                                                <div className={`${isPlayerBWinner ? 'text-green-400' : 'text-white'}`}>{winsB}</div>
+                                                                {setScores.map((set, idx) => (
+                                                                    <div key={`b-${match.id}-${idx}`} className="px-1">
+                                                                        {set.b}
+                                                                    </div>
+                                                                ))}
+                                                                {showSuperTie && <div className="px-1">{superTie.b}</div>}
+                                                            </div>
+                                                            {setScores.length === 0 && !showSuperTie && (
+                                                                <div className="text-center text-sm font-bold text-white mt-1">
+                                                                    {match.match_result}
+                                                                </div>
+                                                            )}
+                                                        </>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })
                         )}
                     </div>
                 )}
