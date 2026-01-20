@@ -119,21 +119,34 @@ export default function PlayerEditPage() {
     }, [isNew, playerId]);
 
     const handleSave = async () => {
-        console.log('Save clicked', player);
+        const p = {
+            ...player,
+            age: toNum(player.age, 0),
+            ntrpRating: toNum(player.ntrpRating, 3.0),
+            wins: toNum(player.wins, 0),
+            losses: toNum(player.losses, 0),
+            currentStreak: toNum(player.currentStreak, 0),
+            aggressiveness: toNum(player.aggressiveness, 5),
+            stamina: toNum(player.stamina, 5),
+            consistency: toNum(player.consistency, 5),
+            surfaceWinRates: {
+                hardCourt: player.surfaceWinRates?.hardCourt ?? 0.5,
+                clayCourt: player.surfaceWinRates?.clayCourt ?? 0.5,
+                grassCourt: player.surfaceWinRates?.grassCourt ?? 0.5,
+            },
+        };
         setLoading(true);
         try {
             if (isNew) {
-                const result = await insertPlayer(player);
+                const result = await insertPlayer(p);
                 console.log('Player created successfully:', result);
                 toast.success('Player created! Redirecting to players list...');
-                // Redirect to players list only when creating new player
                 router.push('/players');
             } else {
                 console.log('Updating player with ID:', player.id);
-                const result = await updatePlayer(player.id, player);
+                const result = await updatePlayer(player.id, p);
                 console.log('Player updated successfully:', result);
                 toast.success('Player updated successfully!');
-                // Stay on the page when editing - no redirect
             }
         } catch (error) {
             console.error('Error saving player:', error);
@@ -181,7 +194,7 @@ export default function PlayerEditPage() {
         setPlayer(prev => ({ ...prev, [field]: value }));
     };
 
-    const updateSurfaceWinRate = (surface: 'hardCourt' | 'clayCourt' | 'grassCourt', value: number) => {
+    const updateSurfaceWinRate = (surface: 'hardCourt' | 'clayCourt' | 'grassCourt', value: number | undefined) => {
         setPlayer(prev => ({
             ...prev,
             surfaceWinRates: {
@@ -190,6 +203,19 @@ export default function PlayerEditPage() {
             }
         }));
     };
+
+    const handleNumberChange = (field: keyof Player, e: React.ChangeEvent<HTMLInputElement>, parse: 'int' | 'float') => {
+        const raw = e.target.value;
+        if (raw === '') {
+            updatePlayerField(field, '');
+            return;
+        }
+        const n = parse === 'int' ? parseInt(raw, 10) : parseFloat(raw);
+        updatePlayerField(field, !Number.isNaN(n) ? n : '');
+    };
+
+    const toNum = (v: unknown, fallback: number): number =>
+        (typeof v === 'number' && !Number.isNaN(v)) ? v : fallback;
 
     const updateLast5 = (index: number, result: 'W' | 'L') => {
         const newLast5 = [...player.last5];
@@ -445,8 +471,8 @@ export default function PlayerEditPage() {
                                     type="number"
                                     min="16"
                                     max="80"
-                                    value={player.age}
-                                    onChange={(e) => updatePlayerField('age', parseInt(e.target.value) || 25)}
+                                    value={(player as { age?: number | string }).age === '' ? '' : player.age}
+                                    onChange={(e) => handleNumberChange('age', e, 'int')}
                                 />
                             </div>
                             <div>
@@ -521,14 +547,14 @@ export default function PlayerEditPage() {
                                     step="0.5"
                                     min="1.0"
                                     max="7.0"
-                                    value={player.ntrpRating}
-                                    onChange={(e) => updatePlayerField('ntrpRating', parseFloat(e.target.value) || 3.0)}
+                                    value={(player as { ntrpRating?: number | string }).ntrpRating === '' ? '' : player.ntrpRating}
+                                    onChange={(e) => handleNumberChange('ntrpRating', e, 'float')}
                                 />
                             </div>
                             <div>
                                 <Label>Εποχική Φόρμα (%)</Label>
                                 <div className="bg-gray-100 rounded px-3 py-2 text-gray-700 font-semibold">
-                                    {getWinRate(player.wins, player.losses)}%
+                                    {getWinRate(toNum(player.wins, 0), toNum(player.losses, 0))}%
                                 </div>
                             </div>
                         </div>
@@ -540,8 +566,8 @@ export default function PlayerEditPage() {
                                     id="wins"
                                     type="number"
                                     min="0"
-                                    value={player.wins}
-                                    onChange={(e) => updatePlayerField('wins', parseInt(e.target.value) || 0)}
+                                    value={(player as { wins?: number | string }).wins === '' ? '' : player.wins}
+                                    onChange={(e) => handleNumberChange('wins', e, 'int')}
                                 />
                             </div>
                             <div>
@@ -550,8 +576,8 @@ export default function PlayerEditPage() {
                                     id="losses"
                                     type="number"
                                     min="0"
-                                    value={player.losses}
-                                    onChange={(e) => updatePlayerField('losses', parseInt(e.target.value) || 0)}
+                                    value={(player as { losses?: number | string }).losses === '' ? '' : player.losses}
+                                    onChange={(e) => handleNumberChange('losses', e, 'int')}
                                 />
                             </div>
                         </div>
@@ -559,7 +585,7 @@ export default function PlayerEditPage() {
                         <div className="bg-blue-50 p-3 rounded-lg">
                             <div className="text-sm font-semibold text-blue-800 mb-2">Win Rate</div>
                             <div className="text-2xl font-bold text-blue-600">
-                                {getWinRate(player.wins, player.losses)}%
+                                {getWinRate(toNum(player.wins, 0), toNum(player.losses, 0))}%
                             </div>
                         </div>
                     </CardContent>
@@ -628,8 +654,8 @@ export default function PlayerEditPage() {
                                 type="number"
                                 min="1"
                                 max="10"
-                                value={player.aggressiveness}
-                                onChange={(e) => updatePlayerField('aggressiveness', parseInt(e.target.value) || 5)}
+                                value={(player as { aggressiveness?: number | string }).aggressiveness === '' ? '' : player.aggressiveness}
+                                onChange={(e) => handleNumberChange('aggressiveness', e, 'int')}
                             />
                         </div>
 
@@ -640,8 +666,8 @@ export default function PlayerEditPage() {
                                 type="number"
                                 min="1"
                                 max="10"
-                                value={player.stamina}
-                                onChange={(e) => updatePlayerField('stamina', parseInt(e.target.value) || 5)}
+                                value={(player as { stamina?: number | string }).stamina === '' ? '' : player.stamina}
+                                onChange={(e) => handleNumberChange('stamina', e, 'int')}
                             />
                         </div>
 
@@ -652,8 +678,8 @@ export default function PlayerEditPage() {
                                 type="number"
                                 min="1"
                                 max="10"
-                                value={player.consistency}
-                                onChange={(e) => updatePlayerField('consistency', parseInt(e.target.value) || 5)}
+                                value={(player as { consistency?: number | string }).consistency === '' ? '' : player.consistency}
+                                onChange={(e) => handleNumberChange('consistency', e, 'int')}
                             />
                         </div>
 
@@ -712,15 +738,15 @@ export default function PlayerEditPage() {
                                     min="0"
                                     max="100"
                                     placeholder="50"
-                                    value={player.surfaceWinRates?.hardCourt ? Math.round(player.surfaceWinRates.hardCourt * 100) : ''}
+                                    value={player.surfaceWinRates?.hardCourt != null ? Math.round(player.surfaceWinRates.hardCourt * 100) : ''}
                                     onChange={(e) => {
                                         const value = e.target.value;
                                         if (value === '') {
-                                            // Allow empty field
+                                            updateSurfaceWinRate('hardCourt', undefined);
                                             return;
                                         }
                                         const percentage = parseFloat(value);
-                                        if (!isNaN(percentage)) {
+                                        if (!Number.isNaN(percentage)) {
                                             const decimal = Math.max(0, Math.min(100, percentage)) / 100;
                                             updateSurfaceWinRate('hardCourt', decimal);
                                         }
@@ -737,15 +763,15 @@ export default function PlayerEditPage() {
                                     min="0"
                                     max="100"
                                     placeholder="50"
-                                    value={player.surfaceWinRates?.clayCourt ? Math.round(player.surfaceWinRates.clayCourt * 100) : ''}
+                                    value={player.surfaceWinRates?.clayCourt != null ? Math.round(player.surfaceWinRates.clayCourt * 100) : ''}
                                     onChange={(e) => {
                                         const value = e.target.value;
                                         if (value === '') {
-                                            // Allow empty field
+                                            updateSurfaceWinRate('clayCourt', undefined);
                                             return;
                                         }
                                         const percentage = parseFloat(value);
-                                        if (!isNaN(percentage)) {
+                                        if (!Number.isNaN(percentage)) {
                                             const decimal = Math.max(0, Math.min(100, percentage)) / 100;
                                             updateSurfaceWinRate('clayCourt', decimal);
                                         }
@@ -762,15 +788,15 @@ export default function PlayerEditPage() {
                                     min="0"
                                     max="100"
                                     placeholder="50"
-                                    value={player.surfaceWinRates?.grassCourt ? Math.round(player.surfaceWinRates.grassCourt * 100) : ''}
+                                    value={player.surfaceWinRates?.grassCourt != null ? Math.round(player.surfaceWinRates.grassCourt * 100) : ''}
                                     onChange={(e) => {
                                         const value = e.target.value;
                                         if (value === '') {
-                                            // Allow empty field
+                                            updateSurfaceWinRate('grassCourt', undefined);
                                             return;
                                         }
                                         const percentage = parseFloat(value);
-                                        if (!isNaN(percentage)) {
+                                        if (!Number.isNaN(percentage)) {
                                             const decimal = Math.max(0, Math.min(100, percentage)) / 100;
                                             updateSurfaceWinRate('grassCourt', decimal);
                                         }

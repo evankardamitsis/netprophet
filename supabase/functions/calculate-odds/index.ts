@@ -747,6 +747,20 @@ function calculateDoublesOdds(
     teamB.player2.ntrpRating
   );
 
+  // Star player rule: In doubles, a team with a 4.5+ player should be clearly favored when the
+  // other team has no 4.5+ player. Apply a strong bonus so the favorite gets meaningfully lower
+  // odds (e.g. 1.55–1.70) and the underdog higher (e.g. 2.20–2.60), not near 2.0 vs 2.0.
+  const STAR_NTRP = 4.5;
+  const STAR_PLAYER_BONUS = 0.22; // ~22% win prob shift: enough for ~1.55 vs ~2.50 style gap
+  const teamAHasStar = teamAMaxNTRP >= STAR_NTRP;
+  const teamBHasStar = teamBMaxNTRP >= STAR_NTRP;
+  const hasStarMismatch = (teamAHasStar && !teamBHasStar) || (teamBHasStar && !teamAHasStar);
+  if (teamAHasStar && !teamBHasStar) {
+    teamAScore += STAR_PLAYER_BONUS;
+  } else if (teamBHasStar && !teamAHasStar) {
+    teamAScore -= STAR_PLAYER_BONUS;
+  }
+
   // Check if one team has a significantly weaker player (weak link)
   const hasWeakLink = minNTRPDiff >= 0.5;
   const weakLinkDiff = minNTRPDiff;
@@ -813,13 +827,13 @@ function calculateDoublesOdds(
       maxBound = 0.70 + (compensationFactor * 0.03); // 0.70-0.73
     }
   } else {
-    // No weak link - use tighter bounds based on average NTRP difference
-    // Special case: When teams are equal (or very close) and no H2H, use tighter bounds
-    // This ensures odds start lower and stay closer together (e.g., 1.35-1.50 range)
-    if (shouldReduceOtherFactors) {
-      // Wider bounds: 0.45-0.55 probability range allows more variation
-      // With -30% margin (discount), this gives odds around 1.27-1.56
-      // The reduced other factors weight (15%) ensures odds stay relatively close together
+    // No weak link - use bounds based on average NTRP difference
+    // Star mismatch (one team 4.5+, other not): allow a clear favorite (62–75%) so
+    // odds gap is wide (e.g. 1.55–1.70 vs 2.20–2.60), not near 2.0 vs 2.0
+    if (hasStarMismatch) {
+      minBound = 0.25;
+      maxBound = 0.75;
+    } else if (shouldReduceOtherFactors) {
       minBound = 0.45;
       maxBound = 0.55;
     } else if (ntrpDiff < 0.2) {
@@ -841,6 +855,17 @@ function calculateDoublesOdds(
   }
 
   teamAScore = Math.max(minBound, Math.min(maxBound, teamAScore));
+
+  // Star mismatch: ensure the 4.5+ team is a clear favorite (at least 58% win prob)
+  // so odds gap is meaningful (favorite ~1.55–1.75, underdog ~2.20–2.55)
+  if (hasStarMismatch) {
+    const STAR_MIN_FAV_PROB = 0.58;
+    if (teamAHasStar && teamAScore < STAR_MIN_FAV_PROB) {
+      teamAScore = Math.min(STAR_MIN_FAV_PROB, maxBound);
+    } else if (teamBHasStar && teamAScore > 1 - STAR_MIN_FAV_PROB) {
+      teamAScore = Math.max(1 - STAR_MIN_FAV_PROB, minBound);
+    }
+  }
 
   // For equal teams, ensure minimum gap so odds differ by at least 0.1 in first decimal
   // This prevents odds like 1.41 vs 1.39 and ensures meaningful difference
