@@ -22,9 +22,7 @@ import {
     ChevronRight,
     Zap,
     Bell,
-    Mail,
     Settings,
-    Eye,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/Logo';
@@ -69,24 +67,13 @@ const menuItems: MenuItem[] = [
             { href: '/economy/calculator', label: 'Calculator', icon: Calculator }
         ]
     },
-    {
-        href: '/email-templates',
-        label: 'Email Management',
-        icon: Mail,
-        children: [
-            { href: '/email-templates', label: 'Templates', icon: Settings },
-            { href: '/email-templates/new', label: 'New Template', icon: Mail },
-            { href: '/email-test', label: 'Test Emails', icon: Eye }
-        ]
-    },
     { href: '/logs', label: 'Logs', icon: FileText },
     {
         href: '/notifications',
         label: 'Notifications',
         icon: Bell,
         children: [
-            { href: '/notifications', label: 'Notification Templates', icon: Settings },
-            { href: '/admin-notifications', label: 'Email Processing', icon: Mail }
+            { href: '/notifications', label: 'Notification Templates', icon: Settings }
         ]
     },
     { href: '/dynamic-fields', label: 'Dynamic Fields', icon: FileText },
