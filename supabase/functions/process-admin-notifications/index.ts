@@ -65,84 +65,119 @@ class ResendService {
 
     throw new Error("Failed to send email after retries");
   }
-}
 
-// Render template function
-function renderTemplate(
-  template: any,
-  variables: Record<string, any>
-): { subject: string; html: string; text?: string } {
-  let subject = template.subject || "Admin Alert";
-  let html = template.html_content || "";
-  let text = template.text_content || "";
+  async sendWithTemplate(
+    to: string,
+    templateId: string,
+    variables: Record<string, unknown>,
+    retries: number = 3
+  ): Promise<any> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          from: "NetProphet <noreply@netprophetapp.com>",
+          to: [to],
+          template: { id: templateId, variables },
+        }),
+      });
 
-  // Replace variables in subject
-  Object.keys(variables).forEach((key) => {
-    const value = variables[key] || "";
-    const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, "g");
-    subject = subject.replace(placeholder, String(value));
-    html = html.replace(placeholder, String(value));
-    if (text) {
-      text = text.replace(placeholder, String(value));
+      if (response.ok) return response.json();
+
+      const errorText = await response.text();
+      if (response.status === 429 && attempt < retries - 1) {
+        const wait =
+          (parseInt(response.headers.get("Retry-After") || "1") || 1) * 1000;
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+      throw new Error(`Resend API error: ${errorText}`);
     }
-  });
-
-  return { subject, html, text: text || undefined };
+    throw new Error("Failed to send email after retries");
+  }
 }
 
-// Helper function to process a single admin email
+// Helper function to process a single admin email (uses Resend hosted templates via RESEND_TEMPLATE_IDS)
 async function processAdminEmail(
   emailLog: any,
   supabaseClient: any,
   resendService: ResendService
 ) {
   try {
-    // Skip if not pending or not admin type
-    if (emailLog.status !== "pending" || emailLog.type !== "admin") {
-      return;
+    if (emailLog.status !== "pending" || emailLog.type !== "admin") return;
+
+    const rawMapping = Deno.env.get("RESEND_TEMPLATE_IDS") || "{}";
+    let mapping: Record<string, string> = {};
+    try {
+      mapping = JSON.parse(rawMapping);
+    } catch {
+      // invalid JSON
     }
 
-    // Get the email template
-    const { data: template, error: templateError } = await supabaseClient
-      .from("email_templates")
-      .select("*")
-      .eq("type", emailLog.template)
-      .eq("language", emailLog.language)
-      .eq("is_active", true)
-      .single();
+    const templateKey = `${emailLog.template}_${emailLog.language}`;
+    const templateId =
+      mapping[templateKey] || mapping[`${emailLog.template}_en`];
 
-    if (templateError || !template) {
-      console.error(
-        `Template not found: ${emailLog.template} (${emailLog.language})`
-      );
-
-      // Mark as failed
+    if (!templateId) {
+      const err = `Resend template not configured: ${templateKey}. Set RESEND_TEMPLATE_IDS.`;
+      console.error(err);
       await supabaseClient
         .from("email_logs")
         .update({
           status: "failed",
           sent_at: new Date().toISOString(),
-          error_message: `Template not found: ${emailLog.template}`,
+          error_message: err,
         })
         .eq("id", emailLog.id);
-
-      throw new Error(`Template not found: ${emailLog.template}`);
+      throw new Error(err);
     }
 
-    // Render the email template with variables
-    const renderedEmail = renderTemplate(template, emailLog.variables || {});
+    // Convert variable keys to uppercase for Resend templates
+    // Resend templates use {{{VAR}}} format with uppercase variable names
+    // Also convert values to strings (Resend expects string values for template variables)
+    const rawVariables = emailLog.variables || {};
+    const variables: Record<string, string> = {};
+    
+    for (const [key, value] of Object.entries(rawVariables)) {
+      // Convert key to uppercase (e.g., 'user_name' -> 'USER_NAME')
+      const upperKey = key.toUpperCase();
+      
+      // Convert value to string (Resend template variables must be strings)
+      if (value === null || value === undefined) {
+        variables[upperKey] = '';
+      } else if (typeof value === 'boolean') {
+        variables[upperKey] = String(value);
+      } else if (typeof value === 'number') {
+        variables[upperKey] = String(value);
+      } else if (typeof value === 'object') {
+        // For objects/arrays, stringify them
+        variables[upperKey] = JSON.stringify(value);
+      } else {
+        variables[upperKey] = String(value);
+      }
+    }
 
-    // Send email via Resend
-    const emailResult = await resendService.sendEmail(
+    // Ensure all variables are strings (Resend requirement)
+    for (const key in variables) {
+      if (typeof variables[key] !== 'string') {
+        variables[key] = String(variables[key] ?? '');
+      }
+    }
+
+    await resendService.sendWithTemplate(
       emailLog.to_email,
-      renderedEmail.subject,
-      renderedEmail.html,
-      renderedEmail.text
+      templateId,
+      variables
     );
 
-    console.log(`Admin email sent to ${emailLog.to_email}:`, emailResult);
+    console.log(
+      `Admin email sent to ${emailLog.to_email} (template: ${templateKey})`
+    );
 
-    // Mark as sent
     await supabaseClient
       .from("email_logs")
       .update({
@@ -151,15 +186,15 @@ async function processAdminEmail(
       })
       .eq("id", emailLog.id);
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`Error processing admin email ${emailLog.id}:`, error);
 
-    // Mark as failed
     await supabaseClient
       .from("email_logs")
       .update({
         status: "failed",
         sent_at: new Date().toISOString(),
-        error_message: error.message,
+        error_message: errorMessage,
       })
       .eq("id", emailLog.id);
 

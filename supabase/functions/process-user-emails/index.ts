@@ -97,150 +97,142 @@ class ResendService {
 
     throw new Error("Failed to send email after retries");
   }
-}
 
-// Email template rendering
-function renderTemplate(
-  template: any,
-  variables: Record<string, any>
-): { subject: string; html: string; text?: string } {
-  const mergedVariables = { ...template.variables, ...variables };
+  async sendWithTemplate(
+    to: string,
+    templateId: string,
+    variables: Record<string, unknown>,
+    retries: number = 3
+  ): Promise<any> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const response = await fetch(`${this.baseUrl}/emails`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "NetProphet <noreply@netprophetapp.com>",
+          to: [to],
+          template: { id: templateId, variables },
+        }),
+      });
 
-  // Replace variables in subject
-  let subject = template.subject;
-  Object.keys(mergedVariables).forEach((key) => {
-    const placeholder = `{{${key}}}`;
-    subject = subject.replace(
-      new RegExp(placeholder, "g"),
-      String(mergedVariables[key] || "")
-    );
-  });
+      if (response.ok) return await response.json();
 
-  // Replace variables in HTML content
-  let html = template.html_content;
-  
-  // Special handling for predicted_result - remove sections if empty
-  const predictedResultValue = mergedVariables['predicted_result'];
-  if (!predictedResultValue || predictedResultValue === '' || predictedResultValue === 'Not specified') {
-    // Remove table row containing predicted_result (for lost emails)
-    html = html.replace(
-      /<tr[^>]*>[\s\S]*?{{predicted_result}}[\s\S]*?<\/tr>/gi,
-      ''
-    );
-    // Remove paragraph containing predicted_result (for won emails)
-    html = html.replace(
-      /<p[^>]*style="[^"]*margin-top:[^"]*margin-bottom:[^"]*"[^>]*>[\s\S]*?<strong[^>]*>[\s\S]*?Predicted Result:[\s\S]*?<\/strong>[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
-      ''
-    );
-    html = html.replace(
-      /<p[^>]*style="[^"]*margin-top:[^"]*margin-bottom:[^"]*"[^>]*>[\s\S]*?<strong[^>]*>[\s\S]*?Προβλεπόμενο Αποτέλεσμα:[\s\S]*?<\/strong>[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
-      ''
-    );
-    // Also handle simpler patterns
-    html = html.replace(
-      /<p[^>]*>[\s\S]*?Predicted Result:[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
-      ''
-    );
-    html = html.replace(
-      /<p[^>]*>[\s\S]*?Προβλεπόμενο Αποτέλεσμα:[\s\S]*?{{predicted_result}}[\s\S]*?<\/p>/gi,
-      ''
-    );
-  }
-  
-  // Replace all variables
-  Object.keys(mergedVariables).forEach((key) => {
-    const placeholder = `{{${key}}}`;
-    const value = mergedVariables[key];
-    html = html.replace(
-      new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"),
-      String(value || "")
-    );
-  });
+      const errorText = await response.text();
+      let errorData: { message?: string } = {};
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
+      }
 
-  // Replace variables in text content
-  let text = template.text_content;
-  if (text) {
-    // Special handling for predicted_result - remove lines if empty
-    const predictedResultValue = mergedVariables['predicted_result'];
-    if (!predictedResultValue || predictedResultValue === '' || predictedResultValue === 'Not specified') {
-      // Remove lines containing predicted_result
-      text = text.replace(
-        /.*Predicted Result:.*{{predicted_result}}.*\n?/gi,
-        ''
+      console.error(
+        `[RESEND ERROR] sendWithTemplate status: ${response.status}, attempt: ${attempt + 1}/${retries}`,
+        errorData
       );
-      text = text.replace(
-        /.*Προβλεπόμενο Αποτέλεσμα:.*{{predicted_result}}.*\n?/gi,
-        ''
+
+      if (response.status === 429 && attempt < retries - 1) {
+        const wait =
+          (parseInt(response.headers.get("Retry-After") || "1") || 1) * 1000;
+        await new Promise((r) => setTimeout(r, wait));
+        continue;
+      }
+
+      throw new Error(
+        `Failed to send via Resend template (${response.status}): ${errorData.message || errorText}`
       );
     }
-    
-    // Replace all variables
-    Object.keys(mergedVariables).forEach((key) => {
-      const placeholder = `{{${key}}}`;
-      const value = mergedVariables[key];
-      text = text.replace(
-        new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"),
-        String(value || "")
-      );
-    });
+    throw new Error("Failed to send email after retries");
   }
-
-  return { subject, html, text };
 }
 
-// Helper function to process a single email
+// Helper function to process a single email (uses Resend hosted templates via RESEND_TEMPLATE_IDS)
 async function processEmail(
   emailLog: any,
   supabaseClient: any,
   resendService: ResendService
 ) {
   try {
-    // Skip if not pending or not user type
-    if (emailLog.status !== "pending" || emailLog.type !== "user") {
-      return;
+    if (emailLog.status !== "pending" || emailLog.type !== "user") return;
+
+    const rawMapping = Deno.env.get("RESEND_TEMPLATE_IDS") || "{}";
+    let mapping: Record<string, string> = {};
+    try {
+      mapping = JSON.parse(rawMapping);
+    } catch {
+      // invalid JSON
     }
 
-    // Get the email template
-    const { data: template, error: templateError } = await supabaseClient
-      .from("email_templates")
-      .select("*")
-      .eq("type", emailLog.template)
-      .eq("language", emailLog.language)
-      .eq("is_active", true)
-      .single();
+    const templateKey = `${emailLog.template}_${emailLog.language}`;
+    const templateId =
+      mapping[templateKey] || mapping[`${emailLog.template}_en`];
 
-    if (templateError || !template) {
-      console.error(
-        `Template not found: ${emailLog.template} (${emailLog.language})`
-      );
-
-      // Mark as failed
+    if (!templateId) {
+      const err = `Resend template not configured: ${templateKey}. Set RESEND_TEMPLATE_IDS.`;
+      console.error(err);
       await supabaseClient
         .from("email_logs")
         .update({
           status: "failed",
           sent_at: new Date().toISOString(),
-          error_message: `Template not found: ${emailLog.template}`,
+          error_message: err,
         })
         .eq("id", emailLog.id);
-
-      throw new Error(`Template not found: ${emailLog.template}`);
+      throw new Error(err);
     }
 
-    // Render the email template with variables
-    const renderedEmail = renderTemplate(template, emailLog.variables || {});
+    // Convert variable keys to uppercase for Resend templates
+    // Resend templates use {{{VAR}}} format with uppercase variable names
+    // Also convert values to strings (Resend expects string values for template variables)
+    const rawVariables = emailLog.variables || {};
+    const variables: Record<string, string> = {};
+    
+    for (const [key, value] of Object.entries(rawVariables)) {
+      // Convert key to uppercase (e.g., 'user_name' -> 'USER_NAME')
+      const upperKey = key.toUpperCase();
+      
+      // Convert value to string (Resend template variables must be strings)
+      if (value === null || value === undefined) {
+        variables[upperKey] = '';
+      } else if (typeof value === 'boolean') {
+        variables[upperKey] = String(value);
+      } else if (typeof value === 'number') {
+        variables[upperKey] = String(value);
+      } else if (typeof value === 'object') {
+        // For objects/arrays, stringify them
+        variables[upperKey] = JSON.stringify(value);
+      } else {
+        variables[upperKey] = String(value);
+      }
+    }
 
-    // Send email via Resend
-    const emailResult = await resendService.sendEmail(
+    // Handle predicted_result fallback for prediction_result templates
+    if (
+      emailLog.template?.startsWith("prediction_result") &&
+      (!variables.PREDICTED_RESULT ||
+        variables.PREDICTED_RESULT === "" ||
+        variables.PREDICTED_RESULT === "Not specified")
+    ) {
+      variables.PREDICTED_RESULT = "–";
+    }
+    
+    // Ensure all variables are strings (Resend requirement)
+    for (const key in variables) {
+      if (typeof variables[key] !== 'string') {
+        variables[key] = String(variables[key] ?? '');
+      }
+    }
+
+    await resendService.sendWithTemplate(
       emailLog.to_email,
-      renderedEmail.subject,
-      renderedEmail.html,
-      renderedEmail.text
+      templateId,
+      variables
     );
 
-    console.log(`Email sent to ${emailLog.to_email}:`, emailResult);
+    console.log(`Email sent to ${emailLog.to_email} (template: ${templateKey})`);
 
-    // Mark as sent
     await supabaseClient
       .from("email_logs")
       .update({
