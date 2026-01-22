@@ -21,39 +21,115 @@ type RawMatch = Database['public']['Tables']['matches']['Row'] & {
     player_b2?: any;
 };
 
-// Helper function to get team name for a player in a team tournament
-async function getTeamNameForPlayer(
-    tournamentId: string | null,
-    playerId: string | null
-): Promise<string | null> {
-    if (!tournamentId || !playerId) return null;
+// Batch fetch team names for all players in matches
+// Returns a Map with key: `${tournamentId}:${playerId}` and value: team name
+async function fetchTeamNamesBatch(matches: RawMatch[]): Promise<Map<string, string>> {
+    const teamNamesMap = new Map<string, string>();
 
-    try {
-        // First get the team_id from team_members
-        const { data: teamMember } = await supabase
-            .from('team_members')
-            .select('team_id')
-            .eq('player_id', playerId)
-            .single();
+    // Collect all unique tournament_id + player_id combinations from team tournaments
+    const playerTournamentPairs = new Set<string>();
 
-        if (!teamMember?.team_id) return null;
+    matches.forEach(match => {
+        const isTeamTournament = match.tournaments?.is_team_tournament === true;
+        if (!isTeamTournament || !match.tournament_id) return;
 
-        // Then get the team name from tournament_teams
-        const { data: team } = await supabase
-            .from('tournament_teams')
-            .select('name')
-            .eq('id', teamMember.team_id)
-            .eq('tournament_id', tournamentId)
-            .single();
+        const isDoubles = (match.match_type || 'singles') === 'doubles';
 
-        return team?.name || null;
-    } catch (error) {
-        return null;
-    }
+        if (isDoubles) {
+            if (match.player_a1_id) {
+                playerTournamentPairs.add(`${match.tournament_id}:${match.player_a1_id}`);
+            }
+            if (match.player_a2_id) {
+                playerTournamentPairs.add(`${match.tournament_id}:${match.player_a2_id}`);
+            }
+            if (match.player_b1_id) {
+                playerTournamentPairs.add(`${match.tournament_id}:${match.player_b1_id}`);
+            }
+            if (match.player_b2_id) {
+                playerTournamentPairs.add(`${match.tournament_id}:${match.player_b2_id}`);
+            }
+        } else {
+            if (match.player_a_id) {
+                playerTournamentPairs.add(`${match.tournament_id}:${match.player_a_id}`);
+            }
+            if (match.player_b_id) {
+                playerTournamentPairs.add(`${match.tournament_id}:${match.player_b_id}`);
+            }
+        }
+    });
+
+    if (playerTournamentPairs.size === 0) return teamNamesMap;
+
+    // Extract unique player IDs and tournament IDs
+    const playerIds = Array.from(playerTournamentPairs).map(pair => pair.split(':')[1]);
+    const tournamentIds = Array.from(new Set(Array.from(playerTournamentPairs).map(pair => pair.split(':')[0])));
+
+    // Fetch all team members in a single query
+    const { data: teamMembers } = await supabase
+        .from('team_members')
+        .select('player_id, team_id')
+        .in('player_id', playerIds);
+
+    if (!teamMembers || teamMembers.length === 0) return teamNamesMap;
+
+    // Get unique team IDs
+    const teamIds = [...new Set(teamMembers.map(tm => tm.team_id))];
+
+    // Fetch all tournament teams in a single query
+    const { data: tournamentTeams } = await supabase
+        .from('tournament_teams')
+        .select('id, tournament_id, name')
+        .in('id', teamIds)
+        .in('tournament_id', tournamentIds);
+
+    if (!tournamentTeams || tournamentTeams.length === 0) return teamNamesMap;
+
+    // Build a map of team_id -> team name by tournament
+    const teamNameByTournament = new Map<string, Map<string, string>>();
+    tournamentTeams.forEach(team => {
+        const key = `${team.tournament_id}:${team.id}`;
+        if (!teamNameByTournament.has(team.tournament_id)) {
+            teamNameByTournament.set(team.tournament_id, new Map());
+        }
+        teamNameByTournament.get(team.tournament_id)!.set(team.id, team.name);
+    });
+
+    // Build the final map: tournament_id:player_id -> team name
+    // Create a map of team_id -> team info (tournament_id, name) for quick lookup
+    const teamInfoByTeamId = new Map<string, Array<{ tournamentId: string; name: string }>>();
+    tournamentTeams.forEach(team => {
+        if (!teamInfoByTeamId.has(team.id)) {
+            teamInfoByTeamId.set(team.id, []);
+        }
+        teamInfoByTeamId.get(team.id)!.push({
+            tournamentId: team.tournament_id,
+            name: team.name
+        });
+    });
+
+    // Build the final map: tournament_id:player_id -> team name
+    teamMembers.forEach(tm => {
+        const playerId = tm.player_id;
+        const teamId = tm.team_id;
+        const teamInfos = teamInfoByTeamId.get(teamId);
+
+        if (teamInfos) {
+            // For each tournament this team is in, check if this player is in that tournament
+            teamInfos.forEach(teamInfo => {
+                const key = `${teamInfo.tournamentId}:${playerId}`;
+                if (playerTournamentPairs.has(key)) {
+                    teamNamesMap.set(key, teamInfo.name);
+                }
+            });
+        }
+    });
+
+    return teamNamesMap;
 }
 
 // Transform raw database match to web app format
-async function transformMatch(rawMatch: RawMatch): Promise<Match> {
+// teamNamesMap: Map with key `${tournamentId}:${playerId}` and value: team name
+function transformMatch(rawMatch: RawMatch, teamNamesMap: Map<string, string>): Match {
     const getPlayerName = (player: RawMatch['player_a']) => {
         if (player?.first_name && player?.last_name) {
             return `${player.first_name} ${player.last_name}`;
@@ -84,19 +160,38 @@ async function transformMatch(rawMatch: RawMatch): Promise<Match> {
     let teamBNameForDisplay: string | null = null;
 
     if (isTeamTournament) {
-        // For singles team tournaments, get team name for each player
+        // For singles team tournaments, get team name for each player from the map
         if (!isDoubles) {
-            teamANameForDisplay = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a_id);
-            teamBNameForDisplay = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b_id);
+            const teamAKey = rawMatch.tournament_id && rawMatch.player_a_id
+                ? `${rawMatch.tournament_id}:${rawMatch.player_a_id}`
+                : null;
+            const teamBKey = rawMatch.tournament_id && rawMatch.player_b_id
+                ? `${rawMatch.tournament_id}:${rawMatch.player_b_id}`
+                : null;
+
+            teamANameForDisplay = teamAKey ? teamNamesMap.get(teamAKey) || null : null;
+            teamBNameForDisplay = teamBKey ? teamNamesMap.get(teamBKey) || null : null;
             teamAName = getPlayerName(rawMatch.player_a);
             teamBName = getPlayerName(rawMatch.player_b);
         } else {
-            // For doubles team tournaments, get team name for each player pair
-            // Get team names for both players in each pair
-            const teamA1Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a1_id);
-            const teamA2Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_a2_id);
-            const teamB1Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b1_id);
-            const teamB2Result = await getTeamNameForPlayer(rawMatch.tournament_id, rawMatch.player_b2_id);
+            // For doubles team tournaments, get team name for each player pair from the map
+            const teamA1Key = rawMatch.tournament_id && rawMatch.player_a1_id
+                ? `${rawMatch.tournament_id}:${rawMatch.player_a1_id}`
+                : null;
+            const teamA2Key = rawMatch.tournament_id && rawMatch.player_a2_id
+                ? `${rawMatch.tournament_id}:${rawMatch.player_a2_id}`
+                : null;
+            const teamB1Key = rawMatch.tournament_id && rawMatch.player_b1_id
+                ? `${rawMatch.tournament_id}:${rawMatch.player_b1_id}`
+                : null;
+            const teamB2Key = rawMatch.tournament_id && rawMatch.player_b2_id
+                ? `${rawMatch.tournament_id}:${rawMatch.player_b2_id}`
+                : null;
+
+            const teamA1Result = teamA1Key ? teamNamesMap.get(teamA1Key) || null : null;
+            const teamA2Result = teamA2Key ? teamNamesMap.get(teamA2Key) || null : null;
+            const teamB1Result = teamB1Key ? teamNamesMap.get(teamB1Key) || null : null;
+            const teamB2Result = teamB2Key ? teamNamesMap.get(teamB2Key) || null : null;
 
             // If both players are on the same team, use that team name
             if (teamA1Result && teamA2Result && teamA1Result === teamA2Result) {
@@ -290,9 +385,14 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
 
     if (error) throw error;
 
-    // Transform matches - now async because we need to fetch team names
-    const transformedMatches = await Promise.all(
-        (data || []).map((rawMatch: any) => transformMatch(rawMatch))
+    const rawMatches = (data || []) as RawMatch[];
+
+    // Batch fetch all team names for team tournaments (single query instead of N queries)
+    const teamNamesMap = await fetchTeamNamesBatch(rawMatches);
+
+    // Transform matches synchronously using the pre-fetched team names map
+    const transformedMatches = rawMatches.map((rawMatch: RawMatch) =>
+        transformMatch(rawMatch, teamNamesMap)
     );
 
     return transformedMatches;

@@ -231,12 +231,31 @@ function calculateOdds(
 
   player1Score = Math.max(minBound, Math.min(maxBound, player1Score));
 
-  const player2Score = 1 - player1Score;
+  // Apply minimum odds threshold of 1.20
+  // Cap maximum win probability to ensure minimum odds (1/1.20 = 0.8333)
+  const MIN_ODDS = 1.20;
+  const MAX_WIN_PROBABILITY = 1 / MIN_ODDS; // ~0.8333
+  
+  // Cap probabilities to ensure minimum odds
+  if (player1Score > MAX_WIN_PROBABILITY) {
+    player1Score = MAX_WIN_PROBABILITY;
+  }
+  
+  let player2Score = 1 - player1Score;
+  
+  if (player2Score > MAX_WIN_PROBABILITY) {
+    player2Score = MAX_WIN_PROBABILITY;
+    player1Score = 1 - player2Score;
+  }
 
   // Calculate decimal odds with slight margin for bookmaker profit
   const margin = 0.05; // 5% margin
-  const player1Odds = (1 / player1Score) * (1 + margin);
-  const player2Odds = (1 / player2Score) * (1 + margin);
+  let player1Odds = (1 / player1Score) * (1 + margin);
+  let player2Odds = (1 / player2Score) * (1 + margin);
+  
+  // Enforce minimum odds threshold (safety check)
+  player1Odds = Math.max(MIN_ODDS, player1Odds);
+  player2Odds = Math.max(MIN_ODDS, player2Odds);
 
   // Calculate confidence based on data quality and factor agreement
   const confidence = calculateConfidence(player1, player2, factors);
@@ -883,14 +902,33 @@ function calculateDoublesOdds(
     }
   }
 
-  const teamBScore = 1 - teamAScore;
+  // Apply minimum odds threshold of 1.20
+  // Cap maximum win probability to ensure minimum odds (1/1.20 = 0.8333)
+  const MIN_ODDS = 1.20;
+  const MAX_WIN_PROBABILITY = 1 / MIN_ODDS; // ~0.8333
+  
+  // Cap probabilities to ensure minimum odds
+  if (teamAScore > MAX_WIN_PROBABILITY) {
+    teamAScore = MAX_WIN_PROBABILITY;
+  }
+  
+  let teamBScore = 1 - teamAScore;
+  
+  if (teamBScore > MAX_WIN_PROBABILITY) {
+    teamBScore = MAX_WIN_PROBABILITY;
+    teamAScore = 1 - teamBScore;
+  }
 
   // Calculate decimal odds with margin
   // For equal teams with no H2H, use a negative margin (discount) to get lower starting odds
   // This makes the odds more attractive (lower) for equal teams
   const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount for equal teams
-  const teamAOdds = (1 / teamAScore) * (1 + margin);
-  const teamBOdds = (1 / teamBScore) * (1 + margin);
+  let teamAOdds = (1 / teamAScore) * (1 + margin);
+  let teamBOdds = (1 / teamBScore) * (1 + margin);
+  
+  // Enforce minimum odds threshold (safety check)
+  teamAOdds = Math.max(MIN_ODDS, teamAOdds);
+  teamBOdds = Math.max(MIN_ODDS, teamBOdds);
 
   // Calculate confidence
   const confidence = calculateDoublesConfidence(

@@ -391,33 +391,9 @@ VALUES (
 
 ---
 
-### 10. Promotional Email (User)
+---
 
-**Template:** `promotional_en`, `promotional_el`
-
-#### SQL Test:
-```sql
-INSERT INTO email_logs (
-    user_id,
-    to_email,
-    template,
-    type,
-    language,
-    variables,
-    status
-)
-VALUES (
-    '<USER_ID_HERE>',
-    '<YOUR_EMAIL>',
-    'promotional',
-    'user',
-    'en',
-    jsonb_build_object(
-        'user_email', '<YOUR_EMAIL>'
-    ),
-    'pending'
-);
-```
+**Note:** Promotional emails are now handled via Mailerlite for newsletters. The `promotional_en` and `promotional_el` templates are no longer used.
 
 ---
 

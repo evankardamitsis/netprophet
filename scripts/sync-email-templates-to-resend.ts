@@ -611,6 +611,7 @@ async function main() {
     .from("email_templates")
     .select("type, language, name, subject, html_content, variables")
     .eq("is_active", true)
+    .neq("type", "promotional") // Exclude promotional templates (using Mailerlite for newsletters)
     .order("type")
     .order("language");
 

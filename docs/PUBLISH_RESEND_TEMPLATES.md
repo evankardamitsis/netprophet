@@ -109,7 +109,8 @@ Before setting up the secrets, you may want to clean up unused templates:
    - `profile_creation_confirmation_en`, `profile_creation_confirmation_el` - User confirmation when creating profile
    - `profile_activated_en`, `profile_activated_el` - User notification when profile is activated
    - `winnings_en`, `winnings_el` - Winnings notifications (if used)
-   - `promotional_en`, `promotional_el` - Promotional emails (if used)
+   
+   **Note:** Promotional emails are handled via Mailerlite for newsletters, not through Resend templates.
 
 3. **Delete unused templates from Resend:**
    - Go to [Resend Dashboard → Templates](https://resend.com/templates)

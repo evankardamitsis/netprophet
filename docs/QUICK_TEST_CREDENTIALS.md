@@ -138,21 +138,9 @@ VALUES (
 );
 ```
 
-### Promotional Email
-```sql
-INSERT INTO email_logs (user_id, to_email, template, type, language, variables, status)
-VALUES (
-    '0fd82e0f-6144-4504-b580-b4a65a079d91',
-    'kardamitsis.e@gmail.com',
-    'promotional',
-    'user',
-    'en',
-    jsonb_build_object(
-        'user_email', 'kardamitsis.e@gmail.com'
-    ),
-    'pending'
-);
-```
+---
+
+**Note:** Promotional emails are now handled via Mailerlite for newsletters. The `promotional_en` and `promotional_el` templates are no longer used.
 
 ---
 

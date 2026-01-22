@@ -5,12 +5,14 @@
 UPDATE email_templates
 SET is_active = false
 WHERE (type = 'welcome' AND language IN ('en', 'el'))
-   OR (type = 'winnings' AND language IN ('en', 'el'));
+   OR (type = 'winnings' AND language IN ('en', 'el'))
+   OR (type = 'promotional' AND language IN ('en', 'el'))
+   OR (type = 'admin' AND language = 'en');
 
 -- Verify the change
 SELECT type, language, name, is_active
 FROM email_templates
-WHERE type IN ('welcome', 'welcome_email', 'winnings')
+WHERE type IN ('welcome', 'welcome_email', 'winnings', 'promotional', 'admin')
 ORDER BY type, language;
 
 -- Option 2: Delete completely (permanent - use with caution)
@@ -18,10 +20,12 @@ ORDER BY type, language;
 
 -- DELETE FROM email_templates
 -- WHERE (type = 'welcome' AND language IN ('en', 'el'))
---    OR (type = 'winnings' AND language IN ('en', 'el'));
+--    OR (type = 'winnings' AND language IN ('en', 'el'))
+--    OR (type = 'promotional' AND language IN ('en', 'el'))
+--    OR (type = 'admin' AND language = 'en');
 
 -- Verify deletion
 -- SELECT type, language, name
 -- FROM email_templates
--- WHERE type IN ('welcome', 'welcome_email', 'winnings')
+-- WHERE type IN ('welcome', 'welcome_email', 'winnings', 'promotional', 'admin')
 -- ORDER BY type, language;
