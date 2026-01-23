@@ -32,17 +32,22 @@ serve(async (req) => {
   }
 
   // Verify cron secret for security
+  // Note: If using Supabase Edge Function webhook type, authentication is handled automatically
+  // CRON_SECRET is only needed for HTTP Request webhook type or manual cron triggers
   const authHeader = req.headers.get("Authorization");
-  if (authHeader !== `Bearer ${CRON_SECRET}` && !CRON_SECRET) {
-    // If no cron secret is set, allow but log warning
-    console.warn(
-      "CRON_SECRET not set - allowing request but consider setting it"
+  if (CRON_SECRET) {
+    // If CRON_SECRET is set, require it
+    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } else {
+    // If no CRON_SECRET is set, allow but log info (this is fine for Supabase Edge Function webhooks)
+    console.log(
+      "CRON_SECRET not set - allowing request (OK if using Supabase Edge Function webhook type)"
     );
-  } else if (authHeader !== `Bearer ${CRON_SECRET}`) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   }
 
   try {
@@ -113,6 +118,33 @@ serve(async (req) => {
           };
         }
 
+        // Add groups to subscriber data if specified (preferred method)
+        // MailerLite API requires group IDs as numbers, not strings
+        const groupsToAdd: number[] = [];
+        if (MAILERLITE_GROUP_ID) {
+          // Convert to number if it's a string
+          const groupIdNum = typeof MAILERLITE_GROUP_ID === 'string' 
+            ? parseInt(MAILERLITE_GROUP_ID, 10) 
+            : MAILERLITE_GROUP_ID;
+          if (!isNaN(groupIdNum)) {
+            groupsToAdd.push(groupIdNum);
+          }
+        }
+        if (subscription.groups && Array.isArray(subscription.groups) && subscription.groups.length > 0) {
+          // Convert all group IDs to numbers
+          for (const groupId of subscription.groups) {
+            const groupIdNum = typeof groupId === 'string' 
+              ? parseInt(groupId, 10) 
+              : groupId;
+            if (!isNaN(groupIdNum)) {
+              groupsToAdd.push(groupIdNum);
+            }
+          }
+        }
+        if (groupsToAdd.length > 0) {
+          subscriberData.groups = groupsToAdd;
+        }
+
         // Add subscriber to MailerLite
         const mailerLiteUrl = `https://connect.mailerlite.com/api/subscribers`;
         const response = await fetch(mailerLiteUrl, {
@@ -134,23 +166,10 @@ serve(async (req) => {
 
         const mailerLiteData = await response.json();
 
-        // Add subscriber to default group
-        try {
-          const groupUrl = `https://connect.mailerlite.com/api/subscribers/${mailerLiteData.data.id}/groups/${MAILERLITE_GROUP_ID}`;
-          await fetch(groupUrl, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${MAILERLITE_API_KEY}`,
-              Accept: "application/json",
-            },
-          });
-        } catch (groupError) {
-          console.warn(
-            `Error adding subscriber to group ${MAILERLITE_GROUP_ID}:`,
-            groupError
-          );
-          // Continue - subscriber was added, just group assignment failed
-        }
+        // Note: Groups are now included in the initial subscriber creation above
+        // This is the preferred method and avoids the 404 error
+        // If groups weren't included (e.g., for existing subscribers), we could add them here
+        // but since we're creating new subscribers, groups are already handled
 
         // Update log with success
         await supabase

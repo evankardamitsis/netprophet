@@ -1,43 +1,11 @@
--- Fix in-app user_registration notifications when create_admin_notification is called
--- from the auth.users trigger. Check 8 = yes but Check 5 = 0 means the call exists
--- but the INSERT inside create_admin_notification fails in the trigger context.
---
--- 1. Ensure the function owner has INSERT on the table (in case it differs from table owner)
--- 2. Set search_path on create_admin_notification so the INSERT always sees public
--- 3. Use public.create_admin_notification in handle_new_user so the trigger resolves the right function
+-- Add MailerLite integration to handle_new_user function
+-- This ensures new users are automatically queued for MailerLite subscription
 
--- 1. Grant INSERT to the owner of create_admin_notification (no-op if they already have it)
-DO $$
-DECLARE
-  fn_owner name;
-BEGIN
-  SELECT rolname INTO fn_owner
-  FROM pg_roles r
-  JOIN pg_proc p ON p.proowner = r.oid
-  WHERE p.proname = 'create_admin_notification'
-  LIMIT 1;
-  IF fn_owner IS NOT NULL THEN
-    EXECUTE format('GRANT INSERT ON public.admin_in_app_notifications TO %I', fn_owner);
-    RAISE LOG '[fix_in_app_notification] Granted INSERT on admin_in_app_notifications to %', fn_owner;
-  END IF;
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE LOG '[fix_in_app_notification] GRANT INSERT failed: %', SQLERRM;
-END $$;
-
--- 2. Ensure create_admin_notification uses public when resolving names
-ALTER FUNCTION public.create_admin_notification(TEXT, TEXT, TEXT, TEXT, JSONB)
-  SET search_path = public;
-
--- 3. Update handle_new_user to call public.create_admin_notification explicitly
---    (avoids search_path / schema resolution in the auth trigger context)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
     user_first_name TEXT;
     user_last_name TEXT;
-    matching_players_count INTEGER;
-    matching_player_id UUID;
     full_name TEXT;
     name_parts TEXT[];
     email_local_part TEXT;
@@ -173,25 +141,7 @@ BEGIN
             RAISE LOG '[handle_new_user] MailerLite queue failed for %: %', NEW.email, SQLERRM;
     END;
     
-    -- Auto-claim player if exactly one match
-    IF user_first_name != '' AND user_last_name != '' THEN
-        BEGIN
-            SELECT COUNT(*) INTO matching_players_count
-            FROM find_matching_players(user_first_name, user_last_name);
-            IF matching_players_count = 1 THEN
-                SELECT id INTO matching_player_id
-                FROM find_matching_players(user_first_name, user_last_name)
-                LIMIT 1;
-                PERFORM claim_player_profile(matching_player_id, NEW.id);
-                UPDATE profiles
-                SET profile_claim_status = 'claimed', claimed_player_id = matching_player_id, profile_claim_completed_at = NOW()
-                WHERE id = NEW.id;
-            END IF;
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE LOG '[handle_new_user] Auto-claim failed for %: %', NEW.email, SQLERRM;
-        END;
-    END IF;
+    -- Auto-claim functionality removed - users should claim profiles manually via the notification flow
     
     RETURN NEW;
 EXCEPTION

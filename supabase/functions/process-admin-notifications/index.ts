@@ -224,6 +224,46 @@ serve(async (req) => {
     const payload = await req.json();
     const emailLog = payload.record; // Supabase webhook sends the new record
 
+    // If webhook was triggered with a record, process it if it matches our criteria
+    if (emailLog) {
+      // Only process if it's a pending admin email
+      if (emailLog.status === "pending" && emailLog.type === "admin") {
+        try {
+          await processAdminEmail(emailLog, supabaseClient, resendService);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              processed: 1,
+              message: "Admin email processed",
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } catch (error) {
+          console.error("Error processing webhook admin email:", error);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      } else {
+        // Not a pending admin email, ignore
+        return new Response(
+          JSON.stringify({
+            success: true,
+            processed: 0,
+            message: "Email does not match criteria (not pending admin email)",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // If no record in payload, try to process all pending admin emails (manual trigger)
     if (!emailLog) {
       const { data: pendingEmails, error: fetchError } = await supabaseClient

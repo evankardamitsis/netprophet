@@ -99,7 +99,7 @@ export function ProfileClaimNotification() {
     }
 
     return (
-        <div className="fixed top-4 right-4 z-50 max-w-sm">
+        <div className="fixed top-[112px] left-1/2 -translate-x-1/2 z-50 max-w-sm w-[calc(100%-2rem)]">
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg shadow-lg p-4 border border-blue-200">
                 <div className="flex items-start gap-3">
                     <div className="flex-shrink-0">

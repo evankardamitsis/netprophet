@@ -87,7 +87,33 @@ serve(async (req) => {
     }
 
     // Add to default group if no groups specified
-    const groupsToAdd = groups.length > 0 ? groups : [MAILERLITE_GROUP_ID];
+    // MailerLite API requires group IDs as numbers, not strings
+    const groupsToAdd: number[] = [];
+    
+    if (groups.length > 0) {
+      // Convert all group IDs to numbers
+      for (const groupId of groups) {
+        const groupIdNum = typeof groupId === 'string' 
+          ? parseInt(groupId, 10) 
+          : groupId;
+        if (!isNaN(groupIdNum)) {
+          groupsToAdd.push(groupIdNum);
+        }
+      }
+    } else if (MAILERLITE_GROUP_ID) {
+      // Convert to number if it's a string
+      const groupIdNum = typeof MAILERLITE_GROUP_ID === 'string' 
+        ? parseInt(MAILERLITE_GROUP_ID, 10) 
+        : MAILERLITE_GROUP_ID;
+      if (!isNaN(groupIdNum)) {
+        groupsToAdd.push(groupIdNum);
+      }
+    }
+
+    // Include groups in subscriber data (preferred method - avoids separate API call)
+    if (groupsToAdd.length > 0) {
+      subscriberData.groups = groupsToAdd;
+    }
 
     // Add subscriber to MailerLite
     const mailerLiteUrl = `https://connect.mailerlite.com/api/subscribers`;
@@ -121,25 +147,9 @@ serve(async (req) => {
 
     const mailerLiteData = await response.json();
 
-    // Add subscriber to groups (triggers workflows)
-    for (const groupId of groupsToAdd) {
-      try {
-        const groupUrl = `https://connect.mailerlite.com/api/subscribers/${mailerLiteData.data.id}/groups/${groupId}`;
-        await fetch(groupUrl, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${MAILERLITE_API_KEY}`,
-            Accept: "application/json",
-          },
-        });
-      } catch (groupError) {
-        console.error(
-          `Error adding subscriber to group ${groupId}:`,
-          groupError
-        );
-        // Continue with other groups
-      }
-    }
+    // Note: Groups are now included in the initial subscriber creation above
+    // This is the preferred method and avoids the 404 error
+    // The subscriber is automatically added to the specified groups during creation
 
     return new Response(
       JSON.stringify({

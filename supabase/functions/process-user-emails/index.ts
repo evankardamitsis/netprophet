@@ -101,7 +101,7 @@ class ResendService {
   async sendWithTemplate(
     to: string,
     templateId: string,
-    variables: Record<string, unknown>,
+    variables: Record<string, string | number>,
     retries: number = 3
   ): Promise<any> {
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -185,20 +185,33 @@ async function processEmail(
 
     // Convert variable keys to uppercase for Resend templates
     // Resend templates use {{{VAR}}} format with uppercase variable names
-    // Also convert values to strings (Resend expects string values for template variables)
+    // Some variables should be numbers (e.g., WELCOME_BONUS_COINS, WINNINGS), others should be strings
     const rawVariables = emailLog.variables || {};
-    const variables: Record<string, string> = {};
+    const variables: Record<string, string | number> = {};
+    
+    // Variables (in lowercase) that should remain as numbers (not converted to strings)
+    // These will be converted to uppercase for Resend, but the value stays as a number
+    // welcome_bonus_pass should be a number (like welcome_bonus_coins) for consistent formatting
+    const numericVariables = new Set([
+      'welcome_bonus_coins',
+      'welcome_bonus_pass',  // Should be number 1 for same formatting as coins
+      'winnings',
+      'bet_amount'
+    ]);
     
     for (const [key, value] of Object.entries(rawVariables)) {
       // Convert key to uppercase (e.g., 'user_name' -> 'USER_NAME')
       const upperKey = key.toUpperCase();
       
-      // Convert value to string (Resend template variables must be strings)
-      if (value === null || value === undefined) {
+      // Preserve numbers for specific numeric variables (check original lowercase key)
+      if (numericVariables.has(key.toLowerCase()) && typeof value === 'number') {
+        variables[upperKey] = value; // Keep as number
+      } else if (value === null || value === undefined) {
         variables[upperKey] = '';
       } else if (typeof value === 'boolean') {
         variables[upperKey] = String(value);
       } else if (typeof value === 'number') {
+        // For other numbers, convert to string (default behavior)
         variables[upperKey] = String(value);
       } else if (typeof value === 'object') {
         // For objects/arrays, stringify them
@@ -216,13 +229,6 @@ async function processEmail(
         variables.PREDICTED_RESULT === "Not specified")
     ) {
       variables.PREDICTED_RESULT = "–";
-    }
-    
-    // Ensure all variables are strings (Resend requirement)
-    for (const key in variables) {
-      if (typeof variables[key] !== 'string') {
-        variables[key] = String(variables[key] ?? '');
-      }
     }
 
     await resendService.sendWithTemplate(
@@ -279,6 +285,46 @@ serve(async (req) => {
     // Get the webhook payload (single email log)
     const payload = await req.json();
     const emailLog = payload.record; // Supabase webhook sends the new record
+
+    // If webhook was triggered with a record, process it if it matches our criteria
+    if (emailLog) {
+      // Only process if it's a pending user email
+      if (emailLog.status === "pending" && emailLog.type === "user") {
+        try {
+          await processEmail(emailLog, supabaseClient, resendService);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              processed: 1,
+              message: "Email processed",
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        } catch (error) {
+          console.error("Error processing webhook email:", error);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            }),
+            {
+              status: 500,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      } else {
+        // Not a pending user email, ignore
+        return new Response(
+          JSON.stringify({
+            success: true,
+            processed: 0,
+            message: "Email does not match criteria (not pending user email)",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // If no record in payload, try to process all pending emails (manual trigger)
     if (!emailLog) {
