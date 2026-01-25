@@ -191,12 +191,12 @@ async function processEmail(
     
     // Variables (in lowercase) that should remain as numbers (not converted to strings)
     // These will be converted to uppercase for Resend, but the value stays as a number
-    // welcome_bonus_pass should be a number (like welcome_bonus_coins) for consistent formatting
+    // Only welcome_bonus_coins and welcome_bonus_pass should be numbers for consistent formatting
+    // Note: winnings and bet_amount must be strings for Resend templates (prediction_result templates)
     const numericVariables = new Set([
       'welcome_bonus_coins',
       'welcome_bonus_pass',  // Should be number 1 for same formatting as coins
-      'winnings',
-      'bet_amount'
+      // winnings and bet_amount removed - Resend templates require them as strings
     ]);
     
     for (const [key, value] of Object.entries(rawVariables)) {

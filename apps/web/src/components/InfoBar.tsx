@@ -55,7 +55,7 @@ export function InfoBar({
     return (
         <div className={`w-full ${typeStyles[type]} border-b relative z-50 shadow-md ${className}`}>
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-center py-2 text-sm">
+                <div className="flex items-center justify-center py-1 md:py-2 text-xs sm:text-sm">
                     <div
                         className="text-center"
                         dangerouslySetInnerHTML={{ __html: displayMessage }}

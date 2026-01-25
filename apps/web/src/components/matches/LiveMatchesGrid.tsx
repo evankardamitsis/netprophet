@@ -4,6 +4,7 @@ import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useActiveBets } from '@/hooks/useActiveBets';
 import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
 import { motion } from 'framer-motion';
 
@@ -18,6 +19,7 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
+    const { activeBetMatchIds } = useActiveBets();
 
     // Filter out cancelled matches
     const filteredLiveMatches = liveMatches.filter(match => match.status !== 'cancelled');
@@ -136,6 +138,20 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                             boxShadow: '0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.1)'
                         } : undefined}
                     >
+                        {/* Active Bet Badge */}
+                        {activeBetMatchIds.has(match.id) && (
+                            <div className="absolute -top-2 -left-2 z-10">
+                                <div className={cx(
+                                    "text-white text-xs font-bold px-2 py-1 shadow-md",
+                                    "bg-gradient-to-r from-green-600 to-emerald-600",
+                                    borders.rounded.full,
+                                    "shadow-lg shadow-green-500/50"
+                                )}>
+                                    ✓ ACTIVE BET
+                                </div>
+                            </div>
+                        )}
+
                         {/* Underdog Alert Banner */}
                         {!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 && (
                             <div className="absolute -top-2 -right-2 z-10 animate-pulse">

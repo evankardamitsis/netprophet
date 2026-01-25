@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useActiveBets } from '@/hooks/useActiveBets';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -42,6 +43,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     const router = useRouter();
     const params = useParams();
     const [isExpanded, setIsExpanded] = useState(true); // Default expanded on large screens
+    const { activeBetMatchIds } = useActiveBets();
 
     const isDoubles = details.matchType === 'doubles';
 
@@ -131,7 +133,15 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     };
 
     return (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border-2 border-purple-500/30 shadow-lg shadow-purple-500/10 overflow-hidden">
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border-2 border-purple-500/30 shadow-lg shadow-purple-500/10 overflow-hidden relative">
+            {/* Active Bet Badge */}
+            {activeBetMatchIds.has(match.id) && (
+                <div className="absolute -top-2 -left-2 z-10">
+                    <div className="text-white text-xs font-bold px-2 py-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full shadow-lg shadow-green-500/50">
+                        ✓ ACTIVE BET
+                    </div>
+                </div>
+            )}
             {/* Compact View - Always visible */}
             <div className="p-2 sm:p-3 lg:p-4 min-h-[60px] lg:min-h-[70px]">
                 {/* Small screens: Stacked layout */}

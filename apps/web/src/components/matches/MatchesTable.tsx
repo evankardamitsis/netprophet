@@ -6,6 +6,7 @@ import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
+import { useActiveBets } from '@/hooks/useActiveBets';
 import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
+    const { activeBetMatchIds } = useActiveBets();
     const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'singles' | 'doubles'>('all');
 
     const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2'): ReactNode => {
@@ -481,10 +483,18 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                     {/* Match content (entire cell is tap target) */}
                                     <td
                                         className={cx(
-                                            "px-3 py-3 align-top",
+                                            "px-3 py-3 align-top relative",
                                             isLastRow ? "rounded-br-2xl" : ""
                                         )}
                                     >
+                                        {/* Active Bet Badge */}
+                                        {activeBetMatchIds.has(match.id) && (
+                                            <div className="absolute -top-1 -left-1 z-10">
+                                                <div className="text-white text-[10px] font-bold px-1.5 py-0.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full shadow-lg shadow-green-500/50">
+                                                    ✓ ACTIVE
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="space-y-1.5">
                                             {/* Tournament info */}
                                             <div className="text-xs text-gray-400 truncate">
