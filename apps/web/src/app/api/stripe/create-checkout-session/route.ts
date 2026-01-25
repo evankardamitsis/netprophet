@@ -3,9 +3,12 @@ import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 // Using Supabase's built-in rate limiting instead of custom implementation
 
-// Use live keys in production, test keys in development
-const isProduction = process.env.NODE_ENV === "production";
-const stripeSecretKey = isProduction
+// Use live keys when: (a) NODE_ENV is production, OR (b) explicit NEXT_PUBLIC_STRIPE_USE_LIVE=true
+// Must match client (lib/stripe) so quick buy / checkout use same Stripe env as production
+const useLiveKeys =
+  process.env.NEXT_PUBLIC_STRIPE_USE_LIVE === "true" ||
+  process.env.NODE_ENV === "production";
+const stripeSecretKey = useLiveKeys
   ? process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY!
   : process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY!;
 

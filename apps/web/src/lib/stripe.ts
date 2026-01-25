@@ -1,8 +1,11 @@
 import { loadStripe } from "@stripe/stripe-js";
 
-// Use live keys in production, test keys in development
-const isProduction = process.env.NODE_ENV === "production";
-const publishableKey = isProduction
+// Use live keys when: (a) NODE_ENV is production, OR (b) explicit NEXT_PUBLIC_STRIPE_USE_LIVE=true
+// This ensures quick buy (low balance, wallet) uses the same Stripe env as production/admin setup
+const useLiveKeys =
+  process.env.NEXT_PUBLIC_STRIPE_USE_LIVE === "true" ||
+  process.env.NODE_ENV === "production";
+const publishableKey = useLiveKeys
   ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_LIVE ||
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
   : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST ||

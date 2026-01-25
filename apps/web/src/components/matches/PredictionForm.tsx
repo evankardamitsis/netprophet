@@ -2,7 +2,7 @@
 
 import { Button, Badge } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
-import { useMemo, useEffect, useRef, useState, useCallback, memo } from 'react';
+import { useMemo, useEffect, useRef, useState, useCallback, memo, cloneElement, isValidElement } from 'react';
 import { createPortal } from 'react-dom';
 import { calculateMultiplier, getPredictionCount } from '@/lib/predictionHelpers';
 import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
@@ -65,6 +65,8 @@ interface PredictionFormProps {
     onSubmitButton?: React.ReactNode;
     hasAnyPredictions?: boolean;
     hasFormChanged?: boolean;
+    // Callback when submission is successful (e.g. to close modal)
+    onSubmitSuccess?: () => void;
 }
 
 export function PredictionForm({
@@ -85,7 +87,8 @@ export function PredictionForm({
     locked,
     onSubmitButton,
     hasAnyPredictions = false,
-    hasFormChanged = false
+    hasFormChanged = false,
+    onSubmitSuccess
 }: PredictionFormProps) {
 
     const { dict, lang } = useDictionary();
@@ -1477,7 +1480,8 @@ export function PredictionForm({
                     right: 0,
                     bottom: 0,
                     width: '100vw',
-                    height: '100vh',
+                    height: '90dvh', // Use dynamic viewport height for mobile browsers
+                    minHeight: '-webkit-fill-available', // Fallback for iOS Safari
                     zIndex: 99999,
                     margin: 0,
                     padding: 0,
@@ -1493,11 +1497,20 @@ export function PredictionForm({
                     className="h-full w-full flex flex-col bg-slate-900 overflow-hidden"
                     style={{
                         width: '100vw',
-                        height: '100vh',
+                        height: '100%',
+                        minHeight: '-webkit-fill-available',
                     }}
                 >
                     {/* Header with close button */}
-                    <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-slate-700/50 bg-slate-800/90 backdrop-blur-sm">
+                    <div 
+                        className="flex-shrink-0 flex items-center justify-between border-b border-slate-700/50 bg-slate-800/90 backdrop-blur-sm"
+                        style={{ 
+                            paddingTop: 'max(1rem, env(safe-area-inset-top))',
+                            paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+                            paddingRight: 'max(1rem, env(safe-area-inset-right))',
+                            paddingBottom: '1rem',
+                        }}
+                    >
                         <h3 className="text-lg font-semibold text-white">
                             {dict?.matches?.makePredictions || 'Make Your Predictions'}
                         </h3>
@@ -1512,15 +1525,51 @@ export function PredictionForm({
                         </button>
                     </div>
                     {/* Scrollable form content */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain pb-20">
-                        <div className="p-4">
+                    <div className="flex-1 overflow-y-auto overscroll-contain min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+                        <div 
+                            className="p-4"
+                            style={{
+                                paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+                                paddingRight: 'max(1rem, env(safe-area-inset-right))',
+                                paddingBottom: onSubmitButton ? 'calc(65px + env(safe-area-inset-bottom))' : '1rem', // Space for CTA button
+                            }}
+                        >
                             {renderFormContent()}
                         </div>
                     </div>
-                    {/* Submit button at bottom */}
+                    {/* Submit button at bottom - part of flex layout for mobile visibility */}
                     {onSubmitButton && (
-                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/95 backdrop-blur-md z-10">
-                            {onSubmitButton}
+                        <div 
+                            className="flex-shrink-0 border-t border-slate-700/50 bg-slate-800/95 backdrop-blur-md"
+                            style={{ 
+                                paddingTop: '0.75rem',
+                                paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
+                                paddingLeft: 'max(1rem, env(safe-area-inset-left))',
+                                paddingRight: 'max(1rem, env(safe-area-inset-right))',
+                            }}
+                        >
+                            {isValidElement(onSubmitButton) && typeof onSubmitButton.props.onClick === 'function'
+                                ? cloneElement(onSubmitButton, {
+                                    onClick: async (e: React.MouseEvent) => {
+                                        try {
+                                            // Call original onClick handler
+                                            await onSubmitButton.props.onClick(e);
+                                            // Close modal after successful submission (only if modal is open)
+                                            if (isFullScreen) {
+                                                if (onSubmitSuccess) {
+                                                    onSubmitSuccess();
+                                                } else {
+                                                    // Fallback: close modal directly
+                                                    handleCloseFullScreen();
+                                                }
+                                            }
+                                        } catch (error) {
+                                            // If submission fails, don't close modal
+                                            console.error('Submission error:', error);
+                                        }
+                                    }
+                                } as any)
+                                : onSubmitButton}
                         </div>
                     )}
                 </div>
