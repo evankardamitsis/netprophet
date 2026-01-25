@@ -375,7 +375,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     };
 
     // Helper function to render set score dropdowns
-    const renderSetScoreDropdown = (setNumber: number, value: string, onChange: (value: string) => void) => {
+    const renderSetScoreDropdown = (setNumber: number, value: string, onChange: (value: string) => void, onFocus?: () => void) => {
         const setWinner = getSetWinner(setNumber);
 
         // All possible set scores
@@ -405,7 +405,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                onFocus={onFocus}
+                className="w-full p-4 sm:p-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg sm:text-sm min-h-[56px] sm:min-h-0"
             >
                 <option value="">{dict?.matches?.selectSetScore?.replace('{setNumber}', setNumber.toString()) || `Select set ${setNumber} score`}</option>
                 {availableScores.map(score => (
@@ -601,8 +602,8 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                     </h2>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
-                                    <div className="p-0 sm:p-4 pb-0 flex-1">
+                                <div className="flex-1 overflow-y-auto min-h-0 pb-28 sm:pb-36 flex flex-col">
+                                    <div className="p-2 sm:p-4 pb-4 flex-1">
                                         <PredictionForm
                                             matchId={match.id}
                                             formPredictions={formPredictions}
@@ -619,11 +620,33 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                             getSetWinner={getSetWinner}
                                             setSetWinner={setSetWinner}
                                             locked={match.locked || false}
+                                            hasAnyPredictions={hasAnyPredictions}
+                                            hasFormChanged={hasFormChanged}
+                                            onSubmitButton={
+                                                <motion.button
+                                                    onClick={handleSubmitPredictions}
+                                                    disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
+                                                    className={cx(
+                                                        "w-full py-2.5 sm:py-3 px-4 font-semibold text-sm",
+                                                        borders.rounded.sm,
+                                                        transitions.default,
+                                                        match.locked
+                                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                                            : (hasAnyPredictions && hasFormChanged
+                                                                ? cx(gradients.purple, 'text-white', shadows.glow.purple)
+                                                                : 'bg-gray-600 text-gray-400 cursor-not-allowed')
+                                                    )}
+                                                    whileHover={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 1.02 } : {}}
+                                                    whileTap={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 0.98 } : {}}
+                                                >
+                                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
+                                                </motion.button>
+                                            }
                                         />
                                     </div>
                                 </div>
 
-                                <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/80 backdrop-blur-md z-10">
+                                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 pt-4 sm:pt-6 border-t border-slate-700/50 bg-slate-800/80 backdrop-blur-md z-10">
                                     <motion.button
                                         onClick={handleSubmitPredictions}
                                         disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}

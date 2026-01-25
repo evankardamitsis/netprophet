@@ -2,7 +2,8 @@
 
 import { Button, Badge } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useEffect, useRef, useState, useCallback, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { calculateMultiplier, getPredictionCount } from '@/lib/predictionHelpers';
 import { SESSION_KEYS, loadFromSessionStorage, removeFromSessionStorage, saveToSessionStorage } from '@/lib/sessionStorage';
 import { motion } from 'framer-motion';
@@ -54,12 +55,16 @@ interface PredictionFormProps {
     isAmateurFormat: boolean;
     setsToShowFromResult: number;
     setWinnersFromResult: string[];
-    renderSetScoreDropdown: (setNumber: number, value: string, onChange: (value: string) => void) => JSX.Element;
+    renderSetScoreDropdown: (setNumber: number, value: string, onChange: (value: string) => void, onFocus?: () => void) => JSX.Element;
     getSetScore: (setNumber: number) => string;
     setSetScore: (setNumber: number, value: string) => void;
     getSetWinner: (setNumber: number) => string;
     setSetWinner: (setNumber: number, value: string) => void;
     locked?: boolean;
+    // Props for full-screen modal submit button
+    onSubmitButton?: React.ReactNode;
+    hasAnyPredictions?: boolean;
+    hasFormChanged?: boolean;
 }
 
 export function PredictionForm({
@@ -77,12 +82,30 @@ export function PredictionForm({
     setSetScore,
     getSetWinner,
     setSetWinner,
-    locked
+    locked,
+    onSubmitButton,
+    hasAnyPredictions = false,
+    hasFormChanged = false
 }: PredictionFormProps) {
 
     const { dict, lang } = useDictionary();
 
-    // Refs for smooth scrolling to sections
+    // State for full-screen mode on mobile when user interacts with form
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [wasManuallyClosed, setWasManuallyClosed] = useState(false);
+    const [hasBlurredSuperTiebreak, setHasBlurredSuperTiebreak] = useState(false);
+    const formContentRef = useRef<HTMLDivElement>(null);
+    const hasAnimatedRef = useRef(false);
+
+    // Ensure component is mounted (for portal)
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
+
+
+    // Refs for sections
     const matchResultRef = useRef<HTMLDivElement>(null);
     const setWinnersRef = useRef<HTMLDivElement>(null);
     const setScoresRef = useRef<HTMLDivElement>(null);
@@ -430,6 +453,7 @@ export function PredictionForm({
 
     // Helper function to automatically set set winners for straight-set results and 2-1/1-2 results
     const handleMatchResultChange = (newMatchResult: string) => {
+        handleButtonClick();
         onPredictionChange('matchResult', newMatchResult);
 
         // For straight-set results, automatically set all set winners
@@ -454,6 +478,7 @@ export function PredictionForm({
 
     // Custom handler for set winner selection that handles 2-1/1-2 auto-selection
     const handleSetWinnerSelection = (setNumber: number, selectedPlayer: string) => {
+        handleButtonClick();
         // For 2-1/1-2 results, when user selects one set winner, automatically select the other
         if (['2-1', '1-2'].includes(formPredictions.matchResult)) {
             const otherSetNumber = setNumber === 1 ? 2 : 1;
@@ -515,13 +540,76 @@ export function PredictionForm({
         }
     };
 
-    return (
-        <div className="space-y-3 pb-4 h-full flex flex-col relative px-2 sm:px-0">
+    // Check if we're on mobile
+    const checkMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
+
+    // Handle window resize to exit full-screen on desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (!checkMobile() && isFullScreen) {
+                setIsFullScreen(false);
+                setWasManuallyClosed(false); // Reset on resize (not manual close)
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [isFullScreen]);
+
+    // Reset manual close flag when component unmounts (user leaves page)
+    useEffect(() => {
+        return () => {
+            setWasManuallyClosed(false);
+            document.body.style.overflow = '';
+        };
+    }, []);
+
+
+    // Handle closing full-screen mode - memoized to prevent re-renders
+    const handleCloseFullScreen = useCallback(() => {
+        setIsFullScreen(false);
+        setWasManuallyClosed(true); // Mark as manually closed
+        document.body.style.overflow = '';
+    }, []);
+
+    // Handle input/button interaction - open full-screen on mobile
+    // Only opens if not already open (stays open during continuous selections)
+    // Memoized to prevent re-renders during selections
+    const handleInputInteraction = useCallback(() => {
+        if (checkMobile() && !isFullScreen) {
+            // Only open if not already open
+            setIsFullScreen(true);
+            setWasManuallyClosed(false); // Reset manual close flag when reopening
+            document.body.style.overflow = 'hidden';
+        }
+        // If already open, do nothing - modal stays open during continuous selections
+    }, [isFullScreen]);
+
+    // Handle input focus - open full-screen on mobile
+    const handleInputFocus = useCallback((e: React.FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        handleInputInteraction();
+    }, [handleInputInteraction]);
+
+
+
+    // Handle button clicks - open full-screen on mobile
+    const handleButtonClick = useCallback(() => {
+        handleInputInteraction();
+    }, [handleInputInteraction]);
+
+    // Form content as render function (not a component) to avoid remounting on each keystroke.
+    // Inline component `const FormContent = () => (...)` gets a new function ref every render;
+    // React then unmounts/remounts it, resetting scroll (e.g. when typing in super tiebreak input).
+    const renderFormContent = () => (
+        <div ref={formContentRef} className="space-y-2 sm:space-y-3 pb-4 h-full flex flex-col relative px-1 sm:px-0">
             {/* Clear All Button */}
             <motion.button
                 onClick={handleClearAll}
                 className={cx(
-                    "absolute top-0 right-0 text-xs text-gray-400 hover:text-white px-2 py-1 border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 z-20",
+                    "absolute top-0 right-0 sm:right-2 text-xs text-gray-400 hover:text-white px-2 py-1 border border-slate-600 hover:border-slate-500 bg-slate-800/50 hover:bg-slate-700/50 z-20",
                     borders.rounded.sm,
                     transitions.default
                 )}
@@ -560,7 +648,7 @@ export function PredictionForm({
             {/* Match Winner */}
             <motion.div
                 className={cx(
-                    "bg-slate-800/50 backdrop-blur-sm p-3 border",
+                    "bg-slate-800/50 backdrop-blur-sm p-2.5 sm:p-3 border",
                     borders.rounded.sm,
                     !formPredictions.winner ? "border-yellow-400/60 border-2 animate-pulse" : "border-slate-700/50"
                 )}
@@ -578,10 +666,13 @@ export function PredictionForm({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                     <motion.button
-                        onClick={() => onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name)}
+                        onClick={() => {
+                            handleButtonClick();
+                            onPredictionChange('winner', formPredictions.winner === details.player1.name ? '' : details.player1.name);
+                        }}
                         disabled={locked}
                         className={cx(
-                            "p-2 border",
+                            "p-2.5 sm:p-2 border min-h-[60px] sm:min-h-0",
                             borders.rounded.sm,
                             locked
                                 ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
@@ -606,10 +697,13 @@ export function PredictionForm({
                         <div className="text-xs text-yellow-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
                     </motion.button>
                     <motion.button
-                        onClick={() => onPredictionChange('winner', formPredictions.winner === details.player2.name ? '' : details.player2.name)}
+                        onClick={() => {
+                            handleButtonClick();
+                            onPredictionChange('winner', formPredictions.winner === details.player2.name ? '' : details.player2.name);
+                        }}
                         disabled={locked}
                         className={cx(
-                            "p-2 border",
+                            "p-2.5 sm:p-2 border min-h-[60px] sm:min-h-0",
                             borders.rounded.sm,
                             locked
                                 ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
@@ -655,7 +749,7 @@ export function PredictionForm({
                 formPredictions.winner && (
                     <motion.div
                         ref={matchResultRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showMatchResultPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border ${showMatchResultPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                     >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                             <div className="flex items-center space-x-2">
@@ -836,7 +930,7 @@ export function PredictionForm({
                 formPredictions.matchResult && (
                     // For straight-set results, show set scores directly
                     ['3-0', '0-3', '2-0', '0-2'].includes(formPredictions.matchResult) ? (
-                        <div ref={setScoresRef} className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border border-slate-700/50">
+                        <div ref={setScoresRef} className="bg-slate-800/50 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border border-slate-700/50">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center space-x-2">
                                     <h3 className="text-base font-bold text-white">{dict?.matches?.setScores || 'Set Scores'}</h3>
@@ -891,7 +985,10 @@ export function PredictionForm({
                                 return (
                                     <div key={i} className="space-y-1.5 mb-2">
                                         <h4 className="font-semibold text-white text-xs">Set {i + 1} Score - {displayName(setWinner)} {dict?.matches?.wins || 'wins'}</h4>
-                                        {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => setSetScore(i + 1, value))}
+                                        {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => {
+                                            handleButtonClick();
+                                            setSetScore(i + 1, value);
+                                        }, handleInputInteraction)}
                                     </div>
                                 );
                             })}
@@ -1104,7 +1201,7 @@ export function PredictionForm({
                 })() && (
                     <motion.div
                         ref={setTiebreaksRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showTiebreaksPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border ${showTiebreaksPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -1152,8 +1249,9 @@ export function PredictionForm({
                                         <select
                                             value={formPredictions.set1TieBreakScore}
                                             onChange={(e) => onPredictionChange('set1TieBreakScore', e.target.value)}
+                                            onFocus={handleInputFocus}
                                             disabled={locked}
-                                            className={`w-full p-2 border rounded-lg text-sm ${locked
+                                            className={`w-full p-3 sm:p-2.5 border rounded-lg text-base sm:text-sm min-h-[48px] sm:min-h-0 ${locked
                                                 ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                 : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
                                                 }`}
@@ -1213,8 +1311,9 @@ export function PredictionForm({
                                         <select
                                             value={formPredictions.set2TieBreakScore}
                                             onChange={(e) => onPredictionChange('set2TieBreakScore', e.target.value)}
+                                            onFocus={handleInputFocus}
                                             disabled={locked}
-                                            className={`w-full p-2 border rounded-lg text-sm ${locked
+                                            className={`w-full p-3 sm:p-2.5 border rounded-lg text-base sm:text-sm min-h-[48px] sm:min-h-0 ${locked
                                                 ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                                 : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
                                                 }`}
@@ -1266,7 +1365,7 @@ export function PredictionForm({
                 isAmateurFormat && formPredictions.matchResult && ['2-1', '1-2'].includes(formPredictions.matchResult) && (
                     <motion.div
                         ref={superTiebreakRef}
-                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 border ${showSuperTiebreakPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
+                        className={`bg-slate-800/50 backdrop-blur-sm rounded-lg p-2.5 sm:p-3 border ${showSuperTiebreakPulse ? 'border-yellow-400 border-2' : 'border-slate-700/50'}`}
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-2">
@@ -1324,21 +1423,28 @@ export function PredictionForm({
                                     <input
                                         type="text"
                                         value={formPredictions.superTieBreakScore || ''}
+                                        onFocus={handleInputInteraction}
                                         onChange={(e) => {
                                             const value = e.target.value;
-                                            // Allow empty or valid format
-                                            if (value === '' || validateSuperTiebreakScore(value, formPredictions.winner === details.player1.name)) {
+                                            // Allow typing: empty, numbers, single dash, or partial scores like "10-", "10-8", etc.
+                                            // Only restrict obviously invalid patterns
+                                            const invalidPattern = /[^0-9-]/; // Only allow digits and dash
+                                            if (value === '' || (!invalidPattern.test(value) && value.split('-').length <= 2)) {
                                                 onPredictionChange('superTieBreakScore', value);
                                             }
                                         }}
+                                        onBlur={() => {
+                                            // Mark as blurred so validation can show after user is done typing
+                                            setHasBlurredSuperTiebreak(true);
+                                        }}
                                         placeholder={dict?.matches?.superTiebreakScorePlaceholder || 'e.g., 10-8, 17-15'}
                                         disabled={locked}
-                                        className={`w-full p-3 border rounded-lg text-sm ${locked
+                                        className={`w-full p-3 sm:p-2.5 border rounded-lg text-base sm:text-sm ${locked
                                             ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed'
                                             : 'bg-slate-700/50 border-slate-600/50 text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent'
                                             }`}
                                     />
-                                    {formPredictions.superTieBreakScore && !validateSuperTiebreakScore(formPredictions.superTieBreakScore, formPredictions.winner === details.player1.name) && (
+                                    {hasBlurredSuperTiebreak && formPredictions.superTieBreakScore && !validateSuperTiebreakScore(formPredictions.superTieBreakScore, formPredictions.winner === details.player1.name) && (
                                         <p className="text-xs text-red-500 mt-1">
                                             {dict?.matches?.superTiebreakScoreError || 'Invalid score. Winner must have at least 10 points and win by 2 points (e.g., 10-8, 17-15).'}
                                         </p>
@@ -1349,72 +1455,89 @@ export function PredictionForm({
                     </motion.div>
                 )
             }
+        </div>
+    );
 
-            {/* Most Aces - COMMENTED OUT FOR FUTURE CHANGES */}
-            {/* <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
-                <h3 className="text-base font-bold text-white mb-3">Most Aces</h3>
-                <p className="text-xs text-gray-400 mb-3">
-                    Who leads in aces during the match?
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                    <button
-                        onClick={() => onPredictionChange('acesLeader', formPredictions.acesLeader === details.player1.name ? '' : details.player1.name)}
-                        className={`p-3 rounded-lg border ${formPredictions.acesLeader === details.player1.name
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
-                            }`}
-                    >
-                                                {displayName(details.player1.name)}
-                    </button>
-                    <button
-                        onClick={() => onPredictionChange('acesLeader', formPredictions.acesLeader === details.player2.name ? '' : details.player2.name)}
-                        className={`p-3 rounded-lg border ${formPredictions.acesLeader === details.player2.name
-                            ? 'bg-purple-600 border-purple-600 text-white'
-                            : 'bg-[#2A2A2A] border-[#3A3A3A] text-gray-300 hover:bg-[#3A3A3A]'
-                            }`}
-                    >
-                                                {displayName(details.player2.name)}
-                    </button>
+    // Render full-screen modal only when isFullScreen or mounted changes
+    // This prevents the portal from being recreated on every formPredictions change
+    const FullScreenModal = (() => {
+        if (!isFullScreen || !mounted) return null;
+
+        return createPortal(
+            <motion.div
+                key="fullscreen-modal" // Stable key to prevent re-mounting
+                initial={false} // Never animate - prevents flashing on re-renders
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-slate-900 md:hidden"
+                style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    zIndex: 99999,
+                    margin: 0,
+                    padding: 0,
+                }}
+                onClick={(e) => {
+                    // Close on backdrop click (but not on form content)
+                    if (e.target === e.currentTarget) {
+                        handleCloseFullScreen();
+                    }
+                }}
+            >
+                <div
+                    className="h-full w-full flex flex-col bg-slate-900 overflow-hidden"
+                    style={{
+                        width: '100vw',
+                        height: '100vh',
+                    }}
+                >
+                    {/* Header with close button */}
+                    <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-slate-700/50 bg-slate-800/90 backdrop-blur-sm">
+                        <h3 className="text-lg font-semibold text-white">
+                            {dict?.matches?.makePredictions || 'Make Your Predictions'}
+                        </h3>
+                        <button
+                            onClick={handleCloseFullScreen}
+                            className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 text-white transition-colors active:scale-95"
+                            aria-label="Close"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    {/* Scrollable form content */}
+                    <div className="flex-1 overflow-y-auto overscroll-contain pb-20">
+                        <div className="p-4">
+                            {renderFormContent()}
+                        </div>
+                    </div>
+                    {/* Submit button at bottom */}
+                    {onSubmitButton && (
+                        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700/50 bg-slate-800/95 backdrop-blur-md z-10">
+                            {onSubmitButton}
+                        </div>
+                    )}
                 </div>
-            </div> */}
+            </motion.div>,
+            document.body
+        );
+    })();
 
-            {/* Total Double Faults - COMMENTED OUT FOR FUTURE CHANGES */}
-            {/* <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
-                <h3 className="text-base font-bold text-white mb-3">Total Double Faults</h3>
-                <p className="text-xs text-gray-400 mb-3">
-                    What is the total number of double faults in the match?
-                </p>
-                <select
-                    value={formPredictions.doubleFaults}
-                    onChange={(e) => onPredictionChange('doubleFaults', e.target.value)}
-                    className="w-full p-3 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                >
-                    <option value="">Select double faults</option>
-                    <option value="Under 5">Under 5</option>
-                    <option value="5-10">5-10</option>
-                    <option value="11-15">11-15</option>
-                    <option value="Over 15">Over 15</option>
-                </select>
-            </div> */}
+    return (
+        <>
+            {/* Full-screen modal for mobile when user makes selections */}
+            {FullScreenModal}
 
-            {/* Total Break Points - COMMENTED OUT FOR FUTURE CHANGES */}
-            {/* <div className="bg-[#1A1A1A] rounded-xl p-4 border border-[#2A2A2A]">
-                <h3 className="text-base font-bold text-white mb-3">Total Break Points</h3>
-                <p className="text-xs text-gray-400 mb-3">
-                    What is the total number of break points faced in the match?
-                </p>
-                <select
-                    value={formPredictions.breakPoints}
-                    onChange={(e) => onPredictionChange('breakPoints', e.target.value)}
-                    className="w-full p-3 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                >
-                    <option value="">Select break points</option>
-                    <option value="Under 8">Under 8</option>
-                    <option value="8-12">8-12</option>
-                    <option value="13-17">13-17</option>
-                    <option value="Over 17">Over 17</option>
-                </select>
-            </div> */}
-        </div >
+            {/* Normal form view (hidden on mobile when full-screen is active) */}
+            <div className={isFullScreen ? 'hidden md:block' : ''}>
+                {renderFormContent()}
+            </div>
+        </>
     );
 } 

@@ -207,12 +207,24 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
             return description; // Keep bet descriptions as is
         }
 
-        if (description.startsWith('Won bet') || description.startsWith('Κέρδισες')) {
-            return description; // Keep win descriptions as is
+        if (description.startsWith('Prediction won:') || description.startsWith('Won bet') || description.startsWith('Κέρδισες')) {
+            // Format: "Prediction won: Player A vs Player B (description)"
+            if (description.startsWith('Prediction won:')) {
+                return lang === 'el'
+                    ? description.replace('Prediction won:', 'Πρόβλεψη κέρδισε:')
+                    : description.replace('Prediction won:', 'Prediction Won:');
+            }
+            return description; // Keep other win descriptions as is
         }
 
-        if (description.startsWith('Lost bet') || description.startsWith('Έχασες')) {
-            return description; // Keep loss descriptions as is
+        if (description.startsWith('Prediction lost:') || description.startsWith('Lost bet') || description.startsWith('Έχασες')) {
+            // Format: "Prediction lost: Player A vs Player B (description)"
+            if (description.startsWith('Prediction lost:')) {
+                return lang === 'el'
+                    ? description.replace('Prediction lost:', 'Πρόβλεψη έχασε:')
+                    : description.replace('Prediction lost:', 'Prediction Lost:');
+            }
+            return description; // Keep other loss descriptions as is
         }
 
         if (description.startsWith('Purchased')) {
