@@ -23,6 +23,17 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     const isAmateurFormat = match.tournaments?.matches_type === 'best-of-3-super-tiebreak';
     const isBestOf5 = match.tournaments?.matches_type === 'best-of-5';
 
+    // Parse match result (e.g. "2-1", "2-0 ret") -> [winnerSets, loserSets]
+    const parseMatchResult = (matchResult: string): [number, number] | null => {
+        if (!matchResult?.trim()) return null;
+        const normalized = matchResult.trim().replace(/\s+ret\s*$/i, '');
+        const parts = normalized.split('-').map(Number);
+        if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return null;
+        return [parts[0], parts[1]];
+    };
+
+    const isRetirement = (matchResult: string) => /ret\s*$/i.test(matchResult?.trim() ?? '');
+
     // Smart form logic functions
     const handleMatchWinnerChange = (winnerId: string, winnerTeam?: string) => {
         const newFormData: any = { ...formData };
@@ -78,8 +89,9 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     const autoPopulateSetWinners = (data: any, winnerId: string, matchResult: string) => {
-        const [winnerSets, loserSets] = matchResult.split('-').map(Number);
-        const loserId = winnerId === match.player_a.id ? match.player_b.id : match.player_a.id;
+        const parsed = parseMatchResult(matchResult);
+        if (!parsed) return data;
+        const [winnerSets, loserSets] = parsed;
 
         // Only auto-populate for straight sets results (2-0, 0-2, 3-0, 0-3)
         const isStraightSets = loserSets === 0;
@@ -101,7 +113,9 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     const autoPopulateSetWinnersDoubles = (data: any, winnerTeam: string, matchResult: string) => {
-        const [winnerSets, loserSets] = matchResult.split('-').map(Number);
+        const parsed = parseMatchResult(matchResult);
+        if (!parsed) return data;
+        const [winnerSets, loserSets] = parsed;
 
         // Only auto-populate for straight sets results (2-0, 0-2, 3-0, 0-3)
         const isStraightSets = loserSets === 0;
@@ -123,7 +137,17 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     const autoPopulateSetScores = (data: any, matchResult: string) => {
-        const [winnerSets, loserSets] = matchResult.split('-').map(Number);
+        // Retirement: do not auto-fill set scores; user enters manually (e.g. 4-2 for incomplete set)
+        if (isRetirement(matchResult)) {
+            for (let i = 1; i <= 5; i++) {
+                data[`set${i}_score`] = '';
+            }
+            return data;
+        }
+
+        const parsed = parseMatchResult(matchResult);
+        if (!parsed) return data;
+        const [winnerSets, loserSets] = parsed;
         const totalSets = winnerSets + loserSets;
 
         // Set default scores for each set (winner gets 6-4, loser gets 4-6)
@@ -213,35 +237,50 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
             : formData.winner_id === match.player_a.id;
 
         if (isBestOf5) {
-            return isTeamAWinner ? [
-                { value: '3-0', label: '3-0 (Straight sets)' },
-                { value: '3-1', label: '3-1 (Four sets)' },
-                { value: '3-2', label: '3-2 (Five sets)' }
-            ] : [
-                { value: '0-3', label: '0-3 (Straight sets)' },
-                { value: '1-3', label: '1-3 (Four sets)' },
-                { value: '2-3', label: '2-3 (Five sets)' }
-            ];
+            const base = isTeamAWinner
+                ? [
+                    { value: '3-0', label: '3-0 (Straight sets)' },
+                    { value: '3-1', label: '3-1 (Four sets)' },
+                    { value: '3-2', label: '3-2 (Five sets)' }
+                ]
+                : [
+                    { value: '0-3', label: '0-3 (Straight sets)' },
+                    { value: '1-3', label: '1-3 (Four sets)' },
+                    { value: '2-3', label: '2-3 (Five sets)' }
+                ];
+            const ret = base.map(({ value, label }) => ({
+                value: `${value} ret`,
+                label: `${value} (Retirement)`
+            }));
+            return [...base, ...ret];
         } else {
-            return isTeamAWinner ? [
-                { value: '2-0', label: '2-0 (Straight sets)' },
-                { value: '2-1', label: isAmateurFormat ? '2-1 (Super tiebreak)' : '2-1 (Three sets)' }
-            ] : [
-                { value: '0-2', label: '0-2 (Straight sets)' },
-                { value: '1-2', label: isAmateurFormat ? '1-2 (Super tiebreak)' : '1-2 (Three sets)' }
-            ];
+            const base = isTeamAWinner
+                ? [
+                    { value: '2-0', label: '2-0 (Straight sets)' },
+                    { value: '2-1', label: isAmateurFormat ? '2-1 (Super tiebreak)' : '2-1 (Three sets)' }
+                ]
+                : [
+                    { value: '0-2', label: '0-2 (Straight sets)' },
+                    { value: '1-2', label: isAmateurFormat ? '1-2 (Super tiebreak)' : '1-2 (Three sets)' }
+                ];
+            const ret = base.map(({ value }) => ({
+                value: `${value} ret`,
+                label: `${value} (Retirement)`
+            }));
+            return [...base, ...ret];
         }
     };
 
     const getSetsToShow = () => {
-        if (!formData.match_result) return 0;
+        const parsed = parseMatchResult(formData.match_result);
+        if (!parsed) return 0;
+        const [sets1, sets2] = parsed;
+        const total = sets1 + sets2;
 
-        if (isAmateurFormat && ['2-1', '1-2'].includes(formData.match_result)) {
+        if (isAmateurFormat && total === 3) {
             return 2; // Only 2 sets for amateur format with super tiebreak
         }
-
-        const [sets1, sets2] = formData.match_result.split('-').map(Number);
-        return sets1 + sets2;
+        return total;
     };
 
 
@@ -251,7 +290,10 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
     };
 
     const shouldShowSuperTiebreak = () => {
-        return isAmateurFormat && ['2-1', '1-2'].includes(formData.match_result);
+        const parsed = parseMatchResult(formData.match_result);
+        if (!parsed || !isAmateurFormat) return false;
+        const [a, b] = parsed;
+        return a + b === 3; // 2-1 or 1-2 (with or without ret)
     };
 
     const validateSuperTiebreakScore = (score: string): boolean => {
@@ -397,9 +439,11 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                         <h3 className="text-base sm:text-lg font-bold text-gray-900">Set Details</h3>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-400 mb-2 sm:mb-3">
-                        {['3-0', '0-3', '2-0', '0-2'].includes(formData.match_result)
-                            ? 'Predict the exact score for each set.'
-                            : 'Who wins each set and predict the exact scores.'
+                        {isRetirement(formData.match_result)
+                            ? 'Enter the score at the time of retirement for each set (e.g. 4-2 if the set was incomplete).'
+                            : ['3-0', '0-3', '2-0', '0-2'].includes(formData.match_result.replace(/\s+ret\s*$/i, ''))
+                                ? 'Predict the exact score for each set.'
+                                : 'Who wins each set and predict the exact scores.'
                         }
                     </p>
                     <div className="space-y-2 sm:space-y-3">
@@ -486,21 +530,31 @@ export function MatchResultForm({ formData, setFormData, match, onSubmit, submit
                                         </div>
                                         <div className="space-y-1.5 sm:space-y-2 min-w-0">
                                             <Label className="text-xs text-gray-400">Score</Label>
-                                            <Select
-                                                value={formData[`set${setNum}_score`]}
-                                                onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_score`]: value })}
-                                            >
-                                                <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm min-w-0 w-full">
-                                                    <SelectValue placeholder="Select score" className="truncate" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {getSetScoreOptions(setWinnerId, setWinnerTeam).map((option) => (
-                                                        <SelectItem key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            {isRetirement(formData.match_result) ? (
+                                                <Input
+                                                    type="text"
+                                                    value={formData[`set${setNum}_score`] || ''}
+                                                    onChange={(e) => setFormData({ ...formData, [`set${setNum}_score`]: e.target.value.trim() })}
+                                                    placeholder="e.g. 4-2, 6-4"
+                                                    className="h-8 sm:h-9 text-xs sm:text-sm"
+                                                />
+                                            ) : (
+                                                <Select
+                                                    value={formData[`set${setNum}_score`]}
+                                                    onValueChange={(value) => setFormData({ ...formData, [`set${setNum}_score`]: value })}
+                                                >
+                                                    <SelectTrigger className="h-8 sm:h-9 text-xs sm:text-sm min-w-0 w-full">
+                                                        <SelectValue placeholder="Select score" className="truncate" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {getSetScoreOptions(setWinnerId, setWinnerTeam).map((option) => (
+                                                            <SelectItem key={option.value} value={option.value}>
+                                                                {option.label}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getTournament, getTournamentTeams } from '@netprophet/lib';
+import { getTournament, getTournamentTeams, getTournamentCategories } from '@netprophet/lib';
 import { supabase } from '@netprophet/lib';
 import { Card, CardContent, CardHeader, CardTitle } from '@netprophet/ui';
-import { Trophy, Calendar, MapPin, Users, ChevronLeft, TrendingUp, Award, User, Crown, ExternalLink } from 'lucide-react';
+import { Trophy, Calendar, MapPin, Users, ChevronLeft, TrendingUp, Award, User, Crown, ExternalLink, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { useDictionary } from '@/context/DictionaryContext';
 import { createSlug } from '@/lib/utils';
@@ -82,10 +82,11 @@ export default function TournamentPage() {
 
     const [tournament, setTournament] = useState<any>(null);
     const [teams, setTeams] = useState<Team[]>([]);
+    const [categories, setCategories] = useState<Array<{ id: string; name: string; description?: string | null }>>([]);
     const [teamStandings, setTeamStandings] = useState<TeamStanding[]>([]);
     const [matches, setMatches] = useState<MatchResult[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'teams' | 'standings' | 'results'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'teams' | 'categories' | 'standings' | 'results'>('overview');
 
     const loadTournamentData = useCallback(async () => {
         try {
@@ -168,18 +169,23 @@ export default function TournamentPage() {
 
             const tournamentId = tournamentData.id;
 
-            // Load teams and matches in parallel
-            const [teamsData, matchesData] = await Promise.all([
+            // Load teams, categories, and matches in parallel
+            const isTeamTournament = tournamentData?.is_team_tournament === true ||
+                tournamentData?.is_team_tournament === 'true' ||
+                tournamentData?.is_team_tournament === 1;
+            const [teamsData, categoriesData, matchesData] = await Promise.all([
                 getTournamentTeams(tournamentId).catch(() => []),
+                isTeamTournament ? Promise.resolve([]) : getTournamentCategories(tournamentId).catch(() => []),
                 fetchTournamentMatches(tournamentId)
             ]);
 
             setTournament(tournamentData);
             setTeams(teamsData || []);
+            setCategories((categoriesData || []).map((c: any) => ({ id: c.id, name: c.name, description: c.description })));
             setMatches(matchesData || []);
 
             // Calculate team standings if this is a team tournament
-            if (tournamentData?.is_team_tournament && teamsData?.length > 0) {
+            if (isTeamTournament && teamsData?.length > 0) {
                 const standings = await calculateTeamStandings(teamsData, matchesData || []);
                 setTeamStandings(standings);
             }
@@ -538,6 +544,7 @@ export default function TournamentPage() {
                         {[
                             { id: 'overview', label: dict?.tournaments?.overview || 'Overview' },
                             { id: 'teams', label: `${dict?.tournaments?.teams || 'Teams'} (${teams.length})`, show: isTeamTournament },
+                            { id: 'categories', label: `${dict?.tournaments?.categories || 'Categories'} (${categories.length})`, show: !isTeamTournament },
                             { id: 'standings', label: dict?.tournaments?.standings || 'Standings', show: isTeamTournament && teamStandings.length > 0 },
                             { id: 'results', label: `${dict?.tournaments?.results || 'Results'} (${matches.length})` }
                         ].filter(tab => tab.show !== false).map(tab => (
@@ -578,13 +585,13 @@ export default function TournamentPage() {
                             <Card className="bg-white/5 border-white/10">
                                 <CardHeader>
                                     <CardTitle className="text-white flex items-center gap-2">
-                                        <Users className="h-5 w-5" />
-                                        {dict?.tournaments?.teams || 'Teams'}
+                                        {isTeamTournament ? <Users className="h-5 w-5" /> : <Tag className="h-5 w-5" />}
+                                        {isTeamTournament ? (dict?.tournaments?.teams || 'Teams') : (dict?.tournaments?.categories || 'Categories')}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-3xl font-bold text-white">{teams.length}</div>
-                                    <p className="text-white/60 text-sm mt-1">{dict?.tournaments?.totalTeams || 'Total teams'}</p>
+                                    <div className="text-3xl font-bold text-white">{isTeamTournament ? teams.length : categories.length}</div>
+                                    <p className="text-white/60 text-sm mt-1">{isTeamTournament ? (dict?.tournaments?.totalTeams || 'Total teams') : (dict?.tournaments?.totalCategories || 'Categories')}</p>
                                 </CardContent>
                             </Card>
 
@@ -618,6 +625,37 @@ export default function TournamentPage() {
                                 </CardContent>
                             </Card>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'categories' && !isTeamTournament && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {categories.length === 0 ? (
+                            <Card className="bg-white/5 border-white/10 col-span-full">
+                                <CardContent className="py-8 text-center">
+                                    <Tag className="h-12 w-12 text-white/40 mx-auto mb-3" />
+                                    <p className="text-white/80">{dict?.tournaments?.noCategoriesYet || 'No categories yet'}</p>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            categories.map((category) => (
+                                <Card
+                                    key={category.id}
+                                    className="bg-gradient-to-br from-white/5 to-white/[0.02] border-white/10 hover:border-yellow-400/30 hover:shadow-lg hover:shadow-yellow-400/10 transition-all duration-300"
+                                >
+                                    <CardHeader>
+                                        <CardTitle className="text-white text-xl font-bold">
+                                            {category.name}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    {category.description && (
+                                        <CardContent className="pt-0">
+                                            <p className="text-white/70 text-sm">{category.description}</p>
+                                        </CardContent>
+                                    )}
+                                </Card>
+                            ))
+                        )}
                     </div>
                 )}
 

@@ -585,14 +585,17 @@ export interface Dictionary {
     backToTournaments: string;
     overview: string;
     teams: string;
+    categories: string;
     standings: string;
     results: string;
     about: string;
     totalTeams: string;
+    totalCategories: string;
     totalMatches: string;
     completed: string;
     live: string;
     noTeamsYet: string;
+    noCategoriesYet: string;
     noMatchesFound: string;
     rank: string;
     team: string;

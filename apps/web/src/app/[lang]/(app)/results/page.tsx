@@ -528,31 +528,30 @@ export default function ResultsPage() {
                                                 const totalColumns = Math.max(setScores.length, 1) + (showSuperTie ? 1 : 0);
 
                                                 // Parse match_result to get actual set wins
-                                                // match_result format is "sets_a-sets_b" (e.g., "2-1" means player A won 2 sets, player B won 1 set)
+                                                // match_result format is "sets_a-sets_b" or "sets_a-sets_b ret" (retirement)
+                                                const isRetirement = match.match_result != null && /ret\s*$/i.test(match.match_result.trim());
+                                                const matchResultNormalized = match.match_result?.trim().replace(/\s+ret\s*$/i, '') ?? '';
                                                 let winsA = 0;
                                                 let winsB = 0;
-                                                if (match.match_result && !isPendingResult) {
-                                                    const parts = match.match_result.split('-');
-                                                    if (parts.length === 2) {
+                                                if (matchResultNormalized && !isPendingResult) {
+                                                    const parts = matchResultNormalized.split('-');
+                                                    if (parts.length >= 2) {
                                                         const setsA = parseInt(parts[0], 10);
                                                         const setsB = parseInt(parts[1], 10);
                                                         if (!isNaN(setsA) && !isNaN(setsB)) {
                                                             winsA = setsA;
                                                             winsB = setsB;
                                                         } else {
-                                                            // Fallback to calculated wins if parsing fails
                                                             const calculated = getSetWins(setScores);
                                                             winsA = calculated.winsA;
                                                             winsB = calculated.winsB;
                                                         }
                                                     } else {
-                                                        // Fallback to calculated wins if format is invalid
                                                         const calculated = getSetWins(setScores);
                                                         winsA = calculated.winsA;
                                                         winsB = calculated.winsB;
                                                     }
                                                 } else {
-                                                    // If no match_result or pending, use calculated wins
                                                     const calculated = getSetWins(setScores);
                                                     winsA = calculated.winsA;
                                                     winsB = calculated.winsB;
@@ -647,6 +646,13 @@ export default function ResultsPage() {
                                                                                 ))}
                                                                                 {showSuperTie && <div className="px-1">{superTie.b}</div>}
                                                                             </div>
+                                                                            {isRetirement && (
+                                                                                <div className="text-center mt-1.5">
+                                                                                    <span className="text-[10px] sm:text-xs font-semibold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded">
+                                                                                        (ret)
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
                                                                             {setScores.length === 0 && !showSuperTie && (
                                                                                 <div className="text-center text-xs sm:text-sm font-bold text-white mt-1">
                                                                                     {formatScore(match)}
