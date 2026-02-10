@@ -220,10 +220,11 @@ export function calculateOdds(
 
   const player2Score = 1 - player1Score;
 
-  // Calculate decimal odds with slight margin for bookmaker profit
-  const margin = 0.05; // 5% margin
-  const player1Odds = (1 / player1Score) * (1 + margin);
-  const player2Odds = (1 / player2Score) * (1 + margin);
+  // For even matches (same NTRP, no H2H), use negative margin so odds start low and stay tight (e.g. ~1.40)
+  const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount when odds are close
+  const MIN_ODDS = 1.2;
+  let player1Odds = Math.max(MIN_ODDS, (1 / player1Score) * (1 + margin));
+  let player2Odds = Math.max(MIN_ODDS, (1 / player2Score) * (1 + margin));
 
   // Calculate confidence based on data quality and factor agreement
   const confidence = calculateConfidence(player1, player2, factors);
@@ -310,8 +311,8 @@ function calculateNTRPAdvantage(
   // For differences >= 0.5, apply much stronger weighting
   if (Math.abs(ntrpDiff) >= 0.5) {
     // For significant differences (0.5+), use linear scaling with high multiplier
-    const significantDiffMultiplier = ntrpDiff >= 0 ? 1.5 : -1.5;
-    return Math.max(-0.8, Math.min(0.8, ntrpDiff * significantDiffMultiplier));
+    // Positive when player1 is stronger, negative when weaker (no sign flip)
+    return Math.max(-0.8, Math.min(0.8, ntrpDiff * 1.5));
   }
 
   // For smaller differences (< 0.5), use the existing non-linear scaling

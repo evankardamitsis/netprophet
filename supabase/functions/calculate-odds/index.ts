@@ -248,11 +248,11 @@ function calculateOdds(
     player1Score = 1 - player2Score;
   }
 
-  // Calculate decimal odds with slight margin for bookmaker profit
-  const margin = 0.05; // 5% margin
+  // For even matches (same NTRP, no H2H), use negative margin so odds start low and stay tight (e.g. ~1.40 vs 1.40)
+  const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount when odds are close
   let player1Odds = (1 / player1Score) * (1 + margin);
   let player2Odds = (1 / player2Score) * (1 + margin);
-  
+
   // Enforce minimum odds threshold (safety check)
   player1Odds = Math.max(MIN_ODDS, player1Odds);
   player2Odds = Math.max(MIN_ODDS, player2Odds);
@@ -332,9 +332,8 @@ function calculateNTRPAdvantage(
       levelMultiplier = 2.0; // Lower impact at beginner levels (<3.5)
     }
 
-    const significantDiffMultiplier =
-      ntrpDiff >= 0 ? levelMultiplier : -levelMultiplier;
-    return Math.max(-0.8, Math.min(0.8, ntrpDiff * significantDiffMultiplier));
+    // Positive when player1/teamA is stronger, negative when weaker (no sign flip)
+    return Math.max(-0.8, Math.min(0.8, ntrpDiff * levelMultiplier));
   }
 
   // For smaller differences (< 0.5), use the existing level-aware scaling

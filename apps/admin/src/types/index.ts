@@ -8,6 +8,7 @@ export interface Tournament {
   status: string;
   surface: string;
   location: string | null;
+  organizer: string | null;
   prize_pool: number | null;
   entry_fee: number | null;
   buy_in_fee: number | null;
@@ -291,6 +292,7 @@ export interface MatchFormData {
 
 export interface TournamentFormData {
   name: string;
+  organizer: string;
   description: string;
   start_date: string;
   end_date: string;

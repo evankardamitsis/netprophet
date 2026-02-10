@@ -141,11 +141,18 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
             {
                 accessorKey: 'tournament',
                 header: 'Tournament',
-                cell: info => (
-                    <div className="text-sm text-gray-300 font-medium truncate max-w-[120px]">
-                        {info.getValue()}
-                    </div>
-                ),
+                cell: ({ row, getValue }) => {
+                    const tournamentName = getValue() as string;
+                    const organizer = (row.original.tournaments as { organizer?: string | null } | undefined)?.organizer;
+                    return (
+                        <div className="text-sm text-gray-300 font-medium truncate flex flex-col gap-0.5">
+                            <span>{tournamentName}</span>
+                            {organizer?.trim() && (
+                                <span className="text-xs text-orange-200 font-medium">{organizer}</span>
+                            )}
+                        </div>
+                    );
+                },
                 enableSorting: true,
                 enableColumnFilter: true,
             },
@@ -496,9 +503,17 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                             </div>
                                         )}
                                         <div className="space-y-1.5">
-                                            {/* Tournament info */}
-                                            <div className="text-xs text-gray-400 truncate">
-                                                {match.tournament} • {match.tournament_categories?.name || ''}
+                                            {/* Tournament info (name, organizer, category on one row) */}
+                                            <div className="text-xs text-gray-400">
+                                                <span className="truncate block">
+                                                    {match.tournament}
+                                                    {(match.tournaments as { organizer?: string | null } | undefined)?.organizer?.trim() && (
+                                                        <> • <span className="font-medium text-gray-400">{(match.tournaments as { organizer?: string | null }).organizer}</span></>
+                                                    )}
+                                                    {match.tournament_categories?.name && (
+                                                        <> • {match.tournament_categories.name}</>
+                                                    )}
+                                                </span>
                                             </div>
 
                                             {/* Players / odds with clear affordance */}

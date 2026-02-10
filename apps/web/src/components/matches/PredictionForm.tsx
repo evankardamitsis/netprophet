@@ -315,7 +315,25 @@ export function PredictionForm({
     const currentMultiplier = useMemo(() => {
         if (!formPredictions.winner) return 0;
 
-        const baseOdds = formPredictions.winner === details.player1.name ? details.player1.odds : details.player2.odds;
+        // Ensure we use the correct player's base odds based on selected winner
+        const baseOdds = formPredictions.winner === details.player1.name 
+            ? details.player1.odds 
+            : formPredictions.winner === details.player2.name 
+                ? details.player2.odds 
+                : 0; // Fallback to 0 if winner doesn't match either player
+        
+        // Validate base odds
+        if (!baseOdds || baseOdds <= 0) {
+            console.warn('Invalid base odds for selected winner:', { 
+                winner: formPredictions.winner, 
+                player1: details.player1.name, 
+                player2: details.player2.name,
+                player1Odds: details.player1.odds,
+                player2Odds: details.player2.odds
+            });
+            return 0;
+        }
+        
         let totalBonus = 0;
 
         // Match Result bonus: +0.2x if selected
@@ -1502,9 +1520,9 @@ export function PredictionForm({
                     }}
                 >
                     {/* Header with close button */}
-                    <div 
+                    <div
                         className="flex-shrink-0 flex items-center justify-between border-b border-slate-700/50 bg-slate-800/90 backdrop-blur-sm"
-                        style={{ 
+                        style={{
                             paddingTop: 'max(1rem, env(safe-area-inset-top))',
                             paddingLeft: 'max(1rem, env(safe-area-inset-left))',
                             paddingRight: 'max(1rem, env(safe-area-inset-right))',
@@ -1526,7 +1544,7 @@ export function PredictionForm({
                     </div>
                     {/* Scrollable form content */}
                     <div className="flex-1 overflow-y-auto overscroll-contain min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-                        <div 
+                        <div
                             className="p-4"
                             style={{
                                 paddingLeft: 'max(1rem, env(safe-area-inset-left))',
@@ -1539,9 +1557,9 @@ export function PredictionForm({
                     </div>
                     {/* Submit button at bottom - part of flex layout for mobile visibility */}
                     {onSubmitButton && (
-                        <div 
+                        <div
                             className="flex-shrink-0 border-t border-slate-700/50 bg-slate-800/95 backdrop-blur-md"
-                            style={{ 
+                            style={{
                                 paddingTop: '0.75rem',
                                 paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))',
                                 paddingLeft: 'max(1rem, env(safe-area-inset-left))',

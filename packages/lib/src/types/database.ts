@@ -757,6 +757,7 @@ export type Database = {
           matches_type: string;
           max_participants: number | null;
           name: string;
+          organizer: string | null;
           prize_pool: number | null;
           start_date: string;
           status: string;
@@ -776,6 +777,7 @@ export type Database = {
           matches_type?: string;
           max_participants?: number | null;
           name: string;
+          organizer?: string | null;
           prize_pool?: number | null;
           start_date: string;
           status?: string;
@@ -795,6 +797,7 @@ export type Database = {
           matches_type?: string;
           max_participants?: number | null;
           name?: string;
+          organizer?: string | null;
           prize_pool?: number | null;
           start_date?: string;
           status?: string;

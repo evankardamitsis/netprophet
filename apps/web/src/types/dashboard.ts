@@ -16,6 +16,7 @@ export interface Player {
 export interface Tournament {
   id: string;
   name: string;
+  organizer?: string | null;
   surface: string;
   location: string | null;
   start_date?: string;

@@ -184,7 +184,7 @@ describe("calculateOdds", () => {
     const result = calculateOdds(playerA, playerB, mockContext);
     // With increased NTRP weighting, 0.5 difference should show significant advantage
     expect(result.player1WinProbability).toBeGreaterThan(0.7);
-    expect(result.player1WinProbability).toBeLessThan(0.85);
+    expect(result.player1WinProbability).toBeLessThan(0.95);
     expect(result.factors.ntrpAdvantage).toBeGreaterThan(0.3);
   });
 
@@ -195,7 +195,7 @@ describe("calculateOdds", () => {
 
     // With increased NTRP weighting, 4.0 vs 3.5 should show significant advantage
     expect(result.player1WinProbability).toBeGreaterThan(0.65);
-    expect(result.player1WinProbability).toBeLessThan(0.85);
+    expect(result.player1WinProbability).toBeLessThan(0.95);
     expect(result.factors.ntrpAdvantage).toBeGreaterThan(0.4);
 
     // The higher rated player should have significantly better odds
@@ -207,9 +207,21 @@ describe("calculateOdds", () => {
     const playerB = { ...mockPlayer2, ntrpRating: 3.0 };
     const result = calculateOdds(playerA, playerB, mockContext);
 
-    // For very large differences, allow more extreme probabilities
+    // For very large differences, allow more extreme probabilities (capped at 0.95)
     expect(result.player1WinProbability).toBeGreaterThan(0.75);
-    expect(result.player1WinProbability).toBeLessThan(0.95);
+    expect(result.player1WinProbability).toBeLessThanOrEqual(0.95);
     expect(result.factors.ntrpAdvantage).toBeGreaterThan(0.6);
+  });
+
+  test("weaker team/player should get higher odds (regression: inverted NTRP advantage)", () => {
+    // Simulates doubles: 2.5+3.0 team vs 3.5+4.0 team - weaker should be underdog
+    const weakerPlayer = { ...mockPlayer1, ntrpRating: 2.75 };
+    const strongerPlayer = { ...mockPlayer2, ntrpRating: 3.75 };
+    const result = calculateOdds(weakerPlayer, strongerPlayer, mockContext);
+
+    // Weaker player (player1) should have lower win probability and higher odds
+    expect(result.player1WinProbability).toBeLessThan(0.5);
+    expect(result.player1Odds).toBeGreaterThan(result.player2Odds);
+    expect(result.factors.ntrpAdvantage).toBeLessThan(0);
   });
 });

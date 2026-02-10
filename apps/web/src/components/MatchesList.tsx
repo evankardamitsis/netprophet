@@ -297,6 +297,7 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
             tournaments!inner (
                 id,
                 name,
+                organizer,
                 surface,
                 location,
                 matches_type,

@@ -19,6 +19,7 @@ interface TournamentFormProps {
 export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFormProps) {
     const [formData, setFormData] = useState<TournamentFormData>({
         name: '',
+        organizer: '',
         description: '',
         start_date: '',
         end_date: '',
@@ -39,6 +40,7 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
         if (tournament) {
             setFormData({
                 name: tournament.name,
+                organizer: tournament.organizer || '',
                 description: tournament.description || '',
                 start_date: tournament.start_date,
                 end_date: tournament.end_date,
@@ -130,7 +132,21 @@ export function TournamentForm({ tournament, onSubmit, onCancel }: TournamentFor
                         </SelectContent>
                     </Select>
                 </div>
+            </div>
 
+            {/* Organizer: full-width row under tournament name (shown in matches table under tournament name) */}
+            <div className="space-y-2">
+                <Label htmlFor="organizer" className="text-base font-semibold">Organizer</Label>
+                <Input
+                    id="organizer"
+                    value={formData.organizer}
+                    onChange={(e) => handleInputChange('organizer', e.target.value)}
+                    placeholder="e.g. Club name, association"
+                    className="h-12 text-base"
+                />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="start_date" className="text-base font-semibold">Start Date *</Label>
                     <Input
