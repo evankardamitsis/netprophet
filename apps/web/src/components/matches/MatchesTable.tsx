@@ -111,6 +111,16 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
         });
     };
 
+    // Short round label for Quarterfinals or later (mobile)
+    const getShortRoundLabel = useCallback((round: string | null | undefined): string | null => {
+        if (!round || typeof round !== 'string') return null;
+        const r = round.trim().toLowerCase();
+        if (r.includes('final') && !r.includes('semi') && !r.includes('quarter')) return 'F';
+        if (r.includes('semifinal')) return 'SF';
+        if (r.includes('quarterfinal')) return 'QF';
+        return null;
+    }, []);
+
     // Check if match has underdog odds
     const isUnderdog = useCallback((match: Match) => {
         return !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5;
@@ -452,6 +462,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                             const match = row.original;
                             const underdog = isUnderdog(match);
                             const isLastRow = index === table.getRowModel().rows.length - 1;
+                            const shortRound = getShortRoundLabel(match.round ?? undefined);
 
                             const isClickable = !match.locked;
 
@@ -503,8 +514,8 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                             </div>
                                         )}
                                         <div className="space-y-1.5">
-                                            {/* Tournament info (name, organizer, category on one row) */}
-                                            <div className="text-xs text-gray-400">
+                                            {/* Tournament info (name, organizer, category) + round QF+ on own line */}
+                                            <div className="text-xs text-gray-400 space-y-0.5">
                                                 <span className="truncate block">
                                                     {match.tournament}
                                                     {(match.tournaments as { organizer?: string | null } | undefined)?.organizer?.trim() && (
@@ -514,6 +525,9 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                                         <> • {match.tournament_categories.name}</>
                                                     )}
                                                 </span>
+                                                {shortRound && (
+                                                    <span className="text-orange-400/90 font-semibold block">{shortRound}</span>
+                                                )}
                                             </div>
 
                                             {/* Players / odds with clear affordance */}

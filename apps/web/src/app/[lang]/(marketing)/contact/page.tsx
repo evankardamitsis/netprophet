@@ -25,8 +25,8 @@ export default function ContactPage() {
     const contactInfo = [
         {
             title: lang === 'el' ? 'Email' : 'Email',
-            value: 'support@netprophetapp.com',
-            link: 'mailto:support@netprophetapp.com'
+            value: 'hello@netprophetapp.com',
+            link: 'mailto:hello@netprophetapp.com'
         },
         {
             title: lang === 'el' ? 'Ζωντανή Συνομιλία' : 'Live Chat',
@@ -54,7 +54,7 @@ export default function ContactPage() {
                             {contactInfo.map((info, index) => (
                                 <div key={index} className="text-center">
                                     <h3 className="font-semibold text-lg mb-2">{info.title}</h3>
-                                    <p className="text-slate-400 mb-4">{info.value}</p>
+                                    {info.onClick && <p className="text-slate-400 mb-4">{info.value}</p>}
                                     {info.onClick ? (
                                         <button
                                             onClick={info.onClick}
