@@ -152,10 +152,17 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 accessorKey: 'tournament',
                 header: 'Tournament',
                 cell: ({ row, getValue }) => {
+                    const match = row.original;
                     const tournamentName = getValue() as string;
-                    const organizer = (row.original.tournaments as { organizer?: string | null } | undefined)?.organizer;
+                    const organizer = (match.tournaments as { organizer?: string | null } | undefined)?.organizer;
+                    const hasActiveBet = activeBetMatchIds.has(match.id);
                     return (
-                        <div className="text-sm text-gray-300 font-medium truncate flex flex-col gap-0.5">
+                        <div className="text-sm text-gray-300 font-medium truncate flex flex-col gap-0.5 relative">
+                            {hasActiveBet && (
+                                <span className="inline-flex items-center w-fit text-white text-[10px] font-bold px-1.5 py-0.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full shadow-lg shadow-green-500/50 mb-1">
+                                    ✓ ACTIVE
+                                </span>
+                            )}
                             <span>{tournamentName}</span>
                             {organizer?.trim() && (
                                 <span className="text-xs text-orange-200 font-medium">{organizer}</span>
@@ -261,7 +268,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 enableColumnFilter: false,
             },
         ],
-        [onSelectMatch, dict, isUnderdog, getDisplayName]
+        [onSelectMatch, dict, isUnderdog, getDisplayName, activeBetMatchIds]
     );
 
     const filteredMatches = useMemo(() => {
