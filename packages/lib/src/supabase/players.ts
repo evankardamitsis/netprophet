@@ -150,7 +150,7 @@ export async function fetchPlayersPaginated(
   sortBy?: string,
   sortOrder: "asc" | "desc" = "asc",
   searchTerm?: string,
-  isActiveFilter?: boolean
+  isActiveFilter?: boolean,
 ) {
   let query = supabase.from(TABLE).select("*", { count: "exact" });
 
@@ -159,7 +159,7 @@ export async function fetchPlayersPaginated(
     const searchValue = searchTerm.trim().toLowerCase();
     // Search using normalized columns for accent and case-insensitive matching
     query = query.or(
-      `first_name_normalized.like.%${searchValue}%,last_name_normalized.like.%${searchValue}%`
+      `first_name_normalized.like.%${searchValue}%,last_name_normalized.like.%${searchValue}%`,
     );
   }
 
@@ -258,8 +258,8 @@ export async function bulkInsertPlayers(players: Player[]) {
 
   const existingSet = new Set(
     (existingPlayers || []).map((p) =>
-      `${p.first_name}|${p.last_name}`.toLowerCase()
-    )
+      `${p.first_name}|${p.last_name}`.toLowerCase(),
+    ),
   );
 
   // Filter out duplicates
@@ -270,7 +270,7 @@ export async function bulkInsertPlayers(players: Player[]) {
 
   console.log(`Total players to import: ${players.length}`);
   console.log(
-    `Existing players (skipped): ${players.length - newPlayers.length}`
+    `Existing players (skipped): ${players.length - newPlayers.length}`,
   );
   console.log(`New players (will import): ${newPlayers.length}`);
 
@@ -287,7 +287,7 @@ export async function bulkInsertPlayers(players: Player[]) {
     const dbPlayers = batch.map(toDbPlayer);
 
     console.log(
-      `Inserting batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(newPlayers.length / BATCH_SIZE)} (${batch.length} players)`
+      `Inserting batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(newPlayers.length / BATCH_SIZE)} (${batch.length} players)`,
     );
 
     const { data, error } = await supabase
@@ -347,7 +347,7 @@ export async function updatePlayerStatus(id: string, isActive: boolean) {
     // Check if this player has been claimed by a user
     if (player.claimed_by_user_id) {
       console.log(
-        `Player ${id} deactivated. Unclaiming user ${player.claimed_by_user_id}`
+        `Player ${id} deactivated. Unclaiming user ${player.claimed_by_user_id}`,
       );
 
       // Reset the player's claim fields so it can be found by find_matching_players
@@ -378,12 +378,12 @@ export async function updatePlayerStatus(id: string, isActive: boolean) {
       if (userUnclaimError) {
         console.error(
           `Error unclaiming user for player ${id}:`,
-          userUnclaimError
+          userUnclaimError,
         );
         // Don't throw error, just log it - the player status update was successful
       } else {
         console.log(
-          `Successfully unclaimed user ${player.claimed_by_user_id} from player ${id}`
+          `Successfully unclaimed user ${player.claimed_by_user_id} from player ${id}`,
         );
       }
     }
@@ -415,7 +415,7 @@ export async function updatePlayerStatsFromMatchResult(
   winnerId: string,
   loserId: string,
   matchDate: string,
-  tournamentSurface?: string
+  tournamentSurface?: string,
 ) {
   try {
     // Get current player data
@@ -426,7 +426,7 @@ export async function updatePlayerStatsFromMatchResult(
     const updateSurfaceWinRate = (
       player: any,
       surface: string,
-      isWin: boolean
+      isWin: boolean,
     ) => {
       const surfaceKey = getSurfaceKey(surface);
       if (!surfaceKey) return player;
@@ -471,7 +471,7 @@ export async function updatePlayerStatsFromMatchResult(
       updatedWinner = updateSurfaceWinRate(
         updatedWinner,
         tournamentSurface,
-        true
+        true,
       );
     }
 
@@ -501,7 +501,7 @@ export async function updatePlayerStatsFromMatchResult(
       updatedLoser = updateSurfaceWinRate(
         updatedLoser,
         tournamentSurface,
-        false
+        false,
       );
     }
 
@@ -538,7 +538,7 @@ export async function updatePlayerStatsFromMatchResult(
     ]);
 
     console.log(
-      `Updated player stats for match ${matchId}: Winner ${winner.firstName} ${winner.lastName}, Loser ${loser.firstName} ${loser.lastName}${tournamentSurface ? ` on ${tournamentSurface}` : ""}`
+      `Updated player stats for match ${matchId}: Winner ${winner.firstName} ${winner.lastName}, Loser ${loser.firstName} ${loser.lastName}${tournamentSurface ? ` on ${tournamentSurface}` : ""}`,
     );
   } catch (error) {
     console.error("Error updating player stats from match result:", error);
@@ -577,7 +577,7 @@ export async function reversePlayerStatsFromMatchResult(
   matchId: string,
   winnerId: string,
   loserId: string,
-  tournamentSurface?: string
+  tournamentSurface?: string,
 ) {
   try {
     // Get current player data
@@ -588,7 +588,7 @@ export async function reversePlayerStatsFromMatchResult(
     const reverseSurfaceWinRate = (
       player: any,
       surface: string,
-      wasWin: boolean
+      wasWin: boolean,
     ) => {
       const surfaceKey = getSurfaceKey(surface);
       if (!surfaceKey) return player;
@@ -634,7 +634,7 @@ export async function reversePlayerStatsFromMatchResult(
       updatedWinner = reverseSurfaceWinRate(
         updatedWinner,
         tournamentSurface,
-        true
+        true,
       );
     }
 
@@ -659,7 +659,7 @@ export async function reversePlayerStatsFromMatchResult(
       updatedLoser = reverseSurfaceWinRate(
         updatedLoser,
         tournamentSurface,
-        false
+        false,
       );
     }
 
@@ -691,7 +691,7 @@ export async function reversePlayerStatsFromMatchResult(
     ]);
 
     console.log(
-      `Reversed player stats for match ${matchId}: Previous Winner ${winner.firstName} ${winner.lastName}, Previous Loser ${loser.firstName} ${loser.lastName}${tournamentSurface ? ` on ${tournamentSurface}` : ""}`
+      `Reversed player stats for match ${matchId}: Previous Winner ${winner.firstName} ${winner.lastName}, Previous Loser ${loser.firstName} ${loser.lastName}${tournamentSurface ? ` on ${tournamentSurface}` : ""}`,
     );
   } catch (error) {
     console.error("Error reversing player stats from match result:", error);
@@ -704,7 +704,7 @@ export async function reversePlayerStatsFromMatchResult(
  */
 export async function getHeadToHeadRecord(
   player1Id: string,
-  player2Id: string
+  player2Id: string,
 ) {
   try {
     const { data, error } = await supabase.rpc("get_head_to_head_record", {
@@ -765,6 +765,7 @@ export async function getPlayerMatchHistory(playerId: string) {
         id,
         start_time,
         status,
+        round,
         player_a_id,
         player_b_id,
         winner_id,
@@ -786,8 +787,11 @@ export async function getPlayerMatchHistory(playerId: string) {
         ),
         tournaments(
           name
+        ),
+        tournament_categories!matches_category_id_fkey(
+          name
         )
-      `
+      `,
       )
       .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
       .eq("status", "finished")

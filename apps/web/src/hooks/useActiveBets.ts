@@ -4,16 +4,18 @@ import { useAuth } from './useAuth';
 
 /**
  * Hook to fetch active bets for the current user
- * Returns a Set of match IDs that have active bets
+ * Returns a Set of match IDs that have active bets and a map of matchId -> betId for linking
  */
 export function useActiveBets() {
     const { user } = useAuth();
     const [activeBetMatchIds, setActiveBetMatchIds] = useState<Set<string>>(new Set());
+    const [activeBetIdByMatchId, setActiveBetIdByMatchId] = useState<Map<string, string>>(new Map());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!user) {
             setActiveBetMatchIds(new Set());
+            setActiveBetIdByMatchId(new Map());
             setLoading(false);
             return;
         }
@@ -22,20 +24,28 @@ export function useActiveBets() {
             try {
                 const { data, error } = await supabase
                     .from('bets')
-                    .select('match_id')
+                    .select('id, match_id')
                     .eq('user_id', user.id)
                     .eq('status', 'active');
 
                 if (error) {
                     console.error('Error fetching active bets:', error);
                     setActiveBetMatchIds(new Set());
+                    setActiveBetIdByMatchId(new Map());
                 } else {
-                    const matchIds = new Set(data?.map(bet => bet.match_id) || []);
+                    const matchIds = new Set<string>();
+                    const betIdByMatch = new Map<string, string>();
+                    (data || []).forEach((bet: { id: string; match_id: string }) => {
+                        matchIds.add(bet.match_id);
+                        betIdByMatch.set(bet.match_id, bet.id);
+                    });
                     setActiveBetMatchIds(matchIds);
+                    setActiveBetIdByMatchId(betIdByMatch);
                 }
             } catch (error) {
                 console.error('Error in useActiveBets:', error);
                 setActiveBetMatchIds(new Set());
+                setActiveBetIdByMatchId(new Map());
             } finally {
                 setLoading(false);
             }
@@ -66,5 +76,5 @@ export function useActiveBets() {
         };
     }, [user]);
 
-    return { activeBetMatchIds, loading };
+    return { activeBetMatchIds, activeBetIdByMatchId, loading };
 }

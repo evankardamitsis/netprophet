@@ -50,6 +50,20 @@ export default function MyPicksPage() {
     const [isActiveBetsMinimized, setIsActiveBetsMinimized] = useState(true);
     const betsPerPage = 20;
 
+    // When landing with #bet-{id}, expand active bets and scroll to the bet
+    useEffect(() => {
+        if (typeof window === 'undefined' || loadingBets) return;
+        const hash = window.location.hash;
+        if (hash?.startsWith('#bet-')) {
+            setIsActiveBetsMinimized(false);
+            const id = hash.slice(1);
+            const timer = setTimeout(() => {
+                document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [loadingBets]);
+
     // Helper function to format prediction for display
     const formatPrediction = (prediction: any) => {
         const parts = [];
@@ -379,7 +393,7 @@ export default function MyPicksPage() {
                                     <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl border-0 shadow-2xl p-6">
                                         <div className="space-y-2">
                                             {activeBets.map((bet) => (
-                                                <div key={bet.id} className="relative group/item">
+                                                <div key={bet.id} id={`bet-${bet.id}`} className="relative group/item scroll-mt-24">
                                                     <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-30 group-hover/item:opacity-50 blur transition"></div>
                                                     <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl border border-purple-500/30 hover:border-purple-400/50 transition-all">
                                                         {isActiveBetsMinimized ? (

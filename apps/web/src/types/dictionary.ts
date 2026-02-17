@@ -68,6 +68,7 @@ export interface Dictionary {
     matchDetails: string;
     backToMatches: string;
     makePredictions: string;
+    activeBet: string;
     makePredictionsDescription: string;
     selectAtLeastOne: string;
     selectSetScore: string;

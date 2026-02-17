@@ -228,6 +228,7 @@
     "matchDetails": "Match Details",
     "backToMatches": "Back to Matches",
     "makePredictions": "Make your predictions",
+    "activeBet": "Active Bet",
     "makePredictionsDescription": "Choose from multiple prediction types to maximize your points!",
     "selectAtLeastOne": "Select at least one prediction",
     "selectSetScore": "Select set {setNumber} score",

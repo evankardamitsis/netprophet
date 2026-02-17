@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@netprophet/ui';
 import { motion } from 'framer-motion';
 import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
@@ -32,6 +33,7 @@ import {
 } from '@/lib/predictionHelpers';
 import { BettingSection } from './BettingSection';
 import { TournamentAccessModal } from './TournamentAccessModal';
+import { useActiveBets } from '@/hooks/useActiveBets';
 
 
 interface MatchDetailProps {
@@ -104,6 +106,7 @@ const createMatchDetails = (match: Match) => {
 
 export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen = true }: MatchDetailProps) {
     const { predictions, outrightsPredictions, addPrediction, addOutrightsPrediction, removePrediction, hasPrediction, hasOutrightsPrediction } = usePredictionSlip();
+    const { activeBetMatchIds, activeBetIdByMatchId } = useActiveBets();
     const { theme } = useTheme();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     const { placeBet, wallet } = useWallet();
@@ -597,9 +600,19 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                 shadows.card
                             )}>
                                 <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0 mt-4">
-                                    <h2 className={cx(typography.heading.sm, "text-white mb-1 px-4")}>
-                                        🎯 {dict?.matches?.makePredictions || 'Make your predictions'}
-                                    </h2>
+                                    <div className="flex items-center gap-2 flex-wrap px-4">
+                                        <h2 className={cx(typography.heading.sm, "text-white mb-1")}>
+                                            🎯 {dict?.matches?.makePredictions || 'Make your predictions'}
+                                        </h2>
+                                        {match && activeBetMatchIds.has(match.id) && (
+                                            <Link
+                                                href={`/${lang}/my-picks#bet-${activeBetIdByMatchId?.get(match.id) ?? ''}`}
+                                                className="inline-flex items-center text-white text-[10px] font-bold px-2 py-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full shadow-lg shadow-green-500/50 hover:from-green-500 hover:to-emerald-500 transition-colors"
+                                            >
+                                                ✓ {dict?.matches?.activeBet || 'Active Bet'}
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex-1 overflow-y-auto min-h-0 pb-28 sm:pb-36 flex flex-col">
