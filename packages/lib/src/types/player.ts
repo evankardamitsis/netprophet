@@ -28,6 +28,12 @@ export interface Player {
   grassLosses?: number;
   grassMatches?: number;
   grassWinRate?: number;
+  // Doubles-specific statistics
+  doublesWins?: number;
+  doublesLosses?: number;
+  doublesLast5?: string[];
+  doublesCurrentStreak?: number;
+  doublesStreakType?: "W" | "L";
   aggressiveness: number; // 1-10
   stamina: number; // 1-10
   consistency: number; // 1-10

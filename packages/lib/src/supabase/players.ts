@@ -34,6 +34,11 @@ function mapPlayer(row: any): Player {
     grassLosses: row.grass_losses,
     grassMatches: row.grass_matches,
     grassWinRate: row.grass_win_rate,
+    doublesWins: row.doubles_wins,
+    doublesLosses: row.doubles_losses,
+    doublesLast5: row.doubles_last5 || [],
+    doublesCurrentStreak: row.doubles_current_streak ?? 0,
+    doublesStreakType: row.doubles_streak_type || "W",
     aggressiveness: row.aggressiveness,
     stamina: row.stamina,
     consistency: row.consistency,
@@ -754,10 +759,54 @@ export async function getHeadToHeadRecord(
 }
 
 /**
- * Get last 5 matches for a specific player with match details
+ * Get last 5 matches for a specific player with match details.
+ * @param playerId - Player UUID
+ * @param matchType - 'singles' (default) or 'doubles'
  */
-export async function getPlayerMatchHistory(playerId: string) {
+export async function getPlayerMatchHistory(
+  playerId: string,
+  matchType: "singles" | "doubles" = "singles"
+) {
   try {
+    if (matchType === "doubles") {
+      const { data, error } = await supabase
+        .from("matches")
+        .select(
+          `
+          id,
+          start_time,
+          status,
+          round,
+          match_type,
+          player_a1_id,
+          player_a2_id,
+          player_b1_id,
+          player_b2_id,
+          player_a1:players!matches_player_a1_id_fkey(id, first_name, last_name),
+          player_a2:players!matches_player_a2_id_fkey(id, first_name, last_name),
+          player_b1:players!matches_player_b1_id_fkey(id, first_name, last_name),
+          player_b2:players!matches_player_b2_id_fkey(id, first_name, last_name),
+          match_results(match_result, set1_score, set2_score, set3_score, match_winner_team),
+          tournaments(name),
+          tournament_categories!matches_category_id_fkey(name)
+        `
+        )
+        .eq("match_type", "doubles")
+        .or(
+          `player_a1_id.eq.${playerId},player_a2_id.eq.${playerId},player_b1_id.eq.${playerId},player_b2_id.eq.${playerId}`
+        )
+        .eq("status", "finished")
+        .order("start_time", { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error("Error fetching doubles match history:", error);
+        return [];
+      }
+      return data || [];
+    }
+
+    // Singles
     const { data, error } = await supabase
       .from("matches")
       .select(
@@ -769,40 +818,23 @@ export async function getPlayerMatchHistory(playerId: string) {
         player_a_id,
         player_b_id,
         winner_id,
-        player_a:players!matches_player_a_id_fkey(
-          id,
-          first_name,
-          last_name
-        ),
-        player_b:players!matches_player_b_id_fkey(
-          id,
-          first_name,
-          last_name
-        ),
-        match_results(
-          match_result,
-          set1_score,
-          set2_score,
-          set3_score
-        ),
-        tournaments(
-          name
-        ),
-        tournament_categories!matches_category_id_fkey(
-          name
-        )
-      `,
+        player_a:players!matches_player_a_id_fkey(id, first_name, last_name),
+        player_b:players!matches_player_b_id_fkey(id, first_name, last_name),
+        match_results(match_result, set1_score, set2_score, set3_score),
+        tournaments(name),
+        tournament_categories!matches_category_id_fkey(name)
+      `
       )
       .or(`player_a_id.eq.${playerId},player_b_id.eq.${playerId}`)
       .eq("status", "finished")
+      .or("match_type.eq.singles,match_type.is.null")
       .order("start_time", { ascending: false })
       .limit(5);
 
     if (error) {
-      console.error("Error fetching player match history:", error);
+      console.error("Error fetching singles match history:", error);
       return [];
     }
-
     return data || [];
   } catch (error) {
     console.error("Error fetching player match history:", error);
