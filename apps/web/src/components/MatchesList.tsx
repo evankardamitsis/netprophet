@@ -381,6 +381,7 @@ export async function fetchSyncedMatches(): Promise<Match[]> {
             )
         `)
         .eq('web_synced', true)
+        .in('status', [MATCH_STATUSES.SCHEDULED, MATCH_STATUSES.LIVE])
         .order('start_time', { ascending: true })
         .limit(100); // Restore reasonable limit
 
