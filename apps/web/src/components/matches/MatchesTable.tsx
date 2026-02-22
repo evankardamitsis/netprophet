@@ -126,6 +126,12 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
         return !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5;
     }, []);
 
+    // Check if match is Semifinals or Finals only (not Quarterfinals)
+    const isProminentRound = useCallback((match: Match) => {
+        const r = (match.round ?? '').trim().toLowerCase();
+        return r.includes('semifinal') || (r.includes('final') && !r.includes('semi') && !r.includes('quarter'));
+    }, []);
+
     // Normalize text for filtering
     const normalizeText = (text: string) => {
         return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -430,12 +436,17 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                             {table.getRowModel().rows.map((row, index) => {
                                 const match = row.original;
                                 const underdog = isUnderdog(match);
+                                const prominent = isProminentRound(match);
                                 const isLastRow = index === table.getRowModel().rows.length - 1;
 
                                 return (
                                     <tr
                                         key={row.id}
-                                        className={`hover:bg-slate-800/50 transition-colors ${underdog ? 'bg-orange-500/5 border-l-4 border-orange-500' : ''}`}
+                                        className={cx(
+                                            "hover:bg-slate-800/50 transition-colors",
+                                            underdog && "bg-orange-500/5 border-l-4 border-orange-500",
+                                            prominent && "bg-amber-500/20 border-l-4 border-amber-400"
+                                        )}
                                     >
                                         {row.getVisibleCells().map(cell => (
                                             <td
@@ -468,6 +479,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                         {table.getRowModel().rows.map((row, index) => {
                             const match = row.original;
                             const underdog = isUnderdog(match);
+                            const prominent = isProminentRound(match);
                             const isLastRow = index === table.getRowModel().rows.length - 1;
                             const shortRound = getShortRoundLabel(match.round ?? undefined);
 
@@ -480,7 +492,8 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                         "transition-colors",
                                         isClickable && "hover:bg-slate-800/70 cursor-pointer",
                                         !isClickable && "opacity-70",
-                                        underdog && "bg-orange-500/5 border-l-4 border-l-orange-500"
+                                        underdog && !prominent && "bg-orange-500/5 border-l-4 border-l-orange-500",
+                                        prominent && "bg-amber-500/20 border-l-4 border-amber-400"
                                     )}
                                     onClick={() => {
                                         if (isClickable) {

@@ -144,4 +144,18 @@ aside .overflow-y-auto::-webkit-scrollbar-corner {
   background: transparent;
 }
 
+/* Tournament marquee banner animation */
+@keyframes tournament-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-tournament-marquee {
+  animation: tournament-marquee 40s linear infinite;
+}
+
  

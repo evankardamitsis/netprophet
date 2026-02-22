@@ -30,6 +30,20 @@ export async function getTournaments() {
   return data;
 }
 
+// Fetch tournaments that are currently active (start_date <= now <= end_date)
+export async function getActiveTournaments() {
+  const now = new Date().toISOString().split("T")[0];
+  const { data, error } = await supabase
+    .from("tournaments")
+    .select("id, name")
+    .lte("start_date", now)
+    .gte("end_date", now)
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function getTournament(id: string) {
   const { data, error } = await supabase
     .from("tournaments")

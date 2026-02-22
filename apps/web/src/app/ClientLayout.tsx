@@ -2,6 +2,7 @@
 import { ReactNode, useState, cloneElement, createContext, useContext, useEffect } from 'react';
 import { Sidebar } from '@/components/matches/Sidebar';
 import { TopNavigation } from '@/components/matches/TopNavigation';
+import { TournamentMarqueeBanner } from '@/components/matches/TournamentMarqueeBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -18,8 +19,6 @@ import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { ProfileClaimNotification } from '@/components/ProfileClaimNotification';
 import { NavigationLoader } from '@/components/NavigationLoader';
 import { AppFooter } from '@/components/AppFooter';
-import { InfoBar } from '@/components/InfoBar';
-
 import React from 'react';
 import type { ReactElement } from 'react';
 
@@ -97,29 +96,9 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
             <PredictionSlipCollapseContext.Provider value={{ setIsPredictionSlipCollapsed: setSlipCollapsed || (() => { }) }}>
                 <MatchSelectContext.Provider value={handleMatchSelect}>
                     <div className="relative h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white flex flex-col overflow-hidden">
-                        {/* Fantasy Ace 2026 Banner - Fixed at top */}
-                        <Link
-                            href={`/${lang}/tournaments/844fa43b-53c2-4116-9ba6-b41c7dd96c6b`}
-                            className="relative z-[60] w-full flex-shrink-0 block bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 border-b-2 border-yellow-500 shadow-lg hover:from-yellow-300 hover:via-yellow-200 hover:to-yellow-300 transition-all cursor-pointer active:scale-[0.98]"
-                        >
-                            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-1 md:py-2">
-                                <div className="flex items-center justify-center gap-1.5 md:gap-2">
-                                    <svg className="h-3 w-3 md:h-4 md:w-4 text-purple-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                    </svg>
-                                    <span className="font-black text-purple-900 text-xs sm:text-sm md:text-base tracking-wide">
-                                        FANTASY ACE 2026
-                                    </span>
-                                    <svg className="h-3 w-3 md:h-4 md:w-4 text-purple-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                    </svg>
-                                </div>
-                            </div>
-                        </Link>
-                        {/* InfoBar - Below banner */}
-                        <div className="relative z-[60] flex-shrink-0">
-                            <InfoBar lang={lang} />
-                        </div>
+                        {/* Active Tournaments Marquee Banner */}
+                        <TournamentMarqueeBanner lang={lang} />
+                        {/* InfoBar - Hidden */}
                         {/* TopNavigation - Below InfoBar, sticky */}
                         <div className="relative z-[60] flex-shrink-0">
                             <TopNavigation
