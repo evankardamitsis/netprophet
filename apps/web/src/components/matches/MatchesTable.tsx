@@ -492,8 +492,8 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                         "transition-colors",
                                         isClickable && "hover:bg-slate-800/70 cursor-pointer",
                                         !isClickable && "opacity-70",
-                                        underdog && !prominent && "bg-orange-500/5 border-l-4 border-l-orange-500",
-                                        prominent && "bg-amber-500/20 border-l-4 border-amber-400"
+                                        underdog && "bg-orange-500/5 border-l-4 border-l-orange-500",
+                                        prominent && !underdog && "bg-amber-500/5"
                                     )}
                                     onClick={() => {
                                         if (isClickable) {
