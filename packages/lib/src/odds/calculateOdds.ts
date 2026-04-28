@@ -220,11 +220,35 @@ export function calculateOdds(
 
   const player2Score = 1 - player1Score;
 
-  // For even matches (same NTRP, no H2H), use negative margin so odds start low and stay tight (e.g. ~1.40)
-  const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount when odds are close
+  // Close match: both sides between 38% and 62% → use compressed odds (e.g. 1.30 vs 1.50 instead of 2.04 vs 2.17)
+  const isCloseMatch =
+    player1Score >= 0.38 &&
+    player1Score <= 0.62 &&
+    player2Score >= 0.38 &&
+    player2Score <= 0.62;
+
+  let margin: number;
+  if (isCloseMatch) {
+    // Strong negative margin so close matches start ~1 whole point lower (target ~1.25–1.55 range)
+    margin = -0.35;
+  } else if (shouldReduceOtherFactors) {
+    margin = -0.3;
+  } else {
+    margin = 0.05;
+  }
+
   const MIN_ODDS = 1.2;
+  const MIN_ODDS_GAP = 0.02; // Odds must never be equal; enforce at least 0.02 difference
   let player1Odds = Math.max(MIN_ODDS, (1 / player1Score) * (1 + margin));
   let player2Odds = Math.max(MIN_ODDS, (1 / player2Score) * (1 + margin));
+
+  if (Math.abs(player1Odds - player2Odds) < MIN_ODDS_GAP) {
+    if (player1Score >= 0.5) {
+      player1Odds = Math.max(MIN_ODDS, player2Odds - MIN_ODDS_GAP);
+    } else {
+      player2Odds = Math.max(MIN_ODDS, player1Odds - MIN_ODDS_GAP);
+    }
+  }
 
   // Calculate confidence based on data quality and factor agreement
   const confidence = calculateConfidence(player1, player2, factors);

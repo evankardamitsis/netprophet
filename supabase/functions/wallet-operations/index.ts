@@ -25,6 +25,26 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function buildErrorResponse(error: any) {
+  const errorCode = error?.code;
+  const errorMessage = error?.message || "Unknown error";
+
+  if (errorCode === "23505") {
+    return {
+      status: 409,
+      message:
+        "You already have an active prediction for this match. Please wait for it to resolve.",
+      code: errorCode,
+    };
+  }
+
+  return {
+    status: 400,
+    message: errorMessage,
+    code: errorCode,
+  };
+}
+
 serve(async (req) => {
   console.log("Function called with method:", req.method, "and URL:", req.url);
 
@@ -114,15 +134,17 @@ serve(async (req) => {
     throw new Error("Invalid method");
   } catch (error) {
     console.log("Error in main function:", error);
+    const mappedError = buildErrorResponse(error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: mappedError.message,
+        code: mappedError.code || null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      }
+        status: mappedError.status,
+      },
     );
   }
 });
@@ -130,7 +152,7 @@ serve(async (req) => {
 const isValidUUID = (value?: string | null) =>
   typeof value === "string" &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value
+    value,
   );
 
 async function handlePlaceBet(supabase: any, user: any, body: any) {
@@ -193,7 +215,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 
     if (newProfile.balance < amount) {
       throw new Error(
-        `Insufficient balance: ${newProfile.balance} < ${amount}`
+        `Insufficient balance: ${newProfile.balance} < ${amount}`,
       );
     }
     activeProfile = newProfile;
@@ -202,7 +224,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
 
     if (activeProfile.balance < amount) {
       throw new Error(
-        `Insufficient balance: ${activeProfile.balance} < ${amount}`
+        `Insufficient balance: ${activeProfile.balance} < ${amount}`,
       );
     }
   }
@@ -224,14 +246,16 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
     if (isMatchIdUUID) {
       const { data: match, error: matchError } = await supabase
         .from("matches")
-        .select("id, player_a_id, player_b_id, player_a1_id, player_a2_id, player_b1_id, player_b2_id")
+        .select(
+          "id, player_a_id, player_b_id, player_a1_id, player_a2_id, player_b1_id, player_b2_id",
+        )
         .eq("id", matchId)
         .maybeSingle();
 
       if (matchError) {
         console.error("Failed to fetch match for conflict check:", matchError);
         throw new Error(
-          "Unable to validate match participants. Please try again."
+          "Unable to validate match participants. Please try again.",
         );
       }
 
@@ -248,10 +272,10 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
         });
 
         // Check singles players
-        const isParticipantInSingles = 
+        const isParticipantInSingles =
           match.player_a_id === claimedPlayerId ||
           match.player_b_id === claimedPlayerId;
-        
+
         // Check doubles players (team A and team B)
         const isParticipantInDoubles =
           match.player_a1_id === claimedPlayerId ||
@@ -271,20 +295,20 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
             player_b2_id: match.player_b2_id,
           });
           throw new Error(
-            "You cannot place predictions on matches you are participating in."
+            "You cannot place predictions on matches you are participating in.",
           );
         }
         console.log("Participant validation passed in wallet-operations");
       } else {
         console.warn(
           "Match not found for validation (may be a placeholder or unsynced match):",
-          matchId
+          matchId,
         );
       }
     } else {
       console.log(
         "Skipping participant validation because matchId is not a UUID (likely a placeholder):",
-        matchId
+        matchId,
       );
     }
   }
@@ -344,7 +368,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
     } catch (notificationError) {
       console.error(
         "Error creating large bet notification:",
-        notificationError
+        notificationError,
       );
       // Don't fail the bet if notification creation fails
     }
@@ -365,7 +389,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -379,7 +403,7 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
     console.log("🔍 DEBUG: Fetching or creating profile for user:", user.id);
     const { data: profileData, error: profileError } = await supabase.rpc(
       "get_or_create_profile",
-      { user_uuid: user.id }
+      { user_uuid: user.id },
     );
 
     console.log("🔍 DEBUG: Profile query result:", {
@@ -451,7 +475,7 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
     if (transactionError) {
       console.error(
         "🔍 DEBUG: Failed to record transaction:",
-        transactionError
+        transactionError,
       );
     } else {
       console.log("🔍 DEBUG: Transaction recorded successfully");
@@ -459,7 +483,7 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
 
     console.log(
       "🔍 DEBUG: Welcome bonus claimed successfully, returning response with newBalance:",
-      newBalance
+      newBalance,
     );
     return new Response(
       JSON.stringify({
@@ -469,7 +493,7 @@ async function handleClaimWelcomeBonus(supabase: any, user: any) {
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
-      }
+      },
     );
   } catch (error) {
     console.log("🔍 DEBUG: Error in handleClaimWelcomeBonus:", error);
@@ -531,7 +555,7 @@ async function handleAddReferralBonus(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -589,7 +613,7 @@ async function handleAddLeaderboardPrize(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -647,7 +671,7 @@ async function handlePurchaseItem(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -705,7 +729,7 @@ async function handleEnterTournament(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -763,7 +787,7 @@ async function handleUnlockInsight(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -825,7 +849,7 @@ async function handleRecordWin(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }
 
@@ -883,6 +907,6 @@ async function handleRecordLoss(supabase: any, user: any, body: any) {
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
-    }
+    },
   );
 }

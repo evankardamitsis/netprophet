@@ -210,6 +210,32 @@ export class BetsService {
       betData.matchId,
     ]);
 
+    const { data: existingActiveBet, error: existingActiveBetError } =
+      await supabase
+        .from("bets")
+        .select("id")
+        .eq("user_id", sessionData.session.user.id)
+        .eq("match_id", betData.matchId)
+        .eq("status", "active")
+        .or("is_parlay.is.null,is_parlay.eq.false")
+        .maybeSingle();
+
+    if (existingActiveBetError) {
+      console.error(
+        "Error checking for existing active single bet:",
+        existingActiveBetError
+      );
+      throw new Error(
+        `Failed to validate existing bet: ${existingActiveBetError.message}`
+      );
+    }
+
+    if (existingActiveBet) {
+      throw new Error(
+        "You already have an active prediction for this match. Please wait for it to resolve."
+      );
+    }
+
     console.log("Insert data object:", insertData);
     console.log("Insert data JSON:", JSON.stringify(insertData, null, 2));
 
@@ -220,6 +246,11 @@ export class BetsService {
       .single();
 
     if (error) {
+      if (error.code === "23505") {
+        throw new Error(
+          "You already have an active prediction for this match. Please wait for it to resolve."
+        );
+      }
       console.error("Error creating bet:", error);
       throw new Error(`Failed to create bet: ${error.message}`);
     }

@@ -248,14 +248,38 @@ function calculateOdds(
     player1Score = 1 - player2Score;
   }
 
-  // For even matches (same NTRP, no H2H), use negative margin so odds start low and stay tight (e.g. ~1.40 vs 1.40)
-  const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount when odds are close
+  // Close match: both sides 38–62% → compressed odds (e.g. 1.30 vs 1.50 instead of 2.04 vs 2.17)
+  const isCloseMatch =
+    player1Score >= 0.38 &&
+    player1Score <= 0.62 &&
+    player2Score >= 0.38 &&
+    player2Score <= 0.62;
+
+  let margin: number;
+  if (isCloseMatch) {
+    margin = -0.35; // Target ~1.25–1.55 range for close matches
+  } else if (shouldReduceOtherFactors) {
+    margin = -0.3;
+  } else {
+    margin = 0.05;
+  }
+
   let player1Odds = (1 / player1Score) * (1 + margin);
   let player2Odds = (1 / player2Score) * (1 + margin);
 
   // Enforce minimum odds threshold (safety check)
   player1Odds = Math.max(MIN_ODDS, player1Odds);
   player2Odds = Math.max(MIN_ODDS, player2Odds);
+
+  // Odds must never be equal; enforce at least 0.02 difference
+  const MIN_ODDS_GAP = 0.02;
+  if (Math.abs(player1Odds - player2Odds) < MIN_ODDS_GAP) {
+    if (player1Score >= 0.5) {
+      player1Odds = Math.max(MIN_ODDS, player2Odds - MIN_ODDS_GAP);
+    } else {
+      player2Odds = Math.max(MIN_ODDS, player1Odds - MIN_ODDS_GAP);
+    }
+  }
 
   // Calculate confidence based on data quality and factor agreement
   const confidence = calculateConfidence(player1, player2, factors);
@@ -918,16 +942,38 @@ function calculateDoublesOdds(
     teamAScore = 1 - teamBScore;
   }
 
-  // Calculate decimal odds with margin
-  // For equal teams with no H2H, use a negative margin (discount) to get lower starting odds
-  // This makes the odds more attractive (lower) for equal teams
-  const margin = shouldReduceOtherFactors ? -0.3 : 0.05; // -30% discount for equal teams
-  let teamAOdds = (1 / teamAScore) * (1 + margin);
-  let teamBOdds = (1 / teamBScore) * (1 + margin);
-  
+  // Close match: both sides 38–62% → compressed odds (e.g. 1.30 vs 1.50)
+  const isCloseMatchDoubles =
+    teamAScore >= 0.38 &&
+    teamAScore <= 0.62 &&
+    teamBScore >= 0.38 &&
+    teamBScore <= 0.62;
+
+  let marginDoubles: number;
+  if (isCloseMatchDoubles) {
+    marginDoubles = -0.35;
+  } else if (shouldReduceOtherFactors) {
+    marginDoubles = -0.3;
+  } else {
+    marginDoubles = 0.05;
+  }
+
+  let teamAOdds = (1 / teamAScore) * (1 + marginDoubles);
+  let teamBOdds = (1 / teamBScore) * (1 + marginDoubles);
+
   // Enforce minimum odds threshold (safety check)
   teamAOdds = Math.max(MIN_ODDS, teamAOdds);
   teamBOdds = Math.max(MIN_ODDS, teamBOdds);
+
+  // Odds must never be equal; enforce at least 0.02 difference
+  const MIN_ODDS_GAP_DOUBLES = 0.02;
+  if (Math.abs(teamAOdds - teamBOdds) < MIN_ODDS_GAP_DOUBLES) {
+    if (teamAScore >= 0.5) {
+      teamAOdds = Math.max(MIN_ODDS, teamBOdds - MIN_ODDS_GAP_DOUBLES);
+    } else {
+      teamBOdds = Math.max(MIN_ODDS, teamAOdds - MIN_ODDS_GAP_DOUBLES);
+    }
+  }
 
   // Calculate confidence
   const confidence = calculateDoublesConfidence(
