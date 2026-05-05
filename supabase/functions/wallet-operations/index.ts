@@ -166,7 +166,7 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
   });
 
   // Validate bet amount
-  if (amount < 10 || amount > 1000) {
+  if (amount < 10) {
     throw new Error("Invalid bet amount");
   }
 

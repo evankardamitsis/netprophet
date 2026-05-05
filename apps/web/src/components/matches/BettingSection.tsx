@@ -90,7 +90,7 @@ export function BettingSection({
                     <input
                         type="number"
                         min={COIN_CONSTANTS.MIN_BET}
-                        max={Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)}
+                        max={wallet.balance}
                         value={betAmount}
                         onChange={(e) => onBetAmountChange(Number(e.target.value))}
                         className="flex-1 p-2 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
@@ -113,7 +113,7 @@ export function BettingSection({
                     </div>
                 </div>
                 <div className="text-xs text-gray-400 flex items-center gap-1">
-                    {dict?.matches?.minMaxBalance?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()).replace('{max}', Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance).toString()).replace('{balance}', wallet.balance.toString()) || `Min: ${COIN_CONSTANTS.MIN_BET} 🌕 | Max: ${Math.min(COIN_CONSTANTS.MAX_BET, wallet.balance)} 🌕 | Balance: ${wallet.balance} 🌕`}
+                    {dict?.matches?.minMaxBalance?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()).replace('{max}', wallet.balance.toString()).replace('{balance}', wallet.balance.toString()) || `Min: ${COIN_CONSTANTS.MIN_BET} 🌕 | Max: ${wallet.balance} 🌕 | Balance: ${wallet.balance} 🌕`}
                     {isLowBalance && (
                         <WarningIcon className="h-3 w-3 text-red-400 drop-shadow-sm" />
                     )}
