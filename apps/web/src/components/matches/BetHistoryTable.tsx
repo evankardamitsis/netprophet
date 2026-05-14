@@ -34,29 +34,20 @@ interface BetHistoryTableProps {
 }
 
 export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
+    const STATUS_STYLES: Record<string, { label: string; className: string }> = {
+        active:  { label: '⏳ Ενεργή',       className: 'bg-[#38BDF8]/10 border-[#38BDF8]/25 text-[#38BDF8]' },
+        won:     { label: '✅ Κερδισμένη',   className: 'bg-[#00E676]/10 border-[#00E676]/30 text-[#00E676]' },
+        lost:    { label: '❌ Χαμένη',       className: 'bg-[#FF4545]/10 border-[#FF4545]/30 text-[#FF4545]' },
+    };
+
     const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'active':
-                return (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-500/20 to-blue-600/20 text-blue-300 border border-blue-500/30">
-                        Active
-                    </span>
-                );
-            case 'won':
-                return (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-300 border border-green-500/30">
-                        Won
-                    </span>
-                );
-            case 'lost':
-                return (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 border border-red-500/30">
-                        Lost
-                    </span>
-                );
-            default:
-                return null;
-        }
+        const s = STATUS_STYLES[status];
+        if (!s) return null;
+        return (
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${s.className}`}>
+                {s.label}
+            </span>
+        );
     };
 
     const formatDate = (dateString: string) => {
@@ -91,139 +82,88 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
     return (
         <>
             {/* Mobile Card View */}
-            <div className="block md:hidden space-y-3">
+            <div className="block md:hidden space-y-2">
                 {bets.map((bet) => (
-                    <div key={bet.id} className="relative group/item">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-xl opacity-30 group-hover/item:opacity-50 blur transition"></div>
-                        <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-xl border border-purple-500/30 p-3">
-                            {/* Header: Match Title and Status */}
-                            <div className="flex items-start justify-between gap-2 mb-2">
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-white text-sm truncate mb-1">
-                                        {bet.matchTitle}
-                                    </h3>
-                                    <p className="text-purple-300 text-xs">
-                                        {formatDate(bet.created_at)}
-                                    </p>
-                                </div>
-                                <div className="flex-shrink-0">
-                                    {getStatusBadge(bet.status)}
-                                </div>
-                            </div>
-
-                            {/* Prediction Details */}
-                            <div className="mb-3">
-                                <p className="text-gray-300 text-xs leading-relaxed break-words">
-                                    {formatPrediction(bet.prediction)}
+                    <div key={bet.id} className="bg-[#161F35] border border-white/[0.06] rounded-xl p-4">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-white text-sm truncate mb-1">
+                                    {bet.matchTitle}
+                                </h3>
+                                <p className="text-[#94A3B8] text-xs">
+                                    {formatDate(bet.created_at)}
                                 </p>
                             </div>
+                            <div className="flex-shrink-0">
+                                {getStatusBadge(bet.status)}
+                            </div>
+                        </div>
 
-                            {/* Stats Row */}
-                            <div className="flex items-center justify-between gap-2 pt-2 border-t border-purple-500/20">
-                                <div className="flex items-center gap-1.5">
-                                    <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg px-2 py-1 border border-green-500/30">
-                                        <div className="text-green-400 text-xs font-bold flex items-center gap-1">
-                                            {bet.betAmount} <CoinIcon size={10} />
-                                        </div>
-                                    </div>
-                                    <div className="text-purple-300 text-xs font-bold">
-                                        {bet.multiplier}x
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-2 py-1 border border-purple-500/30">
-                                        <div className="text-purple-300 text-xs font-bold flex items-center gap-1">
-                                            {bet.potentialWinnings} <CoinIcon size={10} />
-                                        </div>
-                                    </div>
-                                    {bet.pointsEarned > 0 && (
-                                        <div className={`text-xs font-bold flex items-center gap-1 ${bet.pointsEarned > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                                            +{bet.pointsEarned} <CoinIcon size={10} />
-                                        </div>
-                                    )}
-                                </div>
+                        <div className="mb-3">
+                            <p className="text-[#94A3B8] text-xs leading-relaxed break-words">
+                                {formatPrediction(bet.prediction)}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
+                            <div className="text-xs text-[#94A3B8]">
+                                Ποσό: <span className="text-white font-bold tabular-nums">{bet.betAmount}</span>
+                                <span className="ml-1 text-[#4B5975]">× {bet.multiplier}</span>
+                            </div>
+                            <div className="text-xs text-[#94A3B8]">
+                                Πιθανά Κέρδη:{' '}
+                                <span className="text-[#00E676] font-bold tabular-nums">
+                                    {bet.potentialWinnings}
+                                </span>
+                                {bet.pointsEarned > 0 && (
+                                    <span className="text-[#00E676] font-bold ml-1">
+                                        (+{bet.pointsEarned})
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-                    <thead className="bg-slate-700">
-                        <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-48">
-                                {dict?.myPicks?.match || 'Match'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-32">
-                                {dict?.myPicks?.dateTime || 'Date'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-80">
-                                {dict?.myPicks?.predictionDetails || 'Prediction Details'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-24">
-                                {dict?.myPicks?.bet || 'Bet'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-20">
-                                {dict?.myPicks?.multiplier || 'Mult'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-32">
-                                {dict?.myPicks?.potential || 'Potential'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-20">
-                                {dict?.myPicks?.status || 'Status'}
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 tracking-wider w-24">
-                                {dict?.myPicks?.winnings || 'Winnings'}
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-slate-800 divide-y divide-slate-700">
-                        {bets.map((bet) => (
-                            <tr key={bet.id} className="hover:bg-slate-750 transition-colors">
-                                <td className="px-4 py-4">
-                                    <div className="text-sm font-medium text-white">
-                                        {bet.matchTitle}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4">
-                                    <div className="text-sm text-gray-300">
-                                        {formatDate(bet.created_at)}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4">
-                                    <div className="text-sm text-gray-300 leading-relaxed" title={formatPrediction(bet.prediction)}>
-                                        {formatPrediction(bet.prediction)}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-300 flex items-center gap-1">
-                                        {bet.betAmount} <CoinIcon size={14} />
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-300">
-                                        {bet.multiplier}x
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-300 flex items-center gap-1">
-                                        {bet.potentialWinnings} <CoinIcon size={14} />
-                                    </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                    {getStatusBadge(bet.status)}
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap">
-                                    <div className={`text-sm font-medium flex items-center gap-1 ${bet.pointsEarned > 0 ? 'text-green-400' : 'text-gray-400'}`}>
-                                        {bet.pointsEarned > 0 ? `+${bet.pointsEarned}` : '0'} <CoinIcon size={14} />
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            {/* Desktop List View */}
+            <div className="hidden md:block space-y-2">
+                {/* Header */}
+                <div className="grid grid-cols-[2fr_1fr_3fr_1fr_1fr_1fr_1fr] gap-4 px-4 py-2 text-[11px] font-bold text-[#4B5975] uppercase tracking-wider">
+                    <span>{dict?.myPicks?.match || 'Αγώνας'}</span>
+                    <span>{dict?.myPicks?.dateTime || 'Ημερομηνία'}</span>
+                    <span>{dict?.myPicks?.predictionDetails || 'Πρόβλεψη'}</span>
+                    <span>Ποσό</span>
+                    <span>Απόδοση</span>
+                    <span>Πιθανά Κέρδη</span>
+                    <span>{dict?.myPicks?.status || 'Κατάσταση'}</span>
+                </div>
+                {bets.map((bet) => (
+                    <div key={bet.id}
+                         className="grid grid-cols-[2fr_1fr_3fr_1fr_1fr_1fr_1fr] gap-4 items-center px-4 py-4 bg-[#161F35] border border-white/[0.06] rounded-xl transition-all hover:border-white/[0.12]">
+                        <div className="text-sm font-semibold text-white truncate">
+                            {bet.matchTitle}
+                        </div>
+                        <div className="text-xs text-[#94A3B8]">
+                            {formatDate(bet.created_at)}
+                        </div>
+                        <div className="text-xs text-[#94A3B8] leading-relaxed truncate" title={formatPrediction(bet.prediction)}>
+                            {formatPrediction(bet.prediction)}
+                        </div>
+                        <div className="text-sm font-bold text-white tabular-nums flex items-center gap-1">
+                            {bet.betAmount} <CoinIcon size={12} />
+                        </div>
+                        <div className="text-sm text-[#94A3B8] tabular-nums">
+                            {bet.multiplier}×
+                        </div>
+                        <div className="text-sm font-bold tabular-nums flex items-center gap-1 text-[#00E676]">
+                            {bet.potentialWinnings} <CoinIcon size={12} />
+                        </div>
+                        <div>
+                            {getStatusBadge(bet.status)}
+                        </div>
+                    </div>
+                ))}
             </div>
         </>
     );

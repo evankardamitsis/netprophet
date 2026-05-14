@@ -19,6 +19,7 @@ import { ProfileSetupModal } from '@/components/ProfileSetupModal';
 import { ProfileClaimNotification } from '@/components/ProfileClaimNotification';
 import { NavigationLoader } from '@/components/NavigationLoader';
 import { AppFooter } from '@/components/AppFooter';
+import { BottomNav } from '@/components/BottomNav';
 import React from 'react';
 import type { ReactElement } from 'react';
 
@@ -140,7 +141,7 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
 
                             {/* Main content */}
                             <div className={`flex-1 flex flex-col min-w-0 h-full overflow-hidden ${sidebarOpen ? 'xl:ml-[400px]' : 'xl:ml-48'} transition-all duration-300 ease-in-out relative z-10`}>
-                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90 backdrop-blur-sm pb-4 md:pb-0">
+                                <div className="flex-1 p-0 overflow-y-auto bg-gradient-to-br from-slate-950/90 via-blue-950/80 to-purple-950/90 backdrop-blur-sm pb-16 lg:pb-0">
                                     {children}
                                     {/* Bottom spacing for mobile to ensure footer/content isn't clipped */}
                                     <div className="h-4 md:hidden" aria-hidden="true" />
@@ -191,6 +192,13 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                                     onClick={handleExpandPredictionSlip}
                                 />
                             )}
+
+                            {/* Bottom Navigation - mobile only */}
+                            <BottomNav
+                                predictionCount={predictions.length}
+                                onSlipToggle={() => setSlipCollapsed?.(!slipCollapsed)}
+                                lang={lang}
+                            />
 
                             {/* Global Low Balance Notification */}
                             <LowBalanceNotification lang={lang} />

@@ -652,7 +652,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                                     whileHover={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 1.02 } : {}}
                                                     whileTap={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 0.98 } : {}}
                                                 >
-                                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
+                                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Ενημέρωση Πρόβλεψης' : dict?.matches?.addToSlip || 'Προσθήκη Πρόβλεψης') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
                                                 </motion.button>
                                             }
                                         />
@@ -676,7 +676,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                                         whileHover={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 1.02 } : {}}
                                         whileTap={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 0.98 } : {}}
                                     >
-                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Update Slip' : dict?.matches?.addToSlip || 'Add to Slip') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
+                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Ενημέρωση Πρόβλεψης' : dict?.matches?.addToSlip || 'Προσθήκη Πρόβλεψης') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
                                     </motion.button>
                                 </div>
                             </div>

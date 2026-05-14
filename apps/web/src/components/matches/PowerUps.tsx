@@ -251,8 +251,8 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
                                                     {getTranslatedName(powerUp.name)}
                                                 </CardTitle>
                                             </div>
-                                            <span className="inline-block text-xs bg-slate-700/80 text-slate-300 px-3 py-1 rounded-full border border-slate-600/50">
-                                                {dict.rewards[powerUp.usageType.toLowerCase().replace(' ', '') as keyof typeof dict.rewards] || powerUp.usageType}
+                                            <span className="inline-block text-xs bg-[#1E2A45] text-[#94A3B8] px-3 py-1 rounded-full border border-white/[0.08]">
+                                                {({'once per slip': 'Μία φορά ανά λίστα', 'time-based': 'Χρονικά', 'permanent': 'Μόνιμο'} as Record<string, string>)[powerUp.usageType.toLowerCase()] || dict.rewards[powerUp.usageType.toLowerCase().replace(' ', '') as keyof typeof dict.rewards] || powerUp.usageType}
                                             </span>
                                         </div>
                                     </div>

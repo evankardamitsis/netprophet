@@ -322,203 +322,154 @@ export default function MyPicksPage() {
 
     if (loading || !user) {
         return (
-            <div className="min-h-screen relative flex items-center justify-center" style={{ backgroundColor: '#121A39' }}>
+            <div className="min-h-screen flex items-center justify-center bg-[#080C18]">
                 <div className="text-center">
-                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
-                    </div>
-                    <p className="text-white text-lg font-bold">Loading...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#FFD60A] border-t-transparent mx-auto mb-4" />
+                    <p className="text-[#94A3B8] text-sm font-semibold">Φόρτωση...</p>
                 </div>
             </div>
         );
     }
 
+    const wonBets = bets.filter(b => b.status === 'won');
+    const totalBetsCount = bets.filter(b => b.status !== 'active').length;
+    const accuracy = totalBetsCount > 0 ? Math.round((wonBets.length / totalBetsCount) * 100) : 0;
+    const totalEarnings = wonBets.reduce((sum, b) => sum + b.potentialWinnings, 0);
+
     return (
-        <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
-            {/* Decorative circles */}
-            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
-            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
-            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
-
-            {/* Back to Dashboard Button */}
-            <div className="max-w-6xl mx-auto px-6 pt-6 relative z-10">
-                <Button
-                    variant="ghost"
-                    onClick={() => router.push(`/${lang}/matches`)}
-                    className="mb-6 text-gray-300 hover:text-white hover:bg-slate-800/50 px-2 py-1 text-sm sm:px-3 sm:py-2 sm:text-base"
-                >
-                    {dict?.navigation?.backToMatches || '← Back to Matches'}
-                </Button>
-            </div>
-
-            {/* Content Area */}
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 relative z-10">
+        <div className="min-h-screen bg-[#080C18]">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 np-page-pad">
                 {/* Page Header */}
-                <div className="text-center mb-8 sm:mb-12">
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
-                        {dict?.myPicks?.title || 'My Predictions'}
+                <div className="mb-6">
+                    <h1 className="text-2xl font-black text-white">
+                        {dict?.myPicks?.title || 'Οι Προβλέψεις Μου'}
                     </h1>
-                    <p className="text-sm sm:text-lg text-white/90 font-bold max-w-2xl mx-auto px-2">
-                        {dict?.myPicks?.subtitle || 'View your prediction history and the points you\'ve earned.'}
+                    <p className="text-[#94A3B8] text-sm mt-1">
+                        {dict?.myPicks?.subtitle || 'Το ιστορικό και τα αποτελέσματα των προβλέψεών σου.'}
                     </p>
                 </div>
 
+                {/* Stat Summary Strip */}
+                <div className="flex gap-2.5 overflow-x-auto pb-2 mb-6 [scrollbar-width:none]">
+                    <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full border bg-[#161F35] border-white/[0.06] text-sm font-bold text-white">
+                        <span>🎯</span>
+                        <span className="text-[#94A3B8] font-medium">Ακρίβεια:</span>
+                        <span className="tabular-nums">{accuracy}%</span>
+                    </div>
+                    <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full border bg-[#FFD60A]/10 border-[#FFD60A]/30 text-sm font-bold text-[#FFD60A]">
+                        <span>🪙</span>
+                        <span className="font-medium opacity-70">Κέρδη:</span>
+                        <span className="tabular-nums">+{totalEarnings.toLocaleString('el-GR')}</span>
+                    </div>
+                    <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full border bg-[#161F35] border-white/[0.06] text-sm font-bold text-white">
+                        <span>📊</span>
+                        <span className="text-[#94A3B8] font-medium">Συνολικά:</span>
+                        <span className="tabular-nums">{bets.length}</span>
+                    </div>
+                </div>
+
                 {/* Active Bets Section */}
-                {!loadingBets && !error && (
-                    <div className="mb-8 sm:mb-12">
-                        <div className="flex items-center gap-3 mb-6">
-                            <h2 className="text-xl sm:text-2xl font-black text-white drop-shadow-lg">
-                                {dict?.myPicks?.activeBets || 'Active Bets'}
-                            </h2>
-                            {(() => {
-                                const activeBets = bets.filter(bet => bet.status === 'active');
-                                return activeBets.length > 0 && (
-                                    <button
-                                        onClick={() => setIsActiveBetsMinimized(!isActiveBetsMinimized)}
-                                        className="text-white hover:text-purple-300 transition-colors transform hover:scale-110"
-                                        aria-label={isActiveBetsMinimized ? 'Expand active bets' : 'Collapse active bets'}
-                                    >
-                                        <span className="text-lg transition-transform duration-200">
-                                            {isActiveBetsMinimized ? '▼' : '▲'}
-                                        </span>
-                                    </button>
-                                );
-                            })()}
-                        </div>
-                        {(() => {
-                            const activeBets = bets.filter(bet => bet.status === 'active');
-                            return activeBets.length > 0 ? (
-                                <div className="relative group">
-                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 rounded-3xl opacity-40 group-hover:opacity-60 blur transition"></div>
-                                    <div className="relative bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-800/90 backdrop-blur-sm rounded-3xl border-0 shadow-2xl p-6">
-                                        <div className="space-y-2">
-                                            {activeBets.map((bet) => (
-                                                <div key={bet.id} id={`bet-${bet.id}`} className="relative group/item scroll-mt-24">
-                                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl opacity-30 group-hover/item:opacity-50 blur transition"></div>
-                                                    <div className="relative bg-gradient-to-br from-slate-700/90 via-slate-800/90 to-slate-700/90 backdrop-blur-sm rounded-2xl border border-purple-500/30 hover:border-purple-400/50 transition-all">
-                                                        {isActiveBetsMinimized ? (
-                                                            // Compact view - single row
-                                                            <div className="p-3">
-                                                                <div className="flex items-center justify-between gap-4">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-black text-white text-sm sm:text-base truncate">
-                                                                            <span className="md:hidden">{bet.matchTitleShort}</span>
-                                                                            <span className="hidden md:inline">{bet.matchTitle}</span>
-                                                                        </h3>
-                                                                        <p className="text-purple-300 text-xs truncate">
-                                                                            {formatPrediction(bet.prediction)}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                                        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-green-500/30">
-                                                                            <div className="text-green-400 font-black text-xs flex items-center gap-1">
-                                                                                {bet.betAmount} <CoinIcon size={12} />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-purple-500/30">
-                                                                            <div className="text-green-400 font-black text-xs flex items-center gap-1">
-                                                                                {bet.potentialWinnings} <CoinIcon size={12} />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ) : (
-                                                            // Full view - detailed cards
-                                                            <div className="p-4">
-                                                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <h3 className="font-black text-white text-base sm:text-lg mb-2">
-                                                                            <span className="md:hidden">{bet.matchTitleShort}</span>
-                                                                            <span className="hidden md:inline truncate">{bet.matchTitle}</span>
-                                                                        </h3>
-                                                                        <p className="text-purple-300 text-xs mb-2">
-                                                                            {new Date(bet.created_at).toLocaleDateString('en-GB', {
-                                                                                day: 'numeric',
-                                                                                month: 'short',
-                                                                                year: 'numeric'
-                                                                            })}
-                                                                        </p>
-                                                                        <p className="text-purple-200 text-xs sm:text-sm">
-                                                                            <span className="font-bold text-white">{dict?.myPicks?.prediction || 'Prediction'}:</span> {formatPrediction(bet.prediction)}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="flex flex-row sm:flex-col sm:text-right gap-3 sm:gap-2 flex-shrink-0">
-                                                                        <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-green-500/30">
-                                                                            <div className="text-green-400 font-black text-sm flex items-center gap-1">
-                                                                                {bet.betAmount} <CoinIcon size={14} />
-                                                                            </div>
-                                                                            <div className="text-purple-300 text-xs">
-                                                                                {bet.multiplier}x
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
-                                                                            <div className="text-purple-300 text-xs font-bold mb-1">
-                                                                                {dict?.myPicks?.potential || 'Potential'}
-                                                                            </div>
-                                                                            <div className="text-green-400 font-black text-sm flex items-center gap-1">
-                                                                                {bet.potentialWinnings} <CoinIcon size={14} />
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        )}
+                {!loadingBets && !error && (() => {
+                    const activeBets = bets.filter(bet => bet.status === 'active');
+                    if (activeBets.length === 0) return null;
+                    return (
+                        <div className="mb-8">
+                            <div className="flex items-center gap-3 mb-4">
+                                <h2 className="text-lg font-black text-white">
+                                    {dict?.myPicks?.activeBets || 'Ενεργές Προβλέψεις'}
+                                </h2>
+                                <button
+                                    onClick={() => setIsActiveBetsMinimized(!isActiveBetsMinimized)}
+                                    className="text-[#94A3B8] hover:text-white transition-colors text-sm"
+                                >
+                                    {isActiveBetsMinimized ? '▼' : '▲'}
+                                </button>
+                            </div>
+                            <div className="space-y-2">
+                                {activeBets.map((bet) => (
+                                    <div key={bet.id} id={`bet-${bet.id}`}
+                                         className="bg-[#161F35] border border-[#38BDF8]/20 rounded-xl p-4 scroll-mt-24">
+                                        {isActiveBetsMinimized ? (
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-bold text-white text-sm truncate">
+                                                        <span className="md:hidden">{bet.matchTitleShort}</span>
+                                                        <span className="hidden md:inline">{bet.matchTitle}</span>
+                                                    </h3>
+                                                    <p className="text-[#94A3B8] text-xs truncate mt-0.5">
+                                                        {formatPrediction(bet.prediction)}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0 text-xs">
+                                                    <span className="text-[#94A3B8]">Ποσό: <span className="text-white font-bold">{bet.betAmount}</span></span>
+                                                    <span className="text-[#94A3B8]">→ <span className="text-[#00E676] font-bold">{bet.potentialWinnings}</span></span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-bold text-white text-base truncate">
+                                                            <span className="md:hidden">{bet.matchTitleShort}</span>
+                                                            <span className="hidden md:inline">{bet.matchTitle}</span>
+                                                        </h3>
+                                                        <p className="text-[#94A3B8] text-xs mt-1">
+                                                            {new Date(bet.created_at).toLocaleDateString('el-GR', {
+                                                                day: 'numeric', month: 'short', year: 'numeric'
+                                                            })}
+                                                        </p>
+                                                        <p className="text-[#94A3B8] text-xs mt-1">
+                                                            <span className="text-white font-semibold">{dict?.myPicks?.prediction || 'Πρόβλεψη'}:</span>{' '}
+                                                            {formatPrediction(bet.prediction)}
+                                                        </p>
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <div className="flex items-center justify-between text-sm pt-3 border-t border-white/[0.06]">
+                                                    <span className="text-[#94A3B8]">
+                                                        Ποσό: <span className="text-white font-bold tabular-nums">{bet.betAmount} 🪙</span>
+                                                        <span className="text-[#4B5975] ml-2">× {bet.multiplier}</span>
+                                                    </span>
+                                                    <span className="text-[#94A3B8]">
+                                                        Πιθανά Κέρδη: <span className="text-[#00E676] font-bold tabular-nums">{bet.potentialWinnings} 🪙</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-4">
-                                        <span className="text-4xl">🎯</span>
-                                    </div>
-                                    <p className="text-white text-lg font-bold mb-6">
-                                        {dict?.myPicks?.noActiveBets || 'No active bets at the moment.'}
-                                    </p>
-                                    <Button onClick={() => router.push(`/${lang}/matches`)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
-                                        {dict?.myPicks?.goToMatches || 'Go to Matches'}
-                                    </Button>
-                                </div>
-                            );
-                        })()}
-                    </div>
-                )}
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 {/* Bet History Section */}
                 {loadingBets ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-                            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
-                        </div>
-                        <p className="text-white text-lg font-bold">{dict?.myPicks?.loadingBets || 'Loading your bets...'}</p>
+                    <div className="text-center py-16">
+                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#FFD60A] border-t-transparent mx-auto mb-4" />
+                        <p className="text-[#94A3B8] text-sm">{dict?.myPicks?.loadingBets || 'Φόρτωση προβλέψεων...'}</p>
                     </div>
                 ) : error ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-red-500 to-pink-500 mb-4">
-                            <span className="text-4xl">⚠️</span>
-                        </div>
-                        <p className="text-red-300 text-lg font-bold mb-6">{error}</p>
-                        <Button onClick={loadBets} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
-                            {dict?.myPicks?.tryAgain || 'Try Again'}
+                    <div className="text-center py-16">
+                        <p className="text-[#FF4545] text-sm font-semibold mb-4">{error}</p>
+                        <Button onClick={loadBets}
+                                className="px-6 py-2.5 rounded-full bg-[#FFD60A] text-[#080C18] font-bold text-sm">
+                            {dict?.myPicks?.tryAgain || 'Δοκίμασε ξανά'}
                         </Button>
                     </div>
                 ) : bets.length === 0 ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-4">
-                            <span className="text-4xl">🎯</span>
-                        </div>
-                        <p className="text-white text-lg font-bold mb-6">{dict?.myPicks?.noBetsFound || 'No bets found. Start making predictions to see them here!'}</p>
-                        <Button onClick={() => router.push(`/${lang}/matches`)} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg">
-                            {dict?.myPicks?.goToMatches || 'Go to Matches'}
+                    <div className="flex flex-col items-center py-16 gap-4 text-center">
+                        <span className="text-5xl opacity-40">🎯</span>
+                        <p className="text-lg font-bold text-white">{dict?.myPicks?.noBetsFound || 'Δεν υπάρχουν προβλέψεις ακόμα'}</p>
+                        <p className="text-sm text-[#94A3B8] max-w-[260px]">Κάνε την πρώτη σου πρόβλεψη και δες τα αποτελέσματά σου εδώ!</p>
+                        <Button onClick={() => router.push(`/${lang}/matches`)}
+                                className="px-6 py-3 rounded-full bg-[#FFD60A] text-[#080C18] font-bold text-sm">
+                            Πήγαινε στους Αγώνες →
                         </Button>
                     </div>
                 ) : (
                     <div>
-                        <h2 className="text-xl sm:text-2xl font-black text-white mb-6 drop-shadow-lg">
-                            {dict?.myPicks?.betHistory || 'Bet History'}
+                        <h2 className="text-lg font-black text-white mb-4">
+                            {dict?.myPicks?.betHistory || 'Ιστορικό Προβλέψεων'}
                         </h2>
                         {(() => {
                             const resolvedBets = bets.filter(bet => bet.status !== 'active');
@@ -528,7 +479,7 @@ export default function MyPicksPage() {
                                 <>
                                     <BetHistoryTable bets={resolvedBets} dict={dict} />
                                     {totalPages > 1 && (
-                                        <div className="flex flex-row justify-center items-center gap-1.5 sm:gap-2 mt-6 pt-6 border-t border-purple-500/30">
+                                        <div className="flex flex-row justify-center items-center gap-2 mt-6 pt-6 border-t border-white/[0.06]">
                                             <Button
                                                 variant="outline"
                                                 onClick={() => {
@@ -536,15 +487,13 @@ export default function MyPicksPage() {
                                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                                 }}
                                                 disabled={currentPage === 1}
-                                                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all flex-shrink-0"
+                                                className="px-4 py-2 text-sm font-bold bg-[#1E2A45] border-white/[0.12] text-white hover:bg-[#263354] disabled:opacity-40"
                                             >
-                                                ← Previous
+                                                ← Προηγούμενη
                                             </Button>
-                                            <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-lg px-2 sm:px-4 py-2 border border-purple-500/30 whitespace-nowrap flex-shrink-0">
-                                                <span className="text-white text-xs sm:text-sm font-bold">
-                                                    Page <span className="text-purple-300">{currentPage}</span> of <span className="text-purple-300">{totalPages}</span>
-                                                </span>
-                                            </div>
+                                            <span className="text-[#94A3B8] text-sm px-3">
+                                                {currentPage} / {totalPages}
+                                            </span>
                                             <Button
                                                 variant="outline"
                                                 onClick={() => {
@@ -552,9 +501,9 @@ export default function MyPicksPage() {
                                                     window.scrollTo({ top: 0, behavior: 'smooth' });
                                                 }}
                                                 disabled={currentPage === totalPages}
-                                                className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all flex-shrink-0"
+                                                className="px-4 py-2 text-sm font-bold bg-[#1E2A45] border-white/[0.12] text-white hover:bg-[#263354] disabled:opacity-40"
                                             >
-                                                Next →
+                                                Επόμενη →
                                             </Button>
                                         </div>
                                     )}

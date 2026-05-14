@@ -290,7 +290,7 @@ export function Notifications() {
                                                 )}
                                                 <p className="text-xs text-gray-400 mt-1 sm:mt-2">{formatTimeAgo(notification.created_at)}</p>
 
-                                                {/* Welcome Bonus Action Button */}
+                                                {/* Μπόνους Εγγραφής Action Button */}
                                                 {notification.type === 'welcome_bonus' && !notification.read_at && (
                                                     <div className="mt-2 sm:mt-3">
                                                         <Button
@@ -298,7 +298,7 @@ export function Notifications() {
                                                             disabled={claimingWelcomeBonus}
                                                             className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-xs sm:text-sm py-1.5 sm:py-2"
                                                         >
-                                                            {claimingWelcomeBonus ? 'Claiming...' : 'Claim Welcome Bonus'}
+                                                            {claimingWelcomeBonus ? 'Claiming...' : 'Claim Μπόνους Εγγραφής'}
                                                         </Button>
                                                     </div>
                                                 )}

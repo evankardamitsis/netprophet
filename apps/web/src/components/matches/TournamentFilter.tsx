@@ -57,65 +57,55 @@ export function TournamentFilter({ matches, onTournamentSelect, selectedTourname
     }
 
     return (
-        <div className="px-3 xs:px-4 sm:px-5 md:px-6 py-2 sm:py-1">
-            {/* Label and Navigation */}
-            <div className="flex items-center justify-between mb-2 sm:mb-1">
-                <h3 className="text-sm sm:text-base font-medium text-gray-300">
-                    {dict?.matches?.selectTournament || 'Select Tournament'}
-                </h3>
-                {/* Navigation arrows - only visible on large screens */}
-                <div className="hidden lg:flex gap-2">
-                    <button
-                        onClick={scrollLeft}
-                        className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-gray-300 hover:scale-110 hover:bg-slate-700/50 rounded-full"
-                        aria-label="Scroll left"
-                    >
-                        ←
-                    </button>
-                    <button
-                        onClick={scrollRight}
-                        className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-gray-300 hover:scale-110 hover:bg-slate-700/50 rounded-full"
-                        aria-label="Scroll right"
-                    >
-                        →
-                    </button>
-                </div>
-            </div>
-
-            <div className="relative">
-
-                {/* Scrollable container */}
-                <div
-                    ref={scrollContainerRef}
-                    className="flex items-center gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        <div className="px-3 xs:px-4 sm:px-5 md:px-6 py-2">
+            <div
+                ref={scrollContainerRef}
+                className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+                {/* All tournaments button */}
+                <button
+                    onClick={() => onTournamentSelect(null)}
+                    className={[
+                        "flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px]",
+                        "rounded-full text-[13px] font-semibold border transition-all duration-150",
+                        "whitespace-nowrap",
+                        selectedTournament === null
+                            ? "bg-[#FFD60A]/10 border-[#FFD60A]/30 text-[#FFD60A]"
+                            : "bg-[#161F35] border-white/[0.06] text-[#94A3B8] hover:border-white/[0.12] hover:text-white",
+                    ].join(" ")}
                 >
-                    {/* All tournaments button */}
-                    <button
-                        onClick={() => onTournamentSelect(null)}
-                        className={`flex-shrink-0 px-3 xs:px-4 py-1.5 xs:py-2 rounded-full text-sm xs:text-base font-medium transition-colors ${selectedTournament === null
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-                            }`}
-                    >
-                        All Tournaments
-                        <span className="ml-1.5 text-xs opacity-75">({activeMatches.length})</span>
-                    </button>
+                    {dict?.matches?.selectTournament || 'Όλα'}
+                    <span className={[
+                        "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                        selectedTournament === null ? "bg-[#FFD60A]/20" : "bg-white/[0.08]",
+                    ].join(" ")}>
+                        {activeMatches.length}
+                    </span>
+                </button>
 
-                    {/* Individual tournament buttons */}
-                    {tournaments.map((tournament) => (
-                        <button
-                            key={tournament}
-                            onClick={() => onTournamentSelect(tournament)}
-                            className={`flex-shrink-0 px-3 xs:px-4 py-1.5 xs:py-2 rounded-full text-sm xs:text-base font-medium transition-colors whitespace-nowrap ${selectedTournament === tournament
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-                                }`}
-                        >
-                            {tournament}
-                            <span className="ml-1.5 text-xs opacity-75">({tournamentCounts[tournament]})</span>
-                        </button>
-                    ))}
-                </div>
+                {/* Individual tournament buttons */}
+                {tournaments.map((tournament) => (
+                    <button
+                        key={tournament}
+                        onClick={() => onTournamentSelect(tournament)}
+                        className={[
+                            "flex-shrink-0 flex items-center gap-1.5 px-3.5 py-[7px]",
+                            "rounded-full text-[13px] font-semibold border transition-all duration-150",
+                            "whitespace-nowrap",
+                            selectedTournament === tournament
+                                ? "bg-[#FFD60A]/10 border-[#FFD60A]/30 text-[#FFD60A]"
+                                : "bg-[#161F35] border-white/[0.06] text-[#94A3B8] hover:border-white/[0.12] hover:text-white",
+                        ].join(" ")}
+                    >
+                        {tournament}
+                        <span className={[
+                            "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                            selectedTournament === tournament ? "bg-[#FFD60A]/20" : "bg-white/[0.08]",
+                        ].join(" ")}>
+                            {tournamentCounts[tournament]}
+                        </span>
+                    </button>
+                ))}
             </div>
         </div>
     );

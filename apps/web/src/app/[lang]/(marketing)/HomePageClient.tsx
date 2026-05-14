@@ -470,7 +470,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                 </div>
             </section>
 
-            {/* Welcome Bonus Banner */}
+            {/* Μπόνους Εγγραφής Banner */}
             <section className="py-20 bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 text-white relative overflow-hidden">
                 <div className="absolute inset-0 bg-black/10"></div>
                 <div className="relative max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -478,7 +478,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                         <div>
                             <div className="flex items-center gap-3 mb-4">
                                 <span className="text-4xl">🎁</span>
-                                <span className="text-2xl font-bold">Welcome Bonus</span>
+                                <span className="text-2xl font-bold">Μπόνους Εγγραφής</span>
                             </div>
                             <h2 className="text-4xl md:text-5xl font-bold mb-6">
                                 {lang === 'el' ? 'Ξεκίνα με 100 Νομίσματα + Tournament Pass!' : 'Start with 100 Coins + Tournament Pass!'}

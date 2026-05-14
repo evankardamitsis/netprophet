@@ -323,12 +323,8 @@ export function TopNavigation({
     return (
         <div className="relative">
             <header
-                className={cx(
-                    "w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-[55] text-white",
-                    shadows.card,
-                    "border-b border-white/10",
-                    "bg-[#121A39]" // Ensure background color is set for proper sticky behavior
-                )}
+                className="w-full flex items-center justify-between px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-[55] text-white h-[60px]
+                           bg-[#080C18]/95 backdrop-blur-xl border-b border-white/[0.06]"
             >
                 {/* Left Section - Logo and Menu */}
                 <div className="flex items-center gap-2 sm:gap-2">
@@ -364,8 +360,8 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -379,13 +375,13 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname === `/${currentLang}/leaderboard`
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            {dict?.navigation?.leaderboard || 'Leaderboard'}
+                            {dict?.navigation?.leaderboard || 'Κατάταξη'}
                         </motion.button>
                         <motion.button
                             onClick={() => navigateWithFeedback(`/${currentLang}/players`)}
@@ -394,8 +390,8 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname === `/${currentLang}/players`
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -409,8 +405,8 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname === `/${currentLang}/results`
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -424,8 +420,8 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname?.startsWith(`/${currentLang}/tournaments`)
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -439,8 +435,8 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname === `/${currentLang}/my-picks`
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -454,8 +450,8 @@ export function TopNavigation({
                                 borders.rounded.sm,
                                 transitions.default,
                                 pathname === `/${currentLang}/rewards`
-                                    ? 'bg-purple-600/40 text-purple-200 border border-purple-400/60 shadow-lg shadow-purple-500/20'
-                                    : 'hover:bg-purple-600/20 hover:text-purple-300 text-white'
+                                    ? 'bg-white/[0.08] text-white'
+                                    : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                             )}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -531,8 +527,7 @@ export function TopNavigation({
                                     transition={{ duration: 0.2 }}
                                     className={cx(
                                         "absolute right-0 mt-2 w-32 sm:w-36 py-2 text-white z-[90]",
-                                        "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95",
-                                        "backdrop-blur-md border border-slate-700/50",
+                                        "bg-[#0F1628]/97 backdrop-blur-xl border border-white/[0.06]",
                                         borders.rounded.sm,
                                         shadows.cardHover
                                     )}>
@@ -570,12 +565,12 @@ export function TopNavigation({
                         <motion.button
                             onClick={() => setAccountDropdownOpen((open) => !open)}
                             className={cx(
-                                "relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-base sm:text-lg focus:outline-none",
-                                borders.rounded.full,
+                                "relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-sm focus:outline-none",
+                                "rounded-full bg-[#1E2A45] border border-white/[0.12]",
                                 transitions.default,
                                 (totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed))
-                                    ? cx(gradients.purple, shadows.glow.purple, 'ring-2 ring-purple-400/30')
-                                    : cx(gradients.purple, 'shadow-sm shadow-purple-500/30')
+                                    ? 'ring-2 ring-[#FFD60A]/30'
+                                    : ''
                             )}
                             style={(totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed)) ? {
                                 animation: 'slowPulse 2s ease-in-out infinite'
@@ -609,8 +604,7 @@ export function TopNavigation({
                                     transition={{ duration: 0.2 }}
                                     className={cx(
                                         "absolute right-0 mt-2 w-48 sm:w-56 py-2 text-white z-[90]",
-                                        "bg-gradient-to-br from-slate-900/95 via-slate-800/95 to-slate-900/95",
-                                        "backdrop-blur-md border border-slate-700/50",
+                                        "bg-[#0F1628]/97 backdrop-blur-xl border border-white/[0.06]",
                                         borders.rounded.sm,
                                         shadows.cardHover
                                     )}>
@@ -744,12 +738,8 @@ export function TopNavigation({
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className={cx(
-                                "lg:hidden absolute top-full left-0 right-0 z-[60] overflow-hidden",
-                                "bg-gradient-to-br from-slate-950/98 via-slate-900/98 to-slate-950/98",
-                                "backdrop-blur-md border-b border-slate-700/50",
-                                shadows.cardHover
-                            )}
+                            className="lg:hidden absolute top-full left-0 right-0 z-[60] overflow-hidden
+                                       bg-[#0F1628]/97 backdrop-blur-xl border-b border-white/[0.06]"
                         >
                             <div className="px-4 py-3 space-y-3">
                                 {/* Navigation Links */}
@@ -764,8 +754,8 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname === `/${currentLang}/matches` || pathname === `/${currentLang}`
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -782,13 +772,13 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname === `/${currentLang}/leaderboard`
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
-                                        {dict?.navigation?.leaderboard || 'Leaderboard'}
+                                        {dict?.navigation?.leaderboard || 'Κατάταξη'}
                                     </motion.button>
                                     <motion.button
                                         onClick={() => {
@@ -800,8 +790,8 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname === `/${currentLang}/players`
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -818,8 +808,8 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname === `/${currentLang}/results`
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -836,8 +826,8 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname?.startsWith(`/${currentLang}/tournaments`)
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -854,8 +844,8 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname === `/${currentLang}/my-picks`
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -872,8 +862,8 @@ export function TopNavigation({
                                             borders.rounded.sm,
                                             transitions.default,
                                             pathname === `/${currentLang}/rewards`
-                                                ? cx('bg-purple-600/40 text-purple-200 border border-purple-400/60', shadows.card)
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                ? 'bg-white/[0.08] text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -924,7 +914,7 @@ export function TopNavigation({
                                             transitions.default,
                                             currentLang === 'en'
                                                 ? 'text-purple-300 bg-purple-600/30'
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}
@@ -942,7 +932,7 @@ export function TopNavigation({
                                             transitions.default,
                                             currentLang === 'el'
                                                 ? 'text-purple-300 bg-purple-600/30'
-                                                : 'hover:bg-purple-600/30 hover:text-purple-300 text-white'
+                                                : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.06]'
                                         )}
                                         whileHover={{ x: 4 }}
                                         whileTap={{ scale: 0.98 }}

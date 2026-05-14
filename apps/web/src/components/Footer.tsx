@@ -97,7 +97,7 @@ export default function Footer({ lang, dict }: FooterProps) {
                             </li>
                             <li>
                                 <button onClick={() => handleProtectedLink(`/${lang}/leaderboard`)} className="hover:text-yellow-300 transition-colors flex items-center gap-2 cursor-pointer">
-                                    <span>🏆</span> {dict?.navigation?.leaderboard || 'Leaderboard'}
+                                    <span>🏆</span> {dict?.navigation?.leaderboard || 'Κατάταξη'}
                                 </button>
                             </li>
                             <li>

@@ -314,104 +314,81 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
                 </CardHeader>
                 <CardContent>
                     {leaderboardData.length === 0 ? (
-                        <div className="text-center py-8">
-                            <p className="text-gray-400">No leaderboard data available yet.</p>
-                            <p className="text-gray-500 text-sm mt-2">Start making predictions to appear on the leaderboard!</p>
+                        <div className="flex flex-col items-center py-16 gap-4 text-center">
+                            <span className="text-5xl opacity-40">🏆</span>
+                            <p className="text-lg font-bold text-white">Δεν υπάρχει κατάταξη ακόμα</p>
+                            <p className="text-sm text-[#94A3B8] max-w-[260px]">
+                                Κάνε προβλέψεις αυτή την εβδομάδα και εμφανίσου στην κορυφή!
+                            </p>
                         </div>
                     ) : (
                         <>
-                            {/* Desktop Table */}
-                            <div className="hidden md:block">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="border-slate-700/50">
-                                            <TableHead className="w-16 text-gray-300">{dict?.leaderboard?.rank || 'Rank'}</TableHead>
-                                            <TableHead className="w-48 text-gray-300">{dict?.leaderboard?.player || 'Player'}</TableHead>
-                                            <TableHead className="w-24 text-right text-gray-300">{dict?.leaderboard?.points || 'Points'}</TableHead>
-                                            <TableHead className="w-32 text-center text-gray-300">{dict?.leaderboard?.streak || 'Streak'}</TableHead>
-                                            <TableHead className="w-24 text-center text-gray-300">{dict?.leaderboard?.accuracy || 'Accuracy'}</TableHead>
-                                            <TableHead className="w-20 text-center text-gray-300">{dict?.leaderboard?.picks || 'Picks'}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {leaderboardData.map((entry) => (
-                                            <TableRow key={entry.userId} className="hover:bg-slate-700/30 border-slate-700/50">
-                                                <TableCell className="font-medium w-16">
-                                                    {getRankBadge(entry.rank)}
-                                                </TableCell>
-                                                <TableCell className="w-48">
-                                                    <div className="font-semibold text-white truncate">
-                                                        {entry.username || 'Anonymous'}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-right w-24">
-                                                    <div className="flex items-center justify-end space-x-2">
-                                                        {entry.hasActiveStreakMultiplier && (
-                                                            <div className="flex items-center space-x-1 bg-orange-500/20 px-2 py-1 rounded-full border border-orange-500/30">
-                                                                <span className="text-orange-400 text-xs">🔥</span>
-                                                                <span className="text-orange-400 text-xs font-medium">1.5x</span>
-                                                            </div>
-                                                        )}
-                                                        <div className="font-bold text-green-400 text-lg">
-                                                            {entry.totalPoints.toLocaleString()}
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-center w-32">
-                                                    {getStreakDisplay(entry.currentStreak)}
-                                                </TableCell>
-                                                <TableCell className="text-center w-24">
-                                                    <div className="font-medium text-blue-400">
-                                                        {getAccuracy(entry.accuracyPercentage)}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-center w-20 text-sm text-gray-400">
-                                                    {entry.correctPicks}/{entry.totalPicks}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-
-                            {/* Mobile Compact List */}
-                            <div className="md:hidden space-y-1">
+                            {/* Desktop List */}
+                            <div className="hidden md:block space-y-2">
                                 {leaderboardData.map((entry) => (
-                                    <div key={entry.userId} className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                                        {/* Player Name Row */}
-                                        <div className="flex items-center space-x-3 mb-2">
-                                            <div className="flex-shrink-0">
-                                                {getRankBadge(entry.rank)}
-                                            </div>
+                                    <div key={entry.userId} className={[
+                                        "flex items-center gap-4 p-4 rounded-xl border transition-all",
+                                        entry.rank <= 3 ? "bg-[#161F35] border-[#FFD60A]/20" : "bg-[#161F35] border-white/[0.06]",
+                                    ].join(" ")}>
+                                        <span className={[
+                                            "w-8 text-center font-black text-lg tabular-nums flex-shrink-0",
+                                            entry.rank === 1 ? "text-[#FFD60A]" :
+                                            entry.rank === 2 ? "text-[#C0C0C0]" :
+                                            entry.rank === 3 ? "text-[#CD7F32]" : "text-[#4B5975]",
+                                        ].join(" ")}>
+                                            {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank-1] : entry.rank}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
                                             <div className="font-semibold text-white truncate">
                                                 {entry.username || 'Anonymous'}
                                             </div>
                                         </div>
-                                        {/* Stats Row */}
-                                        <div className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="flex items-center space-x-1">
-                                                    <span className="text-orange-500">🔥</span>
-                                                    <span className="text-orange-600 font-medium w-4 text-center">{entry.currentStreak}</span>
-                                                </div>
-                                                <div className="text-blue-400 font-medium w-12 text-center">
-                                                    {getAccuracy(entry.accuracyPercentage)}
-                                                </div>
-                                                <div className="text-gray-400 w-16 text-center">
-                                                    {entry.correctPicks}/{entry.totalPicks}
-                                                </div>
+                                        <div className="flex items-center gap-4 flex-shrink-0">
+                                            {entry.currentStreak > 0 && (
+                                                <span className="text-sm text-[#FF6B2B]">🔥 {entry.currentStreak}</span>
+                                            )}
+                                            <span className="text-sm text-[#94A3B8]">🎯 {getAccuracy(entry.accuracyPercentage)}</span>
+                                            <span className="text-sm text-[#4B5975]">{entry.correctPicks}/{entry.totalPicks}</span>
+                                            {entry.hasActiveStreakMultiplier && (
+                                                <span className="px-2 py-0.5 rounded-full bg-[#FF6B2B]/10 border border-[#FF6B2B]/30 text-[#FF6B2B] text-xs font-bold">
+                                                    🔥 1.5×
+                                                </span>
+                                            )}
+                                            <div className="font-black tabular-nums text-[#00E676] text-lg min-w-[60px] text-right">
+                                                {entry.totalPoints.toLocaleString()}
                                             </div>
-                                            <div className="flex items-center justify-end space-x-2 w-20">
-                                                {entry.hasActiveStreakMultiplier && (
-                                                    <div className="flex items-center space-x-1 bg-orange-500/20 px-1 py-0.5 rounded-full border border-orange-500/30">
-                                                        <span className="text-orange-400 text-xs">🔥</span>
-                                                        <span className="text-orange-400 text-xs font-medium">1.5x</span>
-                                                    </div>
-                                                )}
-                                                <div className="font-bold text-green-400 text-lg">
-                                                    {entry.totalPoints.toLocaleString()}
-                                                </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Mobile Compact List */}
+                            <div className="md:hidden space-y-2">
+                                {leaderboardData.map((entry) => (
+                                    <div key={entry.userId} className={[
+                                        "flex items-center gap-3 p-4 rounded-xl border transition-all",
+                                        entry.rank <= 3 ? "bg-[#161F35] border-[#FFD60A]/20" : "bg-[#161F35] border-white/[0.06]"
+                                    ].join(" ")}>
+                                        <span className={[
+                                            "w-7 text-center font-black text-lg tabular-nums flex-shrink-0",
+                                            entry.rank === 1 ? "text-[#FFD60A]" :
+                                            entry.rank === 2 ? "text-[#C0C0C0]" :
+                                            entry.rank === 3 ? "text-[#CD7F32]" : "text-[#4B5975]"
+                                        ].join(" ")}>
+                                            {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank-1] : entry.rank}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-semibold text-white truncate text-sm">
+                                                {entry.username || 'Anonymous'}
                                             </div>
+                                            <div className="flex items-center gap-3 mt-0.5 text-xs text-[#94A3B8]">
+                                                {entry.currentStreak > 0 && <span>🔥 {entry.currentStreak}</span>}
+                                                <span>🎯 {getAccuracy(entry.accuracyPercentage)}</span>
+                                                <span>{entry.correctPicks}/{entry.totalPicks}</span>
+                                            </div>
+                                        </div>
+                                        <div className="font-black tabular-nums text-[#00E676] text-lg flex-shrink-0">
+                                            {entry.totalPoints.toLocaleString()}
                                         </div>
                                     </div>
                                 ))}
@@ -423,39 +400,21 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
 
             {/* Stats Summary */}
             {summary && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    <Card className="bg-slate-800/50 border-slate-700/50">
-                        <CardContent className="p-3 md:p-4 text-center">
-                            <div className="text-lg md:text-2xl font-bold text-green-400">
-                                {summary.topScore.toLocaleString()}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                    {[
+                        { label: dict?.leaderboard?.topScore || 'Υψηλότερο Σκορ', value: summary.topScore.toLocaleString(), icon: "⚡" },
+                        { label: dict?.leaderboard?.bestStreak || 'Καλύτερο Σερί',  value: String(summary.bestStreak), icon: "🔥" },
+                        { label: dict?.leaderboard?.avgAccuracy || 'Μέση Ακρίβεια', value: `${summary.averageAccuracy}%`, icon: "🎯" },
+                        { label: 'Παίκτες', value: String(summary.totalParticipants), icon: "👥" },
+                    ].map((s) => (
+                        <div key={s.label} className="bg-[#161F35] border border-white/[0.06] rounded-xl p-4">
+                            <div className="text-2xl mb-1">{s.icon}</div>
+                            <div className="text-xl font-black tabular-nums text-white">{s.value || "—"}</div>
+                            <div className="text-[11px] font-semibold text-[#4B5975] uppercase tracking-wide mt-0.5">
+                                {s.label}
                             </div>
-                            <div className="text-xs md:text-sm text-gray-400">{dict?.leaderboard?.topScore || 'Top Score'}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-800/50 border-slate-700/50">
-                        <CardContent className="p-3 md:p-4 text-center">
-                            <div className="text-lg md:text-2xl font-bold text-orange-400">
-                                {summary.bestStreak}
-                            </div>
-                            <div className="text-xs md:text-sm text-gray-400">{dict?.leaderboard?.bestStreak || 'Best Streak'}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-800/50 border-slate-700/50">
-                        <CardContent className="p-3 md:p-4 text-center">
-                            <div className="text-lg md:text-2xl font-bold text-blue-400">
-                                {summary.averageAccuracy}%
-                            </div>
-                            <div className="text-xs md:text-sm text-gray-400">{dict?.leaderboard?.avgAccuracy || 'Avg Accuracy'}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-800/50 border-slate-700/50">
-                        <CardContent className="p-3 md:p-4 text-center">
-                            <div className="text-lg md:text-2xl font-bold text-purple-400">
-                                {summary.totalParticipants}
-                            </div>
-                            <div className="text-xs md:text-sm text-gray-400">Participants</div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    ))}
                 </div>
             )}
 

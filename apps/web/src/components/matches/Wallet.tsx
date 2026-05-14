@@ -200,7 +200,7 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         if (description.startsWith('WELCOME_BONUS')) {
             return lang === 'el'
                 ? 'Μπόνους Καλωσορίσματος'
-                : 'Welcome Bonus';
+                : 'Μπόνους Εγγραφής';
         }
 
         if (description.startsWith('Bet on') || description.startsWith('Στοίχημα')) {

@@ -30,7 +30,7 @@ export function SetWinnersSection({
     onSetWinnerSelection
 }: SetWinnersSectionProps) {
     const { dict } = useDictionary();
-    const formatLabel = isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3';
+    const formatLabel = isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Καλύτερος από 3 σετ';
 
     const setWinnersCount = Array.from({ length: setsToShowFromResult }, (_, i) => getSetWinner(i + 1)).filter(w => w).length;
     const maxBonus = getMaxSetWinnersBonus(formPredictions);

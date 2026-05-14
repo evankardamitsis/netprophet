@@ -370,7 +370,7 @@ export default function HowItWorksPageGame() {
                 </div>
             </section>
 
-            {/* Welcome Bonus - Game Reward Style */}
+            {/* Μπόνους Εγγραφής - Game Reward Style */}
             <section className="py-12 sm:py-16 lg:py-20 relative" style={{
                 background: 'linear-gradient(135deg, #1A0B2E 0%, #2D1B69 25%, #3A2A5C 50%, #4A3A6B 75%, #5A4A7B 100%)',
                 boxShadow: 'inset 0 0 50px rgba(90, 74, 123, 0.15)'
@@ -384,7 +384,7 @@ export default function HowItWorksPageGame() {
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-3 mb-4">
                             <span className="text-5xl">🎁</span>
-                            <span className="text-3xl font-black text-white">Welcome Bonus</span>
+                            <span className="text-3xl font-black text-white">Μπόνους Εγγραφής</span>
                         </div>
                         <h2 className="text-4xl sm:text-5xl font-black text-white mb-6 drop-shadow-lg">
                             {lang === 'el' ? 'Ξεκίνα με 100 Νομίσματα + Tournament Pass!' : 'Start with 100 Coins + Tournament Pass!'}

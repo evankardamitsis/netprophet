@@ -66,10 +66,30 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
             <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
                 <RewardShopHeader userPoints={userPoints} onInfoClick={() => setShowInfoModal(true)} />
 
-                <CoinTopUpSection />
+                {/* REAL MONEY SECTION */}
+                <div>
+                    <div className="flex items-center gap-3 mb-3">
+                        <h2 className="text-base font-bold text-white">{dict.rewards.coinTopUpPacks || 'Αγορά Νομισμάτων'}</h2>
+                        <span className="px-2 py-0.5 rounded-full bg-[#38BDF8]/10 border border-[#38BDF8]/25 text-[#38BDF8] text-[10px] font-bold">€ ΑΓΟΡΑ</span>
+                    </div>
+                    <p className="text-[13px] text-[#94A3B8] mb-4">
+                        Τα νομίσματα είναι εικονικά και χρησιμοποιούνται αποκλειστικά εντός της πλατφόρμας.
+                    </p>
+                    <CoinTopUpSection />
+                </div>
 
-                {/* Power Ups Section */}
-                <PowerUps onPurchase={handlePowerUpPurchase} sidebarOpen={sidebarOpen} />
+                {/* DIVIDER */}
+                <div className="flex items-center gap-3 my-2">
+                    <div className="flex-1 h-px bg-white/[0.06]" />
+                    <span className="text-[11px] font-bold text-[#4B5975] uppercase tracking-widest">ή ξόδεψε νομίσματα</span>
+                    <div className="flex-1 h-px bg-white/[0.06]" />
+                </div>
+
+                {/* VIRTUAL COINS SECTION */}
+                <div>
+                    <h2 className="text-base font-bold text-white mb-4">{dict.rewards.powerUps || 'Ενισχύσεις'}</h2>
+                    <PowerUps onPurchase={handlePowerUpPurchase} sidebarOpen={sidebarOpen} />
+                </div>
             </div>
 
             {/* Info Modal */}

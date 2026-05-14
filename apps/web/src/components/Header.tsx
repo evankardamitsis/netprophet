@@ -209,14 +209,14 @@ export default function Header({ lang, showStartButton = true }: HeaderProps) {
             <div className={`md:hidden fixed inset-0 bg-slate-800 transition-all duration-300 z-50 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                 }`}>
                 <div className="flex flex-col h-full">
-                    {/* Welcome Bonus Banner - Top */}
+                    {/* Μπόνους Εγγραφής Banner - Top */}
                     <div className="bg-yellow-300 text-black py-3 px-4 text-center font-bold text-sm sm:text-base shadow-lg">
                         <div className="flex items-center justify-center space-x-2">
                             <span className="text-xl">🎁</span>
                             <span>
                                 {lang === 'el'
-                                    ? 'Welcome Bonus: Ξεκίνα με 100 Νομίσματα + Tournament Pass!'
-                                    : 'Welcome Bonus: Start with 100 Coins + Tournament Pass!'
+                                    ? 'Μπόνους Εγγραφής: Ξεκίνα με 100 Νομίσματα + Tournament Pass!'
+                                    : 'Μπόνους Εγγραφής: Start with 100 Coins + Tournament Pass!'
                                 }
                             </span>
                         </div>

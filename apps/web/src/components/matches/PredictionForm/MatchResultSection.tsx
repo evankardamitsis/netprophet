@@ -34,7 +34,7 @@ export function MatchResultSection({
         ? dict?.matches?.bestOf5 || 'Best of 5'
         : isAmateurFormat
             ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)'
-            : dict?.matches?.bestOf3 || 'Best of 3';
+            : dict?.matches?.bestOf3 || 'Καλύτερος από 3 σετ';
 
     const renderButton = (value: string, label: string, subLabel: string) => (
         <button
@@ -53,7 +53,7 @@ export function MatchResultSection({
         </button>
     );
 
-    const straightSetsLabel = dict?.matches?.straightSets || 'Straight sets';
+    const straightSetsLabel = dict?.matches?.straightSets || 'Χωρίς απώλεια σετ';
     const fourSetsLabel = dict?.matches?.fourSets || 'Four sets';
     const fiveSetsLabel = dict?.matches?.fiveSets || 'Five sets';
     const threeSetsLabel = dict?.matches?.threeSets || 'Three sets';

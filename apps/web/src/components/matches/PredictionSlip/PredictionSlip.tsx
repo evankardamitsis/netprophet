@@ -502,7 +502,7 @@ export function PredictionSlip({
 
     return (
         <motion.div
-            className={`h-full flex flex-col shadow-2xl relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ${getSafeSlipGradient()}`}
+            className={`h-full flex flex-col shadow-2xl relative overflow-hidden bg-[#0F1628] ${getSafeSlipGradient()}`}
             initial={false}
             animate={{
                 opacity: isCollapsed ? 0 : 1,
@@ -525,7 +525,7 @@ export function PredictionSlip({
             }}
         >
             {/* Header */}
-            <div className="relative flex-shrink-0 p-4 bg-gradient-to-r from-slate-800/90 via-slate-700/90 to-slate-800/90 backdrop-blur-sm border-b border-purple-500/20">
+            <div className="relative flex-shrink-0 p-4 bg-[#0F1628] border-b border-white/[0.12]">
                 {/* Animated border gradient */}
                 <motion.div
                     className="absolute inset-0 opacity-30"
@@ -552,10 +552,10 @@ export function PredictionSlip({
                             </div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-white tracking-wide uppercase">
-                                {dict?.matches?.bettingSlip || 'Betting Slip'}
+                            <h3 className="text-sm font-bold text-white tracking-wide">
+                                {lang === 'el' ? 'Οι Προβλέψεις Μου' : (dict?.matches?.bettingSlip || 'My Predictions')}
                             </h3>
-                            <p className="text-xs text-purple-300">
+                            <p className="text-xs text-[#94A3B8]">
                                 {predictions.length} {predictions.length !== 1 ? (dict?.matches?.picks || 'picks') : (dict?.matches?.pick || 'pick')}
                             </p>
                         </div>

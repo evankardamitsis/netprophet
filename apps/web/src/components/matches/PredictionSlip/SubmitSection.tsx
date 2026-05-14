@@ -91,7 +91,7 @@ export function SubmitSection({
 
     return (
         <motion.div
-            className="flex-shrink-0 p-4 border-t border-dashed border-yellow-400 bg-slate-800 shadow-xl"
+            className="flex-shrink-0 p-4 border-t border-white/[0.12] bg-[#0F1628] shadow-xl"
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
@@ -144,8 +144,8 @@ export function SubmitSection({
                         onClick={onSubmit}
                         disabled={!parlayValidation?.isValid || !isParlayModeValid}
                         className={`w-full font-bold py-2 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 text-sm ${(parlayValidation?.isValid && isParlayModeValid)
-                            ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black'
-                            : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                            ? 'bg-[#FFD60A] text-[#080C18] hover:bg-[#FFE033] shadow-[0_4px_16px_rgba(255,214,10,0.3)] hover:-translate-y-px'
+                            : 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed shadow-none'
                             }`}
                     >
                         {dict?.matches?.placeParlayBet || 'Place Parlay Bet'}
@@ -194,8 +194,8 @@ export function SubmitSection({
                         onClick={onSubmit}
                         disabled={!isIndividualModeValid}
                         className={`w-full font-bold py-2 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 text-sm ${isIndividualModeValid
-                            ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black'
-                            : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                            ? 'bg-[#FFD60A] text-[#080C18] hover:bg-[#FFE033] shadow-[0_4px_16px_rgba(255,214,10,0.3)] hover:-translate-y-px'
+                            : 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed shadow-none'
                             }`}
                     >
                         {dict?.matches?.placeIndividualBets || 'Place your Predictions'}

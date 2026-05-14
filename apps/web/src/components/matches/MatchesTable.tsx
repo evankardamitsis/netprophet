@@ -10,6 +10,7 @@ import { useActiveBets } from '@/hooks/useActiveBets';
 import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { MatchCard } from './MatchCard';
 
 interface MatchesTableProps {
     matches?: Match[];
@@ -277,6 +278,23 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
         [onSelectMatch, dict, isUnderdog, getDisplayName, activeBetMatchIds]
     );
 
+    const translateCategory = (cat: string | undefined | null): string => {
+        if (!cat) return '';
+        const map: Record<string, string> = {
+            "MD/ADV": "Μέσο / Προχωρημένο",
+            "MED/ADV": "Μέσο / Προχωρημένο",
+            "MEDIUM": "Μεσαίο",
+            "ADVANCED": "Προχωρημένο",
+            "BEGINNER": "Αρχάριο",
+            "-40": "Κάτω από 40",
+            "40-49": "40–49 ετών",
+            "50+": "50+ ετών",
+        };
+        const key = cat.replace(/^[MW]\s+/, "").trim();
+        const gender = cat.startsWith("W") ? "Γυν. · " : "Ανδρ. · ";
+        return gender + (map[key] ?? key);
+    };
+
     const filteredMatches = useMemo(() => {
         if (matchTypeFilter === 'all') return matches;
         return matches.filter(match => match.match_type === matchTypeFilter);
@@ -407,8 +425,55 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 </div>
             )}
 
-            {/* Desktop Table View */}
+            {/* Match Card List (replaces table on all screen sizes) */}
             {filteredMatches.length > 0 && (
+                <div className="np-card-list space-y-0">
+                    {table.getRowModel().rows.map((row) => {
+                        const match = row.original;
+                        const surface = match.tournaments?.surface;
+                        const surfaceVal = (surface === "Clay Court" || surface === "Hard Court" || surface === "Grass Court")
+                            ? surface as "Clay Court" | "Hard Court" | "Grass Court"
+                            : undefined;
+                        const playerAName = match.player_a
+                            ? `${match.player_a.first_name} ${match.player_a.last_name}`.trim()
+                            : match.player1.name;
+                        const playerBName = match.player_b
+                            ? `${match.player_b.first_name} ${match.player_b.last_name}`.trim()
+                            : match.player2.name;
+                        return (
+                            <MatchCard
+                                key={match.id}
+                                id={match.id}
+                                tournament={match.tournament}
+                                round={match.round ?? ''}
+                                category={translateCategory(match.tournament_categories?.name)}
+                                surface={surfaceVal}
+                                time={formatTime(match.startTime)}
+                                date={formatDate(match.startTime)}
+                                player1={{
+                                    id: match.player_a?.id ?? match.id + '_a',
+                                    name: playerAName,
+                                    ntrp: match.player_a?.ntrp_rating ?? 0,
+                                    odds: match.player1.odds,
+                                }}
+                                player2={{
+                                    id: match.player_b?.id ?? match.id + '_b',
+                                    name: playerBName,
+                                    ntrp: match.player_b?.ntrp_rating ?? 0,
+                                    odds: match.player2.odds,
+                                }}
+                                isActive={activeBetMatchIds.has(match.id)}
+                                isLive={match.status === 'live' || match.status_display === 'live'}
+                                onViewDetail={() => !match.locked && onSelectMatch(match)}
+                                onSelectPlayer={() => !match.locked && onSelectMatch(match)}
+                            />
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* DEAD CODE — replaced by MatchCard list above; kept for reference only */}
+            {false && filteredMatches.length > 0 && (
                 <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden">
                         <thead>
@@ -466,8 +531,8 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 </div>
             )}
 
-            {/* Mobile Table View (optimized for many rows, row is tap target) */}
-            <div className="lg:hidden overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/80">
+            {/* Mobile Table View — dead code, replaced by MatchCard list */}
+            {false && <div className="lg:hidden overflow-x-auto rounded-2xl border border-slate-700 bg-slate-900/80">
                 <table className="w-full text-xs">
                     <thead>
                         <tr className="border-b border-slate-700">
@@ -598,7 +663,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                         })}
                     </tbody>
                 </table>
-            </div>
+            </div>}
 
             {/* Pagination */}
             {filteredMatches.length > 0 && (

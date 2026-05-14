@@ -273,7 +273,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                 <div className="border-t-2 border-purple-500/30 p-2 sm:p-3 lg:p-4 bg-slate-700/20">
                     <div className="space-y-2 lg:space-y-3">
                         <div className="text-xs text-gray-400">
-                            {isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : dict?.matches?.bestOf3 || 'Best of 3'}
+                            {isBestOf5 ? dict?.matches?.bestOf5 || 'Καλύτερος από 5 σετ' : dict?.matches?.bestOf3 || 'Καλύτερος από 3 σετ'}
                         </div>
                         <div className="text-xs text-gray-400">
                             <span className="font-semibold text-purple-300">{dict?.matches?.headToHead || 'H2H'}:</span> {translateHeadToHead(details.headToHead)}
@@ -291,7 +291,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                         <div className="text-xs text-gray-400 bg-slate-600/30 rounded px-2 py-1">
                             <span className="font-semibold text-purple-300">Head-to-Head Record:</span> {details.headToHeadData && details.headToHeadData.total_matches > 0
                                 ? `${details.headToHeadData.player_a_wins}-${details.headToHeadData.player_b_wins}`
-                                : 'No H2H details'
+                                : 'Δεν υπάρχουν κοινοί αγώνες'
                             }
                         </div>
                         <div className="grid grid-cols-1 gap-3 text-xs">
@@ -309,8 +309,10 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                         {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player1.teamName}</span>}
                                     </div>
                                 </button>
-                                <div className="text-gray-400">
-                                    {dict?.matches?.wins || 'W'}: {details.player1.wins} {dict?.matches?.losses || 'L'}: {details.player1.losses}
+                                <div className="flex items-center gap-2 text-xs mt-1">
+                                    <span className="text-[#00E676] font-bold">✅ {details.player1.wins} Νίκες</span>
+                                    <span className="text-[#4B5975]">·</span>
+                                    <span className="text-[#FF4545] font-bold">❌ {details.player1.losses} Ήττες</span>
                                 </div>
                             </div>
                             <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5 min-w-0">
@@ -327,8 +329,10 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                                         {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player2.teamName}</span>}
                                     </div>
                                 </button>
-                                <div className="text-gray-400">
-                                    {dict?.matches?.wins || 'W'}: {details.player2.wins} {dict?.matches?.losses || 'L'}: {details.player2.losses}
+                                <div className="flex items-center gap-2 text-xs mt-1">
+                                    <span className="text-[#00E676] font-bold">✅ {details.player2.wins} Νίκες</span>
+                                    <span className="text-[#4B5975]">·</span>
+                                    <span className="text-[#FF4545] font-bold">❌ {details.player2.losses} Ήττες</span>
                                 </div>
                             </div>
                         </div>

@@ -38,7 +38,7 @@ export function SetScoresSection({
     onInteraction
 }: SetScoresSectionProps) {
     const { dict } = useDictionary();
-    const formatLabel = isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Best of 3';
+    const formatLabel = isBestOf5 ? dict?.matches?.bestOf5 || 'Best of 5' : isAmateurFormat ? dict?.matches?.bestOf3SuperTB || 'Best of 3 (Super TB)' : dict?.matches?.bestOf3 || 'Καλύτερος από 3 σετ';
 
     const setScoresCount = Array.from({ length: setsCount }, (_, i) => getSetScore(i + 1)).filter(s => s).length;
     const maxBonus = setsCount === 2 ? 0.4 : getMaxSetScoresBonus(formPredictions);

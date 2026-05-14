@@ -38,21 +38,21 @@ export function PredictionHistory({ predictions }: PredictionHistoryProps) {
         switch (status) {
             case 'active':
                 return (
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 border border-blue-300">
-                        Active
-                    </Badge>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-[#38BDF8]/10 border-[#38BDF8]/25 text-[#38BDF8]">
+                        ⏳ Ενεργή
+                    </span>
                 );
             case 'won':
                 return (
-                    <Badge variant="default" className="bg-green-100 text-green-800 border border-green-300">
-                        Won
-                    </Badge>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-[#00E676]/10 border-[#00E676]/30 text-[#00E676]">
+                        ✅ Κερδισμένη
+                    </span>
                 );
             case 'lost':
                 return (
-                    <Badge variant="destructive" className="bg-red-100 text-red-800 border border-red-300">
-                        Lost
-                    </Badge>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border bg-[#FF4545]/10 border-[#FF4545]/30 text-[#FF4545]">
+                        ❌ Χαμένη
+                    </span>
                 );
             default:
                 return null;
