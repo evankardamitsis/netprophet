@@ -1,7 +1,7 @@
 'use client';
 
-import { Dictionary } from '@/types/dictionary';
 import CoinIcon from '@/components/CoinIcon';
+import { useDictionary } from '@/context/DictionaryContext';
 
 interface Prediction {
     winner?: string;
@@ -30,10 +30,10 @@ interface BetHistoryItem {
 
 interface BetHistoryTableProps {
     bets: BetHistoryItem[];
-    dict?: Dictionary;
 }
 
-export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
+export function BetHistoryTable({ bets }: BetHistoryTableProps) {
+    const { dict, prepForUppercaseDisplay } = useDictionary();
     const STATUS_STYLES: Record<string, { label: string; className: string }> = {
         active:  { label: '⏳ Ενεργή',       className: 'bg-[#38BDF8]/10 border-[#38BDF8]/25 text-[#38BDF8]' },
         won:     { label: '✅ Κερδισμένη',   className: 'bg-[#00E676]/10 border-[#00E676]/30 text-[#00E676]' },
@@ -130,13 +130,13 @@ export function BetHistoryTable({ bets, dict }: BetHistoryTableProps) {
             <div className="hidden md:block space-y-2">
                 {/* Header */}
                 <div className="grid grid-cols-[2fr_1fr_3fr_1fr_1fr_1fr_1fr] gap-4 px-4 py-2 text-[11px] font-bold text-[#4B5975] uppercase tracking-wider">
-                    <span>{dict?.myPicks?.match || 'Αγώνας'}</span>
-                    <span>{dict?.myPicks?.dateTime || 'Ημερομηνία'}</span>
-                    <span>{dict?.myPicks?.predictionDetails || 'Πρόβλεψη'}</span>
-                    <span>Ποσό</span>
-                    <span>Απόδοση</span>
-                    <span>Πιθανά Κέρδη</span>
-                    <span>{dict?.myPicks?.status || 'Κατάσταση'}</span>
+                    <span>{prepForUppercaseDisplay(dict?.myPicks?.match || 'Αγώνας')}</span>
+                    <span>{prepForUppercaseDisplay(dict?.myPicks?.dateTime || 'Ημερομηνία')}</span>
+                    <span>{prepForUppercaseDisplay(dict?.myPicks?.predictionDetails || 'Πρόβλεψη')}</span>
+                    <span>{prepForUppercaseDisplay('Ποσό')}</span>
+                    <span>{prepForUppercaseDisplay('Απόδοση')}</span>
+                    <span>{prepForUppercaseDisplay('Πιθανά Κέρδη')}</span>
+                    <span>{prepForUppercaseDisplay(dict?.myPicks?.status || 'Κατάσταση')}</span>
                 </div>
                 {bets.map((bet) => (
                     <div key={bet.id}

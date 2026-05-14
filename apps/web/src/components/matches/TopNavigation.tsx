@@ -565,8 +565,8 @@ export function TopNavigation({
                         <motion.button
                             onClick={() => setAccountDropdownOpen((open) => !open)}
                             className={cx(
-                                "relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-sm focus:outline-none",
-                                "rounded-full bg-[#1E2A45] border border-white/[0.12]",
+                                "relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center font-bold text-sm text-white focus:outline-none",
+                                "rounded-full bg-[#1E2A45] border border-white/[0.20]",
                                 transitions.default,
                                 (totalActivePowerUps > 0 || (wallet.hasTournamentPass && !wallet.tournamentPassUsed))
                                     ? 'ring-2 ring-[#FFD60A]/30'
@@ -604,7 +604,8 @@ export function TopNavigation({
                                     transition={{ duration: 0.2 }}
                                     className={cx(
                                         "absolute right-0 mt-2 w-48 sm:w-56 py-2 text-white z-[90]",
-                                        "bg-[#0F1628]/97 backdrop-blur-xl border border-white/[0.06]",
+                                        "bg-slate-950 border border-slate-700/80 shadow-2xl ring-1 ring-black/30",
+                                        "backdrop-blur-xl",
                                         borders.rounded.sm,
                                         shadows.cardHover
                                     )}>

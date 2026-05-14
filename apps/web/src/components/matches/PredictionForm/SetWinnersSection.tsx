@@ -12,6 +12,7 @@ interface SetWinnersSectionProps {
     setsToShowFromResult: number;
     isBestOf5: boolean;
     isAmateurFormat: boolean;
+    lang: 'en' | 'el';
     locked?: boolean;
     showPulse: boolean;
     getSetWinner: (setNumber: number) => string;
@@ -24,6 +25,7 @@ export function SetWinnersSection({
     setsToShowFromResult,
     isBestOf5,
     isAmateurFormat,
+    lang,
     locked,
     showPulse,
     getSetWinner,
@@ -38,8 +40,8 @@ export function SetWinnersSection({
     const displayBonus = setWinnersCount > 0 ? currentBonus : maxBonus;
 
     const winsSetsDesc = formPredictions.winner === details.player1.name
-        ? (dict?.matches?.winsSetsDescription?.replace('{player1}', displayName(details.player1.name, false)).replace('{sets1}', formPredictions.matchResult.split('-')[0]).replace('{player2}', displayName(details.player2.name, false)).replace('{sets2}', formPredictions.matchResult.split('-')[1]) || `${displayName(details.player1.name, false)} wins ${formPredictions.matchResult.split('-')[0]} sets, ${displayName(details.player2.name, false)} wins ${formPredictions.matchResult.split('-')[1]} sets`)
-        : (dict?.matches?.winsSetsDescription?.replace('{player1}', displayName(details.player2.name, false)).replace('{sets1}', formPredictions.matchResult.split('-')[1]).replace('{player2}', displayName(details.player1.name, false)).replace('{sets2}', formPredictions.matchResult.split('-')[0]) || `${displayName(details.player2.name, false)} wins ${formPredictions.matchResult.split('-')[1]} sets, ${displayName(details.player1.name, false)} wins ${formPredictions.matchResult.split('-')[0]} sets`);
+        ? (dict?.matches?.winsSetsDescription?.replace('{player1}', displayName(details.player1.name, false, lang)).replace('{sets1}', formPredictions.matchResult.split('-')[0]).replace('{player2}', displayName(details.player2.name, false, lang)).replace('{sets2}', formPredictions.matchResult.split('-')[1]) || `${displayName(details.player1.name, false, lang)} wins ${formPredictions.matchResult.split('-')[0]} sets, ${displayName(details.player2.name, false, lang)} wins ${formPredictions.matchResult.split('-')[1]} sets`)
+        : (dict?.matches?.winsSetsDescription?.replace('{player1}', displayName(details.player2.name, false, lang)).replace('{sets1}', formPredictions.matchResult.split('-')[1]).replace('{player2}', displayName(details.player1.name, false, lang)).replace('{sets2}', formPredictions.matchResult.split('-')[0]) || `${displayName(details.player2.name, false, lang)} wins ${formPredictions.matchResult.split('-')[1]} sets, ${displayName(details.player1.name, false, lang)} wins ${formPredictions.matchResult.split('-')[0]} sets`);
 
     return (
         <motion.div
@@ -84,7 +86,7 @@ export function SetWinnersSection({
                                 className={`p-2 rounded-lg border ${locked ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed' : currentWinner === details.player1.name ? 'bg-purple-600 border-purple-600 text-white' : canPlayer1Win ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50' : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'}`}
                             >
                                 <div className="flex flex-col">
-                                    <span className="break-words text-left">{displayName(details.player1.name, false)}</span>
+                                    <span className="break-words text-left">{displayName(details.player1.name, false, lang)}</span>
                                     {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words text-left mt-0.5">{details.player1.teamName}</span>}
                                 </div>
                                 {!canPlayer1Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}
@@ -95,7 +97,7 @@ export function SetWinnersSection({
                                 className={`p-2 rounded-lg border ${locked ? 'bg-gray-600 border-gray-600 text-gray-400 cursor-not-allowed' : currentWinner === details.player2.name ? 'bg-purple-600 border-purple-600 text-white' : canPlayer2Win ? 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50' : 'bg-slate-800/50 border-slate-700/50 text-gray-600 cursor-not-allowed'}`}
                             >
                                 <div className="flex flex-col">
-                                    <span className="break-words text-left">{displayName(details.player2.name, false)}</span>
+                                    <span className="break-words text-left">{displayName(details.player2.name, false, lang)}</span>
                                     {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words text-left mt-0.5">{details.player2.teamName}</span>}
                                 </div>
                                 {!canPlayer2Win && <span className="text-xs block text-gray-500">{dict?.matches?.maxReached || '(max reached)'}</span>}

@@ -1,10 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@netprophet/ui';
-import { formatWinnings, formatParlayOdds } from '@netprophet/lib';
+import { formatWinnings } from '@netprophet/lib';
 import { COIN_CONSTANTS } from '@/context/WalletContext';
-import CoinIcon from '@/components/CoinIcon';
 
 // Function to calculate potential leaderboard points
 function calculatePotentialLeaderboardPoints(predictions: any[], isParlayMode: boolean, parlayCalculation: any, doublePointsMatchId?: string | null): number {
@@ -89,119 +87,84 @@ export function SubmitSection({
     // Calculate potential leaderboard points
     const potentialLeaderboardPoints = calculatePotentialLeaderboardPoints(predictions, isParlayMode, parlayCalculation, doublePointsMatchId);
 
+    const isParlay = isParlayMode && parlayCalculation;
+    const isValid = isParlay ? (parlayValidation?.isValid && isParlayModeValid) : isIndividualModeValid;
+    const stake = isParlay ? parlayStake : totalIndividualStake;
+    const winnings = isParlay ? parlayCalculation!.potentialWinnings : totalIndividualWinnings;
+
+    const errorMessage = (() => {
+        if (isParlay && (!parlayValidation?.isValid || !isParlayModeValid)) {
+            if (!isParlayModeValid) {
+                if (predictions.some(p => (p.betAmount || 0) < 10)) return dict?.matches?.pleaseSetStakesMin?.replace('{min}', '10') || 'Ελάχιστο ποσό 10 🪙 ανά πρόβλεψη';
+                if (parlayStake > walletBalance) return dict?.matches?.insufficientBalance || 'Ανεπαρκές υπόλοιπο';
+                return dict?.matches?.pleaseSetStakes || 'Ορίστε ποσό για κάθε πρόβλεψη';
+            }
+            return parlayValidation?.error;
+        }
+        if (!isParlay && !isIndividualModeValid) {
+            if (predictions.some(p => (p.betAmount || 0) < COIN_CONSTANTS.MIN_BET)) return dict?.matches?.pleaseSetStakesMin?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()) || `Ελάχιστο ποσό ${COIN_CONSTANTS.MIN_BET} 🪙 ανά πρόβλεψη`;
+            if (totalIndividualStake > walletBalance) return dict?.matches?.insufficientBalance || 'Ανεπαρκές υπόλοιπο';
+            return dict?.matches?.pleaseSetStakes || 'Ορίστε ποσό για κάθε πρόβλεψη';
+        }
+        return null;
+    })();
+
     return (
         <motion.div
-            className="flex-shrink-0 p-4 border-t border-white/[0.12] bg-[#0F1628] shadow-xl"
-            initial={{ opacity: 0, y: 50 }}
+            className="flex-shrink-0 border-t border-white/[0.08] bg-[#0F1628] px-4 pt-3 pb-[max(32px,env(safe-area-inset-bottom))]"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ delay: 0.2 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
         >
-            {isParlayMode ? (
-                // Parlay Mode Submit Section
-                <>
-                    <div className="flex justify-between items-center mb-3">
-                        <div className="text-xs text-slate-300">
-                            <span>{dict?.matches?.parlayStake || 'Parlay Stake'}: </span>
-                            <span className="font-bold text-blue-400 text-base items-center gap-1 inline-flex">{parlayStake} <CoinIcon size={14} /></span>
-                        </div>
-                        <div className="text-xs text-slate-300">
-                            <span>{dict?.leaderboard?.points || 'Points'}: </span>
-                            <span className="font-bold text-green-400">
-                                {potentialLeaderboardPoints} 🏆
-                                {doublePointsMatchId && <span className="text-purple-400 ml-1">(2x)</span>}
-                            </span>
-                        </div>
+            {/* Compact stats row */}
+            {stake > 0 || winnings > 0 ? (
+                <div className="flex items-center justify-between mb-3 px-1">
+                    <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-[#4B5975] font-medium">Ποσό</span>
+                        <span className="text-xs font-black text-white tabular-nums">{stake} 🪙</span>
                     </div>
-
-                    <div className="flex justify-between items-center mb-3">
-                        <div className="text-xs text-slate-300">
-                            <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
-                            <span className="font-bold text-yellow-300 text-base  items-center gap-1 inline-flex">
-                                {formatWinnings(parlayCalculation!.potentialWinnings)} <CoinIcon size={14} />
-                            </span>
-                        </div>
-                        <div className="text-xs text-slate-400">
-                            {formatParlayOdds(parlayCalculation!.finalOdds)}x {dict?.matches?.odds || 'odds'}
-                        </div>
-                    </div>
-
-                    {(!parlayValidation?.isValid || !isParlayModeValid) && (
-                        <div className="text-red-400 text-xs mb-2 text-center">
-                            {!isParlayModeValid
-                                ? (predictions.some(prediction => (prediction.betAmount || 0) < 10)
-                                    ? (dict?.matches?.pleaseSetStakesMin?.replace('{min}', '10') || `Please set stakes of at least 10 for all predictions`)
-                                    : parlayStake > walletBalance
-                                        ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
-                                        : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions')
-                                )
-                                : parlayValidation?.error
-                            }
-                        </div>
+                    {winnings > 0 && (
+                        <>
+                            <svg className="w-3 h-3 text-[#4B5975]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[10px] text-[#4B5975] font-medium">Κέρδος</span>
+                                <span className="text-xs font-black text-[#00E676] tabular-nums">{formatWinnings(winnings)} 🪙</span>
+                            </div>
+                        </>
                     )}
-
-                    <Button
-                        onClick={onSubmit}
-                        disabled={!parlayValidation?.isValid || !isParlayModeValid}
-                        className={`w-full font-bold py-2 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 text-sm ${(parlayValidation?.isValid && isParlayModeValid)
-                            ? 'bg-[#FFD60A] text-[#080C18] hover:bg-[#FFE033] shadow-[0_4px_16px_rgba(255,214,10,0.3)] hover:-translate-y-px'
-                            : 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed shadow-none'
-                            }`}
-                    >
-                        {dict?.matches?.placeParlayBet || 'Place Parlay Bet'}
-                    </Button>
-                </>
-            ) : (
-                // Individual Mode Submit Section
-                <>
-                    <div className="flex justify-between items-center mb-3">
-                        <div className="text-xs text-slate-300">
-                            <span>{dict?.matches?.totalStake || 'Total Stake'}: </span>
-                            <span className="font-bold text-blue-400 text-base items-center gap-1 inline-flex">{totalIndividualStake} <CoinIcon size={14} /></span>
-                        </div>
-                        <div className="text-xs text-slate-300">
-                            <span>{dict?.leaderboard?.points || 'Points'}: </span>
-                            <span className="font-bold text-green-400">
-                                {potentialLeaderboardPoints} 🏆
-                                {doublePointsMatchId && <span className="text-purple-400 ml-1">(2x)</span>}
-                            </span>
-                        </div>
+                    <div className="flex items-center gap-1">
+                        <span className="text-[10px] text-[#4B5975] font-medium">Πόντοι</span>
+                        <span className="text-xs font-black text-[#FFD60A] tabular-nums">
+                            {potentialLeaderboardPoints} 🏆{doublePointsMatchId ? ' ×2' : ''}
+                        </span>
                     </div>
-                    <div className="flex justify-between items-center mb-3">
-                        <div className="text-xs text-slate-300">
-                            <span>{dict?.matches?.potentialWin || 'Potential Win'}: </span>
-                            <span className="font-bold text-yellow-300 text-base items-center gap-1 inline-flex">
-                                {formatWinnings(totalIndividualWinnings)} <CoinIcon size={14} />
-                            </span>
-                        </div>
-                        <div className="text-xs text-slate-400">
-                            {predictions.length} {predictions.length !== 1 ? (dict?.matches?.matches || 'matches') : (dict?.matches?.match || 'match')}
-                        </div>
-                    </div>
+                </div>
+            ) : null}
 
-                    {!isIndividualModeValid && (
-                        <div className="text-red-400 text-xs mb-2 text-center">
-                            {predictions.some(prediction => (prediction.betAmount || 0) < COIN_CONSTANTS.MIN_BET)
-                                ? (dict?.matches?.pleaseSetStakesMin?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()) || `Please set stakes of at least ${COIN_CONSTANTS.MIN_BET} for all predictions`)
-                                : totalIndividualStake > walletBalance
-                                    ? (dict?.matches?.insufficientBalance || 'Insufficient balance')
-                                    : (dict?.matches?.pleaseSetStakes || 'Please set stakes for your predictions')
-                            }
-                        </div>
-                    )}
-
-                    <Button
-                        onClick={onSubmit}
-                        disabled={!isIndividualModeValid}
-                        className={`w-full font-bold py-2 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 text-sm ${isIndividualModeValid
-                            ? 'bg-[#FFD60A] text-[#080C18] hover:bg-[#FFE033] shadow-[0_4px_16px_rgba(255,214,10,0.3)] hover:-translate-y-px'
-                            : 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed shadow-none'
-                            }`}
-                    >
-                        {dict?.matches?.placeIndividualBets || 'Place your Predictions'}
-                    </Button>
-                </>
+            {/* Error */}
+            {errorMessage && (
+                <p className="text-[11px] text-[#FF4545] text-center mb-2 px-1">{errorMessage}</p>
             )}
+
+            {/* CTA */}
+            <motion.button
+                onClick={onSubmit}
+                disabled={!isValid}
+                className={[
+                    'w-full py-4 rounded-2xl font-black text-base tracking-wide transition-all duration-150',
+                    isValid
+                        ? 'bg-[#FFD60A] text-[#080C18] shadow-[0_4px_24px_rgba(255,214,10,0.35)] hover:bg-[#FFE033] active:scale-[0.98]'
+                        : 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed',
+                ].join(' ')}
+                whileTap={isValid ? { scale: 0.98 } : {}}
+            >
+                {isParlay
+                    ? (dict?.matches?.placeParlayBet || 'Κατάθεση Συνδυαστικής')
+                    : (dict?.matches?.placeIndividualBets || 'Κατάθεση Προβλέψεων')}
+            </motion.button>
         </motion.div>
     );
 }

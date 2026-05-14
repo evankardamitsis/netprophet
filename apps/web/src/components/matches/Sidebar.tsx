@@ -12,6 +12,7 @@ import { gradients, shadows, borders, transitions, animations, typography, cx } 
 import { Match } from '@/types/dashboard';
 import { useMatchSelect } from '@/context/MatchSelectContext';
 import { Dictionary } from '@/types/dictionary';
+import { useDictionary } from '@/context/DictionaryContext';
 
 // Icon components
 function ChevronDownIcon() {
@@ -168,6 +169,7 @@ import { fetchSyncedMatches } from '@/components/MatchesList';
 export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: onMatchSelectProp, dict, lang = 'en' }: SidebarProps) {
     const matchSelectFromContext = useMatchSelect();
     const onMatchSelect = onMatchSelectProp || matchSelectFromContext;
+    const { prepForUppercaseDisplay } = useDictionary();
     const [expandedTournaments, setExpandedTournaments] = useState<Set<string>>(new Set(["1"])); // Default expand first tournament
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -279,7 +281,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                             {/* Live matches */}
                             {allMatches.filter(m => m.status_display === 'live' && m.status !== 'cancelled').length > 0 && (
                                 <div className={cx(typography.body.sm, "font-bold text-red-300 uppercase tracking-wide mb-1 px-1 bg-red-900/20 py-1 rounded")}>
-                                    🔴 {dict?.sidebar?.live || 'Live'}
+                                    🔴 {prepForUppercaseDisplay(dict?.sidebar?.live || 'Live')}
                                 </div>
                             )}
                             {allMatches.filter(m => m.status_display === 'live' && m.status !== 'cancelled').map((match, index) => (
@@ -316,7 +318,7 @@ export function Sidebar({ onClose, sidebarOpen, setSidebarOpen, onMatchSelect: o
                             {/* Upcoming matches */}
                             {allMatches.filter(m => m.status_display === 'upcoming' && !m.isLocked).length > 0 && (
                                 <div className={cx(typography.body.sm, "font-bold text-blue-300 uppercase tracking-wide mb-1 mt-2 sm:mt-3 px-1 bg-blue-900/20 py-1 rounded")}>
-                                    ⏰ {dict?.sidebar?.upcoming || 'Upcoming'}
+                                    ⏰ {prepForUppercaseDisplay(dict?.sidebar?.upcoming || 'Upcoming')}
                                 </div>
                             )}
                             {allMatches.filter(m => m.status_display === 'upcoming' && !m.isLocked).map((match, index) => (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@netprophet/ui";
 import { User, Users, CheckCircle, Plus, ArrowLeft, UserPlus, X } from "lucide-react";
 import { useDictionary } from "@/context/DictionaryContext";
+import { firstInitialUpper } from "@/lib/greekTypography";
 import { PlayerMatch } from "./types";
 
 interface ProfileClaimResultNewProps {
@@ -33,7 +34,7 @@ export function ProfileClaimResultNew({
 }: ProfileClaimResultNewProps) {
     const [actionLoading, setActionLoading] = useState(false);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-    const { dict } = useDictionary();
+    const { dict, lang, prepForUppercaseDisplay } = useDictionary();
 
     const handleClaimProfile = async (playerId?: string) => {
         const idToClaim = playerId || playerMatch?.id;
@@ -223,13 +224,13 @@ export function ProfileClaimResultNew({
                         <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6">
                             <div className="flex items-center gap-2.5 sm:gap-3 lg:gap-4">
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-green-600 rounded-full flex items-center justify-center font-black text-white text-sm sm:text-lg lg:text-2xl">
-                                    {playerMatch.first_name.charAt(0)}{playerMatch.last_name.charAt(0)}
+                                    {firstInitialUpper(lang, playerMatch.first_name)}{firstInitialUpper(lang, playerMatch.last_name)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
                                         <User className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-green-600" />
                                         <span className="font-bold text-green-800 text-[10px] sm:text-xs lg:text-sm uppercase tracking-wide">
-                                            {dict.profileSetup.result.playerName}
+                                            {prepForUppercaseDisplay(dict.profileSetup.result.playerName)}
                                         </span>
                                     </div>
                                     <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-green-900 truncate">
@@ -336,11 +337,11 @@ export function ProfileClaimResultNew({
                     <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-6">
                         <div className="flex items-center gap-2.5 sm:gap-3 lg:gap-4">
                             <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-orange-600 rounded-full flex items-center justify-center font-black text-white text-sm sm:text-lg lg:text-2xl">
-                                {userFirstName.charAt(0)}{userLastName.charAt(0)}
+                                {firstInitialUpper(lang, userFirstName)}{firstInitialUpper(lang, userLastName)}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="text-[10px] sm:text-xs lg:text-sm font-bold text-orange-800 uppercase tracking-wide mb-1">
-                                    {dict.profileSetup?.result?.yourInformation || "Your Information"}
+                                    {prepForUppercaseDisplay(dict.profileSetup?.result?.yourInformation || "Your Information")}
                                 </div>
                                 <p className="text-base sm:text-lg lg:text-xl xl:text-2xl font-black text-orange-900 truncate">
                                     {userFirstName} {userLastName}

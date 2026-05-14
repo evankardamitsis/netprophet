@@ -13,7 +13,7 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps) {
-    const { dict } = useDictionary();
+    const { dict, prepForUppercaseDisplay } = useDictionary();
     const [timeFrame, setTimeFrame] = useState<'weekly' | 'allTime'>('weekly');
     const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -411,7 +411,7 @@ export function Leaderboard({ className, sidebarOpen = true }: LeaderboardProps)
                             <div className="text-2xl mb-1">{s.icon}</div>
                             <div className="text-xl font-black tabular-nums text-white">{s.value || "—"}</div>
                             <div className="text-[11px] font-semibold text-[#4B5975] uppercase tracking-wide mt-0.5">
-                                {s.label}
+                                {prepForUppercaseDisplay(s.label)}
                             </div>
                         </div>
                     ))}

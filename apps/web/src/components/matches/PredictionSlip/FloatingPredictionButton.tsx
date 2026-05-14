@@ -10,7 +10,7 @@ interface FloatingPredictionButtonProps {
 }
 
 export function FloatingPredictionButton({ predictions, onClick }: FloatingPredictionButtonProps) {
-    const { dict, lang } = useDictionary();
+    const { dict, prepForUppercaseDisplay } = useDictionary();
     const [isHovered, setIsHovered] = useState(false);
 
     // Calculate total potential winnings
@@ -85,7 +85,7 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
                     <div className="flex flex-col items-start">
                         <div className="flex items-center space-x-1.5 sm:space-x-2">
                             <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider">
-                                {dict?.matches?.bettingSlip || 'Betting Slip'}
+                                {prepForUppercaseDisplay(dict?.matches?.bettingSlip || 'Betting Slip')}
                             </span>
                             <motion.div
                                 className="bg-purple-600 text-white text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full"

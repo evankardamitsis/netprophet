@@ -2,14 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, Button } from '@netprophet/ui';
 import { motion } from 'framer-motion';
-import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
 
 import { Match } from '@/types/dashboard';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { usePredictionSlipCollapse } from '../../app/ClientLayout';
-import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
 import {
     SESSION_KEYS,
@@ -107,7 +104,6 @@ const createMatchDetails = (match: Match) => {
 export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen = true }: MatchDetailProps) {
     const { predictions, outrightsPredictions, addPrediction, addOutrightsPrediction, removePrediction, hasPrediction, hasOutrightsPrediction } = usePredictionSlip();
     const { activeBetMatchIds, activeBetIdByMatchId } = useActiveBets();
-    const { theme } = useTheme();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     const { placeBet, wallet } = useWallet();
     const { dict, lang } = useDictionary();
@@ -409,7 +405,7 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={onFocus}
-                className="w-full p-4 sm:p-2.5 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent text-lg sm:text-sm min-h-[56px] sm:min-h-0"
+                className="w-full px-3 py-3 bg-[#0F1628] border border-white/[0.08] rounded-xl text-white text-sm focus:outline-none focus:border-[#FFD60A]/50 focus:ring-1 focus:ring-[#FFD60A]/30 transition-all min-h-[48px]"
             >
                 <option value="">{dict?.matches?.selectSetScore?.replace('{setNumber}', setNumber.toString()) || `Select set ${setNumber} score`}</option>
                 {availableScores.map(score => (
@@ -473,36 +469,24 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
     const setWinnersFromResult = getSetWinnersFromResult(formPredictions.matchResult, formPredictions.winner, detailsWithH2H.player1.name, detailsWithH2H.player2.name);
 
     return (
-        <div className="flex flex-col flex-1 min-h-0 w-full text-white relative">
-            {/* Decorative background elements */}
-            <div className="absolute top-10 right-10 w-48 h-48 bg-purple-400 rounded-full opacity-10 blur-3xl pointer-events-none animate-pulse"></div>
-            <div className="absolute bottom-20 left-20 w-40 h-40 bg-blue-400 rounded-full opacity-10 blur-3xl pointer-events-none" style={{ animationDelay: '1s' }}></div>
-
+        <div className="w-full text-white"  >
             {/* Compact Header Section */}
-            <div className="p-0 sm:p-2 pb-2 flex-shrink-0 relative z-10">
+            <div className="px-2 pt-2 pb-2 flex-shrink-0 relative z-10">
                 <motion.button
                     onClick={onBack}
-                    className={cx(
-                        "flex items-center space-x-2 text-gray-400 hover:text-white mb-2",
-                        transitions.default
-                    )}
+                    className="flex items-center gap-1.5 text-[#4B5975] hover:text-white transition-colors mb-2"
                     whileHover={{ x: -4 }}
                     whileTap={{ scale: 0.95 }}
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    <span className="text-sm">{dict?.matches?.backToMatches || 'Back to Matches'}</span>
+                    <span className="text-sm font-medium">{dict?.matches?.backToMatches || 'Back to Matches'}</span>
                 </motion.button>
-
-                <h1 className={cx(typography.heading.md, "bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1")}>
-                    {dict?.matches?.matchDetails || 'Match Details'}
-                </h1>
-                <p className={cx(typography.body.sm, "text-gray-400")}>{dict?.matches?.loading || 'Monitor live tennis events and place your predictions'}</p>
             </div>
 
             {/* Main Content */}
-            <div className="px-0 sm:px-4 flex-1 flex flex-col lg:flex-row gap-0 sm:gap-4 min-h-0 relative z-10">
+            <div className="px-2 sm:px-4 pb-8 flex flex-col lg:flex-row gap-4 relative z-10">
                 {/* Left Column: MatchHeader + Tabs - Full width on mobile, 20% on large screens */}
                 <div className="w-full lg:w-1/5 flex-shrink-0 flex flex-col">
                     {/* MatchHeader */}
@@ -517,210 +501,165 @@ export function MatchDetail({ match, onAddToPredictionSlip, onBack, sidebarOpen 
 
                     {/* Tab Navigation - Only visible on large screens */}
                     <div className="hidden lg:block">
-                        <div className={cx("flex flex-col space-y-1 bg-slate-800/50 backdrop-blur-sm p-1", borders.rounded.sm)}>
-                            <motion.button
+                        <div className="flex flex-col gap-1 bg-[#0F1628] border border-white/[0.06] rounded-xl p-1">
+                            <button
                                 onClick={() => setActiveTab('match')}
-                                className={cx(
-                                    "py-2 px-3 text-sm font-medium",
-                                    borders.rounded.sm,
-                                    transitions.default,
+                                className={[
+                                    "py-2 px-3 text-sm font-semibold rounded-lg transition-all duration-150",
                                     activeTab === 'match'
-                                        ? cx(gradients.purple, 'text-white', shadows.card)
-                                        : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
-                                )}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                        ? 'bg-[#1E2A45] text-white'
+                                        : 'text-[#4B5975] hover:text-[#94A3B8]'
+                                ].join(' ')}
                             >
                                 {dict?.matches?.matchTab || 'Match'}
-                            </motion.button>
-                            <motion.button
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('outrights')}
-                                className={cx(
-                                    "py-2 px-3 text-sm font-medium",
-                                    borders.rounded.sm,
-                                    transitions.default,
+                                className={[
+                                    "py-2 px-3 text-sm font-semibold rounded-lg transition-all duration-150",
                                     activeTab === 'outrights'
-                                        ? cx(gradients.purple, 'text-white', shadows.card)
-                                        : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
-                                )}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                        ? 'bg-[#1E2A45] text-white'
+                                        : 'text-[#4B5975] hover:text-[#94A3B8]'
+                                ].join(' ')}
                             >
                                 {dict?.matches?.outrightsTab || 'Outrights'}
-                            </motion.button>
+                            </button>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Column: Tab Navigation (mobile) + Content - Full width on mobile, 80% on large screens */}
-                <div className="w-full lg:w-4/5 flex-1 min-h-0 flex flex-col">
+                <div className="w-full lg:w-4/5 flex flex-col gap-2">
                     {/* Tab Navigation - Only visible on mobile */}
-                    <div className="lg:hidden px-0 sm:px-4 pb-2">
-                        <div className={cx("flex space-x-1 bg-slate-800/50 backdrop-blur-sm p-1", borders.rounded.sm)}>
-                            <motion.button
+                    <div className="lg:hidden px-2 pb-2">
+                        <div className="flex gap-1 bg-[#0F1628] border border-white/[0.06] rounded-xl p-1">
+                            <button
                                 onClick={() => setActiveTab('match')}
-                                className={cx(
-                                    "flex-1 py-2 px-3 sm:px-4 text-sm font-medium",
-                                    borders.rounded.sm,
-                                    transitions.default,
+                                className={[
+                                    "flex-1 py-2 px-3 text-sm font-semibold rounded-lg transition-all duration-150",
                                     activeTab === 'match'
-                                        ? cx(gradients.purple, 'text-white', shadows.card)
-                                        : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
-                                )}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                        ? 'bg-[#1E2A45] text-white'
+                                        : 'text-[#4B5975] hover:text-[#94A3B8]'
+                                ].join(' ')}
                             >
                                 {dict?.matches?.matchTab || 'Match'}
-                            </motion.button>
-                            <motion.button
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('outrights')}
-                                className={cx(
-                                    "flex-1 py-2 px-3 sm:px-4 text-sm font-medium",
-                                    borders.rounded.sm,
-                                    transitions.default,
+                                className={[
+                                    "flex-1 py-2 px-3 text-sm font-semibold rounded-lg transition-all duration-150",
                                     activeTab === 'outrights'
-                                        ? cx(gradients.purple, 'text-white', shadows.card)
-                                        : 'bg-slate-600/50 border-2 border-slate-500/60 text-gray-200 hover:text-white hover:bg-slate-600/70 hover:border-slate-400/70'
-                                )}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                        ? 'bg-[#1E2A45] text-white'
+                                        : 'text-[#4B5975] hover:text-[#94A3B8]'
+                                ].join(' ')}
                             >
                                 {dict?.matches?.outrightsTab || 'Outrights'}
-                            </motion.button>
+                            </button>
                         </div>
                     </div>
 
                     {/* Tab Content */}
                     {activeTab === 'match' ? (
                         /* Match Tab Content */
-                        <div className="flex-1 min-h-0 flex flex-col">
-                            <div className={cx(
-                                "bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden flex flex-col h-full relative",
-                                borders.rounded.md,
-                                shadows.card
-                            )}>
-                                <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0 mt-4">
-                                    <div className="flex items-center gap-2 flex-wrap px-4">
-                                        <h2 className={cx(typography.heading.sm, "text-white mb-1")}>
-                                            🎯 {dict?.matches?.makePredictions || 'Make your predictions'}
-                                        </h2>
-                                        {match && activeBetMatchIds.has(match.id) && (
-                                            <Link
-                                                href={`/${lang}/my-picks#bet-${activeBetIdByMatchId?.get(match.id) ?? ''}`}
-                                                className="inline-flex items-center text-white text-[10px] font-bold px-2 py-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full shadow-lg shadow-green-500/50 hover:from-green-500 hover:to-emerald-500 transition-colors"
-                                            >
-                                                ✓ {dict?.matches?.activeBet || 'Active Bet'}
-                                            </Link>
-                                        )}
-                                    </div>
+                        <div className="flex flex-col bg-[#0F1628] border border-white/[0.06] rounded-xl overflow-hidden">
+                            {/* Card header */}
+                            <div className="px-4 pt-3 pb-2 border-b border-white/[0.06] flex-shrink-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <h2 className="text-sm font-bold text-white">
+                                        🎯 {dict?.matches?.makePredictions || 'Make your predictions'}
+                                    </h2>
+                                    {match && activeBetMatchIds.has(match.id) && (
+                                        <Link
+                                            href={`/${lang}/my-picks#bet-${activeBetIdByMatchId?.get(match.id) ?? ''}`}
+                                            className="inline-flex items-center text-[#00E676] text-[10px] font-bold px-2 py-1 bg-[#00E676]/10 border border-[#00E676]/30 rounded-full hover:bg-[#00E676]/15 transition-colors"
+                                        >
+                                            ✓ {dict?.matches?.activeBet || 'Active Bet'}
+                                        </Link>
+                                    )}
                                 </div>
+                            </div>
 
-                                <div className="flex-1 overflow-y-auto min-h-0 pb-28 sm:pb-36 flex flex-col">
-                                    <div className="p-2 sm:p-4 pb-4 flex-1">
-                                        <PredictionForm
-                                            matchId={match.id}
-                                            formPredictions={formPredictions}
-                                            onPredictionChange={handlePredictionChange}
-                                            details={detailsWithH2H}
-                                            isDoubles={match.match_type === 'doubles'}
-                                            isBestOf5={isBestOf5}
-                                            isAmateurFormat={isAmateurFormat}
-                                            setsToShowFromResult={setsToShowFromResult}
-                                            setWinnersFromResult={setWinnersFromResult}
-                                            renderSetScoreDropdown={renderSetScoreDropdown}
-                                            getSetScore={getSetScore}
-                                            setSetScore={setSetScore}
-                                            getSetWinner={getSetWinner}
-                                            setSetWinner={setSetWinner}
-                                            locked={match.locked || false}
-                                            hasAnyPredictions={hasAnyPredictions}
-                                            hasFormChanged={hasFormChanged}
-                                            onSubmitButton={
-                                                <motion.button
-                                                    onClick={handleSubmitPredictions}
-                                                    disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
-                                                    className={cx(
-                                                        "w-full py-2.5 sm:py-3 px-4 font-semibold text-sm",
-                                                        borders.rounded.sm,
-                                                        transitions.default,
-                                                        match.locked
-                                                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                                            : (hasAnyPredictions && hasFormChanged
-                                                                ? cx(gradients.purple, 'text-white', shadows.glow.purple)
-                                                                : 'bg-gray-600 text-gray-400 cursor-not-allowed')
-                                                    )}
-                                                    whileHover={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 1.02 } : {}}
-                                                    whileTap={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 0.98 } : {}}
-                                                >
-                                                    {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Ενημέρωση Πρόβλεψης' : dict?.matches?.addToSlip || 'Προσθήκη Πρόβλεψης') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
-                                                </motion.button>
-                                            }
-                                        />
-                                    </div>
-                                </div>
+                            {/* Scrollable form */}
+                            <div className="p-3 sm:p-4">
+                                <PredictionForm
+                                    matchId={match.id}
+                                    formPredictions={formPredictions}
+                                    onPredictionChange={handlePredictionChange}
+                                    details={detailsWithH2H}
+                                    isDoubles={match.match_type === 'doubles'}
+                                    isBestOf5={isBestOf5}
+                                    isAmateurFormat={isAmateurFormat}
+                                    setsToShowFromResult={setsToShowFromResult}
+                                    setWinnersFromResult={setWinnersFromResult}
+                                    renderSetScoreDropdown={renderSetScoreDropdown}
+                                    getSetScore={getSetScore}
+                                    setSetScore={setSetScore}
+                                    getSetWinner={getSetWinner}
+                                    setSetWinner={setSetWinner}
+                                    locked={match.locked || false}
+                                    hasAnyPredictions={hasAnyPredictions}
+                                    hasFormChanged={hasFormChanged}
+                                    onSubmitButton={null}
+                                />
+                            </div>
 
-                                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5 pt-4 sm:pt-6 border-t border-slate-700/50 bg-slate-800/80 backdrop-blur-md z-10">
-                                    <motion.button
-                                        onClick={handleSubmitPredictions}
-                                        disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
-                                        className={cx(
-                                            "w-full py-2.5 sm:py-3 px-4 font-semibold text-sm",
-                                            borders.rounded.sm,
-                                            transitions.default,
-                                            match.locked
-                                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                                : (hasAnyPredictions && hasFormChanged
-                                                    ? cx(gradients.purple, 'text-white', shadows.glow.purple)
-                                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed')
-                                        )}
-                                        whileHover={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 1.02 } : {}}
-                                        whileTap={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 0.98 } : {}}
-                                    >
-                                        {match.locked ? (dict?.sidebar?.locked || 'LOCKED') : (hasAnyPredictions ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Ενημέρωση Πρόβλεψης' : dict?.matches?.addToSlip || 'Προσθήκη Πρόβλεψης') : dict?.matches?.selectAtLeastOne || 'Select at least one prediction')}
-                                    </motion.button>
-                                </div>
+                            {/* CTA — always visible, flows naturally below form */}
+                            <div className="p-3 pt-0">
+                                {hasAnyPredictions && selectedMultiplier > 1 && (
+                                    <div className="flex items-center justify-between px-3 py-2 mb-2 rounded-xl bg-[#00E676]/08 border border-[#00E676]/20">
+                                        <span className="text-xs text-[#00E676]/70">Απόδοση:</span>
+                                        <span className="text-sm font-black tabular-nums text-[#00E676]">{selectedMultiplier.toFixed(2)}×</span>
+                                    </div>
+                                )}
+                                <motion.button
+                                    onClick={handleSubmitPredictions}
+                                    disabled={!hasAnyPredictions || !hasFormChanged || match.locked || false}
+                                    className={[
+                                        "w-full py-4 px-4 rounded-xl font-black text-sm tracking-wide transition-all duration-150 active:scale-[0.98]",
+                                        match.locked
+                                            ? 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed'
+                                            : (hasAnyPredictions && hasFormChanged
+                                                ? 'bg-[#FFD60A] text-[#080C18] shadow-[0_4px_16px_rgba(255,214,10,0.3)] hover:bg-[#FFE033]'
+                                                : 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed')
+                                    ].join(' ')}
+                                    whileTap={hasAnyPredictions && hasFormChanged && !match.locked ? { scale: 0.98 } : {}}
+                                >
+                                    {match.locked
+                                        ? (dict?.sidebar?.locked || 'LOCKED')
+                                        : hasAnyPredictions
+                                            ? (hasPrediction(match.id) ? dict?.matches?.updateSlip || 'Ενημέρωση Πρόβλεψης' : dict?.matches?.addToSlip || 'Προσθήκη Πρόβλεψης')
+                                            : dict?.matches?.selectAtLeastOne || 'Επέλεξε τουλάχιστον μία πρόβλεψη'}
+                                </motion.button>
                             </div>
                         </div>
                     ) : (
                         /* Outrights Tab Content */
-                        <div className="flex-1 min-h-0 flex flex-col">
-                            <div className={cx(
-                                "bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 overflow-hidden flex flex-col h-full relative",
-                                borders.rounded.md,
-                                shadows.card
-                            )}>
-                                <div className="p-0 sm:p-4 border-b border-slate-700/50 flex-shrink-0">
-                                    <h2 className={cx(typography.heading.sm, "text-white mb-1")}>
-                                        🏆 {dict?.matches?.outrights || 'Outrights'}
-                                    </h2>
-                                    <p className={cx(typography.body.sm, "text-gray-400")}>{dict?.matches?.outrightsDescription || 'Predict the tournament winner and finals pair for big wins!'}</p>
-                                </div>
+                        <div className="flex flex-col bg-[#0F1628] border border-white/[0.06] rounded-xl overflow-hidden">
+                            <div className="px-4 pt-3 pb-2 border-b border-white/[0.06] flex-shrink-0">
+                                <h2 className="text-sm font-bold text-white mb-0.5">
+                                    🏆 {dict?.matches?.outrights || 'Outrights'}
+                                </h2>
+                                <p className="text-xs text-[#4B5975]">{dict?.matches?.outrightsDescription || 'Predict the tournament winner and finals pair for big wins!'}</p>
+                            </div>
 
-                                <div className="flex-1 overflow-y-auto min-h-0 pb-20 sm:pb-24 flex flex-col">
-                                    <div className="p-0 sm:p-4 pb-0 flex-1">
-                                        <OutrightsForm
-                                            matchId={match.id}
-                                            selectedTournamentWinner={selectedTournamentWinner}
-                                            selectedFinalsPair={selectedFinalsPair}
-                                            onTournamentWinnerChange={handleTournamentWinnerChange}
-                                            onFinalsPairChange={handleFinalsPairChange}
-                                            tournament={detailsWithH2H.tournament}
-                                        />
-                                    </div>
-                                </div>
+                            <div className="p-3 sm:p-4">
+                                <OutrightsForm
+                                    matchId={match.id}
+                                    selectedTournamentWinner={selectedTournamentWinner}
+                                    selectedFinalsPair={selectedFinalsPair}
+                                    onTournamentWinnerChange={handleTournamentWinnerChange}
+                                    onFinalsPairChange={handleFinalsPairChange}
+                                    tournament={detailsWithH2H.tournament}
+                                />
+                            </div>
 
-                                <div className="absolute bottom-0 left-0 right-0 p-0 sm:p-4 border-t border-slate-700/50 bg-slate-800/80 backdrop-blur-md z-10">
-                                    <button
-                                        disabled={true}
-                                        className={cx(
-                                            "w-full py-2.5 sm:py-3 px-4 font-semibold text-sm bg-gray-600 text-gray-400 cursor-not-allowed",
-                                            borders.rounded.sm,
-                                            transitions.default
-                                        )}
-                                    >
-                                        {dict?.matches?.comingSoon || 'Coming Soon'}
-                                    </button>
-                                </div>
+                            <div className="p-3 pt-0">
+                                <button
+                                    disabled={true}
+                                    className="w-full py-4 px-4 rounded-xl font-black text-sm bg-[#1E2A45] text-[#4B5975] cursor-not-allowed"
+                                >
+                                    {dict?.matches?.comingSoon || 'Coming Soon'}
+                                </button>
                             </div>
                         </div>
                     )}

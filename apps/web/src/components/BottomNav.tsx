@@ -1,12 +1,13 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
+import { prepGreekTextForUppercase } from "@/lib/greekTypography";
 
 const NAV_ITEMS = [
-  { label: "Αγώνες",   icon: "🎾", path: "/matches"     },
-  { label: "Κατάταξη", icon: "🏆", path: "/leaderboard" },
-  { label: "SLIP",     icon: "📋", path: null, isFab: true },
-  { label: "Αθλητές",  icon: "👤", path: "/players"     },
-  { label: "Προφίλ",   icon: "👛", path: "/my-picks"    },
+  { label: "Αγώνες",    icon: "🎾", path: "/matches"     },
+  { label: "Κατάστημα", icon: "🛍️", path: "/rewards"     },
+  { label: "SLIP",      icon: "📋", path: null, isFab: true },
+  { label: "Αθλητές",  icon: "👤", path: "/players"      },
+  { label: "Κατάταξη", icon: "🏆", path: "/leaderboard"  },
 ];
 
 export function BottomNav({
@@ -65,7 +66,7 @@ export function BottomNav({
               {item.icon}
             </span>
             <span className="text-[9px] font-bold tracking-[0.05em] uppercase">
-              {item.label}
+              {prepGreekTextForUppercase(lang === "el" ? "el" : "en", item.label)}
             </span>
           </button>
         );

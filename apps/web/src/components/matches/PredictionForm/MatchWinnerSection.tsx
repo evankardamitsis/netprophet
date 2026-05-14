@@ -10,6 +10,7 @@ interface MatchWinnerSectionProps {
     formPredictions: PredictionOptions;
     details: MatchDetails;
     isDoubles: boolean;
+    lang: 'en' | 'el';
     locked?: boolean;
     onWinnerChange: (winner: string) => void;
     onInteraction: () => void;
@@ -19,6 +20,7 @@ export function MatchWinnerSection({
     formPredictions,
     details,
     isDoubles,
+    lang,
     locked,
     onWinnerChange,
     onInteraction
@@ -62,7 +64,7 @@ export function MatchWinnerSection({
                 >
                     <div className="flex flex-col items-start sm:items-center text-left sm:text-center">
                         <div className="text-sm font-semibold break-words w-full">
-                            {displayName(details.player1.name, isDoubles)}
+                            {displayName(details.player1.name, isDoubles, lang)}
                             {details.player1.ntrpRating && (
                                 <span className="text-xs text-gray-200 ml-1">({details.player1.ntrpRating.toFixed(1)})</span>
                             )}
@@ -93,7 +95,7 @@ export function MatchWinnerSection({
                 >
                     <div className="flex flex-col items-start sm:items-center text-left sm:text-center">
                         <div className="text-sm font-semibold break-words w-full">
-                            {displayName(details.player2.name, isDoubles)}
+                            {displayName(details.player2.name, isDoubles, lang)}
                             {details.player2.ntrpRating && (
                                 <span className="text-xs text-gray-200 ml-1">({details.player2.ntrpRating.toFixed(1)})</span>
                             )}

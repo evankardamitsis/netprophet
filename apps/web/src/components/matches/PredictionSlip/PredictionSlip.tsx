@@ -518,44 +518,24 @@ export function PredictionSlip({
                 transformOrigin: "bottom right",
                 boxShadow: isSafeSlipActive
                     ? '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.3)'
-                    : '0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(139, 92, 246, 0.3), 0 0 15px rgba(139, 92, 246, 0.2)',
+                    : '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
                 backgroundImage: isSafeSlipActive
                     ? 'linear-gradient(to bottom, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))'
                     : undefined
             }}
         >
             {/* Header */}
-            <div className="relative flex-shrink-0 p-4 bg-[#0F1628] border-b border-white/[0.12]">
-                {/* Animated border gradient */}
-                <motion.div
-                    className="absolute inset-0 opacity-30"
-                    style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent)',
-                        backgroundSize: '200% 100%',
-                    }}
-                    animate={{
-                        backgroundPosition: ['0% 0%', '100% 0%'],
-                    }}
-                    transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: 'linear',
-                    }}
-                />
-
-                <div className="relative flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-purple-500 rounded-lg blur-md opacity-50" />
-                            <div className="relative bg-gradient-to-br from-purple-600 to-blue-600 p-2 rounded-lg">
-                                <BettingSlipIcon className="h-5 w-5 text-white" />
-                            </div>
+            <div className="flex-shrink-0 px-4 py-3 bg-[#0F1628] border-b border-white/[0.08]">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#1E2A45] border border-white/[0.08] flex items-center justify-center">
+                            <BettingSlipIcon className="h-4 w-4 text-[#94A3B8]" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-white tracking-wide">
+                            <h3 className="text-sm font-bold text-white">
                                 {lang === 'el' ? 'Οι Προβλέψεις Μου' : (dict?.matches?.bettingSlip || 'My Predictions')}
                             </h3>
-                            <p className="text-xs text-[#94A3B8]">
+                            <p className="text-[11px] text-[#4B5975]">
                                 {predictions.length} {predictions.length !== 1 ? (dict?.matches?.picks || 'picks') : (dict?.matches?.pick || 'pick')}
                             </p>
                         </div>
@@ -564,12 +544,11 @@ export function PredictionSlip({
                     {onToggleCollapse && (
                         <motion.button
                             onClick={onToggleCollapse}
-                            className="relative p-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 hover:border-purple-500/50 transition-all duration-200"
+                            className="p-2 rounded-lg bg-[#1E2A45] text-[#4B5975] hover:text-white transition-colors"
                             title={dict?.matches?.minimizeSlip || 'Minimize slip'}
-                            whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <svg className="h-5 w-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                             </svg>
                         </motion.button>

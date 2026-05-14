@@ -17,7 +17,7 @@ interface LiveMatchesGridProps {
 export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed }: LiveMatchesGridProps) {
     const onSelectMatch = useMatchSelect();
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
-    const { dict } = useDictionary();
+    const { dict, prepForUppercaseDisplay } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
     const { activeBetMatchIds } = useActiveBets();
 
@@ -177,7 +177,7 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
                                             <div className="flex items-center space-x-2">
                                                 <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
                                                 <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
-                                                    {match.tournament}
+                                                    {prepForUppercaseDisplay(match.tournament)}
                                                 </div>
                                             </div>
                                             {match.round && (

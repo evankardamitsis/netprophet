@@ -36,9 +36,10 @@ export function PredictionForm({
     setSetWinner,
     locked,
     onSubmitButton,
-    onSubmitSuccess
+    onSubmitSuccess,
+    disableFullScreen = false,
 }: PredictionFormProps) {
-    const { dict } = useDictionary();
+    const { dict, lang } = useDictionary();
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [hasBlurredSuperTiebreak, setHasBlurredSuperTiebreak] = useState(false);
@@ -137,11 +138,12 @@ export function PredictionForm({
     const bonusMultiplier = currentMultiplier - baseOdds;
 
     const handleInputInteraction = useCallback(() => {
+        if (disableFullScreen) return;
         if (typeof window !== 'undefined' && window.innerWidth < 768 && !isFullScreen) {
             setIsFullScreen(true);
             document.body.style.overflow = 'hidden';
         }
-    }, [isFullScreen]);
+    }, [isFullScreen, disableFullScreen]);
 
     const handleInputFocus = useCallback(() => handleInputInteraction(), [handleInputInteraction]);
     const handleButtonClick = useCallback(() => handleInputInteraction(), [handleInputInteraction]);
@@ -220,6 +222,7 @@ export function PredictionForm({
                 formPredictions={formPredictions}
                 details={details}
                 isDoubles={isDoubles}
+                lang={lang}
                 locked={locked}
                 onWinnerChange={(w) => onPredictionChange('winner', w)}
                 onInteraction={handleButtonClick}
@@ -243,6 +246,7 @@ export function PredictionForm({
                     isBestOf5={isBestOf5}
                     isAmateurFormat={isAmateurFormat}
                     isDoubles={isDoubles}
+                    lang={lang}
                     locked={locked}
                     showPulse={showMatchResultPulse}
                     onMatchResultChange={handleMatchResultChange}
@@ -257,6 +261,7 @@ export function PredictionForm({
                         isBestOf5={isBestOf5}
                         isAmateurFormat={isAmateurFormat}
                         isDoubles={isDoubles}
+                        lang={lang}
                         locked={locked}
                         showPulse={showSetScoresPulse}
                         setsCount={(() => { const [a, b] = formPredictions.matchResult.split('-').map(Number); return a + b; })()}
@@ -273,6 +278,7 @@ export function PredictionForm({
                         setsToShowFromResult={setsToShowFromResult}
                         isBestOf5={isBestOf5}
                         isAmateurFormat={isAmateurFormat}
+                        lang={lang}
                         locked={locked}
                         showPulse={showSetWinnersPulse}
                         getSetWinner={getSetWinner}
@@ -289,6 +295,7 @@ export function PredictionForm({
                     isBestOf5={isBestOf5}
                     isAmateurFormat={isAmateurFormat}
                     isDoubles={isDoubles}
+                    lang={lang}
                     locked={locked}
                     showPulse={showSetScoresPulse}
                     setsCount={2}
@@ -322,6 +329,7 @@ export function PredictionForm({
                     formPredictions={formPredictions}
                     details={details}
                     isDoubles={isDoubles}
+                    lang={lang}
                     locked={locked}
                     showPulse={showSuperTiebreakPulse}
                     hasBlurredSuperTiebreak={hasBlurredSuperTiebreak}

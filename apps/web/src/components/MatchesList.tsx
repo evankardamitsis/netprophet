@@ -7,6 +7,7 @@ import { Button } from '@netprophet/ui';
 import { useTheme } from './Providers';
 import { Dictionary } from '@/types/dictionary';
 import { Match } from '@/types/dashboard';
+import { prepGreekTextForUppercase } from '@/lib/greekTypography';
 
 // Use database types directly
 import type { Database } from '@netprophet/lib/src/types/database';
@@ -469,7 +470,7 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                 {liveMatches.length > 0 && (
                     <div>
                         <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
-                            {dict?.sidebar?.liveMatches || 'Live Matches'}
+                            {prepGreekTextForUppercase(lang, dict?.sidebar?.liveMatches || 'Live Matches')}
                         </div>
                         <div className="space-y-2 sm:space-y-3 min-w-0">
                             {liveMatches.map(match => (
@@ -525,7 +526,7 @@ export function MatchesList({ onSelectMatch, dict, lang = 'en' }: MatchesListPro
                 {upcomingMatches.length > 0 && (
                     <div>
                         <div className={`text-xs sm:text-sm font-bold mb-2 sm:mb-3 tracking-wide uppercase ${theme === 'dark' ? 'text-blue-400' : 'text-gray-700'}`}>
-                            {dict?.sidebar?.upcoming || 'Upcoming Matches'}
+                            {prepGreekTextForUppercase(lang, dict?.sidebar?.upcoming || 'Upcoming Matches')}
                         </div>
                         <div className="space-y-2 sm:space-y-3 min-w-0">
                             {upcomingMatches.map(match => (

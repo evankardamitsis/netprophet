@@ -13,6 +13,7 @@ import CoinIcon from '@/components/CoinIcon';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileClaim } from '@/hooks/useProfileClaim';
 import { buttons } from '@/styles/design-system';
+import { prepGreekTextForUppercase } from '@/lib/greekTypography';
 
 interface Dictionary {
     navigation: {
@@ -517,7 +518,7 @@ export default function HomePageClient({ dict, lang }: HomePageClientProps) {
                                 {/* Header */}
                                 <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 text-center">
                                     <div className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
-                                        {lang === 'el' ? 'Πακέτο Καλωσορίσματος' : 'Welcome Rewards'}
+                                        {lang === 'el' ? prepGreekTextForUppercase('el', 'Πακέτο Καλωσορίσματος') : 'Welcome Rewards'}
                                     </div>
                                     <div className="text-2xl font-bold text-white">
                                         {lang === 'el' ? 'Ξεκλείδωσε Τώρα!' : 'Unlock Now!'}

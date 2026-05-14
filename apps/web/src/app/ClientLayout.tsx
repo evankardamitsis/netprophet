@@ -168,29 +168,39 @@ function ClientLayoutContent({ children, dict, lang = 'en' }: ClientLayoutProps)
                                 </div>
                             </div>
 
-                            {/* Prediction Slip overlay for smaller screens - positioned on the right */}
+                            {/* Prediction Slip overlay for smaller screens - bottom sheet */}
                             {!slipCollapsed && (
-                                <div className="fixed inset-0 z-40 flex xl:hidden">
-                                    <div className="fixed inset-0 bg-black/40" onClick={() => setSlipCollapsed?.(true)} />
-                                    <div className="relative w-full max-w-[320px] h-full bg-gradient-to-b from-slate-900 via-blue-950 to-purple-950 z-50 pt-[64px] ml-auto overflow-hidden shadow-2xl">
-                                        <div className="overflow-y-auto h-full w-full">
-                                            <PredictionSlip
-                                                onRemovePrediction={removePrediction}
-                                                onSubmitPredictions={() => { }}
-                                                isCollapsed={slipCollapsed}
-                                                onToggleCollapse={() => setSlipCollapsed?.(!slipCollapsed)}
-                                            />
+                                <div className="xl:hidden">
+                                    <div
+                                        className="fixed inset-0 bg-black/60 z-[74]"
+                                        onClick={() => setSlipCollapsed?.(true)}
+                                    />
+                                    <div
+                                        className="fixed bottom-0 left-0 right-0 z-[75] bg-[#0F1628] rounded-t-3xl shadow-[0_-8px_40px_rgba(0,0,0,0.8)]"
+                                        style={{ height: '85dvh' }}
+                                    >
+                                        {/* Drag handle */}
+                                        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                                            <div className="w-10 h-1 rounded-full bg-white/[0.15]" />
                                         </div>
+                                        <PredictionSlip
+                                            onRemovePrediction={removePrediction}
+                                            onSubmitPredictions={() => { }}
+                                            isCollapsed={slipCollapsed}
+                                            onToggleCollapse={() => setSlipCollapsed?.(!slipCollapsed)}
+                                        />
                                     </div>
                                 </div>
                             )}
 
-                            {/* Floating Prediction Button */}
+                            {/* Floating Prediction Button — desktop only (mobile uses BottomNav SLIP button) */}
                             {slipCollapsed && predictions.length > 0 && (
-                                <FloatingPredictionButton
-                                    predictions={predictions}
-                                    onClick={handleExpandPredictionSlip}
-                                />
+                                <div className="hidden xl:block">
+                                    <FloatingPredictionButton
+                                        predictions={predictions}
+                                        onClick={handleExpandPredictionSlip}
+                                    />
+                                </div>
                             )}
 
                             {/* Bottom Navigation - mobile only */}

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useDictionary } from "@/context/DictionaryContext";
 
 interface Player {
   id: string;
@@ -50,6 +51,7 @@ export function MatchCard({
   selectedPlayer, onSelectPlayer, onViewDetail,
 }: MatchCardProps) {
   const [localSel, setLocalSel] = useState<"player1" | "player2" | null>(null);
+  const { prepForUppercaseDisplay } = useDictionary();
   const sel = selectedPlayer !== undefined ? selectedPlayer : localSel;
 
   const handleSelect = (p: "player1" | "player2") => {
@@ -110,6 +112,7 @@ export function MatchCard({
           isUnderdog={isUnderdog1}
           isFavorite={player1.odds < player2.odds}
           side="left"
+          prepForUppercaseDisplay={prepForUppercaseDisplay}
           onClick={() => handleSelect("player1")}
         />
         <div className="flex items-center justify-center w-5 flex-shrink-0">
@@ -122,6 +125,7 @@ export function MatchCard({
           isUnderdog={isUnderdog2}
           isFavorite={player2.odds < player1.odds}
           side="right"
+          prepForUppercaseDisplay={prepForUppercaseDisplay}
           onClick={() => handleSelect("player2")}
         />
       </div>
@@ -130,7 +134,7 @@ export function MatchCard({
       <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06] gap-2 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-bold text-[#4B5975] tracking-[0.05em] uppercase">
-            {category}
+            {prepForUppercaseDisplay(category)}
           </span>
           {surfaceInfo && (
             <span className={`text-[10px] font-semibold ${surfaceInfo.color}`}>
@@ -156,13 +160,14 @@ export function MatchCard({
 }
 
 function OddsBtn({
-  player, isSelected, isUnderdog, isFavorite, side, onClick,
+  player, isSelected, isUnderdog, isFavorite, side, prepForUppercaseDisplay, onClick,
 }: {
   player: Player;
   isSelected: boolean;
   isUnderdog: boolean;
   isFavorite: boolean;
   side: "left" | "right";
+  prepForUppercaseDisplay: (text: string) => string;
   onClick: () => void;
 }) {
   return (
@@ -186,7 +191,7 @@ function OddsBtn({
 
       <span className={`text-[10px] font-bold uppercase tracking-[0.04em] text-center leading-tight
                         ${isSelected ? "text-[#00E676]/80" : "text-[#94A3B8]"}`}>
-        {abbreviate(player.name)}
+        {prepForUppercaseDisplay(abbreviate(player.name))}
       </span>
       <span className="text-[9px] text-[#4B5975]">NTRP {player.ntrp}</span>
       <span className={[

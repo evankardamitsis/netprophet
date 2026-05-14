@@ -22,7 +22,7 @@ interface MatchesGridProps {
 export function MatchesGrid({ matches: propMatches = [], sidebarOpen = true, slipCollapsed }: MatchesGridProps) {
     const onSelectMatch = useMatchSelect();
     const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
-    const { dict, lang } = useDictionary();
+    const { dict, prepForUppercaseDisplay } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
     const { activeBetMatchIds } = useActiveBets();
 
@@ -217,7 +217,7 @@ export function MatchesGrid({ matches: propMatches = [], sidebarOpen = true, sli
                                                         <div className="flex items-center space-x-2">
                                                             <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
                                                             <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
-                                                                {match.tournament}
+                                                                {prepForUppercaseDisplay(match.tournament)}
                                                             </div>
                                                         </div>
                                                         {match.round && (
@@ -446,7 +446,7 @@ export function MatchesGrid({ matches: propMatches = [], sidebarOpen = true, sli
                                                         <div className="flex items-center space-x-2">
                                                             <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
                                                             <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
-                                                                {match.tournament}
+                                                                {prepForUppercaseDisplay(match.tournament)}
                                                             </div>
                                                         </div>
                                                         {match.round && (

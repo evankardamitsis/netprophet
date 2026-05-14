@@ -9,6 +9,7 @@ interface SuperTiebreakSectionProps {
     formPredictions: PredictionOptions;
     details: MatchDetails;
     isDoubles: boolean;
+    lang: 'en' | 'el';
     locked?: boolean;
     showPulse: boolean;
     hasBlurredSuperTiebreak: boolean;
@@ -21,6 +22,7 @@ export function SuperTiebreakSection({
     formPredictions,
     details,
     isDoubles,
+    lang,
     locked,
     showPulse,
     hasBlurredSuperTiebreak,
@@ -52,11 +54,11 @@ export function SuperTiebreakSection({
             <div className="space-y-2 mb-3">
                 <h4 className="font-semibold text-white text-xs">{dict?.matches?.superTiebreakWinner || 'Super Tiebreak Winner'}</h4>
                 <p className="text-xs text-gray-400 mb-2">
-                    {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', displayName(formPredictions.winner, isDoubles)) || `The super tiebreak winner must be ${displayName(formPredictions.winner, isDoubles)} to match your overall prediction.`}
+                    {dict?.matches?.superTiebreakWinnerDescription?.replace('{player}', displayName(formPredictions.winner, isDoubles, lang)) || `The super tiebreak winner must be ${displayName(formPredictions.winner, isDoubles, lang)} to match your overall prediction.`}
                 </p>
                 <div className="grid grid-cols-1 gap-2">
                     <div className="p-2 rounded-lg border bg-purple-600/20 border-purple-500/30 text-purple-300">
-                        <div className="text-sm font-semibold">{displayName(formPredictions.winner, isDoubles)}</div>
+                        <div className="text-sm font-semibold">{displayName(formPredictions.winner, isDoubles, lang)}</div>
                         <div className="text-xs text-purple-400">{dict?.matches?.winsSuperTiebreak || 'Wins super tiebreak (pre-selected)'}</div>
                     </div>
                 </div>
@@ -65,7 +67,7 @@ export function SuperTiebreakSection({
             {formPredictions.superTieBreakWinner && (
                 <div className="space-y-1.5">
                     <h4 className="font-semibold text-white text-xs">
-                        {dict?.matches?.superTiebreakScore?.replace('{player}', displayName(formPredictions.winner, isDoubles)) || `Super Tiebreak Score - ${displayName(formPredictions.winner, isDoubles)} ${dict?.matches?.wins || 'wins'}`}
+                        {dict?.matches?.superTiebreakScore?.replace('{player}', displayName(formPredictions.winner, isDoubles, lang)) || `Super Tiebreak Score - ${displayName(formPredictions.winner, isDoubles, lang)} ${dict?.matches?.wins || 'wins'}`}
                     </h4>
                     <div className="space-y-1.5">
                         <label className="text-xs text-gray-400">

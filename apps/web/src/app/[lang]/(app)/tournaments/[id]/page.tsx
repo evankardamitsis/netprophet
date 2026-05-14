@@ -76,7 +76,7 @@ interface MatchResult {
 export default function TournamentPage() {
     const params = useParams();
     const router = useRouter();
-    const { dict } = useDictionary();
+    const { dict, prepForUppercaseDisplay } = useDictionary();
     const tournamentSlug = params.id as string;
     const lang = params?.lang;
 
@@ -682,7 +682,7 @@ export default function TournamentPage() {
                                             <div className="flex items-center gap-2 mb-2">
                                                 <Crown className="h-4 w-4 text-yellow-400" />
                                                 <p className="text-xs font-semibold text-yellow-300 uppercase tracking-wider">
-                                                    {dict?.tournaments?.captain || 'Captain'}
+                                                    {prepForUppercaseDisplay(dict?.tournaments?.captain || 'Captain')}
                                                 </p>
                                             </div>
                                             {team.captain?.id ? (
@@ -719,7 +719,7 @@ export default function TournamentPage() {
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Users className="h-4 w-4 text-white/60" />
                                                 <p className="text-xs font-semibold text-white/70 uppercase tracking-wider">
-                                                    {dict?.tournaments?.members || 'Members'}
+                                                    {prepForUppercaseDisplay(dict?.tournaments?.members || 'Members')}
                                                     <span className="ml-2 px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30">
                                                         {team.team_members.length}
                                                     </span>

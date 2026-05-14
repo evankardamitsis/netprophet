@@ -1,13 +1,14 @@
 import type { PredictionOptions } from './types';
+import { firstInitialUpper } from '@/lib/greekTypography';
 
-export function displayName(name: string, isDoubles: boolean): string {
+export function displayName(name: string, isDoubles: boolean, lang: 'en' | 'el' = 'en'): string {
     if (isDoubles) {
         const formatPlayerName = (fullName: string) => {
             const parts = fullName.trim().split(' ');
             if (parts.length >= 2) {
                 const lastName = parts[parts.length - 1];
                 const firstName = parts[0];
-                const firstInitial = firstName.charAt(0).toUpperCase();
+                const firstInitial = firstInitialUpper(lang, firstName);
                 return `${lastName} ${firstInitial}.`;
             }
             return fullName;
@@ -22,7 +23,7 @@ export function displayName(name: string, isDoubles: boolean): string {
     if (parts.length >= 2) {
         const lastName = parts[parts.length - 1];
         const firstName = parts[0];
-        const firstInitial = firstName.charAt(0).toUpperCase();
+        const firstInitial = firstInitialUpper(lang, firstName);
         return `${lastName} ${firstInitial}.`;
     }
     return name;

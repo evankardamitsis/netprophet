@@ -12,6 +12,7 @@ interface SetScoresSectionProps {
     isBestOf5: boolean;
     isAmateurFormat: boolean;
     isDoubles: boolean;
+    lang: 'en' | 'el';
     locked?: boolean;
     showPulse: boolean;
     setsCount: number;
@@ -28,6 +29,7 @@ export function SetScoresSection({
     isBestOf5,
     isAmateurFormat,
     isDoubles,
+    lang,
     locked,
     showPulse,
     setsCount,
@@ -46,7 +48,7 @@ export function SetScoresSection({
     const displayBonus = setScoresCount > 0 ? currentBonus : maxBonus;
 
     const predictExactLabel = formPredictions.matchResult
-        ? (dict?.matches?.predictExactScore?.replace('{player}', displayName(formPredictions.winner, isDoubles)) || `Predict the exact score for each set. ${displayName(formPredictions.winner, false)} wins all sets.`)
+        ? (dict?.matches?.predictExactScore?.replace('{player}', displayName(formPredictions.winner, isDoubles, lang)) || `Predict the exact score for each set. ${displayName(formPredictions.winner, false, lang)} wins all sets.`)
         : '';
 
     return (
@@ -75,7 +77,7 @@ export function SetScoresSection({
                 return (
                     <div key={i} className="space-y-1.5 mb-2">
                         <h4 className="font-semibold text-white text-xs">
-                            Set {i + 1} Score - {displayName(setWinner || formPredictions.winner, false)} {dict?.matches?.wins || 'wins'}
+                            Set {i + 1} Score - {displayName(setWinner || formPredictions.winner, false, lang)} {dict?.matches?.wins || 'wins'}
                         </h4>
                         {renderSetScoreDropdown(i + 1, getSetScore(i + 1), (value) => {
                             onInteraction();

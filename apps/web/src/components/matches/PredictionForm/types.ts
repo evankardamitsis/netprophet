@@ -53,4 +53,5 @@ export interface PredictionFormProps {
     hasAnyPredictions?: boolean;
     hasFormChanged?: boolean;
     onSubmitSuccess?: () => void;
+    disableFullScreen?: boolean;
 }

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Badge } from '@netprophet/ui';
 import { useTheme } from '../Providers';
 import { useDictionary } from '@/context/DictionaryContext';
+import { firstInitialUpper } from '@/lib/greekTypography';
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -34,14 +35,15 @@ interface MatchHeaderProps {
     details: MatchDetails;
     player1Id?: string | null;
     player2Id?: string | null;
+    defaultExpanded?: boolean;
 }
 
-export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeaderProps) {
+export function MatchHeader({ match, details, player1Id, player2Id, defaultExpanded }: MatchHeaderProps) {
     const { theme } = useTheme();
     const { dict, lang } = useDictionary();
     const router = useRouter();
     const params = useParams();
-    const [isExpanded, setIsExpanded] = useState(true); // Default expanded on large screens
+    const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? true);
 
     const isDoubles = details.matchType === 'doubles';
 
@@ -54,7 +56,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
                 if (parts.length >= 2) {
                     const lastName = parts[parts.length - 1];
                     const firstName = parts[0];
-                    const firstInitial = firstName.charAt(0).toUpperCase();
+                    const firstInitial = firstInitialUpper(lang, firstName);
                     return `${lastName} ${firstInitial}.`;
                 }
                 return fullName;
@@ -73,7 +75,7 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
             if (parts.length >= 2) {
                 const lastName = parts[parts.length - 1];
                 const firstName = parts[0];
-                const firstInitial = firstName.charAt(0).toUpperCase();
+                const firstInitial = firstInitialUpper(lang, firstName);
                 return `${lastName} ${firstInitial}.`;
             }
             return name;
@@ -81,23 +83,16 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
         return name;
     };
 
-    // Auto-expand on large screens, collapse on small screens
+    // Auto-expand on large screens, collapse on small screens (skip if caller sets defaultExpanded)
     useEffect(() => {
+        if (defaultExpanded !== undefined) return;
         const handleResize = () => {
-            if (window.innerWidth >= 1024) { // lg breakpoint
-                setIsExpanded(true);
-            } else {
-                setIsExpanded(false);
-            }
+            setIsExpanded(window.innerWidth >= 1024);
         };
-
-        // Set initial state
         handleResize();
-
-        // Add event listener
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    }, [defaultExpanded]);
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -131,214 +126,212 @@ export function MatchHeader({ match, details, player1Id, player2Id }: MatchHeade
     };
 
     return (
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-lg border-2 border-purple-500/30 shadow-lg shadow-purple-500/10 overflow-hidden relative">
-            {/* Compact View - Always visible */}
-            <div className="p-2 sm:p-3 lg:p-4 min-h-[60px] lg:min-h-[70px]">
-                {/* Small screens: Stacked layout */}
-                <div className="lg:hidden">
-                    {/* Top row - Tournament info and controls */}
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-xs font-semibold text-white truncate mb-0.5">{details.tournament}</h3>
-                            <p className="text-xs text-gray-400 truncate">{details.round ? `${details.round} • ${details.surface}` : details.surface}</p>
-                        </div>
-                        <div className="flex items-center gap-1 ml-2">
-                            <button
-                                onClick={() => setIsExpanded(!isExpanded)}
-                                className="p-1 text-gray-400 hover:text-white transition-colors rounded hover:bg-slate-700/50"
-                                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                            >
-                                <svg
-                                    className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                        </div>
+        <div className="overflow-hidden">
+            {/* Compact header — always visible */}
+            <div className="p-3">
+                {/* Tournament meta */}
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-bold text-[#4B5975] uppercase tracking-wider truncate">
+                            {details.tournament}
+                        </p>
+                        <p className="text-xs text-[#94A3B8] mt-0.5">
+                            {details.round ? `${details.round} · ${details.surface}` : details.surface}
+                        </p>
                     </div>
-
-                    {/* Bottom row - Players and odds */}
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="text-left min-w-0 flex-1">
-                            <button
-                                onClick={() => navigateToPlayer(player1Id)}
-                                disabled={!player1Id || isDoubles}
-                                className={`text-xs font-medium mb-0.5 transition-colors w-full text-left ${player1Id && !isDoubles
-                                    ? 'text-white hover:text-purple-300 cursor-pointer'
-                                    : 'text-white cursor-default'
-                                    }`}
-                            >
-                                <div className="flex flex-col">
-                                    <span className="break-words">{formatName(details.player1.name, true)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}</span>
-                                    {details.player1.teamName && <span className="text-orange-400 text-[10px] leading-tight break-words">{details.player1.teamName}</span>}
-                                </div>
-                            </button>
-                            <div className="text-xs text-purple-400 font-bold">{details.player1.odds.toFixed(2)}x</div>
-                        </div>
-
-                        <div className="text-xs text-gray-400 font-bold px-1">{dict?.matches?.vs || 'VS'}</div>
-
-                        <div className="text-right min-w-0 flex-1">
-                            <button
-                                onClick={() => navigateToPlayer(player2Id)}
-                                disabled={!player2Id || isDoubles}
-                                className={`text-xs font-medium mb-0.5 transition-colors w-full text-right ${player2Id && !isDoubles
-                                    ? 'text-white hover:text-purple-300 cursor-pointer'
-                                    : 'text-white cursor-default'
-                                    }`}
-                            >
-                                <div className="flex flex-col items-end">
-                                    <span className="break-words text-right">{formatName(details.player2.name, true)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}</span>
-                                    {details.player2.teamName && <span className="text-orange-400 text-[10px] leading-tight break-words text-right">{details.player2.teamName}</span>}
-                                </div>
-                            </button>
-                            <div className="text-xs text-purple-400 font-bold">{details.player2.odds.toFixed(2)}x</div>
-                        </div>
-                    </div>
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="ml-2 w-7 h-7 rounded-full bg-[#1E2A45] flex items-center justify-center text-[#4B5975] hover:text-white transition-colors flex-shrink-0"
+                        aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                    >
+                        <svg
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
                 </div>
 
-                {/* Large screens: Vertical layout */}
-                <div className="hidden lg:flex lg:flex-col lg:gap-3">
-                    {/* Top section - Tournament info and controls */}
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-semibold text-white mb-1 leading-tight">{details.tournament}</h3>
-                            <p className="text-xs text-gray-400 leading-tight">{details.round ? `${details.round} • ${details.surface}` : details.surface}</p>
-                        </div>
-                        <div className="flex items-center gap-1 ml-3">
-                            <button
-                                onClick={() => setIsExpanded(!isExpanded)}
-                                className="p-1 text-gray-400 hover:text-white transition-colors rounded hover:bg-slate-700/50"
-                                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
-                            >
-                                <svg
-                                    className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                        </div>
+                {/* Players vs row */}
+                <div className="flex items-stretch gap-2">
+                    {/* Player 1 */}
+                    <button
+                        onClick={() => navigateToPlayer(player1Id)}
+                        disabled={!player1Id || isDoubles}
+                        className={`flex-1 flex flex-col items-center text-center p-3 rounded-xl bg-[#1E2A45] border border-white/[0.06] transition-all ${player1Id && !isDoubles ? 'hover:border-[#38BDF8]/40 hover:bg-[#263354] cursor-pointer' : 'cursor-default'}`}
+                    >
+                        <span className="text-xs font-semibold text-white break-words leading-tight">
+                            {formatName(details.player1.name, true)}
+                            {details.player1.ntrpRating ? <span className="text-[#4B5975] font-normal"> ({details.player1.ntrpRating.toFixed(1)})</span> : null}
+                        </span>
+                        {details.player1.teamName && (
+                            <span className="text-[#FF6B2B] text-[10px] leading-tight mt-0.5">{details.player1.teamName}</span>
+                        )}
+                        <span className="text-sm font-black text-[#38BDF8] mt-1 tabular-nums">{details.player1.odds.toFixed(2)}×</span>
+                    </button>
+
+                    {/* VS */}
+                    <div className="flex items-center justify-center w-8 flex-shrink-0">
+                        <span className="text-[9px] font-black text-[#4B5975] tracking-[0.1em]" style={{ writingMode: 'vertical-rl' }}>VS</span>
                     </div>
 
-                    {/* Bottom section - Players and odds */}
-                    <div className="flex flex-col gap-3">
-                        {/* Player 1 */}
-                        <div className="flex items-center justify-between gap-3">
-                            <button
-                                onClick={() => navigateToPlayer(player1Id)}
-                                disabled={!player1Id || isDoubles}
-                                className={`text-xs font-medium leading-tight text-left transition-colors flex-1 ${player1Id && !isDoubles
-                                    ? 'text-white hover:text-purple-300 cursor-pointer'
-                                    : 'text-white cursor-default'
-                                    }`}
-                            >
-                                <div className="flex flex-col">
-                                    <span className="break-words">{formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}</span>
-                                    {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player1.teamName}</span>}
-                                </div>
-                            </button>
-                            <div className="text-xs text-purple-400 font-bold flex-shrink-0">{details.player1.odds.toFixed(2)}x</div>
-                        </div>
-                        {/* VS separator */}
-                        <div className="text-xs text-gray-400 font-bold text-center">{dict?.matches?.vs || 'VS'}</div>
-                        {/* Player 2 */}
-                        <div className="flex items-center justify-between gap-3">
-                            <button
-                                onClick={() => navigateToPlayer(player2Id)}
-                                disabled={!player2Id || isDoubles}
-                                className={`text-xs font-medium leading-tight text-left transition-colors flex-1 ${player2Id && !isDoubles
-                                    ? 'text-white hover:text-purple-300 cursor-pointer'
-                                    : 'text-white cursor-default'
-                                    }`}
-                            >
-                                <div className="flex flex-col">
-                                    <span className="break-words">{formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}</span>
-                                    {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player2.teamName}</span>}
-                                </div>
-                            </button>
-                            <div className="text-xs text-purple-400 font-bold flex-shrink-0">{details.player2.odds.toFixed(2)}x</div>
-                        </div>
-                    </div>
+                    {/* Player 2 */}
+                    <button
+                        onClick={() => navigateToPlayer(player2Id)}
+                        disabled={!player2Id || isDoubles}
+                        className={`flex-1 flex flex-col items-center text-center p-3 rounded-xl bg-[#1E2A45] border border-white/[0.06] transition-all ${player2Id && !isDoubles ? 'hover:border-[#38BDF8]/40 hover:bg-[#263354] cursor-pointer' : 'cursor-default'}`}
+                    >
+                        <span className="text-xs font-semibold text-white break-words leading-tight">
+                            {formatName(details.player2.name, true)}
+                            {details.player2.ntrpRating ? <span className="text-[#4B5975] font-normal"> ({details.player2.ntrpRating.toFixed(1)})</span> : null}
+                        </span>
+                        {details.player2.teamName && (
+                            <span className="text-[#FF6B2B] text-[10px] leading-tight mt-0.5">{details.player2.teamName}</span>
+                        )}
+                        <span className="text-sm font-black text-[#38BDF8] mt-1 tabular-nums">{details.player2.odds.toFixed(2)}×</span>
+                    </button>
                 </div>
             </div>
 
-            {/* Expanded Details - Hidden by default */}
+            {/* Expanded details */}
             {isExpanded && (
-                <div className="border-t-2 border-purple-500/30 p-2 sm:p-3 lg:p-4 bg-slate-700/20">
-                    <div className="space-y-2 lg:space-y-3">
-                        <div className="text-xs text-gray-400">
-                            {isBestOf5 ? dict?.matches?.bestOf5 || 'Καλύτερος από 5 σετ' : dict?.matches?.bestOf3 || 'Καλύτερος από 3 σετ'}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                            <span className="font-semibold text-purple-300">{dict?.matches?.headToHead || 'H2H'}:</span> {translateHeadToHead(details.headToHead)}
-                        </div>
-                        {details.headToHeadData && details.headToHeadData.total_matches > 0 && (
-                            <div className="text-xs text-gray-400 bg-slate-700/30 rounded px-2 py-1">
-                                <span className="font-medium">{dict?.athletes?.totalMatches || 'Total matches'}: {details.headToHeadData.total_matches}</span>
-                                {details.headToHeadData.last_match_date && (
-                                    <span className="ml-2 text-gray-300">
-                                        • Last match: {new Date(details.headToHeadData.last_match_date).toLocaleDateString()}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-                        <div className="text-xs text-gray-400 bg-slate-600/30 rounded px-2 py-1">
-                            <span className="font-semibold text-purple-300">Head-to-Head Record:</span> {details.headToHeadData && details.headToHeadData.total_matches > 0
-                                ? `${details.headToHeadData.player_a_wins}-${details.headToHeadData.player_b_wins}`
-                                : 'Δεν υπάρχουν κοινοί αγώνες'
-                            }
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 text-xs">
-                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5 min-w-0">
-                                <button
-                                    onClick={() => navigateToPlayer(player1Id)}
-                                    disabled={!player1Id || isDoubles}
-                                    className={`text-white font-medium text-left transition-colors w-full ${player1Id && !isDoubles
-                                        ? 'hover:text-purple-300 cursor-pointer'
-                                        : 'cursor-default'
-                                        }`}
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="break-words">{formatName(details.player1.name)}{details.player1.ntrpRating ? ` (${details.player1.ntrpRating.toFixed(1)})` : ''}</span>
-                                        {details.player1.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player1.teamName}</span>}
-                                    </div>
-                                </button>
-                                <div className="flex items-center gap-2 text-xs mt-1">
-                                    <span className="text-[#00E676] font-bold">✅ {details.player1.wins} Νίκες</span>
-                                    <span className="text-[#4B5975]">·</span>
-                                    <span className="text-[#FF4545] font-bold">❌ {details.player1.losses} Ήττες</span>
-                                </div>
-                            </div>
-                            <div className="text-left p-2 rounded-lg bg-slate-800/50 border border-purple-500/20 shadow-md shadow-purple-500/5 min-w-0">
-                                <button
-                                    onClick={() => navigateToPlayer(player2Id)}
-                                    disabled={!player2Id || isDoubles}
-                                    className={`text-white text-left font-medium transition-colors w-full ${player2Id && !isDoubles
-                                        ? 'hover:text-purple-300 cursor-pointer'
-                                        : 'cursor-default'
-                                        }`}
-                                >
-                                    <div className="flex flex-col">
-                                        <span className="break-words">{formatName(details.player2.name)}{details.player2.ntrpRating ? ` (${details.player2.ntrpRating.toFixed(1)})` : ''}</span>
-                                        {details.player2.teamName && <span className="text-orange-400 text-[10px] sm:text-xs leading-tight break-words">{details.player2.teamName}</span>}
-                                    </div>
-                                </button>
-                                <div className="flex items-center gap-2 text-xs mt-1">
-                                    <span className="text-[#00E676] font-bold">✅ {details.player2.wins} Νίκες</span>
-                                    <span className="text-[#4B5975]">·</span>
-                                    <span className="text-[#FF4545] font-bold">❌ {details.player2.losses} Ήττες</span>
-                                </div>
-                            </div>
-                        </div>
+                <div className="px-3 pb-3 space-y-3">
+                    {/* Format pill */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2.5 py-1 rounded-full bg-[#1E2A45] border border-white/[0.06] text-[11px] font-semibold text-[#94A3B8]">
+                            🎾 {isBestOf5 ? (dict?.matches?.bestOf5 || 'Καλύτερος από 5 σετ') : (dict?.matches?.bestOf3 || 'Καλύτερος από 3 σετ')}
+                        </span>
                     </div>
+
+                    {/* H2H card */}
+                    <div className="rounded-xl bg-[#1E2A45] border border-white/[0.06] p-3">
+                        <p className="text-[10px] font-bold text-[#4B5975] uppercase tracking-wider mb-2">
+                            {dict?.matches?.headToHead || 'Head to Head'}
+                        </p>
+                        {details.headToHeadData && details.headToHeadData.total_matches > 0 ? (
+                            <div className="space-y-2">
+                                {/* Win bar */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-white tabular-nums w-6 text-right">{details.headToHeadData.player_a_wins}</span>
+                                    <div className="flex-1 h-2 rounded-full bg-[#0F1628] overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full bg-gradient-to-r from-[#38BDF8] to-[#38BDF8]/60"
+                                            style={{ width: `${(details.headToHeadData.player_a_wins / details.headToHeadData.total_matches) * 100}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-xs font-bold text-white tabular-nums w-6">{details.headToHeadData.player_b_wins}</span>
+                                </div>
+                                <p className="text-[10px] text-[#4B5975] text-center">
+                                    {details.headToHeadData.total_matches} {dict?.athletes?.totalMatches || 'κοινοί αγώνες'}
+                                    {details.headToHeadData.last_match_date && (
+                                        <> · Τελευταίος: {new Date(details.headToHeadData.last_match_date).toLocaleDateString('el-GR')}</>
+                                    )}
+                                </p>
+                                <p className="text-xs text-[#94A3B8] text-center">{translateHeadToHead(details.headToHead)}</p>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-[#4B5975]">Δεν υπάρχουν κοινοί αγώνες</p>
+                        )}
+                    </div>
+
+                    {/* Player stats cards */}
+                    {(() => {
+                        const p1Total = details.player1.wins + details.player1.losses;
+                        const p2Total = details.player2.wins + details.player2.losses;
+                        const p1Pct = p1Total > 0 ? Math.round((details.player1.wins / p1Total) * 100) : null;
+                        const p2Pct = p2Total > 0 ? Math.round((details.player2.wins / p2Total) * 100) : null;
+                        return (
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="rounded-xl bg-[#1E2A45] border border-white/[0.06] p-3">
+                                    <button
+                                        onClick={() => navigateToPlayer(player1Id)}
+                                        disabled={!player1Id || isDoubles}
+                                        className={`text-xs font-semibold text-white text-left w-full leading-tight mb-2 ${player1Id && !isDoubles ? 'hover:text-[#38BDF8] cursor-pointer' : 'cursor-default'}`}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="break-words">{formatName(details.player1.name, true)}</span>
+                                            {details.player1.teamName && <span className="text-[#FF6B2B] text-[10px] leading-tight break-words">{details.player1.teamName}</span>}
+                                        </div>
+                                    </button>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-[10px] font-bold text-[#00E676]">✅ {details.player1.wins}</span>
+                                                <span className="text-[10px] text-[#4B5975]">W</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-[10px] text-[#4B5975]">L</span>
+                                                <span className="text-[10px] font-bold text-[#FF4545]">{details.player1.losses} ❌</span>
+                                            </div>
+                                        </div>
+                                        {p1Pct !== null && (
+                                            <>
+                                                <div className="h-1.5 rounded-full bg-[#0F1628] overflow-hidden mt-1">
+                                                    <div
+                                                        className="h-full rounded-full bg-gradient-to-r from-[#00E676] to-[#00C853]"
+                                                        style={{ width: `${p1Pct}%` }}
+                                                    />
+                                                </div>
+                                                <p className="text-[10px] font-black text-center tabular-nums" style={{ color: p1Pct >= 60 ? '#00E676' : p1Pct >= 40 ? '#FFD60A' : '#FF4545' }}>
+                                                    {p1Pct}% νίκες
+                                                </p>
+                                            </>
+                                        )}
+                                        {details.player1.ntrpRating && (
+                                            <div className="mt-1 px-2 py-0.5 rounded-full bg-[#0F1628] text-center">
+                                                <span className="text-[10px] font-bold text-[#38BDF8]">NTRP {details.player1.ntrpRating.toFixed(1)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="rounded-xl bg-[#1E2A45] border border-white/[0.06] p-3">
+                                    <button
+                                        onClick={() => navigateToPlayer(player2Id)}
+                                        disabled={!player2Id || isDoubles}
+                                        className={`text-xs font-semibold text-white text-left w-full leading-tight mb-2 ${player2Id && !isDoubles ? 'hover:text-[#38BDF8] cursor-pointer' : 'cursor-default'}`}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="break-words">{formatName(details.player2.name, true)}</span>
+                                            {details.player2.teamName && <span className="text-[#FF6B2B] text-[10px] leading-tight break-words">{details.player2.teamName}</span>}
+                                        </div>
+                                    </button>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-[10px] font-bold text-[#00E676]">✅ {details.player2.wins}</span>
+                                                <span className="text-[10px] text-[#4B5975]">W</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-[10px] text-[#4B5975]">L</span>
+                                                <span className="text-[10px] font-bold text-[#FF4545]">{details.player2.losses} ❌</span>
+                                            </div>
+                                        </div>
+                                        {p2Pct !== null && (
+                                            <>
+                                                <div className="h-1.5 rounded-full bg-[#0F1628] overflow-hidden mt-1">
+                                                    <div
+                                                        className="h-full rounded-full bg-gradient-to-r from-[#00E676] to-[#00C853]"
+                                                        style={{ width: `${p2Pct}%` }}
+                                                    />
+                                                </div>
+                                                <p className="text-[10px] font-black text-center tabular-nums" style={{ color: p2Pct >= 60 ? '#00E676' : p2Pct >= 40 ? '#FFD60A' : '#FF4545' }}>
+                                                    {p2Pct}% νίκες
+                                                </p>
+                                            </>
+                                        )}
+                                        {details.player2.ntrpRating && (
+                                            <div className="mt-1 px-2 py-0.5 rounded-full bg-[#0F1628] text-center">
+                                                <span className="text-[10px] font-bold text-[#38BDF8]">NTRP {details.player2.ntrpRating.toFixed(1)}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             )}
-        </div >
+        </div>
     );
 } 

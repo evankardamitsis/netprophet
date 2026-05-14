@@ -477,7 +477,7 @@ export default function MyPicksPage() {
 
                             return (
                                 <>
-                                    <BetHistoryTable bets={resolvedBets} dict={dict} />
+                                    <BetHistoryTable bets={resolvedBets} />
                                     {totalPages > 1 && (
                                         <div className="flex flex-row justify-center items-center gap-2 mt-6 pt-6 border-t border-white/[0.06]">
                                             <Button

@@ -11,6 +11,7 @@ interface MatchResultSectionProps {
     isBestOf5: boolean;
     isAmateurFormat: boolean;
     isDoubles: boolean;
+    lang: 'en' | 'el';
     locked?: boolean;
     showPulse: boolean;
     onMatchResultChange: (value: string) => void;
@@ -22,6 +23,7 @@ export function MatchResultSection({
     isBestOf5,
     isAmateurFormat,
     isDoubles,
+    lang,
     locked,
     showPulse,
     onMatchResultChange
@@ -77,7 +79,7 @@ export function MatchResultSection({
                 </div>
             </div>
             <p className="text-xs text-gray-400 mb-2">
-                {dict?.matches?.howWillWin?.replace('{player}', displayName(winner, isDoubles)) || `How will ${displayName(winner, isDoubles)} win the match?`}
+                {dict?.matches?.howWillWin?.replace('{player}', displayName(winner, isDoubles, lang)) || `How will ${displayName(winner, isDoubles, lang)} win the match?`}
             </p>
             <div className="grid grid-cols-2 gap-2">
                 {isBestOf5 ? (

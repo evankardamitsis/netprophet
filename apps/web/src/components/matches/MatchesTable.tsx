@@ -11,6 +11,7 @@ import { gradients, shadows, borders, transitions, animations, cx, typography } 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { MatchCard } from './MatchCard';
+import { PredictionSheet } from './PredictionSheet';
 
 interface MatchesTableProps {
     matches?: Match[];
@@ -26,6 +27,16 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
     const { activeBetMatchIds } = useActiveBets();
     const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'singles' | 'doubles'>('all');
+
+    // Prediction sheet state
+    const [sheetMatch, setSheetMatch] = useState<Match | null>(null);
+    const [sheetPreselect, setSheetPreselect] = useState<'player1' | 'player2' | null>(null);
+
+    const openSheet = (match: Match, player: 'player1' | 'player2') => {
+        setSheetMatch(match);
+        setSheetPreselect(player);
+    };
+    const closeSheet = () => { setSheetMatch(null); setSheetPreselect(null); };
 
     const getDisplayName = useCallback((match: Match, side: 'team1' | 'team2'): ReactNode => {
         const isTeamTournament = (match.tournaments as any)?.is_team_tournament === true;
@@ -465,7 +476,7 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                 isActive={activeBetMatchIds.has(match.id)}
                                 isLive={match.status === 'live' || match.status_display === 'live'}
                                 onViewDetail={() => !match.locked && onSelectMatch(match)}
-                                onSelectPlayer={() => !match.locked && onSelectMatch(match)}
+                                onSelectPlayer={(matchId, player) => !match.locked && openSheet(match, player)}
                             />
                         );
                     })}
@@ -707,6 +718,14 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                     </div>
                 </div>
             )}
+
+            {/* Prediction sheet — opens on odds chip tap */}
+            <PredictionSheet
+                match={sheetMatch}
+                preselectedPlayer={sheetPreselect}
+                onClose={closeSheet}
+                onViewDetail={(match) => { closeSheet(); onSelectMatch(match); }}
+            />
 
             {/* No matches state */}
             {filteredMatches.length === 0 && (
