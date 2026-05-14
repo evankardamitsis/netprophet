@@ -46,12 +46,17 @@ export default function PlayerDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
-                <div className="text-center py-12">
-                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
+            <div className="px-4 py-8 space-y-4 animate-pulse">
+                <div className="h-5 bg-[#1E2A45] rounded-full w-24" />
+                <div className="rounded-2xl bg-[#161F35] border border-white/[0.06] p-6 flex gap-6">
+                    <div className="flex-1 space-y-3">
+                        <div className="h-8 bg-[#1E2A45] rounded-full w-2/3" />
+                        <div className="h-4 bg-[#1E2A45] rounded-full w-1/2" />
                     </div>
-                    <p className="text-white text-lg font-bold">Loading player details...</p>
+                    <div className="w-48 aspect-[4/3] rounded-xl bg-[#1E2A45]" />
+                </div>
+                <div className="grid grid-cols-4 gap-4">
+                    {[1,2,3,4].map(i => <div key={i} className="h-24 rounded-xl bg-[#161F35] border border-white/[0.06]" />)}
                 </div>
             </div>
         );
@@ -59,23 +64,15 @@ export default function PlayerDetailPage() {
 
     if (!player) {
         return (
-            <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
-                <div className="container mx-auto px-4 py-8">
-                    <div className="text-center py-12">
-                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-red-500 to-pink-500 mb-4">
-                            <span className="text-4xl">⚠️</span>
-                        </div>
-                        <div className="text-white text-lg font-bold mb-6">
-                            {dict?.athletes?.athleteNotFound || 'Athlete not found'}
-                        </div>
-                        <button
-                            onClick={() => router.back()}
-                            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg font-bold transition-all transform hover:scale-105"
-                        >
-                            {dict?.common?.back || 'Go Back'}
-                        </button>
-                    </div>
-                </div>
+            <div className="flex flex-col items-center py-20 gap-4 text-center px-4">
+                <span className="text-5xl opacity-30">⚠️</span>
+                <p className="text-base font-bold text-white">{dict?.athletes?.athleteNotFound || 'Αθλητής δεν βρέθηκε'}</p>
+                <button
+                    onClick={() => router.back()}
+                    className="px-5 py-2.5 rounded-xl bg-[#1E2A45] border border-white/[0.08] text-white text-sm font-bold hover:border-white/[0.16] transition-colors"
+                >
+                    ← {dict?.common?.back || 'Πίσω'}
+                </button>
             </div>
         );
     }
@@ -359,19 +356,16 @@ export default function PlayerDetailPage() {
     };
 
     return (
-        <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
-            {/* Decorative circles */}
-            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
-            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
-            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
-
-            <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="px-4 py-6 np-page-pad">
                 {/* Back Button */}
                 <button
                     onClick={() => router.back()}
-                    className="mb-6 sm:mb-8 flex items-center gap-2 text-purple-300 hover:text-white transition-colors text-sm sm:text-base font-bold group"
+                    className="mb-5 flex items-center gap-1.5 text-[#94A3B8] hover:text-white transition-colors text-sm font-semibold"
                 >
-                    <span className="group-hover:-translate-x-1 transition-transform">←</span> {dict?.common?.back || 'Back'}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    {dict?.common?.back || 'Πίσω'}
                 </button>
 
                 {/* Player Header */}
@@ -401,7 +395,7 @@ export default function PlayerDetailPage() {
 
                 {/* Detailed Stats */}
                 {player && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
                         <MatchHistory player={player} matches={matchHistory} />
                         <DoublesSection player={player} matches={doublesMatchHistory} />
                         <PlayerAttributes player={player} />
@@ -410,7 +404,6 @@ export default function PlayerDetailPage() {
 
                 {/* Additional Info */}
                 {player && <AdditionalInfo player={player} />}
-            </div>
 
             {/* Delete Photo Confirmation Modal */}
             <DeletePhotoModal

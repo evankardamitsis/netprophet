@@ -15,211 +15,134 @@ interface PlayerCardProps {
 export function PlayerCard({ player, className = '', disableLink = false }: PlayerCardProps) {
     const { dict, lang } = useDictionary();
     const [imageError, setImageError] = useState(false);
+    const router = useRouter();
 
     const winRate = player.wins + player.losses > 0
         ? Math.round((player.wins / (player.wins + player.losses)) * 100)
         : 0;
 
-    const getWinRateColor = (rate: number) => {
-        if (rate >= 70) return 'text-green-400';
-        if (rate >= 50) return 'text-yellow-400';
-        return 'text-red-400';
-    };
+    const winRateColor = winRate >= 60 ? '#00E676' : winRate >= 40 ? '#FFD60A' : '#FF4545';
 
-    const getNTRPColor = (rating: number) => {
-        if (rating >= 4.5) return 'text-purple-400';
-        if (rating >= 4.0) return 'text-blue-400';
-        if (rating >= 3.5) return 'text-green-400';
-        if (rating >= 3.0) return 'text-yellow-400';
-        return 'text-orange-400';
-    };
+    const ntrpColor = player.ntrpRating >= 4.5 ? '#8B5CF6'
+        : player.ntrpRating >= 4.0 ? '#38BDF8'
+        : player.ntrpRating >= 3.5 ? '#00E676'
+        : player.ntrpRating >= 3.0 ? '#FFD60A'
+        : '#FF6B2B';
 
-    const getStreakColor = (streak: number, type: 'W' | 'L') => {
-        if (type === 'W') {
-            return streak >= 3 ? 'text-green-400' : 'text-green-300';
-        } else {
-            return streak >= 3 ? 'text-red-400' : 'text-red-300';
-        }
+    const surfaceColors: Record<string, { dot: string; text: string; bg: string; border: string }> = {
+        hard:  { dot: '#38BDF8', text: '#38BDF8', bg: 'rgba(56,189,248,0.10)', border: 'rgba(56,189,248,0.25)' },
+        clay:  { dot: '#FF6B2B', text: '#FF6B2B', bg: 'rgba(255,107,43,0.10)', border: 'rgba(255,107,43,0.25)' },
+        grass: { dot: '#00E676', text: '#00E676', bg: 'rgba(0,230,118,0.10)', border: 'rgba(0,230,118,0.25)' },
     };
-
-    const getSurfaceColor = (surface: string) => {
-        switch (surface.toLowerCase()) {
-            case 'hard':
-                return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-            case 'clay':
-                return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
-            case 'grass':
-                return 'bg-green-500/20 text-green-300 border-green-500/30';
-            default:
-                return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
-        }
-    };
-
-    const router = useRouter();
+    const surfaceKey = player.surfacePreference?.toLowerCase() ?? '';
+    const surf = surfaceColors[surfaceKey] ?? { dot: '#94A3B8', text: '#94A3B8', bg: 'rgba(148,163,184,0.10)', border: 'rgba(148,163,184,0.25)' };
 
     const handleCardClick = () => {
-        if (!disableLink && player) {
-            // Always create slug from first and last name
-            const firstName = String(player.firstName || '').trim();
-            const lastName = String(player.lastName || '').trim();
-
-            // Create slug if we have both names
-            if (firstName.length > 0 && lastName.length > 0) {
-                const fullName = `${firstName} ${lastName}`;
-                const playerSlug = createSlug(fullName);
-                // Use slug if it's valid
-                if (playerSlug && playerSlug.length > 0) {
-                    router.push(`/${lang}/players/${playerSlug}`);
-                    return;
-                }
-            }
-
-            // Fallback to ID only if names are missing or slug creation fails
-            router.push(`/${lang}/players/${player.id}`);
+        if (disableLink || !player) return;
+        const firstName = String(player.firstName || '').trim();
+        const lastName = String(player.lastName || '').trim();
+        if (firstName && lastName) {
+            const slug = createSlug(`${firstName} ${lastName}`);
+            if (slug) { router.push(`/${lang}/players/${slug}`); return; }
         }
+        router.push(`/${lang}/players/${player.id}`);
     };
+
+    const hasPhoto = player.photoUrl && !imageError;
 
     return (
         <div
-            className={`bg-slate-900/80 rounded-xl border border-slate-700 ${!disableLink ? 'hover:border-blue-500/50 cursor-pointer hover:shadow-lg hover:shadow-blue-500/10' : ''} transition-all duration-300 group ${className}`}
+            className={`relative overflow-hidden rounded-2xl bg-[#161F35] border border-white/[0.06] transition-all duration-200 ${!disableLink ? 'cursor-pointer hover:border-white/[0.14] hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,0,0.5)]' : ''} ${className}`}
             onClick={handleCardClick}
         >
-            {/* Athlete Photo */}
-            {player.photoUrl && !imageError && (
-                <div className="w-full aspect-[4/3] overflow-hidden rounded-t-xl bg-slate-800 relative">
+            {/* Top shine */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+
+            {/* Photo */}
+            {hasPhoto && (
+                <div className="w-full aspect-[4/3] overflow-hidden bg-[#0F1628]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                        src={player.photoUrl}
+                        src={player.photoUrl!}
                         alt={`${player.firstName} ${player.lastName}`}
-                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
                         onError={() => setImageError(true)}
                     />
                 </div>
             )}
 
-            {/* Header with name and rating */}
-            <div className="p-4 border-b border-slate-700">
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-bold text-white group-hover:text-blue-300 transition-colors">
-                        {player.firstName} {player.lastName}
-                    </h3>
-                    <div className={`text-sm font-bold ${getNTRPColor(player.ntrpRating)}`}>
-                        NTRP {player.ntrpRating.toFixed(1)}
-                    </div>
-                </div>
 
-                {/* Age and Hand */}
-                <div className="flex items-center gap-3 text-sm text-gray-400">
-                    <span>{player.age} {dict?.athletes?.years || 'years'}</span>
-                    <span>•</span>
-                    <span className="capitalize">{dict?.athletes?.[player.hand.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.athletes?.handed || 'handed'}</span>
-                </div>
-            </div>
-
-            {/* Stats Grid */}
+            {/* Content */}
             <div className="p-4">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    {/* Win Rate */}
-                    <div className="text-center">
-                        <div className={`text-2xl font-bold ${getWinRateColor(winRate)}`}>
-                            {winRate}%
-                        </div>
-                        <div className="text-xs text-gray-400">
+                {/* Name + NTRP */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-black text-white leading-tight truncate">
+                            {player.firstName} {player.lastName}
+                        </h3>
+                        <p className="text-[11px] text-[#4B5975] mt-0.5">
+                            {player.age} {dict?.athletes?.years || 'χρ.'} · {dict?.athletes?.[player.hand?.toLowerCase() as 'left' | 'right'] || player.hand} {dict?.athletes?.handed || ''}
+                        </p>
+                    </div>
+                    <span className="text-sm font-black tabular-nums flex-shrink-0" style={{ color: ntrpColor }}>
+                        {player.ntrpRating.toFixed(1)}
+                    </span>
+                </div>
+
+                {/* Win rate bar */}
+                <div className="mb-3">
+                    <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold text-[#4B5975] uppercase tracking-wide">
                             {dict?.athletes?.winRate || 'Win Rate'}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-black tabular-nums" style={{ color: winRateColor }}>
+                                {winRate}%
+                            </span>
+                            <span className="text-[10px] text-[#4B5975]">
+                                ({player.wins}W–{player.losses}L)
+                            </span>
                         </div>
                     </div>
-
-                    {/* Record */}
-                    <div className="text-center">
-                        <div className="text-lg font-bold text-white">
-                            {player.wins}-{player.losses}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                            {dict?.athletes?.record || 'Record'}
-                        </div>
+                    <div className="h-1.5 rounded-full bg-[#0F1628] overflow-hidden">
+                        <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${winRate}%`, backgroundColor: winRateColor }}
+                        />
                     </div>
                 </div>
 
-                {/* Last 5 Matches */}
-                <div className="mb-4">
-                    <div className="text-xs text-gray-400 mb-2">
-                        {dict?.athletes?.last5 || 'Last 5 Matches'}
-                    </div>
-                    <div className="flex gap-1">
-                        {player.last5.map((result: string, idx: number) => (
-                            <div
-                                key={idx}
-                                className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${result === 'W'
-                                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                    }`}
-                            >
-                                {result}
-                            </div>
-                        ))}
-                    </div>
+                {/* Last 5 */}
+                <div className="flex items-center gap-1 mb-3">
+                    {player.last5.map((result: string, idx: number) => (
+                        <div
+                            key={idx}
+                            className="w-6 h-6 rounded-full text-[10px] font-black flex items-center justify-center"
+                            style={result === 'W'
+                                ? { background: 'rgba(0,230,118,0.15)', color: '#00E676', border: '1px solid rgba(0,230,118,0.3)' }
+                                : { background: 'rgba(255,69,69,0.15)', color: '#FF4545', border: '1px solid rgba(255,69,69,0.3)' }
+                            }
+                        >
+                            {result}
+                        </div>
+                    ))}
                 </div>
 
-                {/* Surface Preference */}
-                <div className="mb-4">
-                    <div className="text-xs text-gray-400 mb-1">
-                        {dict?.athletes?.preferredSurface || 'Preferred Surface'}
-                    </div>
-                    <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getSurfaceColor(player.surfacePreference)}`}>
+                {/* Surface pill + injury */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                        style={{ color: surf.text, background: surf.bg, borderColor: surf.border }}
+                    >
+                        <span className="w-1.5 h-1.5 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: surf.dot }} />
                         {player.surfacePreference}
-                    </div>
+                    </span>
+                    {player.injuryStatus && player.injuryStatus !== 'healthy' && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border bg-[#FF4545]/10 border-[#FF4545]/30 text-[#FF4545]">
+                            ⚠ {player.injuryStatus === 'minor' ? (dict?.athletes?.minorInjury || 'Minor') : (dict?.athletes?.majorInjury || 'Major')}
+                        </span>
+                    )}
                 </div>
-
-                {/* Player Attributes */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{dict?.athletes?.aggressiveness || 'Aggressiveness'}</span>
-                        <div className="flex gap-1">
-                            {[...Array(10)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`w-2 h-2 rounded-full ${i < player.aggressiveness ? 'bg-red-400' : 'bg-gray-600'
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{dict?.athletes?.stamina || 'Stamina'}</span>
-                        <div className="flex gap-1">
-                            {[...Array(10)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`w-2 h-2 rounded-full ${i < player.stamina ? 'bg-green-400' : 'bg-gray-600'
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs">
-                        <span className="text-gray-400">{dict?.athletes?.consistency || 'Consistency'}</span>
-                        <div className="flex gap-1">
-                            {[...Array(10)].map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`w-2 h-2 rounded-full ${i < player.consistency ? 'bg-blue-400' : 'bg-gray-600'
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Injury Status (if available) */}
-                {player.injuryStatus && player.injuryStatus !== 'healthy' && (
-                    <div className="mt-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                        <div className="text-xs text-red-400 font-medium">
-                            {player.injuryStatus === 'minor' ? (dict?.athletes?.minorInjury || 'Minor Injury') : (dict?.athletes?.majorInjury || 'Major Injury')}
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -1,9 +1,8 @@
 'use client';
 
 import { Player } from '@netprophet/lib';
-import { Card, CardContent } from '@netprophet/ui';
 import { useDictionary } from '@/context/DictionaryContext';
-import { calculateWinRate, getWinRateColor } from '../utils';
+import { calculateWinRate } from '../utils';
 
 interface PlayerStatsGridProps {
     player: Player;
@@ -12,71 +11,50 @@ interface PlayerStatsGridProps {
 export function PlayerStatsGrid({ player }: PlayerStatsGridProps) {
     const { dict } = useDictionary();
     const winRate = calculateWinRate(player.wins, player.losses);
+    const winRateColor = winRate >= 60 ? '#00E676' : winRate >= 40 ? '#FFD60A' : '#FF4545';
+    const isWinStreak = player.streakType === 'W';
+
+    const tiles = [
+        {
+            label: dict?.athletes?.winRate || 'Win Rate',
+            value: `${winRate}%`,
+            color: winRateColor,
+            icon: '🎯',
+        },
+        {
+            label: dict?.athletes?.record || 'Record',
+            value: `${player.wins}–${player.losses}`,
+            color: '#FFFFFF',
+            icon: '📊',
+        },
+        {
+            label: dict?.athletes?.currentStreak || 'Streak',
+            value: `${player.currentStreak} ${isWinStreak ? 'W' : 'L'}`,
+            color: isWinStreak ? '#00E676' : '#FF4545',
+            icon: isWinStreak ? '🔥' : '❄️',
+        },
+        {
+            label: dict?.athletes?.totalMatches || 'Αγώνες',
+            value: String(player.wins + player.losses),
+            color: '#38BDF8',
+            icon: '🎾',
+        },
+    ];
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
-            {/* Win Rate */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl opacity-40 group-hover:opacity-60 blur transition"></div>
-                <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
-                    <CardContent className="p-4 sm:p-6 text-center">
-                        <div className={`text-3xl sm:text-4xl font-black ${getWinRateColor(winRate)} mb-2 drop-shadow-lg`}>
-                            {winRate}%
-                        </div>
-                        <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                            {dict?.athletes?.winRate || 'Win Rate'}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Record */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-40 group-hover:opacity-60 blur transition"></div>
-                <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
-                    <CardContent className="p-4 sm:p-6 text-center">
-                        <div className="text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-lg">
-                            {player.wins}-{player.losses}
-                        </div>
-                        <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                            {dict?.athletes?.record || 'Record'}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Current Streak */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl opacity-40 group-hover:opacity-60 blur transition"></div>
-                <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
-                    <CardContent className="p-4 sm:p-6 text-center">
-                        <div className="text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-lg">
-                            {player.currentStreak} {player.streakType === 'W'
-                                ? (player.currentStreak === 1 ? (dict?.athletes?.win || 'Win') : (dict?.athletes?.wins || 'Wins'))
-                                : (player.currentStreak === 1 ? (dict?.athletes?.loss || 'Loss') : (dict?.athletes?.losses || 'Losses'))
-                            }
-                        </div>
-                        <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                            {dict?.athletes?.currentStreak || 'Current Streak'}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Total Matches */}
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-2xl opacity-40 group-hover:opacity-60 blur transition"></div>
-                <Card className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border-0 shadow-xl">
-                    <CardContent className="p-4 sm:p-6 text-center">
-                        <div className="text-3xl sm:text-4xl font-black text-white mb-2 drop-shadow-lg">
-                            {player.wins + player.losses}
-                        </div>
-                        <div className="text-xs sm:text-sm text-purple-300 font-bold">
-                            {dict?.athletes?.totalMatches || 'Total Matches'}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            {tiles.map((tile) => (
+                <div key={tile.label} className="relative overflow-hidden rounded-2xl bg-[#161F35] border border-white/[0.06] p-4 text-center">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+                    <div className="text-xl mb-1">{tile.icon}</div>
+                    <div className="text-2xl font-black tabular-nums mb-0.5" style={{ color: tile.color }}>
+                        {tile.value}
+                    </div>
+                    <div className="text-[10px] font-bold text-[#4B5975] uppercase tracking-wide">
+                        {tile.label}
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

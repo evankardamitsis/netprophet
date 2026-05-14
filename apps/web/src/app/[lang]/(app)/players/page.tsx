@@ -5,8 +5,13 @@ import { Player } from '@netprophet/lib';
 import { fetchActivePlayers } from '@netprophet/lib';
 import { PlayerCard } from '@/components/players/PlayerCard';
 import { useDictionary } from '@/context/DictionaryContext';
-import { Card, CardContent } from '@netprophet/ui';
 import { normalizeText } from '@/lib/utils';
+
+const GENDER_OPTIONS = [
+    { value: 'all',   label: 'Όλοι' },
+    { value: 'men',   label: 'Άντρες' },
+    { value: 'women', label: 'Γυναίκες' },
+];
 
 export default function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
@@ -16,153 +21,114 @@ export default function PlayersPage() {
     const { dict } = useDictionary();
 
     useEffect(() => {
-        const loadPlayers = async () => {
-            try {
-                setLoading(true);
-                const fetchedPlayers = await fetchActivePlayers();
-                setPlayers(fetchedPlayers);
-            } catch (error) {
-                console.error('Error loading players:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadPlayers();
+        fetchActivePlayers()
+            .then(setPlayers)
+            .catch(console.error)
+            .finally(() => setLoading(false));
     }, []);
 
     const filteredPlayers = useMemo(() => {
-        const filtered = players.filter(player => {
+        return players.filter(player => {
             const matchesSearch = searchTerm === '' ||
                 normalizeText(player.firstName).includes(normalizeText(searchTerm)) ||
                 normalizeText(player.lastName).includes(normalizeText(searchTerm));
-
-            // Filter by gender - access gender property directly from player object
             const gender = (player as any).gender;
-
-            let matchesGender = true;
-
-            if (selectedGender === 'all') {
-                // Show all players regardless of gender
-                matchesGender = true;
-            } else if (selectedGender === 'men') {
-                // Only show players with gender === 'men'
-                matchesGender = gender === 'men';
-            } else if (selectedGender === 'women') {
-                // Only show players with gender === 'women'
-                matchesGender = gender === 'women';
-            }
-
+            const matchesGender = selectedGender === 'all' || gender === selectedGender;
             return matchesSearch && matchesGender;
         });
-
-
-        return filtered;
     }, [players, searchTerm, selectedGender]);
 
     if (loading) {
         return (
-            <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
-                <div className="text-center py-12">
-                    <div className="inline-block p-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mx-auto" />
-                    </div>
-                    <p className="text-white text-lg font-bold">Loading athletes...</p>
+            <div className="px-4 py-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1,2,3,4,5,6].map(i => (
+                        <div key={i} className="rounded-2xl bg-[#161F35] border border-white/[0.06] overflow-hidden animate-pulse">
+                            <div className="aspect-[4/3] bg-[#1E2A45]" />
+                            <div className="p-4 space-y-3">
+                                <div className="h-4 bg-[#1E2A45] rounded-full w-3/4" />
+                                <div className="h-3 bg-[#1E2A45] rounded-full w-1/2" />
+                                <div className="h-2 bg-[#1E2A45] rounded-full" />
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen relative" style={{ backgroundColor: '#121A39' }}>
-            {/* Decorative circles */}
-            <div className="absolute top-20 left-10 w-32 h-32 bg-purple-400 rounded-full opacity-20 blur-3xl"></div>
-            <div className="absolute top-40 right-20 w-48 h-48 bg-pink-400 rounded-full opacity-15 blur-3xl"></div>
-            <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-indigo-400 rounded-full opacity-20 blur-3xl"></div>
-
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 relative z-10">
-                {/* Header */}
-                <div className="mb-8 sm:mb-12 text-center">
-
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-4 drop-shadow-lg">
-                        {dict?.athletes?.title || 'Athletes'}
-                    </h1>
-                    <p className="text-lg sm:text-xl text-white/90 font-bold max-w-2xl mx-auto">
-                        {dict?.athletes?.subtitle || 'Discover detailed athlete statistics and performance data'}
-                    </p>
-                </div>
-
-                {/* Search and Filters */}
-                <div className="mb-6 sm:mb-10 space-y-4 sm:space-y-6">
-                    {/* Search */}
-                    <div className="relative group">
-                        <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl opacity-40 group-hover:opacity-60 blur transition"></div>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder={dict?.athletes?.searchPlaceholder || "Search athletes..."}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2.5 sm:px-6 sm:py-4 bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-purple-500/30 rounded-xl sm:rounded-2xl text-white placeholder-purple-300 focus:outline-none focus:border-purple-400 transition-all text-sm sm:text-lg"
-                            />
-                            <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-lg sm:text-2xl">
-                                🔍
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Gender Filter */}
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                        {['all', 'men', 'women'].map((gender) => (
-                            <button
-                                key={gender}
-                                onClick={() => setSelectedGender(gender)}
-                                className={`px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all transform hover:scale-105 ${selectedGender === gender
-                                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
-                                    : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/70 border border-slate-600/50'
-                                    }`}
-                            >
-                                {gender === 'all'
-                                    ? 'All'
-                                    : gender === 'men'
-                                        ? 'Men'
-                                        : 'Women'
-                                }
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Results Count */}
-                <div className="mb-6 sm:mb-8">
-                    <div className="inline-block bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-purple-500/30">
-                        <p className="text-white font-bold text-xs">
-                            <span className="text-purple-300">{filteredPlayers.length}</span> {dict?.athletes?.athletesFound || 'athletes found'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Players Grid */}
-                {filteredPlayers.length === 0 ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block p-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 mb-4">
-                            <span className="text-4xl">🎾</span>
-                        </div>
-                        <div className="text-white text-lg font-bold mb-2">
-                            {dict?.athletes?.noAthletesFound || 'No athletes found'}
-                        </div>
-                        <p className="text-purple-300">
-                            {dict?.athletes?.tryDifferentSearch || 'Try adjusting your search criteria'}
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {filteredPlayers.map((player) => (
-                            <PlayerCard key={player.id} player={player} />
-                        ))}
-                    </div>
-                )}
+        <div className="px-4 py-6 space-y-6 np-page-pad">
+            {/* Page header */}
+            <div>
+                <h1 className="text-xl font-black text-white tracking-tight">
+                    {dict?.athletes?.title || 'Αθλητές'}
+                </h1>
+                <p className="text-[13px] text-[#94A3B8] mt-0.5">
+                    {dict?.athletes?.subtitle || 'Στατιστικά & επίδοση'}
+                </p>
             </div>
+
+            {/* Search + filters */}
+            <div className="space-y-3">
+                <div className="relative">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B5975]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                        type="text"
+                        placeholder={dict?.athletes?.searchPlaceholder || 'Αναζήτηση αθλητή...'}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2.5 bg-[#161F35] border border-white/[0.08] rounded-xl text-white text-sm placeholder:text-[#4B5975] focus:outline-none focus:border-white/[0.2] transition-colors"
+                    />
+                    {searchTerm && (
+                        <button
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4B5975] hover:text-white transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                    {GENDER_OPTIONS.map(opt => (
+                        <button
+                            key={opt.value}
+                            onClick={() => setSelectedGender(opt.value)}
+                            className={[
+                                'px-3.5 py-1.5 rounded-full text-[13px] font-semibold border transition-all duration-150',
+                                selectedGender === opt.value
+                                    ? 'bg-[#FFD60A]/10 border-[#FFD60A]/30 text-[#FFD60A]'
+                                    : 'bg-[#161F35] border-white/[0.06] text-[#94A3B8] hover:border-white/[0.12] hover:text-white',
+                            ].join(' ')}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                    <span className="ml-auto text-[11px] font-bold text-[#4B5975] tabular-nums">
+                        {filteredPlayers.length} αθλητές
+                    </span>
+                </div>
+            </div>
+
+            {/* Grid */}
+            {filteredPlayers.length === 0 ? (
+                <div className="flex flex-col items-center py-16 gap-4 text-center">
+                    <span className="text-5xl opacity-30">🎾</span>
+                    <p className="text-base font-bold text-white">{dict?.athletes?.noAthletesFound || 'Δεν βρέθηκαν αθλητές'}</p>
+                    <p className="text-sm text-[#94A3B8]">{dict?.athletes?.tryDifferentSearch || 'Δοκίμασε διαφορετική αναζήτηση'}</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredPlayers.map(player => (
+                        <PlayerCard key={player.id} player={player} />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
