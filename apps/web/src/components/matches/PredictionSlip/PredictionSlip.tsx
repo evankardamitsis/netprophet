@@ -213,6 +213,11 @@ export function PredictionSlip({
                 if (betAmount > 0) {
                     const multiplier = prediction.multiplier || 1;
                     const potentialWinnings = prediction.potentialWinnings || 0;
+                    const description =
+                        dict?.matches?.individualBetDescription
+                            ?.replace('{name}', `${prediction.match.player1.name} vs ${prediction.match.player2.name}`)
+                            .replace('{multiplier}', multiplier.toFixed(2)) ||
+                        `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`;
 
                     const bet = await BetsServiceModule.createBet({
                         matchId: prediction.matchId,
@@ -220,8 +225,23 @@ export function PredictionSlip({
                         multiplier: multiplier,
                         potentialWinnings: potentialWinnings,
                         prediction: formatPrediction(prediction.prediction),
-                        description: `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`
+                        description,
                     });
+
+                    try {
+                        await placeBet(betAmount, prediction.matchId, description);
+                    } catch (walletError) {
+                        try {
+                            await BetsServiceModule.cancelBet(bet.id);
+                        } catch (cancelError) {
+                            console.error(
+                                'Failed to cancel bet after wallet debit error; user may need manual cleanup for bet',
+                                bet.id,
+                                cancelError,
+                            );
+                        }
+                        throw walletError;
+                    }
 
                     // Use safe single power-up if enabled (only for the first bet if multiple)
                     if (isUsingSafeSingle && user?.id && predictions.indexOf(prediction) === 0) {
@@ -244,13 +264,6 @@ export function PredictionSlip({
                             // Don't fail the bet placement if power-up usage fails
                         }
                     }
-
-                    // Update wallet balance
-                    await placeBet(
-                        betAmount,
-                        1, // Using a simple number for matchId
-                        `${dict?.matches?.individualBetDescription?.replace('{name}', `${prediction.match.player1.name} vs ${prediction.match.player2.name}`).replace('{multiplier}', multiplier.toFixed(2)) || `${prediction.match.player1.name} vs ${prediction.match.player2.name} - ${multiplier.toFixed(2)}x multiplier`}`
-                    );
                 }
             }
 
@@ -271,12 +284,18 @@ export function PredictionSlip({
             }, 500);
 
         } catch (error) {
-            // Handle insufficient balance or other errors
-            if (error instanceof Error) {
-                alert(dict?.matches?.errorPlacingBet?.replace('{type}', isParlayMode ? 'parlay' : 'individual').replace('{error}', error.message) || `Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s): ${error.message}`);
-            } else {
-                alert(dict?.matches?.errorPlacingBetCheckBalance?.replace('{type}', isParlayMode ? 'parlay' : 'individual') || `Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s). Please check your balance and try again.`);
+            if (error instanceof Error && error.name === 'WalletPlaceBetError') {
+                return;
             }
+            const message =
+                error instanceof Error
+                    ? dict?.matches?.errorPlacingBet
+                        ?.replace('{type}', isParlayMode ? 'parlay' : 'individual')
+                        .replace('{error}', error.message) ||
+                      `Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s): ${error.message}`
+                    : dict?.matches?.errorPlacingBetCheckBalance?.replace('{type}', isParlayMode ? 'parlay' : 'individual') ||
+                      `Error placing ${isParlayMode ? 'parlay' : 'individual'} bet(s). Please check your balance and try again.`;
+            toast.error(message);
         }
     };
 

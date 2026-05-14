@@ -41,7 +41,7 @@ export interface UserWallet {
 interface WalletContextType {
     wallet: UserWallet;
     isWalletSyncing: boolean;
-    placeBet: (amount: number, matchId: number, description: string) => Promise<void>;
+    placeBet: (amount: number, matchId: string | number, description: string) => Promise<void>;
     recordWin: (stake: number, odds: number, description: string) => void;
     recordLoss: (stake: number, description: string) => void;
     updateBalance: (amount: number, type: Transaction['type'], description: string) => void;
@@ -324,10 +324,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
-    const placeBet = async (amount: number, matchId: number, description: string) => {
+    const placeBet = async (amount: number, matchId: string | number, description: string) => {
+        const loadingToast = toast.loading(dict?.toast?.placingPrediction || 'Placing your prediction...');
+        const markWalletFlow = (err: Error) => {
+            err.name = 'WalletPlaceBetError';
+            return err;
+        };
         try {
-            const loadingToast = toast.loading(dict?.toast?.placingPrediction || 'Placing your prediction...');
-
             const result = await WalletOperationsService.placeBet(amount, matchId.toString(), description);
 
             if (result.success) {
@@ -341,13 +344,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                     id: loadingToast,
                 });
             } else {
-                toast.error(`Failed to place bet: ${result.error}`, {
+                const msg = result.error || 'Failed to place prediction';
+                toast.error(`Failed to place bet: ${msg}`, {
                     id: loadingToast,
                 });
+                throw markWalletFlow(new Error(msg));
             }
         } catch (error) {
             console.error('Error placing prediction:', error);
-            toast.error(dict?.toast?.failedToPlacePrediction || 'Failed to place prediction. Please try again.');
+            const message =
+                error instanceof Error ? error.message : (dict?.toast?.failedToPlacePrediction || 'Failed to place prediction. Please try again.');
+            if (error instanceof Error && error.name === 'WalletPlaceBetError') {
+                throw error;
+            }
+            toast.error(message, { id: loadingToast });
+            throw markWalletFlow(error instanceof Error ? error : new Error(message));
         }
     };
 

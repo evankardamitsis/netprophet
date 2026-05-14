@@ -156,18 +156,27 @@ const isValidUUID = (value?: string | null) =>
   );
 
 async function handlePlaceBet(supabase: any, user: any, body: any) {
-  const { amount, matchId, description } = body;
+  const { matchId, description } = body;
+  const rawAmount = body?.amount;
+  const parsed =
+    typeof rawAmount === "number"
+      ? rawAmount
+      : Number(String(rawAmount ?? "").trim().replace(/,/g, ""));
+  const amount = Number.isFinite(parsed) ? Math.round(parsed) : NaN;
 
   console.log("Place bet request:", {
     user: user.id,
+    rawAmount,
     amount,
     matchId,
     description,
   });
 
-  // Validate bet amount
-  if (amount < 10) {
-    throw new Error("Invalid bet amount");
+  // Whole-coin stakes only; reject NaN/null/undefined (JSON.stringify turns NaN into null)
+  if (!Number.isFinite(amount) || amount < 10) {
+    throw new Error(
+      `Invalid bet amount (min 10 whole coins; received ${JSON.stringify(rawAmount)})`,
+    );
   }
 
   // Check user balance

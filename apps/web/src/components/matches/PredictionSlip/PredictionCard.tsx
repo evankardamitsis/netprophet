@@ -243,7 +243,15 @@ export function PredictionCard({
                                     max={walletBalance}
                                     value={item.betAmount || ''}
                                     onChange={(e) => {
-                                        const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value) || 0);
+                                        const raw = e.target.value;
+                                        if (raw === '') {
+                                            onUpdateBetAmount(item.matchId, 0);
+                                            return;
+                                        }
+                                        const n = Number(raw);
+                                        const value = Number.isFinite(n)
+                                            ? Math.max(0, Math.round(n))
+                                            : 0;
                                         onUpdateBetAmount(item.matchId, value);
                                     }}
                                     className={`flex-1 px-2.5 py-1.5 text-sm bg-slate-800/50 border rounded-lg text-green-400 font-bold focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${!item.betAmount || item.betAmount === 0 ? 'border-yellow-400/60 border-2' : 'border-slate-600'}`}

@@ -17,6 +17,11 @@ export class WalletOperationsService {
       throw new Error('User not authenticated');
     }
 
+    const stake = Math.round(Number(amount));
+    if (!Number.isFinite(stake) || stake < 10) {
+      throw new Error('Invalid bet amount: stake must be a number of at least 10 coins');
+    }
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/wallet-operations?action=place_bet`,
       {
@@ -25,7 +30,7 @@ export class WalletOperationsService {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ amount, matchId, description }),
+        body: JSON.stringify({ amount: stake, matchId, description }),
       }
     );
 
