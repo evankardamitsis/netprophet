@@ -179,20 +179,17 @@ export function PredictionCard({
 
                     {/* Stake section */}
                     <div className="space-y-2">
-                        {/* Odds + potential win summary */}
+                        {/* Label row: stake label + balance + odds */}
                         <div className="flex items-center justify-between">
                             <span className="text-[11px] text-[#4B5975] font-semibold uppercase tracking-wide">
-                                {prepForUppercaseDisplay(dict?.matches?.stake || 'Ποσό')}
+                                {prepForUppercaseDisplay(dict?.matches?.stake || 'Νομίσματα')}
                             </span>
                             <div className="flex items-center gap-2 text-xs">
-                                <span className="text-[#94A3B8]">
-                                    {(item.multiplier || 1).toFixed(2)}×
+                                <span className="text-[#4B5975]">
+                                    Υπόλοιπο: <span className="text-[#94A3B8] font-bold tabular-nums">{walletBalance.toLocaleString('el-GR')} 🌕</span>
                                 </span>
-                                {(item.betAmount || 0) > 0 && (
-                                    <span className="text-[#00E676] font-black tabular-nums">
-                                        → {formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} 🪙
-                                    </span>
-                                )}
+                                <span className="text-[#263354]">·</span>
+                                <span className="text-[#94A3B8]">{(item.multiplier || 1).toFixed(2)}×</span>
                             </div>
                         </div>
 
@@ -244,19 +241,30 @@ export function PredictionCard({
                                 const n = Number(raw);
                                 onUpdateBetAmount(item.matchId, Number.isFinite(n) ? Math.max(0, Math.round(n)) : 0);
                             }}
-                            placeholder={`Ή πληκτρολόγησε ποσό (min ${COIN_CONSTANTS.MIN_BET})`}
+                            placeholder={`Ή πληκτρολόγησε νομίσματα (min ${COIN_CONSTANTS.MIN_BET})`}
                             className="w-full px-3 py-2 rounded-xl bg-[#0F1628] border border-white/[0.08] text-white text-sm font-bold placeholder:text-[#4B5975] placeholder:font-normal focus:outline-none focus:border-[#FFD60A]/50 focus:ring-1 focus:ring-[#FFD60A]/30 transition-all tabular-nums"
                         />
 
                         {/* Live winnings preview bar */}
-                        {(item.betAmount || 0) > 0 && (
-                            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#00E676]/08 border border-[#00E676]/20">
-                                <span className="text-xs text-[#00E676]/70">Αν κερδίσεις:</span>
-                                <span className="text-sm font-black tabular-nums text-[#00E676]">
-                                    +{formatWinnings((item.betAmount || 0) * (item.multiplier || 1))} 🪙
-                                </span>
-                            </div>
-                        )}
+                        {(item.betAmount || 0) > 0 && (() => {
+                            const mult = item.multiplier || 1;
+                            const coins = (item.betAmount || 0) * mult;
+                            const pts = 10 + (mult >= 2.0 ? Math.floor(mult * 5) : 0);
+                            return (
+                                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#00E676]/08 border border-[#00E676]/20">
+                                    <span className="text-xs text-[#00E676]/70">Αν κερδίσεις:</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-black tabular-nums text-[#00E676]">
+                                            +{formatWinnings(coins)} 🪙
+                                        </span>
+                                        <span className="text-[#263354]">·</span>
+                                        <span className="text-xs font-black tabular-nums text-[#FFD60A]">
+                                            +{pts} 🏆
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>

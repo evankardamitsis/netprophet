@@ -151,7 +151,7 @@ export function PredictionHistory({ predictions }: PredictionHistoryProps) {
                                                 Winnings
                                             </div>
                                             <div className="text-xs text-gray-400 flex items-center justify-end gap-1">
-                                                Bet: {prediction.betAmount} <CoinIcon size={12} /> | Multiplier: {prediction.multiplier}x
+                                                {prediction.betAmount} <CoinIcon size={12} /> × {prediction.multiplier}×
                                             </div>
                                         </div>
                                     </div>

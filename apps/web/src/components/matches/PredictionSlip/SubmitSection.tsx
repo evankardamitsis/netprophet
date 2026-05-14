@@ -95,16 +95,16 @@ export function SubmitSection({
     const errorMessage = (() => {
         if (isParlay && (!parlayValidation?.isValid || !isParlayModeValid)) {
             if (!isParlayModeValid) {
-                if (predictions.some(p => (p.betAmount || 0) < 10)) return dict?.matches?.pleaseSetStakesMin?.replace('{min}', '10') || 'Ελάχιστο ποσό 10 🪙 ανά πρόβλεψη';
+                if (predictions.some(p => (p.betAmount || 0) < 10)) return dict?.matches?.pleaseSetStakesMin?.replace('{min}', '10') || 'Ελάχιστα 10 🪙 ανά πρόβλεψη';
                 if (parlayStake > walletBalance) return dict?.matches?.insufficientBalance || 'Ανεπαρκές υπόλοιπο';
-                return dict?.matches?.pleaseSetStakes || 'Ορίστε ποσό για κάθε πρόβλεψη';
+                return dict?.matches?.pleaseSetStakes || 'Ορίστε νομίσματα για κάθε πρόβλεψη';
             }
             return parlayValidation?.error;
         }
         if (!isParlay && !isIndividualModeValid) {
-            if (predictions.some(p => (p.betAmount || 0) < COIN_CONSTANTS.MIN_BET)) return dict?.matches?.pleaseSetStakesMin?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()) || `Ελάχιστο ποσό ${COIN_CONSTANTS.MIN_BET} 🪙 ανά πρόβλεψη`;
+            if (predictions.some(p => (p.betAmount || 0) < COIN_CONSTANTS.MIN_BET)) return dict?.matches?.pleaseSetStakesMin?.replace('{min}', COIN_CONSTANTS.MIN_BET.toString()) || `Ελάχιστα ${COIN_CONSTANTS.MIN_BET} 🪙 ανά πρόβλεψη`;
             if (totalIndividualStake > walletBalance) return dict?.matches?.insufficientBalance || 'Ανεπαρκές υπόλοιπο';
-            return dict?.matches?.pleaseSetStakes || 'Ορίστε ποσό για κάθε πρόβλεψη';
+            return dict?.matches?.pleaseSetStakes || 'Ορίστε νομίσματα για κάθε πρόβλεψη';
         }
         return null;
     })();
@@ -121,7 +121,7 @@ export function SubmitSection({
             {stake > 0 || winnings > 0 ? (
                 <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-1">
-                        <span className="text-[10px] text-[#4B5975] font-medium">Ποσό</span>
+                        <span className="text-[10px] text-[#4B5975] font-medium">Νομίσματα</span>
                         <span className="text-xs font-black text-white tabular-nums">{stake} 🪙</span>
                     </div>
                     {winnings > 0 && (
@@ -162,8 +162,8 @@ export function SubmitSection({
                 whileTap={isValid ? { scale: 0.98 } : {}}
             >
                 {isParlay
-                    ? (dict?.matches?.placeParlayBet || 'Κατάθεση Συνδυαστικής')
-                    : (dict?.matches?.placeIndividualBets || 'Κατάθεση Προβλέψεων')}
+                    ? (dict?.matches?.placeParlayBet || 'Υποβολή Συνδυαστικής')
+                    : (dict?.matches?.placeIndividualBets || 'Υποβολή Προβλέψεων')}
             </motion.button>
         </motion.div>
     );

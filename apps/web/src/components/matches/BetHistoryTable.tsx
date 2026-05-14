@@ -107,7 +107,7 @@ export function BetHistoryTable({ bets }: BetHistoryTableProps) {
 
                         <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.06]">
                             <div className="text-xs text-[#94A3B8]">
-                                Ποσό: <span className="text-white font-bold tabular-nums">{bet.betAmount}</span>
+                                Νομίσματα: <span className="text-white font-bold tabular-nums">{bet.betAmount}</span>
                                 <span className="ml-1 text-[#4B5975]">× {bet.multiplier}</span>
                             </div>
                             <div className="text-xs text-[#94A3B8]">
@@ -133,7 +133,7 @@ export function BetHistoryTable({ bets }: BetHistoryTableProps) {
                     <span>{prepForUppercaseDisplay(dict?.myPicks?.match || 'Αγώνας')}</span>
                     <span>{prepForUppercaseDisplay(dict?.myPicks?.dateTime || 'Ημερομηνία')}</span>
                     <span>{prepForUppercaseDisplay(dict?.myPicks?.predictionDetails || 'Πρόβλεψη')}</span>
-                    <span>{prepForUppercaseDisplay('Ποσό')}</span>
+                    <span>{prepForUppercaseDisplay('Νομίσματα')}</span>
                     <span>{prepForUppercaseDisplay('Απόδοση')}</span>
                     <span>{prepForUppercaseDisplay('Πιθανά Κέρδη')}</span>
                     <span>{prepForUppercaseDisplay(dict?.myPicks?.status || 'Κατάσταση')}</span>

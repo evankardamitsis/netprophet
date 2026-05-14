@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { useWallet } from '@/context/WalletContext';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -95,65 +94,51 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
             {/* Info Modal */}
             {showInfoModal && (
                 <div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     onClick={() => setShowInfoModal(false)}
                 >
                     <div
-                        className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-slate-700/50 rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-sm"
+                        className="bg-[#161F35] border border-white/[0.08] rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="text-lg font-black text-white">
                                 {dict.rewards.howItWorks}
                             </h3>
                             <button
                                 onClick={() => setShowInfoModal(false)}
-                                className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-slate-700/50"
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1E2A45] border border-white/[0.08] text-[#4B5975] hover:text-white transition-colors"
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <CoinIcon size={20} />
-                                    {dict.rewards.earnCoins}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.earnCoinsDescription}</p>
-                            </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>🎯</span>
-                                    {dict.rewards.redeemCoins}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.redeemCoinsDescription}</p>
-                            </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>⭐</span>
-                                    {dict.rewards.raritySystem}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.raritySystemDescription}</p>
-                            </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>🔥</span>
-                                    {dict.rewards.limitedTime}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.limitedTimeDescription}</p>
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {[
+                                { icon: <CoinIcon size={16} />, title: dict.rewards.earnCoins, desc: dict.rewards.earnCoinsDescription },
+                                { icon: '🎯', title: dict.rewards.redeemCoins, desc: dict.rewards.redeemCoinsDescription },
+                                { icon: '⭐', title: dict.rewards.raritySystem, desc: dict.rewards.raritySystemDescription },
+                                { icon: '🔥', title: dict.rewards.limitedTime, desc: dict.rewards.limitedTimeDescription },
+                            ].map((item, i) => (
+                                <div key={i} className="bg-[#1E2A45] border border-white/[0.06] p-4 rounded-xl">
+                                    <h4 className="font-bold text-white mb-1.5 flex items-center gap-2">
+                                        <span>{item.icon}</span>
+                                        {item.title}
+                                    </h4>
+                                    <p className="text-[#94A3B8] text-[12px] leading-relaxed">{item.desc}</p>
+                                </div>
+                            ))}
                         </div>
 
-                        <div className="mt-6 flex justify-end">
-                            <Button
+                        <div className="mt-5 flex justify-end">
+                            <button
                                 onClick={() => setShowInfoModal(false)}
-                                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                                className="px-5 py-2.5 rounded-xl bg-[#FFD60A] text-[#080C18] font-black text-sm hover:bg-[#FFE033] transition-colors"
                             >
                                 {dict.rewards.gotIt}
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>

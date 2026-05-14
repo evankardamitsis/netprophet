@@ -112,15 +112,14 @@ export async function POST(request: NextRequest) {
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card", "revolut_pay"],
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
             currency: "eur",
             product_data: {
               name: pack.name,
-              description: `${pack.coins} coins for NetProphet`,
-              images: ["https://your-domain.com/coin-pack-image.png"], // Optional: Add product image
+              description: `${pack.coins} νομίσματα NetProphet`,
             },
             unit_amount: pack.price,
           },
@@ -135,17 +134,10 @@ export async function POST(request: NextRequest) {
         packId,
         coins: pack.coins.toString(),
       },
-      // Customization options
-      billing_address_collection: "auto", // or 'required'
-      customer_email: profile.email, // Pre-fill customer email
-      locale: "auto", // or 'en', 'es', 'fr', etc.
-      submit_type: "pay", // Button text
-      // Enable automatic payment methods (Apple Pay, Google Pay are automatically enabled with "card")
-      payment_method_options: {
-        card: {
-          request_three_d_secure: "automatic", // Required for Apple Pay/Google Pay
-        },
-      },
+      billing_address_collection: "auto",
+      customer_email: profile.email,
+      locale: "auto",
+      submit_type: "pay",
     });
 
     return NextResponse.json({ sessionId: session.id });

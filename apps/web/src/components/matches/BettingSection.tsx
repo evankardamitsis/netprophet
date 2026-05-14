@@ -84,7 +84,7 @@ export function BettingSection({
             {/* Bet Amount Input */}
             <div className="space-y-2 mb-4">
                 <label className="text-xs font-medium text-gray-300 flex items-center gap-1">
-                    {dict?.matches?.stake || 'Bet Amount'} (<CoinIcon size={12} />)
+                    {dict?.matches?.stake || 'Νομίσματα'} (<CoinIcon size={12} />)
                 </label>
                 <div className="flex gap-1">
                     <input
@@ -94,7 +94,7 @@ export function BettingSection({
                         value={betAmount}
                         onChange={(e) => onBetAmountChange(Number(e.target.value))}
                         className="flex-1 p-2 bg-slate-600 border border-slate-500 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                        placeholder={dict?.matches?.enterBetAmount || "Enter bet amount"}
+                        placeholder={dict?.matches?.enterBetAmount || "Επέλεξε νομίσματα"}
                     />
                     <div className="flex gap-1">
                         {[10, 25, 50, 100].map((amount) => (
@@ -137,7 +137,7 @@ export function BettingSection({
                         {potentialWinnings} <CoinIcon size={20} />
                     </div>
                     <div className="text-xs text-gray-500">
-                        {betAmount > 0 ? `Bet ${betAmount} × ${selectedMultiplier.toFixed(2)}x` : dict?.matches?.enterBetAmountFirst || 'Enter bet amount'}
+                        {betAmount > 0 ? `${betAmount} 🪙 × ${selectedMultiplier.toFixed(2)}×` : dict?.matches?.enterBetAmountFirst || 'Επέλεξε νομίσματα'}
                     </div>
                 </div>
             </div>

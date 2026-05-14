@@ -12,6 +12,7 @@ import {
 import { supabase } from '@netprophet/lib';
 import { toast } from 'sonner';
 import { useDictionary } from '@/context/DictionaryContext';
+import { COIN_CONSTANTS } from '@/context/WalletContext';
 
 // Add PredictionOptions type
 export interface PredictionOptions {
@@ -283,11 +284,12 @@ export function PredictionSlipProvider({ children }: { children: React.ReactNode
                     potentialWinnings: item.potentialWinnings !== undefined ? item.potentialWinnings : existingPotentialWinnings
                 } : p);
             }
-            // For new predictions, preserve any bet amount that was passed in
+            // For new predictions, auto-fill MIN_BET so the chip is pre-selected
+            const defaultBet = item.betAmount || COIN_CONSTANTS.MIN_BET;
             const newItem = {
                 ...item,
-                betAmount: item.betAmount || 0,
-                potentialWinnings: item.potentialWinnings || 0
+                betAmount: defaultBet,
+                potentialWinnings: item.potentialWinnings || defaultBet * (item.multiplier || 1)
             };
             return [...prev, newItem];
         });

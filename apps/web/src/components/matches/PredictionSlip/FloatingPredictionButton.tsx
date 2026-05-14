@@ -84,11 +84,11 @@ export function FloatingPredictionButton({ predictions, onClick }: FloatingPredi
                     {/* Text content */}
                     <div className="flex flex-col items-start">
                         <div className="flex items-center space-x-1.5 sm:space-x-2">
-                            <span className="text-xs font-semibold text-purple-300 uppercase tracking-wider">
-                                {prepForUppercaseDisplay(dict?.matches?.bettingSlip || 'Betting Slip')}
+                            <span className="text-xs font-semibold text-[#FFD60A] uppercase tracking-wider">
+                                {prepForUppercaseDisplay(dict?.matches?.bettingSlip || 'Οι Προβλέψεις Μου')}
                             </span>
                             <motion.div
-                                className="bg-purple-600 text-white text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full"
+                                className="bg-[#FFD60A] text-[#080C18] text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full"
                                 animate={{
                                     scale: [1, 1.1, 1],
                                 }}

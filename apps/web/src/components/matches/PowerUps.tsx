@@ -1,9 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { useWallet } from '@/context/WalletContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useDictionary } from '@/context/DictionaryContext';
@@ -169,223 +166,159 @@ export function PowerUps({ onPurchase, sidebarOpen = true }: PowerUpsProps) {
         return dict.rewards[key as keyof typeof dict.rewards] || '';
     };
 
-    // Convert Tailwind gradient classes to CSS gradient colors
-    const getGradientColors = (gradientClass: string): string => {
-        const gradientMap: { [key: string]: string } = {
-            'from-blue-500 to-purple-600': '#3b82f6, #9333ea',
-            'from-green-500 to-emerald-600': '#10b981, #059669',
-            'from-orange-500 to-red-600': '#f97316, #dc2626',
-            'from-purple-500 to-pink-600': '#8b5cf6, #db2777'
-        };
-        return gradientMap[gradientClass] || '#3b82f6, #9333ea'; // Default fallback
+    const USAGE_LABELS: Record<string, string> = {
+        'once per slip': 'Μία φορά ανά λίστα',
+        'time-based': 'Χρονικά',
+        'permanent': 'Μόνιμο',
     };
 
     if (loading) {
         return (
-            <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
-                <div className="text-center space-y-3">
-                    <div className="flex items-center justify-center gap-3">
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            {dict.rewards.powerUps}
-                        </h2>
-                    </div>
-                    <p className="text-gray-400 text-md">{dict.rewards.powerUpsDescription}</p>
-                </div>
-                <div className="text-center py-8">
-                    <div className="text-white/60">{dict.rewards.loadingPowerUps}</div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-48 rounded-xl bg-[#161F35] border border-white/[0.06] animate-pulse" />
+                ))}
             </div>
         );
     }
 
     return (
         <>
-            <div className={`space-y-8 ${!sidebarOpen ? 'w-full' : ''}`}>
-                {/* Header */}
-                <div className="text-center space-y-3">
-                    <div className="flex items-center justify-center gap-3">
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            {dict.rewards.powerUps}
-                        </h2>
-                        <button
-                            onClick={() => setShowInfoModal(true)}
-                            className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-slate-700/50"
-                            title={dict.rewards.howPowerUpsWork}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {powerUps.map((powerUp) => {
+                    const affordable = canAfford(powerUp.cost);
+                    const isPurchasing = purchasing === powerUp.id;
+                    const usageLabel = USAGE_LABELS[powerUp.usageType.toLowerCase()] ?? powerUp.usageType;
+
+                    return (
+                        <div
+                            key={powerUp.id}
+                            className="relative overflow-hidden rounded-xl bg-[#161F35] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 flex flex-col"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </button>
-                    </div>
-                    <p className="text-gray-400 text-md">{dict.rewards.powerUpsDescription}</p>
-                </div>
+                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
 
-                {/* Power Ups Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {powerUps.map((powerUp) => {
-                        const affordable = canAfford(powerUp.cost);
-                        const isPurchasing = purchasing === powerUp.id;
-
-                        return (
-                            <Card
-                                key={powerUp.id}
-                                className={`
-                                    relative overflow-hidden bg-slate-900/50 border-slate-700/50 
-                                    hover:bg-slate-800/80 transition-all duration-300 
-                                    hover:scale-105 hover:shadow-2xl ${powerUp.glowColor}
-                                    backdrop-blur-sm group flex flex-col h-full
-                                `}
-                            >
-                                {/* Gradient Background */}
-                                <div className={`absolute inset-0 bg-gradient-to-br ${powerUp.gradient} opacity-5 group-hover:opacity-10 transition-opacity duration-300`} />
-
-                                {/* Glow Effect */}
-                                <div className={`absolute inset-0 bg-gradient-to-br ${powerUp.gradient} opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300`} />
-
-                                <CardHeader className="pb-4 relative z-10">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <div className="text-3xl animate-pulse">{powerUp.icon}</div>
-                                                <CardTitle className="text-white text-xl font-bold">
-                                                    {getTranslatedName(powerUp.name)}
-                                                </CardTitle>
-                                            </div>
-                                            <span className="inline-block text-xs bg-[#1E2A45] text-[#94A3B8] px-3 py-1 rounded-full border border-white/[0.08]">
-                                                {({'once per slip': 'Μία φορά ανά λίστα', 'time-based': 'Χρονικά', 'permanent': 'Μόνιμο'} as Record<string, string>)[powerUp.usageType.toLowerCase()] || dict.rewards[powerUp.usageType.toLowerCase().replace(' ', '') as keyof typeof dict.rewards] || powerUp.usageType}
+                            <div className="p-4 flex-1 flex flex-col">
+                                {/* Icon + name */}
+                                <div className="flex items-start justify-between gap-2 mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl">{powerUp.icon}</span>
+                                        <div>
+                                            <p className="text-sm font-bold text-white leading-tight">
+                                                {getTranslatedName(powerUp.name)}
+                                            </p>
+                                            <span className="inline-block text-[10px] font-semibold text-[#94A3B8] bg-[#1E2A45] border border-white/[0.08] px-2 py-0.5 rounded-full mt-0.5">
+                                                {usageLabel}
                                             </span>
                                         </div>
                                     </div>
-                                </CardHeader>
+                                </div>
 
-                                <CardContent className="pt-0 relative z-10 flex-1 flex flex-col">
-                                    <div className="flex-1">
-                                        <p className="text-gray-300 text-sm mb-4 leading-relaxed">
-                                            {getTranslatedDescription(powerUp.name) || powerUp.description}
-                                        </p>
+                                {/* Description */}
+                                <p className="text-[12px] text-[#94A3B8] leading-relaxed mb-3 flex-1">
+                                    {getTranslatedDescription(powerUp.name) || powerUp.description}
+                                </p>
 
-                                        <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/80 p-4 rounded-lg mb-4 border border-slate-600/30">
-                                            <p className="text-green-400 text-sm font-semibold">
-                                                {getTranslatedEffect(powerUp.name) || powerUp.effect}
-                                            </p>
-                                        </div>
+                                {/* Effect */}
+                                <div className="bg-[#00E676]/05 border border-[#00E676]/15 rounded-lg px-3 py-2 mb-3">
+                                    <p className="text-[11px] font-semibold text-[#00E676]">
+                                        {getTranslatedEffect(powerUp.name) || powerUp.effect}
+                                    </p>
+                                </div>
 
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <CoinIcon size={24} />
-                                                <span className="font-bold text-xl text-yellow-400">{powerUp.cost}</span>
-                                            </div>
-
-                                            {!affordable && (
-                                                <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
-                                                    {dict.rewards.needMore.replace('{amount}', (powerUp.cost - (wallet?.balance || 0)).toString())}
-                                                </div>
-                                            )}
-                                        </div>
+                                {/* Cost + shortfall */}
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <CoinIcon size={16} />
+                                        <span className="font-black text-base text-[#FFD60A] tabular-nums">{powerUp.cost}</span>
                                     </div>
+                                    {!affordable && wallet && (
+                                        <span className="text-[10px] text-[#FF4545] font-semibold">
+                                            -{(powerUp.cost - wallet.balance).toLocaleString('el-GR')} 🪙
+                                        </span>
+                                    )}
+                                </div>
 
-                                    <Button
-                                        onClick={() => handlePurchase(powerUp)}
-                                        disabled={!affordable || isPurchasing || !user}
-                                        style={affordable && user ? {
-                                            background: `linear-gradient(to right, ${getGradientColors(powerUp.gradient)})`,
-                                            color: 'white',
-                                            border: 'none'
-                                        } : {}}
-                                        className={`
-                                            w-full h-12 font-semibold text-lg transition-all duration-300 mt-auto
-                                            ${affordable && user
-                                                ? 'hover:scale-105 hover:shadow-lg'
-                                                : 'bg-slate-700/50 text-slate-400 cursor-not-allowed border border-slate-600/50'
-                                            }
-                                        `}
-                                    >
-                                        {!user ? (
-                                            <span>{dict.rewards.signInToBuy}</span>
-                                        ) : isPurchasing ? (
-                                            <div className="flex items-center gap-3">
-                                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                                                <span>{dict.rewards.purchasing}</span>
-                                            </div>
-                                        ) : affordable ? (
-                                            <span>{dict.rewards.purchase}</span>
-                                        ) : (
-                                            <span className="text-xs">{dict.rewards.notEnoughCoins}</span>
-                                        )}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
-                </div>
+                                {/* CTA */}
+                                <button
+                                    onClick={() => handlePurchase(powerUp)}
+                                    disabled={!affordable || isPurchasing || !user}
+                                    className={`w-full py-2.5 rounded-xl text-sm font-black transition-all duration-150 ${
+                                        !user
+                                            ? 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed'
+                                            : !affordable
+                                            ? 'bg-[#1E2A45] text-[#4B5975] cursor-not-allowed'
+                                            : isPurchasing
+                                            ? 'bg-[#FFD60A]/60 text-[#080C18] cursor-wait'
+                                            : 'bg-[#FFD60A] text-[#080C18] hover:bg-[#FFE033] active:scale-95 shadow-[0_4px_12px_rgba(255,214,10,0.25)]'
+                                    }`}
+                                >
+                                    {!user ? (
+                                        dict.rewards.signInToBuy
+                                    ) : isPurchasing ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-[#080C18]/40 border-t-[#080C18] rounded-full" />
+                                            {dict.rewards.purchasing}
+                                        </span>
+                                    ) : affordable ? (
+                                        'Εξαργύρωση'
+                                    ) : (
+                                        dict.rewards.notEnoughCoins
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Info Modal */}
             {showInfoModal && (
                 <div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     onClick={() => setShowInfoModal(false)}
                 >
                     <div
-                        className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 border border-slate-700/50 rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-sm"
+                        className="bg-[#161F35] border border-white/[0.08] rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="text-lg font-black text-white">
                                 {dict.rewards.howPowerUpsWork}
                             </h3>
                             <button
                                 onClick={() => setShowInfoModal(false)}
-                                className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-full hover:bg-slate-700/50"
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1E2A45] border border-white/[0.08] text-[#4B5975] hover:text-white transition-colors"
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>🛡</span>
-                                    {dict.rewards.safeSlips}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.safeSlipsDescription}</p>
-                            </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>🔥</span>
-                                    {dict.rewards.streakMultiplier}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.streakMultiplierDescription}</p>
-                            </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>🎯</span>
-                                    {dict.rewards.doubleXPMatch}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.doubleXPMatchDescription}</p>
-                            </div>
-                            <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-700/30">
-                                <h4 className="font-bold text-white mb-2 flex items-center gap-2">
-                                    <span>💡</span>
-                                    {dict.rewards.proTips}
-                                </h4>
-                                <p className="text-gray-300">{dict.rewards.proTipsDescription}</p>
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                            {[
+                                { icon: '🛡', title: dict.rewards.safeSlips, desc: dict.rewards.safeSlipsDescription },
+                                { icon: '🔥', title: dict.rewards.streakMultiplier, desc: dict.rewards.streakMultiplierDescription },
+                                { icon: '🎯', title: dict.rewards.doubleXPMatch, desc: dict.rewards.doubleXPMatchDescription },
+                                { icon: '💡', title: dict.rewards.proTips, desc: dict.rewards.proTipsDescription },
+                            ].map((item) => (
+                                <div key={item.title} className="bg-[#1E2A45] border border-white/[0.06] p-4 rounded-xl">
+                                    <h4 className="font-bold text-white mb-1.5 flex items-center gap-2">
+                                        <span>{item.icon}</span>
+                                        {item.title}
+                                    </h4>
+                                    <p className="text-[#94A3B8] text-[12px] leading-relaxed">{item.desc}</p>
+                                </div>
+                            ))}
                         </div>
 
-                        <div className="mt-6 flex justify-end">
-                            <Button
+                        <div className="mt-5 flex justify-end">
+                            <button
                                 onClick={() => setShowInfoModal(false)}
-                                style={{
-                                    background: 'linear-gradient(to right, #9333ea, #db2777)',
-                                    color: 'white'
-                                }}
-                                className="p-2 hover:scale-105 transition-transform"
+                                className="px-5 py-2.5 rounded-xl bg-[#FFD60A] text-[#080C18] font-black text-sm hover:bg-[#FFE033] transition-colors"
                             >
                                 {dict.rewards.gotIt}
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>

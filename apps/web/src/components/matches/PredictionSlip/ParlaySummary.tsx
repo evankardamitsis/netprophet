@@ -38,7 +38,7 @@ export function ParlaySummary({
             <div className="text-center mb-2">
                 <h4 className="text-base font-bold text-yellow-200 mb-1">
                     {dict?.matches?.parlayBet?.replace('{count}', predictionsCount.toString()) ||
-                        `🎯 Parlay Bet (${predictionsCount} picks)`}
+                        `🎯 Συνδυαστική (${predictionsCount} επιλογές)`}
                 </h4>
                 <div className="text-xl font-bold text-green-400">
                     {formatParlayOdds(parlayCalculation.finalOdds)}x
@@ -48,7 +48,7 @@ export function ParlaySummary({
                 </div>
                 <div className="text-xs text-blue-300 mt-1">
                     {dict?.matches?.stakeAutoCalculated?.replace('{stake}', parlayStake.toString()) ||
-                        `Stake: ${parlayStake} 🌕 (auto-calculated)`}
+                        `${parlayStake} 🪙 (αυτόματος υπολογισμός)`}
                 </div>
             </div>
 
