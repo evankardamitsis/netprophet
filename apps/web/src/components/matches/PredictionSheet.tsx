@@ -26,7 +26,6 @@ interface PredictionSheetProps {
     match: Match | null;
     preselectedPlayer: 'player1' | 'player2' | null;
     onClose: () => void;
-    onViewDetail: (match: Match) => void;
 }
 
 function buildDetails(match: Match) {
@@ -58,7 +57,7 @@ function buildDetails(match: Match) {
     };
 }
 
-export function PredictionSheet({ match, preselectedPlayer, onClose, onViewDetail }: PredictionSheetProps) {
+export function PredictionSheet({ match, preselectedPlayer, onClose }: PredictionSheetProps) {
     const { addPrediction, hasPrediction } = usePredictionSlip();
     const { setIsPredictionSlipCollapsed } = usePredictionSlipCollapse();
     const { dict, prepForUppercaseDisplay } = useDictionary();

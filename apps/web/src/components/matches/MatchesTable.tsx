@@ -22,17 +22,31 @@ interface MatchesTableProps {
 
 export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }: MatchesTableProps) {
     const onSelectMatch = useMatchSelect();
-    const { slipCollapsed: contextSlipCollapsed } = usePredictionSlip();
+    const { slipCollapsed: contextSlipCollapsed, predictions } = usePredictionSlip();
     const { dict } = useDictionary();
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
     const { activeBetMatchIds } = useActiveBets();
+
+    // Map matchId → which player the user picked (for card highlight)
+    const slipSelectionMap = useMemo(() => {
+        const map = new Map<string, 'player1' | 'player2'>();
+        for (const pred of predictions) {
+            const winner = pred.prediction?.winner;
+            if (!winner) continue;
+            const p1 = pred.match.player1.name;
+            const p2 = pred.match.player2.name;
+            if (winner === p1) map.set(pred.matchId, 'player1');
+            else if (winner === p2) map.set(pred.matchId, 'player2');
+        }
+        return map;
+    }, [predictions]);
     const [matchTypeFilter, setMatchTypeFilter] = useState<'all' | 'singles' | 'doubles'>('all');
 
     // Prediction sheet state
     const [sheetMatch, setSheetMatch] = useState<Match | null>(null);
     const [sheetPreselect, setSheetPreselect] = useState<'player1' | 'player2' | null>(null);
 
-    const openSheet = (match: Match, player: 'player1' | 'player2') => {
+    const openSheet = (match: Match, player: 'player1' | 'player2' | null = null) => {
         setSheetMatch(match);
         setSheetPreselect(player);
     };
@@ -475,7 +489,8 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                                 }}
                                 isActive={activeBetMatchIds.has(match.id)}
                                 isLive={match.status === 'live' || match.status_display === 'live'}
-                                onViewDetail={() => !match.locked && onSelectMatch(match)}
+                                selectedPlayer={slipSelectionMap.get(match.id) ?? null}
+                                onViewDetail={() => !match.locked && openSheet(match)}
                                 onSelectPlayer={(matchId, player) => !match.locked && openSheet(match, player)}
                             />
                         );
@@ -724,7 +739,6 @@ export function MatchesTable({ matches = [], sidebarOpen = true, slipCollapsed }
                 match={sheetMatch}
                 preselectedPlayer={sheetPreselect}
                 onClose={closeSheet}
-                onViewDetail={(match) => { closeSheet(); onSelectMatch(match); }}
             />
 
             {/* No matches state */}
