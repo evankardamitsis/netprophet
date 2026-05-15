@@ -80,7 +80,7 @@ export function RewardShop({ userPoints, onRedeem, sidebarOpen = true }: RewardS
                 {/* DIVIDER */}
                 <div className="flex items-center gap-3 my-2">
                     <div className="flex-1 h-px bg-white/[0.06]" />
-                    <span className="text-[11px] font-bold text-[#4B5975] uppercase tracking-widest">{prepForUppercaseDisplay('ή ξόδεψε νομίσματα')}</span>
+                    <span className="text-[11px] font-bold text-[#4B5975] tracking-widest">Ή ΞΟΔΕΨΕ ΝΟΜΙΣΜΑΤΑ</span>
                     <div className="flex-1 h-px bg-white/[0.06]" />
                 </div>
 

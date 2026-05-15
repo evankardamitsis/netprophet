@@ -67,8 +67,8 @@ export default function MyPicksPage() {
     // Helper function to format prediction for display
     const formatPrediction = (prediction: any) => {
         const parts = [];
-        if (prediction.winner) parts.push(`Winner: ${prediction.winner}`);
-        if (prediction.matchResult) parts.push(`Result: ${prediction.matchResult}`);
+        if (prediction.winner) parts.push(`Νικητής: ${prediction.winner}`);
+        if (prediction.matchResult) parts.push(`Αποτέλεσμα: ${prediction.matchResult}`);
         if (prediction.set1Score) parts.push(`Set 1: ${prediction.set1Score}`);
         if (prediction.set2Score) parts.push(`Set 2: ${prediction.set2Score}`);
         if (prediction.set3Score) parts.push(`Set 3: ${prediction.set3Score}`);
@@ -400,9 +400,9 @@ export default function MyPicksPage() {
                                                         {formatPrediction(bet.prediction)}
                                                     </p>
                                                 </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0 text-xs">
-                                                    <span className="text-[#94A3B8]">Ποσό: <span className="text-white font-bold">{bet.betAmount}</span></span>
-                                                    <span className="text-[#94A3B8]">→ <span className="text-[#00E676] font-bold">{bet.potentialWinnings}</span></span>
+                                                <div className="flex flex-col items-end gap-0.5 flex-shrink-0 text-xs">
+                                                    <span className="text-[#94A3B8]">Ποσό: <span className="text-white font-bold tabular-nums">{bet.betAmount} 🪙</span></span>
+                                                    <span className="text-[#94A3B8]">Πιθανά Κέρδη: <span className="text-[#00E676] font-bold tabular-nums">{bet.potentialWinnings} 🪙</span></span>
                                                 </div>
                                             </div>
                                         ) : (

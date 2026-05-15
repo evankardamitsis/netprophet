@@ -289,21 +289,16 @@ export function Wallet({ dict, lang = 'en' }: WalletProps) {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative flex items-center gap-1 px-2 py-1 rounded-lg transition shadow-lg hover:shadow-xl bg-transparent hover:bg-slate-800/50"
+                className={`inline-flex items-center gap-1.5 border rounded-full px-3 py-1.5 font-bold text-sm tabular-nums transition-all duration-150 ${
+                    isLowBalance
+                        ? 'bg-[#FF4545]/12 border-[#FF4545]/30 text-[#FF4545] hover:bg-[#FF4545]/18 hover:shadow-[0_0_16px_rgba(255,69,69,0.2)]'
+                        : 'bg-[#FFD60A]/12 border-[#FFD60A]/30 text-[#FFD60A] hover:bg-[#FFD60A]/18 hover:shadow-[0_0_16px_rgba(255,214,10,0.2)]'
+                }`}
                 aria-label={isOpen ? "Close wallet" : "Open wallet"}
                 title={isOpen ? "Close wallet" : "Open wallet"}
             >
-                {/* Coin Icon with Balance Overlay */}
-                <div className="relative">
-                    <CoinIcon size={20} />
-                    {/* Balance Badge on top right */}
-                    <div className="absolute -top-1.5 -right-4 bg-slate-800 border border-slate-600 rounded-full px-1.5 min-w-[16px] h-4 flex items-center justify-center">
-                        <span className={`font-bold text-xs ${isLowBalance ? 'text-red-400' : 'text-yellow-300'}`}>
-                            {wallet.balance}
-                        </span>
-                    </div>
-
-                </div>
+                <CoinIcon size={16} />
+                <span className="tabular-nums">{wallet.balance.toLocaleString('el-GR')}</span>
             </button>
 
             <AnimatePresence>

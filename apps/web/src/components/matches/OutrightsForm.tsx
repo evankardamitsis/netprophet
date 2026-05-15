@@ -499,8 +499,8 @@ export function OutrightsForm({
                             type="button"
                             onClick={() => handleCategoryChange(category)}
                             className={`p-3 rounded-lg border transition-colors ${selectedCategory === category
-                                ? 'bg-purple-600 text-white border-purple-600'
-                                : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                ? 'bg-[#00E676]/10 border-[#00E676] text-[#00E676]'
+                                : 'bg-[#1E2A45] border-white/[0.06] text-white hover:bg-[#263354] hover:border-white/[0.12]'
                                 }`}
                         >
                             <div className="text-sm font-semibold">{category}</div>
@@ -526,8 +526,8 @@ export function OutrightsForm({
                                 type="button"
                                 onClick={() => onTournamentWinnerChange(selectedTournamentWinner === winner.name ? '' : winner.name)}
                                 className={`p-3 rounded-lg border transition-colors ${selectedTournamentWinner === winner.name
-                                    ? 'bg-purple-600 text-white border-purple-600'
-                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                    ? 'bg-[#00E676]/10 border-[#00E676] text-[#00E676]'
+                                    : 'bg-[#1E2A45] border-white/[0.06] text-white hover:bg-[#263354] hover:border-white/[0.12]'
                                     }`}
                             >
                                 <div className="text-sm font-semibold">{winner.name}</div>
@@ -552,8 +552,8 @@ export function OutrightsForm({
                                 type="button"
                                 onClick={() => onFinalsPairChange(selectedFinalsPair === pair.pair ? '' : pair.pair)}
                                 className={`p-3 rounded-lg border transition-colors ${selectedFinalsPair === pair.pair
-                                    ? 'bg-purple-600 text-white border-purple-600'
-                                    : 'bg-slate-700/50 border-slate-600/50 text-gray-300 hover:bg-slate-600/50'
+                                    ? 'bg-[#00E676]/10 border-[#00E676] text-[#00E676]'
+                                    : 'bg-[#1E2A45] border-white/[0.06] text-white hover:bg-[#263354] hover:border-white/[0.12]'
                                     }`}
                             >
                                 <div className="text-sm font-semibold">{pair.pair}</div>
