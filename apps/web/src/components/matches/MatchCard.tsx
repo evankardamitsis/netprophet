@@ -33,6 +33,19 @@ const ROUND_MAP: Record<string, string> = {
   "Finals": "Τελικός", "Final": "Τελικός",
 };
 
+function formatRoundLabel(round: string): string | null {
+  const trimmed = round?.trim();
+  if (!trimmed) return null;
+  return ROUND_MAP[trimmed] ?? trimmed;
+}
+
+function getRoundProminence(round: string): "final" | "semifinal" | null {
+  const r = round.trim().toLowerCase();
+  if (r.includes("semifinal")) return "semifinal";
+  if (r.includes("final") && !r.includes("semi") && !r.includes("quarter")) return "final";
+  return null;
+}
+
 const SURFACE_STYLE: Record<string, { color: string; emoji: string }> = {
   "Clay Court":  { color: "text-[#CD7F32]", emoji: "🟤" },
   "Hard Court":  { color: "text-[#38BDF8]", emoji: "🔵" },
@@ -63,17 +76,19 @@ export function MatchCard({
   const isUnderdog1 = player1.odds > player2.odds * 1.8;
   const isUnderdog2 = player2.odds > player1.odds * 1.8;
   const surfaceInfo = surface ? SURFACE_STYLE[surface] : null;
+  const roundLabel = formatRoundLabel(round);
+  const roundProminence = getRoundProminence(round);
 
   return (
     <article
       className={[
         "relative overflow-hidden rounded-[20px] p-4 mb-3 cursor-pointer",
-        "border transition-all duration-150",
+        "border-2 transition-all duration-150",
         "animate-fade-in-up",
-        isFeatured
-          ? "bg-gradient-to-br from-[#1E2A45] to-[#1a2340] border-[#8B5CF6]/30 shadow-glow-violet"
-          : isActive
-          ? "bg-[#161F35] border-[#00E676]/25"
+        isActive
+          ? "bg-[#161F35] border-[#00E676] shadow-glow-green"
+          : isFeatured
+          ? "bg-gradient-to-br from-[#1E2A45] to-[#1a2340] border-[#8B5CF6]/40 shadow-glow-violet"
           : "bg-[#161F35] border-white/[0.06] hover:border-white/[0.12] hover:-translate-y-px hover:shadow-elevated",
       ].join(" ")}
       onClick={() => onViewDetail?.(id)}
@@ -82,14 +97,33 @@ export function MatchCard({
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
 
       {/* META ROW */}
-      <div className="flex items-center justify-between mb-3 gap-2">
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full
-                         bg-[#8B5CF6]/10 border border-[#8B5CF6]/28
-                         text-[10px] font-bold text-[#C4B5FD] tracking-[0.03em]
-                         truncate max-w-[180px]">
-          {isFeatured && "⭐ "}{tournament}
-        </span>
-        <div className="flex items-center gap-2 flex-shrink-0 text-[#94A3B8] text-[11px]">
+      <div className="flex items-start justify-between mb-3 gap-2">
+        <div className="flex flex-col gap-1 min-w-0 max-w-[55%]">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full w-fit max-w-full
+                           bg-[#8B5CF6]/10 border border-[#8B5CF6]/28
+                           text-[10px] font-bold text-[#C4B5FD] tracking-[0.03em] truncate">
+            {isFeatured && "⭐ "}{tournament}
+          </span>
+          {roundLabel && (
+            <span
+              className={[
+                "w-fit max-w-full truncate tracking-[0.04em]",
+                roundProminence === "final"
+                  ? "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black uppercase bg-[#FFD60A]/15 border border-[#FFD60A]/50 text-[#FFD60A] shadow-glow-gold"
+                  : roundProminence === "semifinal"
+                  ? "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#FFD60A]/10 border border-[#FFD60A]/35 text-[#FFD60A]"
+                  : "text-[10px] font-bold text-[#94A3B8] pl-0.5",
+              ].join(" ")}
+            >
+              {roundProminence === "final" && "🏆 "}
+              {roundProminence === "semifinal" && "⚡ "}
+              {roundProminence
+                ? prepForUppercaseDisplay(roundLabel)
+                : roundLabel}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 text-[#94A3B8] text-[11px] pt-0.5">
           {isLive && (
             <span className="px-2 py-0.5 rounded-full bg-[#FF4545]/12 border border-[#FF4545]/30
                              text-[#FF4545] text-[10px] font-bold animate-pulse">
@@ -98,9 +132,6 @@ export function MatchCard({
           )}
           <span className="tabular-nums">{time}</span>
           <span className="text-[#4B5975]">{date}</span>
-          <span className="text-[#4B5975] hidden sm:inline">
-            {ROUND_MAP[round] ?? round}
-          </span>
         </div>
       </div>
 

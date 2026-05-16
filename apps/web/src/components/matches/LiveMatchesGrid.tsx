@@ -5,7 +5,6 @@ import { useMatchSelect } from '@/context/MatchSelectContext';
 import { usePredictionSlip } from '@/context/PredictionSlipContext';
 import { useDictionary } from '@/context/DictionaryContext';
 import { useActiveBets } from '@/hooks/useActiveBets';
-import { gradients, shadows, borders, transitions, animations, cx, typography } from '@/styles/design-system';
 import { motion } from 'framer-motion';
 
 interface LiveMatchesGridProps {
@@ -21,10 +20,8 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
     const isSlipCollapsed = slipCollapsed ?? contextSlipCollapsed;
     const { activeBetMatchIds } = useActiveBets();
 
-    // Filter out cancelled matches
     const filteredLiveMatches = liveMatches.filter(match => match.status !== 'cancelled');
 
-    // Helper function to format player name
     const formatPlayerName = (player: any) => {
         if (!player) return 'TBD';
         const first = player.first_name || '';
@@ -32,335 +29,200 @@ export function LiveMatchesGrid({ liveMatches, sidebarOpen = true, slipCollapsed
         return `${first} ${last}`.trim() || 'TBD';
     };
 
-    // Helper function to render doubles player names vertically
+    const abbreviateName = (name: string) => {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length < 2) return name;
+        return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
+    };
+
     const renderDoublesNames = (players?: any[], alignRight = false) => {
         const [p1, p2] = players || [];
-        if (!p1 && !p2) return 'TBD';
+        if (!p1 && !p2) return <span className="text-[#4B5975]">TBD</span>;
         return (
-            <div className={`flex flex-col leading-tight space-y-0.5 ${alignRight ? 'items-end' : ''}`}>
-                <div className="truncate">{formatPlayerName(p1)}</div>
-                <div className="truncate">{formatPlayerName(p2)}</div>
+            <div className={`flex flex-col leading-tight gap-0.5 ${alignRight ? 'items-end' : ''}`}>
+                <span className="truncate">{formatPlayerName(p1)}</span>
+                <span className="truncate">{formatPlayerName(p2)}</span>
             </div>
         );
     };
 
-    if (filteredLiveMatches.length === 0) {
-        return null;
-    }
+    if (filteredLiveMatches.length === 0) return null;
+
+    const gridCols = sidebarOpen && !isSlipCollapsed
+        ? 'grid-cols-1 lg:grid-cols-2'
+        : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 
     return (
-        <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-4 lg:mt-6">
-            <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                <h2 className={cx(typography.heading.md, "text-white flex items-center text-sm xs:text-base sm:text-lg")}>
-                    <span className="w-1.5 xs:w-2 h-1.5 xs:h-2 rounded-full bg-red-500 animate-pulse mr-1.5 xs:mr-2 sm:mr-3"></span>
+        <div className="mb-4 mt-4 lg:mt-6">
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-3">
+                <h2 className="flex items-center gap-2 text-sm font-bold text-white">
+                    <span className="w-2 h-2 rounded-full bg-[#FF4545] animate-pulse flex-shrink-0" />
                     {dict?.sidebar?.liveMatches || 'Live Matches'}
-                    <span className={cx(typography.body.sm, "ml-2 text-gray-400 text-xs xs:text-sm")}>({filteredLiveMatches.length})</span>
+                    <span className="text-[#4B5975] font-semibold text-xs">({filteredLiveMatches.length})</span>
                 </h2>
-                {/* Navigation arrows for live matches - only visible on large screens */}
-                <div className="hidden lg:flex gap-2">
-                    <motion.button
-                        onClick={() => {
-                            const container = document.querySelector('.live-matches-container');
-                            if (container) {
-                                container.scrollBy({ left: -200, behavior: 'smooth' });
-                            }
-                        }}
-                        className={cx(
-                            "w-8 h-8 text-white flex items-center justify-center",
-                            borders.rounded.full,
-                            transitions.default,
-                            "hover:text-yellow-400 hover:bg-slate-700/50"
-                        )}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        aria-label="Scroll left"
-                    >
-                        ←
-                    </motion.button>
-                    <motion.button
-                        onClick={() => {
-                            const container = document.querySelector('.live-matches-container');
-                            if (container) {
-                                container.scrollBy({ left: 200, behavior: 'smooth' });
-                            }
-                        }}
-                        className={cx(
-                            "w-8 h-8 text-white flex items-center justify-center",
-                            borders.rounded.full,
-                            transitions.default,
-                            "hover:text-yellow-400 hover:bg-slate-700/50"
-                        )}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        aria-label="Scroll right"
-                    >
-                        →
-                    </motion.button>
+                {/* Scroll arrows — desktop only */}
+                <div className="hidden lg:flex gap-1">
+                    {(['left', 'right'] as const).map(dir => (
+                        <button
+                            key={dir}
+                            onClick={() => document.querySelector('.live-matches-container')?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' })}
+                            className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1E2A45] border border-white/[0.06] text-[#4B5975] hover:text-white hover:border-white/[0.12] transition-colors text-sm"
+                            aria-label={`Scroll ${dir}`}
+                        >
+                            {dir === 'left' ? '←' : '→'}
+                        </button>
+                    ))}
                 </div>
             </div>
+
+            {/* Cards */}
             <div className={`live-matches-container ${
-                // Locked matches on small screens: horizontal carousel with peek
                 filteredLiveMatches.some(m => m.locked)
-                    ? 'flex gap-2 xs:gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-2 xs:pb-3 pr-4 xs:pr-6 snap-x snap-mandatory'
-                    : // Grid layout for active matches
-                    'grid gap-2 xs:gap-3 sm:gap-4 md:gap-5 ' + (
-                        // When both sidebar and prediction slip are open, max 2 columns
-                        sidebarOpen && !isSlipCollapsed
-                            ? 'grid-cols-1 xs:grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2'
-                            : // All other states: max 3 columns
-                            'grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3'
-                    )
-                }`}>
-                {filteredLiveMatches.map((match) => (
-                    <div
-                        key={match.id}
-                        className={cx(
-                            "rounded-lg xs:rounded-xl flex flex-col relative",
-                            transitions.default,
-                            // Check for high odds difference (underdog alert)
-                            !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5
-                                ? cx(borders.thick, shadows.glow.orange, 'border-orange-500 bg-slate-900/90 cursor-pointer backdrop-blur-sm', animations.hover.scale)
-                                : match.locked
-                                    ? 'border border-slate-600 bg-gradient-to-br from-slate-800/50 via-slate-900/50 to-slate-800/50 backdrop-blur-sm cursor-not-allowed'
-                                    : cx('border bg-slate-900/80 border-blue-600 hover:border-blue-500/50 cursor-pointer', animations.hover.lift),
-                            // Locked matches are much smaller and compact
-                            match.locked
-                                ? 'p-2 xs:p-2.5 sm:p-3 h-[90px] xs:h-[100px] sm:h-[110px] md:h-[120px] min-w-[280px] xs:min-w-[300px] sm:min-w-[320px] snap-start flex-shrink-0'
-                                : // Active matches - adjust padding and height based on available space
-                                sidebarOpen && !isSlipCollapsed
-                                    ? 'p-1.5 xs:p-2 sm:p-2.5 md:p-3 h-[200px] xs:h-[220px] sm:h-[240px] md:h-[260px]'
-                                    : 'p-2 xs:p-2.5 sm:p-3 md:p-4 h-[220px] xs:h-[240px] sm:h-[260px] md:h-[280px]'
-                        )}
-                        onClick={() => !match.locked && onSelectMatch(match)}
-                        style={!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 ? {
-                            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 50%, rgba(15, 23, 42, 0.95) 100%)',
-                            borderImage: 'linear-gradient(45deg, #fbbf24, #f97316, #ef4444) 1',
-                            boxShadow: '0 0 20px rgba(251, 191, 36, 0.3), inset 0 0 20px rgba(251, 191, 36, 0.1)'
-                        } : undefined}
-                    >
-                        {/* Active Bet Badge */}
-                        {activeBetMatchIds.has(match.id) && (
-                            <div className="absolute -top-2 -left-2 z-10">
-                                <div className={cx(
-                                    "text-white text-xs font-bold px-2 py-1 shadow-md",
-                                    "bg-gradient-to-r from-green-600 to-emerald-600",
-                                    borders.rounded.full,
-                                    "shadow-lg shadow-green-500/50"
-                                )}>
-                                    ✓ ACTIVE BET
-                                </div>
-                            </div>
-                        )}
+                    ? 'flex gap-3 overflow-x-auto [&::-webkit-scrollbar]:hidden pb-2 snap-x snap-mandatory'
+                    : `grid gap-3 ${gridCols}`
+            }`}>
+                {filteredLiveMatches.map((match) => {
+                    const isUnderdog = !match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5;
+                    const hasActiveBet = activeBetMatchIds.has(match.id);
+                    const p1Fav = match.player1.odds <= match.player2.odds;
 
-                        {/* Underdog Alert Banner */}
-                        {!match.locked && Math.abs(match.player1.odds - match.player2.odds) > 2.5 && (
-                            <div className="absolute -top-2 -right-2 z-10 animate-pulse">
-                                <div className={cx(
-                                    "text-black text-xs font-bold px-2 py-1 shadow-md",
-                                    gradients.orange,
-                                    borders.rounded.full,
-                                    shadows.glow.orange
-                                )}>
-                                    🔥 UNDERDOG ALERT
-                                </div>
-                            </div>
-                        )}
+                    return (
+                        <div
+                            key={match.id}
+                            onClick={() => !match.locked && onSelectMatch(match)}
+                            className={[
+                                'relative overflow-hidden rounded-2xl border transition-all duration-150 flex flex-col',
+                                match.locked
+                                    ? 'bg-[#161F35] border-white/[0.04] cursor-not-allowed opacity-60 p-3 min-w-[280px] snap-start flex-shrink-0'
+                                    : isUnderdog
+                                    ? 'bg-[#161F35] border-[#FF6B2B]/30 cursor-pointer hover:border-[#FF6B2B]/50 hover:-translate-y-px p-4'
+                                    : 'bg-[#161F35] border-white/[0.06] cursor-pointer hover:border-white/[0.12] hover:-translate-y-px p-4',
+                            ].join(' ')}
+                        >
+                            {/* Top shine */}
+                            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
 
-                        {/* Content Area - Takes up available space */}
-                        <div className="flex-1 flex flex-col">
+                            {/* Active bet badge */}
+                            {hasActiveBet && (
+                                <div className="absolute -top-px left-3 px-2 py-0.5 rounded-b-lg bg-[#00E676]/15 border-x border-b border-[#00E676]/30 text-[#00E676] text-[9px] font-black tracking-wide">
+                                    ✓ ΠΡΟΒΛΕΨΗ ΕΝΕΡΓΗ
+                                </div>
+                            )}
+
+                            {/* Underdog badge */}
+                            {isUnderdog && (
+                                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-[#FF6B2B]/15 border border-[#FF6B2B]/30 text-[#FF6B2B] text-[9px] font-black animate-pulse">
+                                    🔥 UNDERDOG
+                                </div>
+                            )}
+
                             {match.locked ? (
-                                // Professional compact layout for locked matches
+                                /* ── LOCKED (upcoming) compact card ── */
                                 <>
-                                    {/* Header with tournament info */}
                                     <div className="flex items-center justify-between mb-2">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center space-x-2">
-                                                <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                                                <div className="text-xs font-medium text-slate-300 uppercase tracking-wide">
-                                                    {prepForUppercaseDisplay(match.tournament)}
-                                                </div>
-                                            </div>
-                                            {match.round && (
-                                                <div className="text-xs text-slate-400 font-medium ml-4">
-                                                    {match.round}
-                                                </div>
-                                            )}
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#4B5975]" />
+                                            <span className="text-[10px] font-bold text-[#4B5975] uppercase tracking-wide truncate max-w-[160px]">
+                                                {prepForUppercaseDisplay(match.tournament)}
+                                            </span>
                                         </div>
-                                        <div className="text-xs text-slate-400 font-medium">{match.time}</div>
+                                        <span className="text-[10px] text-[#4B5975]">{match.time}</span>
                                     </div>
-
-                                    {/* Player names with NTRP ratings */}
-                                    <div className="flex items-center justify-between mb-2 xs:mb-3">
-                                        <div className="text-white font-semibold text-xs xs:text-sm flex-1 min-w-0">
-                                            {match.match_type === 'doubles' ? (
-                                                renderDoublesNames(match.team1?.players)
-                                            ) : (
-                                                <div className="truncate">
-                                                    {match.player1.name.split(' ').length > 1
-                                                        ? `${match.player1.name.split(' ')[0][0]}. ${match.player1.name.split(' ').slice(1).join(' ')}`
-                                                        : match.player1.name}
-                                                </div>
-                                            )}
-                                            <div className="text-xs text-gray-400 font-medium">
-                                                {match.match_type === 'doubles' ? (
-                                                    match.team1?.players?.[0]?.ntrp_rating && match.team1?.players?.[1]?.ntrp_rating
-                                                        ? `NTRP ${((match.team1.players[0].ntrp_rating + match.team1.players[1].ntrp_rating) / 2).toFixed(1)}`
-                                                        : 'N/A'
-                                                ) : (
-                                                    `NTRP ${match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}`
-                                                )}
-                                            </div>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs font-bold text-white truncate">
+                                                {match.match_type === 'doubles'
+                                                    ? renderDoublesNames(match.team1?.players)
+                                                    : abbreviateName(match.player1.name)}
+                                            </p>
+                                            <p className="text-[10px] text-[#4B5975]">NTRP {match.player_a?.ntrp_rating?.toFixed(1) ?? '—'}</p>
                                         </div>
-                                        <div className="text-slate-500 text-xs font-bold mx-1 xs:mx-2 flex-shrink-0">VS</div>
-                                        <div className="text-white font-semibold text-xs xs:text-sm flex-1 text-right min-w-0">
-                                            {match.match_type === 'doubles' ? (
-                                                renderDoublesNames(match.team2?.players, true)
-                                            ) : (
-                                                <div className="truncate">
-                                                    {match.player2.name.split(' ').length > 1
-                                                        ? `${match.player2.name.split(' ')[0][0]}. ${match.player2.name.split(' ').slice(1).join(' ')}`
-                                                        : match.player2.name}
-                                                </div>
-                                            )}
-                                            <div className="text-xs text-gray-400 font-medium">
-                                                {match.match_type === 'doubles' ? (
-                                                    match.team2?.players?.[0]?.ntrp_rating && match.team2?.players?.[1]?.ntrp_rating
-                                                        ? `NTRP ${((match.team2.players[0].ntrp_rating + match.team2.players[1].ntrp_rating) / 2).toFixed(1)}`
-                                                        : 'N/A'
-                                                ) : (
-                                                    `NTRP ${match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}`
-                                                )}
-                                            </div>
+                                        <span className="text-[9px] font-black text-[#263354] flex-shrink-0">VS</span>
+                                        <div className="flex-1 min-w-0 text-right">
+                                            <p className="text-xs font-bold text-white truncate">
+                                                {match.match_type === 'doubles'
+                                                    ? renderDoublesNames(match.team2?.players, true)
+                                                    : abbreviateName(match.player2.name)}
+                                            </p>
+                                            <p className="text-[10px] text-[#4B5975]">NTRP {match.player_b?.ntrp_rating?.toFixed(1) ?? '—'}</p>
                                         </div>
                                     </div>
-
-                                    {/* Odds with better styling */}
-                                    <div className="flex justify-between items-center">
-                                        <div className="text-center flex-1">
-                                            <div className="text-xs xs:text-sm font-bold text-white">{match.player1.odds.toFixed(2)}</div>
-                                        </div>
-                                        <div className="text-center flex-1">
-                                            <div className="text-xs xs:text-sm font-bold text-white">{match.player2.odds.toFixed(2)}</div>
-                                        </div>
+                                    <div className="flex items-center justify-between mt-2">
+                                        <span className="text-sm font-black text-white tabular-nums">{match.player1.odds.toFixed(2)}<span className="text-[10px] text-[#4B5975] ml-0.5">×</span></span>
+                                        <span className="text-sm font-black text-white tabular-nums">{match.player2.odds.toFixed(2)}<span className="text-[10px] text-[#4B5975] ml-0.5">×</span></span>
                                     </div>
                                 </>
                             ) : (
-                                // Full layout for active matches
+                                /* ── ACTIVE (live) full card ── */
                                 <>
-                                    {/* Match Header */}
-                                    <div className="mb-2 xs:mb-3 sm:mb-4">
-                                        <div className="flex items-start justify-between mb-1">
-                                            <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2 min-w-0 flex-1">
-                                                <div className={`text-xs font-bold px-1 xs:px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border flex-shrink-0 ${match.locked
-                                                    ? 'bg-gray-600/20 text-gray-400 border-gray-600/30'
-                                                    : 'bg-red-500/20 text-red-400 border-red-500/30'
-                                                    }`}>
-                                                    {dict?.sidebar?.live || 'LIVE'}
-                                                </div>
-                                                <div className="flex flex-col min-w-0 flex-1">
-                                                    <span className="text-gray-400 text-xs xs:text-sm font-bold truncate">{match.tournament}</span>
-                                                    {match.round && (
-                                                        <span className="text-gray-500 text-xs font-medium truncate">
-                                                            {match.round}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-right flex-shrink-0 ml-2">
-                                                <div className="text-white text-xs xs:text-sm font-medium">{match.time}</div>
-                                                <div className="text-gray-400 text-xs">{new Date(match.startTime).toLocaleDateString('en-GB')}</div>
-                                            </div>
+                                    {/* Header */}
+                                    <div className="flex items-start justify-between mb-3 gap-2">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#FF4545]/12 border border-[#FF4545]/30 text-[#FF4545] text-[9px] font-black flex-shrink-0">
+                                                🔴 {dict?.sidebar?.live || 'LIVE'}
+                                            </span>
+                                            <span className="text-[#94A3B8] text-[11px] font-semibold truncate">
+                                                {match.tournament}
+                                                {match.round && <span className="text-[#4B5975]"> · {match.round}</span>}
+                                            </span>
                                         </div>
+                                        <span className="text-[#4B5975] text-[11px] tabular-nums flex-shrink-0">{match.time}</span>
                                     </div>
 
-                                    {/* Teams */}
-                                    <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
-                                        {/* Team 1 */}
-                                        <div className="flex-1 min-w-0">
-                                            {match.match_type === 'doubles' ? (
-                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words">
-                                                    {renderDoublesNames(match.team1?.players)}
-                                                </div>
-                                            ) : (
-                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">
-                                                    {match.player1.name}
-                                                </div>
-                                            )}
-                                            <div className="text-xs text-gray-400 font-medium">
-                                                {match.match_type === 'doubles' ? (
-                                                    match.team1?.players?.[0]?.ntrp_rating && match.team1?.players?.[1]?.ntrp_rating
-                                                        ? `NTRP ${((match.team1.players[0].ntrp_rating + match.team1.players[1].ntrp_rating) / 2).toFixed(1)}`
-                                                        : 'N/A'
-                                                ) : (
-                                                    `NTRP ${match.player_a?.ntrp_rating ? match.player_a.ntrp_rating.toFixed(1) : 'N/A'}`
-                                                )}
-                                            </div>
+                                    {/* Players + odds */}
+                                    <div className="flex items-stretch gap-2 flex-1">
+                                        {/* Player 1 */}
+                                        <div className="flex-1 flex flex-col items-center justify-center text-center px-2 py-3 rounded-xl bg-[#1E2A45] border border-white/[0.06] gap-1.5 min-w-0">
+                                            <span className="text-[11px] font-bold text-[#94A3B8] leading-tight w-full truncate">
+                                                {match.match_type === 'doubles'
+                                                    ? renderDoublesNames(match.team1?.players)
+                                                    : abbreviateName(match.player1.name)}
+                                            </span>
+                                            <span className="text-[9px] text-[#4B5975]">
+                                                NTRP {match.player_a?.ntrp_rating?.toFixed(1) ?? '—'}
+                                            </span>
+                                            <span className={`text-2xl font-black tabular-nums leading-none ${p1Fav ? 'text-[#38BDF8]' : 'text-[#FF6B2B]'}`}>
+                                                {match.player1.odds.toFixed(2)}
+                                                <span className="text-sm opacity-60 ml-0.5">×</span>
+                                            </span>
                                         </div>
 
                                         {/* VS */}
-                                        <div className="text-center mx-1 xs:mx-2 sm:mx-3 md:mx-4 flex-shrink-0">
-                                            <div className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-400">{dict?.sidebar?.versus || 'VS'}</div>
+                                        <div className="flex items-center justify-center w-5 flex-shrink-0">
+                                            <span className="text-[8px] font-black text-[#4B5975] tracking-[0.1em]" style={{ writingMode: 'vertical-rl' }}>VS</span>
                                         </div>
 
-                                        {/* Team 2 */}
-                                        <div className="flex-1 text-right min-w-0">
-                                            {match.match_type === 'doubles' ? (
-                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words">
-                                                    {renderDoublesNames(match.team2?.players, true)}
-                                                </div>
-                                            ) : (
-                                                <div className="text-white font-semibold text-xs xs:text-sm sm:text-base break-words leading-tight truncate">
-                                                    {match.player2.name}
-                                                </div>
-                                            )}
-                                            <div className="text-xs text-gray-400 font-medium">
-                                                {match.match_type === 'doubles' ? (
-                                                    match.team2?.players?.[0]?.ntrp_rating && match.team2?.players?.[1]?.ntrp_rating
-                                                        ? `NTRP ${((match.team2.players[0].ntrp_rating + match.team2.players[1].ntrp_rating) / 2).toFixed(1)}`
-                                                        : 'N/A'
-                                                ) : (
-                                                    `NTRP ${match.player_b?.ntrp_rating ? match.player_b.ntrp_rating.toFixed(1) : 'N/A'}`
-                                                )}
-                                            </div>
+                                        {/* Player 2 */}
+                                        <div className="flex-1 flex flex-col items-center justify-center text-center px-2 py-3 rounded-xl bg-[#1E2A45] border border-white/[0.06] gap-1.5 min-w-0">
+                                            <span className="text-[11px] font-bold text-[#94A3B8] leading-tight w-full truncate">
+                                                {match.match_type === 'doubles'
+                                                    ? renderDoublesNames(match.team2?.players, true)
+                                                    : abbreviateName(match.player2.name)}
+                                            </span>
+                                            <span className="text-[9px] text-[#4B5975]">
+                                                NTRP {match.player_b?.ntrp_rating?.toFixed(1) ?? '—'}
+                                            </span>
+                                            <span className={`text-2xl font-black tabular-nums leading-none ${!p1Fav ? 'text-[#38BDF8]' : 'text-[#FF6B2B]'}`}>
+                                                {match.player2.odds.toFixed(2)}
+                                                <span className="text-sm opacity-60 ml-0.5">×</span>
+                                            </span>
                                         </div>
                                     </div>
 
-                                    {/* Betting Odds */}
-                                    <div className="flex justify-between items-center px-1 xs:px-2">
-                                        <div className="text-center flex-1 min-w-0">
-                                            <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player1.odds.toFixed(2)}</div>
-                                        </div>
-                                        <div className="text-center flex-1 min-w-0">
-                                            <div className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-white">{match.player2.odds.toFixed(2)}</div>
-                                        </div>
-                                    </div>
+                                    {/* CTA */}
+                                    <motion.button
+                                        onClick={(e) => { e.stopPropagation(); onSelectMatch(match); }}
+                                        className="w-full mt-3 py-2.5 rounded-xl bg-[#FFD60A] text-[#080C18] font-black text-sm shadow-[0_4px_16px_rgba(255,214,10,0.25)] hover:bg-[#FFE033] active:scale-[0.98] transition-all duration-150"
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {dict?.sidebar?.makePrediction || 'Κάνε Πρόβλεψη'}
+                                    </motion.button>
                                 </>
                             )}
                         </div>
-
-                        {/* Action Button - Only for active matches */}
-                        {!match.locked && (
-                            <motion.button
-                                className={cx(
-                                    "w-full font-semibold py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-3 xs:px-4 text-xs xs:text-sm mt-2 xs:mt-3 text-white",
-                                    gradients.purple,
-                                    borders.rounded.sm,
-                                    transitions.default,
-                                    shadows.glow.purple,
-                                    "hover:scale-105 active:scale-95"
-                                )}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onSelectMatch(match);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                {dict?.sidebar?.makePrediction || 'Make your prediction'}
-                            </motion.button>
-                        )}
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );
