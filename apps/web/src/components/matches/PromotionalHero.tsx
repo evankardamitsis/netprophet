@@ -1,10 +1,10 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Match } from '@/types/dashboard';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { gradients, shadows, borders, transitions, animations, typography, cx } from '@/styles/design-system';
+import { motion } from 'framer-motion';
+import CoinIcon from '@/components/CoinIcon';
 
 interface PromotionalHeroProps {
     featuredMatches: Match[];
@@ -12,13 +12,7 @@ interface PromotionalHeroProps {
     lang: string;
 }
 
-
-
-export function PromotionalHero({
-    featuredMatches,
-    onSelectMatch,
-    lang
-}: PromotionalHeroProps) {
+export function PromotionalHero({ featuredMatches, onSelectMatch, lang }: PromotionalHeroProps) {
     const router = useRouter();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
@@ -28,140 +22,38 @@ export function PromotionalHero({
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const abbreviateName = (name: string) => {
+        const parts = name.trim().split(/\s+/);
+        if (parts.length < 2) return name;
+        return `${parts[0][0]}. ${parts.slice(1).join(' ')}`;
+    };
 
-
-
-    // Promotional content items - Mixed layout
-    const promotionalItems = [
-        // Coin packs promotion - Tennis themed (moved to first position)
-        {
-            type: 'promo',
-            id: 'coin-packs',
-            title: lang === 'el' ? 'Coin Packs' : 'Coin Packs',
-            subtitle: lang === 'el' ? 'Αγόρασε νομίσματα' : 'Buy Coins',
-            time: lang === 'el' ? 'Ειδικές προσφορές' : 'Special Offers',
-            players: [],
-            image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNGxhd3d1OTdkNWxiOXBjNzl5N2dycmxoa2M4NWl0Z3VnaHo1YjVndSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/xUPGcJaL5ODxniWMNO/giphy.gif', // Coins dropping animation
-            action: () => router.push(`/${lang}/rewards`),
-            actionText: lang === 'el' ? 'Αγόρασε' : 'Buy Now',
-            secondaryAction: null,
-            secondaryActionText: ''
-        },
-        // Featured Match 1
-        ...(featuredMatches && featuredMatches[0] ? [{
-            type: 'match',
-            id: featuredMatches[0].id,
-            title: featuredMatches[0].tournament || 'Tournament',
-            subtitle: featuredMatches[0].round || 'Match',
-            time: featuredMatches[0].time || 'TBD',
-            players: [
-                { name: featuredMatches[0].player1.name, odds: featuredMatches[0].player1.odds },
-                { name: featuredMatches[0].player2.name, odds: featuredMatches[0].player2.odds }
-            ],
-            image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop&crop=center',
-            action: () => onSelectMatch(featuredMatches[0]),
-            actionText: lang === 'el' ? 'Δες Λεπτομέρειες' : 'View Details',
-            secondaryAction: null,
-            secondaryActionText: ''
-        }] : []),
-        // Power-ups promotion - Tennis themed
-        {
-            type: 'promo',
-            id: 'power-ups',
-            title: lang === 'el' ? 'Power-ups' : 'Power-ups',
-            subtitle: lang === 'el' ? 'Βελτίωσε τις προβλέψεις σου' : 'Boost Your Predictions',
-            time: lang === 'el' ? 'Διαθέσιμα τώρα' : 'Available Now',
-            players: [],
-            image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeTYwNTQ0emJra3BoaWdkdDZsYXNpYWh1ZjJicmd0MG1pa3dlOWg0eiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/ls9hrqiE3ezVW5u7iE/giphy.gif', // Power-ups animation
-            action: () => router.push(`/${lang}/rewards`),
-            actionText: lang === 'el' ? 'Δες Power-ups' : 'View Power-ups',
-            secondaryAction: null,
-            secondaryActionText: ''
-        },
-        // Featured Match 2
-        ...(featuredMatches && featuredMatches[1] ? [{
-            type: 'match',
-            id: featuredMatches[1].id,
-            title: featuredMatches[1].tournament || 'Tournament',
-            subtitle: featuredMatches[1].round || 'Match',
-            time: featuredMatches[1].time || 'TBD',
-            players: [
-                { name: featuredMatches[1].player1.name, odds: featuredMatches[1].player1.odds },
-                { name: featuredMatches[1].player2.name, odds: featuredMatches[1].player2.odds }
-            ],
-            image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop&crop=center',
-            action: () => onSelectMatch(featuredMatches[1]),
-            actionText: lang === 'el' ? 'Δες Λεπτομέρειες' : 'View Details',
-            secondaryAction: null,
-            secondaryActionText: ''
-        }] : []),
-        // Featured Match 3
-        ...(featuredMatches && featuredMatches[2] ? [{
-            type: 'match',
-            id: featuredMatches[2].id,
-            title: featuredMatches[2].tournament || 'Tournament',
-            subtitle: featuredMatches[2].round || 'Match',
-            time: featuredMatches[2].time || 'TBD',
-            players: [
-                { name: featuredMatches[2].player1.name, odds: featuredMatches[2].player1.odds },
-                { name: featuredMatches[2].player2.name, odds: featuredMatches[2].player2.odds }
-            ],
-            image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop&crop=center',
-            action: () => onSelectMatch(featuredMatches[2]),
-            actionText: lang === 'el' ? 'Δες Λεπτομέρειες' : 'View Details',
-            secondaryAction: null,
-            secondaryActionText: ''
-        }] : []),
-        // All Tournament Results - Enhanced promotion
-        {
-            type: 'promo',
-            id: 'all-tournament-results',
-            title: lang === 'el' ? 'Όλα τα Αποτελέσματα' : 'All Tournament Results',
-            subtitle: lang === 'el' ? 'Εξερεύνησε όλες τις διοργανώσεις' : 'Explore All Tournaments',
-            time: lang === 'el' ? 'Πλήρες Ιστορικό' : 'Detailed History',
-            players: [],
-            image: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHM4ZzlyODZ2ZjZmNDJxMGRxYXAyY2liemUzdThnODJpaGVhbXc3OSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/tDQlA2505j56E2YEv8/giphy.gif', // Tennis tournament results animation
-            action: () => router.push(`/${lang}/results`),
-            actionText: lang === 'el' ? 'Όλα τα Αποτελέσματα' : 'All Results',
-            secondaryAction: null,
-            secondaryActionText: ''
-        },
-        // Player Statistics - Tennis themed
-        {
-            type: 'promo',
-            id: 'player-stats',
-            title: lang === 'el' ? 'Στατιστικά Παικτών' : 'Player Statistics',
-            subtitle: lang === 'el' ? 'Ανάλυση απόδοσης παικτών' : 'Player Performance Analysis',
-            time: lang === 'el' ? 'Λεπτομερή Στατιστικά' : 'Detailed Stats',
-            players: [],
-            image: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDRtc3JqNzd3MjFsa25meW4wNXh1Y3BsYXUyaXU4ZmQ0OXRqcHF5OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7Oifk90VrCdNe/giphy.gif', // Tennis stats animation
-            action: () => router.push(`/${lang}/players`),
-            actionText: lang === 'el' ? 'Δες Στατιστικά' : 'View Stats',
-            secondaryAction: null,
-            secondaryActionText: ''
-        }
+    const items = [
+        { type: 'coins' as const, id: 'coin-packs' },
+        ...(featuredMatches || []).slice(0, 3).map(m => ({
+            type: 'match' as const,
+            id: m.id,
+            match: m,
+        })),
     ];
 
-    // Navigation functions
+    const maxIndex = Math.max(0, items.length - cardsPerView);
+    const safeIndex = Math.min(currentIndex, maxIndex);
+
     const scrollLeft = useCallback(() => {
-        if (promotionalItems.length > cardsPerView) {
-            setCurrentIndex(prev => {
-                const maxIndex = promotionalItems.length - cardsPerView;
-                return prev > 0 ? prev - 1 : maxIndex;
-            });
-        }
-    }, [promotionalItems.length, cardsPerView]);
+        setCurrentIndex(prev => {
+            const max = Math.max(0, items.length - cardsPerView);
+            return prev > 0 ? prev - 1 : max;
+        });
+    }, [items.length, cardsPerView]);
 
     const scrollRight = useCallback(() => {
-        if (promotionalItems.length > cardsPerView) {
-            setCurrentIndex(prev => {
-                const maxIndex = promotionalItems.length - cardsPerView;
-                return prev < maxIndex ? prev + 1 : 0;
-            });
-        }
-    }, [promotionalItems.length, cardsPerView]);
+        setCurrentIndex(prev => {
+            const max = Math.max(0, items.length - cardsPerView);
+            return prev < max ? prev + 1 : 0;
+        });
+    }, [items.length, cardsPerView]);
 
-    // Drag gesture handlers
     const handleDragStart = useCallback((clientX: number) => {
         setDragStart(clientX);
         setDragOffset(0);
@@ -169,20 +61,13 @@ export function PromotionalHero({
     }, []);
 
     const handleDragMove = useCallback((clientX: number) => {
-        if (dragStart !== null) {
-            setDragOffset(clientX - dragStart);
-        }
+        if (dragStart !== null) setDragOffset(clientX - dragStart);
     }, [dragStart]);
 
     const handleDragEnd = useCallback(() => {
         if (dragStart !== null) {
-            const threshold = 50;
-            if (Math.abs(dragOffset) > threshold) {
-                if (dragOffset > 0) {
-                    scrollLeft();
-                } else {
-                    scrollRight();
-                }
+            if (Math.abs(dragOffset) > 50) {
+                dragOffset > 0 ? scrollLeft() : scrollRight();
             }
             setDragStart(null);
             setDragOffset(0);
@@ -190,89 +75,25 @@ export function PromotionalHero({
         }
     }, [dragStart, dragOffset, scrollLeft, scrollRight]);
 
-    // Responsive cards per view calculation
     useEffect(() => {
-        const updateCardsPerView = () => {
-            const width = window.innerWidth;
-            if (width >= 1536) { // 2xl
-                setCardsPerView(4);
-            } else if (width >= 1280) { // xl
-                setCardsPerView(3);
-            } else if (width >= 1024) { // lg
-                setCardsPerView(2);
-            } else {
-                setCardsPerView(1);
-            }
+        const update = () => {
+            const w = window.innerWidth;
+            setCardsPerView(w >= 1280 ? 3 : w >= 1024 ? 2 : 1);
         };
-
-        updateCardsPerView();
-        window.addEventListener('resize', updateCardsPerView);
-        return () => window.removeEventListener('resize', updateCardsPerView);
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
     }, []);
 
-    // Auto-scroll functionality
     useEffect(() => {
-        if (!isPaused && promotionalItems.length > cardsPerView) {
-            intervalRef.current = setInterval(() => {
-                setCurrentIndex((prevIndex) => {
-                    const maxIndex = promotionalItems.length - cardsPerView;
-                    return (prevIndex + 1) % (maxIndex + 1);
-                });
-            }, 4000); // Change slide every 4 seconds
+        if (!isPaused && items.length > cardsPerView) {
+            intervalRef.current = setInterval(scrollRight, 4500);
         }
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, [isPaused, promotionalItems.length, cardsPerView]);
-
-    // Remove early return to keep promo content visible even without featured matches
+        return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    }, [isPaused, items.length, cardsPerView, scrollRight]);
 
     return (
-        <div className="w-full mb-8 relative z-0">
-            {/* Navigation arrows - right aligned */}
-            {promotionalItems.length > cardsPerView && (
-                <div className="flex justify-end mb-4">
-                    {/* Desktop arrows */}
-                    <div className="hidden lg:flex gap-2">
-                        <button
-                            onClick={scrollLeft}
-                            className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-yellow-400 hover:scale-110 hover:bg-slate-700/50 rounded-full"
-                            aria-label="Scroll left"
-                        >
-                            ←
-                        </button>
-                        <button
-                            onClick={scrollRight}
-                            className="w-8 h-8 text-white flex items-center justify-center transition-all duration-200 hover:text-yellow-400 hover:scale-110 hover:bg-slate-700/50 rounded-full"
-                            aria-label="Scroll right"
-                        >
-                            →
-                        </button>
-                    </div>
-                    {/* Mobile arrows */}
-                    <div className="flex lg:hidden gap-2">
-                        <button
-                            onClick={scrollLeft}
-                            className="w-6 h-6 text-white flex items-center justify-center transition-all duration-200 hover:text-yellow-400 hover:scale-110 hover:bg-slate-700/50 rounded-full"
-                            aria-label="Scroll left"
-                        >
-                            ←
-                        </button>
-                        <button
-                            onClick={scrollRight}
-                            className="w-6 h-6 text-white flex items-center justify-center transition-all duration-200 hover:text-yellow-400 hover:scale-110 hover:bg-slate-700/50 rounded-full"
-                            aria-label="Scroll right"
-                        >
-                            →
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Carousel Container */}
+        <div className="w-full mb-8">
             <div
                 ref={containerRef}
                 className="relative overflow-hidden"
@@ -285,220 +106,191 @@ export function PromotionalHero({
                 onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
                 onTouchEnd={handleDragEnd}
             >
-                {/* Carousel Track */}
                 <motion.div
                     className="flex"
-                    animate={{ x: -(currentIndex * (100 / cardsPerView)) + '%' }}
-                    transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    animate={{ x: `${-(safeIndex * (100 / cardsPerView))}%` }}
+                    transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
                 >
-                    {promotionalItems.map((item, index) => (
+                    {items.map((item) => (
                         <div
                             key={item.id}
-                            className={`flex-shrink-0 px-2 ${cardsPerView === 1 ? 'w-full' :
-                                cardsPerView === 2 ? 'w-1/2' :
-                                    cardsPerView === 3 ? 'w-1/3' :
-                                        'w-1/4'
-                                }`}
+                            className={`flex-shrink-0 px-1.5 ${
+                                cardsPerView === 1 ? 'w-full' :
+                                cardsPerView === 2 ? 'w-1/2' : 'w-1/3'
+                            }`}
                         >
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.1 }}
-                                className="group"
-                            >
-                                {item.type === 'match' ? (
-                                    // Featured Match Card - Same height as promo cards
-                                    <div className={cx(
-                                        borders.thick,
-                                        borders.rounded.lg,
-                                        "border-yellow-400 bg-gradient-to-br from-purple-800/80 to-indigo-900/80 backdrop-blur-sm cursor-pointer group h-64 relative overflow-hidden",
-                                        shadows.glow.yellow,
-                                        transitions.default,
-                                        animations.hover.scale
-                                    )}>
-                                        {/* Featured Badge */}
-                                        <span className="absolute top-3 left-3 text-[9px] font-bold px-2 py-1 rounded-full bg-yellow-400/20 text-yellow-300 animate-pulse">
-                                            ⭐ FEATURED
-                                        </span>
-
-                                        {/* Content */}
-                                        <div className="relative z-10 h-full flex flex-col p-3 pt-12">
-                                            {/* Match Header */}
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div className="flex flex-col">
-                                                    <div className="text-yellow-400 text-xs font-bold truncate">
-                                                        {item.title}
-                                                    </div>
-                                                    {item.subtitle && item.subtitle !== 'Match' && (
-                                                        <div className="text-gray-300 text-xs truncate">
-                                                            {item.subtitle}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="text-white text-sm font-bold">
-                                                    {item.time}
-                                                </div>
-                                            </div>
-
-                                            {/* Diagonal Split Players Section */}
-                                            <div className="flex-1 relative mb-3">
-                                                {/* Player 1 - Top Left */}
-                                                <div className="absolute top-2 left-2 w-3/5 h-3/5 flex flex-col justify-center items-start">
-                                                    <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg p-3 w-full">
-                                                        <div className="text-white text-sm font-bold mb-1 leading-tight">
-                                                            {item.players[0]?.name || 'Player 1'}
-                                                        </div>
-                                                        <div className="text-yellow-400 text-xs font-bold">
-                                                            {item.players[0]?.odds.toFixed(2) || '1.19'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Player 2 - Bottom Right */}
-                                                <div className="absolute bottom-2 right-2 w-3/5 h-3/5 flex flex-col justify-center items-end">
-                                                    <div className="bg-gradient-to-br from-red-500/20 to-red-600/30 rounded-lg p-3 w-full">
-                                                        <div className="text-yellow-400 text-xs font-bold text-right mb-1">
-                                                            {item.players[1]?.odds.toFixed(2) || '17.75'}
-                                                        </div>
-                                                        <div className="text-white text-sm font-bold text-right leading-tight">
-                                                            {item.players[1]?.name || 'Player 2'}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* VS in Center */}
-                                                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                                    <div className="bg-yellow-400/20 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center">
-                                                        <span className="text-yellow-400 text-xs font-bold">VS</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Diagonal Line */}
-                                                <div className="absolute top-0 left-0 w-full h-full">
-                                                    <div className="absolute top-0 left-0 w-full h-full">
-                                                        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                                            <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="1" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-
-                                            {/* Action Button */}
-                                            <div className="flex-shrink-0">
-                                                <button
-                                                    onClick={item.action}
-                                                    className={cx(
-                                                        "w-full px-3 py-2 text-black text-xs font-bold shadow-lg",
-                                                        gradients.yellow,
-                                                        borders.rounded.sm,
-                                                        transitions.default,
-                                                        animations.hover.scaleSmall
-                                                    )}
-                                                >
-                                                    {item.actionText}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Hover Effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                    </div>
-                                ) : (
-                                    // Promotional Card - Enhanced Style
-                                    <div className={cx(
-                                        "relative overflow-hidden h-64",
-                                        borders.thick,
-                                        borders.rounded.lg,
-                                        "border-white/20 hover:border-yellow-400",
-                                        shadows.cardHover,
-                                        shadows.glow.yellow,
-                                        transitions.default,
-                                        animations.hover.scale
-                                    )}>
-                                        {item.id === 'coin-packs' ? (
-                                            // Coin Packs - Coin Pattern Image Background
-                                            <div
-                                                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                                                style={{
-                                                    backgroundImage: `url(${item.image})`,
-                                                }}
-                                            >
-                                                <div className="absolute inset-0 bg-black/60"></div>
-                                            </div>
-                                        ) : (
-                                            // Other promos - Image Background
-                                            <div
-                                                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                                                style={{
-                                                    backgroundImage: `url(${item.image})`,
-                                                }}
-                                            >
-                                                <div className="absolute inset-0 bg-black/60"></div>
-                                            </div>
-                                        )}
-
-                                        {/* Content */}
-                                        <div className="relative z-10 h-full flex flex-col p-4">
-                                            {/* Header */}
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                                                    <span className="text-black text-lg font-bold">NP</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Promo Content */}
-                                            <div className="flex-1 flex flex-col justify-center">
-                                                <div className="text-white text-2xl font-bold mb-2">
-                                                    {item.title}
-                                                </div>
-                                                <div className="text-white text-lg mb-4">
-                                                    {item.subtitle}
-                                                </div>
-                                                <div className="text-white text-sm mb-4">
-                                                    {item.time}
-                                                </div>
-                                            </div>
-
-                                            {/* Action Button */}
-                                            <div className="space-y-2">
-                                                <button
-                                                    onClick={item.action}
-                                                    className={cx(
-                                                        "w-full px-4 py-2 text-white text-sm font-semibold shadow-lg",
-                                                        gradients.blue,
-                                                        borders.rounded.sm,
-                                                        transitions.default,
-                                                        animations.hover.scaleSmall
-                                                    )}
-                                                >
-                                                    {item.actionText}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
+                            {item.type === 'coins' ? (
+                                <CoinPackCard
+                                    lang={lang}
+                                    onClick={() => router.push(`/${lang}/rewards`)}
+                                />
+                            ) : (
+                                <MatchHeroCard
+                                    match={item.match!}
+                                    onPredict={() => onSelectMatch(item.match!)}
+                                    abbreviateName={abbreviateName}
+                                    lang={lang}
+                                />
+                            )}
                         </div>
                     ))}
                 </motion.div>
-
-                {/* Carousel Indicators */}
-                {promotionalItems.length > cardsPerView && (
-                    <div className="flex justify-center mt-4 space-x-2">
-                        {Array.from({ length: promotionalItems.length - cardsPerView + 1 }).map((_, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setCurrentIndex(index)}
-                                className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentIndex
-                                    ? 'bg-yellow-400 w-8'
-                                    : 'bg-white/30 hover:bg-white/50'
-                                    }`}
-                            />
-                        ))}
-                    </div>
-                )}
             </div>
+
+            {/* Dot indicators */}
+            {items.length > cardsPerView && (
+                <div className="flex items-center justify-center gap-1.5 mt-3">
+                    {Array.from({ length: maxIndex + 1 }).map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentIndex(i)}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                                i === safeIndex
+                                    ? 'w-6 bg-[#FFD60A]'
+                                    : 'w-1.5 bg-white/20 hover:bg-white/40'
+                            }`}
+                            aria-label={`Slide ${i + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* ── Coin Pack monetization card ── */
+function CoinPackCard({ lang, onClick }: { lang: string; onClick: () => void }) {
+    return (
+        <div
+            onClick={onClick}
+            className="relative overflow-hidden rounded-2xl border border-[#FFD60A]/25 bg-[#161F35] cursor-pointer group h-[200px] flex flex-col p-4 hover:border-[#FFD60A]/45 hover:-translate-y-px transition-all duration-150"
+        >
+            {/* Top shine */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD60A]/20 to-transparent" />
+            {/* Corner glow */}
+            <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#FFD60A]/08 blur-2xl pointer-events-none" />
+
+            {/* Badge */}
+            <div className="mb-auto">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FFD60A]/10 border border-[#FFD60A]/30 text-[#FFD60A] text-[10px] font-black tracking-wide">
+                    <CoinIcon size={12} /> ΝΟΜΙΣΜΑΤΑ
+                </span>
+            </div>
+
+            {/* Body */}
+            <div className="flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                    <p className="text-white font-black text-xl leading-tight">
+                        Αγόρασε<br />Νομίσματα
+                    </p>
+                    <p className="text-[#94A3B8] text-[12px] mt-1 leading-snug">
+                        Κάνε προβλέψεις &amp; ανέβα στην κατάταξη
+                    </p>
+                    <p className="text-[#FFD60A] text-[11px] font-bold mt-1 flex items-center gap-1">
+                        Από €1,99 · 500 <CoinIcon size={13} />
+                    </p>
+                </div>
+                <div className="flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                    <CoinIcon size={56} />
+                </div>
+            </div>
+
+            {/* CTA */}
+            <button
+                onClick={(e) => { e.stopPropagation(); onClick(); }}
+                className="w-full mt-3 py-2.5 rounded-xl bg-[#FFD60A] text-[#080C18] font-black text-sm shadow-[0_4px_16px_rgba(255,214,10,0.25)] hover:bg-[#FFE033] active:scale-[0.98] transition-all duration-150"
+            >
+                {lang === 'el' ? 'Αγόρασε Τώρα' : 'Buy Now'}
+            </button>
+        </div>
+    );
+}
+
+/* ── Featured match card ── */
+function MatchHeroCard({
+    match,
+    onPredict,
+    abbreviateName,
+    lang,
+}: {
+    match: Match;
+    onPredict: () => void;
+    abbreviateName: (name: string) => string;
+    lang: string;
+}) {
+    const p1Fav = match.player1.odds <= match.player2.odds;
+    const isLive = match.status === 'live' || match.status === 'in_progress';
+
+    return (
+        <div
+            onClick={onPredict}
+            className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#161F35] h-[200px] flex flex-col p-4 hover:border-white/[0.12] hover:-translate-y-px transition-all duration-150 cursor-pointer"
+        >
+            {/* Top shine */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-1.5 min-w-0">
+                    {isLive && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-[#FF4545]/12 border border-[#FF4545]/30 text-[#FF4545] text-[9px] font-black flex-shrink-0">
+                            🔴 LIVE
+                        </span>
+                    )}
+                    <span className="text-[#94A3B8] text-[11px] font-semibold truncate">
+                        {match.tournament}
+                        {match.round && (
+                            <span className="text-[#4B5975]"> · {match.round}</span>
+                        )}
+                    </span>
+                </div>
+                <span className="text-[#4B5975] text-[11px] tabular-nums flex-shrink-0">
+                    {match.time}
+                </span>
+            </div>
+
+            {/* Odds panels */}
+            <div className="flex items-stretch gap-2 flex-1">
+                {/* Player 1 */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center px-2 py-2 rounded-xl bg-[#1E2A45] border border-white/[0.06] gap-1 min-w-0">
+                    <span className="text-[10px] font-bold text-[#94A3B8] leading-tight w-full truncate">
+                        {abbreviateName(match.player1.name)}
+                    </span>
+                    <span className={`text-2xl font-black tabular-nums leading-none ${p1Fav ? 'text-[#38BDF8]' : 'text-[#FF6B2B]'}`}>
+                        {match.player1.odds.toFixed(2)}
+                        <span className="text-sm opacity-60 ml-0.5">×</span>
+                    </span>
+                </div>
+
+                {/* VS */}
+                <div className="flex items-center justify-center w-5 flex-shrink-0">
+                    <span
+                        className="text-[8px] font-black text-[#4B5975] tracking-[0.1em]"
+                        style={{ writingMode: 'vertical-rl' }}
+                    >
+                        VS
+                    </span>
+                </div>
+
+                {/* Player 2 */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center px-2 py-2 rounded-xl bg-[#1E2A45] border border-white/[0.06] gap-1 min-w-0">
+                    <span className="text-[10px] font-bold text-[#94A3B8] leading-tight w-full truncate">
+                        {abbreviateName(match.player2.name)}
+                    </span>
+                    <span className={`text-2xl font-black tabular-nums leading-none ${!p1Fav ? 'text-[#38BDF8]' : 'text-[#FF6B2B]'}`}>
+                        {match.player2.odds.toFixed(2)}
+                        <span className="text-sm opacity-60 ml-0.5">×</span>
+                    </span>
+                </div>
+            </div>
+
+            {/* CTA */}
+            <button
+                onClick={(e) => { e.stopPropagation(); onPredict(); }}
+                className="w-full mt-3 py-2 rounded-xl bg-[#FFD60A] text-[#080C18] font-black text-sm shadow-[0_4px_16px_rgba(255,214,10,0.25)] hover:bg-[#FFE033] active:scale-[0.98] transition-all duration-150"
+            >
+                {lang === 'el' ? 'Κάνε Πρόβλεψη' : 'Make a Prediction'}
+            </button>
         </div>
     );
 }
