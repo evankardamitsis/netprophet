@@ -386,9 +386,27 @@ async function handlePlaceBet(supabase: any, user: any, body: any) {
   // Get updated balance
   const { data: updatedProfile } = await supabase
     .from("profiles")
-    .select("balance")
+    .select("balance, email")
     .eq("id", user.id)
     .single();
+
+  // MailerLite: sync balance after stake (non-blocking)
+  if (updatedProfile?.email) {
+    const today = new Date().toISOString().slice(0, 10);
+    supabase
+      .rpc("queue_mailerlite_action", {
+        p_action: "update_fields",
+        p_email: updatedProfile.email,
+        p_user_id: user.id,
+        p_fields: {
+          coin_balance: updatedProfile.balance ?? 0,
+          last_prediction_date: today,
+        },
+      })
+      .then(({ error }) => {
+        if (error) console.warn("[mailerlite] place_bet queue:", error.message);
+      });
+  }
 
   return new Response(
     JSON.stringify({

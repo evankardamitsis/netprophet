@@ -124,3 +124,23 @@ export type {
   MailerLiteSubscriber,
   MailerLiteWorkflow,
 } from "./supabase/mailerliteService";
+export {
+  upsertSubscriber,
+  updateSubscriberFields,
+  addToGroup,
+  removeFromGroup,
+  addToGroupByKey,
+  removeFromGroupByKey,
+  bulkAddToGroup,
+  bulkRemoveFromGroup,
+  bulkAddToGroupByKey,
+  bulkRemoveFromGroupByKey,
+  fireAndForget,
+  formatMailerLiteDate,
+  resolveGroupId,
+  resolveGroupIds,
+} from "./services/mailerlite";
+export type {
+  MailerLiteGroupKey,
+  SubscriberFields,
+} from "./services/mailerlite";

@@ -1,9 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  addToGroup,
+  addToGroupByKey,
+  bulkAddToGroup,
+  bulkRemoveFromGroup,
+  parseFieldsJson,
+  removeFromGroup,
+  removeFromGroupByKey,
+  resolveGroupId,
+  updateSubscriberFields,
+  upsertSubscriber,
+} from "../_shared/mailerlite.ts";
 
-const MAILERLITE_API_KEY = Deno.env.get("MAILERLITE_API_KEY");
-const MAILERLITE_GROUP_ID = Deno.env.get("MAILERLITE_GROUP_ID") || "users";
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
+const DEFAULT_GROUP = Deno.env.get("MAILERLITE_GROUP_ID");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,218 +22,211 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-/**
- * MailerLite Queue Processor Edge Function
- *
- * This function processes pending MailerLite subscriptions from the queue.
- * It can be called via:
- * 1. Cron job (every 5 minutes)
- * 2. Database webhook (on mailerlite_logs INSERT)
- *
- * Purpose:
- * - Process pending MailerLite subscriptions
- * - Retry failed subscriptions
- * - Keep transactional emails (Resend) completely separate
- */
+type QueueRow = {
+  id: string;
+  email: string | null;
+  name: string | null;
+  action: string;
+  fields: Record<string, unknown> | null;
+  groups: string[] | null;
+  group_keys: string[] | null;
+  group_id: string | null;
+  bulk_emails: string[] | null;
+  execute_after: string | null;
+  remove_after: string | null;
+};
+
+async function processJob(row: QueueRow): Promise<void> {
+  const action = row.action || "upsert";
+  const fields = parseFieldsJson(row.fields);
+
+  switch (action) {
+    case "upsert": {
+      const groupIds = [...(row.groups ?? [])];
+      if (DEFAULT_GROUP) groupIds.push(DEFAULT_GROUP);
+      await upsertSubscriber({
+        email: row.email!,
+        name: row.name ?? undefined,
+        fields,
+        groupIds,
+        groupKeys: row.group_keys ?? undefined,
+      });
+      break;
+    }
+    case "update_fields":
+      await updateSubscriberFields(row.email!, fields);
+      break;
+    case "add_group": {
+      if (row.group_id) {
+        await addToGroup(row.email!, row.group_id);
+      }
+      for (const key of row.group_keys ?? []) {
+        await addToGroupByKey(row.email!, key);
+      }
+      break;
+    }
+    case "remove_group": {
+      if (row.group_id) {
+        await removeFromGroup(row.email!, row.group_id);
+      }
+      for (const key of row.group_keys ?? []) {
+        await removeFromGroupByKey(row.email!, key);
+      }
+      break;
+    }
+    case "bulk_add_group": {
+      const gid =
+        row.group_id ??
+        (row.group_keys?.[0] ? resolveGroupId(row.group_keys[0]) : undefined);
+      if (gid && row.bulk_emails?.length) {
+        await bulkAddToGroup(row.bulk_emails, gid);
+      }
+      break;
+    }
+    case "bulk_remove_group": {
+      const gid =
+        row.group_id ??
+        (row.group_keys?.[0] ? resolveGroupId(row.group_keys[0]) : undefined);
+      if (gid && row.bulk_emails?.length) {
+        await bulkRemoveFromGroup(row.bulk_emails, gid);
+      }
+      break;
+    }
+    default:
+      throw new Error(`Unknown mailerlite action: ${action}`);
+  }
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Verify cron secret for security
-  // Note: If using Supabase Edge Function webhook type, authentication is handled automatically
-  // CRON_SECRET is only needed for HTTP Request webhook type or manual cron triggers
   const authHeader = req.headers.get("Authorization");
-  if (CRON_SECRET) {
-    // If CRON_SECRET is set, require it
-    if (authHeader !== `Bearer ${CRON_SECRET}`) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-  } else {
-    // If no CRON_SECRET is set, allow but log info (this is fine for Supabase Edge Function webhooks)
-    console.log(
-      "CRON_SECRET not set - allowing request (OK if using Supabase Edge Function webhook type)"
-    );
+  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
-    if (!MAILERLITE_API_KEY) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "MAILERLITE_API_KEY not configured",
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const now = new Date().toISOString();
 
-    // Get pending MailerLite subscriptions (limit to 50 per run)
-    const { data: pendingSubscriptions, error: fetchError } = await supabase
+    // Process delayed removals first
+    const { data: dueRemovals } = await supabase
       .from("mailerlite_logs")
       .select("*")
       .eq("status", "pending")
-      .order("created_at", { ascending: true })
-      .limit(50);
+      .eq("action", "bulk_remove_group")
+      .lte("execute_after", now)
+      .limit(20);
 
-    if (fetchError) {
-      throw new Error(
-        `Failed to fetch pending subscriptions: ${fetchError.message}`
-      );
-    }
-
-    if (!pendingSubscriptions || pendingSubscriptions.length === 0) {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "No pending subscriptions to process",
-          processed: 0,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    let successCount = 0;
-    let failureCount = 0;
-
-    // Process each pending subscription
-    for (const subscription of pendingSubscriptions) {
+    for (const row of dueRemovals ?? []) {
       try {
-        // Prepare subscriber data for MailerLite
-        const subscriberData: any = {
-          email: subscription.email,
-          status: "active",
-        };
-
-        // Add name if provided
-        if (subscription.name) {
-          const nameParts = subscription.name.split(" ");
-          subscriberData.fields = {
-            name: subscription.name,
-            first_name: nameParts[0] || "",
-            last_name: nameParts.slice(1).join(" ") || "",
-          };
-        }
-
-        // Add groups to subscriber data if specified (preferred method)
-        // MailerLite API requires group IDs as numbers, not strings
-        const groupsToAdd: number[] = [];
-        if (MAILERLITE_GROUP_ID) {
-          // Convert to number if it's a string
-          const groupIdNum = typeof MAILERLITE_GROUP_ID === 'string' 
-            ? parseInt(MAILERLITE_GROUP_ID, 10) 
-            : MAILERLITE_GROUP_ID;
-          if (!isNaN(groupIdNum)) {
-            groupsToAdd.push(groupIdNum);
-          }
-        }
-        if (subscription.groups && Array.isArray(subscription.groups) && subscription.groups.length > 0) {
-          // Convert all group IDs to numbers
-          for (const groupId of subscription.groups) {
-            const groupIdNum = typeof groupId === 'string' 
-              ? parseInt(groupId, 10) 
-              : groupId;
-            if (!isNaN(groupIdNum)) {
-              groupsToAdd.push(groupIdNum);
-            }
-          }
-        }
-        if (groupsToAdd.length > 0) {
-          subscriberData.groups = groupsToAdd;
-        }
-
-        // Add subscriber to MailerLite
-        const mailerLiteUrl = `https://connect.mailerlite.com/api/subscribers`;
-        const response = await fetch(mailerLiteUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${MAILERLITE_API_KEY}`,
-            Accept: "application/json",
-          },
-          body: JSON.stringify(subscriberData),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(
-            `MailerLite API error: ${response.status} - ${errorText}`
-          );
-        }
-
-        const mailerLiteData = await response.json();
-
-        // Note: Groups are now included in the initial subscriber creation above
-        // This is the preferred method and avoids the 404 error
-        // If groups weren't included (e.g., for existing subscribers), we could add them here
-        // but since we're creating new subscribers, groups are already handled
-
-        // Update log with success
+        await processJob(row as QueueRow);
         await supabase
           .from("mailerlite_logs")
           .update({
             status: "success",
-            mailerlite_id: mailerLiteData.data.id,
-            processed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            processed_at: now,
+            updated_at: now,
           })
-          .eq("id", subscription.id);
-
-        successCount++;
-      } catch (error) {
-        console.error(
-          `Error processing subscription ${subscription.id}:`,
-          error
-        );
-
-        // Update log with failure
+          .eq("id", row.id);
+      } catch (e) {
         await supabase
           .from("mailerlite_logs")
           .update({
             status: "failed",
-            error_message: error.message,
-            processed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            error_message: (e as Error).message,
+            processed_at: now,
+            updated_at: now,
           })
-          .eq("id", subscription.id);
+          .eq("id", row.id);
+      }
+    }
 
-        failureCount++;
+    const { data: pending, error: fetchError } = await supabase
+      .from("mailerlite_logs")
+      .select("*")
+      .eq("status", "pending")
+      .or(`execute_after.is.null,execute_after.lte.${now}`)
+      .neq("action", "bulk_remove_group")
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    if (fetchError) throw fetchError;
+
+    if (!pending?.length) {
+      return new Response(
+        JSON.stringify({ success: true, processed: 0, message: "Queue empty" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let ok = 0;
+    let fail = 0;
+
+    for (const row of pending) {
+      try {
+        await processJob(row as QueueRow);
+
+        // Schedule follow-up removal if remove_after set
+        if (row.remove_after && row.bulk_emails?.length) {
+          const removeGroupKey = row.group_keys?.[0] ?? null;
+          await supabase.from("mailerlite_logs").insert({
+            email: null,
+            status: "pending",
+            action: "bulk_remove_group",
+            bulk_emails: row.bulk_emails,
+            group_keys: removeGroupKey ? [removeGroupKey] : null,
+            group_id: row.group_id,
+            execute_after: row.remove_after,
+          });
+        }
+
+        await supabase
+          .from("mailerlite_logs")
+          .update({
+            status: "success",
+            processed_at: now,
+            updated_at: now,
+          })
+          .eq("id", row.id);
+        ok++;
+      } catch (e) {
+        console.error(`Job ${row.id} failed:`, e);
+        await supabase
+          .from("mailerlite_logs")
+          .update({
+            status: "failed",
+            error_message: (e as Error).message,
+            processed_at: now,
+            updated_at: now,
+          })
+          .eq("id", row.id);
+        fail++;
       }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Processed MailerLite queue",
-        processed: successCount + failureCount,
-        successful: successCount,
-        failed: failureCount,
+        processed: ok + fail,
+        successful: ok,
+        failed: fail,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in mailerlite-process-queue:", error);
+    console.error("mailerlite-process-queue:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || "Failed to process MailerLite queue",
-      }),
+      JSON.stringify({ success: false, error: (error as Error).message }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

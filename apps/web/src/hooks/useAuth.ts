@@ -68,8 +68,10 @@ const setupAuthListener = () => {
       if (event === "SIGNED_IN" && session) {
         globalSession = session;
         globalUser = session.user;
-        // Note: Removed automatic player lookup to allow notification system to work
-        // checkPlayerLookup(session.user.id);
+        // MailerLite: update last_login_date (non-blocking)
+        supabase.rpc("queue_mailerlite_login_sync").then(({ error }) => {
+          if (error) console.warn("[mailerlite] login sync:", error.message);
+        });
       } else if (event === "SIGNED_OUT") {
         globalSession = null;
         globalUser = null;

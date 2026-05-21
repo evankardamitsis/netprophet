@@ -80,6 +80,10 @@ export default function TournamentsPage() {
             setShowTournamentForm(false);
             loadTournaments();
             toast.success('Tournament created successfully!');
+            // Fire-and-forget MailerLite tournament announcement
+            fetch('/api/admin/mailerlite/tournament', { method: 'POST' }).catch((err) =>
+                console.warn('MailerLite tournament blast failed:', err)
+            );
         } catch (error) {
             console.error('Error creating tournament:', error);
             toast.error('Failed to create tournament');

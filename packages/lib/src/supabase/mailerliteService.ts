@@ -1,27 +1,15 @@
 import { supabase } from "./client";
+import type { MailerLiteGroupKey, SubscriberFields } from "../services/mailerlite";
 
 /**
- * MailerLite Service
- *
- * This service handles MailerLite integration for automated marketing workflows.
- * It is completely separate from the transactional email system (Resend).
- *
- * Use cases:
- * - Welcome email automation workflows
- * - Onboarding sequences
- * - Marketing campaigns
- * - Newsletter management
- *
- * Note: Transactional emails (2FA, winnings, admin alerts) still use Resend.
+ * MailerLite client wrapper — queues jobs for mailerlite-process-queue Edge Function.
+ * Transactional emails (win/lose) remain on Resend.
  */
 
 export interface MailerLiteSubscriber {
   email: string;
   name?: string;
-  fields?: {
-    name?: string;
-    first_name?: string;
-  };
+  fields?: Record<string, unknown>;
   status?: "active" | "unsubscribed" | "bounced" | "junk";
   groups?: string[];
 }
@@ -32,139 +20,94 @@ export interface MailerLiteWorkflow {
   type: "welcome" | "onboarding" | "campaign";
 }
 
-export class MailerLiteService {
-  private supabase;
-
-  constructor() {
-    this.supabase = supabase;
-  }
-
-  /**
-   * Add subscriber to MailerLite
-   * This triggers automated workflows (welcome, onboarding)
-   */
-  async addSubscriber(
-    email: string,
-    name?: string,
-    groups?: string[]
-  ): Promise<boolean> {
-    try {
-      // Call Supabase Edge Function to add subscriber to MailerLite
-      const { data, error } = await this.supabase.functions.invoke(
-        "mailerlite-subscribe",
-        {
-          body: {
-            email,
-            name,
-            groups: groups || ["users"], // Default to 'users' group
-          },
-        }
-      );
-
-      if (error) throw error;
-      return data?.success || false;
-    } catch (error) {
-      console.error("Error adding subscriber to MailerLite:", error);
-      // Don't throw - MailerLite failures shouldn't block user registration
-      return false;
-    }
-  }
-
-  /**
-   * Trigger a specific workflow for a subscriber
-   */
-  async triggerWorkflow(email: string, workflowId: string): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabase.functions.invoke(
-        "mailerlite-trigger-workflow",
-        {
-          body: {
-            email,
-            workflow_id: workflowId,
-          },
-        }
-      );
-
-      if (error) throw error;
-      return data?.success || false;
-    } catch (error) {
-      console.error("Error triggering MailerLite workflow:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Update subscriber information in MailerLite
-   */
-  async updateSubscriber(
-    email: string,
-    fields: Record<string, any>
-  ): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabase.functions.invoke(
-        "mailerlite-update-subscriber",
-        {
-          body: {
-            email,
-            fields,
-          },
-        }
-      );
-
-      if (error) throw error;
-      return data?.success || false;
-    } catch (error) {
-      console.error("Error updating MailerLite subscriber:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Add subscriber to a specific group
-   */
-  async addToGroup(email: string, groupId: string): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabase.functions.invoke(
-        "mailerlite-add-to-group",
-        {
-          body: {
-            email,
-            group_id: groupId,
-          },
-        }
-      );
-
-      if (error) throw error;
-      return data?.success || false;
-    } catch (error) {
-      console.error("Error adding subscriber to MailerLite group:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Remove subscriber from a group
-   */
-  async removeFromGroup(email: string, groupId: string): Promise<boolean> {
-    try {
-      const { data, error } = await this.supabase.functions.invoke(
-        "mailerlite-remove-from-group",
-        {
-          body: {
-            email,
-            group_id: groupId,
-          },
-        }
-      );
-
-      if (error) throw error;
-      return data?.success || false;
-    } catch (error) {
-      console.error("Error removing subscriber from MailerLite group:", error);
-      return false;
-    }
+async function queueAction(params: {
+  action: string;
+  email?: string;
+  userId?: string;
+  name?: string;
+  fields?: Partial<SubscriberFields>;
+  groupKeys?: MailerLiteGroupKey[];
+  groupId?: string;
+  bulkEmails?: string[];
+  executeAfter?: string;
+  removeAfter?: string;
+}): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc("queue_mailerlite_action", {
+      p_action: params.action,
+      p_email: params.email ?? null,
+      p_user_id: params.userId ?? null,
+      p_name: params.name ?? null,
+      p_fields: params.fields ?? null,
+      p_group_keys: params.groupKeys ?? null,
+      p_group_id: params.groupId ?? null,
+      p_bulk_emails: params.bulkEmails ?? null,
+      p_execute_after: params.executeAfter ?? null,
+      p_remove_after: params.removeAfter ?? null,
+    });
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error("[MailerLiteService] queue failed:", error);
+    return false;
   }
 }
 
-// Export singleton instance
+export class MailerLiteService {
+  async addSubscriber(
+    email: string,
+    name?: string,
+    groups?: string[],
+    groupKeys?: MailerLiteGroupKey[]
+  ): Promise<boolean> {
+    return queueAction({
+      action: "upsert",
+      email,
+      name,
+      fields: {
+        coin_balance: 100,
+        last_login_date: new Date().toISOString().slice(0, 10),
+      },
+      groupKeys: groupKeys ?? ["NEW_USERS"],
+    });
+  }
+
+  async updateSubscriber(
+    email: string,
+    fields: Partial<SubscriberFields>
+  ): Promise<boolean> {
+    return queueAction({ action: "update_fields", email, fields });
+  }
+
+  async addToGroup(
+    email: string,
+    groupKey: MailerLiteGroupKey
+  ): Promise<boolean> {
+    return queueAction({
+      action: "add_group",
+      email,
+      groupKeys: [groupKey],
+    });
+  }
+
+  async removeFromGroup(
+    email: string,
+    groupKey: MailerLiteGroupKey
+  ): Promise<boolean> {
+    return queueAction({
+      action: "remove_group",
+      email,
+      groupKeys: [groupKey],
+    });
+  }
+
+  /** @deprecated Use addToGroup with MailerLiteGroupKey */
+  async triggerWorkflow(_email: string, _workflowId: string): Promise<boolean> {
+    console.warn(
+      "[MailerLiteService] triggerWorkflow is deprecated; use group-based automations"
+    );
+    return false;
+  }
+}
+
 export const mailerLiteService = new MailerLiteService();
