@@ -64,6 +64,10 @@ export const dailyCss = `
   box-shadow:0 5px 0 ${colour.emberShadow};
 }
 .np-cta:active{transform:translateY(3px);box-shadow:none}
+.np-cta.is-win{
+  color:${colour.onGood};background:${ambience.ctaGood};
+  box-shadow:0 5px 0 ${colour.goodShadow};
+}
 .np-cta:disabled{
   background:${colour.mute};color:${colour.muteInk};
   box-shadow:0 5px 0 ${colour.muteShadow};pointer-events:none;
@@ -395,6 +399,24 @@ export const dailyCss = `
 }
 .np-ttc.is-sel{border-color:${colour.ember2}}
 
+/* rapid round */
+.np-timer{
+  height:6px;border-radius:${radius.pill};background:${surface.celeBarTrack};
+  overflow:hidden;margin-bottom:14px;
+}
+.np-timer i{
+  display:block;height:100%;background:${ambience.progress};transition:width 1s linear;
+}
+.np-timer.is-urgent i{background:${colour.bad}}
+.np-tally{display:flex;gap:5px;margin-bottom:14px}
+.np-tally i{width:26px;height:5px;border-radius:${radius.pill};background:${surface.track}}
+.np-tally i.w{background:${colour.good}}
+.np-tally i.l{background:${colour.bad}}
+.np-rapid-q{
+  font-weight:900;font-size:clamp(24px,6.8vw,30px);line-height:1.02;
+  margin-bottom:18px;min-height:96px;
+}
+
 /* feedback sheet */
 .np-fb{
   position:fixed;left:0;right:0;bottom:0;z-index:9;
@@ -635,6 +657,7 @@ export const dailyCss = `
   .np-pcard{padding:26px 18px}
   .np-pcard .np-nm{font-size:22px}
   .np-tt{height:300px}
+  .np-rapid-q{font-size:38px;min-height:0}
   .np-fb{max-width:1120px;padding:28px 48px calc(32px + env(safe-area-inset-bottom))}
   .np-choice3{max-width:560px}
   .np-fb .np-cta{max-width:340px}

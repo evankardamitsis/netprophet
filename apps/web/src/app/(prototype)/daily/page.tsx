@@ -5,6 +5,7 @@ import { CardStage } from '@/components/daily/CardStage';
 import { Celebration, type CelebrationSpec } from '@/components/daily/Celebration';
 import { FeedbackSheet, type FeedbackMood } from '@/components/daily/FeedbackSheet';
 import { Hub } from '@/components/daily/Hub';
+import { RapidRound } from '@/components/daily/RapidRound';
 import { Onboarding } from '@/components/daily/Onboarding';
 import { Portrait } from '@/components/daily/Portrait';
 import { RunHeader } from '@/components/daily/RunHeader';
@@ -94,7 +95,7 @@ function confirmLabel(card: GameCard, draft: Draft): string {
     return `Διάλεξε ${left} ακόμα`;
 }
 
-type Screen = 'hub' | 'run';
+type Screen = 'hub' | 'run' | 'bonus';
 
 export default function DailyPage() {
     const [state, setState] = useState<DailyState | null>(null);
@@ -144,6 +145,17 @@ export default function DailyPage() {
         setScreen('hub');
     }, []);
 
+    // The bonus round has no streak, no combo and no cards to mark seen — it
+    // only ever adds points, and only once a day.
+    const finishBonus = useCallback((earned: number) => {
+        const base = loadDailyState();
+        setState(patchDailyState({
+            totalPoints: base.totalPoints + earned,
+            bonusPlayedOn: today(),
+        }));
+        setScreen('hub');
+    }, []);
+
     // Nothing renders until local state is read, so server and client agree.
     if (state === null) return <div className="np-stage" />;
 
@@ -163,6 +175,8 @@ export default function DailyPage() {
         <div className="np-stage">
             {screen === 'run' ? (
                 <Run state={state} onFinish={finishRun} />
+            ) : screen === 'bonus' ? (
+                <RapidRound streak={state.streak} onFinish={finishBonus} />
             ) : (
                 <Hub
                     state={state}
@@ -171,6 +185,7 @@ export default function DailyPage() {
                         setState(next);
                     }}
                     onStart={() => setScreen('run')}
+                    onStartBonus={() => setScreen('bonus')}
                 />
             )}
         </div>

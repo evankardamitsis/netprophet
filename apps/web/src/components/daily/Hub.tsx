@@ -13,8 +13,9 @@ import {
 import { colour, radius, surface } from '@/lib/daily/tokens';
 import type { BoardRow } from '@/lib/daily/providers/mock';
 import type { PlayerRef } from '@/lib/daily/types';
+import { RAPID_STREAK } from '@/lib/daily/generators/rapid';
 import {
-    patchDailyState, playedToday, type DailyState,
+    patchDailyState, playedToday, today as todayISO, type DailyState,
 } from '@/lib/daily/storage';
 
 // Four tabs behind one nav, plus a player page hanging off Παίκτες. Nothing
@@ -56,11 +57,12 @@ function accuracy(state: DailyState): string {
 }
 
 export function Hub({
-    state, onState, onStart,
+    state, onState, onStart, onStartBonus,
 }: {
     state: DailyState;
     onState: (next: DailyState) => void;
     onStart: () => void;
+    onStartBonus: () => void;
 }) {
     const [tab, setTab] = useState<Tab>('today');
     const [openPlayer, setOpenPlayer] = useState<string | null>(null);
@@ -97,6 +99,7 @@ export function Hub({
                             state={state}
                             onState={onState}
                             onStart={onStart}
+                            onStartBonus={onStartBonus}
                             onCelebrate={setParty}
                             onOpenPlayer={setOpenPlayer}
                         />
@@ -133,11 +136,12 @@ export function Hub({
 /* ================= Σήμερα ================= */
 
 function Today({
-    state, onState, onStart, onCelebrate, onOpenPlayer,
+    state, onState, onStart, onStartBonus, onCelebrate, onOpenPlayer,
 }: {
     state: DailyState;
     onState: (next: DailyState) => void;
     onStart: () => void;
+    onStartBonus: () => void;
     onCelebrate: (spec: CelebrationSpec) => void;
     onOpenPlayer: (id: string) => void;
 }) {
@@ -150,6 +154,10 @@ function Today({
         .map(getPlayer)
         .filter((p): p is PlayerRef => Boolean(p));
     const resolved = state.resolvedIds.includes(PENDING_RESOLVE.id);
+    // Earned by the streak, unlocked by finishing today's run, once a day.
+    const bonusOpen = done
+        && state.streak >= RAPID_STREAK
+        && state.bonusPlayedOn !== todayISO();
 
     const today = greekCaps(
         new Date().toLocaleDateString('el-GR', {
@@ -193,6 +201,26 @@ function Today({
                         {done ? 'Ολοκληρώθηκε' : 'Παίξε τώρα'}
                     </button>
                 </section>
+
+                {bonusOpen && (
+                    <div className="np-crd is-bonus" style={{ marginTop: 12 }}>
+                        <div className="np-t1">
+                            <b>Γρήγορος γύρος</b>
+                            <span style={{ color: colour.good }}>ΞΕΚΛΕΙΔΩΘΗΚΕ</span>
+                        </div>
+                        <div className="np-t2" style={{ marginBottom: 11 }}>
+                            Το κέρδισες με σερί {RAPID_STREAK}+ ημερών. Πέντε ερωτήσεις σε 18
+                            δευτερόλεπτα.
+                        </div>
+                        <button
+                            type="button"
+                            className="np-cta is-win"
+                            onClick={() => { haptics.lock(); onStartBonus(); }}
+                        >
+                            Παίξε τον γύρο
+                        </button>
+                    </div>
+                )}
 
                 <div className="np-section-title">ΣΕ ΑΝΑΜΟΝΗ</div>
                 {!resolved && (

@@ -20,6 +20,8 @@ export interface DailyState {
     haptics: boolean;
     /** pending predictions the tester has already uncovered on the hub */
     resolvedIds: string[];
+    /** the bonus round is once a day, like the run itself */
+    bonusPlayedOn: string | null;
     history: { date: string; points: number; correct: number; total: number }[];
 }
 
@@ -37,6 +39,7 @@ export function defaultDailyState(): DailyState {
         shield: false,
         haptics: true,
         resolvedIds: [],
+        bonusPlayedOn: null,
         history: [],
     };
 }

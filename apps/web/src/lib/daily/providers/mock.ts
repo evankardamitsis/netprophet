@@ -91,6 +91,22 @@ export const DOUBLE_UP_QUESTIONS: DoubleUpQuestion[] = [
     },
 ];
 
+/**
+ * The Γρήγορος γύρος: five true/false calls against the clock. Everything here
+ * is answerable from the roster above, which is the point — it rewards having
+ * actually read the players.
+ */
+export const RAPID_QUESTIONS: { question: string; correctIndex: number }[] = [
+    { question: 'Ο Γεωργίου είναι αριστερόχειρας.', correctIndex: 1 },
+    {
+        question: 'Ο Καραμάνος έχει καλύτερο ποσοστό σε σκληρό απ’ ό,τι σε χώμα.',
+        correctIndex: 0,
+    },
+    { question: 'Ο Παππάς είναι ο νεότερος της πεντάδας.', correctIndex: 1 },
+    { question: 'Ο Σταύρου έχει ενεργό σερί νικών.', correctIndex: 0 },
+    { question: 'Ο ΑΟ Κηφισιάς έχει δύο παίκτες στην πεντάδα.', correctIndex: 1 },
+];
+
 /* ---------- hub content ---------- */
 
 /** The Saturday double, waiting under foil on the Σήμερα tab. */
