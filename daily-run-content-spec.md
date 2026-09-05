@@ -25,8 +25,8 @@ Checked against `packages/lib/src/types/database.ts` and the migrations.
 | Source | What it gives you |
 |---|---|
 | `players` | `ntrp_rating`, `wins/losses`, `last5`, `current_streak`, `streak_type`, `surface_win_rates` (Hard/Clay/Grass with per-surface wins/losses/matches), `age`, `hand`, `aggressiveness`, `stamina`, `consistency`, `injury_status`, `seasonal_form`, `last_match_date`, `photo_url`, plus the doubles mirror |
-| `matches` | both players, `tournament_id`, `category_id`, `round` (R64 → Finals), `start_time`, `status`, `winner_id`, `format`, and `odds_a`/`odds_b` |
-| `match_results` | per-set scores **and per-set winners** for sets 1–5, tiebreak scores, super-tiebreak, `total_games`, `aces_leader_id`, `break_points_count`, `double_faults_count` |
+| `matches` | both players (and both doubles pairs), `tournament_id`, `category_id`, `round` (R64 → Finals), `start_time`, `status`, `match_type`, and `odds_a`/`odds_b`. **Not** `winner_id` — the column exists but is empty on every row |
+| `match_results` | **`winner_id`, populated on every row — this is where the winner lives.** Per-set scores and per-set winners, tiebreak scores, super-tiebreak, and a `match_result` shorthand (`2-0`, `2-1`, `0-2`, `1-2`, plus `ret`). `total_games`, `aces_leader_id` and `break_points_count` exist but are empty on every row |
 | `head_to_head` | `player_a_wins`, `player_b_wins`, `total_matches`, `last_match_date`, `last_match_result` |
 | `tournaments` | `name`, `location`, `organizer`, `surface`, `format`, dates |
 | `tournament_categories` | `gender`, `age_min/max`, `skill_level_min/max` — the axis the twice-weekly upload selects on |
@@ -109,39 +109,64 @@ matches means a week of cards about the same twenty players. Rotating categories
 across uploads widens the cast and is worth more to the feature than depth in
 any one draw.
 
-### 2.2 Measure before building
+### 2.2 Measured, 2026-09-05
 
-```sql
--- weekly finished-match supply, the number that decides everything
-select date_trunc('week', m.start_time) as week,
-       count(*) as finished,
-       count(*) filter (where r.set3_score is not null) as three_setters
-from matches m
-join match_results r on r.match_id = m.id
-where m.start_time > now() - interval '120 days'
-group by 1 order by 1 desc;
+Run against production, read-only. The numbers change the plan in several places.
 
--- forward fixtures: can we build a combo card at all?
-select count(*) from matches
-where start_time > now() and winner_id is null;
+| | | |
+|---|---|---|
+| **Players** | 1.633 | 1.517 with a match, 627 with five or more, 307 with a populated `last5` |
+| **Matches** | 393 | 2026-01-17 → 2026-07-08, across 9 tournaments |
+| **Finished** | 342 | over 23 active weeks |
+| **Weekly rate** | **mean 14,9 · median 15** | range 3–40 |
+| **Singles / doubles** | 227 / 166 | **42% of the pool is doubles** |
+| **Finished singles** | **190** | ~8 a week — the pool the current card types can actually use |
+| **Odds** | **100% populated** | median gap 0,69; 114 matches lopsided by more than 2,0 |
+| **Results** | 343, `winner_id` on all | 87 went to a super-tiebreak (25%) |
+| `total_games`, aces, break points | **0%** | the columns exist and are empty |
+| **Head-to-head** | 184 pairs | 175 have met once, 8 twice, **1 more than that** |
+| **Rounds** | 70% labelled | 116 of 393 have no `round` |
 
--- players with enough history to be asked about
-select count(*) filter (where wins + losses >= 5) as with_history, count(*) from players;
+#### What it means
 
--- pairs with a story
-select count(*) from head_to_head where total_matches >= 2;
+**Eight cards is supportable in season — but only if doubles counts.** At a
+median of 15 finished matches a week the §2 arithmetic works. Take doubles out
+and it is **190 singles over 23 weeks, about 8 a week**, under the gate and an
+argument for a five-card run.
 
--- category spread of recent uploads
-select c.name, count(*) from matches m
-join tournament_categories c on c.id = m.category_id
-where m.start_time > now() - interval '60 days' group by 1 order by 2 desc;
-```
+So the most valuable thing in this measurement: **doubles support is not a
+nice-to-have, it is the difference between a five-card run and an eight-card
+one.** The schema already carries it — `match_type`, the `player_a1/a2` and
+`player_b1/b2` slots, and a full doubles stats mirror on `players`. It is also
+pre-paid work for padel (§8.7.1), which is doubles by nature.
 
-**Gate:** under ~10 finished matches a week, the event tier cannot carry a daily
-run and the honest move is a **shorter run** — five cards, not eight — rather
-than padding with filler. A tight five-card run beats a bloated eight.
+**The season has the shape §8.3.1 assumed.** January to April runs 13–40 matches
+a week; May and June taper to 3–9; and there has been **nothing since
+2026-06-26, ten weeks ago**. The local dead season is July–September — precisely
+Wimbledon and the US Open. The slam calendar patches the exact hole the local
+calendar has.
 
----
+**The surprise signal works today.** Odds are populated on every match, median
+gap 0,69, with 114 clear favourites. That is the 0,35 weight in §4.2 — the most
+important input to picking a good card — available immediately, no new pipeline.
+
+**The closeness signal does not.** `total_games` is empty on every row, as are
+aces and break points. Rebalance §4.2 to take closeness from the scoreline
+instead, which *is* there: `match_result` distinguishes `2-0` from `2-1`, and
+`super_tiebreak_score` marks the matches that went the distance.
+
+**The format is two sets plus a champions tiebreak,** not best of three.
+`set3_score` is used once in 343 rows; `super_tiebreak_score` is used 87 times,
+holding scores like `17-15`. The prototype's `score` card copy — *"2-1 με
+ανατροπή από 0-1"* — assumes a third set. Options and distractors have to speak
+the real format.
+
+**Head-to-head is effectively empty.** Of 184 pairs, 175 have met exactly once.
+That removes the `h2h` fact kind for now, and it is a real problem for the
+scouting report in §8.4 — see the note there.
+
+**The pipeline is not running.** Ten weeks without a row. Everything above is
+downstream of that, and no amount of generator quality substitutes for it.
 
 ## 3. Architecture
 
@@ -218,8 +243,9 @@ scored; the scheduler takes the top of each bucket:
 interest =
     0.35 × surprise      // |expectedWinProbability − outcome|, from calculateOdds.
                          //   A heavy favourite losing is the best card of the week.
-  + 0.20 × closeness     // from match_results: three sets, tiebreaks, total_games.
-                         //   6-0 6-1 is not a story.
+  + 0.20 × closeness     // from `match_result` (2-1 beats 2-0) and whether a
+                         //   super-tiebreak was needed. NOT total_games — that
+                         //   column is empty on every row (§2.2).
   + 0.15 × recency       // ~10 day half-life — longer than daily, because the pool is weekly
   + 0.15 × stakes        // round (Finals > R64) + category prestige
   + 0.10 × novelty       // penalise players featured in the last few runs
@@ -597,8 +623,15 @@ This works disproportionately well here: the leaderboard shows people you
 actually play against, so identity has real social value in a scene this size.
 Direct purchase only — see §8.5.
 
-**Scouting report, one-off, ~1,99 €.** A full dossier on one player: H2H, surface
-splits over time, form curve, recent results by round. This is the highest-intent
+**Scouting report, one-off, ~1,99 €.** A dossier on one player: surface splits
+over time, form curve, recent results by round.
+
+**Caveat from §2.2: the head-to-head half of this does not exist.** 175 of 184
+pairs have met exactly once. *"How do I match up against him"* is the most
+compelling line in the pitch and there is no data behind it yet. What remains —
+form, surfaces, recent results — is real but thinner than the feature was sold
+on. Either it launches without H2H and says so plainly, or it waits for another
+season of results. Worth knowing before pricing against it. This is the highest-intent
 purchase in the product because it attaches to a real moment — the week before
 you face someone. A tournament player buying two a year is worth more than most
 subscribers. Pass holders get credits; everyone else can buy one.
@@ -945,8 +978,12 @@ job.
 
 0. **The copy layer** (§9.6). 341 Greek strings are already hardcoded and every
    new component adds more. Cheapest it will ever be is now.
-1. **Measure.** Run §2.2. The weekly supply number decides whether the run is
-   eight cards or five.
+1. ~~**Measure.**~~ Done — §2.2. Median 15 finished matches a week in season,
+   but only ~8 of them singles.
+1a. **Doubles-aware cards.** The measurement's headline: 42% of the pool is
+   doubles, and without it the run is five cards rather than eight. `PlayerRef`
+   and the `result` card both assume one player a side. This moves to the front
+   of the queue, and it is the same work padel needs later.
 2. **`greek.ts`** — caps, dates, declension, unit tested. Everything depends on it.
 3. **`facts.ts` + `providers/supabase.ts`** — read-only, snapshot-pinned, behind
    the same interface as `mock.ts`. The mock stays the default so the prototype
