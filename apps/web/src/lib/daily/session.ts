@@ -4,6 +4,7 @@
 // what this tester has already seen, shuffle with a seed derived from the date
 // so a reload gives the same run back, and cut to eight.
 
+import type { Locale } from './copy';
 import { allCards } from './generators';
 import type { GameCard } from './types';
 
@@ -47,14 +48,16 @@ function shuffle<T>(items: T[], rand: () => number): T[] {
 export function buildRun({
     seenCardIds = [],
     seed,
+    locale,
     size = RUN_SIZE,
 }: {
     seenCardIds?: string[];
     /** Usually the date, so the run is stable across reloads within a day. */
     seed: string;
+    locale: Locale;
     size?: number;
 }): GameCard[] {
-    const pool = allCards();
+    const pool = allCards(locale);
     const seen = new Set(seenCardIds);
     const fresh = pool.filter((c) => !seen.has(c.id));
 

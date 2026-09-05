@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useCountUp } from '@/hooks/useCountUp';
+import { useCopy } from '@/lib/daily/copy';
 import { confetti as CONFETTI, rays as RAY } from '@/lib/daily/tokens';
 
 // Full-screen takeover for the moments worth stopping the run over.
@@ -36,6 +37,7 @@ export function Celebration({
 }) {
     const { label, title, points, total, sub, huge } = spec;
 
+    const copy = useCopy();
     const [shown, setShown] = useState(false);
     const [ringsGo, setRingsGo] = useState(0);
     const [counted, setCounted] = useState(false);
@@ -137,12 +139,12 @@ export function Celebration({
                 <div className="np-cele-lbl">{label}</div>
                 <div className="np-cele-ttl">{title}</div>
                 <div ref={numberRef} className="np-cele-num">{value}</div>
-                <div className="np-cele-unit">ΠΟΝΤΟΙ</div>
+                <div className="np-cele-unit">{copy.common.pointsCaption}</div>
                 {sub && <p className="np-cele-sub" dangerouslySetInnerHTML={{ __html: sub }} />}
 
                 <div className="np-cele-bar-w">
                     <div className="np-cele-bar-t">
-                        <span>ΣΥΝΟΛΟ</span>
+                        <span>{copy.celebration.total}</span>
                         <b>{total + value}</b>
                     </div>
                     <div className="np-cele-bar">
@@ -158,7 +160,7 @@ export function Celebration({
                         window.setTimeout(onDone, 320);
                     }}
                 >
-                    Συνέχεια
+                    {copy.common.continue}
                 </button>
             </div>
         </div>,

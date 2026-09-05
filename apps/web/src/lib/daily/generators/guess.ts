@@ -3,13 +3,13 @@
 // `guess` shares its shape with `score` — options, one correct, plus the
 // optional clue stack that `OptionList` renders above them.
 //
-// The prototype ships no card of this kind, and inventing the Greek copy for
-// one is not this branch's call to make. The generator is registered and
-// returns nothing until real copy exists; `OptionList` already supports clues,
-// so a card dropped in here needs no component work.
+// The prototype ships no card of this kind, and inventing the copy for one is
+// not this branch's call to make. Registered and returning nothing until real
+// copy exists; a card dropped in here needs no component work.
 
+import type { Locale } from '../copy';
 import type { GameCard } from '../types';
 
-export function generateGuessCards(): GameCard[] {
+export function generateGuessCards(_locale: Locale): GameCard[] {
     return [];
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useCopy } from '@/lib/daily/copy';
 import { halfOf } from '@/lib/daily/scoring';
 
 // What to do with points that are on the table but not yet banked. Offered only
@@ -15,13 +16,12 @@ export function RiskChoice({
     onHalf: () => void;
     onDouble: () => void;
 }) {
+    const copy = useCopy();
     const half = halfOf(pending);
 
     return (
         <>
-            <p className="np-table">
-                Έχεις <b>{pending} πόντους</b> στο τραπέζι.
-            </p>
+            <p className="np-table">{copy.risk.onTable(pending)}</p>
             <div className="np-choice3">
                 <button
                     type="button"
@@ -29,7 +29,7 @@ export function RiskChoice({
                     disabled={disabled}
                     onClick={onKeep}
                 >
-                    Κράτα<small>{pending} πόντοι</small>
+                    {copy.risk.keep}<small>{copy.common.points(pending)}</small>
                 </button>
                 <button
                     type="button"
@@ -37,7 +37,7 @@ export function RiskChoice({
                     disabled={disabled}
                     onClick={onHalf}
                 >
-                    Τα μισά<small>{half} + ασπίδα</small>
+                    {copy.risk.half}<small>{copy.risk.halfSub(half)}</small>
                 </button>
                 <button
                     type="button"
@@ -45,7 +45,7 @@ export function RiskChoice({
                     disabled={disabled}
                     onClick={onDouble}
                 >
-                    Διπλασίασε<small>{pending * 2} ή τίποτα</small>
+                    {copy.risk.double}<small>{copy.risk.doubleSub(pending * 2)}</small>
                 </button>
             </div>
         </>

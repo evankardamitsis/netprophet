@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
+import { useCopy } from '@/lib/daily/copy';
 import { foil as material, surface } from '@/lib/daily/tokens';
 
 // Two stacked canvases over the answer: the foil, erased with
@@ -41,6 +42,7 @@ export function ScratchPanel({
     /** first contact with the foil */
     onStart?: () => void;
 }) {
+    const copy = useCopy();
     const rootRef = useRef<HTMLDivElement>(null);
     const foilRef = useRef<HTMLCanvasElement>(null);
     const dustRef = useRef<HTMLCanvasElement>(null);
@@ -320,7 +322,7 @@ export function ScratchPanel({
             <div className="np-tx" dangerouslySetInnerHTML={{ __html: html }} />
             <canvas ref={foilRef} />
             <canvas ref={dustRef} />
-            <div ref={hintRef} className="np-hint"><span>Ξύσε</span></div>
+            <div ref={hintRef} className="np-hint"><span>{copy.run.scratch}</span></div>
             <div ref={progressRef} className="np-prg">
                 <i ref={barRef as React.RefObject<HTMLElement>} />
             </div>

@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react';
 import { Portrait } from '@/components/daily/Portrait';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useCopy, useLocale } from '@/lib/daily/copy';
 import type { DailyProfile } from '@/lib/daily/storage';
 import {
-    CLUBS, PLAYERS, PLAY_TYPES, getPlayerMeta,
+    CLUBS, PLAY_TYPES, clubIdFor, getPlayerMeta, getPlayers, t,
 } from '@/lib/daily/providers/mock';
 import type { PlayerRef } from '@/lib/daily/types';
+import { matchesLoosely } from '@/lib/daily/greek';
 import { radius } from '@/lib/daily/tokens';
 
 // Four steps, five if you play tournaments — the extra one lets a competitive
@@ -26,13 +28,6 @@ function paletteOf(id: string): [string, string, string] {
     return getPlayerMeta(id)?.palette ?? FALLBACK_PALETTE;
 }
 
-/** Accent-insensitive contains, so "παππας" finds "Α. Παππάς". */
-function matches(haystack: string, needle: string): boolean {
-    const fold = (s: string) =>
-        s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    return fold(haystack).includes(fold(needle.trim()));
-}
-
 export function Onboarding({
     onComplete,
 }: {
@@ -46,6 +41,9 @@ export function Onboarding({
     const [claimQuery, setClaimQuery] = useState('');
     const [friendQuery, setFriendQuery] = useState('');
     const haptics = useHaptics();
+    const copy = useCopy();
+    const locale = useLocale();
+    const players = getPlayers(locale);
 
     const steps: Step[] = useMemo(
         () =>
@@ -60,12 +58,12 @@ export function Onboarding({
     const current = steps[Math.min(stepIndex, steps.length - 1)];
     const next = () => setStepIndex((i) => i + 1);
 
-    const claimList = PLAYERS.filter(
-        (p) => !claimQuery || matches(`${p.name} ${p.club}`, claimQuery),
+    const claimList = players.filter(
+        (p) => !claimQuery || matchesLoosely(`${p.name} ${p.club}`, claimQuery),
     );
-    const friendList = PLAYERS.filter(
+    const friendList = players.filter(
         (p) => p.id !== claimedId
-            && (!friendQuery || matches(`${p.name} ${p.club}`, friendQuery)),
+            && (!friendQuery || matchesLoosely(`${p.name} ${p.club}`, friendQuery)),
     );
 
     const toggleFriend = (id: string) =>
@@ -79,27 +77,27 @@ export function Onboarding({
     };
 
     // The footer button is the only way forward on every step.
-    let label = 'Συνέχεια';
+    let label = copy.common.continue;
     let disabled = false;
     let advance: () => void = () => { haptics.tap(); next(); };
 
     if (current === 'welcome') {
-        label = 'Ξεκίνα';
+        label = copy.onboarding.welcome.cta;
     } else if (current === 'type') {
         disabled = !playType;
     } else if (current === 'claim') {
-        label = claimedId ? 'Αυτός είμαι' : 'Δεν είμαι στη λίστα';
+        label = claimedId ? copy.onboarding.claim.yes : copy.onboarding.claim.no;
     } else if (current === 'club') {
         disabled = !club;
     } else if (current === 'friends') {
         label = friendIds.length
-            ? `Πάμε (${friendIds.length})`
-            : 'Διάλεξε τουλάχιστον έναν';
+            ? copy.onboarding.friends.go(friendIds.length)
+            : copy.onboarding.friends.none;
         disabled = friendIds.length === 0;
         advance = finish;
     }
 
-    const stepLabel = `Βήμα ${stepIndex} από ${steps.length - 1}`;
+    const stepLabel = copy.onboarding.step(stepIndex, steps.length - 1);
 
     return (
         <div className="np-ob">
@@ -115,18 +113,14 @@ export function Onboarding({
                     {current === 'welcome' && (
                         <>
                             <div className="np-ob-copy">
-                                <div className="np-eyebrow">Αθήνα · καθημερινό παιχνίδι</div>
+                                <div className="np-eyebrow">{copy.onboarding.eyebrow}</div>
                                 <div className="np-wordmark">NET<br />PROPHET</div>
                             </div>
                             <div className="np-ob-choices">
                                 <div className="np-tagline">
-                                    Ξέρεις την τοπική σκηνή καλύτερα από όλους;
+                                    {copy.onboarding.welcome.tagline}
                                 </div>
-                                <p className="np-sub">
-                                    Οκτώ παιχνίδια τη μέρα με πραγματικά ματς από τα ταμπλό της
-                                    Αθήνας. Προβλέψεις, δημοσκοπήσεις, ψηφοφορίες. Και τα
-                                    στατιστικά κάθε παίκτη μαζί.
-                                </p>
+                                <p className="np-sub">{copy.onboarding.welcome.sub}</p>
                             </div>
                         </>
                     )}
@@ -135,11 +129,8 @@ export function Onboarding({
                         <>
                             <div className="np-ob-copy">
                                 <div className="np-eyebrow">{stepLabel}</div>
-                                <div className="np-tagline">Παίζεις κι εσύ;</div>
-                                <p className="np-sub">
-                                    Για να ξέρουμε αν θα βλέπεις και τα δικά σου ματς μέσα στο
-                                    παιχνίδι.
-                                </p>
+                                <div className="np-tagline">{copy.onboarding.playType.tagline}</div>
+                                <p className="np-sub">{copy.onboarding.playType.sub}</p>
                             </div>
                             <div className="np-ob-choices">
                                 <div className="np-list">
@@ -153,8 +144,8 @@ export function Onboarding({
                                                 // Only tournament players claim a profile.
                                                 if (p.id !== 'comp') setClaimedId(null);
                                             }}
-                                            title={p.name}
-                                            sub={p.sub}
+                                            title={t(p.name, locale)}
+                                            sub={t(p.sub, locale)}
                                         />
                                     ))}
                                 </div>
@@ -166,17 +157,13 @@ export function Onboarding({
                         <>
                             <div className="np-ob-copy">
                                 <div className="np-eyebrow">{stepLabel}</div>
-                                <div className="np-tagline">Βρες τον εαυτό σου.</div>
-                                <p className="np-sub">
-                                    Αν έχεις παίξει σε τοπικό ταμπλό, είσαι ήδη στη λίστα.
-                                    Διάλεξε το προφίλ σου για να βλέπεις τα ματς και τα
-                                    στατιστικά σου.
-                                </p>
+                                <div className="np-tagline">{copy.onboarding.claim.tagline}</div>
+                                <p className="np-sub">{copy.onboarding.claim.sub}</p>
                             </div>
                             <div className="np-ob-choices">
                                 <input
                                     className="np-input"
-                                    placeholder="Γράψε το όνομά σου"
+                                    placeholder={copy.onboarding.claim.search}
                                     value={claimQuery}
                                     onChange={(e) => setClaimQuery(e.target.value)}
                                 />
@@ -191,7 +178,7 @@ export function Onboarding({
                                                 const nextId = claimedId === p.id ? null : p.id;
                                                 setClaimedId(nextId);
                                                 // Claiming a profile pre-fills the club step.
-                                                if (nextId) setClub(p.club);
+                                                if (nextId) setClub(clubIdFor(p.id));
                                             }}
                                         />
                                     ))}
@@ -205,23 +192,20 @@ export function Onboarding({
                         <>
                             <div className="np-ob-copy">
                                 <div className="np-eyebrow">{stepLabel}</div>
-                                <div className="np-tagline">Σε ποιον σύλλογο;</div>
-                                <p className="np-sub">
-                                    Θα μπεις στην κατάταξη του συλλόγου σου και θα βλέπεις πρώτα
-                                    τα δικά του ματς.
-                                </p>
+                                <div className="np-tagline">{copy.onboarding.club.tagline}</div>
+                                <p className="np-sub">{copy.onboarding.club.sub}</p>
                             </div>
                             <div className="np-ob-choices">
                                 <div className="np-tiles">
                                     {CLUBS.map((c) => (
                                         <button
-                                            key={c}
+                                            key={c.id}
                                             type="button"
-                                            aria-pressed={club === c}
-                                            onClick={() => { haptics.select(); setClub(c); }}
-                                            className={`np-tile${club === c ? ' is-sel' : ''}`}
+                                            aria-pressed={club === c.id}
+                                            onClick={() => { haptics.select(); setClub(c.id); }}
+                                            className={`np-tile${club === c.id ? ' is-sel' : ''}`}
                                         >
-                                            {c}
+                                            {t(c, locale)}
                                         </button>
                                     ))}
                                 </div>
@@ -233,16 +217,13 @@ export function Onboarding({
                         <>
                             <div className="np-ob-copy">
                                 <div className="np-eyebrow">{stepLabel}</div>
-                                <div className="np-tagline">Ποιους ξέρεις;</div>
-                                <p className="np-sub">
-                                    Φίλοι, συμπαίκτες, αντίπαλοι. Θα βλέπεις πρώτα τα ματς τους
-                                    και θα συγκρίνεσαι μαζί τους στην κατάταξη.
-                                </p>
+                                <div className="np-tagline">{copy.onboarding.friends.tagline}</div>
+                                <p className="np-sub">{copy.onboarding.friends.sub}</p>
                             </div>
                             <div className="np-ob-choices">
                                 <input
                                     className="np-input"
-                                    placeholder="Αναζήτηση παίκτη"
+                                    placeholder={copy.onboarding.friends.search}
                                     value={friendQuery}
                                     onChange={(e) => setFriendQuery(e.target.value)}
                                 />
@@ -280,7 +261,8 @@ export function Onboarding({
 /* ---------- pieces shared by the steps ---------- */
 
 function Empty() {
-    return <p className="np-sub">Κανένα αποτέλεσμα.</p>;
+    const copy = useCopy();
+    return <p className="np-sub">{copy.common.noResults}</p>;
 }
 
 function Row({
@@ -311,12 +293,13 @@ function PlayerRow({
 }: {
     player: PlayerRef; selected: boolean; onClick: () => void;
 }) {
+    const copy = useCopy();
     return (
         <Row
             selected={selected}
             onClick={onClick}
             title={player.name}
-            sub={`${player.club} · NTRP ${player.ntrp}`}
+            sub={copy.hub.players.sub(player.club, player.ntrp)}
             leading={
                 <Portrait palette={paletteOf(player.id)} size={38} corner={radius.sm} />
             }

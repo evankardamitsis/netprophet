@@ -1,6 +1,7 @@
 'use client';
 
 import { ScratchPanel } from '@/components/daily/ScratchPanel';
+import { useCopy } from '@/lib/daily/copy';
 import { surface } from '@/lib/daily/tokens';
 
 // Bottom sheet in three moods. It stays mounted and slides, so the transition
@@ -35,6 +36,7 @@ export function FeedbackSheet({
     onScratchTick?: () => void;
     onScratchStart?: () => void;
 }) {
+    const copy = useCopy();
     const locked = Boolean(scratch) && !scratched;
 
     return (
@@ -68,7 +70,7 @@ export function FeedbackSheet({
                     disabled={locked}
                     tabIndex={open ? 0 : -1}
                 >
-                    {locked ? 'Ξύσε πρώτα' : actionLabel}
+                    {locked ? copy.run.scratchFirst : actionLabel}
                 </button>
             )}
         </div>

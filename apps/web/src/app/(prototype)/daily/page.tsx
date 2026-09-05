@@ -12,14 +12,13 @@ import { RunHeader } from '@/components/daily/RunHeader';
 import { RiskChoice } from '@/components/daily/RiskChoice';
 import { RunProgress } from '@/components/daily/RunProgress';
 import { setHapticsEnabled, useHaptics } from '@/hooks/useHaptics';
+import { CopyProvider, useCopy, useLocale, type Copy } from '@/lib/daily/copy';
 import { OptionList } from '@/components/daily/answers/OptionList';
 import { OrderList } from '@/components/daily/answers/OrderList';
 import { PlayerPair } from '@/components/daily/answers/PlayerPair';
 import { RowList } from '@/components/daily/answers/RowList';
 import { ThisOrThat } from '@/components/daily/answers/ThisOrThat';
-import {
-    DOUBLE_UP_QUESTIONS, getPlayer, getPlayerMeta,
-} from '@/lib/daily/providers/mock';
+import { DOUBLE_UP_QUESTIONS, t } from '@/lib/daily/providers/mock';
 import {
     bankVote, halfAndShield, keep, resolveAnswer, resolveDouble, type Score,
 } from '@/lib/daily/scoring';
@@ -36,23 +35,7 @@ import {
 // all still ahead — a correct answer banks straight away for now.
 
 const BUILD = 'daily-run · step 3';
-const FALLBACK_PALETTE: [string, string, string] = ['#2E4A63', '#0E1A24', '#66C2E8'];
 
-/** Feedback headline per kind, verbatim from the prototype's submit(). */
-const TITLES: Partial<Record<CardKind, { win: string; lose: string }>> = {
-    result: { win: 'Σωστά!', lose: 'Όχι αυτή τη φορά' },
-    score: { win: 'Ακριβώς', lose: 'Κοντά' },
-    upset: { win: 'Το βρήκες', lose: 'Δεν ήταν αυτό' },
-    order: { win: 'Σωστή σειρά', lose: 'Λάθος σειρά' },
-};
-
-/** What a non-scoring card says instead. */
-const INFO_TITLES: Partial<Record<CardKind, string>> = {
-    poll: 'Ψήφισες',
-    award: 'Ψήφισες',
-    thisThat: 'Ψήφισες',
-    combo: 'Κλειδώθηκε',
-};
 
 /** Everything a card can hold while it is being answered. */
 interface Draft {
@@ -87,12 +70,12 @@ function isCorrect(card: GameCard, draft: Draft): boolean | null {
     }
 }
 
-function confirmLabel(card: GameCard, draft: Draft): string {
-    if (card.kind !== 'combo') return 'Επιβεβαίωση';
+function confirmLabel(card: GameCard, draft: Draft, copy: Copy): string {
+    if (card.kind !== 'combo') return copy.run.confirm;
     const left = card.pickCount - draft.indices.length;
-    if (left === 0) return 'Κλείδωσε';
-    if (draft.indices.length === 0) return `Διάλεξε ${card.pickCount}`;
-    return `Διάλεξε ${left} ακόμα`;
+    if (left === 0) return copy.run.lock;
+    if (draft.indices.length === 0) return copy.run.pick(card.pickCount);
+    return copy.run.pickMore(left);
 }
 
 type Screen = 'hub' | 'run' | 'bonus';
@@ -159,36 +142,32 @@ export default function DailyPage() {
     // Nothing renders until local state is read, so server and client agree.
     if (state === null) return <div className="np-stage" />;
 
-    if (state.profile === null) {
-        return (
-            <div className="np-stage">
-                <Onboarding
-                    onComplete={(profile: DailyProfile) =>
-                        setState(patchDailyState({ profile }))
-                    }
-                />
-            </div>
-        );
-    }
-
     return (
-        <div className="np-stage">
-            {screen === 'run' ? (
-                <Run state={state} onFinish={finishRun} />
-            ) : screen === 'bonus' ? (
-                <RapidRound streak={state.streak} onFinish={finishBonus} />
-            ) : (
-                <Hub
-                    state={state}
-                    onState={(next) => {
-                        setHapticsEnabled(next.haptics);
-                        setState(next);
-                    }}
-                    onStart={() => setScreen('run')}
-                    onStartBonus={() => setScreen('bonus')}
-                />
-            )}
-        </div>
+        <CopyProvider locale={state.locale}>
+            <div className="np-stage">
+                {state.profile === null ? (
+                    <Onboarding
+                        onComplete={(profile: DailyProfile) =>
+                            setState(patchDailyState({ profile }))
+                        }
+                    />
+                ) : screen === 'run' ? (
+                    <Run state={state} onFinish={finishRun} />
+                ) : screen === 'bonus' ? (
+                    <RapidRound streak={state.streak} onFinish={finishBonus} />
+                ) : (
+                    <Hub
+                        state={state}
+                        onState={(next) => {
+                            setHapticsEnabled(next.haptics);
+                            setState(next);
+                        }}
+                        onStart={() => setScreen('run')}
+                        onStartBonus={() => setScreen('bonus')}
+                    />
+                )}
+            </div>
+        </CopyProvider>
     );
 }
 
@@ -202,7 +181,9 @@ function Run({
 }) {
     // Seeded on the date, so a mid-run reload returns the same eight cards.
     const [run, setRun] = useState<RunState>(() => ({
-        cards: buildRun({ seenCardIds: state.seenCardIds, seed: today() }),
+        cards: buildRun({
+            seenCardIds: state.seenCardIds, seed: today(), locale: state.locale,
+        }),
         index: 0,
         points: 0,
         pending: 0,
@@ -221,6 +202,8 @@ function Run({
     const [doublePick, setDoublePick] = useState<number | null>(null);
     // Scratch cards hold the sheet shut until the foil is off.
     const [scratched, setScratched] = useState(false);
+    const copy = useCopy();
+    const locale = useLocale();
     // A takeover, plus what to do once the player dismisses it.
     const [party, setParty] = useState<
         { spec: CelebrationSpec; then: 'next' | 'finish' } | null
@@ -229,7 +212,13 @@ function Run({
 
     const card: GameCard | undefined = run.cards[run.index];
     const last = run.index === run.cards.length - 1;
-    const question = DOUBLE_UP_QUESTIONS[doubleIndex % DOUBLE_UP_QUESTIONS.length];
+    const raw = DOUBLE_UP_QUESTIONS[doubleIndex % DOUBLE_UP_QUESTIONS.length];
+    const question = {
+        question: t(raw.question, locale),
+        options: raw.options.map((o) => t(o, locale)),
+        correctIndex: raw.correctIndex,
+        explanation: t(raw.explanation, locale),
+    };
 
     // An empty deck would strand the tester on a blank screen.
     useEffect(() => {
@@ -239,7 +228,7 @@ function Run({
     if (!card) return <div className="np-run" />;
 
     const correct = isCorrect(card, draft);
-    const titles = TITLES[card.kind];
+    const titles = copy.run.titles[card.kind];
 
     /** Pull the money out of the run, apply a rule, put it back. */
     const applyScore = (fn: (s: Score) => Score) =>
@@ -261,11 +250,11 @@ function Run({
                     haptics.streak();
                     setParty({
                         spec: {
-                            label: 'ΤΕΛΟΣ ΓΥΡΟΥ',
-                            title: `Σερί ${state.streak + 1} ημερών`,
+                            label: copy.celebration.runLabel,
+                            title: copy.celebration.runTitle(state.streak + 1),
                             points: run.points,
                             total: state.totalPoints,
-                            sub: 'Επιστρέφεις αύριο στις 09:00 για οκτώ νέα παιχνίδια.',
+                            sub: copy.celebration.runSub,
                         },
                         then: 'finish',
                     });
@@ -338,8 +327,8 @@ function Run({
         if (ok) {
             setParty({
                 spec: {
-                    label: 'ΔΙΠΛΑΣΙΑΣΜΟΣ',
-                    title: 'Το πήρες',
+                    label: copy.double.celebrationLabel,
+                    title: copy.double.celebrationTitle,
                     points: won,
                     total: state.totalPoints + run.points,
                     sub: question.explanation,
@@ -373,7 +362,7 @@ function Run({
     const sheet = phase === 'risk'
         ? {
             mood: 'win' as FeedbackMood,
-            title: titles?.win ?? 'Σωστά!',
+            title: titles?.win ?? '',
             explanation: card.explanation,
             scratch: foiled,
         }
@@ -381,15 +370,15 @@ function Run({
             ? {
                 // The double-up answer is never hidden — you already gambled.
                 mood: (doubleWon ? 'win' : 'lose') as FeedbackMood,
-                title: doubleWon ? 'Διπλασιάστηκε' : 'Τα έχασες',
+                title: doubleWon ? copy.double.won : copy.double.lost,
                 explanation: question.explanation,
                 scratch: false,
             }
             : {
                 mood: (!card.scoring ? 'info' : correct ? 'win' : 'lose') as FeedbackMood,
                 title: !card.scoring
-                    ? INFO_TITLES[card.kind] ?? 'Καταχωρήθηκε'
-                    : correct ? titles?.win ?? 'Σωστά!' : titles?.lose ?? 'Όχι αυτή τη φορά',
+                    ? copy.run.info[card.kind] ?? copy.run.recorded
+                    : correct ? titles?.win ?? '' : titles?.lose ?? '',
                 explanation: card.explanation,
                 scratch: foiled,
             };
@@ -410,16 +399,12 @@ function Run({
                 {phase === 'double' ? (
                     <div key="double" className="np-fade np-game-grid">
                         <div className="np-stage-copy">
-                            <span className="np-riskbar">
-                                ⚡ {run.pending} ΠΟΝΤΟΙ ΣΕ ΚΙΝΔΥΝΟ
-                            </span>
+                            <span className="np-riskbar">{copy.double.atRisk(run.pending)}</span>
                             <div className="np-gtype">
-                                ΔΙΠΛΑΣΙΑΣΜΟΣ · {run.pending * 2} πόντοι
+                                {copy.double.kind} · {copy.common.points(run.pending * 2)}
                             </div>
                             <h2 className="np-ask">{question.question}</h2>
-                            <p className="np-hintline">
-                                Σωστή απάντηση και διπλασιάζεις. Λάθος και τα χάνεις όλα.
-                            </p>
+                            <p className="np-hintline">{copy.double.lede}</p>
                         </div>
                         <div>
                             <OptionList
@@ -532,7 +517,7 @@ function Run({
                         disabled={!isReady(card, draft)}
                         onClick={submit}
                     >
-                        {confirmLabel(card, draft)}
+                        {confirmLabel(card, draft, copy)}
                     </button>
                 </div>
             )}
@@ -542,7 +527,7 @@ function Run({
                 mood={sheet.mood}
                 title={sheet.title}
                 explanation={sheet.explanation}
-                actionLabel={last ? 'Τελείωσες' : 'Επόμενο'}
+                actionLabel={last ? copy.common.finish : copy.common.next}
                 onAction={nextCard}
                 scratch={sheet.scratch}
                 scratchKey={`${card.id}-${phase}`}

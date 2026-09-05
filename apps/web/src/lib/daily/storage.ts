@@ -3,6 +3,8 @@
 // The prototype has no server and no account. Everything a tester accumulates
 // lives under one versioned localStorage key. Wiping the key resets the tester.
 
+import { detectLocale, isLocale, type Locale } from './copy';
+
 export const DAILY_KEY = 'np_daily_v1';
 
 export interface DailyState {
@@ -18,6 +20,8 @@ export interface DailyState {
     shield: boolean;
     /** the settings toggle; ignored entirely on devices without vibration */
     haptics: boolean;
+    /** el or en; lives in state rather than the URL — see content spec §9.6 */
+    locale: Locale;
     /** pending predictions the tester has already uncovered on the hub */
     resolvedIds: string[];
     /** the bonus round is once a day, like the run itself */
@@ -38,6 +42,7 @@ export function defaultDailyState(): DailyState {
         seenCardIds: [],
         shield: false,
         haptics: true,
+        locale: detectLocale(),
         resolvedIds: [],
         bonusPlayedOn: null,
         history: [],
@@ -68,7 +73,10 @@ export function loadDailyState(): DailyState {
         if (!raw) return defaultDailyState();
         const parsed: unknown = JSON.parse(raw);
         if (!isDailyState(parsed)) return defaultDailyState();
-        return { ...defaultDailyState(), ...parsed };
+        const merged = { ...defaultDailyState(), ...parsed };
+        // A stored locale from an older build could be anything.
+        if (!isLocale(merged.locale)) merged.locale = detectLocale();
+        return merged;
     } catch {
         return defaultDailyState();
     }

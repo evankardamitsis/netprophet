@@ -5,6 +5,7 @@ import { FeedbackSheet } from '@/components/daily/FeedbackSheet';
 import { RunHeader } from '@/components/daily/RunHeader';
 import { RunProgress } from '@/components/daily/RunProgress';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useCopy, useLocale } from '@/lib/daily/copy';
 import { buildRapidRound, rapidAward } from '@/lib/daily/generators/rapid';
 
 // Five true/false calls in eighteen seconds. Unlike the daily run there is no
@@ -22,7 +23,9 @@ export function RapidRound({
     /** called with what the round was worth */
     onFinish: (earned: number, correct: number, total: number) => void;
 }) {
-    const [round] = useState(buildRapidRound);
+    const copy = useCopy();
+    const locale = useLocale();
+    const [round] = useState(() => buildRapidRound(locale));
     const [index, setIndex] = useState(0);
     const [marks, setMarks] = useState<boolean[]>([]);
     const [picked, setPicked] = useState<number | null>(null);
@@ -90,11 +93,13 @@ export function RapidRound({
             <div className="np-body">
                 <div className="np-fade np-game-grid">
                     <div className="np-stage-copy">
-                        <div className="np-gtype">{round.label} · {round.points} πόντοι</div>
+                        <div className="np-gtype">
+                            {copy.rapid.label} · {copy.common.points(round.points)}
+                        </div>
                         <div
                             className={`np-timer${urgent ? ' is-urgent' : ''}`}
                             role="timer"
-                            aria-label={`${Math.max(0, left)} δευτερόλεπτα`}
+                            aria-label={copy.rapid.seconds(Math.max(0, left))}
                         >
                             <i style={{ width: `${Math.max(0, (left / round.seconds) * 100)}%` }} />
                         </div>
@@ -112,7 +117,7 @@ export function RapidRound({
                     </div>
 
                     <div className="np-opts">
-                        {round.options.map((label, k) => {
+                        {[copy.rapid.wrong, copy.rapid.right].map((label, k) => {
                             const isPicked = k === picked;
                             const isCorrect = k === question.correctIndex;
                             const marksFor = [
@@ -138,9 +143,9 @@ export function RapidRound({
             <FeedbackSheet
                 open={over}
                 mood={correct >= 4 ? 'win' : 'info'}
-                title={`${correct} στα ${total}`}
-                explanation={`Κέρδισες <b>${earned} πόντους</b> στον γρήγορο γύρο.`}
-                actionLabel="Τέλος"
+                title={copy.rapid.outOf(correct, total)}
+                explanation={copy.rapid.earned(earned)}
+                actionLabel={copy.common.done}
                 onAction={() => { haptics.tap(); onFinish(earned, correct, total); }}
             />
         </div>
