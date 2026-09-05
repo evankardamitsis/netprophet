@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NetProphet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--base:#0A0E1A;--ember:#FF5B3D;--ember2:#FF8A4B;--amber:#E9B45C;
+ --chalk:#F4F2ED;--dim:#8792A3;--good:#5FCE8B;--bad:#FF5B3D}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#05070C}
+body{font-family:Inter,system-ui,sans-serif;color:var(--chalk);display:flex;justify-content:center}
+.app{position:relative;width:100%;max-width:440px;height:100dvh;background:var(--base);
+ display:flex;flex-direction:column;overflow:hidden}
+.flare,.flare2,.vign,.grain{position:absolute;pointer-events:none}
+.flare{width:560px;height:440px;right:-200px;top:-170px;filter:blur(6px);
+ background:radial-gradient(closest-side,rgba(255,91,61,.40),rgba(255,91,61,0) 72%)}
+.flare2{width:480px;height:400px;left:-210px;bottom:-180px;filter:blur(8px);
+ background:radial-gradient(closest-side,rgba(52,86,255,.24),rgba(52,86,255,0) 72%)}
+.vign{inset:0;background:radial-gradient(120% 90% at 50% 30%,transparent 40%,rgba(0,0,0,.6) 100%)}
+.grain{inset:0;opacity:.15;mix-blend-mode:overlay;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.eyebrow{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.22em;color:var(--ember2);text-transform:uppercase}
+.mono{font-family:"IBM Plex Mono";font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+.mono b{color:var(--chalk);font-weight:500}
+.sectitle{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.2em;color:var(--dim);margin:20px 0 10px}
+.cta{width:100%;border:none;border-radius:18px;padding:16px;cursor:pointer;font-family:"Roboto Condensed";
+ font-weight:900;font-size:19px;color:#1B0703;background:linear-gradient(180deg,var(--ember2),var(--ember));
+ box-shadow:0 5px 0 #A33018}
+.cta.win{background:linear-gradient(180deg,#6BDD97,#42AE72);color:#062313;box-shadow:0 5px 0 #24603F}
+.cta.ghost{background:rgba(255,255,255,.06);color:var(--chalk);border:1px solid rgba(255,255,255,.14);box-shadow:none}
+.cta:active{transform:translateY(3px);box-shadow:none}
+.cta[disabled]{background:#18202D;color:#3D4859;box-shadow:0 5px 0 #101724;pointer-events:none}
+.foot{position:relative;z-index:5;padding:10px 20px calc(16px + env(safe-area-inset-bottom))}
+
+/* onboarding */
+.ob{position:relative;z-index:4;flex:1;display:flex;flex-direction:column;min-height:0}
+.obtop{padding:calc(16px + env(safe-area-inset-top)) 22px 0;display:flex;gap:6px}
+.obtop i{width:22px;height:2.5px;border-radius:2px;background:rgba(255,255,255,.13)}
+.obtop i.on{background:linear-gradient(90deg,var(--ember),var(--ember2))}
+.obbody{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 22px 6px;overflow-y:auto}
+.wordmark{font-family:"Roboto Condensed";font-weight:900;font-size:clamp(44px,13vw,60px);line-height:.84;
+ letter-spacing:-.035em;background:linear-gradient(96deg,#FFF3EC 10%,var(--ember2) 55%,var(--ember) 95%);
+ -webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{font-family:"Roboto Condensed";font-weight:900;font-size:clamp(25px,7.2vw,32px);line-height:.98;
+ letter-spacing:-.02em;margin-top:16px}
+.sub{font-size:13.5px;line-height:1.55;color:var(--dim);margin-top:11px;max-width:300px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+.tile{border-radius:18px;padding:14px;cursor:pointer;min-height:72px;display:flex;flex-direction:column;
+ justify-content:flex-end;background:rgba(255,255,255,.045);border:1.5px solid rgba(255,255,255,.10);transition:.16s}
+.tile .nm2{font-family:"Roboto Condensed";font-weight:900;font-size:17px}
+.tile .sm{font-size:11px;color:var(--dim);margin-top:2px}
+.tile.sel{border-color:rgba(255,138,75,.65);background:rgba(255,138,75,.12)}
+.plist{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.prow{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:15px;cursor:pointer;
+ background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.09);transition:.16s}
+.prow.sel{border-color:rgba(255,138,75,.6);background:rgba(255,138,75,.10)}
+.prow .who{flex:1;font-weight:600;font-size:14px}
+.prow .who small{display:block;color:var(--dim);font-weight:400;font-size:11px}
+.tick{width:20px;height:20px;border-radius:50%;border:1px solid rgba(255,255,255,.22);
+ display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent}
+.sel .tick{background:linear-gradient(102deg,var(--ember),var(--ember2));border-color:transparent;color:#170604}
+.mug{width:64px;height:64px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.mug svg{width:100%;height:100%;display:block}
+
+/* shell */
+.screen{position:relative;z-index:4;flex:1;overflow-y:auto;padding:calc(14px + env(safe-area-inset-top)) 20px 16px}
+.hdrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.h1{font-family:"Roboto Condensed";font-weight:900;font-size:30px;letter-spacing:-.02em}
+.nav{position:relative;z-index:6;display:flex;border-top:1px solid rgba(255,255,255,.09);
+ background:rgba(8,12,20,.9);backdrop-filter:blur(14px);padding-bottom:env(safe-area-inset-bottom)}
+.nav div{flex:1;padding:11px 0 12px;text-align:center;cursor:pointer;color:#5C6A78}
+.nav div.on{color:var(--ember2)}
+.nav em{display:block;font-style:normal;font-size:19px;line-height:1}
+.nav span{font-size:10px;font-weight:600;margin-top:3px;display:block}
+.hero{border-radius:24px;padding:20px;background:linear-gradient(150deg,rgba(255,138,75,.20),rgba(255,91,61,.05));
+ border:1px solid rgba(255,138,75,.36)}
+.hero h2{font-family:"Roboto Condensed";font-weight:900;font-size:29px;line-height:.96;margin:8px 0 6px}
+.hero p{font-size:13px;color:#D2DAE1;margin-bottom:14px}
+.pill{display:inline-flex;gap:6px;align-items:center;font-family:"IBM Plex Mono";font-size:10.5px;
+ letter-spacing:.14em;padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.18)}
+.crd{border-radius:18px;padding:14px 16px;background:rgba(255,255,255,.045);
+ border:1px solid rgba(255,255,255,.10);margin-bottom:9px}
+.crd .t1{display:flex;justify-content:space-between;align-items:center}
+.crd .t1 b{font-family:"Roboto Condensed";font-weight:900;font-size:17px}
+.crd .t1 span{font-family:"IBM Plex Mono";font-size:11px;color:var(--dim)}
+.crd .t2{font-size:12.5px;color:var(--dim);margin-top:4px}
+.crd.bonus{border-color:rgba(95,206,139,.45);background:rgba(95,206,139,.08)}
+.locked{position:relative;overflow:hidden}
+.locked .blur{filter:blur(5px);opacity:.5;pointer-events:none}
+.lockbar{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:6px;background:rgba(10,14,26,.55);cursor:pointer}
+.lockbar span{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.14em;color:var(--amber)}
+.lockbar b{font-family:"Roboto Condensed";font-weight:900;font-size:15px}
+.tog{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-radius:16px;
+ background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);cursor:pointer}
+.tog b{font-size:14px;font-weight:600}
+.tog small{display:block;color:var(--dim);font-size:11.5px;margin-top:2px;font-weight:400}
+.sw{width:44px;height:26px;border-radius:99px;background:#243040;position:relative;transition:.22s;flex:0 0 44px}
+.sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+ background:#7C8896;transition:.22s}
+.sw.on{background:rgba(255,138,75,.45)}
+.sw.on::after{left:21px;background:var(--ember2)}
+.plrow{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:16px;margin-bottom:8px;cursor:pointer;
+ background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}
+.plrow .who{flex:1;font-weight:600;font-size:14.5px}
+.plrow .who small{display:block;color:var(--dim);font-weight:400;font-size:11px}
+.plrow .rt{font-family:"Roboto Condensed";font-weight:900;font-size:20px;color:var(--amber)}
+.form{display:flex;gap:3px}
+.form i{width:16px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+ font-family:"IBM Plex Mono";font-size:9.5px;font-style:normal}
+.form i.w{background:rgba(95,206,139,.20);color:var(--good)}
+.form i.l{background:rgba(255,91,61,.16);color:var(--bad)}
+.barrow{display:flex;align-items:center;gap:8px;margin-top:7px}
+.barrow small{font-family:"IBM Plex Mono";font-size:10px;color:var(--dim);width:56px}
+.bar{flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px}
+.barrow b{font-family:"IBM Plex Mono";font-size:11px;width:32px;text-align:right}
+.back{font-family:"IBM Plex Mono";font-size:12px;color:var(--dim);cursor:pointer;margin-bottom:12px;display:inline-block}
+.psearch input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.11);
+ border-radius:14px;padding:12px 14px;color:var(--chalk);font-family:inherit;font-size:14px;outline:none;margin-bottom:12px}
+.lbrow{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:15px;margin-bottom:7px;
+ background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.lbrow.me{border-color:rgba(255,138,75,.5);background:rgba(255,138,75,.10)}
+.lbrow .pos{font-family:"IBM Plex Mono";font-size:12px;color:var(--dim);width:18px}
+.lbrow .who{flex:1;font-weight:600;font-size:14px}
+.lbrow .who small{display:block;color:var(--dim);font-weight:400;font-size:11px}
+.lbrow .pts{font-family:"Roboto Condensed";font-weight:900;font-size:19px;color:var(--amber)}
+
+/* game */
+.top{position:relative;z-index:5;padding:calc(13px + env(safe-area-inset-top)) 20px 0}
+.seg{display:flex;gap:3px;margin-bottom:12px}
+.seg i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+.seg i.on{background:linear-gradient(90deg,var(--ember),var(--ember2))}
+.seg i.cur::after{content:'';display:block;height:100%;width:52%;border-radius:2px;
+ background:linear-gradient(90deg,var(--ember),var(--ember2))}
+.gbody{position:relative;z-index:4;flex:1;overflow-y:auto;padding:16px 20px;min-height:0}
+.gtype{font-family:"IBM Plex Mono";font-size:10.5px;letter-spacing:.2em;color:var(--ember2);text-transform:uppercase}
+.ask{font-family:"Roboto Condensed";font-weight:900;font-size:clamp(26px,7.4vw,33px);line-height:.98;
+ letter-spacing:-.02em;margin-top:8px}
+.hintline{font-size:12.5px;color:var(--dim);margin-top:7px;margin-bottom:16px}
+.duo{display:flex;gap:11px}
+.pcard{flex:1;border-radius:22px;padding:14px 10px;text-align:center;cursor:pointer;position:relative;overflow:hidden;
+ background:rgba(255,255,255,.045);border:1.5px solid rgba(255,255,255,.10);
+ box-shadow:0 5px 0 rgba(0,0,0,.35);transition:.16s}
+.pcard:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.pcard .mug{margin:0 auto 9px}
+.nm{font-family:"Roboto Condensed";font-weight:900;font-size:17px;line-height:1.05}
+.cl{font-size:11px;color:var(--dim);margin-top:3px}
+.pcard.sel{border-color:var(--ember2);background:rgba(255,138,75,.12)}
+.pcard.ok{border-color:var(--good);background:rgba(95,206,139,.12)}
+.pcard.no{border-color:var(--bad);background:rgba(255,91,61,.12)}
+.pcard .share{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--ember2);transition:width .8s}
+.pcard .pctv{margin-top:8px;font-family:"Roboto Condensed";font-weight:900;font-size:22px;color:var(--ember2);
+ opacity:0;transition:.3s}
+.pcard.reveal .pctv{opacity:1}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{position:relative;overflow:hidden;border-radius:18px;padding:15px 17px;cursor:pointer;display:flex;
+ justify-content:space-between;align-items:center;background:rgba(255,255,255,.045);
+ border:1.5px solid rgba(255,255,255,.10);box-shadow:0 4px 0 rgba(0,0,0,.32);
+ font-family:"Roboto Condensed";font-weight:900;font-size:19px;transition:.16s}
+.opt:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.32)}
+.opt span{position:relative;z-index:2}
+.opt .fill{position:absolute;left:0;top:0;bottom:0;width:0;z-index:1;
+ background:linear-gradient(90deg,rgba(255,138,75,.28),rgba(255,138,75,.04));transition:width .85s}
+.opt .pc{color:var(--ember2)}
+.opt .num{font-family:"IBM Plex Mono";font-size:12px;color:var(--ember2)}
+.opt.sel{border-color:var(--ember2)}.opt.ok{border-color:var(--good);background:rgba(95,206,139,.12)}
+.opt.no{border-color:var(--bad);background:rgba(255,91,61,.12)}
+.rowline{border-radius:18px;padding:14px 16px;margin-bottom:9px;cursor:pointer;display:flex;
+ justify-content:space-between;align-items:center;background:rgba(255,255,255,.045);
+ border:1.5px solid rgba(255,255,255,.10);box-shadow:0 4px 0 rgba(0,0,0,.32);transition:.16s}
+.rowline:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.32)}
+.rowline .l{font-weight:600;font-size:14.5px}
+.rowline .r{font-family:"IBM Plex Mono";font-size:12.5px;color:var(--dim)}
+.rowline.sel{border-color:var(--ember2);background:rgba(255,138,75,.10)}
+.rowline.ok{border-color:var(--good);background:rgba(95,206,139,.10)}
+.rowline.no{border-color:var(--bad);background:rgba(255,91,61,.10)}
+.clues{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.clue{border-radius:14px;padding:11px 13px;font-size:13.5px;color:#CBD5DC;
+ background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09)}
+.clue b{color:var(--amber);font-family:"IBM Plex Mono";font-size:11px;margin-right:8px}
+.tt{display:flex;gap:11px;height:210px}
+.ttc{flex:1;border-radius:22px;position:relative;overflow:hidden;cursor:pointer;display:flex;
+ align-items:flex-end;padding:16px;border:1.5px solid rgba(255,255,255,.10);box-shadow:0 5px 0 rgba(0,0,0,.35)}
+.ttc:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.ttc .bgx{position:absolute;inset:0;z-index:0}
+.ttc .tx{position:relative;z-index:2}
+.ttc .tx b{display:block;font-family:"Roboto Condensed";font-weight:900;font-size:21px;line-height:1}
+.ttc .tx small{color:#D5DCE2;font-size:11.5px}
+.ttc .vt{position:absolute;left:0;bottom:0;height:5px;width:0;background:var(--ember2);z-index:3;transition:width .85s}
+.ttc.sel{border-color:var(--ember2)}
+.timer{height:6px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden;margin-bottom:14px}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--ember),var(--ember2));width:100%}
+.rapidQ{font-family:"Roboto Condensed";font-weight:900;font-size:clamp(24px,6.8vw,30px);line-height:1.02;
+ margin-bottom:18px;min-height:96px}
+.rapidTally{display:flex;gap:5px;margin-bottom:14px}
+.rapidTally i{width:26px;height:5px;border-radius:99px;background:rgba(255,255,255,.12)}
+.rapidTally i.w{background:var(--good)}.rapidTally i.l{background:var(--bad)}
+.fb{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:20px 20px calc(22px + env(safe-area-inset-bottom));
+ border-top-left-radius:26px;border-top-right-radius:26px;transform:translateY(105%);
+ transition:transform .34s cubic-bezier(.2,.9,.25,1)}
+.fb.up{transform:none}
+.fb.win{background:#123122;border-top:1.5px solid rgba(95,206,139,.5)}
+.fb.lose{background:#2E1310;border-top:1.5px solid rgba(255,91,61,.5)}
+.fb.info{background:#141B2B;border-top:1.5px solid rgba(255,138,75,.45)}
+.fb h4{font-family:"Roboto Condensed";font-weight:900;font-size:23px;margin-bottom:6px}
+.fb.win h4{color:var(--good)}.fb.lose h4{color:var(--bad)}.fb.info h4{color:var(--ember2)}
+.fb p{font-size:13.5px;line-height:1.5;color:#CBD5DC}.fb p b{color:#fff;font-weight:600}
+.fb .cta{margin-top:15px}
+.pro{border-radius:22px;padding:18px;position:relative;overflow:hidden;
+ background:linear-gradient(155deg,rgba(255,138,75,.18),rgba(255,91,61,.05));border:1px solid rgba(255,138,75,.4)}
+.pro .badge{position:absolute;top:15px;right:15px;font-family:"IBM Plex Mono";font-size:9px;
+ letter-spacing:.16em;color:#170604;background:var(--ember2);padding:3px 9px;border-radius:99px}
+.pro h5{font-family:"Roboto Condensed";font-weight:900;font-size:23px}
+.pro .plede{font-size:12.5px;color:var(--dim);margin-top:4px}
+.cmprow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
+.cmprow.hd{border-top:none;color:var(--dim);font-family:"IBM Plex Mono";font-size:10px;letter-spacing:.14em}
+.cmprow .f1{flex:1}.cmprow .f2,.cmprow .f3{width:70px;text-align:center;font-weight:600}
+.cmprow .f2{color:#8A97A4}.cmprow .f3{color:var(--amber)}
+.prow2{display:flex;gap:9px;margin-top:14px}
+.pbtn{flex:1;border-radius:16px;padding:13px 10px;text-align:center;cursor:pointer;position:relative;
+ background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.13)}
+.pbtn.best{border-color:var(--ember2);background:rgba(255,138,75,.16)}
+.pbtn .tagx{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-family:"IBM Plex Mono";
+ font-size:8.5px;letter-spacing:.12em;background:var(--ember2);color:#170604;padding:2px 8px;border-radius:99px}
+.pbtn b{display:block;font-family:"Roboto Condensed";font-weight:900;font-size:19px}
+.pbtn span{font-size:10.5px;color:var(--dim)}
+.trial{margin-top:11px;text-align:center;font-size:11.5px;color:var(--dim)}
+.store{display:flex;gap:9px;margin-top:10px}
+.sitem{flex:1;border-radius:15px;padding:12px 8px;text-align:center;background:rgba(255,255,255,.045);
+ border:1px solid rgba(255,255,255,.10)}
+.sitem em{display:block;font-style:normal;font-size:19px;margin-bottom:4px}
+.sitem b{display:block;font-family:"Roboto Condensed";font-weight:900;font-size:13px}
+.sitem span{font-size:10px;color:var(--amber);font-family:"IBM Plex Mono"}
+.stats{display:flex;gap:9px}
+.stbox{flex:1;border-radius:18px;padding:13px 6px;text-align:center;background:rgba(255,255,255,.045);
+ border:1px solid rgba(255,255,255,.10)}
+.stbox small{display:block;font-family:"IBM Plex Mono";font-size:9.5px;letter-spacing:.14em;color:var(--dim)}
+.stbox b{font-family:"Roboto Condensed";font-weight:900;font-size:25px;color:var(--amber)}
+.hidden{display:none!important}
+/* ===== celebration takeover ===== */
+.cele{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;padding:26px;text-align:center;opacity:0;transition:opacity .3s;
+ background:radial-gradient(circle at 50% 44%,rgba(255,138,75,.26),rgba(5,7,12,.95) 64%);
+ -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.cele.on{opacity:1}
+.cele canvas{position:absolute;inset:0;pointer-events:none;z-index:2}
+.rays{position:absolute;width:900px;height:900px;z-index:0;opacity:.55;animation:spin 22s linear infinite}
+.cele.huge .rays{opacity:.85;animation-duration:13s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring{position:absolute;z-index:1;border-radius:50%;border:2px solid rgba(255,138,75,.6);
+ width:140px;height:140px;opacity:0}
+.ring.go{animation:ringOut 1.25s cubic-bezier(.15,.7,.25,1) forwards}
+@keyframes ringOut{0%{transform:scale(.3);opacity:.9}100%{transform:scale(5.2);opacity:0}}
+.celeIn{position:relative;z-index:3;display:flex;flex-direction:column;align-items:center;width:100%}
+.celeLbl{font-family:"IBM Plex Mono";font-size:11px;letter-spacing:.3em;color:var(--ember2);
+ text-transform:uppercase;animation:dropIn .4s cubic-bezier(.2,.9,.3,1) both}
+.celeTtl{font-family:"Roboto Condensed";font-weight:900;font-size:clamp(30px,9vw,42px);line-height:.94;
+ margin-top:8px;letter-spacing:-.02em;animation:dropIn .45s .06s cubic-bezier(.2,.9,.3,1) both}
+@keyframes dropIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
+.celeNum{font-family:"Roboto Condensed";font-weight:900;font-variant-numeric:tabular-nums;
+ font-size:clamp(80px,27vw,132px);line-height:.86;margin:14px 0 2px;letter-spacing:-.045em;
+ background:linear-gradient(96deg,#FFF6E6 8%,var(--amber) 45%,var(--ember2) 92%);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 0 26px rgba(255,138,75,.5));animation:pop .5s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.celeNum.kick{animation:kick .16s ease}
+@keyframes kick{50%{transform:scale(1.07)}}
+.celeUnit{font-family:"IBM Plex Mono";font-size:12px;letter-spacing:.24em;color:#C9B48A}
+.celeSub{font-size:13.5px;color:#C4CDD5;margin-top:14px;max-width:290px;line-height:1.5;
+ animation:dropIn .4s .5s cubic-bezier(.2,.9,.3,1) both}
+.celeBarW{width:100%;max-width:280px;margin-top:20px;animation:dropIn .4s .6s cubic-bezier(.2,.9,.3,1) both}
+.celeBarT{display:flex;justify-content:space-between;font-family:"IBM Plex Mono";font-size:10.5px;
+ color:var(--dim);margin-bottom:6px}
+.celeBarT b{color:var(--chalk);font-weight:500}
+.celeBar{height:8px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
+.celeBar i{display:block;height:100%;width:0;border-radius:99px;
+ background:linear-gradient(90deg,var(--ember),var(--amber));transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.celeBtn{margin-top:26px;width:100%;max-width:280px;opacity:0;transform:translateY(10px);
+ transition:opacity .35s,transform .35s}
+.celeBtn.on{opacity:1;transform:none}
+/* gamification */
+.choice3{display:flex;gap:8px;margin-top:15px}
+.ch{flex:1;border:none;border-radius:16px;padding:13px 6px;cursor:pointer;text-align:center;
+ font-family:"Roboto Condensed";font-weight:900;font-size:15px;line-height:1.05;transition:.12s}
+.ch:active{transform:translateY(3px);box-shadow:none!important}
+.ch small{display:block;font-family:Inter;font-weight:600;font-size:10px;margin-top:3px;opacity:.75}
+.ch.keep{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);color:var(--chalk)}
+.ch.half{background:rgba(95,206,139,.16);border:1px solid rgba(95,206,139,.5);color:#B6E9C9}
+.ch.risk{background:linear-gradient(180deg,#F5C879,#E0A03F);color:#1A1104;box-shadow:0 4px 0 #9C6E17}
+.cmb{font-family:"IBM Plex Mono";font-size:12px;color:var(--amber);display:flex;align-items:center;gap:7px}
+.cmb .sh{filter:drop-shadow(0 0 6px rgba(95,206,139,.7))}
+.mult{font-family:"Roboto Condensed";font-weight:900;font-size:15px;color:var(--ember2)}
+.riskbar{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono";font-size:10.5px;
+ letter-spacing:.16em;color:#1A1104;background:var(--amber);padding:4px 11px;border-radius:99px;margin-bottom:10px}
+/* foil scratch */
+.scr{position:relative;border-radius:16px;overflow:hidden;min-height:104px;touch-action:none;
+ background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
+.scr .tx{padding:15px 16px;font-size:13.5px;line-height:1.5;color:#DDE3EA}
+.scr .tx b{color:#fff;font-weight:600}
+.scr canvas{position:absolute;inset:0;pointer-events:none}
+.scr .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+ pointer-events:none;transition:opacity .2s}
+.scr .hint span{background:rgba(255,255,255,.55);color:#0A1014;font-size:10.5px;font-weight:800;
+ letter-spacing:.22em;text-transform:uppercase;padding:5px 13px;border-radius:99px}
+.scr .prg{position:absolute;left:13px;right:13px;bottom:8px;height:2.5px;background:rgba(0,0,0,.3);
+ border-radius:99px;opacity:0;transition:opacity .2s}
+.scr .prg i{display:block;height:100%;width:0;border-radius:99px;
+ background:linear-gradient(90deg,var(--ember),var(--ember2));transition:width .09s linear}
+.crd.resolve{border-color:rgba(233,180,92,.45);background:rgba(233,180,92,.07)}
+.fade{animation:in .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="flare"></div><div class="flare2"></div><div class="vign"></div><div class="grain"></div>
+ <div class="ob" id="ob"><div class="obtop" id="obtop"></div><div class="obbody" id="obbody"></div>
+   <div class="foot"><button class="cta" id="obBtn">Ξεκίνα</button></div></div>
+ <div class="hidden" id="shell" style="flex:1;display:flex;flex-direction:column;min-height:0">
+   <div class="screen" id="screen"></div><div class="nav" id="nav"></div></div>
+ <div class="hidden" id="game" style="flex:1;display:flex;flex-direction:column;min-height:0">
+   <div class="top"><div class="seg" id="seg"></div>
+     <div class="hdrow" style="margin:0"><span class="mono">🔥 <b id="stk">6</b> μέρες</span>
+       <span class="cmb" id="cmb"></span>
+       <span class="mono" id="pts"><b>0</b> πόντοι</span></div></div>
+   <div class="gbody" id="gbody"></div>
+   <div class="foot" id="gfoot"><button class="cta" id="check" disabled>Επιβεβαίωση</button></div>
+   <div class="fb" id="fb"></div>
+ </div>
+</div>
+
+<script>
+/* ================= HAPTICS ================= */
+const H={
+ on:true,
+ supported:typeof navigator!=='undefined'&&'vibrate' in navigator,
+ fire(p){if(this.on&&this.supported){try{navigator.vibrate(p);}catch(e){}}},
+ tap(){this.fire(8)},            // κάθε άγγιγμα
+ select(){this.fire(14)},        // επιλογή απάντησης
+ lock(){this.fire([14,45,22])},  // κλείδωμα πρόβλεψης
+ win(){this.fire([16,42,28])},   // σωστό
+ lose(){this.fire([48,70,48])},  // λάθος
+ tick(){this.fire(5)},           // χρονόμετρο
+ streak(){this.fire([12,30,12,30,26])}, // σερί
+ nav(){this.fire(6)}
+};
+
+/* ================= art + data ================= */
+function portrait(seed,pal){const [c1,c2,c3]=pal;
+ return `<svg viewBox="0 0 220 300" preserveAspectRatio="xMidYMid slice">
+ <defs><linearGradient id="b${seed}" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient>
+  <radialGradient id="h${seed}" cx=".5" cy=".32"><stop offset="0" stop-color="${c3}" stop-opacity=".8"/>
+  <stop offset="1" stop-color="${c3}" stop-opacity="0"/></radialGradient></defs>
+ <rect width="220" height="300" fill="url(#b${seed})"/>
+ <ellipse cx="110" cy="108" rx="118" ry="104" fill="url(#h${seed})"/>
+ <g fill="#080D12"><circle cx="104" cy="96" r="19"/>
+  <path d="M90 116 q14 -8 28 0 q16 9 14 34 l-6 44 -46 2 -4 -46 q-2 -24 14 -34z"/>
+  <path d="M118 124 q30 -22 40 -58 q4 -14 15 -10 q11 5 6 18 q-14 44 -49 68z"/>
+  <path d="M92 126 q-24 12 -30 40 q-4 14 8 17 q12 3 15 -10 q5 -20 21 -30z"/>
+  <path d="M96 194 l-8 66 -18 6 -2 -74z"/><path d="M124 194 l16 60 18 -2 -12 -62z"/></g>
+ <g stroke="#080D12" stroke-width="6" fill="none"><ellipse cx="182" cy="42" rx="17" ry="22"/></g>
+ <circle cx="150" cy="18" r="9" fill="${c3}"/></svg>`;}
+const PAL={nk:['#2E4A63','#0E1A24','#66C2E8'],dg:['#5A3320','#1A0E08','#FF9A5B'],
+ ms:['#2C4A34','#0D1A12','#79D9A0'],ap:['#3C2C58','#150F22','#A98BFF'],ti:['#4A4326','#16140A','#E3C86A']};
+const P={
+ nk:{n:'Ν. Καραμάνος',c:'ΑΟ Κηφισιάς',ntrp:'4.5',rt:1842,streak:2,clay:71,hard:54,form:['w','w','l','w','l'],age:31,hand:'Δεξιόχειρας'},
+ dg:{n:'Δ. Γεωργίου',c:'ΤΚ Γλυφάδας',ntrp:'4.0',rt:1795,streak:5,clay:48,hard:76,form:['w','w','w','w','w'],age:26,hand:'Αριστερόχειρας'},
+ ms:{n:'Μ. Σταύρου',c:'ΟΑ Μαρουσιού',ntrp:'4.0',rt:1711,streak:0,clay:63,hard:41,form:['l','l','w','l','w'],age:34,hand:'Δεξιόχειρας'},
+ ap:{n:'Α. Παππάς',c:'ΑΟ Κηφισιάς',ntrp:'3.5',rt:1688,streak:1,clay:58,hard:60,form:['w','l','w','w','l'],age:22,hand:'Δεξιόχειρας'},
+ ti:{n:'Θ. Ιωάννου',c:'Athens LTC',ntrp:'3.5',rt:1601,streak:0,clay:44,hard:57,form:['l','w','l','l','w'],age:29,hand:'Δεξιόχειρας'},
+};
+const CLUBS=['ΑΟ Κηφισιάς','ΤΚ Γλυφάδας','ΟΑ Μαρουσιού','Athens LTC','Άλλος σύλλογος','Δεν ανήκω κάπου'];
+const PLAYTYPE=[
+ {id:'comp',n:'Παίζω σε τουρνουά',s:'Αγωνίζομαι σε τοπικά ταμπλό'},
+ {id:'fun',n:'Παίζω για πλάκα',s:'Χωρίς επίσημα τουρνουά'},
+ {id:'watch',n:'Παρακολουθώ',s:'Μου αρέσει να ξέρω τι γίνεται'}];
+
+/* ================= 8 games + bonus ================= */
+const FLOW=[
+ {t:'result',type:'ΤΟ ΑΠΟΤΕΛΕΣΜΑ',pts:10,ask:'Ποιος κέρδισε χθες στην Κηφισιά;',
+  hint:'Προημιτελικός · 2 ώρες 14 λεπτά',a:'nk',b:'dg',correct:'dg',split:[38,62],
+  fb:'<b>Γεωργίου</b> 4-6, 7-5, 7-6. Το 62% της σκηνής το βρήκε.'},
+ {t:'score',type:'ΤΟ ΣΚΟΡ',pts:20,scratch:true,ask:'Πώς τελείωσε;',hint:'Τρεις εκδοχές, μία σωστή',
+  o:['2-0 σε 58 λεπτά','2-1 με τάι μπρέικ','2-1 με ανατροπή από 0-1'],correct:2,
+  fb:'Έχασε το πρώτο σετ και γύρισε. <b>4-6, 7-5, 7-6</b>.'},
+ {t:'thisthat',type:'ΑΥΤΟΣ Ή ΑΥΤΟΣ',pts:5,ask:'Ποιον θες στο πλευρό σου σε τρίτο σετ;',
+  hint:'Καθαρά θέμα γούστου',
+  o:[{b:'Ο ψύχραιμος',s:'Γεωργίου · 5 σερί',g:'linear-gradient(150deg,#5A3320,#1A0E08)'},
+     {b:'Ο έμπειρος',s:'Καραμάνος · 31 ετών',g:'linear-gradient(150deg,#2E4A63,#0E1A24)'}],
+  split:[63,37],fb:'Η σκηνή προτιμά τη φόρμα από την εμπειρία. <b>63%</b> για τον Γεωργίου.'},
+ {t:'poll',type:'ΔΗΜΟΣΚΟΠΗΣΗ',pts:5,ask:'Ποιος παίρνει το τουρνουά;',hint:'214 ψήφοι · κλείνει σε 6 ώρες',
+  o:['Δ. Γεωργίου','Ν. Καραμάνος','Μ. Σταύρου','Κάποιος έκπληξη'],split:[44,28,11,17],
+  fb:'Η Γλυφάδα ψηφίζει μαζικά Γεωργίου. Η Κηφισιά διαφωνεί έντονα.'},
+ {t:'upset',type:'Η ΑΝΑΤΡΟΠΗ',pts:15,ask:'Ποια ήταν η έκπληξη;',hint:'Τρία αποτελέσματα, μία ανατροπή',
+  rows:[{l:'Καραμάνος – Ιωάννου',r:'6-2 6-1'},{l:'Παππάς – Γεωργίου',r:'7-6 6-4'},
+        {l:'Σταύρου – Ιωάννου',r:'6-3 6-4'}],correct:1,
+  fb:'Ο <b>Παππάς</b> έριξε τον νούμερο ένα της περιοχής.'},
+ {t:'order',type:'ΒΑΛΕ ΣΕ ΣΕΙΡΑ',pts:15,ask:'Από τον ψηλότερο βαθμό στον χαμηλότερο.',
+  hint:'Άγγιξε με τη σωστή σειρά',items:['dg','ap','ti'],order:['dg','ap','ti'],
+  fb:'Γεωργίου 1795, Παππάς 1688, Ιωάννου 1601.'},
+ {t:'award',type:'ΨΗΦΟΦΟΡΙΑ ΕΒΔΟΜΑΔΑΣ',pts:5,ask:'Παίκτης της εβδομάδας;',
+  hint:'Τα αποτελέσματα βγαίνουν Δευτέρα',
+  o:['Α. Παππάς','Δ. Γεωργίου','Ν. Καραμάνος','Μ. Σταύρου'],split:[41,33,18,8],
+  fb:'Ο <b>Παππάς</b> προηγείται χάρη στην ανατροπή. Η ψηφοφορία κλείνει απόψε.'},
+ {t:'combo',type:'ΔΙΠΛΗ ΠΡΟΒΛΕΨΗ',pts:40,ask:'Διάλεξε δύο νικητές για το Σάββατο.',
+  hint:'Και οι δύο σωστοί ή τίποτα',
+  rows:[{l:'Γεωργίου – Σταύρου',r:'18:00'},{l:'Καραμάνος – Παππάς',r:'19:30'},
+        {l:'Ιωάννου – Δημητρίου',r:'20:45'},{l:'Βλάχος – Ρούσσος',r:'21:15'}],need:2,
+  fb:'Η διπλή σου κλείδωσε. Και τα δύο σωστά δίνουν <b>40 πόντους</b>, αλλιώς μηδέν.'},
+];
+const RAPID={type:'ΓΡΗΓΟΡΟΣ ΓΥΡΟΣ',pts:25,secs:18,
+ qs:[{q:'Ο Γεωργίου είναι αριστερόχειρας.',a:1},
+     {q:'Ο Καραμάνος έχει καλύτερο ποσοστό σε σκληρό απ’ ό,τι σε χώμα.',a:0},
+     {q:'Ο Παππάς είναι ο νεότερος της πεντάδας.',a:1},
+     {q:'Ο Σταύρου έχει ενεργό σερί νικών.',a:0},
+     {q:'Ο ΑΟ Κηφισιάς έχει δύο παίκτες στην πεντάδα.',a:1}]};
+
+/* ================= foil scratch ================= */
+const SC={cols:24,rows:11,clear:.68,flakes:['#7E9EA9','#5E838F','#96B4BE','#41626D','#B7CDD4']};
+function scratchPanel(html,tone,onDone){
+ const d=document.createElement('div');d.className='scr';
+ if(tone)d.style.borderColor=tone;
+ d.innerHTML=`<div class="tx">${html}</div><canvas class="fo"></canvas><canvas class="du"></canvas>
+  <div class="hint"><span>Ξύσε</span></div><div class="prg"><i></i></div>`;
+ const foil=d.querySelector('.fo'),dust=d.querySelector('.du'),hint=d.querySelector('.hint'),
+  prg=d.querySelector('.prg'),bar=prg.querySelector('i'),dpr=devicePixelRatio||1;
+ const cov=new Set();let done=false,dr=false,last=null,ps=[],raf=null,hapAcc=0;
+ requestAnimationFrame(()=>{
+  const r=d.getBoundingClientRect();
+  [foil,dust].forEach(cv=>{cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);
+   cv.style.width=r.width+'px';cv.style.height=r.height+'px';});
+  const x=foil.getContext('2d'),w=foil.width,h=foil.height,g=x.createLinearGradient(0,0,w,h);
+  g.addColorStop(0,'#2A3A4A');g.addColorStop(.42,'#4E6A79');g.addColorStop(.52,'#7794A2');
+  g.addColorStop(.64,'#3D5462');g.addColorStop(1,'#25333F');
+  x.fillStyle=g;x.fillRect(0,0,w,h);x.globalAlpha=.08;
+  for(let k=0;k<170;k++){x.strokeStyle=k%2?'#fff':'#000';x.lineWidth=Math.random()*1.7*dpr;
+   const y=Math.random()*h;x.beginPath();x.moveTo(0,y);x.lineTo(w,y+(Math.random()*10-5)*dpr);x.stroke();}
+  x.globalAlpha=1;});
+ function tick(){const x=dust.getContext('2d');x.clearRect(0,0,dust.width,dust.height);
+  for(let k=ps.length-1;k>=0;k--){const p=ps[k];p.vy+=.42*dpr;p.vx*=.985;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life--;
+   if(p.life<=0||p.y>dust.height+30){ps.splice(k,1);continue;}
+   x.save();x.translate(p.x,p.y);x.rotate(p.rot);x.globalAlpha=Math.max(0,Math.min(1,p.life/24));
+   x.fillStyle=p.col;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.55);x.restore();}
+  raf=ps.length?requestAnimationFrame(tick):null;}
+ function spawn(x,y,n,sp){for(let k=0;k<n;k++){const a=Math.random()*Math.PI*2,s=(Math.random()*sp+.6)*dpr;
+   ps.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.6*dpr,rot:Math.random()*Math.PI,vr:(Math.random()-.5)*.4,
+    s:(2.4+Math.random()*4)*dpr,life:26+Math.random()*26,col:SC.flakes[(Math.random()*SC.flakes.length)|0]});}
+  if(!raf)raf=requestAnimationFrame(tick);}
+ function mark(x,y,r){const cw=foil.width/SC.cols,ch=foil.height/SC.rows;
+  for(let cy=Math.max(0,((y-r)/ch)|0);cy<=Math.min(SC.rows-1,((y+r)/ch)|0);cy++)
+   for(let cx=Math.max(0,((x-r)/cw)|0);cx<=Math.min(SC.cols-1,((x+r)/cw)|0);cx++){
+    const px=(cx+.5)*cw,py=(cy+.5)*ch;if((px-x)**2+(py-y)**2<=r*r)cov.add(cy*SC.cols+cx);}}
+ function paint(p){if(done)return;const x=foil.getContext('2d'),rad=24*dpr;
+  x.globalCompositeOperation='destination-out';x.lineCap='round';x.lineJoin='round';x.lineWidth=rad*2;
+  let mv=0;
+  if(last){const dx=p.x-last.x,dy=p.y-last.y;mv=Math.hypot(dx,dy);
+   x.beginPath();x.moveTo(last.x,last.y);x.lineTo(p.x,p.y);x.stroke();
+   const st=Math.max(1,Math.ceil(mv/(rad*.5)));for(let k=0;k<=st;k++)mark(last.x+dx*k/st,last.y+dy*k/st,rad);}
+  x.beginPath();x.arc(p.x,p.y,rad,0,Math.PI*2);x.fill();mark(p.x,p.y,rad);last=p;
+  spawn(p.x,p.y,Math.min(7,2+Math.floor(mv/(10*dpr))),2.6);
+  hapAcc+=mv;if(hapAcc>34*dpr){hapAcc=0;H.tick();}          // δόνηση καθώς ξύνεις
+  const pct=cov.size/(SC.cols*SC.rows);bar.style.width=Math.min(100,(pct/SC.clear)*100)+'%';
+  if(pct>SC.clear){done=true;H.streak();
+   foil.style.transition='opacity .32s,transform .32s';foil.style.opacity='0';
+   foil.style.transform='scale(1.03)';prg.style.opacity='0';
+   for(let k=0;k<10;k++)spawn(Math.random()*foil.width,Math.random()*foil.height*.8,8,5.5);
+   if(onDone)onDone();}}
+ const pos=e=>{const r=foil.getBoundingClientRect();return{x:(e.clientX-r.left)*dpr,y:(e.clientY-r.top)*dpr};};
+ d.addEventListener('pointerdown',e=>{if(done)return;dr=true;last=null;hint.style.opacity='0';
+  prg.style.opacity='1';d.setPointerCapture(e.pointerId);H.select();paint(pos(e));});
+ d.addEventListener('pointermove',e=>{if(dr&&!done)paint(pos(e));});
+ d.addEventListener('pointerup',()=>{dr=false;last=null;});
+ d.addEventListener('pointercancel',()=>{dr=false;last=null;});
+ return d;
+}
+
+/* ================= celebration takeover ================= */
+function celebrate({label='ΚΕΡΔΙΣΕΣ',title,points,sub,huge=false,after}){
+ const app=document.querySelector('.app');
+ const el=document.createElement('div');
+ el.className='cele'+(huge?' huge':'');
+ const rays=Array.from({length:22}).map((_,k)=>{
+  const a=(360/22)*k;
+  return `<rect x="449" y="450" width="460" height="${k%2?5:15}" rx="2"
+   fill="${k%2?'#FF8A4B':'#E9B45C'}" opacity="${k%2?.30:.16}"
+   transform="rotate(${a} 450 450)"/>`;}).join('');
+ el.innerHTML=`<svg class="rays" viewBox="0 0 900 900">${rays}</svg>
+  <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+  <canvas></canvas>
+  <div class="celeIn">
+    <div class="celeLbl">${label}</div>
+    <div class="celeTtl">${title}</div>
+    <div class="celeNum" id="celeNum">0</div>
+    <div class="celeUnit">ΠΟΝΤΟΙ</div>
+    ${sub?`<div class="celeSub">${sub}</div>`:''}
+    <div class="celeBarW">
+      <div class="celeBarT"><span>ΣΥΝΟΛΟ</span><b id="celeTot">${total}</b></div>
+      <div class="celeBar"><i id="celeBar"></i></div>
+    </div>
+    <button class="cta celeBtn" id="celeBtn">Συνέχεια</button>
+  </div>`;
+ app.appendChild(el);
+ requestAnimationFrame(()=>el.classList.add('on'));
+
+ const rings=[...el.querySelectorAll('.ring')];
+ rings.forEach((r,k)=>setTimeout(()=>r.classList.add('go'),k*180));
+ H.fire(huge?[24,50,18,50,34]:[18,44,26]);
+
+ /* count up */
+ const numEl=el.querySelector('#celeNum'),totEl=el.querySelector('#celeTot'),
+       barEl=el.querySelector('#celeBar'),btn=el.querySelector('#celeBtn');
+ const startTotal=total,endTotal=total+points,t0=performance.now(),dur=huge?1250:950;
+ let lastTick=0;
+ const step=t=>{
+  const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);
+  const v=Math.round(points*e);
+  numEl.textContent=v;
+  totEl.textContent=startTotal+v;
+  if(t-lastTick>110){lastTick=t;H.tick();numEl.classList.remove('kick');
+   void numEl.offsetWidth;numEl.classList.add('kick');}
+  if(k<1)requestAnimationFrame(step);
+  else{
+   H.fire(huge?[16,40,16,40,52]:[14,36,30]);
+   barEl.style.width=Math.min(100,((endTotal%500)/500)*100)+'%';
+   burst(el.querySelector('canvas'),huge?170:120);
+   setTimeout(()=>btn.classList.add('on'),260);
+  }
+ };
+ setTimeout(()=>requestAnimationFrame(step),320);
+ setTimeout(()=>{barEl.style.width='6%';},340);
+
+ btn.onclick=()=>{H.tap();el.classList.remove('on');
+  setTimeout(()=>{el.remove();if(after)after();},320);};
+}
+
+function burst(cv,n){
+ const dpr=devicePixelRatio||1,r=cv.getBoundingClientRect();
+ cv.width=r.width*dpr;cv.height=r.height*dpr;
+ const x=cv.getContext('2d'),cols=['#FF5B3D','#FF8A4B','#E9B45C','#FFE9B8','#F4F2ED','#5FCE8B'];
+ const ps=Array.from({length:n},()=>{
+  const a=Math.random()*Math.PI*2,sp=(2+Math.random()*11)*dpr;
+  return{x:cv.width/2,y:cv.height*.42,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-3*dpr,
+   s:(4+Math.random()*8)*dpr,rot:Math.random()*6,vr:(Math.random()-.5)*.4,
+   life:70+Math.random()*60,col:cols[(Math.random()*cols.length)|0]};});
+ (function loop(){
+  x.clearRect(0,0,cv.width,cv.height);let alive=false;
+  ps.forEach(p=>{p.vy+=.26*dpr;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life--;
+   if(p.life>0&&p.y<cv.height+50){alive=true;
+    x.save();x.translate(p.x,p.y);x.rotate(p.rot);
+    x.globalAlpha=Math.min(1,p.life/28);x.fillStyle=p.col;
+    x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.5);x.restore();}});
+  if(alive)requestAnimationFrame(loop);
+ })();
+}
+
+let obStep=0,playType=null,claimed=null,club=null,favs=new Set(),tab='today',openPlayer=null;
+let i=0,sel=null,multi=[],order=[],pts=0,streak=6,doneToday=false,bonusDone=false,total=1240,acc=64,resolved=false;
+let combo=0,shield=false,pending=0,hardIdx=0;
+const MULT=c=>c>=4?2:c>=3?1.75:c>=2?1.5:c>=1?1.25:1;
+const HARD=[
+ {q:'Ο Γεωργίου δεν έχει χάσει ματς σε σκληρό γήπεδο φέτος.',o:['Λάθος','Σωστό'],a:0,
+  f:'Έχει χάσει ένα, στον δεύτερο γύρο του Μαρτίου. 76% δεν είναι 100%.'},
+ {q:'Ποιος έχει το μεγαλύτερο άλμα βαθμών τον τελευταίο μήνα;',
+  o:['Α. Παππάς','Δ. Γεωργίου','Θ. Ιωάννου'],a:0,
+  f:'Ο Παππάς πήρε 62 βαθμούς σε τέσσερις εβδομάδες, κυρίως από τη νίκη επί του Γεωργίου.'},
+ {q:'Πόσα ματς έχουν παίξει μεταξύ τους Καραμάνος και Γεωργίου;',o:['Δύο','Τέσσερα','Έξι'],a:1,
+  f:'Τέσσερα, με τον Γεωργίου να προηγείται 3-1.'},
+];
+const $=id=>document.getElementById(id);
+const ob=$('ob'),obtop=$('obtop'),obbody=$('obbody'),obBtn=$('obBtn'),shell=$('shell'),
+ screen=$('screen'),nav=$('nav'),game=$('game'),gbody=$('gbody'),fb=$('fb'),check=$('check'),segEl=$('seg');
+let runList=FLOW,isBonus=false;
+
+/* ---------- onboarding ---------- */
+function obSteps(){return playType==='comp'
+ ? ['welcome','type','claim','club','friends']
+ : ['welcome','type','club','friends'];}
+
+function renderOb(){
+ const st=obSteps(),cur=st[obStep];
+ obtop.innerHTML='';st.slice(1).forEach((_,k)=>{const d=document.createElement('i');
+  if(k<=obStep-1)d.className='on';obtop.appendChild(d);});
+ obbody.innerHTML='';const w=document.createElement('div');w.className='fade';
+ const step=n=>`Βήμα ${obStep} από ${st.length-1}`;
+
+ if(cur==='welcome'){
+  w.innerHTML=`<div class="eyebrow">Αθήνα · καθημερινό παιχνίδι</div>
+   <div class="wordmark">NET<br>PROPHET</div>
+   <div class="tagline">Ξέρεις την τοπική σκηνή καλύτερα από όλους;</div>
+   <div class="sub">Οκτώ παιχνίδια τη μέρα με πραγματικά ματς από τα ταμπλό της Αθήνας. Προβλέψεις, δημοσκοπήσεις, ψηφοφορίες. Και τα στατιστικά κάθε παίκτη μαζί.</div>`;
+  obBtn.textContent='Ξεκίνα';obBtn.disabled=false;obBtn.onclick=()=>{H.tap();obStep=1;renderOb();};}
+
+ if(cur==='type'){
+  w.innerHTML=`<div class="eyebrow">${step()}</div>
+   <div class="tagline">Παίζεις κι εσύ;</div>
+   <div class="sub">Για να ξέρουμε αν θα βλέπεις και τα δικά σου ματς μέσα στο παιχνίδι.</div>`;
+  const l=document.createElement('div');l.className='plist';
+  PLAYTYPE.forEach(p=>{const r=document.createElement('div');r.className='prow'+(playType===p.id?' sel':'');
+   r.innerHTML=`<span class="who">${p.n}<small>${p.s}</small></span><span class="tick">✓</span>`;
+   r.onclick=()=>{H.select();playType=p.id;if(p.id!=='comp')claimed=null;renderOb();};l.appendChild(r);});
+  w.appendChild(l);
+  obBtn.textContent='Συνέχεια';obBtn.disabled=!playType;
+  obBtn.onclick=()=>{H.tap();obStep++;renderOb();};}
+
+ if(cur==='claim'){
+  w.innerHTML=`<div class="eyebrow">${step()}</div>
+   <div class="tagline">Βρες τον εαυτό σου.</div>
+   <div class="sub">Αν έχεις παίξει σε τοπικό ταμπλό, είσαι ήδη στη λίστα. Διάλεξε το προφίλ σου για να βλέπεις τα ματς και τα στατιστικά σου.</div>
+   <div class="psearch" style="margin-top:16px"><input placeholder="Γράψε το όνομά σου"></div>`;
+  const l=document.createElement('div');l.className='plist';l.style.marginTop='0';
+  Object.entries(P).forEach(([k,p])=>{const r=document.createElement('div');
+   r.className='prow'+(claimed===k?' sel':'');
+   r.innerHTML=`<div class="mug" style="width:38px;height:38px;border-radius:11px">${portrait(k,PAL[k])}</div>
+    <span class="who">${p.n}<small>${p.c} · NTRP ${p.ntrp}</small></span><span class="tick">✓</span>`;
+   r.onclick=()=>{H.select();claimed=claimed===k?null:k;if(claimed)club=P[k].c;renderOb();};l.appendChild(r);});
+  w.appendChild(l);
+  obBtn.textContent=claimed?'Αυτός είμαι':'Δεν είμαι στη λίστα';obBtn.disabled=false;
+  obBtn.onclick=()=>{H.tap();obStep++;renderOb();};}
+
+ if(cur==='club'){
+  w.innerHTML=`<div class="eyebrow">${step()}</div>
+   <div class="tagline">Σε ποιον σύλλογο;</div>
+   <div class="sub">Θα μπεις στην κατάταξη του συλλόγου σου και θα βλέπεις πρώτα τα δικά του ματς.</div>`;
+  const g=document.createElement('div');g.className='tiles';
+  CLUBS.forEach(c=>{const t=document.createElement('div');t.className='tile'+(club===c?' sel':'');
+   t.innerHTML=`<div class="nm2" style="font-size:15px">${c}</div>`;
+   t.onclick=()=>{H.select();club=c;renderOb();};g.appendChild(t);});
+  w.appendChild(g);
+  obBtn.textContent='Συνέχεια';obBtn.disabled=!club;
+  obBtn.onclick=()=>{H.tap();obStep++;renderOb();};}
+
+ if(cur==='friends'){
+  w.innerHTML=`<div class="eyebrow">${step()}</div>
+   <div class="tagline">Ποιους ξέρεις;</div>
+   <div class="sub">Φίλοι, συμπαίκτες, αντίπαλοι. Θα βλέπεις πρώτα τα ματς τους και θα συγκρίνεσαι μαζί τους στην κατάταξη.</div>
+   <div class="psearch" style="margin-top:16px"><input placeholder="Αναζήτηση παίκτη"></div>`;
+  const l=document.createElement('div');l.className='plist';l.style.marginTop='0';
+  Object.entries(P).filter(([k])=>k!==claimed).forEach(([k,p])=>{
+   const r=document.createElement('div');r.className='prow'+(favs.has(k)?' sel':'');
+   r.innerHTML=`<div class="mug" style="width:38px;height:38px;border-radius:11px">${portrait(k,PAL[k])}</div>
+    <span class="who">${p.n}<small>${p.c} · NTRP ${p.ntrp}</small></span><span class="tick">✓</span>`;
+   r.onclick=()=>{H.select();favs.has(k)?favs.delete(k):favs.add(k);renderOb();};l.appendChild(r);});
+  w.appendChild(l);
+  obBtn.textContent=favs.size?`Πάμε (${favs.size})`:'Διάλεξε τουλάχιστον έναν';
+  obBtn.disabled=!favs.size;
+  obBtn.onclick=()=>{H.streak();ob.classList.add('hidden');shell.classList.remove('hidden');renderShell();};}
+
+ obbody.appendChild(w);
+}
+
+/* ---------- shell ---------- */
+const TABS=[{id:'today',ic:'⚡',n:'Σήμερα'},{id:'players',ic:'👤',n:'Παίκτες'},
+ {id:'board',ic:'📊',n:'Κατάταξη'},{id:'pro',ic:'★',n:'Pro'}];
+function renderShell(){
+ nav.innerHTML='';
+ TABS.forEach(t=>{const d=document.createElement('div');d.className=tab===t.id?'on':'';
+  d.innerHTML=`<em>${t.ic}</em><span>${t.n}</span>`;
+  d.onclick=()=>{H.nav();tab=t.id;openPlayer=null;renderShell();};nav.appendChild(d);});
+ screen.innerHTML='';const w=document.createElement('div');w.className='fade';
+ w.innerHTML=tab==='today'?todayView():tab==='players'?(openPlayer?playerView(openPlayer):playersView()):
+   tab==='board'?boardView():proView();
+ screen.appendChild(w);
+ const s=$('startBtn');if(s)s.onclick=()=>{H.lock();startRun(false);};
+ const b2=$('bonusBtn');if(b2)b2.onclick=()=>{H.lock();startRun(true);};
+ screen.querySelectorAll('[data-p]').forEach(el=>el.onclick=()=>{H.tap();openPlayer=el.dataset.p;renderShell();});
+ const b=$('backBtn');if(b)b.onclick=()=>{H.tap();openPlayer=null;renderShell();};
+ screen.querySelectorAll('.lockbar').forEach(el=>el.onclick=()=>{H.tap();tab='pro';renderShell();});
+ const hp=$('hapToggle');if(hp)hp.onclick=()=>{H.on=!H.on;H.select();renderShell();};
+ const rs=$('resolveSlot');
+ if(rs)rs.appendChild(scratchPanel(
+   'Γεωργίου <b>6-3 6-4</b> · Καραμάνος <b>7-5 6-7 6-2</b><br>Και τα δύο σωστά.',
+   'rgba(120,220,150,.45)',
+   ()=>{resolved=true;
+     celebrate({label:'ΔΙΠΛΗ ΠΡΟΒΛΕΨΗ',title:'Βγήκαν και τα δύο',points:40,huge:true,
+       sub:'Μόνο το 12% της σκηνής βρήκε και τα δύο ματς του Σαββάτου.',
+       after:()=>{total+=40;renderShell();}});}));
+}
+
+function todayView(){
+ return `<div class="hdrow"><div class="h1">Σήμερα</div><span class="mono">🔥 <b>${streak}</b> μέρες</span></div>
+  ${claimed?`<div class="crd" style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+    <div class="mug" style="width:42px;height:42px;border-radius:12px">${portrait(claimed,PAL[claimed])}</div>
+    <div style="flex:1"><b style="font-size:14.5px">${P[claimed].n}</b>
+      <div class="t2" style="margin:2px 0 0">Το προφίλ σου · ${P[claimed].c} · NTRP ${P[claimed].ntrp}</div></div>
+    <span class="mono">${P[claimed].rt}</span></div>`:''}
+  <div class="hero"><span class="pill" style="color:var(--ember2)">ΤΡΙΤΗ 8 ΣΕΠΤΕΜΒΡΙΟΥ</span>
+   <h2>${doneToday?'Το έπαιξες σήμερα':'Οκτώ παιχνίδια σε περιμένουν'}</h2>
+   <p>${doneToday?'Επιστρέφεις αύριο στις 09:00.':'Αποτέλεσμα, σκορ, αυτός ή αυτός, δημοσκόπηση, ανατροπή, σειρά, ψηφοφορία, διπλή πρόβλεψη.'}</p>
+   <button class="cta" id="startBtn" ${doneToday?'disabled':''}>${doneToday?'Ολοκληρώθηκε':'Παίξε τώρα'}</button></div>
+
+  ${doneToday&&!bonusDone?`<div class="crd bonus" style="margin-top:12px">
+    <div class="t1"><b>Γρήγορος γύρος</b><span style="color:var(--good)">ΞΕΚΛΕΙΔΩΘΗΚΕ</span></div>
+    <div class="t2" style="margin-bottom:11px">Το κέρδισες με σερί 5+ ημερών. Πέντε ερωτήσεις σε 18 δευτερόλεπτα.</div>
+    <button class="cta win" id="bonusBtn">Παίξε τον γύρο</button></div>`:''}
+
+  <div class="sectitle">ΣΕ ΑΝΑΜΟΝΗ</div>
+  ${resolved?'':`<div class="crd resolve"><div class="t1"><b>Βγήκαν τα αποτελέσματα</b><span>ΣΑΒ 21:40</span></div>
+   <div class="t2" style="margin-bottom:11px">Η διπλή πρόβλεψη του Σαββάτου έκλεισε. Ξύσε για να δεις πώς πήγε.</div>
+   <div id="resolveSlot"></div></div>`}
+  <div class="crd"><div class="t1"><b>Ψηφοφορία εβδομάδας</b><span>ΚΛΕΙΝΕΙ ΑΠΟΨΕ</span></div>
+   <div class="t2">Παίκτης της εβδομάδας · ψήφισες Παππά</div></div>
+
+  <div class="sectitle">ΟΙ ΠΑΙΚΤΕΣ ΣΟΥ</div>
+  ${[...favs].map(k=>{const p=P[k];return `<div class="plrow" data-p="${k}">
+    <div class="mug" style="width:40px;height:40px;border-radius:12px">${portrait(k,PAL[k])}</div>
+    <span class="who">${p.n}<small>${p.c}</small></span>
+    <div class="form">${p.form.map(f=>`<i class="${f}">${f==='w'?'Ν':'Η'}</i>`).join('')}</div></div>`}).join('')}
+
+  <div class="sectitle">Η ΕΒΔΟΜΑΔΑ ΣΟΥ</div>
+  <div class="stats"><div class="stbox"><small>ΠΟΝΤΟΙ</small><b>${total}</b></div>
+   <div class="stbox"><small>ΑΚΡΙΒΕΙΑ</small><b>${acc}%</b></div>
+   <div class="stbox"><small>ΣΕΡΙ</small><b>${streak}</b></div></div>
+
+  <div class="sectitle">ΡΥΘΜΙΣΕΙΣ</div>
+  <div class="tog" id="hapToggle"><div><b>Δόνηση</b>
+    <small>${H.supported?'Μικρή δόνηση σε κάθε επιλογή':'Δεν υποστηρίζεται σε αυτή τη συσκευή'}</small></div>
+   <div class="sw ${H.on?'on':''}"></div></div>`;
+}
+function playersView(){
+ return `<div class="hdrow"><div class="h1">Παίκτες</div><span class="mono">Αττική · 214</span></div>
+  <div class="psearch"><input placeholder="Αναζήτηση παίκτη ή συλλόγου"></div>
+  ${Object.entries(P).map(([k,p])=>`<div class="plrow" data-p="${k}">
+   <div class="mug" style="width:44px;height:44px;border-radius:13px">${portrait(k,PAL[k])}</div>
+   <span class="who">${p.n}<small>${p.c} · NTRP ${p.ntrp}</small></span>
+   <span class="rt">${p.rt}</span></div>`).join('')}`;
+}
+function playerView(k){const p=P[k];
+ return `<span class="back" id="backBtn">← Παίκτες</span>
+  <div style="display:flex;gap:14px;align-items:center">
+   <div class="mug" style="width:76px;height:76px;border-radius:20px">${portrait(k,PAL[k])}</div>
+   <div><div class="h1" style="font-size:26px">${p.n}</div>
+    <div class="mono" style="margin-top:4px">${p.c}</div>
+    <div class="mono">NTRP ${p.ntrp} · ${p.hand} · ${p.age} ετών</div></div></div>
+  <div class="sectitle">ΦΟΡΜΑ · ΤΕΛΕΥΤΑΙΑ 5</div>
+  <div class="crd"><div class="form" style="justify-content:flex-start">
+   ${p.form.map(f=>`<i class="${f}">${f==='w'?'Ν':'Η'}</i>`).join('')}</div>
+   <div class="t2" style="margin-top:8px">Ενεργό σερί: ${p.streak} · Βαθμοί: ${p.rt}</div></div>
+  <div class="sectitle">ΑΠΟΔΟΣΗ ΑΝΑ ΕΠΙΦΑΝΕΙΑ</div>
+  <div class="crd">
+   <div class="barrow"><small>ΧΩΜΑ</small><div class="bar"><i style="width:${p.clay}%;background:#C4763F"></i></div><b>${p.clay}%</b></div>
+   <div class="barrow"><small>ΣΚΛΗΡΟ</small><div class="bar"><i style="width:${p.hard}%;background:#3E7FB8"></i></div><b>${p.hard}%</b></div></div>
+  <div class="sectitle">ΤΕΛΕΥΤΑΙΑ ΜΑΤΣ</div>
+  <div class="crd"><div class="t1"><b>vs Θ. Ιωάννου</b><span style="color:var(--good)">6-2 6-1</span></div></div>
+  <div class="crd"><div class="t1"><b>vs Α. Παππάς</b><span style="color:var(--bad)">6-7 4-6</span></div></div>
+  <div class="sectitle">ΒΑΘΥΤΕΡΑ ΣΤΑΤΙΣΤΙΚΑ</div>
+  <div class="crd locked"><div class="blur">
+    <div class="barrow"><small>ΣΕΡΒΙΣ</small><div class="bar"><i style="width:68%;background:#7FA662"></i></div><b>68%</b></div>
+    <div class="barrow"><small>3 ΣΕΤ</small><div class="bar"><i style="width:74%;background:#7FA662"></i></div><b>74%</b></div>
+    <div class="barrow"><small>ΤΑΪ ΜΠΡΕΪΚ</small><div class="bar"><i style="width:52%;background:#7FA662"></i></div><b>52%</b></div>
+    <div class="t2" style="margin-top:9px">Πλήρες ιστορικό 38 ματς, ανά αντίπαλο και ανά σεζόν</div></div>
+   <div class="lockbar"><span>PRO</span><b>Πλήρη στατιστικά & ιστορικό</b></div></div>`;
+}
+function boardView(){
+ return `<div class="hdrow"><div class="h1">Κατάταξη</div><span class="mono">ΕΒΔΟΜΑΔΑ 36</span></div>
+  <div class="sectitle">ΑΤΤΙΚΗ</div>
+  <div class="lbrow"><span class="pos">1</span><span class="who">Σ. Δημητρίου<small>ΤΚ Γλυφάδας · 71% ακρίβεια</small></span><span class="pts">410</span></div>
+  <div class="lbrow"><span class="pos">2</span><span class="who">Κ. Βλάχος<small>ΟΑ Μαρουσιού · 68%</small></span><span class="pts">385</span></div>
+  <div class="lbrow me"><span class="pos">3</span><span class="who">Εσύ<small>ΑΟ Κηφισιάς · ${acc}%</small></span><span class="pts">${340+pts}</span></div>
+  <div class="lbrow"><span class="pos">4</span><span class="who">Ι. Ρούσσος<small>Athens LTC · 61%</small></span><span class="pts">318</span></div>
+  <div class="sectitle">ΣΥΛΛΟΓΟΙ</div>
+  <div class="lbrow"><span class="pos">1</span><span class="who">ΤΚ Γλυφάδας<small>34 παίκτες</small></span><span class="pts">2.140</span></div>
+  <div class="lbrow me"><span class="pos">2</span><span class="who">ΑΟ Κηφισιάς<small>29 παίκτες</small></span><span class="pts">1.980</span></div>`;
+}
+function proView(){
+ return `<div class="hdrow"><div class="h1">NetProphet Pro</div></div>
+  <div class="pro"><span class="badge">7 ΜΕΡΕΣ ΔΩΡΕΑΝ</span>
+   <h5>Περισσότερα παιχνίδια, όλα τα δεδομένα</h5>
+   <div class="plede">Δωρεάν έχεις όλα τα παιχνίδια. Με την Pro έχεις και όλα τα δεδομένα.</div>
+   <div style="margin-top:14px">
+    <div class="cmprow hd"><span class="f1"></span><span class="f2">ΔΩΡΕΑΝ</span><span class="f3">PRO</span></div>
+    <div class="cmprow"><span class="f1">Παιχνίδια τη μέρα</span><span class="f2">8</span><span class="f3">Απεριόριστα</span></div>
+    <div class="cmprow"><span class="f1">Γρήγορος γύρος</span><span class="f2">Με σερί</span><span class="f3">Πάντα</span></div>
+    <div class="cmprow"><span class="f1">Δημοσκοπήσεις & ψηφοφορίες</span><span class="f2">✓</span><span class="f3">✓</span></div>
+    <div class="cmprow"><span class="f1">Βασικά στατιστικά παικτών</span><span class="f2">✓</span><span class="f3">✓</span></div>
+    <div class="cmprow"><span class="f1">Κατάταξη & σύλλογοι</span><span class="f2">✓</span><span class="f3">✓</span></div>
+    <div class="cmprow"><span class="f1">Βαθύτερα στατιστικά</span><span class="f2">—</span><span class="f3">✓</span></div>
+    <div class="cmprow"><span class="f1">Ιστορικό μεταξύ τους</span><span class="f2">—</span><span class="f3">✓</span></div>
+    <div class="cmprow"><span class="f1">Σύγκριση δύο παικτών</span><span class="f2">1 / εβδομάδα</span><span class="f3">Απεριόριστη</span></div>
+    <div class="cmprow"><span class="f1">Αρχείο παλιών γύρων</span><span class="f2">7 μέρες</span><span class="f3">Πλήρες</span></div>
+    <div class="cmprow"><span class="f1">Ανάλυση ακρίβειας</span><span class="f2">Σύνολο</span><span class="f3">Ανά τύπο</span></div>
+    <div class="cmprow"><span class="f1">Ειδοποιήσεις παικτών</span><span class="f2">—</span><span class="f3">✓</span></div>
+    <div class="cmprow"><span class="f1">Ασφάλεια σερί</span><span class="f2">—</span><span class="f3">Κάθε μήνα</span></div>
+   </div>
+   <div class="prow2">
+    <div class="pbtn"><b>4,99 €</b><span>τον μήνα</span></div>
+    <div class="pbtn best"><span class="tagx">ΚΑΛΥΤΕΡΗ ΑΞΙΑ</span><b>34,99 €</b><span>τον χρόνο · −42%</span></div></div>
+   <div class="trial">Δοκιμή 7 ημερών. Ακυρώνεις όποτε θες.</div></div>
+  <div class="sectitle">ΜΕΜΟΝΩΜΕΝΑ</div>
+  <div class="store"><div class="sitem"><em>🛡️</em><b>Ασφάλεια σερί</b><span>0,99 €</span></div>
+   <div class="sitem"><em>⚡</em><b>Έξτρα γύρος</b><span>0,99 €</span></div>
+   <div class="sitem"><em>📊</em><b>Ανάλυση παίκτη</b><span>1,99 €</span></div></div>`;
+}
+
+/* ---------- run ---------- */
+function startRun(bonus){
+ isBonus=bonus;i=0;pts=bonus?pts:0;combo=0;shield=false;pending=0;
+ shell.classList.add('hidden');game.classList.remove('hidden');
+ if(bonus)renderRapid();else render();
+}
+function chrome(n,cur){segEl.innerHTML='';
+ for(let k=0;k<n;k++){const e=document.createElement('i');
+  if(k<cur)e.className='on';else if(k===cur)e.className='cur';segEl.appendChild(e);}
+ $('pts').innerHTML=`<b>${pts}</b> πόντοι`;$('stk').textContent=streak;
+ const c=$('cmb');
+ if(c)c.innerHTML=(combo>0?`<span class="mult">×${MULT(combo)}</span>`:'')+
+   (shield?'<span class="sh">🛡️</span>':'');}
+
+function render(){
+ sel=null;multi=[];order=[];fb.className='fb';check.disabled=true;
+ check.textContent='Επιβεβαίωση';check.onclick=submit;$('gfoot').classList.remove('hidden');
+ const g=FLOW[i];gbody.innerHTML='';
+ const w=document.createElement('div');w.className='fade';
+ w.innerHTML=`<div class="gtype">${g.type} · ${g.pts} πόντοι</div>
+  <div class="ask">${g.ask}</div><div class="hintline">${g.hint}</div>`;
+
+ if(g.t==='result'){const d=document.createElement('div');d.className='duo';
+  [g.a,g.b].forEach(k=>{const c=document.createElement('div');c.className='pcard';c.dataset.k=k;
+   c.innerHTML=`<div class="mug">${portrait(k,PAL[k])}</div><div class="nm">${P[k].n}</div>
+    <div class="cl">${P[k].c}</div><div class="pctv"></div><div class="share"></div>`;
+   c.onclick=()=>{H.select();sel=k;d.querySelectorAll('.pcard').forEach(x=>x.classList.toggle('sel',x===c));
+    check.disabled=false;};d.appendChild(c);});
+  w.appendChild(d);}
+
+ if(g.t==='thisthat'){const d=document.createElement('div');d.className='tt';
+  g.o.forEach((o,k)=>{const c=document.createElement('div');c.className='ttc';c.dataset.k=k;
+   c.innerHTML=`<div class="bgx" style="background:${o.g}"></div>
+     <div class="tx"><b>${o.b}</b><small>${o.s}</small></div><div class="vt"></div>`;
+   c.onclick=()=>{H.select();sel=k;d.querySelectorAll('.ttc').forEach(x=>x.classList.toggle('sel',x===c));
+    check.disabled=false;};d.appendChild(c);});
+  w.appendChild(d);}
+
+ if(g.t==='poll'||g.t==='award'||g.t==='score'){
+  const o=document.createElement('div');o.className='opts';
+  g.o.forEach((t,k)=>{const b=document.createElement('div');b.className='opt';b.dataset.k=k;
+   b.innerHTML=`<span class="fill"></span><span>${t}</span><span class="pc"></span>`;
+   b.onclick=()=>{H.select();sel=k;o.querySelectorAll('.opt').forEach(x=>x.classList.toggle('sel',x===b));
+    check.disabled=false;};o.appendChild(b);});
+  w.appendChild(o);}
+
+ if(g.t==='order'){const o=document.createElement('div');o.className='opts';
+  g.items.slice().sort(()=>Math.random()-.5).forEach(k=>{
+   const b=document.createElement('div');b.className='opt';b.dataset.k=k;
+   b.innerHTML=`<span>${P[k].n}</span><span class="num"></span>`;
+   b.onclick=()=>{if(order.includes(k))return;H.select();order.push(k);b.classList.add('sel');
+    b.querySelector('.num').textContent=order.length;
+    if(order.length===g.items.length)check.disabled=false;};o.appendChild(b);});
+  w.appendChild(o);}
+
+ if(g.t==='upset'||g.t==='combo'){
+  g.rows.forEach((r,k)=>{const m=document.createElement('div');m.className='rowline';m.dataset.k=k;
+   m.innerHTML=`<span class="l">${r.l}</span><span class="r">${r.r}</span>`;
+   m.onclick=()=>{H.select();
+    if(g.t==='upset'){sel=k;w.querySelectorAll('.rowline').forEach(x=>x.classList.toggle('sel',x===m));check.disabled=false;}
+    else{const idx=multi.indexOf(k);
+     if(idx>=0){multi.splice(idx,1);m.classList.remove('sel');}
+     else if(multi.length<g.need){multi.push(k);m.classList.add('sel');}
+     check.disabled=multi.length!==g.need;
+     check.textContent=multi.length===g.need?'Κλείδωσε':`Διάλεξε ${g.need-multi.length} ακόμα`;}};
+   w.appendChild(m);});
+  if(g.t==='combo')check.textContent='Διάλεξε 2';}
+
+ gbody.appendChild(w);chrome(FLOW.length,i);
+}
+
+function submit(){
+ const g=FLOW[i];let mood='info',title='Καταχωρήθηκε';
+ const scoring=['result','score','upset','order'].includes(g.t);
+ const gain=()=>{pending=Math.round(g.pts*MULT(combo));combo++;H.win();};
+ const fail=()=>{pending=0;if(shield){shield=false;H.lock();}else{combo=0;}H.lose();};
+ if(g.t==='result'){const ok=sel===g.correct;mood=ok?'win':'lose';title=ok?'Σωστά!':'Όχι αυτή τη φορά';
+  ok?gain():fail();
+  gbody.querySelectorAll('.pcard').forEach((c,k)=>{c.classList.add('reveal');
+   c.querySelector('.pctv').textContent=g.split[k]+'%';
+   c.querySelector('.share').style.width=g.split[k]+'%';
+   if(c.dataset.k===g.correct)c.classList.add('ok');else if(c.dataset.k===sel)c.classList.add('no');});}
+ if(g.t==='score'){const ok=sel===g.correct;mood=ok?'win':'lose';title=ok?'Ακριβώς':'Κοντά';
+  ok?gain():fail();
+  gbody.querySelectorAll('.opt').forEach(b=>{if(+b.dataset.k===g.correct)b.classList.add('ok');
+   else if(+b.dataset.k===sel)b.classList.add('no');});}
+ if(g.t==='poll'||g.t==='award'){pts+=g.pts;title='Ψήφισες';H.lock();
+  gbody.querySelectorAll('.opt').forEach((b,k)=>{b.querySelector('.fill').style.width=g.split[k]+'%';
+   b.querySelector('.pc').textContent=g.split[k]+'%';});}
+ if(g.t==='thisthat'){pts+=g.pts;title='Ψήφισες';H.lock();
+  gbody.querySelectorAll('.ttc').forEach((c,k)=>{c.querySelector('.vt').style.width=g.split[k]+'%';});}
+ if(g.t==='upset'){const ok=sel===g.correct;mood=ok?'win':'lose';title=ok?'Το βρήκες':'Δεν ήταν αυτό';
+  ok?gain():fail();
+  gbody.querySelectorAll('.rowline').forEach(m=>{if(+m.dataset.k===g.correct)m.classList.add('ok');
+   else if(+m.dataset.k===sel)m.classList.add('no');});}
+ if(g.t==='order'){const ok=order.join()===g.order.join();mood=ok?'win':'lose';
+  title=ok?'Σωστή σειρά':'Λάθος σειρά';ok?gain():fail();
+  gbody.querySelectorAll('.opt').forEach(b=>b.classList.add(ok?'ok':'no'));}
+ if(g.t==='combo'){title='Κλειδώθηκε';H.lock();
+  gbody.querySelectorAll('.rowline').forEach(m=>{if(!multi.includes(+m.dataset.k))m.style.opacity='.4';});}
+ chrome(FLOW.length,i);
+ fb.className='fb '+mood+' up';
+
+ if(scoring&&mood==='win'){
+  const half=Math.max(1,Math.floor(pending/2));
+  fb.innerHTML=`<h4>${title}</h4>
+   ${g.scratch?'<div id="fbslot"></div>':`<p>${g.fb}</p>`}
+   <p style="margin-top:9px;color:#AEBAC4">Έχεις <b>${pending} πόντους</b> στο τραπέζι.</p>
+   <div class="choice3">
+     <button class="ch keep" id="chKeep">Κράτα<small>${pending} πόντοι</small></button>
+     <button class="ch half" id="chHalf">Τα μισά<small>${half} + ασπίδα</small></button>
+     <button class="ch risk" id="chRisk">Διπλασίασε<small>${pending*2} ή τίποτα</small></button>
+   </div>`;
+  const wire=()=>{
+   $('chKeep').onclick=()=>{H.lock();pts+=pending;pending=0;nextCard();};
+   $('chHalf').onclick=()=>{H.streak();pts+=half;pending=0;shield=true;nextCard();};
+   $('chRisk').onclick=()=>{H.select();fb.classList.remove('up');setTimeout(renderHard,260);};
+  };
+  if(g.scratch){
+   const btns=[...fb.querySelectorAll('.ch')];
+   btns.forEach(b=>{b.disabled=true;b.style.opacity='.35';});
+   $('fbslot').appendChild(scratchPanel(g.fb,'rgba(120,220,150,.45)',
+     ()=>btns.forEach(b=>{b.disabled=false;b.style.opacity='1';})));
+  }
+  wire();
+  return;
+ }
+
+ if(g.scratch){
+  fb.innerHTML=`<h4>${title}</h4><div id="fbslot"></div>
+   <button class="cta ${mood==='win'?'win':''}" id="cont" disabled style="opacity:.4">Ξύσε πρώτα</button>`;
+  const cont=$('cont');
+  $('fbslot').appendChild(scratchPanel(g.fb,
+   mood==='win'?'rgba(120,220,150,.45)':'rgba(255,91,61,.5)',
+   ()=>{cont.disabled=false;cont.style.opacity='1';
+     cont.textContent=i===FLOW.length-1?'Τελείωσες':'Επόμενο';}));
+ }else{
+  fb.innerHTML=`<h4>${title}</h4><p>${g.fb}</p>
+   <button class="cta ${mood==='win'?'win':''}" id="cont">${i===FLOW.length-1?'Τελείωσες':'Επόμενο'}</button>`;
+ }
+ $('cont').onclick=()=>{H.tap();fb.classList.remove('up');i++;
+  setTimeout(()=>{if(i>=FLOW.length)endRun();else render();},240);};
+}
+
+function nextCard(){
+ H.tap();fb.classList.remove('up');i++;
+ setTimeout(()=>{if(i>=FLOW.length)endRun();else render();},240);
+}
+
+/* ---------- διπλασιασμός ---------- */
+function renderHard(){
+ const h=HARD[hardIdx%HARD.length];hardIdx++;
+ $('gfoot').classList.add('hidden');
+ gbody.innerHTML='';
+ const w=document.createElement('div');w.className='fade';
+ w.innerHTML=`<div class="riskbar">⚡ ${pending} ΠΟΝΤΟΙ ΣΕ ΚΙΝΔΥΝΟ</div>
+  <div class="gtype">ΔΙΠΛΑΣΙΑΣΜΟΣ · ${pending*2} πόντοι</div>
+  <div class="ask">${h.q}</div>
+  <div class="hintline">Σωστή απάντηση και διπλασιάζεις. Λάθος και τα χάνεις όλα.</div>`;
+ const o=document.createElement('div');o.className='opts';
+ h.o.forEach((t,k)=>{const b=document.createElement('div');b.className='opt';
+  b.innerHTML=`<span>${t}</span>`;
+  b.onclick=()=>{
+   const ok=k===h.a;
+   o.querySelectorAll('.opt').forEach((x,j)=>{
+    if(j===h.a)x.classList.add('ok');else if(j===k)x.classList.add('no');
+    x.onclick=null;});
+   if(ok){pending*=2;pts+=pending;combo++;H.streak();}
+   else{pending=0;if(shield){shield=false;H.lock();}else combo=0;H.lose();}
+   chrome(FLOW.length,i);
+   if(ok){
+    const won=pending;
+    celebrate({label:'ΔΙΠΛΑΣΙΑΣΜΟΣ',title:'Το πήρες',points:won,huge:true,sub:h.f,
+      after:()=>{pending=0;$('gfoot').classList.remove('hidden');nextCard();}});
+    return;
+   }
+   fb.className='fb '+(ok?'win':'lose')+' up';
+   fb.innerHTML=`<h4>${ok?'Διπλασιάστηκε':'Τα έχασες'}</h4><p>${h.f}</p>
+     <button class="cta ${ok?'win':''}" id="cont">${i===FLOW.length-1?'Τελείωσες':'Επόμενο'}</button>`;
+   $('cont').onclick=()=>{pending=0;$('gfoot').classList.remove('hidden');nextCard();};
+  };
+  o.appendChild(b);});
+ w.appendChild(o);gbody.appendChild(w);chrome(FLOW.length,i);
+}
+
+/* ---------- rapid bonus ---------- */
+function renderRapid(){
+ let qi=0,right=0,left=RAPID.secs,tk=null;
+ $('gfoot').classList.add('hidden');
+ const draw=()=>{
+  gbody.innerHTML='';
+  const w=document.createElement('div');w.className='fade';
+  w.innerHTML=`<div class="gtype">${RAPID.type} · ${RAPID.pts} πόντοι</div>
+   <div class="timer"><i id="tbar" style="width:${(left/RAPID.secs)*100}%"></i></div>
+   <div class="rapidTally">${RAPID.qs.map((_,k)=>`<i class="${k<qi?(marks[k]?'w':'l'):''}"></i>`).join('')}</div>
+   <div class="rapidQ">${RAPID.qs[qi].q}</div>`;
+  const o=document.createElement('div');o.className='opts';
+  [['Λάθος',0],['Σωστό',1]].forEach(([t,v])=>{
+   const b=document.createElement('div');b.className='opt';b.innerHTML=`<span>${t}</span>`;
+   b.onclick=()=>{
+    const ok=v===RAPID.qs[qi].a;marks[qi]=ok;ok?(right++,H.win()):H.lose();
+    b.classList.add(ok?'ok':'no');qi++;
+    setTimeout(()=>{if(qi>=RAPID.qs.length)done();else draw();},260);};
+   o.appendChild(b);});
+  w.appendChild(o);gbody.appendChild(w);chrome(RAPID.qs.length,qi);
+ };
+ const marks=[];
+ const done=()=>{
+  clearInterval(tk);
+  const earned=Math.round(RAPID.pts*(right/RAPID.qs.length));
+  pts+=earned;bonusDone=true;
+  fb.className='fb '+(right>=4?'win':'info')+' up';
+  fb.innerHTML=`<h4>${right} στα ${RAPID.qs.length}</h4>
+   <p>Κέρδισες <b>${earned} πόντους</b> στον γρήγορο γύρο.</p>
+   <button class="cta ${right>=4?'win':''}" id="cont">Τέλος</button>`;
+  right>=4?H.streak():H.tap();
+  $('cont').onclick=()=>{H.tap();fb.classList.remove('up');setTimeout(endRun,240);};
+ };
+ tk=setInterval(()=>{left--;const b=$('tbar');if(b)b.style.width=(left/RAPID.secs)*100+'%';
+  if(left<=5)H.tick();if(left<=0)done();},1000);
+ draw();
+}
+
+function endRun(){
+ if(!isBonus){doneToday=true;streak++;H.streak();}
+ const won=pts;
+ total+=won;
+ game.classList.add('hidden');shell.classList.remove('hidden');tab='today';renderShell();
+ if(won>0)celebrate({label:isBonus?'ΓΡΗΓΟΡΟΣ ΓΥΡΟΣ':'ΤΕΛΟΣ ΓΥΡΟΥ',
+   title:isBonus?'Καθαρή δουλειά':`Σερί ${streak} ημερών`,points:won,
+   sub:isBonus?'':'Επιστρέφεις αύριο στις 09:00 για οκτώ νέα παιχνίδια.',
+   after:()=>renderShell()});
+}
+renderOb();
+</script>
+</body>
+</html>

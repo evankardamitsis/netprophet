@@ -74,6 +74,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip all internal paths (_next)
-    "/((?!_next|api|_vercel|.*\\..*).*)",
+    // `daily` is the isolated Daily Run prototype: unlocalised, standalone.
+    "/((?!_next|api|_vercel|daily|.*\\..*).*)",
   ],
 };
