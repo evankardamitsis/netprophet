@@ -109,7 +109,7 @@ describe('answers have to be on the card', () => {
 
     it('rejects a result whose winner is neither side', () => {
         const player = {
-            id: 'p1', name: 'Α', club: 'Κ', ntrp: '4.0', rating: 1, streak: 0,
+            id: 'p1', name: 'Α', club: 'Κ', ntrp: '4.0', winRate: 50, streak: 0,
             clay: 0, hard: 0, form: [] as ('w' | 'l')[],
         };
         const card = {

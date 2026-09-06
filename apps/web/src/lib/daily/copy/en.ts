@@ -102,8 +102,8 @@ export const en: Copy = {
             meta: (ntrp: string, hand: string, age: number) =>
                 `NTRP ${ntrp} · ${hand} · ${age}`,
             sub: (club: string, ntrp: string) => `${club} · NTRP ${ntrp}`,
-            streakLine: (streak: number, rating: number) =>
-                `Active streak: ${streak} · Rating: ${rating}`,
+            streakLine: (streak: number, winRate: number) =>
+                `Active streak: ${streak} · Wins: ${winRate}%`,
             lockedNote: 'Full history of 38 matches, by opponent and by season',
             lockTitle: 'Full stats & history',
             win: 'W',

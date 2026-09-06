@@ -30,23 +30,23 @@ export interface PlayerMeta {
 const PLAYERS_EL: PlayerRef[] = [
     {
         id: 'nk', name: 'Ν. Καραμάνος', club: 'ΑΟ Κηφισιάς', ntrp: '4.5',
-        rating: 1842, streak: 2, clay: 71, hard: 54, form: ['w', 'w', 'l', 'w', 'l'],
+        winRate: 70, streak: 2, clay: 71, hard: 54, form: ['w', 'w', 'l', 'w', 'l'],
     },
     {
         id: 'dg', name: 'Δ. Γεωργίου', club: 'ΤΚ Γλυφάδας', ntrp: '4.0',
-        rating: 1795, streak: 5, clay: 48, hard: 76, form: ['w', 'w', 'w', 'w', 'w'],
+        winRate: 83, streak: 5, clay: 48, hard: 76, form: ['w', 'w', 'w', 'w', 'w'],
     },
     {
         id: 'ms', name: 'Μ. Σταύρου', club: 'ΟΑ Μαρουσιού', ntrp: '4.0',
-        rating: 1711, streak: 0, clay: 63, hard: 41, form: ['l', 'l', 'w', 'l', 'w'],
+        winRate: 44, streak: 0, clay: 63, hard: 41, form: ['l', 'l', 'w', 'l', 'w'],
     },
     {
         id: 'ap', name: 'Α. Παππάς', club: 'ΑΟ Κηφισιάς', ntrp: '3.5',
-        rating: 1688, streak: 1, clay: 58, hard: 60, form: ['w', 'l', 'w', 'w', 'l'],
+        winRate: 61, streak: 1, clay: 58, hard: 60, form: ['w', 'l', 'w', 'w', 'l'],
     },
     {
         id: 'ti', name: 'Θ. Ιωάννου', club: 'Athens LTC', ntrp: '3.5',
-        rating: 1601, streak: 0, clay: 44, hard: 57, form: ['l', 'w', 'l', 'l', 'w'],
+        winRate: 38, streak: 0, clay: 44, hard: 57, form: ['l', 'w', 'l', 'l', 'w'],
     },
 ];
 

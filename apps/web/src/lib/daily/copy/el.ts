@@ -103,8 +103,8 @@ export const el = {
             meta: (ntrp: string, hand: string, age: number) =>
                 `NTRP ${ntrp} · ${hand} · ${age} ετών`,
             sub: (club: string, ntrp: string) => `${club} · NTRP ${ntrp}`,
-            streakLine: (streak: number, rating: number) =>
-                `Ενεργό σερί: ${streak} · Βαθμοί: ${rating}`,
+            streakLine: (streak: number, winRate: number) =>
+                `Ενεργό σερί: ${streak} · Νίκες: ${winRate}%`,
             lockedNote: 'Πλήρες ιστορικό 38 ματς, ανά αντίπαλο και ανά σεζόν',
             lockTitle: 'Πλήρη στατιστικά & ιστορικό',
             win: 'Ν',

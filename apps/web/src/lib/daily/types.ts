@@ -19,7 +19,17 @@ interface CardBase {
 
 export interface PlayerRef {
     id: string; name: string; club: string; ntrp: string;
-    rating: number; streak: number; clay: number; hard: number;
+    /**
+     * Win rate, 0–100.
+     *
+     * The prototype called this `rating` and showed an ELO-like 1842. That
+     * number belongs to the *game's* players — a user's standing on the
+     * leaderboard — not to the tennis player a card is about. A tennis player's
+     * standing here is NTRP, which has its own field, and their headline number
+     * is how often they win.
+     */
+    winRate: number;
+    streak: number; clay: number; hard: number;
     form: ('w' | 'l')[];
 }
 

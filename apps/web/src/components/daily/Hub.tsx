@@ -178,7 +178,7 @@ function Today({
                                 {copy.hub.today.yourProfile(claimed.club, claimed.ntrp)}
                             </small>
                         </span>
-                        <span className="np-meta">{claimed.rating}</span>
+                        <span className="np-meta">{claimed.winRate}%</span>
                     </div>
                 )}
 
@@ -364,7 +364,7 @@ function Players({ onOpen }: { onOpen: (id: string) => void }) {
                     <span className="np-who">
                         {p.name}<small>{copy.hub.players.sub(p.club, p.ntrp)}</small>
                     </span>
-                    <span className="np-rt">{p.rating}</span>
+                    <span className="np-rt">{p.winRate}%</span>
                 </button>
             ))}
             {list.length === 0 && <p className="np-sub">{copy.common.noResults}</p>}
@@ -403,7 +403,7 @@ function PlayerPage({
             <div className="np-crd">
                 <Form form={player.form} />
                 <div className="np-t2" style={{ marginTop: 8 }}>
-                    {copy.hub.players.streakLine(player.streak, player.rating)}
+                    {copy.hub.players.streakLine(player.streak, player.winRate)}
                 </div>
             </div>
 

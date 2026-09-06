@@ -60,9 +60,8 @@ export function toPlayerRef(
         name: shortName(player, locale),
         club: '',
         ntrp: String(player.ntrp_rating ?? ''),
-        rating: Math.round((player.win_rate ?? 0) > 1
-            ? (player.win_rate ?? 0)
-            : (player.win_rate ?? 0) * 100),
+        // win_rate is stored 0–100
+        winRate: Math.round(player.win_rate ?? 0),
         streak: discipline === 'doubles'
             ? (player.doubles_current_streak ?? 0)
             : (player.current_streak ?? 0),
