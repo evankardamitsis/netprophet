@@ -3,14 +3,17 @@ import { ReviewList, type ReviewItem } from '@/components/daily/review/ReviewLis
 // From copy/types, not copy/index — the latter is a client module, and a
 // server component cannot call a function that lives on the client.
 import { isLocale, type Locale } from '@/lib/daily/copy/types';
+import { isReviewer } from '@/lib/daily/content/reviewAuth';
 import { listCards, templateHealth } from '@/lib/daily/content/store';
 
 // The daily check-in. Shows the cards a generation run produced, rendered as a
 // player will see them, with the fact and its provenance beside each.
 //
-// Gated on a shared token rather than the app's auth: the prototype has no
-// accounts by design, and the review screen must not depend on the app it is
-// meant to stay isolated from. Same pattern as CRON_SECRET.
+// Gated on a shared token held in an httpOnly cookie, set once by
+// /daily/review/enter?token=… — see reviewAuth.ts for why the token does not
+// live in the URL. Not the app's auth, because the prototype has no accounts by
+// design and this tool must not depend on the app it is meant to stay isolated
+// from. Same shared-secret pattern as CRON_SECRET.
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +23,6 @@ export const metadata = {
 };
 
 interface Search {
-    token?: string;
     locale?: string;
     date?: string;
     status?: string;
@@ -32,11 +34,10 @@ export default async function ReviewPage({
     searchParams: Promise<Search>;
 }) {
     const params = await searchParams;
-    const expected = process.env.DAILY_REVIEW_TOKEN;
 
-    // A wrong or missing token is a 404, not a 403 — an unlinked tool should
-    // not confirm it exists.
-    if (!expected || params.token !== expected) notFound();
+    // No cookie is a 404, not a 403 — an unlinked tool should not confirm it
+    // exists to someone guessing.
+    if (!await isReviewer()) notFound();
 
     const locale: Locale = isLocale(params.locale) ? params.locale : 'el';
     const status = params.status === 'approved' || params.status === 'rejected'
@@ -70,9 +71,7 @@ export default async function ReviewPage({
     }
 
     const link = (over: Partial<Search>) => {
-        const next = new URLSearchParams({
-            token: params.token ?? '', locale, status, ...over,
-        } as Record<string, string>);
+        const next = new URLSearchParams({ locale, status, ...over } as Record<string, string>);
         return `?${next.toString()}`;
     };
 
@@ -118,7 +117,7 @@ export default async function ReviewPage({
             )}
 
             {items.length > 0 && (
-                <ReviewList items={items} locale={locale} token={params.token ?? ''} />
+                <ReviewList items={items} locale={locale} />
             )}
         </main>
     );

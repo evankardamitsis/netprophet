@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { CopyProvider, type Locale } from '@/lib/daily/copy';
+import { CopyProvider } from '@/lib/daily/copy';
+import type { Locale } from '@/lib/daily/copy/types';
 import type { GameCard } from '@/lib/daily/types';
 import { ReviewCard, type ReviewAction } from './ReviewCard';
 import { approve, edit, reject } from '@/app/(prototype)/daily/review/actions';
@@ -18,11 +19,10 @@ export interface ReviewItem {
 }
 
 export function ReviewList({
-    items, locale, token,
+    items, locale,
 }: {
     items: ReviewItem[];
     locale: Locale;
-    token: string;
 }) {
     const [pending, startTransition] = useTransition();
     // Settled cards drop out of the queue rather than the page reloading —
@@ -33,11 +33,13 @@ export function ReviewList({
     const handle = (action: ReviewAction) => {
         startTransition(async () => {
             try {
-                if (action.action === 'approve') await approve(token, action.id, locale);
+                // No token travels with the call — the action reads the
+                // httpOnly cookie the browser sends automatically.
+                if (action.action === 'approve') await approve(action.id, locale);
                 else if (action.action === 'edit' && action.corrected) {
-                    await edit(token, action.id, locale, action.corrected, action.reason);
+                    await edit(action.id, locale, action.corrected, action.reason);
                 } else if (action.action === 'reject' && action.reason) {
-                    await reject(token, action.id, locale, action.reason);
+                    await reject(action.id, locale, action.reason);
                 }
                 setDone((d) => ({ ...d, [action.id]: action.action }));
             } catch (error) {

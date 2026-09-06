@@ -1,33 +1,27 @@
 'use server';
 
-import type { Locale } from '@/lib/daily/copy';
+import type { Locale } from '@/lib/daily/copy/types';
 import type { GameCard } from '@/lib/daily/types';
+import { assertReviewer } from '@/lib/daily/content/reviewAuth';
 import { approveCard, editCard, rejectCard } from '@/lib/daily/content/store';
 
-// Server actions for the review screen. Every one re-checks the token: a server
-// action is a public endpoint, and the page having been rendered behind a gate
-// says nothing about who is calling this.
+// Every action re-checks the cookie for itself. A server action is a public
+// endpoint — the page having rendered behind a gate says nothing about who is
+// calling this a minute later.
 
-function assertReviewer(token: string): void {
-    const expected = process.env.DAILY_REVIEW_TOKEN;
-    if (!expected || token !== expected) throw new Error('Not a reviewer.');
-}
-
-export async function approve(token: string, id: string, locale: Locale): Promise<void> {
-    assertReviewer(token);
+export async function approve(id: string, locale: Locale): Promise<void> {
+    await assertReviewer();
     await approveCard({ id, locale, reviewer: 'review-screen' });
 }
 
 export async function edit(
-    token: string, id: string, locale: Locale, corrected: GameCard, reason?: string,
+    id: string, locale: Locale, corrected: GameCard, reason?: string,
 ): Promise<void> {
-    assertReviewer(token);
+    await assertReviewer();
     await editCard({ id, locale, corrected, reason, reviewer: 'review-screen' });
 }
 
-export async function reject(
-    token: string, id: string, locale: Locale, reason: string,
-): Promise<void> {
-    assertReviewer(token);
+export async function reject(id: string, locale: Locale, reason: string): Promise<void> {
+    await assertReviewer();
     await rejectCard({ id, locale, reason, reviewer: 'review-screen' });
 }
