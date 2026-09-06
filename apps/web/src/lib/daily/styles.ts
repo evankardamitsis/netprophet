@@ -584,6 +584,67 @@ export const dailyCss = `
   }
 }
 
+/* ---------- review screen ----------
+   An internal tool, so it borrows the card language and stops there. Wide by
+   default: the reviewer is at a desk, not on a phone. */
+.np-rv-page{max-width:none}
+.np-rv-nav{display:flex;gap:14px;margin-bottom:14px;font-size:13px}
+.np-rv-nav a{color:${colour.ember2};text-decoration:none}
+.np-rv-nav a:hover{text-decoration:underline}
+.np-rv-health{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;font-size:11px;color:${colour.dim};
+}
+.np-rv-health span{
+  padding:4px 9px;border-radius:${radius.pill};
+  background:${surface.card};border:1px solid ${surface.cardBorder};
+}
+.np-rv-health span.is-clean{border-color:${surface.bonusBorder};color:${colour.good}}
+.np-rv-count{font-size:12px;color:${colour.dim};margin-bottom:14px}
+.np-rv-error{
+  font-size:12.5px;color:${colour.bad};margin-bottom:12px;padding:10px 12px;
+  border-radius:${radius.md};background:${surface.lossChip};
+}
+.np-rv-list{display:flex;flex-direction:column;gap:18px}
+.np-rv{
+  display:grid;grid-template-columns:1fr;gap:18px;padding:18px;
+  border-radius:${radius.xl};background:${surface.card};
+  border:1px solid ${surface.cardBorder};
+}
+@media (min-width:1080px){ .np-rv{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+.np-rv-preview{min-width:0}
+.np-rv-answers{margin-top:14px}
+.np-rv-side{min-width:0;display:flex;flex-direction:column;gap:12px}
+.np-rv-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:${colour.dim}}
+.np-rv-tag{
+  padding:2px 8px;border-radius:${radius.pill};
+  background:${surface.selected};color:${colour.ember2};
+}
+.np-rv-prov{
+  font-size:11px;line-height:1.7;color:${colour.dim};padding:10px 12px;
+  border-radius:${radius.md};background:${surface.row};border:1px solid ${surface.rowBorder};
+  overflow-wrap:anywhere;
+}
+.np-rv-prov b{color:${colour.chalk};font-weight:500;margin-right:6px}
+.np-rv-expl{font-size:13.5px;line-height:1.5;color:${colour.sheetText}}
+.np-rv-expl b{color:${colour.chalk}}
+.np-rv-form{display:flex;flex-direction:column;gap:10px}
+.np-rv-form label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:${colour.dim}}
+.np-rv-form textarea,.np-rv-form input{
+  width:100%;border-radius:${radius.sm};padding:9px 11px;font:inherit;font-size:13px;
+  background:${surface.inputBg};border:1px solid ${surface.inputBorder};
+  color:${colour.chalk};outline:none;resize:vertical;
+}
+.np-rv-form textarea:focus,.np-rv-form input:focus{border-color:${surface.rowSelectedBorder}}
+.np-rv-actions{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+.np-rv-btn{
+  padding:9px 16px;border-radius:${radius.md};cursor:pointer;font-size:13px;font-weight:600;
+  background:${surface.ghost};border:1px solid ${surface.ghostBorder};color:${colour.chalk};
+  transition:${motion.tap};
+}
+.np-rv-btn:disabled{opacity:.4;pointer-events:none}
+.np-rv-btn.is-yes{background:${surface.bonusFace};border-color:${surface.bonusBorder};color:${colour.good}}
+.np-rv-btn.is-no{background:${surface.lossChip};border-color:${surface.scratchToneLose};color:${colour.bad}}
+
 /* ---------- motion ---------- */
 .np-fade{animation:np-in ${motion.enter} ${motion.easeOut} both}
 @keyframes np-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
