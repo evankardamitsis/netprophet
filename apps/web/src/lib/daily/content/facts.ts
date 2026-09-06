@@ -95,20 +95,56 @@ function setsOf(result: ResultRow): string[] {
 }
 
 /**
+ * Which side the set scores say won, reading each set as "side a – side b".
+ *
+ * Null when they are unreadable or tied, which is itself a reason to skip the
+ * match rather than guess.
+ */
+export function winnerFromSets(result: ResultRow): 'a' | 'b' | null {
+    let a = 0;
+    let b = 0;
+    for (const set of setsOf(result)) {
+        const [x, y] = String(set).split('-').map((n) => Number.parseInt(n, 10));
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        if (x > y) a += 1;
+        else if (y > x) b += 1;
+    }
+    if (a === b) return null;
+    return a > b ? 'a' : 'b';
+}
+
+/**
  * Does the recorded scoreline agree with the recorded outcome?
  *
- * `match_result` says 2-0 or 2-1; the set columns should say the same thing.
- * A few rows disagree — "6-0, [10-3]" is a 2-1 missing its second set — and a
- * card built on one shows a scoreline that never happened. Cheaper to skip the
- * match than to explain it.
+ * Two checks, and the second was added because a reviewer caught what it
+ * misses:
+ *
+ * 1. `match_result` says 2-0 or 2-1; the set columns should say the same thing.
+ *    "6-0, [10-3]" is a 2-1 missing its second set.
+ * 2. `winner_id` should be the side the sets say won. One match in the first
+ *    review batch recorded "3-6, 6-2, [10-5]" — a win for side a — against a
+ *    `match_result` of "1-2" and a winner on side b. Whichever field is wrong,
+ *    a card built on it names the loser as the winner, which is the worst thing
+ *    a card can do.
+ *
+ * Cheaper to skip the match than to decide which field to believe.
  */
-export function scorelineAgrees(result: ResultRow): boolean {
+export function scorelineAgrees(result: ResultRow, winner?: 'a' | 'b'): boolean {
     const sets = setsOf(result);
     const outcome = result.match_result?.trim() ?? '';
     if (outcome.includes('ret')) return false;          // retirements read wrong on a card
-    if (/^[02]-[02]$/.test(outcome)) return sets.length === 2;
-    if (/^[12]-[12]$/.test(outcome)) return sets.length === 3;
-    return false;
+    if (/^[02]-[02]$/.test(outcome) && sets.length !== 2) return false;
+    if (/^[12]-[12]$/.test(outcome) && sets.length !== 3) return false;
+    if (!/^[0-2]-[0-2]$/.test(outcome)) return false;
+
+    const fromSets = winnerFromSets(result);
+    if (fromSets === null) return false;
+
+    // match_result is written from side a: "2-1" means a won.
+    const [aSets, bSets] = outcome.split('-').map((n) => Number.parseInt(n, 10));
+    if (fromSets !== (aSets > bSets ? 'a' : 'b')) return false;
+
+    return winner === undefined || fromSets === winner;
 }
 
 export type Discipline = 'singles' | 'doubles';
@@ -150,8 +186,6 @@ export function resultFacts(snapshot: Snapshot): Fact<ResultValue>[] {
     const facts: Fact<ResultValue>[] = [];
 
     for (const { match, result } of snapshot.matches) {
-        if (!scorelineAgrees(result)) continue;
-
         const a = sideOf(match, 'a');
         const b = sideOf(match, 'b');
         if (!a || !b) continue;
@@ -165,6 +199,10 @@ export function resultFacts(snapshot: Snapshot): Fact<ResultValue>[] {
             : b.playerIds.includes(result.winner_id) ? 'b'
                 : null;
         if (!winner) continue;
+
+        // Three fields have to tell the same story: the set scores, the
+        // match_result shorthand, and winner_id.
+        if (!scorelineAgrees(result, winner)) continue;
 
         const tournament: TournamentRow | undefined = match.tournament_id
             ? snapshot.tournaments.get(match.tournament_id)

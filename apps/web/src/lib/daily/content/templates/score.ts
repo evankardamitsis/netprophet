@@ -17,7 +17,6 @@ import { kickerFor } from './result';
 const COPY = {
     el: {
         question: 'Πώς τελείωσε;',
-        lede: 'Τρεις εκδοχές, μία σωστή.',
         decider: {
             one: (who: string) => `Ο <b>${who}</b> το πήρε στο σούπερ τάι μπρέικ.`,
             many: (who: string) => `Οι <b>${who}</b> το πήραν στο σούπερ τάι μπρέικ.`,
@@ -33,7 +32,6 @@ const COPY = {
     },
     en: {
         question: 'How did it finish?',
-        lede: 'Three versions, one correct.',
         decider: {
             one: (who: string) => `<b>${who}</b> took it on the champions tiebreak.`,
             many: (who: string) => `<b>${who}</b> took it on the champions tiebreak.`,
@@ -64,6 +62,17 @@ export function renderScore(
 
     const { options, correctIndex } = placeAnswer(answer, distractors, value.matchId);
 
+    // "Πώς τελείωσε;" on its own does not say which match. The reviewer
+    // rejected every score card in the first batch for exactly this.
+    const sideNames = (ids: string[]) => ids
+        .map((id) => snapshot.players.get(id))
+        .filter((p): p is NonNullable<typeof p> => Boolean(p))
+        .map((p) => surname(p, locale));
+    const left = sideNames(value.a.playerIds);
+    const right = sideNames(value.b.playerIds);
+    if (!left.length || !right.length) return null;
+    const matchup = `${left.join(' / ')} – ${right.join(' / ')}`;
+
     const winning = value.winner === 'a' ? value.a : value.b;
     const names = winning.playerIds
         .map((id) => snapshot.players.get(id))
@@ -85,7 +94,8 @@ export function renderScore(
         kind: 'score',
         kicker: kickerFor(value, locale, now),
         question: copy.question,
-        lede: copy.lede,
+        // Both sides, in the nominative — no article, no case to get wrong.
+        lede: matchup,
         points: 20,
         // The reveal is worth scratching for.
         reveal: 'scratch',

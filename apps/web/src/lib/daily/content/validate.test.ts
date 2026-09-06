@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isExpired, textsOf, validateCard } from './validate';
 import type { GameCard } from '../types';
+import { scorelineAgrees, winnerFromSets } from './facts';
 
 const base = {
     id: 'x', kicker: 'Προημιτελικός', question: 'Ποιος κέρδισε;',
@@ -147,5 +148,42 @@ describe('isExpired', () => {
     it('expires a stale standings card', () => {
         expect(isExpired('2026-09-01T00:00:00Z', now)).toBe(true);
         expect(isExpired('2026-09-20T00:00:00Z', now)).toBe(false);
+    });
+});
+
+describe('scoreline integrity', () => {
+    // Found by a reviewer: a match recorded "3-6, 6-2, [10-5]" — a win for
+    // side a — against match_result "1-2" and a winner on side b.
+    const row = (over: Record<string, unknown> = {}) => ({
+        match_id: 'm', winner_id: 'p1', match_result: '2-1',
+        set1_score: '6-4', set2_score: '3-6', set3_score: null,
+        super_tiebreak_score: '10-5', ...over,
+    });
+
+    it('reads the winner off the set scores', () => {
+        expect(winnerFromSets(row())).toBe('a');
+        expect(winnerFromSets(row({ set1_score: '4-6', super_tiebreak_score: '5-10' })))
+            .toBe('b');
+    });
+
+    it('accepts a coherent result', () => {
+        expect(scorelineAgrees(row(), 'a')).toBe(true);
+    });
+
+    it('rejects sets that contradict match_result', () => {
+        // sets say a won 2-1, the shorthand says b did
+        expect(scorelineAgrees(row({ match_result: '1-2' }))).toBe(false);
+    });
+
+    it('rejects sets that contradict winner_id', () => {
+        expect(scorelineAgrees(row(), 'b')).toBe(false);
+    });
+
+    it('rejects a 2-1 with only two sets recorded', () => {
+        expect(scorelineAgrees(row({ super_tiebreak_score: null }), 'a')).toBe(false);
+    });
+
+    it('rejects a retirement — it reads wrong on a card', () => {
+        expect(scorelineAgrees(row({ match_result: '2-0 ret' }), 'a')).toBe(false);
     });
 });
