@@ -14,7 +14,7 @@
 
 import { displayName } from '../greek';
 import type { Locale } from '../copy';
-import type { PlayerRef } from '../types';
+import type { PlayerRef, SideRef } from '../types';
 
 export interface Localized { el: string; en: string }
 export const t = (value: Localized, locale: Locale): string => value[locale];
@@ -61,6 +61,20 @@ export function getPlayers(locale: Locale): PlayerRef[] {
 
 export function getPlayer(id: string, locale: Locale): PlayerRef | undefined {
     return getPlayers(locale).find((p) => p.id === id);
+}
+
+/** A side of a match: one id for singles, two for doubles. */
+export function getSide(ids: string[], locale: Locale): SideRef | undefined {
+    const players = ids
+        .map((id) => getPlayer(id, locale))
+        .filter((p): p is PlayerRef => Boolean(p));
+    if (players.length !== ids.length) return undefined;
+    return { id: ids.join('+'), players };
+}
+
+/** "Γεωργίου" for singles, "Γεωργίου / Σταύρου" for a pair. */
+export function sideLabel(side: SideRef): string {
+    return side.players.map((p) => p.name).join(' / ');
 }
 
 export const PLAYER_META: Record<string, PlayerMeta> = {

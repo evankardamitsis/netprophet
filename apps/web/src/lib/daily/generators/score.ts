@@ -5,18 +5,29 @@
 import type { Locale } from '../copy';
 import type { GameCard } from '../types';
 
+// The real format is two sets and a champions tiebreak, not best of three —
+// set3_score appears once in 343 rows, super_tiebreak_score 87 times
+// (content spec §2.2). The options speak that format.
 const COPY = {
     el: {
         kicker: 'Τρεις εκδοχές, μία σωστή',
         question: 'Πώς τελείωσε;',
-        explanation: 'Έχασε το πρώτο σετ και γύρισε. <b>4-6, 7-5, 7-6</b>.',
-        options: ['2-0 σε 58 λεπτά', '2-1 με τάι μπρέικ', '2-1 με ανατροπή από 0-1'],
+        explanation: 'Έχασε το δεύτερο σετ και το πήρε στο σούπερ τάι μπρέικ. <b>6-4, 2-6, [17-15]</b>.',
+        options: [
+            '2-0 σε δύο σετ',
+            '2-1 στο σούπερ τάι μπρέικ',
+            '2-0 με τάι μπρέικ στο πρώτο',
+        ],
     },
     en: {
         kicker: 'Three versions, one correct',
         question: 'How did it finish?',
-        explanation: 'He dropped the first set and turned it around. <b>4-6, 7-5, 7-6</b>.',
-        options: ['2-0 in 58 minutes', '2-1 on a tiebreak', '2-1 from a set down'],
+        explanation: 'He dropped the second set and took it on the champions tiebreak. <b>6-4, 2-6, [17-15]</b>.',
+        options: [
+            '2-0 in straight sets',
+            '2-1 on the champions tiebreak',
+            '2-0 with a tiebreak in the first',
+        ],
     },
 } as const;
 
@@ -32,6 +43,6 @@ export function generateScoreCards(locale: Locale): GameCard[] {
         reveal: 'scratch',
         scoring: true,
         options: [...c.options],
-        correctIndex: 2,
+        correctIndex: 1,
     }];
 }

@@ -317,6 +317,10 @@ export const dailyCss = `
 .np-pcard:active{transform:translateY(3px);box-shadow:0 2px 0 ${surface.drop}}
 .np-pcard[disabled]{cursor:default}
 .np-pcard .np-portrait{margin:0 auto 9px}
+/* a doubles pair: two smaller portraits, slightly overlapped */
+.np-pcard .np-portrait.is-pair{display:flex;justify-content:center;gap:0}
+.np-pcard .np-portrait.is-pair > *:last-child{margin-left:-12px}
+.np-pcard .np-nm{overflow-wrap:anywhere}
 .np-pcard .np-nm{font-weight:900;font-size:17px;line-height:1.05}
 .np-pcard .np-cl{font-size:11px;color:${colour.dim};margin-top:3px}
 .np-pcard.is-sel{border-color:${colour.ember2};background:${surface.selected}}

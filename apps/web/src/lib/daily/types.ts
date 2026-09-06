@@ -23,9 +23,24 @@ export interface PlayerRef {
     form: ('w' | 'l')[];
 }
 
+/**
+ * One side of a match: a single player, or a doubles pair.
+ *
+ * Deviates from the port spec, which pinned `result` to `a: PlayerRef;
+ * b: PlayerRef`. The measurement in the content spec §2.2 is the reason —
+ * 42% of the real match pool is doubles, and excluding it drops the daily run
+ * from eight cards to five. It is also exactly the shape padel needs.
+ */
+export interface SideRef {
+    /** stable within a card; the joined player ids */
+    id: string;
+    /** one for singles, two for doubles */
+    players: PlayerRef[];
+}
+
 export type GameCard =
     | (CardBase & {
-        kind: 'result'; a: PlayerRef; b: PlayerRef;
+        kind: 'result'; a: SideRef; b: SideRef;
         correctId: string; crowdSplit: [number, number]
     })
     | (CardBase & {
