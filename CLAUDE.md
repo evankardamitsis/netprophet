@@ -81,14 +81,20 @@ components/daily/         Onboarding, Hub, run shell, answers/, ScratchPanel, Ce
 hooks/                    useHaptics, useCountUp
 ```
 
-**Zero coupling, while it lasts.** Nothing in `lib/daily/` or `components/daily/`
-may import from the rest of the app. If something is needed, copy it in. This
-rule has a planned ending — see content spec §9.5 — but it is still load-bearing
-today. Check it with:
+**Zero coupling, while it lasts.** Nothing the *game* touches may import from the
+rest of the app. If something is needed, copy it in. This rule has a planned
+ending — see content spec §9.5 — but it is still load-bearing today. Check it
+with:
 
 ```bash
-grep -rn "@netprophet/\|@/components/[^d]\|@/lib/[^d]" apps/web/src/lib/daily apps/web/src/components/daily
+grep -rn "@netprophet/" apps/web/src/lib/daily apps/web/src/components/daily | grep -v /review/
 ```
+
+**One documented exception: the review tool.** `components/daily/review/` uses
+the app's Supabase auth so a reviewer is a real admin account rather than
+whoever holds a shared secret. Deliberate — the review screen is internal, never
+ships to a player, and real identities on corrections are worth more than
+purity. The game itself stays deletable in one commit.
 
 **Design system.** `tokens.ts` holds every colour — no hex literals anywhere
 else. `styles.ts` builds the stylesheet from those tokens; components carry

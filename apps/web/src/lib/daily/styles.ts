@@ -589,8 +589,13 @@ export const dailyCss = `
    default: the reviewer is at a desk, not on a phone. */
 .np-rv-page{max-width:none}
 .np-rv-nav{display:flex;gap:14px;margin-bottom:14px;font-size:13px}
-.np-rv-nav a{color:${colour.ember2};text-decoration:none}
-.np-rv-nav a:hover{text-decoration:underline}
+.np-rv-nav a,.np-rv-nav button{
+  color:${colour.ember2};text-decoration:none;cursor:pointer;font:inherit;font-size:13px;
+  background:none;border:none;padding:0;
+}
+.np-rv-nav a:hover,.np-rv-nav button:hover{text-decoration:underline}
+.np-rv-nav button.is-on{color:${colour.chalk};font-weight:600}
+.np-rv-error a{color:${colour.ember2}}
 .np-rv-health{
   display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;font-size:11px;color:${colour.dim};
 }
