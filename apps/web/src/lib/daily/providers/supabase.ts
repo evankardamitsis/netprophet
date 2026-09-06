@@ -25,6 +25,12 @@ export interface PlayerRow {
     last5: string[] | null;
     current_streak: number;
     streak_type: string;
+    /** wins/losses count singles only; doubles has its own mirror */
+    doubles_wins: number;
+    doubles_losses: number;
+    doubles_last5: string[] | null;
+    doubles_current_streak: number;
+    doubles_streak_type: string;
     clay_win_rate: number | null;
     hard_win_rate: number | null;
     clay_matches: number | null;
@@ -86,6 +92,7 @@ export interface Snapshot {
 
 const PLAYER_COLUMNS =
     'id,first_name,last_name,ntrp_rating,wins,losses,last5,current_streak,streak_type,'
+    + 'doubles_wins,doubles_losses,doubles_last5,doubles_current_streak,doubles_streak_type,'
     + 'clay_win_rate,hard_win_rate,clay_matches,hard_matches,win_rate,age,hand,'
     + 'is_active,is_hidden,is_demo_player';
 

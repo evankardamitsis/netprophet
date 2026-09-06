@@ -92,22 +92,38 @@ function setsOf(result: ResultRow): string[] {
         .filter((s): s is string => Boolean(s));
 }
 
+export type Discipline = 'singles' | 'doubles';
+
+/** Matches played in the discipline being asked about. */
+export function played(player: PlayerRow, discipline: Discipline): number {
+    return discipline === 'doubles'
+        ? (player.doubles_wins ?? 0) + (player.doubles_losses ?? 0)
+        : (player.wins ?? 0) + (player.losses ?? 0);
+}
+
 /**
- * A player is usable in a question if they are real and have enough history to
- * ask about.
+ * A player is usable in a question if they are real and have enough history in
+ * the discipline being asked about.
+ *
+ * **The discipline matters.** `wins`/`losses` count singles only — doubles has
+ * its own mirror. 81 of the 157 players in the doubles pool have no singles
+ * record at all, so checking `wins + losses` rejected them as unknowns despite
+ * full doubles histories. That alone cut doubles cards from 108 to 9.
  *
  * Deliberately does **not** filter on `is_hidden`. That flag means *unclaimed* —
- * `players.ts` sets it back to true so the claim lookup can find them, and
- * un-claiming a profile sets it too. 155 of the 276 players in a recent snapshot
- * are "hidden", and 154 of those have real match records. Excluding them would
- * mean only asking about people who already use the app, which is backwards for
- * a game about the local scene.
+ * `players.ts` sets it back to true so the claim lookup can find them. 154 of
+ * the 155 hidden players have real records; excluding them would mean only
+ * asking about people who already use the app, which is backwards for a game
+ * about the local scene.
  */
-export function isAskable(player: PlayerRow | undefined): player is PlayerRow {
+export function isAskable(
+    player: PlayerRow | undefined,
+    discipline: Discipline = 'singles',
+): player is PlayerRow {
     if (!player) return false;
     if (player.is_demo_player) return false;
     if (player.is_active === false) return false;
-    return (player.wins ?? 0) + (player.losses ?? 0) >= 3;
+    return played(player, discipline) >= 3;
 }
 
 /** One `result` fact per finished match both of whose sides are askable. */
@@ -120,7 +136,8 @@ export function resultFacts(snapshot: Snapshot): Fact<ResultValue>[] {
         if (!a || !b) continue;
 
         const everyone = [...a.playerIds, ...b.playerIds];
-        if (!everyone.every((id) => isAskable(snapshot.players.get(id)))) continue;
+        const discipline: Discipline = match.match_type === 'doubles' ? 'doubles' : 'singles';
+        if (!everyone.every((id) => isAskable(snapshot.players.get(id), discipline))) continue;
 
         // The winner is one player id; for doubles it identifies the pair.
         const winner = a.playerIds.includes(result.winner_id) ? 'a'
@@ -202,7 +219,8 @@ export function rankingFacts(
     };
 
     const askable = [...snapshot.players.values()]
-        .filter(isAskable)
+        // Ordered by the singles win rate, so it needs a singles record.
+        .filter((p) => isAskable(p, 'singles'))
         .map((p) => ({ player: p, rate: rateOf(p) }))
         .filter((x): x is { player: PlayerRow; rate: number } => x.rate !== null)
         .sort((x, y) => y.rate - x.rate);
