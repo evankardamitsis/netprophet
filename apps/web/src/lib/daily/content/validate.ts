@@ -143,7 +143,12 @@ export function validateCard(
     const duplicates = normalised.filter((o, i) => normalised.indexOf(o) !== i);
     if (duplicates.length) add('duplicate-options', duplicates.join(', '));
 
-    if (answers.length > 1) {
+    // Only prose can give itself away by length. A three-set scoreline is
+    // longer than a two-set one because it is a longer match, not because the
+    // generator got lazy — applying the rule there rejects correct cards.
+    const isProse = answers.some((o) => /\p{L}/u.test(o));
+
+    if (isProse && answers.length > 1) {
         // A conspicuously longer option is a tell, whichever one it is. Compare
         // the longest against the mean of the others rather than a median that
         // includes it — with two options a median is the outlier itself.

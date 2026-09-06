@@ -17,7 +17,9 @@ export type FactKind =
     | 'result'        // who won
     | 'setScore'      // how it finished
     | 'upset'         // the favourite lost
-    | 'ranking';      // order these players by rating
+    | 'ranking'       // order these players by win rate
+    | 'award'         // a vote, no right answer
+    | 'contrast';     // two players worth arguing about
 
 export interface Side {
     /** joined player ids, stable within a card */
@@ -92,6 +94,23 @@ function setsOf(result: ResultRow): string[] {
         .filter((s): s is string => Boolean(s));
 }
 
+/**
+ * Does the recorded scoreline agree with the recorded outcome?
+ *
+ * `match_result` says 2-0 or 2-1; the set columns should say the same thing.
+ * A few rows disagree — "6-0, [10-3]" is a 2-1 missing its second set — and a
+ * card built on one shows a scoreline that never happened. Cheaper to skip the
+ * match than to explain it.
+ */
+export function scorelineAgrees(result: ResultRow): boolean {
+    const sets = setsOf(result);
+    const outcome = result.match_result?.trim() ?? '';
+    if (outcome.includes('ret')) return false;          // retirements read wrong on a card
+    if (/^[02]-[02]$/.test(outcome)) return sets.length === 2;
+    if (/^[12]-[12]$/.test(outcome)) return sets.length === 3;
+    return false;
+}
+
 export type Discipline = 'singles' | 'doubles';
 
 /** Matches played in the discipline being asked about. */
@@ -131,6 +150,8 @@ export function resultFacts(snapshot: Snapshot): Fact<ResultValue>[] {
     const facts: Fact<ResultValue>[] = [];
 
     for (const { match, result } of snapshot.matches) {
+        if (!scorelineAgrees(result)) continue;
+
         const a = sideOf(match, 'a');
         const b = sideOf(match, 'b');
         if (!a || !b) continue;
@@ -262,11 +283,124 @@ export function rankingFacts(
     return facts;
 }
 
+export interface AwardValue {
+    /** candidates, best first */
+    playerIds: string[];
+    /** wins inside the snapshot window, in the same order */
+    recentWins: number[];
+}
+
+export interface ContrastValue {
+    /** the player on the hottest streak */
+    formId: string;
+    streak: number;
+    /** the player with the best record */
+    recordId: string;
+    winRate: number;
+}
+
+const endOfWeek = (from: string): string => {
+    const d = new Date(from);
+    d.setUTCDate(d.getUTCDate() + (7 - ((d.getUTCDay() + 6) % 7)));
+    d.setUTCHours(0, 0, 0, 0);
+    return d.toISOString();
+};
+
+/**
+ * A vote for the standout of the period. No right answer, so it always pays and
+ * never touches the combo — and it never goes stale in the way a prediction can,
+ * which is what makes it the shock absorber for a thin week (content spec §3.1).
+ */
+export function awardFacts(snapshot: Snapshot, { size = 4 } = {}): Fact<AwardValue>[] {
+    // Wins per player, per tournament — one vote per draw gives the week
+    // several different votes instead of the same four names every day.
+    const byTournament = new Map<string, Map<string, number>>();
+
+    for (const { match, result } of snapshot.matches) {
+        const key = match.tournament_id ?? 'all';
+        const side = sideIds(match, 'a').includes(result.winner_id) ? 'a' : 'b';
+        for (const id of sideIds(match, side)) {
+            if (!isAskable(snapshot.players.get(id),
+                match.match_type === 'doubles' ? 'doubles' : 'singles')) continue;
+            const wins = byTournament.get(key) ?? new Map<string, number>();
+            wins.set(id, (wins.get(id) ?? 0) + 1);
+            byTournament.set(key, wins);
+        }
+    }
+
+    const facts: Fact<AwardValue>[] = [];
+    for (const [key, wins] of byTournament) {
+        const top = [...wins.entries()].sort((x, y) => y[1] - x[1]).slice(0, size);
+        // Four candidates or it is not a vote.
+        if (top.length < size) continue;
+
+        facts.push({
+            id: `award:${key}`,
+            kind: 'award',
+            subjects: top.map(([id]) => id),
+            value: { playerIds: top.map(([id]) => id), recentWins: top.map(([, n]) => n) },
+            computedAt: snapshot.takenAt,
+            validUntil: endOfWeek(snapshot.takenAt),
+            source: { table: 'match_results', ids: top.map(([id]) => id) },
+            interest: 0,
+        });
+    }
+    return facts;
+}
+
+/**
+ * Two players worth arguing about: the one in form against the one with the
+ * record. Taste, not knowledge — there is nothing to get wrong.
+ */
+export function contrastFacts(
+    snapshot: Snapshot, { pairs = 6 } = {},
+): Fact<ContrastValue>[] {
+    const askable = [...snapshot.players.values()].filter((p) => isAskable(p, 'singles'));
+    if (askable.length < 2) return [];
+
+    // A streak of one is not a story.
+    const inForm = [...askable]
+        .filter((p) => (p.current_streak ?? 0) >= 2)
+        .sort((x, y) => (y.current_streak ?? 0) - (x.current_streak ?? 0));
+    const onRecord = [...askable].sort((x, y) => (y.win_rate ?? 0) - (x.win_rate ?? 0));
+
+    const facts: Fact<ContrastValue>[] = [];
+    const used = new Set<string>();
+
+    // Pair the hottest against the best, then the next of each, and so on —
+    // several arguments rather than one, so the week has more than a single
+    // matter of taste in it.
+    for (let k = 0; k < pairs; k++) {
+        const form = inForm[k];
+        const record = onRecord.find((p) => p.id !== form?.id && !used.has(p.id));
+        if (!form || !record) break;
+        used.add(form.id);
+        used.add(record.id);
+
+        facts.push({
+            id: `contrast:${form.id}+${record.id}`,
+            kind: 'contrast',
+            subjects: [form.id, record.id],
+            value: {
+                formId: form.id, streak: form.current_streak ?? 0,
+                recordId: record.id, winRate: Math.round(record.win_rate ?? 0),
+            },
+            computedAt: snapshot.takenAt,
+            validUntil: endOfWeek(snapshot.takenAt),
+            source: { table: 'players', ids: [form.id, record.id] },
+            interest: 0,
+        });
+    }
+    return facts;
+}
+
 export function allFacts(snapshot: Snapshot): Fact[] {
     return [
         ...resultFacts(snapshot),
         ...setScoreFacts(snapshot),
         ...upsetFacts(snapshot),
         ...rankingFacts(snapshot),
+        ...awardFacts(snapshot),
+        ...contrastFacts(snapshot),
     ];
 }
