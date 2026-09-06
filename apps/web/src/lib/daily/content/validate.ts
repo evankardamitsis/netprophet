@@ -93,7 +93,19 @@ function optionsOf(card: GameCard): string[] {
     return [];
 }
 
-export function validateCard(card: GameCard, locale: Locale, now = new Date()): Verdict {
+export interface ValidateOptions {
+    /**
+     * Names that are allowed to be Latin inside Greek copy — tournaments,
+     * venues, clubs. Without this every card from "TAF Tennis Open" is
+     * rejected as English creeping into the Greek, which rejected 127 of 336
+     * cards on the first real run.
+     */
+    properNouns?: string[];
+}
+
+export function validateCard(
+    card: GameCard, locale: Locale, options: ValidateOptions = {},
+): Verdict {
     const issues: Issue[] = [];
     const texts = textsOf(card);
     const add = (rule: string, detail: string) => issues.push({ rule, detail });
@@ -111,8 +123,14 @@ export function validateCard(card: GameCard, locale: Locale, now = new Date()): 
                 if (pattern.test(probe)) add('copy-regression', `${pattern} in "${text}"`);
             }
             // Latin letters are fine in names and tournaments, not in prose.
+            const allowed = new Set(
+                (options.properNouns ?? [])
+                    .flatMap((n) => n.split(/[\s·\-/]+/))
+                    .map((w) => w.toLowerCase()),
+            );
             const latinWords = text.match(/\b[A-Za-z]{4,}\b/g) ?? [];
-            const suspicious = latinWords.filter((w) => !/^(NTRP|LTC|Pro|NetProphet)$/i.test(w));
+            const suspicious = latinWords.filter((w) =>
+                !/^(NTRP|LTC|Pro|NetProphet)$/i.test(w) && !allowed.has(w.toLowerCase()));
             if (suspicious.length > 2) {
                 add('latin-in-greek', `"${suspicious.join(', ')}" in "${text}"`);
             }
@@ -120,16 +138,16 @@ export function validateCard(card: GameCard, locale: Locale, now = new Date()): 
     }
 
     // Distractors decide whether a card is any good — content spec §4.4.
-    const options = optionsOf(card);
-    const normalised = options.map((o) => o.trim().toLowerCase().replace(/\s+/g, ' '));
+    const answers = optionsOf(card);
+    const normalised = answers.map((o) => o.trim().toLowerCase().replace(/\s+/g, ' '));
     const duplicates = normalised.filter((o, i) => normalised.indexOf(o) !== i);
     if (duplicates.length) add('duplicate-options', duplicates.join(', '));
 
-    if (options.length > 1) {
+    if (answers.length > 1) {
         // A conspicuously longer option is a tell, whichever one it is. Compare
         // the longest against the mean of the others rather than a median that
         // includes it — with two options a median is the outlier itself.
-        const lengths = options.map((o) => o.length).sort((a, b) => a - b);
+        const lengths = answers.map((o) => o.length).sort((a, b) => a - b);
         const longest = lengths[lengths.length - 1];
         const rest = lengths.slice(0, -1);
         const mean = rest.reduce((n, l) => n + l, 0) / rest.length;
@@ -174,14 +192,16 @@ export function isExpired(validUntil: string | null, now = new Date()): boolean 
     return Date.parse(validUntil) <= now.getTime();
 }
 
-export function validateAll(cards: GameCard[], locale: Locale): {
+export function validateAll(
+    cards: GameCard[], locale: Locale, options: ValidateOptions = {},
+): {
     passed: GameCard[];
     rejected: { card: GameCard; issues: Issue[] }[];
 } {
     const passed: GameCard[] = [];
     const rejected: { card: GameCard; issues: Issue[] }[] = [];
     for (const card of cards) {
-        const verdict = validateCard(card, locale);
+        const verdict = validateCard(card, locale, options);
         if (verdict.ok) passed.push(card);
         else rejected.push({ card, issues: verdict.issues });
     }
