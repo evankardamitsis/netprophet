@@ -16,6 +16,7 @@ env:
     --filter @netprophet/core
     --filter @netprophet/copy
     --filter @netprophet/tokens
+    --filter @netprophet/db
 
 jobs:
   checks:
@@ -39,20 +40,14 @@ jobs:
         run: pnpm ${V2_FILTERS} test
 
   db:
-    # Placeholder. A later task fills this: start Postgres, apply supabase-v2/migrations, run pgTAP.
+    # Applies supabase-v2/migrations to a fresh PostgreSQL 17 + pgTAP (built from supabase-v2/tests/Dockerfile),
+    # loads seed.sql, runs supabase-v2/tests/*.test.sql, and checks packages/db/src/types.ts is not stale.
+    # The same script runs locally: see supabase-v2/README.md.
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Database checks (not implemented yet)
-        run: echo "TODO: apply supabase-v2/migrations and run pgTAP"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Database checks (migrations, seed, pgTAP, generated types)
+        run: V2_DB_MODE=docker ./scripts/v2-db-test.sh
