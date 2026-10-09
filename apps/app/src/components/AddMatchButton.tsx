@@ -27,9 +27,8 @@ export function AddMatchButton() {
 }
 
 const styles = StyleSheet.create({
-  // prototype: right 12, bottom 110 of a frame whose tab bar (with its prototype-only debug row) is 101px,
-  // so it floats 9px above the tab bar
-  wrap: { position: 'absolute', right: 12, bottom: 9 },
+  // prototype: right 12, bottom 110 from the bottom of the screen; this view ends at the 67px tab bar
+  wrap: { position: 'absolute', right: 12, bottom: 43 },
   btn: {
     minHeight: 48,
     paddingHorizontal: 18,

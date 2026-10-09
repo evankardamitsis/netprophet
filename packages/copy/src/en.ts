@@ -46,8 +46,17 @@ export const en: Copy = {
     title: 'Got a match?',
     soon: 'Coming soon.',
   },
+  welcome: {
+    title: 'Everything about amateur',
+    sports: ['tennis.', 'padel.'],
+    points: ['Pick the winners', 'See results', 'Know your opponents inside out'],
+    tagline: 'Who wins today? Say it first.',
+    cta: 'Let’s go',
+    later: 'Another time',
+  },
   auth: {
     title: 'Get in the game',
+    subtitle: 'Type your email and we send you a code.',
     emailLabel: 'Your email',
     emailPlaceholder: 'you@email.com',
     sendCode: 'Send me a code',
