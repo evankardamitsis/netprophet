@@ -44,10 +44,11 @@ cd "$OUT"
 
 dump() { supabase db dump --workdir "$ROOT" --linked "$@"; }
 
-echo "roles"   && dump --role-only -f roles.sql
-echo "schema"  && dump -f schema.sql
-echo "data"    && dump --data-only --use-copy -f data.sql
-echo "auth"    && dump --data-only --use-copy --schema auth -f auth.sql
+# absolute paths: the CLI resolves a relative -f against --workdir (the repo), not the current directory
+echo "roles"   && dump --role-only -f "$OUT/roles.sql"
+echo "schema"  && dump -f "$OUT/schema.sql"
+echo "data"    && dump --data-only --use-copy -f "$OUT/data.sql"
+echo "auth"    && dump --data-only --use-copy --schema auth -f "$OUT/auth.sql"
 
 echo "full"
 if ! docker run --rm -e PGPASSWORD="$SUPABASE_DB_PASSWORD" -v "$OUT":/out postgres:17 \
