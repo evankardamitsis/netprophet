@@ -1,6 +1,7 @@
 -- M1 result cards: names on the card, resolution callable without a user session, a queue worker.
 --   1. core.resolve_votes: the result card payload carries the sides (core.match_sides_json) so the app can say
---      who won without another query.
+--      who won without another query, and the σερί event (advanced / frozen / broken with lostStreak), so the app
+--      can show the header as it was before the card and play the change.
 --   2. core.resolve_match holds the resolution; api.resolve_match is the admin/service wrapper. The worker runs
 --      under pg_cron with no JWT, so it calls the core function.
 --   3. core.process_outbox(limit): claims resolve_match jobs (written by api.admin_set_result) with
@@ -111,7 +112,7 @@ begin
                                'points', v_pts, 'upset', v_upset,
                                'streak', v_streak, 'freeze_used', v_ev ->> 'kind' = 'frozen',
                                'winner_side', r.winner_side, 'score', r.score_summary, 'sets', r.sets,
-                               'sides', core.match_sides_json(m.id)))
+                               'sides', core.match_sides_json(m.id), 'streak_event', v_ev))
     on conflict do nothing;
 
     insert into core.notifications (user_id, type, payload, channel, dedupe_key)

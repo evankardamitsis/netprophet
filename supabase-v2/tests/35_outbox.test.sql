@@ -1,7 +1,7 @@
 -- Outbox worker: admin_set_result queues a resolve job; core.process_outbox resolves it without a user session
 -- (as pg_cron runs it), once only; a failing job stays open with its error. Result cards carry the sides.
 begin;
-select plan(14);
+select plan(15);
 
 select tests.create_user('ob-a@test.local') as a \gset
 select tests.create_user('ob-b@test.local') as b \gset
@@ -32,6 +32,8 @@ select is((select jsonb_array_length(payload -> 'sides') from core.feed_inbox wh
           2, 'the result card carries both sides');
 select is((select payload #>> '{sides,0,players,0,surname}' from core.feed_inbox where user_id = :'a'::uuid and kind = 'result'),
           'Ροδίτης', 'with the player names');
+select is((select payload #>> '{streak_event,kind}' from core.feed_inbox where user_id = :'a'::uuid and kind = 'result'),
+          'advanced', 'and the σερί event, so the app can play the change');
 
 -- idempotent
 select is((core.process_outbox(10) ->> 'processed')::int, 0, 'nothing left to process');
