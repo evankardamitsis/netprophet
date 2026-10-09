@@ -38,7 +38,8 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     if (!api) return;
     setLoading(true);
     try {
-      const [feed, areas] = await Promise.all([api.getFeed(30), loadAreas()]);
+      // area names are a nicety: without them the cards still show, just without the area
+      const [feed, areas] = await Promise.all([api.getFeed(30), loadAreas().catch(() => ({}))]);
       const now = new Date();
       setCards(feed.items.flatMap((it) => (it.kind === 'match' ? [fromFeedCard(it, areas, t, now)] : [])));
       setError(false);

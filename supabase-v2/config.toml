@@ -24,7 +24,7 @@ sql_paths = ["./seed.sql"]
 [auth]
 enabled = true
 site_url = "https://app.netprophet.gr"
-additional_redirect_urls = ["netprophet://auth/callback", "https://netprophet.gr/auth/callback"]
+additional_redirect_urls = ["netprophet://auth/callback", "https://netprophet.gr/auth/callback", "http://localhost:8081"]
 enable_signup = true
 
 [auth.email]

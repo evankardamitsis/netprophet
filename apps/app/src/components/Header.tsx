@@ -2,13 +2,13 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { greekCaps } from '@netprophet/copy';
 import { useCopy } from '../i18n';
-import { useMe } from '../lib/data';
+import type { MeSummary } from '../lib/data';
 import { alpha, colors, fonts, spacing } from '../theme';
 
-export function Header() {
+/** `me` comes from the tabs layout, so all tabs share one get_me call. Null while loading. */
+export function Header({ me }: { me: MeSummary | null }) {
   const t = useCopy();
   const insets = useSafeAreaInsets();
-  const { me } = useMe();
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing[2] }]}>
       <Text style={styles.logo}>NetProphet</Text>
