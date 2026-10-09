@@ -115,5 +115,25 @@ for t in $(ls "$DB"/tests/*.test.sql | sort); do
   fi
 done
 
+TYPES_BAD=0
+if command -v node >/dev/null 2>&1; then
+  log "packages/db types (generated from this database)"
+  if node "$ROOT/packages/db/scripts/gen-types.mjs" --out "$WORK/types.ts"; then
+    if [ "${V2_DB_WRITE_TYPES:-0}" = "1" ]; then
+      cp "$WORK/types.ts" "$ROOT/packages/db/src/types.ts"; echo "wrote packages/db/src/types.ts"
+    elif ! diff -q "$WORK/types.ts" "$ROOT/packages/db/src/types.ts" >/dev/null; then
+      echo "STALE: packages/db/src/types.ts differs from the migrations. Run: V2_DB_WRITE_TYPES=1 scripts/v2-db-test.sh"
+      diff -u "$ROOT/packages/db/src/types.ts" "$WORK/types.ts" | head -40 || true
+      TYPES_BAD=1
+    else
+      echo "types are up to date"
+    fi
+  else
+    echo "type generation failed"; TYPES_BAD=1
+  fi
+else
+  echo "node not found: skipping the types freshness check"
+fi
+
 log "result: $PASS passed, $FAIL failed, across $FILES files"
-[ "$BAD" = "0" ] && [ "$FAIL" = "0" ] && [ "$PASS" -gt 0 ]
+[ "$BAD" = "0" ] && [ "$FAIL" = "0" ] && [ "$TYPES_BAD" = "0" ] && [ "$PASS" -gt 0 ]

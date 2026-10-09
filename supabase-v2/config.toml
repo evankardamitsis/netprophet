@@ -1,0 +1,45 @@
+# Supabase CLI settings for the v2 project. The CLI looks for `supabase/config.toml`, so to use `supabase start`
+# or `supabase db push` point it at this folder (for example a scratch symlink named `supabase` in a temp checkout).
+# Not exercised in CI: CI runs scripts/v2-db-test.sh against plain PostgreSQL 17 + pgTAP.
+project_id = "netprophet-v2"
+
+[api]
+enabled = true
+# only `api` is exposed; base tables live in `core`
+schemas = ["api"]
+extra_search_path = ["extensions"]
+max_rows = 1000
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "https://app.netprophet.gr"
+additional_redirect_urls = ["netprophet://auth/callback", "https://netprophet.gr/auth/callback"]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+# login is by one-time code, no passwords
+enable_confirmations = true
+otp_length = 6
+otp_expiry = 3600
+
+[auth.external.google]
+enabled = true
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+
+[auth.external.apple]
+enabled = true
+client_id = "env(APPLE_CLIENT_ID)"
+secret = "env(APPLE_CLIENT_SECRET)"
+
+[storage]
+enabled = true
+file_size_limit = "5MiB"
