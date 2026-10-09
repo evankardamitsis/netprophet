@@ -78,7 +78,7 @@ Stores:
 Secrets:
 - Keep one `.env.example` per app, listing names only.
 - Store values in Vercel env (per environment), EAS secrets, Supabase function secrets and GitHub Actions environments (`v2-dev`, `v2-prod` with required reviewer).
-- Never ship the service-role key to any client. `NEXT_PUBLIC_*` and `EXPO_PUBLIC_*` carry only the anon key and URLs.
+- Never ship the service-role key to any client. `NEXT_PUBLIC_*` and `EXPO_PUBLIC_*` carry only the publishable key (`sb_publishable_…`, which replaced the legacy anon key) and URLs.
 - Rotate every v1 key that reaches v2 (Stripe, Resend, MailerLite) by issuing new restricted keys.
 
 ### 1.5 CI (GitHub Actions)

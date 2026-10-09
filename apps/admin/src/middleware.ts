@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { V2_ANON_KEY, V2_URL, v2Configured } from './lib/v2/env';
+import { V2_PUBLISHABLE_KEY, V2_URL, v2Configured } from './lib/v2/env';
 
 /**
  * v2 admin only (/v2/*): keep the v2 session fresh and send signed-out visitors to /v2/login.
@@ -9,7 +9,7 @@ import { V2_ANON_KEY, V2_URL, v2Configured } from './lib/v2/env';
 export async function middleware(request: NextRequest) {
   if (!v2Configured) return NextResponse.next();
   let response = NextResponse.next({ request });
-  const supabase = createServerClient(V2_URL, V2_ANON_KEY, {
+  const supabase = createServerClient(V2_URL, V2_PUBLISHABLE_KEY, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list) => {

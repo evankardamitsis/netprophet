@@ -18,7 +18,7 @@ export default function V2Login() {
     return (
       <main style={ui.main}>
         <h1 style={ui.h1}>v2 admin is not configured</h1>
-        <p style={ui.muted}>Set NEXT_PUBLIC_V2_SUPABASE_URL and NEXT_PUBLIC_V2_SUPABASE_ANON_KEY.</p>
+        <p style={ui.muted}>Set NEXT_PUBLIC_V2_SUPABASE_URL and NEXT_PUBLIC_V2_SUPABASE_PUBLISHABLE_KEY.</p>
       </main>
     );
   }
