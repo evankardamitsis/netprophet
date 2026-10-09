@@ -94,7 +94,6 @@ function Row({
 }) {
   const [raw, setRaw] = useState('');
   const [winnerChoice, setWinnerChoice] = useState<Side | null>(null);
-  const [feedback, setFeedback] = useState<ActionResult | null>(null);
   const [pending, start] = useTransition();
   const parsed = useMemo(() => (raw.trim() ? parseTennisScore(raw) : null), [raw]);
 
@@ -107,7 +106,6 @@ function Row({
   const run = (fn: () => Promise<ActionResult>) =>
     start(async () => {
       const r = await fn();
-      setFeedback(r);
       onNotice({ ...r, what: `${sideName(item, 1)} vs ${sideName(item, 2)}:` });
       if (r.ok) setRaw('');
     });
@@ -168,7 +166,6 @@ function Row({
               onChange={(e) => {
                 setRaw(e.target.value);
                 setWinnerChoice(null);
-                setFeedback(null);
               }}
               onKeyDown={(e) => e.key === 'Enter' && canSave && save()}
               aria-label={`Score for ${sideName(item, 1)} vs ${sideName(item, 2)}`}
@@ -189,7 +186,6 @@ function Row({
           <Preview item={item} parsed={parsed} needsWinnerPick={needsWinnerPick} winner={winner} onPick={setWinnerChoice} />
         </>
       )}
-      {feedback ? <p style={{ ...ui.error, color: feedback.ok ? colors.ink : colors.blue, margin: 0 }}>{feedback.message}</p> : null}
     </div>
   );
 }
