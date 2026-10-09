@@ -1,0 +1,58 @@
+name: v2
+
+on:
+  pull_request:
+    branches: [v2, 'v2/**']
+  push:
+    branches: [v2, 'v2/**']
+
+concurrency:
+  group: v2-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # v2 packages and apps only. Legacy apps/web, apps/mobile, packages/lib are not checked here.
+  V2_FILTERS: >-
+    --filter @netprophet/core
+    --filter @netprophet/copy
+    --filter @netprophet/tokens
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install (v2 packages only)
+        run: pnpm install --frozen-lockfile ${V2_FILTERS}
+      - name: Lint
+        run: pnpm ${V2_FILTERS} lint
+      - name: Type-check
+        run: pnpm ${V2_FILTERS} type-check
+      - name: Test
+        run: pnpm ${V2_FILTERS} test
+
+  db:
+    # Placeholder. A later task fills this: start Postgres, apply supabase-v2/migrations, run pgTAP.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Database checks (not implemented yet)
+        run: echo "TODO: apply supabase-v2/migrations and run pgTAP"
