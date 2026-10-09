@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -56,9 +56,21 @@ describe('when', () => {
     // 22:30 UTC on the 9th is 01:30 on the 10th in Athens
     expect(when('2026-10-09T22:30:00Z', NOW, t).label).toBe('Αύριο 01:30');
   });
-  it('falls back to a date further out, and to «μετά το ματς» without a time', () => {
-    expect(when('2026-10-12T16:00:00Z', NOW, t)).toEqual({ label: '12/10 19:00', learn: t.match.learnAfter });
+  it('uses the weekday further out (prototype: Σήμερα, Αύριο, Κυριακή), and «μετά το ματς» without a time', () => {
+    // 11 Oct 2026 is a Sunday, 12 Oct a Monday
+    expect(when('2026-10-11T08:00:00Z', NOW, t).label).toBe('Κυριακή 11:00');
+    expect(when('2026-10-12T16:00:00Z', NOW, t)).toEqual({ label: 'Δευτέρα 19:00', learn: t.match.learnAfter });
     expect(when(null, NOW, t)).toEqual({ label: null, learn: t.match.learnAfter });
+  });
+});
+
+describe('initials', () => {
+  it('takes first letters as capitals without accents', () => {
+    expect(initials('Νίκος', 'Ροδίτης')).toBe('ΝΡ');
+    expect(initials('Άννα', 'Μάνου')).toBe('ΑΜ');
+    expect(initials('Έλενα Ίριδα')).toBe('ΕΙ');
+    expect(initials(null, undefined)).toBe('');
+    expect(initials('kostas@test.gr')).toBe('K');
   });
 });
 
@@ -68,31 +80,51 @@ describe('fromFeedCard', () => {
   it('builds the meta line and both sides', () => {
     const c = fromFeedCard(card(), areas, t, NOW);
     expect(c.meta).toBe('Σήμερα 18:00 · Open Γλυφάδας · Ημιτελικός');
-    expect(c.a).toEqual({ title: 'Πράτσας', subtitle: 'Νίκος', detail: 'level 4 · Γλυφάδα' });
-    // unknown area and no level: no detail line
-    expect(c.b).toEqual({ title: 'Βλάχος', subtitle: 'Γιώργος', detail: null });
+    expect(c.doubles).toBe(false);
+    expect(c.a).toEqual({ people: [{ surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ' }], sub: 'level 4 · Γλυφάδα' });
+    // unknown area and no level: no sub line
+    expect(c.b).toEqual({ people: [{ surname: 'Βλάχος', first: 'Γιώργος', initials: 'ΓΒ' }], sub: null });
     expect(c.myVote).toBeUndefined();
   });
 
-  it('keeps a free-text round and falls back to the venue', () => {
+  it('puts a friendly the prototype way: round text, then the venue', () => {
     const c = fromFeedCard(card({ round: 'Φιλικό', tournament: null }), areas, t, NOW);
-    expect(c.meta).toBe('Σήμερα 18:00 · Γλυφάδα · Φιλικό');
+    expect(c.meta).toBe('Σήμερα 18:00 · Φιλικό · Γλυφάδα');
   });
 
-  it('joins doubles partners', () => {
+  it('marks doubles and mixed, stacks partners and joins levels', () => {
     const c = fromFeedCard(
-      card({ format: 'doubles', sides: [{ side: 1, players: [player(), player({ surname: 'Αλεξίου', first_name: 'Δημήτρης' })] }, { side: 2, players: [player()] }] }),
+      card({
+        format: 'mixed',
+        round: 'Φιλικό',
+        tournament: null,
+        sides: [
+          { side: 1, players: [player({ first_name: 'Μαρία', surname: 'Καρρά', level_tier: 5 }), player({ level_tier: 5 })] },
+          { side: 2, players: [player(), player({ level_tier: null })] },
+        ],
+      }),
       areas,
       t,
       NOW,
     );
-    expect(c.a).toEqual({ title: 'Πράτσας / Αλεξίου', subtitle: 'Νίκος / Δημήτρης', detail: null });
+    expect(c.meta).toBe('Σήμερα 18:00 · Μικτό · Φιλικό · Γλυφάδα');
+    expect(c.doubles).toBe(true);
+    expect(c.a.people.map((p) => p.initials)).toEqual(['ΜΚ', 'ΝΠ']);
+    expect(c.a.sub).toBe('level 5 & 5');
+    // a missing level hides the line rather than printing «null»
+    expect(c.b.sub).toBeNull();
   });
 
   it('carries an earlier vote and its split, so the card starts folded', () => {
     const c = fromFeedCard(card({ my_vote: 2, split: { total: 10, side1: 3, side2: 7, pct1: 30, pct2: 70 } }), areas, t, NOW);
     expect(c.myVote).toBe('b');
     expect(c.split).toEqual({ pctA: 30, pctB: 70 });
+  });
+
+  it('maps a sponsored card', () => {
+    expect(
+      fromSponsored({ kind: 'sponsored', id: 's1', label: 'Χορηγούμενο', sponsor: 'X', title: 'Πλέξιμο ρακέτας από 12€', subtitle: null, cta_url: null }),
+    ).toEqual({ kind: 'sponsored', id: 's1', label: 'Χορηγούμενο', title: 'Πλέξιμο ρακέτας από 12€', subtitle: null });
   });
 });
 

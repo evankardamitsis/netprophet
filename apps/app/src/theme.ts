@@ -1,3 +1,4 @@
+import { Easing } from 'react-native-reanimated';
 import { colors, motion, radii, spacing } from '@netprophet/tokens';
 import { parseBezier } from './lib/ease';
 
@@ -9,14 +10,21 @@ export function alpha(hex: string, a: number): string {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
 
-// TODO(tokens): card surface (white on paper) should live in @netprophet/tokens.
-export const cardSurface = '#FFFFFF';
+export const cardSurface = colors.white;
 
+/** Commissioner for text, Sofia Sans Extra Condensed for names, numbers and titles (prototype V2). */
 export const fonts = {
   body: 'Commissioner_400Regular',
+  bodyMedium: 'Commissioner_500Medium',
   bodySemi: 'Commissioner_600SemiBold',
+  bodyBold: 'Commissioner_700Bold',
   display: 'SofiaSansExtraCondensed_700Bold',
   displayHeavy: 'SofiaSansExtraCondensed_800ExtraBold',
 } as const;
 
 export const bezier = parseBezier(motion.ease);
+export const springBezier = parseBezier(motion.springCurve);
+
+/** The prototype's --ease and --spring as Reanimated easings. */
+export const ease = Easing.bezier(...bezier);
+export const springEase = Easing.bezier(...springBezier);

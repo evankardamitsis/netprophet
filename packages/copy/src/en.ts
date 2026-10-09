@@ -30,6 +30,9 @@ export const en: Copy = {
     levelArea: 'level {level} · {area}',
     learnTonight: 'You find out tonight',
     learnTomorrow: 'You find out tomorrow',
+    weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    formats: { doubles: 'Doubles', mixed: 'Mixed' },
+    friendly: 'Friendly',
     learnAfter: 'You find out after the match',
     rounds: {
       round16: 'Second round',
@@ -65,7 +68,10 @@ export const en: Copy = {
     },
   },
   feed: {
-    empty: 'No matches to vote on right now. Come back later.',
+    title: 'What is on today?',
+    subtitle: 'Pick the winners and collect points.',
+    end: 'The further down you go, the more matches from players you may not know.',
+    empty: 'No matches this day yet.',
     error: 'Could not load. Pull down to try again.',
     voteFailed: 'Your vote did not go through. Try again.',
     votingClosed: 'Voting has closed.',

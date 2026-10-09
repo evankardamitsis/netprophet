@@ -1,25 +1,32 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { useEffect } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { greekCaps } from '@netprophet/copy';
-import { alpha, colors, fonts, motion, spacing } from '../theme';
+import { usePress } from '../lib/motion';
+import { colors, fonts } from '../theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
-/** Glyph-free bottom nav: text labels, an ink bar marks the current tab. */
+/** Tabs in the bar and their column weights (prototype: 1fr 1.5fr 1fr 1.2fr). Εγώ opens from the header avatar. */
+const WEIGHTS: Record<string, number> = { index: 1, results: 1.5, players: 1, ladder: 1.2 };
+const COLOR_MS = 350;
+
 export function TabBar({ state, descriptors, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom + spacing[2] }]}>
+    <Animated.View style={[styles.bar, { paddingBottom: 14 + insets.bottom }]}>
       {state.routes.map((route, index) => {
+        const weight = WEIGHTS[route.name];
+        if (weight === undefined) return null;
         const focused = state.index === index;
         const label = String(descriptors[route.key]?.options.title ?? route.name);
         return (
           <TabItem
             key={route.key}
             label={label}
+            weight={weight}
             focused={focused}
             onPress={() => {
               const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -28,31 +35,33 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
           />
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 
-function TabItem({ label, focused, onPress }: { label: string; focused: boolean; onPress: () => void }) {
-  const scale = useSharedValue(1);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+function TabItem({ label, weight, focused, onPress }: { label: string; weight: number; focused: boolean; onPress: () => void }) {
+  const press = usePress();
+  const on = useSharedValue(focused ? 1 : 0);
+  useEffect(() => {
+    on.value = withTiming(focused ? 1 : 0, { duration: COLOR_MS });
+  }, [focused, on]);
+  const bg = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(on.value, [0, 1], ['rgba(15,32,25,0)', colors.ink]),
+  }));
+  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.ink, colors.paper]) }));
   return (
     <Pressable
       accessibilityRole="tab"
       accessibilityState={{ selected: focused }}
       onPress={onPress}
-      onPressIn={() => {
-        scale.value = withSpring(0.92, motion.spring);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1, motion.spring);
-      }}
-      style={styles.item}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={{ flex: weight }}
     >
-      <Animated.View style={[styles.inner, style]}>
-        <Text numberOfLines={1} style={[styles.label, focused && styles.labelOn]}>
-          {greekCaps(label)}
-        </Text>
-        <View style={[styles.dot, focused && styles.dotOn]} />
+      <Animated.View style={[styles.item, bg, press.style]}>
+        <Animated.Text numberOfLines={1} style={[styles.label, fg]}>
+          {label}
+        </Animated.Text>
       </Animated.View>
     </Pressable>
   );
@@ -61,15 +70,13 @@ function TabItem({ label, focused, onPress }: { label: string; focused: boolean;
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: colors.paper,
+    gap: 4,
+    paddingTop: 4,
+    paddingHorizontal: 10,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: alpha(colors.ink, 0.1),
-    paddingTop: spacing[2],
+    borderTopColor: colors.navLine,
   },
-  item: { flex: 1, alignItems: 'center' },
-  inner: { alignItems: 'center', paddingVertical: spacing[1], gap: 4 },
-  label: { fontFamily: fonts.bodySemi, fontSize: 9, letterSpacing: 0.2, color: colors.muted },
-  labelOn: { color: colors.ink },
-  dot: { width: 16, height: 3, borderRadius: 2, backgroundColor: 'transparent' },
-  dotOn: { backgroundColor: colors.ink },
+  item: { minHeight: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  label: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });

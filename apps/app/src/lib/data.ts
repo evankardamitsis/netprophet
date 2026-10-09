@@ -3,7 +3,19 @@ import type { MeResult } from '@netprophet/db';
 import { MOCK_MATCHES } from '../mock/matches';
 import { useCopy } from '../i18n';
 import { api, supabase } from './supabase';
-import { fromFeedCard, fromMock, mockVote, toDbSide, toPct, voteErrorKind, type CardMatch, type CardPct, type VoteErrorKind } from './feed';
+import {
+  fromFeedCard,
+  fromMock,
+  fromSponsored,
+  initials,
+  mockVote,
+  toDbSide,
+  toPct,
+  voteErrorKind,
+  type CardPct,
+  type FeedCard,
+  type VoteErrorKind,
+} from './feed';
 import type { Side } from './votes';
 
 export type { VoteErrorKind } from './feed';
@@ -19,7 +31,7 @@ async function loadAreas(): Promise<Record<string, string>> {
 }
 
 interface FeedState {
-  cards: CardMatch[];
+  cards: FeedCard[];
   loading: boolean;
   error: boolean;
   refresh: () => Promise<void>;
@@ -28,7 +40,7 @@ interface FeedState {
 
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
-  const [cards, setCards] = useState<CardMatch[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
+  const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
   const onError = useRef(onVoteError);
@@ -41,7 +53,12 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       // area names are a nicety: without them the cards still show, just without the area
       const [feed, areas] = await Promise.all([api.getFeed(30), loadAreas().catch(() => ({}))]);
       const now = new Date();
-      setCards(feed.items.flatMap((it) => (it.kind === 'match' ? [fromFeedCard(it, areas, t, now)] : [])));
+      // result cards come in M1 (the success/fail sequence); matches and the labelled ads render now
+      setCards(
+        feed.items.flatMap((it): FeedCard[] =>
+          it.kind === 'match' ? [fromFeedCard(it, areas, t, now)] : it.kind === 'sponsored' ? [fromSponsored(it)] : [],
+        ),
+      );
       setError(false);
     } catch {
       setError(true);
@@ -74,12 +91,20 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
 export interface MeSummary {
   streak: number;
   points: number;
+  initials: string;
 }
 
-const MOCK_ME: MeSummary = { streak: 7, points: 240 };
+const MOCK_ME: MeSummary = { streak: 5, points: 340, initials: 'ΒΚ' };
+
+function meInitials(raw: MeResult, email: string | undefined): string {
+  const p = raw.profile;
+  if (p.first_name || p.surname) return initials(p.first_name, p.surname);
+  if (p.display_name) return initials(p.display_name);
+  return initials(email);
+}
 
 /** Streak and total points for the header. Null while loading in live mode. */
-export function useMe(): { me: MeSummary | null; raw: MeResult | null; refresh: () => Promise<void> } {
+export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: () => Promise<void> } {
   const [raw, setRaw] = useState<MeResult | null>(null);
   const refresh = useCallback(async () => {
     if (!api) return;
@@ -93,5 +118,9 @@ export function useMe(): { me: MeSummary | null; raw: MeResult | null; refresh: 
     void refresh();
   }, [refresh]);
   if (!api) return { me: MOCK_ME, raw: null, refresh };
-  return { me: raw ? { streak: raw.game.streak, points: raw.game.total_points } : null, raw, refresh };
+  return {
+    me: raw ? { streak: raw.game.streak, points: raw.game.total_points, initials: meInitials(raw, email) } : null,
+    raw,
+    refresh,
+  };
 }

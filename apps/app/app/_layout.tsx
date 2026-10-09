@@ -9,11 +9,13 @@ import { isLive } from '../src/lib/supabase';
 import { colors } from '../src/theme';
 
 export default function RootLayout() {
-  // Only the four faces in use are required, so the bundle stays small.
+  // Only the faces the prototype uses are loaded, so the bundle stays small.
   const [loaded, error] = useFonts({
     /* eslint-disable @typescript-eslint/no-var-requires */
     Commissioner_400Regular: require('@expo-google-fonts/commissioner/400Regular/Commissioner_400Regular.ttf'),
+    Commissioner_500Medium: require('@expo-google-fonts/commissioner/500Medium/Commissioner_500Medium.ttf'),
     Commissioner_600SemiBold: require('@expo-google-fonts/commissioner/600SemiBold/Commissioner_600SemiBold.ttf'),
+    Commissioner_700Bold: require('@expo-google-fonts/commissioner/700Bold/Commissioner_700Bold.ttf'),
     SofiaSansExtraCondensed_700Bold: require('@expo-google-fonts/sofia-sans-extra-condensed/700Bold/SofiaSansExtraCondensed_700Bold.ttf'),
     SofiaSansExtraCondensed_800ExtraBold: require('@expo-google-fonts/sofia-sans-extra-condensed/800ExtraBold/SofiaSansExtraCondensed_800ExtraBold.ttf'),
     /* eslint-enable @typescript-eslint/no-var-requires */
