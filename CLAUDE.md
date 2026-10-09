@@ -1,6 +1,6 @@
 # NetProphet v2: project guide
 
-Read `docs/v2/` first: `product-spec.md` (what), `implementation-plan.md` (how), `monetization-plan.md` (money).
+Read `docs/v2/STATUS.md` first (current state and next steps), then `docs/v2/`: `product-spec.md` (what), `implementation-plan.md` (how), `monetization-plan.md` (money).
 
 ## What v2 is
 A voting and σερί (streak) game for amateur sport. Tennis first, built multi-sport-ready (nothing in core, copy or tokens may hardcode tennis). Players vote, see what happened, keep a streak, climb a Ladder, unlock levels. It is not betting.
