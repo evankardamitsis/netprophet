@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import type { MeSummary } from '../lib/data';
 import { usePopOnChange, usePress } from '../lib/motion';
+import { Shine } from './Shine';
 import { colors, fonts } from '../theme';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -24,7 +25,7 @@ export function Header({ me }: { me: MeSummary | null }) {
       <Image source={LOGO} style={styles.logo} contentFit="contain" accessibilityLabel="NetProphet" />
       <View style={styles.right}>
         <Stat value={me?.streak} label={t.streak.label} color={colors.lime} onPress={goMe} />
-        <Stat value={me?.points} label={t.header.points} color={colors.lime} />
+        <Stat value={me?.points} label={t.header.points} color={colors.lime} shine />
         <Avatar initials={me?.initials ?? ''} />
       </View>
     </View>
@@ -33,7 +34,20 @@ export function Header({ me }: { me: MeSummary | null }) {
 
 const goMe = () => router.push('/me');
 
-function Stat({ value, label, color, onPress }: { value: number | undefined; label: string; color: string; onPress?: () => void }) {
+function Stat({
+  value,
+  label,
+  color,
+  onPress,
+  shine = false,
+}: {
+  value: number | undefined;
+  label: string;
+  color: string;
+  onPress?: () => void;
+  /** πόντοι carry the prototype's moving shine */
+  shine?: boolean;
+}) {
   const press = usePress();
   const pop = usePopOnChange(value, 500);
   return (
@@ -45,7 +59,13 @@ function Stat({ value, label, color, onPress }: { value: number | undefined; lab
       onPressOut={press.onPressOut}
     >
       <Animated.View style={[styles.stat, press.style]}>
-        <Animated.Text style={[styles.num, { color }, pop]}>{value ?? ' '}</Animated.Text>
+        {shine && value !== undefined ? (
+          <Animated.View style={pop}>
+            <Shine text={String(value)} style={styles.num} />
+          </Animated.View>
+        ) : (
+          <Animated.Text style={[styles.num, { color }, pop]}>{value ?? ' '}</Animated.Text>
+        )}
         <Text style={styles.label}>{label}</Text>
       </Animated.View>
     </Pressable>
