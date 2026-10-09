@@ -4,8 +4,20 @@
     {
       "name": "app-web",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-lc", "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && pnpm --filter @netprophet/app exec expo start --web --port 8081"],
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && pnpm --filter @netprophet/app exec expo start --web --port 8081"
+      ],
       "port": 8081
+    },
+    {
+      "name": "admin",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && pnpm --filter @netprophet/admin exec next dev -p 3001"
+      ],
+      "port": 3001
     }
   ]
 }

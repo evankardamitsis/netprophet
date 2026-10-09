@@ -20,8 +20,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
 
-    // Check if we're on an auth page
-    const isAuthPage = pathname?.startsWith('/auth');
+    // Check if we're on an auth page. /v2 is the v2 admin: its own layout, login and role check (src/app/v2)
+    const isAuthPage = pathname?.startsWith('/auth') || pathname?.startsWith('/v2');
 
     useEffect(() => {
         // Only redirect if we're certain there's no user (not loading and not on auth page)

@@ -10,3 +10,4 @@ export * from './rules/unlocks';
 export * from './rules/leaderboard';
 export * from './rules/entitlements';
 export * from './sports/tennis';
+export * from './sports/tennisScore';
