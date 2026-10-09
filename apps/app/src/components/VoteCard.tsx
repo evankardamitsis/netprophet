@@ -180,13 +180,13 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
         onPressOut={press.onPressOut}
       >
         <Animated.View style={press.style}>
-          <Animated.View style={[styles.vb, box]}>
+          <Animated.View style={[styles.vb, doubles && styles.vbDbl, box]}>
             <Animated.View style={[styles.fill, fillStyle]} />
             {/* always mounted: Reanimated (web) does not animate a view that appears mid-flight */}
             <Animated.Text style={[styles.pct, doubles && styles.pctDbl, pctStyle]}>{pct === null ? '' : `${pct}%`}</Animated.Text>
             {data.people.map((p, i) => (
               <View key={i}>
-                <Text numberOfLines={1} style={[styles.sn, doubles && styles.snDbl, i > 0 && styles.snNext]}>
+                <Text numberOfLines={1} style={[styles.sn, doubles && styles.snDbl]}>
                   {p.surname}
                 </Text>
                 <Text numberOfLines={1} style={styles.fn}>
@@ -301,10 +301,12 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     color: colors.ink,
   },
-  pctDbl: { fontSize: 24, lineHeight: 24 },
+  // doubles: the two players spread over the whole button instead of piling up at the bottom;
+  // the % moves to the bottom corner so a long first surname never runs under it
+  vbDbl: { paddingTop: 32, justifyContent: 'space-between' },
+  pctDbl: { top: 'auto', bottom: 12, fontSize: 24, lineHeight: 24 },
   sn: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, color: colors.ink },
-  snDbl: { fontSize: 20, lineHeight: 20 },
-  snNext: { paddingTop: 5 },
+  snDbl: { fontSize: 25, lineHeight: 25 },
   fn: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18.75, color: colors.inkSoft },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
   av: {

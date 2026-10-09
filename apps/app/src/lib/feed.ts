@@ -201,7 +201,13 @@ export function fromSponsored(card: FeedSponsoredCard): CardSponsored {
   return { kind: 'sponsored', id: card.id, label: card.label, title: card.title, subtitle: card.subtitle };
 }
 
-function mockSide(p: MockPlayer, t: Copy): CardSide {
+function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {
+  if (p2) {
+    return {
+      people: [p, p2].map((x) => ({ surname: x.surname, first: x.firstName, initials: initials(x.firstName, x.surname) })),
+      sub: `${t.level.label} ${p.level} & ${p2.level}`,
+    };
+  }
   return {
     people: [{ surname: p.surname, first: p.firstName, initials: initials(p.firstName, p.surname) }],
     sub: fmt(t.match.levelArea, { level: p.level, area: p.area }),
@@ -214,11 +220,11 @@ export function fromMock(m: MockMatch, t: Copy): CardMatch {
   return {
     kind: 'match',
     id: m.id,
-    doubles: false,
+    doubles: Boolean(m.a2 && m.b2),
     meta: parts.join(' · '),
     learn: m.day === 'today' ? t.match.learnTonight : t.match.learnTomorrow,
-    a: mockSide(m.a, t),
-    b: mockSide(m.b, t),
+    a: mockSide(m.a, t, m.a2),
+    b: mockSide(m.b, t, m.b2),
   };
 }
 
