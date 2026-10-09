@@ -157,6 +157,27 @@ export function played(player: PlayerRow, discipline: Discipline): number {
 }
 
 /**
+ * Win rate as a 0–1 fraction, derived — never read from `players.win_rate`.
+ *
+ * **That column cannot be trusted.** Of the 1.517 players with a record, it is
+ * correct for 481, silently zero for 917, and *wrong but non-zero* for 119.
+ * ΤΣΟΝΑΚΗΣ sits at 8-4 with a stored rate of 100%. The wrong values skew
+ * extreme, which is exactly what the interest scorer rewards, so the bad rows
+ * were being promoted to the top of the review queue and printed on cards as
+ * fact. Deriving from `wins`/`losses` costs nothing and cannot disagree with
+ * the record shown beside it.
+ *
+ * Returns null when the player has not played in the discipline — no matches
+ * is not the same as losing them all, and a card must not imply otherwise.
+ */
+export function winRate(player: PlayerRow, discipline: Discipline = 'singles'): number | null {
+    const total = played(player, discipline);
+    if (total === 0) return null;
+    const won = discipline === 'doubles' ? (player.doubles_wins ?? 0) : (player.wins ?? 0);
+    return won / total;
+}
+
+/**
  * A player is usable in a question if they are real and have enough history in
  * the discipline being asked about.
  *
@@ -269,18 +290,28 @@ export function rankingFacts(
         validForDays = 7,
         /** adjacent players must differ by at least this, or it is a coin flip */
         minGap = 0.05,
-    }: { size?: number; validForDays?: number; minGap?: number } = {},
+        /**
+         * Matches needed before a *rate* means anything.
+         *
+         * Higher than `isAskable`'s three on purpose. "Who won this match" needs
+         * only that the players are real; "who has the better record" needs
+         * enough matches for the record to be one. At three, the top of the
+         * table is 3-0 players sitting above a 49-5 player, which is arithmetic
+         * nobody in the scene would accept. Measured across the pool: at 3 there
+         * are four unbeaten thin records, at 5 there are two, at 8 there are
+         * none and the table opens 49-5, 8-1, 15-2. Raising it further only
+         * costs players — 101 qualify at eight, 83 at ten.
+         */
+        minMatches = 8,
+    }: {
+        size?: number; validForDays?: number; minGap?: number; minMatches?: number;
+    } = {},
 ): Fact<RankingValue>[] {
-    const rateOf = (p: PlayerRow): number | null => {
-        if (p.win_rate != null) return p.win_rate > 1 ? p.win_rate / 100 : p.win_rate;
-        const played = (p.wins ?? 0) + (p.losses ?? 0);
-        return played > 0 ? (p.wins ?? 0) / played : null;
-    };
-
     const askable = [...snapshot.players.values()]
         // Ordered by the singles win rate, so it needs a singles record.
         .filter((p) => isAskable(p, 'singles'))
-        .map((p) => ({ player: p, rate: rateOf(p) }))
+        .filter((p) => played(p, 'singles') >= minMatches)
+        .map((p) => ({ player: p, rate: winRate(p, 'singles') }))
         .filter((x): x is { player: PlayerRow; rate: number } => x.rate !== null)
         .sort((x, y) => y.rate - x.rate);
 
@@ -400,7 +431,8 @@ export function contrastFacts(
     const inForm = [...askable]
         .filter((p) => (p.current_streak ?? 0) >= 2)
         .sort((x, y) => (y.current_streak ?? 0) - (x.current_streak ?? 0));
-    const onRecord = [...askable].sort((x, y) => (y.win_rate ?? 0) - (x.win_rate ?? 0));
+    const onRecord = [...askable]
+        .sort((x, y) => (winRate(y) ?? 0) - (winRate(x) ?? 0));
 
     const facts: Fact<ContrastValue>[] = [];
     const used = new Set<string>();
@@ -421,7 +453,8 @@ export function contrastFacts(
             subjects: [form.id, record.id],
             value: {
                 formId: form.id, streak: form.current_streak ?? 0,
-                recordId: record.id, winRate: Math.round(record.win_rate ?? 0),
+                recordId: record.id,
+                winRate: Math.round((winRate(record) ?? 0) * 100),
             },
             computedAt: snapshot.takenAt,
             validUntil: endOfWeek(snapshot.takenAt),

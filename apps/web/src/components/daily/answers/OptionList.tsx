@@ -6,6 +6,8 @@
 //
 // `clues` renders the hint stack above the options; only `guess` uses it.
 
+import { hasCrowd } from './crowd';
+
 export function OptionList({
     options, selectedIndex, answered, onSelect, correctIndex, crowdSplit, clues,
 }: {
@@ -17,6 +19,8 @@ export function OptionList({
     crowdSplit?: number[];
     clues?: string[];
 }) {
+    const showSplit = hasCrowd(crowdSplit);
+
     return (
         <>
             {clues && clues.length > 0 && (
@@ -33,7 +37,7 @@ export function OptionList({
                 {options.map((text, k) => {
                     const isPicked = k === selectedIndex;
                     const isCorrect = correctIndex !== undefined && k === correctIndex;
-                    const share = crowdSplit?.[k];
+                    const share = showSplit ? crowdSplit[k] : undefined;
 
                     const marks = [
                         !answered && isPicked ? 'is-sel' : '',

@@ -47,8 +47,10 @@ function accuracy(state: DailyState): string {
 }
 
 export function Hub({
-    state, onState, onStart, onStartBonus,
+    todayCount, state, onState, onStart, onStartBonus,
 }: {
+    /** approved cards waiting today; null while they are still loading */
+    todayCount: number | null;
     state: DailyState;
     onState: (next: DailyState) => void;
     onStart: () => void;
@@ -87,6 +89,7 @@ export function Hub({
                 <div key={openPlayer ?? tab} className="np-fade">
                     {tab === 'today' && (
                         <Today
+                            todayCount={todayCount}
                             state={state}
                             onState={onState}
                             onStart={onStart}
@@ -127,8 +130,10 @@ export function Hub({
 /* ================= Σήμερα ================= */
 
 function Today({
-    state, onState, onStart, onStartBonus, onCelebrate, onOpenPlayer,
+    todayCount, state, onState, onStart, onStartBonus, onCelebrate, onOpenPlayer,
 }: {
+    /** approved cards waiting today; null while they are still loading */
+    todayCount: number | null;
     state: DailyState;
     onState: (next: DailyState) => void;
     onStart: () => void;
@@ -140,6 +145,16 @@ function Today({
     const copy = useCopy();
     const locale = useLocale();
     const done = playedToday(state);
+
+    // The hero says what the run will actually deal. An empty day is a real
+    // answer, and a button that opens onto nothing is worse than a disabled one.
+    const hero = done
+        ? { title: copy.hub.today.heroDone, lede: copy.hub.today.ledeDone }
+        : todayCount === null
+            ? { title: copy.hub.today.heroLoading, lede: '' }
+            : todayCount === 0
+                ? { title: copy.run.nothingToday, lede: copy.run.nothingTodayLede }
+                : { title: copy.hub.today.heroOpen(todayCount), lede: copy.hub.today.ledeOpen };
     const claimed = state.profile?.claimedId
         ? getPlayer(state.profile.claimedId, locale)
         : undefined;
@@ -184,12 +199,12 @@ function Today({
 
                 <section className="np-hero">
                     <span className="np-pill">{today}</span>
-                    <h2>{done ? copy.hub.today.heroDone : copy.hub.today.heroOpen}</h2>
-                    <p>{done ? copy.hub.today.ledeDone : copy.hub.today.ledeOpen}</p>
+                    <h2>{hero.title}</h2>
+                    <p>{hero.lede}</p>
                     <button
                         type="button"
                         className="np-cta"
-                        disabled={done}
+                        disabled={done || !todayCount}
                         onClick={() => { haptics.lock(); onStart(); }}
                     >
                         {done ? copy.hub.today.played : copy.hub.today.play}

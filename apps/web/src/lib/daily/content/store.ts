@@ -188,6 +188,73 @@ export async function rejectCard(
     }
 }
 
+/**
+ * Retire cards that were built on something since found to be wrong.
+ *
+ * Distinct from `rejectCard` in two ways that both matter. It writes no
+ * `daily_card_edits` row, because "this fact should not have produced a card"
+ * is the wrong lesson when the template was fine and the *input column* was
+ * poisoned — teaching the corpus that would suppress good cards later. And it
+ * leaves `reviewed_by` null, which is what `templateHealth` reads to tell a
+ * person's judgement apart from a bulk retirement.
+ *
+ * The row stays, with its reason, so the audit trail survives.
+ */
+export async function retireCards(
+    { ids, locale, reason, client = createDailyClient() }: {
+        ids: string[]; locale: Locale; reason: string; client?: SupabaseClient;
+    },
+): Promise<{ retired: number }> {
+    if (ids.length === 0) return { retired: 0 };
+    const { data, error } = await client.from(TABLE).update({
+        status: 'rejected',
+        reject_reason: reason,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: null,
+    }).in('id', ids).eq('locale', locale).select('id');
+    if (error) throw new Error(error.message);
+    return { retired: (data ?? []).length };
+}
+
+/**
+ * The approved cards for a day, best first.
+ *
+ * Serving reads only what a person has approved. A draft has never been looked
+ * at by anyone, and the whole point of the review step is that nothing reaches
+ * a player unseen.
+ */
+export async function approvedForDay(
+    { locale, date, seenCardIds = [], limit = 12, client = createDailyClient() }: {
+        locale: Locale;
+        /** ISO date */
+        date: string;
+        seenCardIds?: string[];
+        limit?: number;
+        client?: SupabaseClient;
+    },
+): Promise<GameCard[]> {
+    const { data, error } = await client
+        .from(TABLE)
+        .select('id,card,valid_until,interest')
+        .eq('locale', locale)
+        .eq('status', 'approved')
+        .eq('scheduled_for', date)
+        .order('interest', { ascending: false })
+        .limit(limit)
+        .returns<{ id: string; card: GameCard; valid_until: string | null }[]>();
+    if (error) throw new Error(error.message);
+
+    const seen = new Set(seenCardIds);
+    const now = Date.now();
+
+    return (data ?? [])
+        .filter((row) => !seen.has(row.id))
+        // A card built on live standings can go stale between approval and
+        // play. Expired is not "probably still fine".
+        .filter((row) => !row.valid_until || Date.parse(row.valid_until) > now)
+        .map((row) => row.card);
+}
+
 export interface TemplateHealth {
     kind: string;
     approved: number;
@@ -204,18 +271,28 @@ export interface TemplateHealth {
  * change has earned the right to publish unreviewed, and the reviewer's job
  * narrows to the templates that have not. Without a number, "eventually it does
  * it on its own" stays a hope.
+ *
+ * Only a *person's* rejection counts. Cards retired in bulk — the eight `order`
+ * cards built on `players.win_rate` before that column was found to disagree
+ * with `wins`/`losses` — carry no reviewer, and counting them would charge the
+ * template for a poisoned input and hold back its autonomy for something it did
+ * not do.
  */
 export async function templateHealth(
     { locale, client = createDailyClient() }: { locale: Locale; client?: SupabaseClient },
 ): Promise<TemplateHealth[]> {
     const { data: cards, error } = await client
-        .from(TABLE).select('card,status,original').eq('locale', locale)
+        .from(TABLE).select('card,status,original,reviewed_by').eq('locale', locale)
         .neq('status', 'draft')
-        .returns<{ card: GameCard; status: CardStatus; original: GameCard | null }[]>();
+        .returns<{
+            card: GameCard; status: CardStatus;
+            original: GameCard | null; reviewed_by: string | null;
+        }[]>();
     if (error) throw new Error(error.message);
 
     const byKind = new Map<string, TemplateHealth>();
     for (const row of cards ?? []) {
+        if (row.status === 'rejected' && !row.reviewed_by) continue;
         const kind = row.card.kind;
         const entry = byKind.get(kind)
             ?? { kind, approved: 0, edited: 0, rejected: 0, editRate: 0 };

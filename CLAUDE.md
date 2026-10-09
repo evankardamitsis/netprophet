@@ -12,8 +12,16 @@ Greek amateur tennis, as a daily game.
 ## Where the project is
 
 **Pivoting** from a coins-and-predictions betting app to a daily game about the
-Athens amateur tennis scene. Two specs carry the plan; read them before working
-on anything in `lib/daily/`:
+Athens amateur tennis scene.
+
+**Start with `netprophet-pivot-overview.md`.** It is the one document that
+carries the whole effort: what the pivot is and why, the artifact map, the git
+state, what has been built, the measured findings about the real data, the
+monetisation and rollout decisions, the current card pool, and the open items in
+the order the user set them. Read it before the specs — it says which spec you
+actually need.
+
+Then the two specs, before working on anything in `lib/daily/`:
 
 - **`daily-run-port-spec.md`** — porting the standalone prototype into the app.
   Steps 1–9 are complete, plus the rapid bonus round.

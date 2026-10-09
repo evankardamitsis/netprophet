@@ -62,9 +62,15 @@ export const el = {
         tabs: { today: 'Σήμερα', players: 'Παίκτες', board: 'Κατάταξη', pro: 'Pro' },
         today: {
             heroDone: 'Το έπαιξες σήμερα',
-            heroOpen: 'Οκτώ παιχνίδια σε περιμένουν',
+            // Counted, not promised: the run is whatever was approved for
+            // today, and a hero that says οκτώ over a run of five is a lie the
+            // player catches within a minute.
+            heroOpen: (n: number) => (n === 1
+                ? 'Ένα παιχνίδι σε περιμένει'
+                : `${n} παιχνίδια σε περιμένουν`),
+            heroLoading: 'Φορτώνει…',
             ledeDone: 'Επιστρέφεις αύριο στις 09:00.',
-            ledeOpen: 'Αποτέλεσμα, σκορ, αυτός ή αυτός, δημοσκόπηση, ανατροπή, σειρά, ψηφοφορία, διπλή πρόβλεψη.',
+            ledeOpen: 'Αποτέλεσμα, σκορ, ανατροπή, σειρά και άλλα — όλα από πραγματικούς αγώνες.',
             play: 'Παίξε τώρα',
             played: 'Ολοκληρώθηκε',
             yourProfile: (club: string, ntrp: string) =>
@@ -137,6 +143,9 @@ export const el = {
         pick: (n: number) => `Διάλεξε ${n}`,
         pickMore: (n: number) => `Διάλεξε ${n} ακόμα`,
         scratchFirst: 'Ξύσε πρώτα',
+        loading: 'Φορτώνει…',
+        nothingToday: 'Δεν υπάρχουν παιχνίδια σήμερα',
+        nothingTodayLede: 'Μόλις μπουν τα αποτελέσματα, θα βρεις εδώ τον γύρο σου.',
         scratch: 'Ξύσε',
         streakDays: (n: number) => `${n} ${n === 1 ? 'μέρα' : 'μέρες'}`,
         shieldLabel: 'ασφάλεια σερί',

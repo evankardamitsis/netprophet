@@ -61,9 +61,12 @@ export const en: Copy = {
         tabs: { today: 'Today', players: 'Players', board: 'Leaderboard', pro: 'Pro' },
         today: {
             heroDone: 'You have played today',
-            heroOpen: 'Eight games are waiting',
+            heroOpen: (n: number) => (n === 1
+                ? 'One game is waiting'
+                : `${n} games are waiting`),
+            heroLoading: 'Loading…',
             ledeDone: 'Come back tomorrow at 09:00.',
-            ledeOpen: 'Result, score, this or that, poll, upset, order, vote, double prediction.',
+            ledeOpen: 'Result, score, upset, order and more — all from real matches.',
             play: 'Play now',
             played: 'Completed',
             yourProfile: (club: string, ntrp: string) =>
@@ -136,6 +139,9 @@ export const en: Copy = {
         pick: (n: number) => `Pick ${n}`,
         pickMore: (n: number) => `Pick ${n} more`,
         scratchFirst: 'Scratch first',
+        loading: 'Loading…',
+        nothingToday: 'No games today',
+        nothingTodayLede: 'As soon as results are in, your round will be here.',
         scratch: 'Scratch',
         streakDays: days,
         shieldLabel: 'streak shield',

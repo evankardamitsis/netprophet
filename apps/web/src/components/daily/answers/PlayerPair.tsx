@@ -3,6 +3,7 @@
 import { Portrait } from '@/components/daily/Portrait';
 import { getPlayerMeta, sideLabel } from '@/lib/daily/providers/mock';
 import { radius } from '@/lib/daily/tokens';
+import { hasCrowd } from './crowd';
 import type { GameCard, SideRef } from '@/lib/daily/types';
 
 // Two sides, pick one. A side is one player or a doubles pair — 42% of the real
@@ -34,6 +35,7 @@ export function PlayerPair({
     onSelect: (id: string) => void;
 }) {
     const sides = [card.a, card.b];
+    const showSplit = hasCrowd(card.crowdSplit);
     // A pair needs two smaller portraits where a single player gets one big one.
     const doubles = sides.some((s) => s.players.length > 1);
 
@@ -72,10 +74,12 @@ export function PlayerPair({
                         </div>
                         <div className="np-nm">{sideLabel(side)}</div>
                         <div className="np-cl">{sideClub(side)}</div>
-                        <div className="np-pctv">{answered ? `${share}%` : ''}</div>
+                        <div className="np-pctv">
+                            {answered && showSplit ? `${share}%` : ''}
+                        </div>
                         <span
                             className="np-share"
-                            style={answered ? { width: `${share}%` } : undefined}
+                            style={answered && showSplit ? { width: `${share}%` } : undefined}
                         />
                     </button>
                 );

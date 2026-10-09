@@ -22,7 +22,7 @@ import { DOUBLE_UP_QUESTIONS, t } from '@/lib/daily/providers/mock';
 import {
     bankVote, halfAndShield, keep, resolveAnswer, resolveDouble, type Score,
 } from '@/lib/daily/scoring';
-import { buildRun } from '@/lib/daily/session';
+import { loadRun, type DailyRun } from './actions';
 import { radius } from '@/lib/daily/tokens';
 import type { CardKind, GameCard, RunState } from '@/lib/daily/types';
 import {
@@ -139,6 +139,26 @@ export default function DailyPage() {
         setScreen('hub');
     }, []);
 
+    // The day's approved cards, fetched once and shared.
+    //
+    // The hub and the run read the *same* list, so the hero cannot promise
+    // eight games and the run then deal five. Refetched when the language
+    // changes, because cards are written per locale, and after a run finishes,
+    // because those cards are now seen.
+    const locale = state?.locale;
+    const seenCount = state?.seenCardIds.length ?? 0;
+    const [dailyRun, setDailyRun] = useState<DailyRun | null>(null);
+
+    useEffect(() => {
+        if (!locale) return undefined;
+        let cancelled = false;
+        setDailyRun(null);
+        void loadRun(locale, today(), loadDailyState().seenCardIds).then((loaded) => {
+            if (!cancelled) setDailyRun(loaded);
+        });
+        return () => { cancelled = true; };
+    }, [locale, seenCount]);
+
     // Nothing renders until local state is read, so server and client agree.
     if (state === null) return <div className="np-stage" />;
 
@@ -152,11 +172,12 @@ export default function DailyPage() {
                         }
                     />
                 ) : screen === 'run' ? (
-                    <Run state={state} onFinish={finishRun} />
+                    <Run cards={dailyRun?.cards ?? []} state={state} onFinish={finishRun} />
                 ) : screen === 'bonus' ? (
                     <RapidRound streak={state.streak} onFinish={finishBonus} />
                 ) : (
                     <Hub
+                        todayCount={dailyRun ? dailyRun.cards.length : null}
                         state={state}
                         onState={(next) => {
                             setHapticsEnabled(next.haptics);
@@ -174,22 +195,18 @@ export default function DailyPage() {
 /* ================= the run ================= */
 
 function Run({
-    state, onFinish,
+    cards, state, onFinish,
 }: {
+    /** the day's approved cards, already fetched by the screen above */
+    cards: GameCard[];
     state: DailyState;
     onFinish: (run: RunState) => void;
 }) {
-    // Seeded on the date, so a mid-run reload returns the same eight cards.
+    // Captured at mount. The cards a run is dealt do not change under the
+    // player halfway through it.
     const [run, setRun] = useState<RunState>(() => ({
-        cards: buildRun({
-            seenCardIds: state.seenCardIds, seed: today(), locale: state.locale,
-        }),
-        index: 0,
-        points: 0,
-        pending: 0,
-        combo: 0,
-        shield: state.shield,
-        answers: {},
+        cards, index: 0, points: 0, pending: 0, combo: 0,
+        shield: state.shield, answers: {},
     }));
 
     const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT);
@@ -220,12 +237,24 @@ function Run({
         explanation: t(raw.explanation, locale),
     };
 
-    // An empty deck would strand the tester on a blank screen.
-    useEffect(() => {
-        if (run.cards.length === 0) onFinish(run);
-    }, [run, onFinish]);
-
-    if (!card) return <div className="np-run" />;
+    // Nothing approved for today is a real state, not an error. Say so rather
+    // than falling back to fixtures a tester would mistake for the local scene.
+    if (!card) {
+        return (
+            <main className="np-scroll np-fade">
+                <header className="np-hub-head">
+                    <h1 className="np-h1">{copy.hub.tabs.today}</h1>
+                </header>
+                <section className="np-hero">
+                    <h2>{copy.run.nothingToday}</h2>
+                    <p>{copy.run.nothingTodayLede}</p>
+                    <button type="button" className="np-cta" onClick={() => onFinish(run)}>
+                        {copy.common.back}
+                    </button>
+                </section>
+            </main>
+        );
+    }
 
     const correct = isCorrect(card, draft);
     const titles = copy.run.titles[card.kind];

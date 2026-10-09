@@ -8,6 +8,7 @@
 // See content spec §5.1. If a template ever needs an oblique case, that is a
 // signal to rewrite the template, not to reach for a declension helper.
 
+import { winRate } from '../facts';
 import type { Locale } from '../../copy';
 import { displayName } from '../../greek';
 import type { PlayerRow } from '../../providers/supabase';
@@ -48,6 +49,12 @@ export function surname(player: PlayerRow, locale: Locale): string {
  * `club` is empty on purpose: there is no club column on `players`, and
  * inventing one from the tournament would be wrong. The card falls back to the
  * NTRP line, which is real.
+ *
+ * `clay` and `hard` are zero for almost everyone for the same kind of reason:
+ * 675 of the 679 players with clay matches have `clay_win_rate` sitting at 0,
+ * and there are no per-surface win columns to derive a real figure from. Zero
+ * here means "not known", and the surface bars must read it that way rather
+ * than claiming nobody wins on clay.
  */
 export function toPlayerRef(
     player: PlayerRow,
@@ -60,8 +67,8 @@ export function toPlayerRef(
         name: shortName(player, locale),
         club: '',
         ntrp: String(player.ntrp_rating ?? ''),
-        // win_rate is stored 0–100
-        winRate: Math.round(player.win_rate ?? 0),
+        // Derived, not read — see winRate() for why the stored column is unusable.
+        winRate: Math.round((winRate(player, discipline) ?? 0) * 100),
         streak: discipline === 'doubles'
             ? (player.doubles_current_streak ?? 0)
             : (player.current_streak ?? 0),

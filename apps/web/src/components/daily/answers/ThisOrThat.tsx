@@ -3,6 +3,8 @@
 // Two framed choices. Nothing is right, so answering only reveals which way
 // the scene leaned — the bar across the bottom of each card.
 
+import { hasCrowd } from './crowd';
+
 export function ThisOrThat({
     options, crowdSplit, selectedIndex, answered, onSelect,
 }: {
@@ -12,6 +14,8 @@ export function ThisOrThat({
     answered: boolean;
     onSelect: (index: number) => void;
 }) {
+    const showSplit = hasCrowd(crowdSplit);
+
     return (
         <div className="np-tt">
             {options.map((option, k) => (
@@ -30,7 +34,9 @@ export function ThisOrThat({
                     </span>
                     <span
                         className="np-vt"
-                        style={answered ? { width: `${crowdSplit[k]}%` } : undefined}
+                        style={
+                            answered && showSplit ? { width: `${crowdSplit[k]}%` } : undefined
+                        }
                     />
                 </button>
             ))}
