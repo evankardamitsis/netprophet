@@ -5,6 +5,8 @@ project_id = "netprophet-v2"
 
 [api]
 enabled = true
+# local ports are 5442x so the v2 stack runs next to the v1 one (5432x)
+port = 54421
 # only `api` is exposed; base tables live in `core`
 schemas = ["api"]
 extra_search_path = ["extensions"]
@@ -12,6 +14,8 @@ max_rows = 1000
 
 [db]
 major_version = 17
+port = 54422
+shadow_port = 54420
 
 [db.seed]
 enabled = true
@@ -43,3 +47,12 @@ secret = "env(APPLE_CLIENT_SECRET)"
 [storage]
 enabled = true
 file_size_limit = "5MiB"
+
+[studio]
+port = 54423
+
+[local_smtp]
+port = 54424
+
+[analytics]
+port = 54427

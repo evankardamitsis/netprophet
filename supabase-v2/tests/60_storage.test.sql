@@ -1,5 +1,7 @@
 -- Storage: avatars and athlete-photos accept writes from the owner only (v1 let any signed-in user write and delete).
 begin;
+-- real Supabase blocks direct deletes unless this is set (the Storage API sets it); the RLS policies are what we test
+set local storage.allow_delete_query = 'true';
 select plan(16);
 
 select tests.create_user('st-a@test.local') as a \gset

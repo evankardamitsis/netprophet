@@ -29,6 +29,19 @@ KEEP=1 V2_DB_MODE=local scripts/v2-db-test.sh
 psql -X -f supabase-v2/tests/30_resolve.test.sql
 ```
 
+## Real Supabase (local stack and the v2 project)
+
+`scripts/v2-db-remote.sh` drives the Supabase CLI from `.supabase-v2/` (a `supabase -> ../supabase-v2` symlink), so the v1 link in `supabase/` is never touched. Local ports are 5442x so the v2 stack runs next to v1.
+
+```bash
+scripts/v2-db-remote.sh local-test   # real auth/storage/PostgREST in Docker: migrations + seed + pgTAP
+scripts/v2-db-remote.sh link <ref>   # link the netprophet-v2 project
+scripts/v2-db-remote.sh push         # dry run, then apply migrations (no seed)
+scripts/v2-db-remote.sh check        # read-only counts on the linked project
+```
+
+The suite needs `seed.sql`, so it runs on the local stack only; the real project gets migrations, and seeding it is a founder decision. Real Supabase blocks direct `delete from storage.objects` unless `storage.allow_delete_query` is set (the Storage API sets it), which `60_storage` does.
+
 ## Layout
 
 ```

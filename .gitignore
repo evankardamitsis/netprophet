@@ -116,3 +116,8 @@ web-build/
 *.tsbuildinfo
 apps/web/.env.sentry-build-plugin
 apps/admin/.env.sentry-build-plugin
+
+# v2 Supabase CLI workdir and link state (scripts/v2-db-remote.sh)
+.supabase-v2/
+supabase-v2/.temp/
+supabase-v2/.branches/
