@@ -24,7 +24,12 @@ packages/config eslint/prettier presets (kept).
 supabase-v2/    The new database: migrations, pgTAP tests, edge functions.
 docs/v2/        Spec, plan, monetization.
 ```
-Legacy `apps/web`, `apps/mobile`, `packages/lib`, `packages/ui`, `supabase/` are v1. On v2 do not edit them; they are only deleted at cutover.
+Legacy `apps/web`, `apps/mobile`, `packages/lib`, `packages/ui`, `supabase/` are v1. On v2 do not edit them. At cutover v1 is archived to a separate repo (never deleted outright). Only the data v2 needs migrates: roster (players), users/profiles and claims, tournaments, matches and results. All coins, bets and balances are dropped for everyone.
+
+## Founder decisions (9 Oct 2026)
+- Expo universal app. New Supabase project for v2 (credentials come from the founder when needed).
+- Login: email OTP, Google, Apple.
+- Match data ingestion from our sources is approved; no extra permission step.
 
 ## Design system
 - Two surfaces: ink (`#0F2019`) and paper (`#F3F5EE`).
