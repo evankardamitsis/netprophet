@@ -25,7 +25,13 @@ Data on the hosted project (`tools/migrate/`, `supabase-v2/migration-from-v1.md`
 - 10 upcoming demo matches, flagged `source_ref 'demo:%'` / `provenance.demo`. Clear before launch: `tools/demo/clear_demo.sql`.
 - No coins, bets or v1 points carried over.
 
-Open questions for the founder: «Άλλη φορά» on welcome; capital, unaccented surnames from v1 (1,611); Greek drafts listed in PR #2.
+Decided 9 Oct: «Άλλη φορά» stays and skips onboarding (still asks for the email code); v1 capital surnames get an accent pass with admin approval (queued, after the admin desk); the results desk lives in apps/admin.
+
+Phone testing: `apps/app/.env.local` points at the hosted project by default (Expo Go, same Wi-Fi). For the local stack use the values from `scripts/v2-db-remote.sh start`.
+
+## Queued phases
+- **Match data automation** (after the admin desk): spec in `docs/v2/match-data-automation.md`. Port `parse_oop.py` to TypeScript, keep the TAF RACE sheet as a test fixture, build order step 1 first (tournaments page, Google Sheets adapter, records sheet writer). Ask the founder the open questions before dedupe and results logic. **Waiting for `parse_oop.py` and the TAF sheet** (not in the repo yet; put them in `tools/match-data/fixtures/`).
+- **v1 names accent pass**: propose accented spellings for the 1,611 capital surnames, admin approves in bulk.
 
 ## M1: core loop and first real users (next)
 See `implementation-plan.md` section 9. In short:
