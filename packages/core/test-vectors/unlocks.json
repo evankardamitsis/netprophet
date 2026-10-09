@@ -1,0 +1,623 @@
+{
+  "suite": "unlocks",
+  "version": 1,
+  "notes": "fn evaluateUnlocks. Primary triggers are actions, backups are votesCast thresholds. Unlocks are sticky. Order is ladder order.",
+  "groups": [
+    {
+      "fn": "evaluateUnlocks",
+      "cases": [
+        {
+          "name": "brand new player has only day 1",
+          "input": {
+            "counters": {
+              "votesCast": 0,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1"
+            ],
+            "newlyUnlocked": [
+              "day1"
+            ]
+          }
+        },
+        {
+          "name": "level bar: 3rd correct vote on the 2nd active day",
+          "input": {
+            "counters": {
+              "votesCast": 4,
+              "votesResolved": 0,
+              "correctVotes": 3,
+              "activeDays": 2,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar"
+            ],
+            "newlyUnlocked": [
+              "level_bar"
+            ]
+          }
+        },
+        {
+          "name": "level bar waits for the 2nd day",
+          "input": {
+            "counters": {
+              "votesCast": 4,
+              "votesResolved": 0,
+              "correctVotes": 3,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1"
+            ],
+            "newlyUnlocked": []
+          }
+        },
+        {
+          "name": "level bar backup: 5th vote",
+          "input": {
+            "counters": {
+              "votesCast": 5,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar"
+            ],
+            "newlyUnlocked": [
+              "level_bar"
+            ]
+          }
+        },
+        {
+          "name": "first freeze moment: first streak of 3",
+          "input": {
+            "counters": {
+              "votesCast": 3,
+              "votesResolved": 0,
+              "correctVotes": 3,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 3,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "first_freeze"
+            ],
+            "newlyUnlocked": [
+              "first_freeze"
+            ]
+          }
+        },
+        {
+          "name": "quests: 10th vote and 2nd active day",
+          "input": {
+            "counters": {
+              "votesCast": 10,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 2,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests"
+            ],
+            "newlyUnlocked": [
+              "daily_quests"
+            ]
+          }
+        },
+        {
+          "name": "quests: 10th vote on day 1 is not enough",
+          "input": {
+            "counters": {
+              "votesCast": 10,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze"
+            ],
+            "newlyUnlocked": []
+          }
+        },
+        {
+          "name": "quests backup: 12th vote",
+          "input": {
+            "counters": {
+              "votesCast": 12,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests"
+            ],
+            "newlyUnlocked": [
+              "daily_quests"
+            ]
+          }
+        },
+        {
+          "name": "kudos and reactions: first confirmed match",
+          "input": {
+            "counters": {
+              "votesCast": 2,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 1,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "kudos_reactions"
+            ],
+            "newlyUnlocked": [
+              "kudos_reactions"
+            ]
+          }
+        },
+        {
+          "name": "badges shelf: 10th correct vote",
+          "input": {
+            "counters": {
+              "votesCast": 12,
+              "votesResolved": 0,
+              "correctVotes": 10,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "badges_shelf"
+            ],
+            "newlyUnlocked": [
+              "badges_shelf"
+            ]
+          }
+        },
+        {
+          "name": "pro first view: first streak of 5",
+          "input": {
+            "counters": {
+              "votesCast": 6,
+              "votesResolved": 0,
+              "correctVotes": 5,
+              "activeDays": 1,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 5,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "pro_first_view"
+            ],
+            "newlyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "pro_first_view"
+            ]
+          }
+        },
+        {
+          "name": "pro first view backup: 30th vote",
+          "input": {
+            "counters": {
+              "votesCast": 30,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "badges_shelf",
+              "pro_first_view"
+            ],
+            "newlyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "badges_shelf",
+              "pro_first_view"
+            ]
+          }
+        },
+        {
+          "name": "weekly quests: 6th active day",
+          "input": {
+            "counters": {
+              "votesCast": 9,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 6,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "weekly_quests"
+            ],
+            "newlyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "weekly_quests"
+            ]
+          }
+        },
+        {
+          "name": "gifts: 3rd kudos given",
+          "input": {
+            "counters": {
+              "votesCast": 3,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 3,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "gifts"
+            ],
+            "newlyUnlocked": [
+              "gifts"
+            ]
+          }
+        },
+        {
+          "name": "45 votes unlock everything except gifts (backup 50)",
+          "input": {
+            "counters": {
+              "votesCast": 45,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "avatar_profile",
+              "badges_shelf",
+              "pro_first_view",
+              "weekly_quests",
+              "stats_area"
+            ],
+            "newlyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "avatar_profile",
+              "badges_shelf",
+              "pro_first_view",
+              "weekly_quests",
+              "stats_area"
+            ]
+          }
+        },
+        {
+          "name": "50 votes unlock all 13",
+          "input": {
+            "counters": {
+              "votesCast": 50,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "avatar_profile",
+              "badges_shelf",
+              "pro_first_view",
+              "weekly_quests",
+              "gifts",
+              "stats_area"
+            ],
+            "newlyUnlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "avatar_profile",
+              "badges_shelf",
+              "pro_first_view",
+              "weekly_quests",
+              "gifts",
+              "stats_area"
+            ]
+          }
+        },
+        {
+          "name": "unlocks are sticky when counters drop",
+          "input": {
+            "counters": {
+              "votesCast": 0,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1",
+              "badges_shelf"
+            ],
+            "existingPlayer": false
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "badges_shelf"
+            ],
+            "newlyUnlocked": []
+          }
+        },
+        {
+          "name": "existing player gets the whole ladder",
+          "input": {
+            "counters": {
+              "votesCast": 0,
+              "votesResolved": 0,
+              "correctVotes": 0,
+              "activeDays": 0,
+              "kudosGiven": 0,
+              "matchesLogged": 0,
+              "matchesConfirmed": 0,
+              "bestStreak": 0,
+              "fullQuestDays": 0
+            },
+            "previouslyUnlocked": [
+              "day1"
+            ],
+            "existingPlayer": true
+          },
+          "expected": {
+            "unlocked": [
+              "day1",
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "avatar_profile",
+              "badges_shelf",
+              "pro_first_view",
+              "weekly_quests",
+              "gifts",
+              "stats_area"
+            ],
+            "newlyUnlocked": [
+              "level_bar",
+              "first_freeze",
+              "daily_quests",
+              "bridge_line",
+              "ladder_friends",
+              "kudos_reactions",
+              "avatar_profile",
+              "badges_shelf",
+              "pro_first_view",
+              "weekly_quests",
+              "gifts",
+              "stats_area"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

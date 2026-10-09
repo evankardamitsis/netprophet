@@ -1,0 +1,862 @@
+{
+  "suite": "quests",
+  "version": 1,
+  "notes": "fn applyQuestEvent. Rewards are never points: quest definitions carry only cosmetic or badge rewards (see README).",
+  "groups": [
+    {
+      "fn": "applyQuestEvent",
+      "cases": [
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 2,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 3,
+                "days": [],
+                "doneAt": "2026-10-09T10:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "daily_vote_3_cards",
+                "from": 2,
+                "to": 3,
+                "target": 3
+              }
+            ],
+            "completed": [
+              "daily_vote_3_cards"
+            ]
+          },
+          "name": "third card completes the daily"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-08",
+                "current": 2,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "daily_vote_3_cards",
+                "from": 0,
+                "to": 1,
+                "target": 3
+              }
+            ],
+            "completed": []
+          },
+          "name": "stale window resets to zero then counts"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 2,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-09T20:59:59Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 3,
+                "days": [],
+                "doneAt": "2026-10-09T20:59:59Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "daily_vote_3_cards",
+                "from": 2,
+                "to": 3,
+                "target": 3
+              }
+            ],
+            "completed": [
+              "daily_vote_3_cards"
+            ]
+          },
+          "name": "23:59:59 Athens still counts for the old day"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 2,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-09T21:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-10",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "daily_vote_3_cards",
+                "from": 0,
+                "to": 1,
+                "target": 3
+              }
+            ],
+            "completed": []
+          },
+          "name": "00:00 Athens starts a new day"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-03-29",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-03-29T21:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-03-30",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "daily_vote_3_cards",
+                "from": 0,
+                "to": 1,
+                "target": 3
+              }
+            ],
+            "completed": []
+          },
+          "name": "DST spring: the 23-hour day still ends at 00:00 Athens"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-25",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-25T21:59:59Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-25",
+                "current": 2,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "daily_vote_3_cards",
+                "from": 1,
+                "to": 2,
+                "target": 3
+              }
+            ],
+            "completed": []
+          },
+          "name": "DST autumn: the 25-hour day keeps counting until 00:00 Athens"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 3,
+                "days": [],
+                "doneAt": "2026-10-09T09:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 3,
+                "days": [],
+                "doneAt": "2026-10-09T09:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [],
+            "completed": []
+          },
+          "name": "done quest ignores further events"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [],
+            "event": {
+              "type": "kudos_given",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-09",
+                "current": 0,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [],
+            "completed": []
+          },
+          "name": "unrelated event changes nothing"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "daily_vote_3_cards",
+                "window": "daily",
+                "target": 3,
+                "triggers": [
+                  {
+                    "event": "vote_card",
+                    "mode": "inc"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-10",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "vote_card",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "daily_vote_3_cards",
+                "windowKey": "2026-10-10",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [],
+            "completed": []
+          },
+          "name": "late event from an older window is ignored"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "weekly_vote_5_days",
+                "window": "weekly",
+                "target": 5,
+                "triggers": [
+                  {
+                    "event": "active_day",
+                    "mode": "distinct_day"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 2,
+                "days": [
+                  "2026-10-05",
+                  "2026-10-06"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "active_day",
+              "at": "2026-10-06T15:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 2,
+                "days": [
+                  "2026-10-05",
+                  "2026-10-06"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [],
+            "completed": []
+          },
+          "name": "weekly distinct day: same day twice counts once"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "weekly_vote_5_days",
+                "window": "weekly",
+                "target": 5,
+                "triggers": [
+                  {
+                    "event": "active_day",
+                    "mode": "distinct_day"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 4,
+                "days": [
+                  "2026-10-05",
+                  "2026-10-06",
+                  "2026-10-07",
+                  "2026-10-08"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "active_day",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 5,
+                "days": [
+                  "2026-10-05",
+                  "2026-10-06",
+                  "2026-10-07",
+                  "2026-10-08",
+                  "2026-10-09"
+                ],
+                "doneAt": "2026-10-09T10:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "weekly_vote_5_days",
+                "from": 4,
+                "to": 5,
+                "target": 5
+              }
+            ],
+            "completed": [
+              "weekly_vote_5_days"
+            ]
+          },
+          "name": "weekly distinct day: fifth day completes"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "weekly_vote_5_days",
+                "window": "weekly",
+                "target": 5,
+                "triggers": [
+                  {
+                    "event": "active_day",
+                    "mode": "distinct_day"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 1,
+                "days": [
+                  "2026-10-05"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "active_day",
+              "at": "2026-10-11T20:59:59Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 2,
+                "days": [
+                  "2026-10-05",
+                  "2026-10-11"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "weekly_vote_5_days",
+                "from": 1,
+                "to": 2,
+                "target": 5
+              }
+            ],
+            "completed": []
+          },
+          "name": "weekly: Sunday 23:59:59 is still the old week"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "weekly_vote_5_days",
+                "window": "weekly",
+                "target": 5,
+                "triggers": [
+                  {
+                    "event": "active_day",
+                    "mode": "distinct_day"
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-05",
+                "current": 4,
+                "days": [
+                  "2026-10-05",
+                  "2026-10-06",
+                  "2026-10-07",
+                  "2026-10-08"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "active_day",
+              "at": "2026-10-11T21:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "weekly_vote_5_days",
+                "windowKey": "2026-10-12",
+                "current": 1,
+                "days": [
+                  "2026-10-12"
+                ],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "weekly_vote_5_days",
+                "from": 0,
+                "to": 1,
+                "target": 5
+              }
+            ],
+            "completed": []
+          },
+          "name": "weekly: Monday 00:00 resets"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "invite_friend",
+                "window": "lifetime",
+                "target": 2,
+                "triggers": [
+                  {
+                    "event": "friend_invited",
+                    "mode": "at_least",
+                    "value": 1
+                  },
+                  {
+                    "event": "friend_activated",
+                    "mode": "at_least",
+                    "value": 2
+                  }
+                ]
+              }
+            ],
+            "stored": [],
+            "event": {
+              "type": "friend_invited",
+              "at": "2026-10-09T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "invite_friend",
+                "windowKey": "all",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "invite_friend",
+                "from": 0,
+                "to": 1,
+                "target": 2
+              }
+            ],
+            "completed": []
+          },
+          "name": "invite: sent"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "invite_friend",
+                "window": "lifetime",
+                "target": 2,
+                "triggers": [
+                  {
+                    "event": "friend_invited",
+                    "mode": "at_least",
+                    "value": 1
+                  },
+                  {
+                    "event": "friend_activated",
+                    "mode": "at_least",
+                    "value": 2
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "invite_friend",
+                "windowKey": "all",
+                "current": 1,
+                "days": [],
+                "doneAt": null,
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "friend_activated",
+              "at": "2026-10-10T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "invite_friend",
+                "windowKey": "all",
+                "current": 2,
+                "days": [],
+                "doneAt": "2026-10-10T10:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [
+              {
+                "questId": "invite_friend",
+                "from": 1,
+                "to": 2,
+                "target": 2
+              }
+            ],
+            "completed": [
+              "invite_friend"
+            ]
+          },
+          "name": "invite: friend joined and played"
+        },
+        {
+          "input": {
+            "defs": [
+              {
+                "id": "invite_friend",
+                "window": "lifetime",
+                "target": 2,
+                "triggers": [
+                  {
+                    "event": "friend_invited",
+                    "mode": "at_least",
+                    "value": 1
+                  },
+                  {
+                    "event": "friend_activated",
+                    "mode": "at_least",
+                    "value": 2
+                  }
+                ]
+              }
+            ],
+            "stored": [
+              {
+                "questId": "invite_friend",
+                "windowKey": "all",
+                "current": 2,
+                "days": [],
+                "doneAt": "2026-10-10T10:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "event": {
+              "type": "friend_invited",
+              "at": "2026-10-11T10:00:00Z"
+            }
+          },
+          "expected": {
+            "progress": [
+              {
+                "questId": "invite_friend",
+                "windowKey": "all",
+                "current": 2,
+                "days": [],
+                "doneAt": "2026-10-10T10:00:00Z",
+                "rewardGranted": false
+              }
+            ],
+            "steps": [],
+            "completed": []
+          },
+          "name": "invite: sent after done does not go backwards"
+        }
+      ]
+    }
+  ]
+}

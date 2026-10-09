@@ -1,0 +1,756 @@
+{
+  "suite": "resolution",
+  "version": 1,
+  "notes": "fn resolveBatch. Items are processed by resolvedAt, then vote createdAt, then vote id. `entries` are in processing order. Streak follows RESOLUTION time.",
+  "groups": [
+    {
+      "fn": "resolveBatch",
+      "cases": [
+        {
+          "name": "first correct vote",
+          "input": {
+            "streak": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 10,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 1,
+              "best": 1,
+              "chain": 1,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "out of order results follow resolution time",
+          "input": {
+            "streak": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 1,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "v2",
+                "createdAt": "2026-10-09T10:05:00Z",
+                "matchId": "m2",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T14:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "v3",
+                "createdAt": "2026-10-09T10:10:00Z",
+                "matchId": "m3",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T12:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v3",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 15,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": 3,
+                  "newBest": true,
+                  "freezeGranted": true
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "wrong",
+                "points": 0,
+                "streakEvent": {
+                  "kind": "frozen",
+                  "freezeUsed": "free"
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "v2",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 15,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 4,
+              "best": 4,
+              "chain": 4,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "same resolution time: older vote first, then id",
+          "input": {
+            "streak": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "vB",
+                "createdAt": "2026-10-09T10:05:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "vA",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m2",
+                "matchStatus": "confirmed",
+                "winnerSide": 1,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "vC",
+                "createdAt": "2026-10-09T10:05:00Z",
+                "matchId": "m3",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "vA",
+                "status": "resolved",
+                "outcome": "wrong",
+                "points": 0,
+                "streakEvent": {
+                  "kind": "idle"
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "vB",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 10,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "vC",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 15,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "double resolution inside a batch counts once",
+          "input": {
+            "streak": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              },
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 10,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": false
+              },
+              {
+                "voteId": "v1",
+                "status": "already_resolved",
+                "outcome": null,
+                "points": 0,
+                "streakEvent": null,
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 1,
+              "best": 1,
+              "chain": 1,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "vote already resolved earlier is skipped",
+          "input": {
+            "streak": {
+              "current": 3,
+              "best": 3,
+              "chain": 3,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": true
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "already_resolved",
+                "outcome": null,
+                "points": 0,
+                "streakEvent": null,
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 3,
+              "best": 3,
+              "chain": 3,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "cancelled match: no points, streak unchanged",
+          "input": {
+            "streak": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "cancelled",
+                "winnerSide": null,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "void",
+                "outcome": "none",
+                "points": 0,
+                "streakEvent": null,
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "void match: no points, streak unchanged",
+          "input": {
+            "streak": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "void",
+                "winnerSide": null,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "void",
+                "outcome": "none",
+                "points": 0,
+                "streakEvent": null,
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "played but unconfirmed stays pending",
+          "input": {
+            "streak": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "played",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "pending",
+                "outcome": null,
+                "points": 0,
+                "streakEvent": null,
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "disputed stays pending",
+          "input": {
+            "streak": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "disputed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 5,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "pending",
+                "outcome": null,
+                "points": 0,
+                "streakEvent": null,
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "upset call is worth 30",
+          "input": {
+            "streak": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 3,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 30,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": true
+              }
+            ],
+            "final": {
+              "current": 1,
+              "best": 1,
+              "chain": 1,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "upset call extending a chain is 35",
+          "input": {
+            "streak": {
+              "current": 1,
+              "best": 1,
+              "chain": 1,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 0,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 3,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "correct",
+                "points": 35,
+                "streakEvent": {
+                  "kind": "advanced",
+                  "milestone": null,
+                  "newBest": true,
+                  "freezeGranted": false
+                },
+                "isUpsetCall": true
+              }
+            ],
+            "final": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "picking the favourite that lost is wrong, not an upset call",
+          "input": {
+            "streak": {
+              "current": 3,
+              "best": 3,
+              "chain": 3,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "items": [
+              {
+                "voteId": "v1",
+                "createdAt": "2026-10-09T10:00:00Z",
+                "matchId": "m1",
+                "matchStatus": "confirmed",
+                "winnerSide": 1,
+                "resolvedAt": "2026-10-09T13:00:00Z",
+                "votesForWinner": 3,
+                "totalVotes": 10,
+                "option": 0,
+                "alreadyResolved": false
+              }
+            ]
+          },
+          "expected": {
+            "entries": [
+              {
+                "voteId": "v1",
+                "status": "resolved",
+                "outcome": "wrong",
+                "points": 0,
+                "streakEvent": {
+                  "kind": "broken",
+                  "lostStreak": 3
+                },
+                "isUpsetCall": false
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 3,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": "2026-10-09T13:00:00Z"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

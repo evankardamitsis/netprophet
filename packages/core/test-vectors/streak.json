@@ -1,0 +1,1000 @@
+{
+  "suite": "streak",
+  "version": 1,
+  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step.",
+  "groups": [
+    {
+      "fn": "streakSequence",
+      "cases": [
+        {
+          "name": "three correct earn the first free freeze and milestone 3",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": true,
+                "freezeGranted": true
+              }
+            ],
+            "final": {
+              "current": 3,
+              "best": 3,
+              "chain": 3,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "free freeze absorbs the first wrong, the second breaks",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T13:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": true,
+                "freezeGranted": true
+              },
+              {
+                "kind": "frozen",
+                "freezeUsed": "free"
+              },
+              {
+                "kind": "broken",
+                "lostStreak": 3
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 3,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": "2026-10-09T13:00:00Z"
+            }
+          }
+        },
+        {
+          "name": "paid freeze keeps the number and restarts the chain",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "buy_freeze"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "bought"
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "frozen",
+                "freezeUsed": "paid"
+              },
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": true,
+                "freezeGranted": true
+              }
+            ],
+            "final": {
+              "current": 3,
+              "best": 3,
+              "chain": 1,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "max 2 freezes held",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "buy_freeze"
+              },
+              {
+                "op": "buy_freeze"
+              },
+              {
+                "op": "buy_freeze"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "bought"
+              },
+              {
+                "kind": "bought"
+              },
+              {
+                "kind": "rejected",
+                "reason": "max_freezes"
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [
+                "paid",
+                "paid"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "free freeze every 15 votes cast",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "cast",
+                "repeat": 15
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": true
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "second free freeze after 30 casts",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "cast",
+                "repeat": 30
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": true
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": true
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [
+                "free",
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "freeze waits at 15 while both slots are full, then is granted on the first free slot",
+          "input": {
+            "initial": {
+              "current": 4,
+              "best": 4,
+              "chain": 4,
+              "freezes": [
+                "free",
+                "free"
+              ],
+              "votesSinceFreeFreeze": 14,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "cast"
+              },
+              {
+                "op": "cast"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "cast"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": false
+              },
+              {
+                "kind": "frozen",
+                "freezeUsed": "free"
+              },
+              {
+                "kind": "cast",
+                "freezeGranted": true
+              }
+            ],
+            "final": {
+              "current": 4,
+              "best": 4,
+              "chain": 4,
+              "freezes": [
+                "free",
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "free freeze is spent before paid",
+          "input": {
+            "initial": {
+              "current": 5,
+              "best": 5,
+              "chain": 5,
+              "freezes": [
+                "paid",
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T13:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "frozen",
+                "freezeUsed": "free"
+              },
+              {
+                "kind": "frozen",
+                "freezeUsed": "paid"
+              },
+              {
+                "kind": "broken",
+                "lostStreak": 5
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 5,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": "2026-10-09T13:00:00Z"
+            }
+          }
+        },
+        {
+          "name": "wrong at zero spends nothing",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "idle"
+              }
+            ],
+            "final": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "milestones 3, 5, 7, 10; freeze only at the first 3",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": true,
+                "freezeGranted": true
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": 5,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": 7,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": 10,
+                "newBest": true,
+                "freezeGranted": false
+              }
+            ],
+            "final": {
+              "current": 10,
+              "best": 10,
+              "chain": 10,
+              "freezes": [
+                "free"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "record survives a break",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-09T12:00:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false
+              },
+              {
+                "kind": "broken",
+                "lostStreak": 2
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false
+              }
+            ],
+            "final": {
+              "current": 1,
+              "best": 2,
+              "chain": 1,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": "2026-10-09T12:00:00Z"
+            }
+          }
+        },
+        {
+          "name": "first free freeze is granted only once",
+          "input": {
+            "initial": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": true,
+                "freezeGranted": false
+              }
+            ],
+            "final": {
+              "current": 3,
+              "best": 3,
+              "chain": 3,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null
+            }
+          }
+        },
+        {
+          "name": "first free at 3 is skipped when both slots are full",
+          "input": {
+            "initial": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [
+                "paid",
+                "paid"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-09T12:00:00Z"
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": true,
+                "freezeGranted": false
+              }
+            ],
+            "final": {
+              "current": 3,
+              "best": 3,
+              "chain": 3,
+              "freezes": [
+                "paid",
+                "paid"
+              ],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

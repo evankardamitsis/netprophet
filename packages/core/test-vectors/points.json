@@ -1,0 +1,251 @@
+{
+  "suite": "points",
+  "version": 1,
+  "notes": "Language-neutral. Instants are ISO 8601. Each group names the function under test.",
+  "groups": [
+    {
+      "fn": "pointsForVote",
+      "cases": [
+        {
+          "name": "correct, no chain",
+          "input": {
+            "correct": true,
+            "upset": false,
+            "chainBefore": 0
+          },
+          "expected": [
+            {
+              "reason": "vote_correct",
+              "delta": 10
+            }
+          ]
+        },
+        {
+          "name": "correct, extends a chain of 1",
+          "input": {
+            "correct": true,
+            "upset": false,
+            "chainBefore": 1
+          },
+          "expected": [
+            {
+              "reason": "vote_correct",
+              "delta": 10
+            },
+            {
+              "reason": "chain_bonus",
+              "delta": 5
+            }
+          ]
+        },
+        {
+          "name": "correct, long chain pays a flat +5",
+          "input": {
+            "correct": true,
+            "upset": false,
+            "chainBefore": 9
+          },
+          "expected": [
+            {
+              "reason": "vote_correct",
+              "delta": 10
+            },
+            {
+              "reason": "chain_bonus",
+              "delta": 5
+            }
+          ]
+        },
+        {
+          "name": "upset replaces the +10 with +30",
+          "input": {
+            "correct": true,
+            "upset": true,
+            "chainBefore": 0
+          },
+          "expected": [
+            {
+              "reason": "vote_upset",
+              "delta": 30
+            }
+          ]
+        },
+        {
+          "name": "upset with chain adds +5",
+          "input": {
+            "correct": true,
+            "upset": true,
+            "chainBefore": 3
+          },
+          "expected": [
+            {
+              "reason": "vote_upset",
+              "delta": 30
+            },
+            {
+              "reason": "chain_bonus",
+              "delta": 5
+            }
+          ]
+        },
+        {
+          "name": "wrong earns nothing",
+          "input": {
+            "correct": false,
+            "upset": false,
+            "chainBefore": 4
+          },
+          "expected": []
+        },
+        {
+          "name": "wrong upset flag is ignored",
+          "input": {
+            "correct": false,
+            "upset": true,
+            "chainBefore": 4
+          },
+          "expected": []
+        }
+      ]
+    },
+    {
+      "fn": "isUpset",
+      "cases": [
+        {
+          "name": "3 of 10 is 30 percent",
+          "input": {
+            "votesForWinner": 3,
+            "totalVotes": 10
+          },
+          "expected": true
+        },
+        {
+          "name": "4 of 10 is exactly 40 percent: not an upset",
+          "input": {
+            "votesForWinner": 4,
+            "totalVotes": 10
+          },
+          "expected": false
+        },
+        {
+          "name": "0 of 9: below the minimum vote count",
+          "input": {
+            "votesForWinner": 0,
+            "totalVotes": 9
+          },
+          "expected": false
+        },
+        {
+          "name": "39 of 100",
+          "input": {
+            "votesForWinner": 39,
+            "totalVotes": 100
+          },
+          "expected": true
+        },
+        {
+          "name": "40 of 100",
+          "input": {
+            "votesForWinner": 40,
+            "totalVotes": 100
+          },
+          "expected": false
+        },
+        {
+          "name": "winner favourite",
+          "input": {
+            "votesForWinner": 8,
+            "totalVotes": 10
+          },
+          "expected": false
+        }
+      ]
+    },
+    {
+      "fn": "quizCompletionPoints",
+      "cases": [
+        {
+          "name": "free set complete",
+          "input": {
+            "answered": 6,
+            "required": 6,
+            "alreadyAwardedForDay": false
+          },
+          "expected": [
+            {
+              "reason": "daily_quiz",
+              "delta": 30
+            }
+          ]
+        },
+        {
+          "name": "pro 12-card set pays the same +30",
+          "input": {
+            "answered": 12,
+            "required": 12,
+            "alreadyAwardedForDay": false
+          },
+          "expected": [
+            {
+              "reason": "daily_quiz",
+              "delta": 30
+            }
+          ]
+        },
+        {
+          "name": "one card short",
+          "input": {
+            "answered": 5,
+            "required": 6,
+            "alreadyAwardedForDay": false
+          },
+          "expected": []
+        },
+        {
+          "name": "already awarded this quiz day",
+          "input": {
+            "answered": 6,
+            "required": 6,
+            "alreadyAwardedForDay": true
+          },
+          "expected": []
+        }
+      ]
+    },
+    {
+      "fn": "quizDayKey",
+      "cases": [
+        {
+          "name": "08:59:59 EEST is still yesterday s set",
+          "input": "2026-10-09T05:59:59Z",
+          "expected": "2026-10-08"
+        },
+        {
+          "name": "09:00 EEST starts the new set",
+          "input": "2026-10-09T06:00:00Z",
+          "expected": "2026-10-09"
+        },
+        {
+          "name": "winter 08:59:59 EET",
+          "input": "2026-12-01T06:59:59Z",
+          "expected": "2026-11-30"
+        },
+        {
+          "name": "winter 09:00 EET",
+          "input": "2026-12-01T07:00:00Z",
+          "expected": "2026-12-01"
+        },
+        {
+          "name": "DST start day, 08:59:59 EEST",
+          "input": "2026-03-29T05:59:59Z",
+          "expected": "2026-03-28"
+        },
+        {
+          "name": "DST start day, 09:00 EEST",
+          "input": "2026-03-29T06:00:00Z",
+          "expected": "2026-03-29"
+        }
+      ]
+    }
+  ]
+}

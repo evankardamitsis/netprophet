@@ -1,0 +1,175 @@
+{
+  "suite": "votes",
+  "version": 1,
+  "notes": "fn validateVote. A vote at exactly the lock instant is rejected.",
+  "groups": [
+    {
+      "fn": "validateVote",
+      "cases": [
+        {
+          "name": "open before the start",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T14:59:59Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "announced matches accept votes",
+          "input": {
+            "matchStatus": "announced",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 1,
+            "castAt": "2026-10-09T10:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": true
+          }
+        },
+        {
+          "name": "exactly at start is locked",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T15:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "after start is locked",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T15:00:01Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "explicit lock earlier than start",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": "2026-10-09T14:45:00Z",
+            "optionIndex": 0,
+            "castAt": "2026-10-09T14:50:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "offsets compare as instants (18:00+03:00 is 15:00Z)",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T18:00:00+03:00",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T15:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "locked"
+          }
+        },
+        {
+          "name": "played match is not open",
+          "input": {
+            "matchStatus": "played",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T10:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "not_open"
+          }
+        },
+        {
+          "name": "confirmed match is not open",
+          "input": {
+            "matchStatus": "confirmed",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T10:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "not_open"
+          }
+        },
+        {
+          "name": "cancelled match is not open",
+          "input": {
+            "matchStatus": "cancelled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T10:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "not_open"
+          }
+        },
+        {
+          "name": "option 2 is invalid",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 2,
+            "castAt": "2026-10-09T10:00:00Z",
+            "alreadyVoted": false
+          },
+          "expected": {
+            "ok": false,
+            "reason": "invalid_option"
+          }
+        },
+        {
+          "name": "second vote on the same match",
+          "input": {
+            "matchStatus": "scheduled",
+            "startsAt": "2026-10-09T15:00:00Z",
+            "lockAt": null,
+            "optionIndex": 0,
+            "castAt": "2026-10-09T10:00:00Z",
+            "alreadyVoted": true
+          },
+          "expected": {
+            "ok": false,
+            "reason": "already_voted"
+          }
+        }
+      ]
+    }
+  ]
+}
