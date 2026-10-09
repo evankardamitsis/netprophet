@@ -360,8 +360,16 @@ export type Database = {
       };
     };
     Functions: {
+      admin_desk: {
+        Args: { p_days?: number };
+        Returns: Json;
+      };
       admin_set_result: {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
+        Returns: Json;
+      };
+      admin_void_match: {
+        Args: { p_match_id: string };
         Returns: Json;
       };
       cast_vote: {
