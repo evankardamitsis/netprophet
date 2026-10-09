@@ -8,6 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
@@ -21,6 +22,8 @@ const LOGO = require('../assets/logo-on-ink.svg');
 const LOGO_RATIO = 159 / 30;
 
 type Step = 'welcome' | 'email' | 'code';
+/** «Άλλη φορά»: after the email code, go straight to the feed and skip claim, area and Ποιους ξέρεις */
+export const SKIP_ONBOARDING_KEY = 'np.skipOnboarding';
 const CODE_LEN = 6;
 /** prototype .sw: a 1em box (70px), words slide by 110% */
 const SWAP_H = 70;
@@ -40,7 +43,20 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {step === 'welcome' ? <Welcome onNext={() => setStep('email')} /> : <Auth step={step} setStep={setStep} />}
+        {step === 'welcome' ? (
+          <Welcome
+            onNext={() => {
+              AsyncStorage.removeItem(SKIP_ONBOARDING_KEY).catch(() => undefined);
+              setStep('email');
+            }}
+            onLater={() => {
+              AsyncStorage.setItem(SKIP_ONBOARDING_KEY, '1').catch(() => undefined);
+              setStep('email');
+            }}
+          />
+        ) : (
+          <Auth step={step} setStep={setStep} />
+        )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -48,7 +64,7 @@ export default function SignInScreen() {
 
 /* ---------- welcome (prototype isWelcome) ---------- */
 
-function Welcome({ onNext }: { onNext: () => void }) {
+function Welcome({ onNext, onLater }: { onNext: () => void; onLater: () => void }) {
   const t = useCopy();
   const card = useInA(500, 12);
   const cta = usePopIn(450, 1500);
@@ -79,7 +95,7 @@ function Welcome({ onNext }: { onNext: () => void }) {
           {t.welcome.cta}
         </Button>
       </Animated.View>
-      {/* «Άλλη φορά» skips onboarding in the prototype; v2 needs an account first, so it waits for a decision */}
+      <Later onPress={onLater}>{t.welcome.later}</Later>
     </View>
   );
 }
@@ -290,6 +306,16 @@ function Button({
   );
 }
 
+/** «Άλλη φορά»: 44px, underlined, secondary ink (prototype welcome) */
+function Later({ children, onPress }: { children: ReactNode; onPress: () => void }) {
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.laterHit}>
+      <Animated.Text style={[styles.later, press.style]}>{children}</Animated.Text>
+    </Pressable>
+  );
+}
+
 function Back({ children, onPress }: { children: ReactNode; onPress: () => void }) {
   const press = usePress();
   return (
@@ -365,5 +391,7 @@ const styles = StyleSheet.create({
   outlineText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   disabled: { opacity: 0.4 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  laterHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  later: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft, textDecorationLine: 'underline' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
 });
