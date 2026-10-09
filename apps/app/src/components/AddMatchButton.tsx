@@ -1,40 +1,46 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { Pressable, StyleSheet } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useCopy } from '../i18n';
-import { colors, fonts, motion, radii, spacing } from '../theme';
+import { usePopIn, usePress } from '../lib/motion';
+import { colors, fonts } from '../theme';
 
-/** The single blue primary action on Ψήφισε and Αποτελέσματα. */
+/** The single blue primary action on Ψήφισε and Αποτελέσματα (prototype: pinned «+ Ματς» above the tabs). */
 export function AddMatchButton() {
   const t = useCopy();
-  const scale = useSharedValue(1);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const press = usePress();
+  const pop = usePopIn(450, 300);
   return (
-    <Animated.View style={[styles.wrap, style]}>
+    <Animated.View style={[styles.wrap, pop]}>
       <Pressable
         accessibilityRole="button"
         onPress={() => router.push('/add-match')}
-        onPressIn={() => {
-          scale.value = withSpring(0.94, motion.spring);
-        }}
-        onPressOut={() => {
-          scale.value = withSpring(1, motion.spring);
-        }}
-        style={styles.btn}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
       >
-        <Text style={styles.text}>{t.addMatch.cta}</Text>
+        <Animated.View style={[styles.btn, press.style]}>
+          <Animated.Text style={styles.text}>{t.addMatch.cta}</Animated.Text>
+        </Animated.View>
       </Pressable>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', right: spacing[4], bottom: spacing[4] },
+  // prototype: right 12, bottom 110 from the bottom of the screen; this view ends at the 67px tab bar
+  wrap: { position: 'absolute', right: 12, bottom: 43 },
   btn: {
+    minHeight: 48,
+    paddingHorizontal: 18,
+    borderRadius: 999,
     backgroundColor: colors.blue,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[3],
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.ink,
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  text: { color: colors.paper, fontFamily: fonts.bodySemi, fontSize: 16 },
+  text: { color: colors.white, fontFamily: fonts.bodyBold, fontSize: 15 },
 });

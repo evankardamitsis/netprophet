@@ -11,5 +11,9 @@ describe('tokens', () => {
     const css = cssVars();
     expect(css).toContain(`--np-lime: ${colors.lime};`);
     expect(css).toContain('--np-reveal-dur: 700ms;');
+    expect(css).toContain('--np-spring: cubic-bezier(.2,1.4,.4,1);');
+  });
+  it('keeps every colour a 6-digit hex', () => {
+    for (const v of Object.values(colors)) expect(v).toMatch(/^#[0-9A-F]{6}$/);
   });
 });

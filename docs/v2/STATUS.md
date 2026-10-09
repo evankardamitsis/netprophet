@@ -11,14 +11,21 @@ Last updated: 9 Oct 2026. Read this after CLAUDE.md. It says what is done, what 
 - `apps/app`: Expo SDK 57, expo-router, 5 Greek tabs, header (σερί, πόντοι), «+ Ματς» modal, `VoteCard` with Reanimated on mock data. `expo export -p web` works. Never run on a device.
 - `supabase-v2/migration-from-v1.md`: v1 to v2 data mapping (roster, users, claims, tournaments, matches, results; all coins dropped).
 
-## Left from M0 (do first)
-1. Done 9 Oct: project `netprophet-v2` (ref `mssedfnhcozeifgflkaq`, own org, eu-west-1 Ireland, not Frankfurt). Migrations pushed (no seed). `scripts/v2-db-remote.sh` links/pushes/checks from `.supabase-v2/`; `local-test` runs the pgTAP suite on a real Supabase stack (286/286). Still to do: set Exposed schemas to `api` only in the dashboard (API settings), auth providers (email OTP, Google), keys into GitHub secrets and local `.env`.
-2. Done 9 Oct: v1 backup in `~/netprophet-backups/v1-20261009-*` (roles, schema, data, auth users, full.dump). Storage bucket files are not included.
-3. Auth in the app: email OTP, Google (Apple later, needs a developer account). Google needs client id/secret from the founder.
-4. Wire `apps/app` to the real database through `@netprophet/db` (feed from `get_feed`, vote via `cast_vote`). Replace mocks in `apps/app/src/mock/`.
-5. Run the app on a real phone (Expo Go / dev build) and on a low-end Android: animation spike sign-off by the founder.
-6. Done: CI green on `v2`.
-7. Done: local `pnpm install` works without `--ignore-scripts`. Toolchain upgrades (pnpm 9, turbo 2) deferred. The root pre-commit hook fails on a stale v1 `apps/web/.next` cache; v2 checks pass.
+## Where M0 stands (9 Oct, branch `v2-app-auth-feed`, PR #2 on top of #1)
+1. Done: hosted project `netprophet-v2` (ref `mssedfnhcozeifgflkaq`, Ireland). Migrations pushed; Data API exposes only `api`; 6-digit email code; all auth email through Resend SMTP from noreply@netprophetapp.com (`scripts/v2-project-settings.sh`). Checked end to end.
+2. Done: v1 backup in `~/netprophet-backups/v1-20261009-*`. Storage bucket files not included.
+3. Done: email code sign-in. Google is written but unverified (needs client id/secret). Apple later.
+4. Done: app on real data (feed, vote, header). Screens copied from the prototype: welcome, header with the πόντοι shine, feed card, tab bar, «+ Ματς». Sign-in steps use the claim screen style (founder review).
+5. Open: run on a real phone and a low-end Android; animation sign-off; check the native shine.
+6. Done: CI green. 7. Done: local install.
+
+Data on the hosted project (`tools/migrate/`, `supabase-v2/migration-from-v1.md` section 4):
+- v1 roster 1,632 players (NTRP as initial level), 157 accounts with Google identities, profiles, 3 admins, 37 claims, 15 creation requests waiting.
+- 3 tournaments and a test sample of 19 past results (the other 324 come at cutover with `-v sample=0`).
+- 10 upcoming demo matches, flagged `source_ref 'demo:%'` / `provenance.demo`. Clear before launch: `tools/demo/clear_demo.sql`.
+- No coins, bets or v1 points carried over.
+
+Open questions for the founder: «Άλλη φορά» on welcome; capital, unaccented surnames from v1 (1,611); Greek drafts listed in PR #2.
 
 ## M1: core loop and first real users (next)
 See `implementation-plan.md` section 9. In short:

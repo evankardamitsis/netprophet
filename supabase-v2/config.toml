@@ -24,7 +24,7 @@ sql_paths = ["./seed.sql"]
 [auth]
 enabled = true
 site_url = "https://app.netprophet.gr"
-additional_redirect_urls = ["netprophet://auth/callback", "https://netprophet.gr/auth/callback"]
+additional_redirect_urls = ["netprophet://auth/callback", "https://netprophet.gr/auth/callback", "http://localhost:8081"]
 enable_signup = true
 
 [auth.email]
@@ -33,6 +33,15 @@ enable_signup = true
 enable_confirmations = true
 otp_length = 6
 otp_expiry = 3600
+
+# Login is by a 6-digit code, so both emails carry {{ .Token }} instead of a link. Greek copy: founder review.
+[auth.email.template.confirmation]
+subject = "Ο κωδικός σου για το NetProphet"
+content_path = "./templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Ο κωδικός σου για το NetProphet"
+content_path = "./templates/magic_link.html"
 
 [auth.external.google]
 enabled = true
