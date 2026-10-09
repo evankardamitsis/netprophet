@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "NetProphet",
+    "slug": "netprophet",
+    "scheme": "netprophet",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F3F5EE",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "gr.netprophet.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "gr.netprophet.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-router", "expo-font"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
