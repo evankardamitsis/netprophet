@@ -87,6 +87,18 @@ export const el = {
     voteFailed: 'Η ψήφος δεν πέρασε. Ξαναδοκίμασε.',
     votingClosed: 'Η ψηφοφορία έκλεισε.',
   },
+  result: {
+    correct: "Το 'πες!",
+    wrong: 'Όχι αυτή τη φορά',
+    /** «κέρδισε τον Νίκο Ροδίτη»: {loser} carries the article, see withArticleAccusative */
+    beat: 'κέρδισε {loser}',
+    /** doubles (new, not in the prototype) */
+    beatPair: 'κέρδισαν τους {losers}',
+    points: '+{points} · σερί {streak}',
+    kept: 'κράτησες το σερί',
+    next: 'Επόμενο ›',
+    done: 'Εντάξει',
+  },
   placeholder: {
     results: 'Τα αποτελέσματα έρχονται εδώ.',
     players: 'Οι παίκτες έρχονται εδώ.',

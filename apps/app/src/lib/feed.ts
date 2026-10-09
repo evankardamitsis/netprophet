@@ -1,6 +1,6 @@
 import { dayKey, localParts } from '@netprophet/core';
-import { greekCaps, type Copy } from '@netprophet/copy';
-import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
+import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy } from '@netprophet/copy';
+import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { fmt, voteSplit, type Side } from './votes';
 
@@ -46,7 +46,67 @@ export interface CardSponsored {
   subtitle: string | null;
 }
 
-export type FeedCard = CardMatch | CardSponsored;
+/** A result coming back to the top of the feed (prototype «rq» card). */
+export interface CardResult {
+  kind: 'result';
+  /** feed_inbox id: mark_inbox_seen takes it */
+  id: string;
+  matchId: string;
+  ok: boolean;
+  points: number;
+  /** σερί before this card and after it, so the header can play the change */
+  streakBefore: number;
+  streak: number;
+  /** a freeze saved the σερί on a wrong call */
+  frozen: boolean;
+  winnerSurname: string;
+  winnerFirst: string;
+  /** «κέρδισε τον Νίκο Ροδίτη» */
+  line: string;
+  /** «6-3, 7-5», winner first */
+  sets: string;
+  /** what the pill says: «+10 · σερί 4», «κράτησες το σερί», or nothing */
+  pill: string | null;
+}
+
+export type FeedCard = CardMatch | CardSponsored | CardResult;
+
+export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
+  const p = card.payload;
+  const ev = p.streak_event;
+  const ok = p.outcome === 'correct';
+  const frozen = ev?.kind === 'frozen' || (!ev && p.freeze_used);
+  const streakBefore =
+    ev?.kind === 'advanced' ? Math.max(0, p.streak - 1) : ev?.kind === 'broken' ? ev.lostStreak ?? p.streak : p.streak;
+  const winners = p.sides?.find((s) => s.side === p.winner_side)?.players ?? [];
+  const losers = p.sides?.find((s) => s.side !== p.winner_side)?.players ?? [];
+  let line = '';
+  if (losers.length === 1) {
+    const l = losers[0]!;
+    line = fmt(t.result.beat, { loser: withArticleAccusative(l.first_name, l.surname) });
+  } else if (losers.length > 1) {
+    const names = losers.map((l) => {
+      const g = nameGender(l.first_name);
+      return [l.first_name, l.surname].map((w) => accusativeWord(w, g)).join(' ');
+    });
+    line = fmt(t.result.beatPair, { losers: names.join(' & ') });
+  }
+  return {
+    kind: 'result',
+    id: card.id,
+    matchId: p.match_id,
+    ok,
+    points: p.points,
+    streakBefore,
+    streak: p.streak,
+    frozen,
+    winnerSurname: winners.map((w) => w.surname).join(' & '),
+    winnerFirst: winners.map((w) => w.first_name).join(' & '),
+    line,
+    sets: (p.sets ?? []).map((x) => `${x.w}-${x.l}`).join(', '),
+    pill: ok ? fmt(t.result.points, { points: p.points, streak: p.streak }) : frozen ? t.result.kept : null,
+  };
+}
 
 /** Avatar letters as in the prototype: first letter of each name part, capitals without accents («Άννα Μάνου» → «ΑΜ»). */
 export function initials(...parts: (string | null | undefined)[]): string {

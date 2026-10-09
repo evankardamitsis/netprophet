@@ -87,6 +87,16 @@ export const en: Copy = {
     voteFailed: 'Your vote did not go through. Try again.',
     votingClosed: 'Voting has closed.',
   },
+  result: {
+    correct: 'You called it!',
+    wrong: 'Not this time',
+    beat: 'beat {loser}',
+    beatPair: 'beat {losers}',
+    points: '+{points} · streak {streak}',
+    kept: 'you kept your streak',
+    next: 'Next ›',
+    done: 'OK',
+  },
   placeholder: {
     results: 'Results will show up here.',
     players: 'Players will show up here.',

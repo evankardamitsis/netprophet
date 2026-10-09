@@ -110,3 +110,40 @@ export function transliterate(text: string): string {
 export function displayName(name: string, locale: 'el' | 'en'): string {
     return locale === 'en' ? transliterate(name) : name;
 }
+
+/* ================= names in a sentence ================= */
+
+export type NameGender = 'm' | 'f';
+
+/**
+ * Gender for grammar when the roster does not say: a first name ending in -ς is masculine (Νίκος, Γιάννης),
+ * one ending in -α, -η, -ω or -ου is feminine (Μαρία, Ελένη, Κλειώ), anything else (Αντρέι, Nick) is masculine.
+ * Works on capitals too (ΝΙΚΟΣ), which is how most v1 names are stored.
+ */
+export function nameGender(firstName: string, known?: NameGender | null): NameGender {
+    if (known) return known;
+    const f = stripAccents(firstName.trim()).toLowerCase();
+    if (/[ςσ]$/.test(f)) return 'm';
+    if (/(α|η|ω|ου)$/.test(f)) return 'f';
+    return 'm';
+}
+
+/**
+ * Accusative of one name word. Masculine Greek words drop the final -ς after a vowel
+ * (Νίκος -> Νίκο, Ροδίτης -> Ροδίτη, Παππάς -> Παππά, ΧΟΛΕΒΑΣ -> ΧΟΛΕΒΑ); feminine words and
+ * non-Greek words stay as they are (Μαρία, Ντίρζου, Ostapov).
+ */
+export function accusativeWord(word: string, gender: NameGender): string {
+    if (gender === 'f') return word;
+    return word.replace(/([αεηιουωάέήίόύώϊϋΐΰΑΕΗΙΟΥΩΆΈΉΊΌΎΏΪΫ])[ςσΣ]$/u, '$1');
+}
+
+/** «τον Νίκο Ροδίτη», «την Μαρία Καρρά»: article plus the full name in the accusative. */
+export function withArticleAccusative(firstName: string, surname: string, known?: NameGender | null): string {
+    const g = nameGender(firstName, known);
+    const name = [firstName, surname]
+        .filter(Boolean)
+        .map((part) => part.split(/\s+/).map((w) => accusativeWord(w, g)).join(' '))
+        .join(' ');
+    return `${g === 'f' ? 'την' : 'τον'} ${name}`;
+}

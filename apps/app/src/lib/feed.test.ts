@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { RpcError, type FeedMatchCard, type FeedPlayer } from '@netprophet/db';
+import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -139,5 +139,51 @@ describe('error mapping', () => {
     expect(authErrorKind({ status: 403, code: 'otp_expired', message: 'Token has expired or is invalid' })).toBe('badCode');
     expect(authErrorKind({ status: 400, code: 'email_address_invalid', message: 'bad' })).toBe('invalidEmail');
     expect(authErrorKind({ status: 500, message: 'boom' })).toBe('generic');
+  });
+});
+
+describe('fromResultCard', () => {
+  const sides = (dbl = false) => [
+    { side: 1 as const, players: [player(), ...(dbl ? [player({ first_name: 'Ηλίας', surname: 'Μέμμος' })] : [])] },
+    { side: 2 as const, players: [player({ first_name: 'Γιώργος', surname: 'Δεσύπρης' }), ...(dbl ? [player({ first_name: 'ΑΝΝΑ', surname: 'ΜΑΝΟΥ' })] : [])] },
+  ];
+  const result = (payload: Partial<FeedResultCard['payload']>): FeedResultCard => ({
+    kind: 'result',
+    id: 'inbox-1',
+    created_at: '2026-10-09T20:00:00Z',
+    payload: {
+      match_id: 'm1', vote_id: 'v1', outcome: 'correct', points: 10, upset: false, streak: 4, freeze_used: false,
+      winner_side: 1, score: '2-0', sets: [{ w: 6, l: 3 }, { w: 7, l: 5 }], sides: sides(),
+      streak_event: { kind: 'advanced', milestone: null }, ...payload,
+    },
+  });
+
+  it('a right call: who won, against whom, the sets and the pill', () => {
+    const c = fromResultCard(result({}), t);
+    expect(c).toMatchObject({
+      ok: true, points: 10, streakBefore: 3, streak: 4, frozen: false,
+      winnerSurname: 'Πράτσας', winnerFirst: 'Νίκος', line: 'κέρδισε τον Γιώργο Δεσύπρη', sets: '6-3, 7-5',
+      pill: '+10 · σερί 4',
+    });
+  });
+
+  it('an upset pays what the server says', () => {
+    expect(fromResultCard(result({ points: 30, upset: true }), t).pill).toBe('+30 · σερί 4');
+  });
+
+  it('a wrong call saved by a freeze keeps the σερί', () => {
+    const c = fromResultCard(result({ outcome: 'wrong', points: 0, streak: 4, streak_event: { kind: 'frozen', freezeUsed: 'free' } }), t);
+    expect(c).toMatchObject({ ok: false, frozen: true, streakBefore: 4, streak: 4, pill: 'κράτησες το σερί' });
+  });
+
+  it('a wrong call that breaks the σερί shows no pill and remembers what was lost', () => {
+    const c = fromResultCard(result({ outcome: 'wrong', points: 0, streak: 0, streak_event: { kind: 'broken', lostStreak: 6 } }), t);
+    expect(c).toMatchObject({ ok: false, frozen: false, streakBefore: 6, streak: 0, pill: null });
+  });
+
+  it('doubles: both winners and the plural line', () => {
+    const c = fromResultCard(result({ sides: sides(true) }), t);
+    expect(c.winnerSurname).toBe('Πράτσας & Μέμμος');
+    expect(c.line).toBe('κέρδισαν τους Γιώργο Δεσύπρη & ΑΝΝΑ ΜΑΝΟΥ');
   });
 });

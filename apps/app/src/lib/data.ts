@@ -6,6 +6,7 @@ import { api, supabase } from './supabase';
 import {
   fromFeedCard,
   fromMock,
+  fromResultCard,
   fromSponsored,
   initials,
   mockVote,
@@ -13,6 +14,7 @@ import {
   toPct,
   voteErrorKind,
   type CardPct,
+  type CardResult,
   type FeedCard,
   type VoteErrorKind,
 } from './feed';
@@ -32,6 +34,10 @@ async function loadAreas(): Promise<Record<string, string>> {
 
 interface FeedState {
   cards: FeedCard[];
+  /** unseen results, oldest first; they play one by one at the top of the feed */
+  results: CardResult[];
+  /** the viewer closed a result card: mark it seen and drop it */
+  dismissResult: (id: string) => void;
   loading: boolean;
   error: boolean;
   refresh: () => Promise<void>;
@@ -41,6 +47,7 @@ interface FeedState {
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
   const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
+  const [results, setResults] = useState<CardResult[]>([]);
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
   const onError = useRef(onVoteError);
@@ -53,7 +60,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       // area names are a nicety: without them the cards still show, just without the area
       const [feed, areas] = await Promise.all([api.getFeed(30), loadAreas().catch(() => ({}))]);
       const now = new Date();
-      // result cards come in M1 (the success/fail sequence); matches and the labelled ads render now
+      setResults(feed.items.flatMap((it) => (it.kind === 'result' ? [fromResultCard(it, t)] : [])));
       setCards(
         feed.items.flatMap((it): FeedCard[] =>
           it.kind === 'match' ? [fromFeedCard(it, areas, t, now)] : it.kind === 'sponsored' ? [fromSponsored(it)] : [],
@@ -85,7 +92,12 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     }
   }, []);
 
-  return { cards, loading, error, refresh, vote };
+  const dismissResult = useCallback((id: string) => {
+    setResults((r) => r.filter((x) => x.id !== id));
+    api?.markInboxSeen([id]).catch(() => undefined);
+  }, []);
+
+  return { cards, results, dismissResult, loading, error, refresh, vote };
 }
 
 export interface MeSummary {
