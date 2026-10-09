@@ -71,6 +71,10 @@ export interface FeedResultCard {
     winner_side: Side;
     score: string | null;
     sets: SetScore[];
+    /** both sides, as on match cards (added in M1; older cards may lack it) */
+    sides?: { side: Side; players: FeedPlayer[] }[];
+    /** what happened to the σερί: advanced, frozen (a freeze saved it), broken (lostStreak), idle */
+    streak_event?: { kind: 'advanced' | 'frozen' | 'broken' | 'idle'; milestone?: number | null; lostStreak?: number; freezeUsed?: string };
   };
 }
 

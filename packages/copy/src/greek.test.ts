@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    displayName, greekCaps, matchesLoosely, stripAccents, transliterate,
+    accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative,
 } from './greek';
 
 describe('greekCaps', () => {
@@ -76,5 +76,32 @@ describe('displayName', () => {
     it('only transliterates for English', () => {
         expect(displayName('Δ. Γεωργίου', 'el')).toBe('Δ. Γεωργίου');
         expect(displayName('Δ. Γεωργίου', 'en')).toBe('D. Georgiou');
+    });
+});
+
+describe('names in a sentence', () => {
+    it('guesses gender from the first name, capitals included', () => {
+        expect(nameGender('Νίκος')).toBe('m');
+        expect(nameGender('ΓΙΑΝΝΗΣ')).toBe('m');
+        expect(nameGender('Μαρία')).toBe('f');
+        expect(nameGender('ΕΛΕΝΗ')).toBe('f');
+        expect(nameGender('Αντρέι')).toBe('m');
+        expect(nameGender('Μαρία', 'm')).toBe('m');
+    });
+    it('puts masculine names in the accusative and leaves the rest', () => {
+        expect(accusativeWord('Νίκος', 'm')).toBe('Νίκο');
+        expect(accusativeWord('Ροδίτης', 'm')).toBe('Ροδίτη');
+        expect(accusativeWord('Παππάς', 'm')).toBe('Παππά');
+        expect(accusativeWord('ΧΟΛΕΒΑΣ', 'm')).toBe('ΧΟΛΕΒΑ');
+        expect(accusativeWord('Ντίρζου', 'm')).toBe('Ντίρζου');
+        expect(accusativeWord('Ostapov', 'm')).toBe('Ostapov');
+        expect(accusativeWord('Καρράς', 'f')).toBe('Καρράς');
+    });
+    it('builds the article and the full name', () => {
+        expect(withArticleAccusative('Νίκος', 'Ροδίτης')).toBe('τον Νίκο Ροδίτη');
+        expect(withArticleAccusative('Αντρέι', 'Ντίρζου')).toBe('τον Αντρέι Ντίρζου');
+        expect(withArticleAccusative('Μαρία', 'Καρρά')).toBe('την Μαρία Καρρά');
+        expect(withArticleAccusative('ΒΑΓΓΕΛΗΣ', 'ΚΑΡΔΑΜΙΤΣΗΣ')).toBe('τον ΒΑΓΓΕΛΗ ΚΑΡΔΑΜΙΤΣΗ');
+        expect(withArticleAccusative('Γιώργος', 'Δεσύπρης')).toBe('τον Γιώργο Δεσύπρη');
     });
 });

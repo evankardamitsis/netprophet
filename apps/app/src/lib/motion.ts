@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   useAnimatedStyle,
   useSharedValue,
@@ -77,4 +77,33 @@ export function usePopOnChange(value: unknown, durationMs: number) {
     runPop(scale, opacity, durationMs);
   }, [value, scale, opacity, durationMs]);
   return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+}
+
+/** Count a number up or down over 800ms, ease-out cubic (prototype `.rvn`). The first value shows as is. */
+export function useCountUp(value: number | undefined, durationMs = 800): number | undefined {
+  const [shown, setShown] = useState(value);
+  const from = useRef(value);
+  useEffect(() => {
+    if (value === undefined || from.current === undefined || from.current === value) {
+      from.current = value;
+      setShown(value);
+      return undefined;
+    }
+    const start = from.current;
+    const t0 = Date.now();
+    let raf = 0;
+    const step = () => {
+      const q = Math.min(1, (Date.now() - t0) / durationMs);
+      const e = 1 - Math.pow(1 - q, 3);
+      setShown(Math.round(start + (value - start) * e));
+      if (q < 1) raf = requestAnimationFrame(step);
+      else from.current = value;
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      from.current = value;
+    };
+  }, [value, durationMs]);
+  return shown;
 }
