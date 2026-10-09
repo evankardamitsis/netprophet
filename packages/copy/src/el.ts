@@ -34,6 +34,8 @@ export const el = {
     formats: { doubles: 'Διπλό', mixed: 'Μικτό' },
     friendly: 'Φιλικό',
     rounds: {
+      round64: 'Φάση των 64',
+      round32: 'Φάση των 32',
       round16: 'Δεύτερος γύρος',
       quarter: 'Προημιτελικός',
       semi: 'Ημιτελικός',

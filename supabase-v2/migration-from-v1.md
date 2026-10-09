@@ -2,7 +2,7 @@
 
 Scope (founder decision, 9 Oct 2026): only the **roster (players), users/profiles with claims, tournaments, matches and results** move. **All coins, bets, parlays, transactions, power-ups, rewards and balances are dropped for everyone.** v2 is a new Supabase project; v1 stays read-only for 12 months after cutover.
 
-Nothing in this file has been run. v1 column names below come from `backup/migrations-20251021-135848/` and `supabase/migrations/`; before the first rehearsal take `pg_dump --schema-only` of v1 prod into `supabase/legacy/v1_schema.sql` and check every name against it (the v1 chain cannot be replayed, so the dump is the reference).
+**Run so far (9 Oct 2026):** roster, tournaments and a test sample of 19 recent results imported into the hosted project with `tools/migrate/` (see section 4). Users, profiles and claims have not been run. v1 column names below come from `backup/migrations-20251021-135848/` and `supabase/migrations/`; before the first rehearsal take `pg_dump --schema-only` of v1 prod into `supabase/legacy/v1_schema.sql` and check every name against it (the v1 chain cannot be replayed, so the dump is the reference).
 
 ## 1. Table by table
 
@@ -203,3 +203,17 @@ Timing and checks follow `docs/v2/implementation-plan.md` section 8.3 (rehearsal
 3. **Tournament entries and teams** are archived, not migrated, until a `tournament_entries` table exists.
 4. **Purchasers' compensation** (Pro time or refunds) is a founder and legal decision; coins are dropped for everyone as decided.
 5. **v1 data quality** (gender nulls, text-only match rows, incoherent scores) is only known after the first restore; the reject report sizes the cleanup.
+
+## 4. What the real v1 data looks like (checked against the 9 Oct backup)
+
+The tables above were written from old migrations; the backup differs in these places, and `tools/migrate/sql/import_roster_matches.sql` follows the backup:
+
+- `players.gender` is `men` / `women` (1,356 of 1,633 are null). There is no `slug` and no `created_at` (`updated_at` is used). `ntrp_rating = 0` means unknown (21 players). `age = 0` means unknown.
+- 1,611 of 1,632 surnames are stored in capitals without accents («ΧΟΛΕΒΑΣ»). They are imported as they are; accents cannot be restored automatically.
+- `matches` has no court or location and no text-only player names; `match_type` is only `singles` / `doubles`.
+- Scores read from side A («2-1» = A won). Tie-breaks and super tie-breaks too; the import turns them winner-first.
+- Rounds are stored as keys `round64`, `round32`, `round16`, `quarter`, `semi`, `final` (rendered by `packages/copy`).
+- All v1 matches are in the past (latest 8 Jul 2026); 8 were never finished and import as `scheduled`.
+- 18 results have only a final score and no sets: the match imports as `played` and the result goes to `etl.rejects`.
+
+How to run: `python3 tools/migrate/stage_v1.py <backup> > stage.sql`, load it into the local stack (`scripts/v2-db-remote.sh start`, reset with `--no-seed`), run `psql -v sample=20 -f tools/migrate/sql/import_roster_matches.sql` (0 = all matches), check the report, then export the `core` rows with `pg_dump --data-only --inserts --on-conflict-do-nothing` and send them with `supabase --workdir .supabase-v2 db query --linked -f`. No v1 staging data reaches the hosted project.

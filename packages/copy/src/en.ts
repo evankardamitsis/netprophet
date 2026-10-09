@@ -35,6 +35,8 @@ export const en: Copy = {
     friendly: 'Friendly',
     learnAfter: 'You find out after the match',
     rounds: {
+      round64: 'Round of 64',
+      round32: 'Round of 32',
       round16: 'Second round',
       quarter: 'Quarterfinal',
       semi: 'Semifinal',

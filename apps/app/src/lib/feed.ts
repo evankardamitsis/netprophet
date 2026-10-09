@@ -68,7 +68,7 @@ export function toPct(split: VoteSplit): CardPct {
   return { pctA: split.pct1, pctB: split.pct2 };
 }
 
-const ROUND_KEYS = ['round16', 'quarter', 'semi', 'final'] as const;
+const ROUND_KEYS = ['round64', 'round32', 'round16', 'quarter', 'semi', 'final'] as const;
 type RoundKey = (typeof ROUND_KEYS)[number];
 const isRoundKey = (r: string): r is RoundKey => (ROUND_KEYS as readonly string[]).includes(r);
 
