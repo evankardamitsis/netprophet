@@ -34,6 +34,15 @@ enable_confirmations = true
 otp_length = 6
 otp_expiry = 3600
 
+# Login is by a 6-digit code, so both emails carry {{ .Token }} instead of a link. Greek copy: founder review.
+[auth.email.template.confirmation]
+subject = "Ο κωδικός σου για το NetProphet"
+content_path = "./templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Ο κωδικός σου για το NetProphet"
+content_path = "./templates/magic_link.html"
+
 [auth.external.google]
 enabled = true
 client_id = "env(GOOGLE_CLIENT_ID)"

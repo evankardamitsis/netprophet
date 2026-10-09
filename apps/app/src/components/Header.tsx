@@ -2,25 +2,23 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { greekCaps } from '@netprophet/copy';
 import { useCopy } from '../i18n';
+import { useMe } from '../lib/data';
 import { alpha, colors, fonts, spacing } from '../theme';
-
-// TODO(core): streak and points come from the server once auth lands.
-const MOCK_STREAK = 7;
-const MOCK_POINTS = 240;
 
 export function Header() {
   const t = useCopy();
   const insets = useSafeAreaInsets();
+  const { me } = useMe();
   return (
     <View style={[styles.bar, { paddingTop: insets.top + spacing[2] }]}>
       <Text style={styles.logo}>NetProphet</Text>
       <View style={styles.stats}>
         <View style={styles.stat}>
-          <Text style={styles.streakNum}>{MOCK_STREAK}</Text>
+          <Text style={styles.streakNum}>{me?.streak ?? ' '}</Text>
           <Text style={styles.label}>{greekCaps(t.streak.label)}</Text>
         </View>
         <View style={styles.stat}>
-          <Text style={styles.pointsNum}>{MOCK_POINTS}</Text>
+          <Text style={styles.pointsNum}>{me?.points ?? ' '}</Text>
           <Text style={styles.label}>{greekCaps(t.header.points)}</Text>
         </View>
       </View>

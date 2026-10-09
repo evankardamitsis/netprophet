@@ -4,6 +4,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { useFonts } from 'expo-font';
+import { AuthProvider, useAuth } from '../src/lib/auth';
+import { isLive } from '../src/lib/supabase';
 import { colors } from '../src/theme';
 
 export default function RootLayout() {
@@ -22,13 +24,32 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="add-match" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        </Stack>
+        <AuthProvider>
+          <Routes />
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function Routes() {
+  const { ready, session } = useAuth();
+  if (!ready) return null;
+  // without a backend (mock mode) the app is open; live, everything but sign-in needs a session
+  const signedIn = !isLive || session !== null;
+  return (
+    <>
+      <StatusBar style={signedIn ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
+        <Stack.Protected guard={signedIn}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="add-match" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={!signedIn}>
+          <Stack.Screen name="sign-in" />
+        </Stack.Protected>
+      </Stack>
+    </>
   );
 }
 

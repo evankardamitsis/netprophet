@@ -14,8 +14,8 @@ Last updated: 9 Oct 2026. Read this after CLAUDE.md. It says what is done, what 
 ## Left from M0 (do first)
 1. Done 9 Oct: project `netprophet-v2` (ref `mssedfnhcozeifgflkaq`, own org, eu-west-1 Ireland, not Frankfurt). Migrations pushed (no seed). `scripts/v2-db-remote.sh` links/pushes/checks from `.supabase-v2/`; `local-test` runs the pgTAP suite on a real Supabase stack (286/286). Still to do: set Exposed schemas to `api` only in the dashboard (API settings), auth providers (email OTP, Google), keys into GitHub secrets and local `.env`.
 2. Done 9 Oct: v1 backup in `~/netprophet-backups/v1-20261009-*` (roles, schema, data, auth users, full.dump). Storage bucket files are not included.
-3. Auth in the app: email OTP, Google (Apple later, needs a developer account). Google needs client id/secret from the founder.
-4. Wire `apps/app` to the real database through `@netprophet/db` (feed from `get_feed`, vote via `cast_vote`). Replace mocks in `apps/app/src/mock/`.
+3. Auth in the app (branch `v2-app-auth-feed`): email code sign-in works end to end on the local stack, in the browser and in `scripts/v2-app-smoke.mjs`. Google is written (web redirect, native auth session + PKCE) but unverified until the founder adds the Google client id/secret. Apple later. The hosted project still needs the code email templates (see `supabase-v2/README.md`). New Greek copy (auth, feed errors, email) is a draft for founder review.
+4. Done on the same branch: feed from `get_feed`, vote via `cast_vote` (card reveals the server split), header from `get_me`, sign-out on Εγώ. Without `EXPO_PUBLIC_SUPABASE_*` the app falls back to the mocks in `apps/app/src/mock/`. Expo SDK 57 needs Node 22 (`apps/app/.nvmrc`); the root `.nvmrc` stays 18 for v1 on Vercel.
 5. Run the app on a real phone (Expo Go / dev build) and on a low-end Android: animation spike sign-off by the founder.
 6. Done: CI green on `v2`.
 7. Done: local `pnpm install` works without `--ignore-scripts`. Toolchain upgrades (pnpm 9, turbo 2) deferred. The root pre-commit hook fails on a stale v1 `apps/web/.next` cache; v2 checks pass.

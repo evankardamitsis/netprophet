@@ -35,12 +35,16 @@ psql -X -f supabase-v2/tests/30_resolve.test.sql
 
 ```bash
 scripts/v2-db-remote.sh local-test   # real auth/storage/PostgREST in Docker: migrations + seed + pgTAP
+scripts/v2-db-remote.sh start        # same stack for app development, left running (mail at :54424)
+node scripts/v2-app-smoke.mjs        # on that stack: email-code sign-in, get_feed, cast_vote, get_me
 scripts/v2-db-remote.sh link <ref>   # link the netprophet-v2 project
 scripts/v2-db-remote.sh push         # dry run, then apply migrations (no seed)
 scripts/v2-db-remote.sh check        # read-only counts on the linked project
 ```
 
 The suite needs `seed.sql`, so it runs on the local stack only; the real project gets migrations, and seeding it is a founder decision. Real Supabase blocks direct `delete from storage.objects` unless `storage.allow_delete_query` is set (the Storage API sets it), which `60_storage` does.
+
+Login is by a 6-digit email code, so `templates/confirmation.html` and `templates/magic_link.html` carry `{{ .Token }}` (Supabase's defaults send a link). The script copies them into `.supabase-v2/templates` because the CLI rejects template paths that resolve through the symlink. The hosted project needs the same templates: Authentication > Email Templates, or `supabase --workdir .supabase-v2 config push`.
 
 ## Layout
 

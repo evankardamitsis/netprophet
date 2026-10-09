@@ -13,49 +13,60 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useCopy } from '../i18n';
-import { voteSplit, fmt, type Side } from '../lib/votes';
-import type { MockMatch, MockPlayer } from '../mock/matches';
+import type { CardMatch, CardPct, CardSide } from '../lib/feed';
+import type { Side } from '../lib/votes';
 import { alpha, bezier, cardSurface, colors, fonts, motion, radii, spacing } from '../theme';
 
-type Phase = 'idle' | 'reveal' | 'folded';
+type Phase = 'idle' | 'sending' | 'reveal' | 'folded';
 
 const FOLD_HOLD_MS = 650; // how long the split stays on screen before the card folds
 const FOLD_DUR = 500;
 
 const ease = Easing.bezier(...bezier);
 
-function haptic(kind: 'tap' | 'fold') {
+function haptic(kind: 'tap' | 'fold' | 'error') {
   if (Platform.OS === 'web') return;
   const run =
     kind === 'tap'
       ? Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      : Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      : Haptics.notificationAsync(
+          kind === 'fold' ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error,
+        );
   run.catch(() => undefined);
 }
 
 interface Props {
-  match: MockMatch;
+  match: CardMatch;
   index?: number;
-  onVote?: (matchId: string, side: Side) => void;
+  /** Sends the vote and resolves with the split to reveal. A rejection puts the card back to idle. */
+  onVote: (matchId: string, side: Side) => Promise<CardPct>;
 }
 
 export const VoteCard = memo(function VoteCard({ match, index = 0, onVote }: Props) {
-  const t = useCopy();
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [pick, setPick] = useState<Side | undefined>();
+  const voted = match.myVote !== undefined && match.split !== undefined;
+  const [phase, setPhase] = useState<Phase>(voted ? 'folded' : 'idle');
+  const [pick, setPick] = useState<Side | undefined>(match.myVote);
+  const [split, setSplit] = useState<CardPct | undefined>(match.split);
   const progress = useSharedValue(0);
-
-  const split = voteSplit(match.votes.a, match.votes.b, pick);
 
   const vote = useCallback(
     (side: Side) => {
       if (phase !== 'idle') return;
       setPick(side);
-      setPhase('reveal');
+      setPhase('sending');
       haptic('tap');
-      progress.value = withTiming(1, { duration: motion.revealDur, easing: ease });
-      onVote?.(match.id, side);
+      onVote(match.id, side).then(
+        (s) => {
+          setSplit(s);
+          setPhase('reveal');
+          progress.value = withTiming(1, { duration: motion.revealDur, easing: ease });
+        },
+        () => {
+          haptic('error');
+          setPick(undefined);
+          setPhase('idle');
+        },
+      );
     },
     [phase, progress, onVote, match.id],
   );
@@ -69,10 +80,8 @@ export const VoteCard = memo(function VoteCard({ match, index = 0, onVote }: Pro
     return () => clearTimeout(id);
   }, [phase]);
 
-  const when = match.day === 'today' ? t.match.today : t.match.tomorrow;
-  const parts = [`${when} ${match.time}`, match.event];
-  if (match.round) parts.push(t.match.rounds[match.round]);
-  const learn = match.day === 'today' ? t.match.learnTonight : t.match.learnTomorrow;
+  const pctA = split?.pctA ?? 0;
+  const pctB = split?.pctB ?? 0;
 
   return (
     <Animated.View
@@ -80,47 +89,24 @@ export const VoteCard = memo(function VoteCard({ match, index = 0, onVote }: Pro
       layout={LinearTransition.duration(FOLD_DUR).easing(ease)}
       style={styles.card}
     >
-      <Text style={styles.meta} numberOfLines={1}>
-        {parts.join(' · ')}
-      </Text>
+      {match.meta ? (
+        <Text style={styles.meta} numberOfLines={1}>
+          {match.meta}
+        </Text>
+      ) : null}
 
       {phase !== 'folded' ? (
         <Animated.View key="open" exiting={FadeOut.duration(220)}>
-          <Side
-            side="a"
-            player={match.a}
-            phase={phase}
-            pick={pick}
-            pct={split.pctA}
-            onPress={vote}
-            levelArea={fmt(t.match.levelArea, { level: match.a.level, area: match.a.area })}
-          />
+          <Side side="a" player={match.a} phase={phase} pick={pick} pct={pctA} onPress={vote} />
           <View style={styles.gap} />
-          <Side
-            side="b"
-            player={match.b}
-            phase={phase}
-            pick={pick}
-            pct={split.pctB}
-            onPress={vote}
-            levelArea={fmt(t.match.levelArea, { level: match.b.level, area: match.b.area })}
-          />
-          {phase === 'reveal' ? (
-            <SplitBar progress={progress} pctA={split.pctA} pctB={split.pctB} pick={pick} />
-          ) : null}
+          <Side side="b" player={match.b} phase={phase} pick={pick} pct={pctB} onPress={vote} />
+          {phase === 'reveal' ? <SplitBar progress={progress} pctA={pctA} pctB={pctB} pick={pick} /> : null}
         </Animated.View>
       ) : (
         <Animated.View key="folded" entering={FadeIn.duration(motion.revealDur / 2)}>
-          <FoldedRow
-            player={pick === 'a' ? match.a : match.b}
-            pct={pick === 'a' ? split.pctA : split.pctB}
-            picked
-          />
-          <FoldedRow
-            player={pick === 'a' ? match.b : match.a}
-            pct={pick === 'a' ? split.pctB : split.pctA}
-          />
-          <Text style={styles.learn}>{learn}</Text>
+          <FoldedRow player={pick === 'a' ? match.a : match.b} pct={pick === 'a' ? pctA : pctB} picked />
+          <FoldedRow player={pick === 'a' ? match.b : match.a} pct={pick === 'a' ? pctB : pctA} />
+          <Text style={styles.learn}>{match.learn}</Text>
         </Animated.View>
       )}
     </Animated.View>
@@ -129,15 +115,14 @@ export const VoteCard = memo(function VoteCard({ match, index = 0, onVote }: Pro
 
 interface SideProps {
   side: Side;
-  player: MockPlayer;
-  levelArea: string;
+  player: CardSide;
   phase: Phase;
   pick: Side | undefined;
   pct: number;
   onPress: (side: Side) => void;
 }
 
-function Side({ side, player, levelArea, phase, pick, pct, onPress }: SideProps) {
+function Side({ side, player, phase, pick, pct, onPress }: SideProps) {
   const scale = useSharedValue(1);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const chosen = pick === side;
@@ -145,7 +130,7 @@ function Side({ side, player, levelArea, phase, pick, pct, onPress }: SideProps)
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${player.firstName} ${player.surname}`}
+      accessibilityLabel={`${player.subtitle} ${player.title}`}
       disabled={phase !== 'idle'}
       onPress={() => onPress(side)}
       onPressIn={() => {
@@ -159,10 +144,10 @@ function Side({ side, player, levelArea, phase, pick, pct, onPress }: SideProps)
         <View style={styles.names}>
           <Text style={styles.surname} numberOfLines={1}>
             {chosen ? '✓ ' : ''}
-            {player.surname}
+            {player.title}
           </Text>
-          <Text style={styles.first}>{player.firstName}</Text>
-          <Text style={styles.sub}>{levelArea}</Text>
+          <Text style={styles.first}>{player.subtitle}</Text>
+          {player.detail ? <Text style={styles.sub}>{player.detail}</Text> : null}
         </View>
         {phase === 'reveal' ? (
           <Animated.Text entering={FadeIn.duration(motion.revealDur / 2)} style={styles.pct}>
@@ -195,13 +180,13 @@ function SplitBar({
   );
 }
 
-function FoldedRow({ player, pct, picked = false }: { player: MockPlayer; pct: number; picked?: boolean }) {
+function FoldedRow({ player, pct, picked = false }: { player: CardSide; pct: number; picked?: boolean }) {
   return (
     <View style={styles.foldRow}>
       <Text style={[styles.foldName, picked ? styles.foldPicked : styles.foldOther]} numberOfLines={1}>
         {picked ? '✓ ' : ''}
-        {player.surname}
-        <Text style={styles.foldFirst}>{`  ${player.firstName}`}</Text>
+        {player.title}
+        <Text style={styles.foldFirst}>{`  ${player.subtitle}`}</Text>
       </Text>
       <Text style={[styles.foldPct, picked ? styles.foldPicked : styles.foldOther]}>{pct}%</Text>
     </View>

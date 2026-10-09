@@ -5,6 +5,8 @@
 #
 #   scripts/v2-db-remote.sh local-test     real Supabase stack in Docker (auth, storage, PostgREST): apply
 #                                          migrations + seed, run the pgTAP suite against it, stop it again
+#   scripts/v2-db-remote.sh start          start the local stack for app development (with mail at :54424) and
+#                                          leave it running; `supabase --workdir .supabase-v2 stop` ends it
 #   scripts/v2-db-remote.sh link <ref>     link the v2 project (asks for the database password)
 #   scripts/v2-db-remote.sh push           dry run, then apply migrations/ to the linked v2 project (no seed)
 #   scripts/v2-db-remote.sh check          read-only check of the linked project: tables, views, RPCs
@@ -20,6 +22,8 @@ V1_REF="mgojbigzulgkjomgirrm"
 
 mkdir -p "$WD"
 [ -L "$WD/supabase" ] || ln -s ../supabase-v2 "$WD/supabase"
+# the CLI refuses email template paths that resolve through the symlink, so the templates are copied next to it
+rm -rf "$WD/templates" && cp -R "$DB/templates" "$WD/templates"
 sb() { supabase --workdir "$WD" "$@"; }
 
 linked_ref() { cat "$DB/.temp/project-ref" 2>/dev/null || true; }
@@ -69,6 +73,10 @@ for k, v in dict(PGHOST=d.hostname, PGPORT=d.port, PGUSER=d.username, PGPASSWORD
     [ -n "${PGPORT:-}" ] || { echo "could not read DB_URL from supabase status" >&2; exit 1; }
     run_tests
     ;;
+  start)
+    sb start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
+    sb status -o env 2>/dev/null | grep -E '^(API_URL|ANON_KEY|MAILPIT_URL)=' || true
+    ;;
   link)
     ref="${2:?usage: link <project-ref>}"
     [ "$ref" != "$V1_REF" ] || { echo "that is the v1 project" >&2; exit 1; }
@@ -89,5 +97,5 @@ for k, v in dict(PGHOST=d.hostname, PGPORT=d.port, PGUSER=d.username, PGPASSWORD
         (select count(*) from core.players) as players"
     ;;
   *)
-    sed -n '2,14p' "$0"; exit 2 ;;
+    sed -n '2,16p' "$0"; exit 2 ;;
 esac
