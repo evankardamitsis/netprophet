@@ -1,6 +1,6 @@
 -- resolve_match: admin/service only, +10 per correct vote, idempotent (run twice, points once).
 begin;
-select plan(31);
+select plan(37);
 
 select tests.create_user('rs-a@test.local') as a \gset
 select tests.create_user('rs-b@test.local') as b \gset
@@ -60,13 +60,41 @@ select is((select sum(delta)::int from core.points_ledger where user_id = :'a'::
 select is(core.award_points(:'a'::uuid, 10, 'correct', 'match', :'m'::uuid, 'resolve:' || :'m' || ':' || :'a' || ':correct'), 0,
           'award_points with an existing idempotency key is a no-op');
 
--- a void match cannot be resolved
+-- a void match with nothing left to resolve is a no-op, not an error
 update core.matches set status = 'void' where id = :'m'::uuid;
 select tests.as_service();
-select throws_ok(format($$select api.resolve_match(%L)$$, :'m'), 'P0001', null, 'void match cannot be resolved');
+select lives_ok(format($$select api.resolve_match(%L)$$, :'m'), 'resolving a void match does not fail');
 select tests.logout();
+select is((select total_points from tests.state(:'a'::uuid)), 10, 'void: points already paid are untouched');
 
--- upset: the winning side was backed by a small minority (>= 10 votes, < 35 percent) pays +30
+-- cancelled and void matches close their votes with outcome none: no points, σερί, chain or freezes change
+select tests.create_user('rs-v@test.local') as v \gset
+select tests.play(:'v'::uuid, true) is not null as p \gset
+select tests.play(:'v'::uuid, true) is not null as p \gset
+select tests.mk_match_fresh() as mc \gset
+insert into core.votes (user_id, subject_type, subject_id, option, created_at, day_key)
+values (:'v'::uuid, 'match', :'mc'::uuid, 1, clock_timestamp(), core.athens_day());
+update core.matches set status = 'cancelled' where id = :'mc'::uuid;
+select tests.as_service();
+select (api.resolve_match(:'mc'::uuid)) as rc \gset
+select tests.logout();
+select is((:'rc'::jsonb ->> 'voided')::int, 1, 'cancelled: the vote is closed');
+select is((select outcome from core.votes where user_id = :'v'::uuid and subject_id = :'mc'::uuid), 'none', 'cancelled: outcome none');
+select is((select points from core.votes where user_id = :'v'::uuid and subject_id = :'mc'::uuid), 0, 'cancelled: no points');
+select is((select streak || '/' || chain || '/' || total_points from tests.state(:'v'::uuid)), '2/2/25', 'cancelled: σερί, chain and points unchanged');
+
+-- a played (not confirmed) match with a result stays pending
+select tests.mk_match_fresh() as mp \gset
+insert into core.votes (user_id, subject_type, subject_id, option, created_at, day_key)
+values (:'v'::uuid, 'match', :'mp'::uuid, 1, clock_timestamp(), core.athens_day());
+insert into core.match_results (match_id, winner_side, sets) values (:'mp'::uuid, 1, '[{"w":6,"l":1},{"w":6,"l":1}]');
+update core.matches set status = 'played' where id = :'mp'::uuid;
+select tests.as_service();
+select (api.resolve_match(:'mp'::uuid)) as rp \gset
+select tests.logout();
+select is((:'rp'::jsonb ->> 'pending')::boolean, true, 'played: stays pending until confirmed');
+
+-- upset: the winning side was backed by a small minority (>= 10 votes, < 40 percent) pays +30
 select tests.mk_match_fresh() as mu \gset
 insert into core.votes (user_id, subject_type, subject_id, option, created_at, day_key)
 select tests.create_user('rs-u' || g || '@test.local'), 'match', :'mu'::uuid, case when g <= 2 then 1 else 2 end, clock_timestamp(), core.athens_day()

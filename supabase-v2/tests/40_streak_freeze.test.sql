@@ -1,7 +1,7 @@
 -- σερί and freezes: correct votes in a row, wrong resets unless a freeze absorbs it,
 -- first free freeze at σερί 3, then one every 15 votes, max 2 held.
 begin;
-select plan(38);
+select plan(46);
 
 -- ---------------------------------------------------------------------------
 -- u1: build to 3, absorb one wrong with the free freeze, break, restart
@@ -61,7 +61,12 @@ select tests.create_user('sf-3@test.local') as u3 \gset
 insert into core.freezes (user_id, kind, source, acquired_at) values
   (:'u3'::uuid, 'paid', 'purchase', now() - interval '1 day'), (:'u3'::uuid, 'free', 'gift', now());
 select tests.play(:'u3'::uuid, false) is not null as p \gset
+select is(tests.unused_freezes(:'u3'::uuid), 2, 'u3: a wrong vote at σερί 0 spends no freeze');
+select is((select count(*)::int from core.streak_events where user_id = :'u3'::uuid and kind in ('broke', 'freeze_used')), 0, 'u3: nothing is logged for a wrong vote at σερί 0');
+select tests.play(:'u3'::uuid, true) is not null as p \gset
+select tests.play(:'u3'::uuid, false) is not null as p \gset
 select is((select kind from core.freezes where user_id = :'u3'::uuid and used_at is null), 'paid', 'u3: the free freeze was consumed first, the paid one is kept');
+select is((select streak from tests.state(:'u3'::uuid)), 1, 'u3: the freeze kept σερί 1');
 
 -- ---------------------------------------------------------------------------
 -- cap: never more than 2 unused freezes
@@ -70,22 +75,40 @@ insert into core.freezes (user_id, kind, source) values (:'u3'::uuid, 'free', 'g
 select throws_like($$insert into core.freezes (user_id, kind, source) values ('$$ || :'u3' || $$', 'free', 'gift')$$, 'freeze_cap%', 'a third unused freeze is refused');
 
 -- ---------------------------------------------------------------------------
--- u4: one free freeze every 15 votes cast (counted as they resolve), held back at the cap
+-- u4: one free freeze every 15 votes CAST (counted when the vote is cast), held back at the cap
 -- ---------------------------------------------------------------------------
 select tests.create_user('sf-4@test.local') as u4 \gset
 select tests.play(:'u4'::uuid, true) is not null as p from generate_series(1, 14);
 select is((select votes_since_free_freeze from tests.state(:'u4'::uuid)), 14, 'u4: 14 votes counted toward the next free freeze');
 select is(tests.unused_freezes(:'u4'::uuid), 1, 'u4: only the σερί-3 freeze so far');
 select tests.play(:'u4'::uuid, true) is not null as p \gset
-select is(tests.unused_freezes(:'u4'::uuid), 2, 'u4: the 15th vote grants a free freeze (2 held)');
+select is(tests.unused_freezes(:'u4'::uuid), 2, 'u4: the 15th vote cast grants a free freeze (2 held)');
 select is((select votes_since_free_freeze from tests.state(:'u4'::uuid)), 0, 'u4: counter reset after the grant');
 select is((select count(*)::int from core.freezes where user_id = :'u4'::uuid and source = 'every15'), 1, 'u4: granted with source every15');
 select tests.play(:'u4'::uuid, true) is not null as p from generate_series(1, 15);
 select is(tests.unused_freezes(:'u4'::uuid), 2, 'u4: at the cap of 2 nothing more is granted');
 select is((select votes_since_free_freeze from tests.state(:'u4'::uuid)), 15, 'u4: the counter waits at 15 while the user holds 2');
 select tests.play(:'u4'::uuid, false) is not null as p \gset
-select is((select streak from tests.state(:'u4'::uuid)), 30, 'u4: the wrong vote used a freeze (σερί kept at 30)') ;
-select is(tests.unused_freezes(:'u4'::uuid), 2, 'u4: a freed slot is refilled at once (1 used, 1 granted)');
+select is((select streak from tests.state(:'u4'::uuid)), 30, 'u4: the wrong vote used a freeze (σερί kept at 30)');
+select is(tests.unused_freezes(:'u4'::uuid), 1, 'u4: the freed slot stays empty until the next vote is cast');
+select tests.play(:'u4'::uuid, true) is not null as p \gset
+select is(tests.unused_freezes(:'u4'::uuid), 2, 'u4: the waiting freeze is granted on the first cast with a free slot');
+select is((select votes_since_free_freeze from tests.state(:'u4'::uuid)), 0, 'u4: counter reset after the late grant');
+
+-- the cast counts at cast time, before any result exists
+select tests.create_user('sf-5@test.local') as u5 \gset
+select tests.mk_match_fresh() as mx \gset
+select tests.login(:'u5'::uuid);
+select api.cast_vote(:'mx'::uuid, 1) is not null as v \gset
+select tests.logout();
+select is((select votes_since_free_freeze from tests.state(:'u5'::uuid)), 1, 'u5: api.cast_vote counts the vote before it is resolved');
+
+-- σερί 3 with both slots full: the flag stays unset, the freeze is tried again the next time σερί reaches 3
+select tests.create_user('sf-6@test.local') as u6 \gset
+insert into core.freezes (user_id, kind, source) values (:'u6'::uuid, 'paid', 'purchase'), (:'u6'::uuid, 'paid', 'purchase');
+select tests.play(:'u6'::uuid, true) is not null as p from generate_series(1, 3);
+select is((select first_free_at3_done from tests.state(:'u6'::uuid)), false, 'u6: no slot at σερί 3 -> the first-free flag stays unset');
+select is(tests.unused_freezes(:'u6'::uuid), 2, 'u6: no third freeze');
 
 select * from finish();
 rollback;

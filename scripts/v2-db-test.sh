@@ -99,6 +99,8 @@ log "test helpers"
 "${PSQL[@]}" -f "$DB/tests/support/helpers.sql"
 
 log "pgTAP"
+# 80_parity.test.sql reads the shared rule vectors from packages/core (the same files the TypeScript tests run)
+export VECTORS_DIR="${VECTORS_DIR:-$ROOT/packages/core/test-vectors}"
 PASS=0; FAIL=0; FILES=0; BAD=0
 for t in $(ls "$DB"/tests/*.test.sql | sort); do
   FILES=$((FILES + 1))

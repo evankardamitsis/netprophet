@@ -46,18 +46,35 @@ In `streak.json` a step with `repeat: N` means N identical steps.
 
 The spec is silent or ambiguous here; the simplest consistent choice was made.
 
+Status: **enforced in both places** means the TypeScript rules and the SQL rules (`supabase-v2/migrations/*_core_rules_parity.sql`) give identical results, checked by `supabase-v2/tests/80_parity.test.sql` against `test-vectors/`. **TS only** means the database does not implement that rule yet. Decisions 1 to 6 and 8 to 10 are exercised by shared vectors; the others are marked by what the database does.
+
 1. **Upset (Ανατροπή):** a correct call is an upset when the winner had under 40% of votes and at least 10 votes were cast. It pays +30 in total, not +10 plus +30.
+   _Enforced in both places. SQL: `core.is_upset`, defaults in `core.sport_rules` and `sports.config -> rules` (`upset_share_max` 0.40, `upset_min_votes` 10)._
 2. **Chain bonus:** a flat +5 on every correct vote that follows at least one correct vote in the chain (not escalating).
+   _Enforced in both places. SQL writes the +5 as its own `chain` ledger row; the per-vote total equals core's._
 3. **Free freeze counter:** counts votes cast (at vote time, match votes). When both slots are full the counter waits at 15 and the freeze is granted on the first cast with a free slot (not lost).
+   _Enforced in both places. SQL counts in `api.cast_vote` through `core.record_vote_cast`, not at resolution._
 4. **First free freeze at σερί 3:** granted once, only if a slot is free; otherwise it is tried again the next time σερί reaches 3.
+   _Enforced in both places. SQL grants it only at exactly σερί 3 and sets the flag only when a slot was free._
 5. **Which freeze is spent first:** the free one (it keeps the chain), then the paid one.
+   _Enforced in both places (`core.apply_outcome`: free first, then the oldest paid)._
 6. **Wrong vote at σερί 0:** no freeze is spent.
+   _Enforced in both places. SQL no longer spends a freeze or logs a break for a wrong vote at σερί 0._
 7. **Quiz and σερί:** quiz and dynamic card answers do not touch σερί or freezes. They count for the "vote cards" quest and the active day.
+   _TS only. The database has no quiz or dynamic-card answer RPC yet; the quiz award and day key exist as `core.quiz_completion_points` and `core.quiz_day_key` and are checked by the points vectors._
 8. **Resolution order:** by resolution time, then vote time, then vote id (as the implementation plan recommends). Points land in the Athens month of the resolution time.
+   _Enforced in both places (`core.resolve_votes` sorts by resolved time, vote time, vote id; ledger month comes from the resolution time)._
 9. **Resolvable matches:** only status `confirmed` with a result. Admin-entered results must be saved as `confirmed` by the server.
+   _Enforced in both places. `api.resolve_match` leaves any other status pending; void and cancelled close their votes with outcome `none`._
 10. **Lock:** `lockAt` defaults to `startsAt`; a vote at exactly the lock instant is rejected.
+   _Enforced in both places (`core.vote_gate`; the lock instant is `locked_at`, else `starts_at`, and a vote at exactly that instant is rejected)._
 11. **Unlock backups:** the spec gives vote-count backups only for steps 10 (30) and 13 (45). Others chosen: 2: 5, 3: 8, 4: 12, 5: 15, 6: 25, 7: 20, 8: 35, 9: 28, 11: 40, 12: 50. Step 5 "first result after day 2" is `votesResolved >= 1` and 2 active days.
+   _TS only (unlock ladder is not in the database yet)._
 12. **Ladder ties:** points, then who reached them first (`lastPointAt`), then user id. Players with 0 points never promote or get awards. Groups under 16 players relegate nobody.
+   _TS only (monthly ladder is not in the database yet)._
 13. **Pro status:** active until `endsAt` (null is open ended); gifted weeks run until `giftUntil`.
+   _Not vector-checked. `api.get_me` reads Pro the same way (active until `ends_at`, null is open ended); gifted weeks are TS only._
 14. **Quest rewards:** reward ids in the default catalogue are placeholders; real ones come from admin config.
+   _TS only._
 15. **Corrections:** an admin score change does not rewrite σερί (per the plan). Compensating ledger rows are the server s job and are not modelled here.
+   _Not vector-checked. `api.resolve_match` never rewrites σερί, and the database refuses result corrections for now._

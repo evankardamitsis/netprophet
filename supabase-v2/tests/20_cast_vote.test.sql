@@ -44,7 +44,8 @@ select tests.login(:'a'::uuid);
 select throws_ok($$select api.cast_vote('32000000-0000-0000-0000-000000000001', 1)$$, '55000', null, 'locked: start time passed');
 select throws_ok($$select api.cast_vote('32000000-0000-0000-0000-000000000002', 1)$$, '55000', null, 'locked: match already played');
 select throws_ok(format($$select api.cast_vote(%L, 1)$$, :'m3'), '55000', null, 'locked: admin lock (locked_at)');
-select throws_ok($$select api.cast_vote('32000000-0000-0000-0000-000000000003', 1)$$, 'P0002', null, 'void match is not found');
+select throws_ok($$select api.cast_vote('32000000-0000-0000-0000-000000000003', 1)$$, '55000', null, 'void match is not open (core: not_open)');
+
 select throws_ok($$select api.cast_vote('32000000-0000-0000-0000-000000000005', 1)$$, 'P0002', null, 'unapproved user match is not found');
 select lives_ok($$select api.cast_vote('32000000-0000-0000-0000-000000000004', 1)$$, 'announced match without a start time is open');
 

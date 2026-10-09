@@ -30,6 +30,10 @@ export interface ResolveMatchResult {
   points_awarded: number;
   upset: boolean;
   already_resolved: number;
+  /** votes closed with outcome 'none' because the match is cancelled or void */
+  voided: number;
+  /** true when the match is not confirmed yet (played, disputed, ...): nothing was changed */
+  pending: boolean;
 }
 
 export interface SetScore {

@@ -32,9 +32,9 @@ psql -X -f supabase-v2/tests/30_resolve.test.sql
 ## Layout
 
 ```
-migrations/   8 ordered, timestamp-named files (the squashed baseline)
+migrations/   9 ordered, timestamp-named files (the squashed baseline plus the core-parity migration)
 seed.sql      dev data: 20 Greek-named players, 2 tournaments, 10 matches, 3 test users
-tests/        pgTAP: 00_schema, 10_rls, 20_cast_vote, 30_resolve, 40_streak_freeze, 50_claim_feed_me, 60_storage
+tests/        pgTAP: 00_schema, 10_rls, 20_cast_vote, 30_resolve, 40_streak_freeze, 50_claim_feed_me, 60_storage, 80_parity
 tests/support supabase_stub.sql (plain-Postgres stand-ins), helpers.sql (test fixtures), Dockerfile
 config.toml   Supabase CLI settings for the real project (api schema only, auth providers); not exercised here
 migration-from-v1.md   v1 to v2 data mapping and the cutover script outline
@@ -50,6 +50,7 @@ migration-from-v1.md   v1 to v2 data mapping and the cutover script outline
 | `…000500_api_views` | 29 views in `api` |
 | `…000600_rpc_game` | the RPCs |
 | `…000700_reference_data` | tennis (and inactive padel, basketball, football), areas, quests, 16 badges, 13 unlock steps, reaction and kudos pools, free cosmetics |
+| `…000800_core_rules_parity` | makes the SQL rules equal `packages/core` (upset under 40%, free freeze counted at cast time, resolution order, void/cancelled, lock instant) and adds `core.resolve_votes`, `core.apply_outcome` and the pure rule helpers; `tests/80_parity.test.sql` runs `packages/core/test-vectors` against them |
 
 44 base tables in `core`, 29 views and 12 RPCs in `api`.
 
@@ -66,7 +67,7 @@ migration-from-v1.md   v1 to v2 data mapping and the cutover script outline
 | RPC | Who | What |
 |---|---|---|
 | `cast_vote(match_id, side, client_event_id?)` | signed in | before lock only (`starts_at`, `locked_at`, `status`, result present); one vote per user and match; the same vote again is a harmless replay; returns the split |
-| `resolve_match(match_id)` | admin or service role | +10 per correct vote (+30 for a correct upset call, +5 chain bonus), ledger rows with idempotency keys, σερί, freezes, result cards; safe to run twice |
+| `resolve_match(match_id)` | admin or service role | +10 per correct vote (+30 for a correct upset call, +5 chain bonus), ledger rows with idempotency keys, σερί, freezes, result cards; cancelled/void matches close votes as `none`, unconfirmed matches stay pending; safe to run twice |
 | `admin_set_result(match_id, winner_side, sets, retired?, walkover?)` | admin, editor, service | validates the result (coherence trigger), confirms the match, queues `resolve_match` in `outbox` |
 | `get_feed(limit?)` | signed in | result cards, then open matches (unvoted first, circle first, soonest), a labelled sponsored card after every 4th |
 | `get_me()` | signed in | profile, claimed player, game state, freezes, Pro flag (level numbers only for Pro), unlocks |

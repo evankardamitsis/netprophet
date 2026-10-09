@@ -84,13 +84,15 @@ begin
   return v_out;
 end $$;
 
--- one resolved vote for p_user on a fresh match: side 1 is voted, p_correct decides whether side 1 wins
+-- one resolved vote for p_user on a fresh match: side 1 is voted, p_correct decides whether side 1 wins.
+-- Like api.cast_vote it counts the cast toward the free freeze (every 15th vote cast), then the match is resolved.
 create or replace function tests.play(p_user uuid, p_correct boolean)
 returns uuid language plpgsql as $$
-declare v_m uuid := tests.mk_match_fresh();
+declare v_m uuid := tests.mk_match_fresh(); v_vote uuid;
 begin
   insert into core.votes (user_id, subject_type, subject_id, option, created_at, day_key)
-  values (p_user, 'match', v_m, 1, clock_timestamp(), core.athens_day());
+  values (p_user, 'match', v_m, 1, clock_timestamp(), core.athens_day()) returning id into v_vote;
+  perform core.record_vote_cast(p_user, 'tennis', v_vote);
   perform tests.finish_match(v_m, case when p_correct then 1 else 2 end);
   return v_m;
 end $$;
