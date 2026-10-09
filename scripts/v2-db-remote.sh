@@ -59,7 +59,14 @@ case "${1:-}" in
     sb stop --no-backup >/dev/null 2>&1 || true
     sb start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
     trap 'sb stop --no-backup >/dev/null 2>&1 || true' EXIT
-    export PGHOST=127.0.0.1 PGPORT=54422 PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
+    # connection of the throwaway local stack, as reported by the CLI (no credentials in this file)
+    eval "$(sb status -o json 2>/dev/null | python3 -c '
+import json, sys, shlex, urllib.parse as u
+d = u.urlparse(json.load(sys.stdin)["DB_URL"])
+for k, v in dict(PGHOST=d.hostname, PGPORT=d.port, PGUSER=d.username, PGPASSWORD=u.unquote(d.password or ""), PGDATABASE=d.path[1:]).items():
+    print(f"export {k}={shlex.quote(str(v))}")
+')"
+    [ -n "${PGPORT:-}" ] || { echo "could not read DB_URL from supabase status" >&2; exit 1; }
     run_tests
     ;;
   link)
