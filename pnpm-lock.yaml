@@ -54,9 +54,18 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.1.1
         version: 5.1.1(react-hook-form@7.60.0)
+      '@netprophet/core':
+        specifier: workspace:^
+        version: link:../../packages/core
+      '@netprophet/db':
+        specifier: workspace:^
+        version: link:../../packages/db
       '@netprophet/lib':
         specifier: workspace:*
         version: link:../../packages/lib
+      '@netprophet/tokens':
+        specifier: workspace:^
+        version: link:../../packages/tokens
       '@radix-ui/react-alert-dialog':
         specifier: ^1.1.14
         version: 1.1.14(@types/react-dom@18.3.7)(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
@@ -87,6 +96,9 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.12
         version: 1.1.12(@types/react-dom@18.3.7)(@types/react@18.2.14)(react-dom@18.3.1)(react@18.3.1)
+      '@supabase/ssr':
+        specifier: 0.7.0
+        version: 0.7.0(@supabase/supabase-js@2.51.0)
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@18.3.1)(react@18.3.1)
@@ -8038,6 +8050,15 @@ packages:
       - utf-8-validate
     dev: false
 
+  /@supabase/ssr@0.7.0(@supabase/supabase-js@2.51.0):
+    resolution: {integrity: sha512-G65t5EhLSJ5c8hTCcXifSL9Q/ZRXvqgXeNo+d3P56f4U1IxwTqjB64UfmfixvmMcjuxnq2yGqEWVJqUcO+AzAg==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.43.4
+    dependencies:
+      '@supabase/supabase-js': 2.51.0
+      cookie: 1.1.1
+    dev: false
+
   /@supabase/storage-js@2.7.1:
     resolution: {integrity: sha512-asYHcyDR1fKqrMpytAS1zjyEfvxuOIp1CIXX7ji4lHHcJKqyk+sLl/Vxgm4sN6u8zvuUtae9e4kDxQP2qrwWBA==}
     dependencies:
@@ -11027,6 +11048,11 @@ packages:
     resolution: {integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==}
     engines: {node: '>= 0.6'}
     dev: true
+
+  /cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
+    engines: {node: '>=18'}
+    dev: false
 
   /core-js-compat@3.44.0:
     resolution: {integrity: sha512-JepmAj2zfl6ogy34qfWtcE7nHKAJnKsQFRn++scjVS2bZFllwptzw61BZcZFYBPpUznLfAvh0LGhxKppk04ClA==}
