@@ -12,11 +12,13 @@ concurrency:
 
 env:
   # v2 packages and apps only. Legacy apps/web, apps/mobile, packages/lib are not checked here.
+  # @netprophet/app runs type-check, lint and test; its export:web is a local verification.
   V2_FILTERS: >-
     --filter @netprophet/core
     --filter @netprophet/copy
     --filter @netprophet/tokens
     --filter @netprophet/db
+    --filter @netprophet/app
 
 jobs:
   checks:
@@ -30,7 +32,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - name: Install (v2 packages only)
+      - name: Install (v2 packages and apps only)
         run: pnpm install --frozen-lockfile ${V2_FILTERS}
       - name: Lint
         run: pnpm ${V2_FILTERS} lint
