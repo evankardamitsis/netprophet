@@ -18,6 +18,15 @@
         "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && pnpm --filter @netprophet/admin exec next dev -p 3001"
       ],
       "port": 3001
+    },
+    {
+      "name": "app-web-mock",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-lc",
+        "source ~/.nvm/nvm.sh && nvm use 22 >/dev/null && pnpm --filter @netprophet/app exec expo start --web --port 8083 --clear"
+      ],
+      "port": 8083
     }
   ]
 }

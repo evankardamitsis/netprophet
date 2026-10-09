@@ -16,6 +16,9 @@ export interface MockMatch {
   round?: 'round16' | 'quarter' | 'semi' | 'final';
   a: MockPlayer;
   b: MockPlayer;
+  /** doubles partners */
+  a2?: MockPlayer;
+  b2?: MockPlayer;
   /** Votes already cast, before the viewer's. */
   votes: Record<Side, number>;
 }
@@ -50,6 +53,17 @@ export const MOCK_MATCHES: MockMatch[] = [
     a: { firstName: 'Μιχάλης', surname: 'Βλάχος', level: 3, area: 'Κηφισιά' },
     b: { firstName: 'Αντώνης', surname: 'Σιμιτζής', level: 3, area: 'Χαλάνδρι' },
     votes: { a: 12, b: 12 },
+  },
+  {
+    id: 'm3d',
+    day: 'tomorrow',
+    time: '12:00',
+    event: 'Φιλικό',
+    a: { firstName: 'Γιάννης', surname: 'Καραγιάννης', level: 5, area: 'Κηφισιά' },
+    a2: { firstName: 'Πέτρος', surname: 'Δημόπουλος', level: 4, area: 'Μαρούσι' },
+    b: { firstName: 'Άκης', surname: 'Ρόκας', level: 5, area: 'Χαλάνδρι' },
+    b2: { firstName: 'Σπύρος', surname: 'Παπαθανασίου', level: 5, area: 'Κηφισιά' },
+    votes: { a: 9, b: 14 },
   },
   {
     id: 'm4',
