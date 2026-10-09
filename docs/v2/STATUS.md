@@ -12,13 +12,13 @@ Last updated: 9 Oct 2026. Read this after CLAUDE.md. It says what is done, what 
 - `supabase-v2/migration-from-v1.md`: v1 to v2 data mapping (roster, users, claims, tournaments, matches, results; all coins dropped).
 
 ## Left from M0 (do first)
-1. Founder creates Supabase project `netprophet-v2` (Frankfurt). Then: link with the CLI, `supabase db push` the `supabase-v2` migrations, run the pgTAP suite against it, fix anything the stubs hid. Secrets live in GitHub Actions secrets and local `.env` (never committed).
-2. Backup of the v1 Supabase database (full dump incl. auth users) before the founder pauses v1. Store outside git.
-3. Auth in the app: email OTP, Google (Apple later, needs a developer account).
+1. Done 9 Oct: project `netprophet-v2` (ref `mssedfnhcozeifgflkaq`, own org, eu-west-1 Ireland, not Frankfurt). Migrations pushed (no seed). `scripts/v2-db-remote.sh` links/pushes/checks from `.supabase-v2/`; `local-test` runs the pgTAP suite on a real Supabase stack (286/286). Still to do: set Exposed schemas to `api` only in the dashboard (API settings), auth providers (email OTP, Google), keys into GitHub secrets and local `.env`.
+2. Done 9 Oct: v1 backup in `~/netprophet-backups/v1-20261009-*` (roles, schema, data, auth users, full.dump). Storage bucket files are not included.
+3. Auth in the app: email OTP, Google (Apple later, needs a developer account). Google needs client id/secret from the founder.
 4. Wire `apps/app` to the real database through `@netprophet/db` (feed from `get_feed`, vote via `cast_vote`). Replace mocks in `apps/app/src/mock/`.
 5. Run the app on a real phone (Expo Go / dev build) and on a low-end Android: animation spike sign-off by the founder.
-6. Confirm the first CI run is green.
-7. Known gaps: `pnpm install` needed `--ignore-scripts` in the cloud container (unrs-resolver); verify locally. Toolchain upgrades (pnpm 9, turbo 2) deferred.
+6. Done: CI green on `v2`.
+7. Done: local `pnpm install` works without `--ignore-scripts`. Toolchain upgrades (pnpm 9, turbo 2) deferred. The root pre-commit hook fails on a stale v1 `apps/web/.next` cache; v2 checks pass.
 
 ## M1: core loop and first real users (next)
 See `implementation-plan.md` section 9. In short:
