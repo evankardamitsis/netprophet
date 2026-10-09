@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build a staging SQL file from a v1 backup (scripts/v1-backup.sh output).
 
-Reads schema.sql and data.sql from the backup folder and writes SQL that recreates only the tables the
+Reads schema.sql, data.sql and auth.sql from the backup folder and writes SQL that recreates only the tables the
 v2 import needs, in schema `v1`, with their data. Generated columns, defaults that call v1 functions and
 CHECK constraints are dropped: staging only holds the rows. Output goes to stdout.
 
@@ -11,7 +11,9 @@ import re
 import sys
 from pathlib import Path
 
-TABLES = ["players", "tournaments", "tournament_categories", "matches", "match_results"]
+TABLES = ["players", "tournaments", "tournament_categories", "matches", "match_results", "profiles"]
+# auth tables are staged with the target project's own column types (create table ... (like auth.x))
+AUTH_TABLES = ["users", "identities"]
 TYPES = ["match_round", "match_type"]
 
 
@@ -19,6 +21,7 @@ def main(folder: str) -> None:
     root = Path(folder).expanduser()
     schema = (root / "schema.sql").read_text(encoding="utf-8")
     data = (root / "data.sql").read_text(encoding="utf-8")
+    auth = (root / "auth.sql").read_text(encoding="utf-8")
     out = ["drop schema if exists v1 cascade;", "create schema v1;"]
 
     for t in TYPES:
@@ -47,6 +50,13 @@ def main(folder: str) -> None:
             out.append(f"-- no rows for {t}")
             continue
         out.append(f"COPY v1.{t} ({m.group(1)}) FROM stdin;\n{m.group(2)}\n\\.")
+
+    for t in AUTH_TABLES:
+        out.append(f"create table v1.auth_{t} (like auth.{t});")
+        m = re.search(r'COPY "auth"\."%s" \((.*?)\) FROM stdin;\n(.*?)\n\\\.\n' % t, auth, re.S)
+        if not m:
+            sys.exit(f"auth.{t} rows not found")
+        out.append(f"COPY v1.auth_{t} ({m.group(1)}) FROM stdin;\n{m.group(2)}\n\\.")
 
     print("\n\n".join(out))
 
