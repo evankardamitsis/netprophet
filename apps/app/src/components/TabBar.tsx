@@ -9,7 +9,10 @@ import { colors, fonts } from '../theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
-/** Tabs in the bar and their column weights (prototype: 1fr 1.5fr 1fr 1.2fr). Εγώ opens from the header avatar. */
+/**
+ * Tabs in the bar and their column weights (prototype: 1fr 1.5fr 1fr 1.2fr). Εγώ opens from the header avatar.
+ * Ink bar like the header, so the feed sits between two dark bands; the open tab is a paper pill.
+ */
 const WEIGHTS: Record<string, number> = { index: 1, results: 1.5, players: 1, ladder: 1.2 };
 const COLOR_MS = 350;
 
@@ -46,9 +49,9 @@ function TabItem({ label, weight, focused, onPress }: { label: string; weight: n
     on.value = withTiming(focused ? 1 : 0, { duration: COLOR_MS });
   }, [focused, on]);
   const bg = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(on.value, [0, 1], ['rgba(15,32,25,0)', colors.ink]),
+    backgroundColor: interpolateColor(on.value, [0, 1], [colors.ink, colors.paper]),
   }));
-  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.ink, colors.paper]) }));
+  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.mist, colors.ink]) }));
   return (
     <Pressable
       accessibilityRole="tab"
@@ -71,11 +74,9 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     gap: 4,
-    paddingTop: 4,
+    paddingTop: 8,
     paddingHorizontal: 10,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.navLine,
+    backgroundColor: colors.ink,
   },
   item: { minHeight: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   label: { fontFamily: fonts.bodyBold, fontSize: 13 },
