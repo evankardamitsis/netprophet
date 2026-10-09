@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import type { Database, MeResult, NetprophetClient } from '@netprophet/db';
-import { V2_ANON_KEY, V2_URL } from './env';
+import { V2_PUBLISHABLE_KEY, V2_URL } from './env';
 
 /**
  * Server client acting as the signed-in admin (never the service key): the database decides what staff may do
@@ -9,7 +9,7 @@ import { V2_ANON_KEY, V2_URL } from './env';
  */
 export async function createV2ServerClient(): Promise<NetprophetClient> {
   const store = await cookies();
-  return createServerClient<Database, 'api'>(V2_URL, V2_ANON_KEY, {
+  return createServerClient<Database, 'api'>(V2_URL, V2_PUBLISHABLE_KEY, {
     db: { schema: 'api' },
     cookies: {
       getAll: () => store.getAll(),

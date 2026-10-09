@@ -9,11 +9,11 @@ const require = createRequire(new URL('../packages/db/package.json', import.meta
 const { createClient } = require('@supabase/supabase-js');
 
 const status = JSON.parse(execFileSync('supabase', ['--workdir', '.supabase-v2', 'status', '-o', 'json'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
-const { API_URL, ANON_KEY, MAILPIT_URL } = status;
+const { API_URL, PUBLISHABLE_KEY, MAILPIT_URL } = status;
 if (!MAILPIT_URL) throw new Error('local stack runs without mail; start it without -x inbucket');
 
 const email = `smoke-${Date.now()}@test.local`;
-const sb = createClient(API_URL, ANON_KEY, { db: { schema: 'api' }, auth: { persistSession: false } });
+const sb = createClient(API_URL, PUBLISHABLE_KEY, { db: { schema: 'api' }, auth: { persistSession: false } });
 const ok = (label, cond, detail = '') => {
   console.log(`${cond ? 'ok  ' : 'FAIL'} ${label}${detail ? `  ${detail}` : ''}`);
   if (!cond) process.exitCode = 1;

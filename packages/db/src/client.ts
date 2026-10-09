@@ -16,9 +16,9 @@ export type NetprophetClient = SupabaseClient<Database, typeof API_SCHEMA>;
 
 export type ClientOptions = Omit<SupabaseClientOptions<typeof API_SCHEMA>, 'db'>;
 
-/** Public client: anon key, user JWT after sign-in. Used by apps/app and apps/site. */
-export function createNetprophetClient(url: string, anonKey: string, options: ClientOptions = {}): NetprophetClient {
-  return createClient<Database, typeof API_SCHEMA>(url, anonKey, { ...options, db: { schema: API_SCHEMA } });
+/** Public client: publishable key, user JWT after sign-in. Used by apps/app and apps/site. */
+export function createNetprophetClient(url: string, publishableKey: string, options: ClientOptions = {}): NetprophetClient {
+  return createClient<Database, typeof API_SCHEMA>(url, publishableKey, { ...options, db: { schema: API_SCHEMA } });
 }
 
 /** Service-role client for edge functions and the admin server actions. Never ship the key to a browser or app. */

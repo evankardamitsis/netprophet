@@ -75,7 +75,7 @@ for k, v in dict(PGHOST=d.hostname, PGPORT=d.port, PGUSER=d.username, PGPASSWORD
     ;;
   start)
     sb start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor
-    sb status -o env 2>/dev/null | grep -E '^(API_URL|ANON_KEY|MAILPIT_URL)=' || true
+    sb status -o env 2>/dev/null | grep -E '^(API_URL|PUBLISHABLE_KEY|MAILPIT_URL)=' || true
     ;;
   link)
     ref="${2:?usage: link <project-ref>}"

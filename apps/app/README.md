@@ -5,7 +5,7 @@ Expo universal app (iOS, Android, web). Needs Node 22 (`nvm use 22`).
 ## Run against the local v2 database
 
 ```bash
-scripts/v2-db-remote.sh start          # from the repo root; prints API_URL and ANON_KEY
+scripts/v2-db-remote.sh start          # from the repo root; prints API_URL and PUBLISHABLE_KEY
 cp apps/app/.env.example apps/app/.env.local   # fill in those two values
 pnpm --filter @netprophet/app web
 ```
