@@ -2,9 +2,9 @@ name: v2
 
 on:
   pull_request:
-    branches: [v2, 'v2/**']
+    branches: [v2, 'v2-**']
   push:
-    branches: [v2, 'v2/**']
+    branches: [v2, 'v2-**']
 
 concurrency:
   group: v2-${{ github.ref }}

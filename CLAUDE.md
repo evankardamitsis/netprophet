@@ -8,7 +8,7 @@ A voting and σερί (streak) game for amateur sport. Tennis first, built multi
 ## Branches
 - `main` is v1 in production. Hotfixes only. Do not build v2 work on it.
 - `v2` is long-lived and protected: PR only, squash merge, CI green.
-- Feature branches: `v2/<area>-<short>`, e.g. `v2/feed-vote-card`. Off `v2`, short-lived (under 5 days), at most one migration file per PR.
+- Feature branches: `v2-<area>-<short>`, e.g. `v2-feed-vote-card` (git cannot have both `v2` and `v2/...` branches). Off `v2`, short-lived (under 5 days), at most one migration file per PR.
 - Merge `main` into `v2` weekly. At cutover `v2` merges to `main`.
 
 ## Layout (target)
