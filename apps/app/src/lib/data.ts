@@ -2,7 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MeResult } from '@netprophet/db';
 import { MOCK_MATCHES } from '../mock/matches';
 import { useCopy } from '../i18n';
-import { api, supabase } from './supabase';
+import { useAuth } from './auth';
+import { api as liveApi, supabase } from './supabase';
+
+/** The RPC client, or null for mock data: no backend, or the dev-only guest. */
+function useApi() {
+  const { guest } = useAuth();
+  return guest ? null : liveApi;
+}
 import {
   fromFeedCard,
   fromMock,
@@ -46,6 +53,7 @@ interface FeedState {
 
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
+  const api = useApi();
   const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
   const [results, setResults] = useState<CardResult[]>([]);
   const [loading, setLoading] = useState(api !== null);
@@ -72,7 +80,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, api]);
 
   useEffect(() => {
     void refresh();
@@ -90,12 +98,12 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       onError.current?.(voteErrorKind(err));
       throw err;
     }
-  }, []);
+  }, [api]);
 
   const dismissResult = useCallback((id: string) => {
     setResults((r) => r.filter((x) => x.id !== id));
     api?.markInboxSeen([id]).catch(() => undefined);
-  }, []);
+  }, [api]);
 
   return { cards, results, dismissResult, loading, error, refresh, vote };
 }
@@ -117,6 +125,7 @@ function meInitials(raw: MeResult, email: string | undefined): string {
 
 /** Streak and total points for the header. Null while loading in live mode. */
 export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: () => Promise<void> } {
+  const api = useApi();
   const [raw, setRaw] = useState<MeResult | null>(null);
   const refresh = useCallback(async () => {
     if (!api) return;
@@ -125,7 +134,7 @@ export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | n
     } catch {
       // the header keeps the last value; the feed shows its own error
     }
-  }, []);
+  }, [api]);
   useEffect(() => {
     void refresh();
   }, [refresh]);
