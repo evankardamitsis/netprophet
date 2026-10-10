@@ -112,6 +112,31 @@ export interface GetFeedResult {
   count: number;
 }
 
+/** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
+export interface ResultRow {
+  match_id: string;
+  sport_id: string;
+  format: 'singles' | 'doubles' | 'mixed';
+  starts_at: string;
+  round: string | null;
+  venue: string | null;
+  area_id: string | null;
+  /** null for friendlies */
+  tournament: string | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
+  winner_side: Side;
+  /** winner first */
+  sets: SetScore[];
+  retired: boolean;
+  walkover: boolean;
+  /** vote counts; null when nobody voted */
+  split: { side1: number; side2: number; total: number } | null;
+  /** the winner had under the upset share of enough votes (same rule as resolve_match) */
+  upset: boolean;
+  /** the viewer's own vote; null when they did not vote */
+  my: { pick: Side; outcome: 'correct' | 'wrong' | 'none' | null; points: number } | null;
+}
+
 export interface MeResult {
   user_id: string;
   profile: {

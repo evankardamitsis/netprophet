@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MeResult } from '@netprophet/db';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MeResult, ResultRow } from '@netprophet/db';
 import { MOCK_MATCHES } from '../mock/matches';
+import { mockResults } from '../mock/results';
 import { useCopy } from '../i18n';
-import { api, supabase } from './supabase';
+import { useAuth } from './auth';
+import { groupResults, type ResultGroup } from './results';
+import { api as liveApi, supabase } from './supabase';
 import {
   fromFeedCard,
   fromMock,
@@ -19,6 +22,12 @@ import {
   type VoteErrorKind,
 } from './feed';
 import type { Side } from './votes';
+
+/** The RPC client, or null for mock data: no backend, or the dev-only guest. */
+function useApi() {
+  const { guest } = useAuth();
+  return guest ? null : liveApi;
+}
 
 export type { VoteErrorKind } from './feed';
 
@@ -46,6 +55,7 @@ interface FeedState {
 
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
+  const api = useApi();
   const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
   const [results, setResults] = useState<CardResult[]>([]);
   const [loading, setLoading] = useState(api !== null);
@@ -72,7 +82,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, api]);
 
   useEffect(() => {
     void refresh();
@@ -90,12 +100,12 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       onError.current?.(voteErrorKind(err));
       throw err;
     }
-  }, []);
+  }, [api]);
 
   const dismissResult = useCallback((id: string) => {
     setResults((r) => r.filter((x) => x.id !== id));
     api?.markInboxSeen([id]).catch(() => undefined);
-  }, []);
+  }, [api]);
 
   return { cards, results, dismissResult, loading, error, refresh, vote };
 }
@@ -117,6 +127,7 @@ function meInitials(raw: MeResult, email: string | undefined): string {
 
 /** Streak and total points for the header. Null while loading in live mode. */
 export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: () => Promise<void> } {
+  const api = useApi();
   const [raw, setRaw] = useState<MeResult | null>(null);
   const refresh = useCallback(async () => {
     if (!api) return;
@@ -125,7 +136,7 @@ export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | n
     } catch {
       // the header keeps the last value; the feed shows its own error
     }
-  }, []);
+  }, [api]);
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -135,4 +146,43 @@ export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | n
     raw,
     refresh,
   };
+}
+
+export interface ResultsState {
+  groups: ResultGroup[];
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** Αποτελέσματα: finished matches of the last two weeks, grouped by day and event. */
+export function useResults(): ResultsState {
+  const t = useCopy();
+  const api = useApi();
+  const [rows, setRows] = useState<ResultRow[]>(() => (api ? [] : mockResults(new Date())));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setRows(mockResults(new Date()));
+      return;
+    }
+    setLoading(true);
+    try {
+      setRows(await api.getResults(14, 60));
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const groups = useMemo(() => groupResults(rows, t, new Date()), [rows, t]);
+  return { groups, loading, error, refresh };
 }

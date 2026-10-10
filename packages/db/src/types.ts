@@ -396,6 +396,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      get_results: {
+        Args: { p_days?: number; p_limit?: number };
+        Returns: Json;
+      };
       mark_inbox_seen: {
         Args: { p_ids: string[] };
         Returns: number;
