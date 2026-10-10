@@ -18,7 +18,8 @@ import { Shine } from './Shine';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LOGO = require('../../assets/logo-on-ink.svg');
-const LOGO_RATIO = 159 / 30;
+/** brand/logo/lockup-on-ink-tight.svg: 426.4 × 80 */
+const LOGO_RATIO = 426.4 / 80;
 
 /**
  * Prototype V2 app header: logo left; σερί, πόντοι and the avatar (opens Εγώ) right.
@@ -164,12 +165,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  logo: { height: 20, width: 20 * LOGO_RATIO },
+  logo: { height: 22, width: 22 * LOGO_RATIO },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stat: { minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', gap: 1 },
-  num: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 27 },
+  stat: { minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', gap: 0 },
+  // line heights at least the font size: iOS clips glyphs that rise above the line box (web lets them spill)
+  num: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32 },
   lime: { color: colors.lime },
-  label: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 11, letterSpacing: 0.33, color: colors.mist },
+  label: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.33, color: colors.mist },
   avatarHit: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   avatar: {
     width: 36,

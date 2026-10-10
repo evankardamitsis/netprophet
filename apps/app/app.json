@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#F3F5EE",
+    "icon": "./assets/icon.png",
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "gr.netprophet.app",
