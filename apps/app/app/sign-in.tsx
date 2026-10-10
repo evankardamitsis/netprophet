@@ -30,6 +30,13 @@ const SWAP_H = 70;
 const SWAP_SHIFT = SWAP_H * 1.1;
 /** bottom padding on phones without a home indicator */
 const BOTTOM_MIN = 12;
+/** «Άλλη φορά» is a 44pt tap area with 14px text, so it can sit this far into the home-indicator inset */
+const LATER_SLACK = 14;
+/**
+ * The hero title's line height (62) is below its size (70): iOS clips what rises above the line box,
+ * the tonos on «Μάθε» and «τένις». Extra top padding, cancelled by a negative margin, keeps it drawn.
+ */
+const ACCENT_PAD = 10;
 
 /**
  * Signed-out flow. Welcome is prototype V2's first screen, copied as is.
@@ -42,7 +49,7 @@ export default function SignInScreen() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         // bottom: only the home-indicator area; «Άλλη φορά» already carries a 44pt tap area of its own
-        contentContainerStyle={[styles.scroll, { paddingTop: 18 + insets.top, paddingBottom: Math.max(BOTTOM_MIN, insets.bottom) }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: 18 + insets.top, paddingBottom: Math.max(BOTTOM_MIN, insets.bottom - LATER_SLACK) }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -76,7 +83,7 @@ function Welcome({ onNext, onLater }: { onNext: () => void; onLater: () => void 
       <Animated.View style={[styles.hero, card]}>
         <Image source={LOGO} style={styles.heroLogo} contentFit="contain" accessibilityLabel="NetProphet" />
         <Rise delay={80} duration={550}>
-          <Text style={styles.heroTitle}>{t.welcome.title}</Text>
+          <Text style={[styles.heroTitle, styles.accentRoom]}>{t.welcome.title}</Text>
           <Swap words={t.welcome.sports} />
         </Rise>
         <View>
@@ -127,8 +134,8 @@ function Swap({ words }: { words: readonly string[] }) {
   });
   return (
     <View style={styles.swap}>
-      <Animated.Text style={[styles.heroTitle, styles.lime, a]}>{words[0]}</Animated.Text>
-      <Animated.Text style={[styles.heroTitle, styles.lime, styles.swapB, b]}>{words[1] ?? words[0]}</Animated.Text>
+      <Animated.Text style={[styles.heroTitle, styles.lime, styles.swapText, a]}>{words[0]}</Animated.Text>
+      <Animated.Text style={[styles.heroTitle, styles.lime, styles.swapText, styles.swapB, b]}>{words[1] ?? words[0]}</Animated.Text>
     </View>
   );
 }
@@ -347,7 +354,9 @@ const styles = StyleSheet.create({
   heroLogo: { height: 24, width: 24 * LOGO_RATIO },
   heroTitle: { fontFamily: fonts.displayHeavy, fontSize: 70, lineHeight: 62, color: colors.paper },
   lime: { color: colors.lime },
-  swap: { height: SWAP_H, overflow: 'hidden' },
+  accentRoom: { paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  swap: { height: SWAP_H + ACCENT_PAD, marginTop: -ACCENT_PAD, overflow: 'hidden' },
+  swapText: { paddingTop: ACCENT_PAD },
   swapB: { position: 'absolute', left: 0, top: 0 },
   point: {
     flexDirection: 'row',
