@@ -28,6 +28,8 @@ const CODE_LEN = 6;
 /** prototype .sw: a 1em box (70px), words slide by 110% */
 const SWAP_H = 70;
 const SWAP_SHIFT = SWAP_H * 1.1;
+/** bottom padding on phones without a home indicator */
+const BOTTOM_MIN = 12;
 
 /**
  * Signed-out flow. Welcome is prototype V2's first screen, copied as is.
@@ -39,7 +41,8 @@ export default function SignInScreen() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: 18 + insets.top, paddingBottom: 18 + insets.bottom }]}
+        // bottom: only the home-indicator area; «Άλλη φορά» already carries a 44pt tap area of its own
+        contentContainerStyle={[styles.scroll, { paddingTop: 18 + insets.top, paddingBottom: Math.max(BOTTOM_MIN, insets.bottom) }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
