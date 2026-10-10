@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Image } from 'expo-image';
+import { BouncingLogo } from '../src/components/BouncingLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
 import { AuthFailure, EMAIL_RE, useAuth, type AuthErrorKind } from '../src/lib/auth';
@@ -17,9 +17,8 @@ import { usePopIn, usePress } from '../src/lib/motion';
 import { fmt } from '../src/lib/votes';
 import { cardSurface, colors, ease, fonts } from '../src/theme';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const LOGO = require('../assets/logo-on-ink.svg');
-const LOGO_RATIO = 159 / 30;
+/** the lockup's height on the welcome card */
+const HERO_LOGO_H = 30;
 
 type Step = 'welcome' | 'email' | 'code';
 /** «Άλλη φορά»: after the email code, go straight to the feed and skip claim, area and Ποιους ξέρεις */
@@ -81,7 +80,7 @@ function Welcome({ onNext, onLater }: { onNext: () => void; onLater: () => void 
   return (
     <View style={styles.welcome}>
       <Animated.View style={[styles.hero, card]}>
-        <Image source={LOGO} style={styles.heroLogo} contentFit="contain" accessibilityLabel="NetProphet" />
+        <BouncingLogo height={HERO_LOGO_H} />
         <Rise delay={80} duration={550}>
           <Text style={[styles.heroTitle, styles.accentRoom]}>{t.welcome.title}</Text>
           <Swap words={t.welcome.sports} />
@@ -351,7 +350,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 18,
   },
-  heroLogo: { height: 24, width: 24 * LOGO_RATIO },
   heroTitle: { fontFamily: fonts.displayHeavy, fontSize: 70, lineHeight: 62, color: colors.paper },
   lime: { color: colors.lime },
   accentRoom: { paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
