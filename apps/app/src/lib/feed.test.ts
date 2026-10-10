@@ -139,6 +139,7 @@ describe('error mapping', () => {
     expect(authErrorKind({ status: 403, code: 'otp_expired', message: 'Token has expired or is invalid' })).toBe('badCode');
     expect(authErrorKind({ status: 400, code: 'email_address_invalid', message: 'bad' })).toBe('invalidEmail');
     expect(authErrorKind({ status: 500, message: 'boom' })).toBe('generic');
+    expect(authErrorKind({ status: 500, message: 'Error sending magic link OTP to provider' })).toBe('generic');
   });
 });
 

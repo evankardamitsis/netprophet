@@ -12,7 +12,10 @@ export class AuthFailure extends Error {
 export function authErrorKind(err: { status?: number; code?: string; message?: string }): AuthErrorKind {
   const code = err.code ?? '';
   if (err.status === 429 || code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') return 'tooMany';
-  if (code === 'otp_expired' || code === 'invalid_credentials' || /token|otp/i.test(err.message ?? '')) return 'badCode';
+  // a server failure that mentions the OTP (e.g. «Error sending … OTP») is not a wrong code
+  const clientError = (err.status ?? 400) < 500;
+  if (code === 'otp_expired' || code === 'invalid_credentials' || (clientError && /token|otp/i.test(err.message ?? '')))
+    return 'badCode';
   if (code === 'email_address_invalid' || code === 'validation_failed') return 'invalidEmail';
   return 'generic';
 }
