@@ -4,8 +4,12 @@ import { parseBezier } from './lib/ease';
 
 export { colors, motion, radii, spacing };
 
-/** Alpha variants of token colours, so nothing outside the tokens is hardcoded. */
+/**
+ * Alpha variants of token colours, so nothing outside the tokens is hardcoded.
+ * A worklet: animated styles call it on the UI thread (a plain function there aborts the app on iOS).
+ */
 export function alpha(hex: string, a: number): string {
+  'worklet';
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
 }
