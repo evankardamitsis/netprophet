@@ -14,6 +14,8 @@ import { ease, springEase } from '../theme';
  * button:active   scale .94, 180ms on --spring
  * pop             scale .4 → 1.18 (60%) → 1, fading in
  * jpop            scale .9 → 1.14 (35%) → .98 (65%) → 1
+ * stg             rise 14px from scale .985 while fading in (list items, staggered)
+ * slam            scale 2.4 → .94 (70%) → 1, fading in (tags that land)
  */
 export const PRESS_SCALE = 0.94;
 export const PRESS_MS = 180;
@@ -60,6 +62,35 @@ export function usePopIn(durationMs: number, delayMs = 0) {
   const opacity = useSharedValue(0);
   useEffect(() => {
     runPop(scale, opacity, durationMs, delayMs);
+  }, [scale, opacity, durationMs, delayMs]);
+  return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+}
+
+/** `stg` once on mount: fade in, rise 14px, scale .985 → 1, on --ease (prototype .45s, staggered by delay). */
+export function useStgIn(durationMs: number, delayMs = 0) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
+  }, [p, durationMs, delayMs]);
+  return useAnimatedStyle(() => ({
+    opacity: p.value,
+    transform: [{ translateY: (1 - p.value) * 14 }, { scale: 0.985 + 0.015 * p.value }],
+  }));
+}
+
+/** `slam` once on mount: from 2.4× and invisible to .94 at 70%, settling at 1, every segment on --ease. */
+export function useSlamIn(durationMs: number, delayMs = 0) {
+  const scale = useSharedValue(2.4);
+  const opacity = useSharedValue(0);
+  useEffect(() => {
+    scale.value = withDelay(
+      delayMs,
+      withSequence(
+        withTiming(0.94, { duration: durationMs * 0.7, easing: ease }),
+        withTiming(1, { duration: durationMs * 0.3, easing: ease }),
+      ),
+    );
+    opacity.value = withDelay(delayMs, withTiming(1, { duration: durationMs * 0.7, easing: ease }));
   }, [scale, opacity, durationMs, delayMs]);
   return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
 }

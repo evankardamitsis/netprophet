@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatSets, parseTennisScore, toWinnerFirst } from './sports/tennisScore';
+import { formatSets, formatWinnerSets, parseTennisScore, toWinnerFirst } from './sports/tennisScore';
 
 const ok = (raw: string) => {
   const r = parseTennisScore(raw);
@@ -79,5 +79,18 @@ describe('toWinnerFirst / formatSets', () => {
   });
   it('formats for a preview', () => {
     expect(formatSets(ok('7-6(5) 6-4').sets)).toBe('7-6(5), 6-4');
+  });
+});
+
+describe('formatWinnerSets', () => {
+  const words = { retired: 'ret.', walkover: 'w/o' };
+  it('writes winner-first sets with the loser\'s tie-break points', () => {
+    expect(formatWinnerSets([{ w: 6, l: 4 }, { w: 6, l: 7, tb: [5, 7] }, { w: 10, l: 8, stb: true }], {}, words)).toBe(
+      '6-4, 6-7(5), 10-8',
+    );
+  });
+  it('marks a retirement and a walkover', () => {
+    expect(formatWinnerSets([{ w: 6, l: 3 }, { w: 2, l: 1 }], { retired: true }, words)).toBe('6-3, 2-1 ret.');
+    expect(formatWinnerSets([], { walkover: true }, words)).toBe('w/o');
   });
 });
