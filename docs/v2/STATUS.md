@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 9 Oct 2026. Read this after CLAUDE.md. It says what is done, what is left of M0, and what M1 is.
+Last updated: 10 Oct 2026. Read this after CLAUDE.md. It says what is done, what is left of M0, and what M1 is.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
@@ -28,6 +28,16 @@ Data on the hosted project (`tools/migrate/`, `supabase-v2/migration-from-v1.md`
 Decided 9 Oct: «Άλλη φορά» stays and skips onboarding (still asks for the email code); v1 capital surnames get an accent pass with admin approval (queued, after the admin desk); the results desk lives in apps/admin.
 
 Phone testing: `apps/app/.env.local` points at the hosted project by default (Expo Go, same Wi-Fi). For the local stack use the values from `scripts/v2-db-remote.sh start`.
+
+Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development builds it enters without an account on the sample data (#16); it goes before launch.
+
+## M1 progress (10 Oct)
+- Merged: result cards with the prototype sequence and the outbox worker (pg_cron `np-process-outbox`, every minute, live on hosted); admin results desk at `/v2/results` in apps/admin; doubles layout; ink tab bar; publishable key instead of the legacy anon key; iOS crash after sign-in fixed (worklet); welcome fits iOS.
+- Logo: «the net» chosen; files and rules in `brand/logo/` (explorations: https://claude.ai/artifact/MgaqRSkhaQAuMvVwZa9RXc).
+- Open PRs at the time of writing: new logo in the app + header clipping (#12), fold timing (#13), sign-in error message (#14), bouncing logo (#15, on #12), dev-only guest (#16), Αποτελέσματα (on #16).
+- Αποτελέσματα: `api.get_results` (scoreboard of the last 14 days, split, upset by the resolver's rule, the viewer's own vote only) and the screen from the prototype. Reactions, kudos, filter and the sponsored card are later. Hosted needs `scripts/v2-db-remote.sh push` after merge.
+- Testing: iOS Simulator works (Xcode installed; iPhone 18 Pro). Android Studio still to install. `preview` is a local branch combining open PRs for the founder's phone; new work is built in a separate worktree (`../netprophet-results`) so the main folder stays on it.
+- Lessons: on iOS, text clips when its line height is below its font size (accents, digits); any function called inside an animated style must be a worklet.
 
 ## Queued phases
 - **Match data automation** (after the admin desk): spec in `docs/v2/match-data-automation.md`. Port `parse_oop.py` to TypeScript, keep the TAF RACE sheet as a test fixture, build order step 1 first (tournaments page, Google Sheets adapter, records sheet writer). Ask the founder the open questions before dedupe and results logic. **Waiting for `parse_oop.py` and the TAF sheet** (not in the repo yet; put them in `tools/match-data/fixtures/`).

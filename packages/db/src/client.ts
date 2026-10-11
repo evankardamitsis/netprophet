@@ -5,6 +5,7 @@ import type {
   GetFeedResult,
   MeResult,
   ResolveMatchResult,
+  ResultRow,
   SetScore,
   Side,
 } from './rpc';
@@ -62,6 +63,7 @@ export function rpc(client: NetprophetClient) {
       call<CastVoteResult>(client, 'cast_vote', { p_match_id: matchId, p_side: side, p_client_event_id: clientEventId }),
     getFeed: (limit = 20) => call<GetFeedResult>(client, 'get_feed', { p_limit: limit }),
     getMe: () => call<MeResult>(client, 'get_me', {}),
+    getResults: (days = 14, limit = 60) => call<ResultRow[]>(client, 'get_results', { p_days: days, p_limit: limit }),
     markInboxSeen: (ids: string[]) => call<number>(client, 'mark_inbox_seen', { p_ids: ids }),
     claimPlayer: (playerId: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_player', { p_player_id: playerId }),
     followPlayer: (playerId: string, relation: 'known' | 'friend' = 'known', source: 'onboarding' | 'profile' | 'card' | 'invite' = 'profile') =>

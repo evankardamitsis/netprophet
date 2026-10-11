@@ -99,6 +99,32 @@ export const el = {
     next: 'Επόμενο ›',
     done: 'Εντάξει',
   },
+  results: {
+    title: 'Αποτελέσματα',
+    subtitle: 'Τι έγινε στα γήπεδα.',
+    yesterday: 'Χθες',
+    dayBefore: 'Προχθές',
+    /** «Την Κυριακή · OPEN ΓΛΥΦΑΔΑΣ»: the day with its article, for days within the last week */
+    weekdaysOn: ['Την Κυριακή', 'Τη Δευτέρα', 'Την Τρίτη', 'Την Τετάρτη', 'Την Πέμπτη', 'Την Παρασκευή', 'Το Σάββατο'],
+    friendlies: 'Φιλικά',
+    /** a round names a group of results, so some are plural («Προημιτελικά») */
+    rounds: {
+      round64: 'Φάση των 64',
+      round32: 'Φάση των 32',
+      round16: 'Δεύτερος γύρος',
+      quarter: 'Προημιτελικά',
+      semi: 'Ημιτελικά',
+      final: 'Τελικός',
+    },
+    upset: 'Ανατροπή',
+    calledIt: 'Το ’πες · +{points}',
+    /** «Το 69% έλεγε Πράτσας»: the side most people picked */
+    line: 'Το {pct}% έλεγε {name}',
+    retired: 'απ.',
+    walkover: 'w/o',
+    empty: 'Δεν έχει αποτελέσματα ακόμα. Μόλις τελειώσει ένα ματς, θα το δεις εδώ.',
+    error: 'Δεν φόρτωσαν. Τράβα προς τα κάτω για ξανά.',
+  },
   placeholder: {
     results: 'Τα αποτελέσματα έρχονται εδώ.',
     players: 'Οι παίκτες έρχονται εδώ.',

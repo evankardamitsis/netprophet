@@ -122,3 +122,20 @@ export function formatSets(sets: ParsedSet[]): string {
     .map((s) => `${s.a}-${s.b}${s.tb ? `(${Math.min(s.tb[0], s.tb[1])})` : ''}`)
     .join(', ');
 }
+
+/**
+ * A stored result (winner first) as the scoreboard shows it: «6-4, 6-7(5), 10-8».
+ * The bracket holds the set loser's tie-break points. The words for a retirement and a walkover come
+ * from the copy package (core holds no display text).
+ */
+export function formatWinnerSets(
+  sets: WinnerFirstSet[],
+  opts: { retired?: boolean; walkover?: boolean },
+  words: { retired: string; walkover: string },
+): string {
+  if (opts.walkover) return words.walkover;
+  const text = sets
+    .map((s) => `${s.w}-${s.l}${s.tb && !s.stb ? `(${Math.min(s.tb[0], s.tb[1])})` : ''}`)
+    .join(', ');
+  return opts.retired ? `${text} ${words.retired}` : text;
+}

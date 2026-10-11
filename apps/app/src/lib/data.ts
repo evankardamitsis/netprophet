@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MeResult } from '@netprophet/db';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MeResult, ResultRow } from '@netprophet/db';
 import { MOCK_MATCHES } from '../mock/matches';
+import { mockResults } from '../mock/results';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
+import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
-
-/** The RPC client, or null for mock data: no backend, or the dev-only guest. */
-function useApi() {
-  const { guest } = useAuth();
-  return guest ? null : liveApi;
-}
 import {
   fromFeedCard,
   fromMock,
@@ -26,6 +22,12 @@ import {
   type VoteErrorKind,
 } from './feed';
 import type { Side } from './votes';
+
+/** The RPC client, or null for mock data: no backend, or the dev-only guest. */
+function useApi() {
+  const { guest } = useAuth();
+  return guest ? null : liveApi;
+}
 
 export type { VoteErrorKind } from './feed';
 
@@ -144,4 +146,43 @@ export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | n
     raw,
     refresh,
   };
+}
+
+export interface ResultsState {
+  groups: ResultGroup[];
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** Αποτελέσματα: finished matches of the last two weeks, grouped by day and event. */
+export function useResults(): ResultsState {
+  const t = useCopy();
+  const api = useApi();
+  const [rows, setRows] = useState<ResultRow[]>(() => (api ? [] : mockResults(new Date())));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setRows(mockResults(new Date()));
+      return;
+    }
+    setLoading(true);
+    try {
+      setRows(await api.getResults(14, 60));
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const groups = useMemo(() => groupResults(rows, t, new Date()), [rows, t]);
+  return { groups, loading, error, refresh };
 }
