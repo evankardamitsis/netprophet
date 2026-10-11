@@ -15,7 +15,7 @@ const TAG_MS = 450;
 const TAG_DELAY = 250;
 const PILL_MS = 450;
 const PILL_DELAY = 350;
-/** prototype revName: a tapped name shows the surname for 4s */
+/** prototype revName: a tapped name opens for 4s */
 const REVEAL_MS = 4000;
 
 export function ResultRow({ item, index }: { item: ResultItem; index: number }) {
@@ -63,7 +63,10 @@ function Pill({ text }: { text: string }) {
   );
 }
 
-/** «Γιώργος Δ. & Ηλίας Μ.»: first name and the surname's initial; a tap shows the surname for 4s. */
+/**
+ * «Δεσύπρης Γ. & Μέμμος Η.»: the surname large, as on the feed cards, and the first name's initial;
+ * a tap shows the first name for 4s (founder, 10 Oct; the prototype had it the other way round).
+ */
 function Names({ people, style }: { people: ResultName[]; style: object }) {
   return (
     <Text style={[styles.names, style]}>
@@ -86,8 +89,8 @@ function Name({ person }: { person: ResultName }) {
   }, [open]);
   return (
     <Text onPress={() => setOpen((o) => !o)} suppressHighlighting>
-      {person.first}{' '}
-      {open ? <Text style={styles.surname}>{person.surname}</Text> : `${person.surname.slice(0, 1)}.`}
+      {person.surname}{' '}
+      {open ? <Text style={styles.firstName}>{person.first}</Text> : `${person.first.slice(0, 1)}.`}
     </Text>
   );
 }
@@ -108,7 +111,7 @@ const styles = StyleSheet.create({
   loser: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, opacity: 0.7 },
   loseName: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30 },
   loseScore: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30 },
-  // prototype .ns: the revealed surname is smaller and lighter
-  surname: { fontSize: 21, fontFamily: fonts.bodySemi },
+  // the revealed first name is smaller and lighter (prototype .ns)
+  firstName: { fontSize: 21, fontFamily: fonts.bodySemi },
   sets: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
 });

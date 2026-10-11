@@ -39,7 +39,7 @@ def symbol(fg, ball, opacity=(1, 0.55, 0.25), ox=0, oy=0, s=1.0):
         f'<rect {r(8, 56, 84, 7, 3.5)} fill="{fg}" opacity="{opacity[0]}"/>'
         f'<rect {r(8, 70, 84, 7, 3.5)} fill="{fg}" opacity="{opacity[1]}"/>'
         f'<rect {r(8, 84, 84, 7, 3.5)} fill="{fg}" opacity="{opacity[2]}"/>'
-        f'<circle cx="{ox + 66 * s:.2f}" cy="{oy + 26 * s:.2f}" r="{15 * s:.2f}" fill="{ball}"/>'
+        + (f'<circle cx="{ox + 66 * s:.2f}" cy="{oy + 26 * s:.2f}" r="{15 * s:.2f}" fill="{ball}"/>' if ball else "")
     )
 
 
@@ -67,7 +67,10 @@ def wordmark(color, x, baseline, size):
     return f'<path d="{d1}" fill="{color}"/><path d="{d2}" fill="{color}"/>', x
 
 
-# lockups: symbol 100px tall, wordmark 50px, 22px gap (as on the canvas)
+# lockups: symbol 100px box, wordmark 64px (its x-height centred on the net and ball), 20px gap
+WORD = 64
+GAP = 20
+BASE = 70
 for name, fg, ball, bg in [
     ("lockup-on-ink.svg", PAPER, LIME, INK),
     ("lockup-on-paper.svg", INK, INK, PAPER),
@@ -75,9 +78,24 @@ for name, fg, ball, bg in [
     ("lockup-on-paper-transparent.svg", INK, INK, None),
 ]:
     pad = 24
-    words, end = wordmark(fg, pad + 100 + 22, pad + 50 + 18, 50)
+    words, end = wordmark(fg, pad + 92 + GAP, pad + BASE, WORD)
     body = symbol(fg, ball, ox=pad, oy=pad) + words
     write(name, svg(round(end + pad), 100 + 2 * pad, body, bg, "NetProphet logo"))
+
+# tight lockups for in-app use: cropped to the drawing (symbol x 8..92, y 11..91), no background
+# "-noball": the app draws the ball itself so it can bounce (apps/app/src/components/BouncingLogo.tsx)
+for name, fg, ball in [
+    ("lockup-on-ink-tight.svg", PAPER, LIME),
+    ("lockup-on-paper-tight.svg", INK, INK),
+    ("lockup-on-ink-tight-noball.svg", PAPER, None),
+]:
+    words, end = wordmark(fg, 92 + GAP, BASE, WORD)
+    body = symbol(fg, ball) + words
+    w = end - 8
+    write(name, (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 11 {w:.2f} 80" width="{w:.2f}" height="80" role="img">'
+        f"<title>NetProphet</title>{body}</svg>\n"
+    ))
 
 # wordmark alone
 for name, color in [("wordmark-paper.svg", PAPER), ("wordmark-ink.svg", INK)]:

@@ -34,6 +34,7 @@ export function usePress(scaleTo = PRESS_SCALE) {
   };
 }
 
+/** CSS `pop` (prototype): the animation's timing function applies to every keyframe segment, so all use the spring. */
 export function runPop(scale: SharedValue<number>, opacity: SharedValue<number>, durationMs: number, delayMs = 0) {
   scale.value = 0.4;
   opacity.value = 0;
@@ -41,18 +42,18 @@ export function runPop(scale: SharedValue<number>, opacity: SharedValue<number>,
     delayMs,
     withSequence(
       withTiming(1.18, { duration: durationMs * 0.6, easing: springEase }),
-      withTiming(1, { duration: durationMs * 0.4, easing: ease }),
+      withTiming(1, { duration: durationMs * 0.4, easing: springEase }),
     ),
   );
-  opacity.value = withDelay(delayMs, withTiming(1, { duration: durationMs * 0.6 }));
+  opacity.value = withDelay(delayMs, withTiming(1, { duration: durationMs * 0.6, easing: springEase }));
 }
 
 export function runJpop(scale: SharedValue<number>, durationMs: number) {
   scale.value = 0.9;
   scale.value = withSequence(
     withTiming(1.14, { duration: durationMs * 0.35, easing: springEase }),
-    withTiming(0.98, { duration: durationMs * 0.3, easing: ease }),
-    withTiming(1, { duration: durationMs * 0.35, easing: ease }),
+    withTiming(0.98, { duration: durationMs * 0.3, easing: springEase }),
+    withTiming(1, { duration: durationMs * 0.35, easing: springEase }),
   );
 }
 

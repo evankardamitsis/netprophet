@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
@@ -17,7 +17,8 @@ import { cardSurface, colors, ease, fonts } from '../theme';
  * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
  * idle      two vote buttons side by side, avatars on the top edge
  * revealed  the pick gets an ink border and a jpop, lime fills grow to the split, percentages pop in
- * folded    1100ms after the vote: one row, lime under the pick, ✓ and both percentages
+ * folded    1100ms after the tap (as in the prototype, whatever the network took), and never before the
+ *           fills finish growing: one row, lime under the pick, ✓ and both percentages
  */
 type Phase = 'idle' | 'sending' | 'revealed' | 'folded';
 
@@ -67,10 +68,12 @@ export const VoteCard = memo(function VoteCard({ match, onVote }: Props) {
   const [pick, setPick] = useState<Side | undefined>(match.myVote);
   const [split, setSplit] = useState<CardPct | undefined>(match.split);
   const enter = useEnter();
+  const tappedAt = useRef(0);
 
   const vote = useCallback(
     (side: Side) => {
       if (phase !== 'idle') return;
+      tappedAt.current = Date.now();
       setPick(side);
       setPhase('sending');
       haptic('tap');
@@ -91,10 +94,11 @@ export const VoteCard = memo(function VoteCard({ match, onVote }: Props) {
 
   useEffect(() => {
     if (phase !== 'revealed') return undefined;
+    const left = FOLD_AFTER_MS - (Date.now() - tappedAt.current);
     const id = setTimeout(() => {
       haptic('fold');
       setPhase('folded');
-    }, FOLD_AFTER_MS);
+    }, Math.max(left, FILL_MS));
     return () => clearTimeout(id);
   }, [phase]);
 
