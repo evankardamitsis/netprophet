@@ -67,7 +67,10 @@ def wordmark(color, x, baseline, size):
     return f'<path d="{d1}" fill="{color}"/><path d="{d2}" fill="{color}"/>', x
 
 
-# lockups: symbol 100px tall, wordmark 50px, 22px gap (as on the canvas)
+# lockups: symbol 100px box, wordmark 64px (its x-height centred on the net and ball), 20px gap
+WORD = 64
+GAP = 20
+BASE = 70
 for name, fg, ball, bg in [
     ("lockup-on-ink.svg", PAPER, LIME, INK),
     ("lockup-on-paper.svg", INK, INK, PAPER),
@@ -75,9 +78,19 @@ for name, fg, ball, bg in [
     ("lockup-on-paper-transparent.svg", INK, INK, None),
 ]:
     pad = 24
-    words, end = wordmark(fg, pad + 100 + 22, pad + 50 + 18, 50)
+    words, end = wordmark(fg, pad + 92 + GAP, pad + BASE, WORD)
     body = symbol(fg, ball, ox=pad, oy=pad) + words
     write(name, svg(round(end + pad), 100 + 2 * pad, body, bg, "NetProphet logo"))
+
+# tight lockups for in-app use: cropped to the drawing (symbol x 8..92, y 11..91), no background
+for name, fg, ball in [("lockup-on-ink-tight.svg", PAPER, LIME), ("lockup-on-paper-tight.svg", INK, INK)]:
+    words, end = wordmark(fg, 92 + GAP, BASE, WORD)
+    body = symbol(fg, ball) + words
+    w = end - 8
+    write(name, (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="8 11 {w:.2f} 80" width="{w:.2f}" height="80" role="img">'
+        f"<title>NetProphet</title>{body}</svg>\n"
+    ))
 
 # wordmark alone
 for name, color in [("wordmark-paper.svg", PAPER), ("wordmark-ink.svg", INK)]:

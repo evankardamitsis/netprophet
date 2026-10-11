@@ -14,6 +14,7 @@ All exploration boards, including directions A to F and the C1 to C5 variations:
 | --- | --- |
 | `lockup-on-ink.svg`, `lockup-on-paper.svg` | Symbol + wordmark with background (slides, social) |
 | `lockup-on-ink-transparent.svg`, `lockup-on-paper-transparent.svg` | Same without background (place on ink or paper) |
+| `lockup-on-ink-tight.svg`, `lockup-on-paper-tight.svg` | Cropped to the drawing, for in-app use (`apps/app/assets/logo-on-ink.svg` is the ink one) |
 | `wordmark-paper.svg`, `wordmark-ink.svg` | Wordmark alone |
 | `symbol-on-ink.svg`, `symbol-ink.svg`, `symbol-paper.svg` | Symbol alone, colour / one colour |
 | `app-icon-1024.svg`, `png/app-icon-1024.png` | iOS and store icon, full bleed (the OS rounds the corners) |
