@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 10 Oct 2026. Read this after CLAUDE.md. It says what is done, what is left of M0, and what M1 is.
+Last updated: 11 Oct 2026. Read this after CLAUDE.md. It says what is done, what is left of M0, and what M1 is.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
@@ -34,9 +34,10 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 ## M1 progress (10 Oct)
 - Merged: result cards with the prototype sequence and the outbox worker (pg_cron `np-process-outbox`, every minute, live on hosted); admin results desk at `/v2/results` in apps/admin; doubles layout; ink tab bar; publishable key instead of the legacy anon key; iOS crash after sign-in fixed (worklet); welcome fits iOS.
 - Logo: «the net» chosen; files and rules in `brand/logo/` (explorations: https://claude.ai/artifact/MgaqRSkhaQAuMvVwZa9RXc).
-- Open PRs at the time of writing: new logo in the app + header clipping (#12), fold timing (#13), sign-in error message (#14), bouncing logo (#15, on #12), dev-only guest (#16), Αποτελέσματα (on #16).
-- Αποτελέσματα: `api.get_results` (scoreboard of the last 14 days, split, upset by the resolver's rule, the viewer's own vote only) and the screen from the prototype. Reactions, kudos, filter and the sponsored card are later. Hosted needs `scripts/v2-db-remote.sh push` after merge.
-- Testing: iOS Simulator works (Xcode installed; iPhone 18 Pro). Android Studio still to install. `preview` is a local branch combining open PRs for the founder's phone; new work is built in a separate worktree (`../netprophet-results`) so the main folder stays on it.
+- #12 to #17 merged 11 Oct (logo in the app, fold timing, sign-in error, bouncing logo, dev guest, Αποτελέσματα); `get_results` is live on hosted.
+- Αποτελέσματα: `api.get_results` (scoreboard of the last 14 days, split, upset by the resolver's rule, the viewer's own vote only) and the screen; names show the surname large and the first initial (founder). Reactions, kudos, filter and the sponsored card are later.
+- Παίκτες: `get_players_home`, `find_players`, `get_player` and the tab + profile from the prototype. Follow from the profile is a friend (relation 'friend'); onboarding's «Ποιους ξέρεις» will use 'known'. Traits («Πώς παίζει»), head-to-head and gifts are later. Hosted needs `scripts/v2-db-remote.sh push` after merge.
+- Testing: iOS Simulator works (Xcode installed; iPhone 18 Pro). Android Studio still to install. `preview` is a local branch combining open PRs for the founder's phone; new work is built in a second clone (`../netprophet-dev`; worktrees there get cleaned up) so the main folder stays on `v2`.
 - Lessons: on iOS, text clips when its line height is below its font size (accents, digits); any function called inside an animated style must be a worklet.
 
 ## Queued phases
