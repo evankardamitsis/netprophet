@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
+import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
 import { useFeed, type VoteErrorKind } from '../../src/lib/data';
@@ -11,8 +12,6 @@ import type { CardResult } from '../../src/lib/feed';
 import { useHud } from '../../src/lib/hud';
 import { colors, ease, fonts } from '../../src/theme';
 
-/** Prototype toast: 2.2s, in over the first 12%, out after 85%. */
-const TOAST_MS = 2200;
 const TITLE_IN_MS = 400;
 /** prototype rqStart / rqNext: the first result waits 450ms, the next one comes 140ms after the last closes */
 const FIRST_RESULT_DELAY = 450;
@@ -100,27 +99,6 @@ function useInA() {
   return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 12 }] }));
 }
 
-function Toast({ text }: { text: string }) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withSequence(
-      withTiming(1, { duration: TOAST_MS * 0.12, easing: ease }),
-      withTiming(1, { duration: TOAST_MS * 0.73 }),
-      withTiming(0, { duration: TOAST_MS * 0.15, easing: ease }),
-    );
-  }, [p]);
-  const style = useAnimatedStyle(() => ({
-    opacity: p.value,
-    transform: [{ translateY: (1 - p.value) * -14 }, { scale: 0.9 + p.value * 0.1 }],
-  }));
-  return (
-    <View style={styles.toastWrap} pointerEvents="none">
-      <Animated.View style={[styles.toast, style]} accessibilityLiveRegion="polite">
-        <Text style={styles.toastText}>{text}</Text>
-      </Animated.View>
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
@@ -140,17 +118,4 @@ const styles = StyleSheet.create({
     color: colors.inkSoft,
     textAlign: 'center',
   },
-  toastWrap: { position: 'absolute', top: 10, left: 0, right: 0, alignItems: 'center' },
-  toast: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-    backgroundColor: colors.ink,
-    shadowColor: colors.ink,
-    shadowOpacity: 0.3,
-    shadowRadius: 11,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-  },
-  toastText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
 });

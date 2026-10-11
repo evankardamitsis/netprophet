@@ -16,6 +16,8 @@ import { ease, springEase } from '../theme';
  * jpop            scale .9 → 1.14 (35%) → .98 (65%) → 1
  * stg             rise 14px from scale .985 while fading in (list items, staggered)
  * slam            scale 2.4 → .94 (70%) → 1, fading in (tags that land)
+ * rise            fade in from 40px below (profile lines)
+ * grow            width 0 → full (dividers)
  */
 export const PRESS_SCALE = 0.94;
 export const PRESS_MS = 180;
@@ -94,6 +96,24 @@ export function useSlamIn(durationMs: number, delayMs = 0) {
     opacity.value = withDelay(delayMs, withTiming(1, { duration: durationMs * 0.7, easing: ease }));
   }, [scale, opacity, durationMs, delayMs]);
   return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+}
+
+/** `rise` once on mount: fade in from 40px below, on --ease. */
+export function useRiseIn(durationMs: number, delayMs = 0) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
+  }, [p, durationMs, delayMs]);
+  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 40 }] }));
+}
+
+/** `grow` once on mount: width 0 → 100%, on --ease. */
+export function useGrowIn(durationMs: number, delayMs = 0) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
+  }, [p, durationMs, delayMs]);
+  return useAnimatedStyle(() => ({ width: `${p.value * 100}%` }));
 }
 
 /** `pop` whenever `value` changes after the first render (header numbers). */

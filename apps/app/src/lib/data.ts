@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MeResult, ResultRow } from '@netprophet/db';
+import { RpcError, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { MOCK_MATCHES } from '../mock/matches';
+import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
+import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
 import {
@@ -185,4 +187,149 @@ export function useResults(): ResultsState {
 
   const groups = useMemo(() => groupResults(rows, t, new Date()), [rows, t]);
   return { groups, loading, error, refresh };
+}
+
+/** Area names for the guest's sample data or from the database. */
+async function areasFor(live: boolean): Promise<Record<string, string>> {
+  return live ? loadAreas().catch(() => ({})) : MOCK_AREAS;
+}
+
+export interface PlayersHomeState {
+  rows: PlayerRow[];
+  /** the roster size, «1.632», for the search placeholder */
+  total: string;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** Παίκτες before a search: friends who do not play today, then today's players. */
+export function usePlayersHome(): PlayersHomeState {
+  const t = useCopy();
+  const api = useApi();
+  const [rows, setRows] = useState<PlayerRow[]>([]);
+  const [total, setTotal] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [home, areas] = await Promise.all([api ? api.getPlayersHome(60) : mockPlayersHome(), areasFor(api !== null)]);
+      setRows(home.players.map((p) => toPlayerRow(p, areas, t)));
+      setTotal(thousands(home.total_players));
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, t]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { rows, total, loading, error, refresh };
+}
+
+/** Typing pauses this long before the search goes out. */
+const SEARCH_DEBOUNCE_MS = 250;
+/** Fewer letters than this keep the home list. */
+export const SEARCH_MIN_CHARS = 2;
+
+/** Name search; rows is null while the query is too short to search. */
+export function usePlayerSearch(query: string): { rows: PlayerRow[] | null; searching: boolean } {
+  const t = useCopy();
+  const api = useApi();
+  const [rows, setRows] = useState<PlayerRow[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < SEARCH_MIN_CHARS) {
+      setRows(null);
+      setSearching(false);
+      return undefined;
+    }
+    let live = true;
+    setSearching(true);
+    const id = setTimeout(async () => {
+      try {
+        const [found, areas] = await Promise.all([api ? api.findPlayers(q, 30) : mockFindPlayers(q), areasFor(api !== null)]);
+        if (live) setRows(found.map((p) => toPlayerRow(p, areas, t)));
+      } catch {
+        if (live) setRows([]);
+      } finally {
+        if (live) setSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      live = false;
+      clearTimeout(id);
+    };
+  }, [query, api, t]);
+
+  return { rows, searching };
+}
+
+export type FollowOutcome = 'followed' | 'unfollowed' | 'failed';
+
+export interface PlayerState {
+  profile: ProfileView | null;
+  loading: boolean;
+  error: boolean;
+  /** the player is hidden or gone */
+  notFound: boolean;
+  refresh: () => Promise<void>;
+  /** follows as a friend («✓ Στους φίλους σου»), or unfollows; optimistic, reverts on failure */
+  toggleFollow: () => Promise<FollowOutcome>;
+}
+
+export function usePlayer(id: string): PlayerState {
+  const t = useCopy();
+  const api = useApi();
+  const [raw, setRaw] = useState<PlayerProfile | null>(null);
+  const [areas, setAreas] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [notFound, setNotFound] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [p, a] = await Promise.all([api ? api.getPlayer(id) : mockPlayer(id, new Date()), areasFor(api !== null)]);
+      setAreas(a);
+      setRaw(p);
+      setNotFound(p === null);
+      setError(false);
+    } catch (err) {
+      if (err instanceof RpcError && err.code === 'player_not_found') setNotFound(true);
+      else setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, id]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const toggleFollow = useCallback(async (): Promise<FollowOutcome> => {
+    if (!raw) return 'failed';
+    const on = !raw.is_followed;
+    setRaw({ ...raw, is_followed: on });
+    if (!api) return on ? 'followed' : 'unfollowed';
+    try {
+      if (on) await api.followPlayer(raw.id, 'friend', 'profile');
+      else await api.unfollowPlayer(raw.id);
+      return on ? 'followed' : 'unfollowed';
+    } catch {
+      setRaw((r) => (r ? { ...r, is_followed: !on } : r));
+      return 'failed';
+    }
+  }, [api, raw]);
+
+  const profile = useMemo(() => (raw ? toProfile(raw, areas, t, new Date()) : null), [raw, areas, t]);
+  return { profile, loading, error, notFound, refresh, toggleFollow };
 }
