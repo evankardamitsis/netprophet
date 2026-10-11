@@ -39,7 +39,7 @@ def symbol(fg, ball, opacity=(1, 0.55, 0.25), ox=0, oy=0, s=1.0):
         f'<rect {r(8, 56, 84, 7, 3.5)} fill="{fg}" opacity="{opacity[0]}"/>'
         f'<rect {r(8, 70, 84, 7, 3.5)} fill="{fg}" opacity="{opacity[1]}"/>'
         f'<rect {r(8, 84, 84, 7, 3.5)} fill="{fg}" opacity="{opacity[2]}"/>'
-        f'<circle cx="{ox + 66 * s:.2f}" cy="{oy + 26 * s:.2f}" r="{15 * s:.2f}" fill="{ball}"/>'
+        + (f'<circle cx="{ox + 66 * s:.2f}" cy="{oy + 26 * s:.2f}" r="{15 * s:.2f}" fill="{ball}"/>' if ball else "")
     )
 
 
@@ -83,7 +83,12 @@ for name, fg, ball, bg in [
     write(name, svg(round(end + pad), 100 + 2 * pad, body, bg, "NetProphet logo"))
 
 # tight lockups for in-app use: cropped to the drawing (symbol x 8..92, y 11..91), no background
-for name, fg, ball in [("lockup-on-ink-tight.svg", PAPER, LIME), ("lockup-on-paper-tight.svg", INK, INK)]:
+# "-noball": the app draws the ball itself so it can bounce (apps/app/src/components/BouncingLogo.tsx)
+for name, fg, ball in [
+    ("lockup-on-ink-tight.svg", PAPER, LIME),
+    ("lockup-on-paper-tight.svg", INK, INK),
+    ("lockup-on-ink-tight-noball.svg", PAPER, None),
+]:
     words, end = wordmark(fg, 92 + GAP, BASE, WORD)
     body = symbol(fg, ball) + words
     w = end - 8
