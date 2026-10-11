@@ -12,7 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BouncingLogo } from '../src/components/BouncingLogo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
-import { AuthFailure, EMAIL_RE, useAuth, type AuthErrorKind } from '../src/lib/auth';
+import { AuthFailure, EMAIL_RE, guestAllowed, useAuth, type AuthErrorKind } from '../src/lib/auth';
 import { usePopIn, usePress } from '../src/lib/motion';
 import { fmt } from '../src/lib/votes';
 import { cardSurface, colors, ease, fonts } from '../src/theme';
@@ -42,6 +42,7 @@ const ACCENT_PAD = 10;
  * Email and code are not in the prototype; they use its claim screen («Είσαι ήδη εδώ;») styles.
  */
 export default function SignInScreen() {
+  const { enterAsGuest } = useAuth();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState<Step>('welcome');
   return (
@@ -60,7 +61,8 @@ export default function SignInScreen() {
             }}
             onLater={() => {
               AsyncStorage.setItem(SKIP_ONBOARDING_KEY, '1').catch(() => undefined);
-              setStep('email');
+              if (guestAllowed) enterAsGuest();
+              else setStep('email');
             }}
           />
         ) : (

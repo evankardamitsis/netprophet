@@ -35,10 +35,11 @@ export default function RootLayout() {
 }
 
 function Routes() {
-  const { ready, session } = useAuth();
+  const { ready, session, guest } = useAuth();
   if (!ready) return null;
   // without a backend (mock mode) the app is open; live, everything but sign-in needs a session
-  const signedIn = !isLive || session !== null;
+  // (or, in development builds, the «Άλλη φορά» guest)
+  const signedIn = !isLive || session !== null || guest;
   return (
     <>
       <StatusBar style={signedIn ? 'light' : 'dark'} />
