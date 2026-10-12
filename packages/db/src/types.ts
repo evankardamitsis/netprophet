@@ -400,6 +400,10 @@ export type Database = {
         Args: { p_limit?: number };
         Returns: Json;
       };
+      get_ladder: {
+        Args: { p_limit?: number; p_scope?: string };
+        Returns: Json;
+      };
       get_me: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
