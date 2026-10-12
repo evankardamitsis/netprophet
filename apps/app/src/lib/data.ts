@@ -12,6 +12,7 @@ import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
 import { askForPushOnce } from './push';
+import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
@@ -106,6 +107,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     }
     try {
       const res = await api.castVote(matchId, toDbSide(side));
+      track('vote_cast', { match_id: matchId, side: toDbSide(side) });
       void askForPushOnce(api);
       return toPct(res.split);
     } catch (err) {
@@ -115,7 +117,11 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
   }, [api]);
 
   const dismissResult = useCallback((id: string) => {
-    setResults((r) => r.filter((x) => x.id !== id));
+    setResults((r) => {
+      const card = r.find((x) => x.id === id);
+      if (card) track('result_card_seen', { outcome: card.ok ? 'correct' : 'wrong', points: card.points });
+      return r.filter((x) => x.id !== id);
+    });
     api?.markInboxSeen([id]).catch(() => undefined);
   }, [api]);
 

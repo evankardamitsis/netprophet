@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GoSplash, IntroSlideView } from '../src/components/IntroSlides';
+import { track } from '../src/lib/analytics';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { useAuth } from '../src/lib/auth';
@@ -88,6 +89,11 @@ export default function OnboardingScreen() {
     },
     [],
   );
+  useEffect(() => {
+    track('onboarding_step', { step, index: i });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
   const back = useCallback(() => {
     if (i === 0) return false;
     // stepping back over «Πώς παίζεις;» to the claim undoes «είμαι καινούριος»
@@ -133,6 +139,7 @@ export default function OnboardingScreen() {
     run(async () => {
       if (!picked) return;
       const r = await ob.claim(picked);
+      track('claim_completed', { result: r });
       if (r === 'ok') return go(i + 1);
       setError(r === 'taken' ? o.claim.taken : r === 'other' ? o.claim.otherClaimed : o.claim.failed);
     });
@@ -162,6 +169,7 @@ export default function OnboardingScreen() {
     run(async () => {
       await ob.follow(known);
       await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null });
+      track('onboarding_done', { claimed: !isNew && picked !== null, known: known.length });
       go(i + 1);
     });
 

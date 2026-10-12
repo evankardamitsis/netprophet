@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import type { rpc } from '@netprophet/db';
+import { track } from './analytics';
 
 /**
  * Push for results (M1). The app asks once, right after your first vote, when «Μαθαίνεις απόψε» makes the
@@ -48,6 +49,7 @@ export async function askForPushOnce(api: Api): Promise<void> {
     if ((await AsyncStorage.getItem(ASKED_KEY)) === '1') return;
     await AsyncStorage.setItem(ASKED_KEY, '1');
     const { status } = await Notifications.requestPermissionsAsync();
+    track('push_permission', { granted: status === 'granted' });
     if (status === 'granted') await register(api);
   } catch {
     // the vote already counted; push is a bonus
