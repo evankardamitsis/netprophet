@@ -4,6 +4,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyOutcome,
+  levelDirection,
+  recomputeLevels,
   applyQuestEvent,
   buyFreeze,
   daysLeftInMonth,
@@ -37,6 +39,7 @@ import questVectors from '../test-vectors/quests.json';
 import unlockVectors from '../test-vectors/unlocks.json';
 import voteVectors from '../test-vectors/votes.json';
 import resolutionVectors from '../test-vectors/resolution.json';
+import levelVectors from '../test-vectors/levels.json';
 
 interface Case {
   name: string;
@@ -191,4 +194,9 @@ run(resolutionVectors, {
       final: r.streak,
     };
   },
+});
+
+run(levelVectors, {
+  recomputeLevels: (i) => recomputeLevels(i),
+  levelDirection: (i) => levelDirection(i.now, i.weekAgo),
 });

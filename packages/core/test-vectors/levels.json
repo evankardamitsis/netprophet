@@ -1,0 +1,844 @@
+{
+  "suite": "levels",
+  "version": 1,
+  "notes": "Level algorithm v1 (docs/v2/level-algorithm.md). Values to 4 decimals; players sorted by id.",
+  "groups": [
+    {
+      "fn": "recomputeLevels",
+      "cases": [
+        {
+          "name": "start values only: NTRP player active, new player pending",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 4
+              },
+              {
+                "id": "b",
+                "initial": null
+              }
+            ],
+            "matches": []
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 4,
+              "tier": 4,
+              "status": "active",
+              "matches": 0,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3,
+              "tier": null,
+              "status": "pending",
+              "matches": 0,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "levels go in halves and never round up",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3.49
+              },
+              {
+                "id": "b",
+                "initial": 3.5
+              },
+              {
+                "id": "c",
+                "initial": 3.99
+              }
+            ],
+            "matches": []
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.49,
+              "tier": 3,
+              "status": "active",
+              "matches": 0,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.5,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 0,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "c",
+              "value": 3.99,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 0,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "the 2-1 score is tunable",
+          "input": {
+            "config": {
+              "twoOneScore": 0.85
+            },
+            "players": [
+              {
+                "id": "a",
+                "initial": 3.5
+              },
+              {
+                "id": "b",
+                "initial": 3.5
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 1,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.64,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.36,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "the weaker player wins: a big move",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3
+              },
+              {
+                "id": "b",
+                "initial": 4
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.3365,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.6635,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "the stronger player wins: a small move",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 4
+              },
+              {
+                "id": "b",
+                "initial": 3
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 4.0635,
+              "tier": 4,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 2.9365,
+              "tier": 2.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "a 2-1 counts the same as a 2-0",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3.5
+              },
+              {
+                "id": "b",
+                "initial": 3.5
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 1,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.7,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.3,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "a retirement counts as a win",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3.5
+              },
+              {
+                "id": "b",
+                "initial": 3.5
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": null,
+                "retired": true
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.7,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.3,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "doubles: side averages, each player moves",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3
+              },
+              {
+                "id": "b",
+                "initial": 4
+              },
+              {
+                "id": "c",
+                "initial": 3.5
+              },
+              {
+                "id": "d",
+                "initial": 3.5
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a",
+                    "b"
+                  ],
+                  [
+                    "c",
+                    "d"
+                  ]
+                ],
+                "winner": 2,
+                "setsLost": 1,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 2.8,
+              "tier": 2.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.8,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "c",
+              "value": 3.7,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "d",
+              "value": 3.7,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "the crowd backs the winner: a little more",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3.5
+              },
+              {
+                "id": "b",
+                "initial": 3.5
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": {
+                  "votes": 12,
+                  "w1": 7.5,
+                  "w2": 1.5
+                }
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.7333,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 12,
+              "upsetIndex": 0
+            },
+            {
+              "id": "b",
+              "value": 3.2667,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 12,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "too few votes: the crowd does not count",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3.5
+              },
+              {
+                "id": "b",
+                "initial": 3.5
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": {
+                  "votes": 9,
+                  "w1": 7,
+                  "w2": 2
+                }
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.7,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 9,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 3.3,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 9,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "a new player shows a level after three matches; K falls",
+          "input": {
+            "players": [
+              {
+                "id": "n",
+                "initial": null
+              },
+              {
+                "id": "x",
+                "initial": 3
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "n"
+                  ],
+                  [
+                    "x"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": null
+              },
+              {
+                "id": "m2",
+                "sides": [
+                  [
+                    "n"
+                  ],
+                  [
+                    "x"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": null
+              },
+              {
+                "id": "m3",
+                "sides": [
+                  [
+                    "n"
+                  ],
+                  [
+                    "x"
+                  ]
+                ],
+                "winner": 2,
+                "setsLost": 1,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "n",
+              "value": 3.0714,
+              "tier": 3,
+              "status": "active",
+              "matches": 3,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "x",
+              "value": 2.9286,
+              "tier": 2.5,
+              "status": "active",
+              "matches": 3,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "ten votes on their matches also make a player active",
+          "input": {
+            "players": [
+              {
+                "id": "n",
+                "initial": null
+              },
+              {
+                "id": "x",
+                "initial": 3
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "n"
+                  ],
+                  [
+                    "x"
+                  ]
+                ],
+                "winner": 2,
+                "setsLost": 0,
+                "crowd": {
+                  "votes": 10,
+                  "w1": 2,
+                  "w2": 6
+                }
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "n",
+              "value": 2.775,
+              "tier": 2.5,
+              "status": "active",
+              "matches": 1,
+              "votes": 10,
+              "upsetIndex": null
+            },
+            {
+              "id": "x",
+              "value": 3.225,
+              "tier": 3,
+              "status": "active",
+              "matches": 1,
+              "votes": 10,
+              "upsetIndex": 0
+            }
+          ]
+        },
+        {
+          "name": "underdog wins feed the upset index",
+          "input": {
+            "players": [
+              {
+                "id": "a",
+                "initial": 3
+              },
+              {
+                "id": "b",
+                "initial": 4
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 0,
+                "crowd": {
+                  "votes": 10,
+                  "w1": 2,
+                  "w2": 8
+                }
+              },
+              {
+                "id": "m2",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 1,
+                "setsLost": 1,
+                "crowd": {
+                  "votes": 11,
+                  "w1": 6,
+                  "w2": 4
+                }
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 3.5949,
+              "tier": 3.5,
+              "status": "active",
+              "matches": 2,
+              "votes": 21,
+              "upsetIndex": 50
+            },
+            {
+              "id": "b",
+              "value": 3.4051,
+              "tier": 3,
+              "status": "active",
+              "matches": 2,
+              "votes": 21,
+              "upsetIndex": null
+            }
+          ]
+        },
+        {
+          "name": "values stay within 1 and 7",
+          "input": {
+            "config": {
+              "kStart": 9,
+              "kEnd": 9
+            },
+            "players": [
+              {
+                "id": "a",
+                "initial": 6.9
+              },
+              {
+                "id": "b",
+                "initial": 1.1
+              }
+            ],
+            "matches": [
+              {
+                "id": "m1",
+                "sides": [
+                  [
+                    "a"
+                  ],
+                  [
+                    "b"
+                  ]
+                ],
+                "winner": 2,
+                "setsLost": 0,
+                "crowd": null
+              }
+            ]
+          },
+          "expected": [
+            {
+              "id": "a",
+              "value": 1,
+              "tier": 1,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            },
+            {
+              "id": "b",
+              "value": 7,
+              "tier": 7,
+              "status": "active",
+              "matches": 1,
+              "votes": 0,
+              "upsetIndex": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fn": "levelDirection",
+      "cases": [
+        {
+          "name": "up by 0.10 or more",
+          "input": {
+            "now": 4.23,
+            "weekAgo": 4.13
+          },
+          "expected": "up"
+        },
+        {
+          "name": "down by 0.10 or more",
+          "input": {
+            "now": 3.9,
+            "weekAgo": 4
+          },
+          "expected": "down"
+        },
+        {
+          "name": "within 0.10 is the same",
+          "input": {
+            "now": 4.05,
+            "weekAgo": 4
+          },
+          "expected": "same"
+        },
+        {
+          "name": "no history yet",
+          "input": {
+            "now": 4,
+            "weekAgo": null
+          },
+          "expected": "same"
+        }
+      ]
+    }
+  ]
+}

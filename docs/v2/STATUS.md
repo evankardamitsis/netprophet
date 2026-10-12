@@ -59,6 +59,10 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Part 5c, minors and roster tools (`20261120000000_m2_roster_minors.sql`; admin `/v2/players`): a birth year under 18 makes a player a minor (staff can also flag one without a birth year). Minors are never voted on (`cast_vote` refuses, the feed and Αποτελέσματα leave their matches out) and never on cards (Παίκτες, search, profiles, the roster view). Sign-up asks «Είμαι 15 χρονών και πάνω» on the first onboarding step (and on the link claim step); it is a self-declaration stored as `onboarding_state.age_15`. Roster tools: search everyone with filters (new, minors, hidden, with an account), fix names, gender, birth year, hide, merge duplicates, release a claim.
 - M2 is code-complete. Left for the founder: confirm the reaction pairs, check /v2/moderation and /v2/players on the admin preview.
 
+## M3 (started 12 Oct)
+- Order: level algorithm, celebrations (σερί milestones, free freezes), Αποστολές, badges, unlock ladder, leagues and month close, «Οι 6 της ημέρας», traits, Εγώ avatar and stats.
+- Part 1, level algorithm v1 (`docs/v2/level-algorithm.md`; `packages/core/src/rules/level.ts` and `core.level_compute`, both on `test-vectors/levels.json`; `core.recompute_levels` nightly at 00:30 UTC; `api.admin_recompute_levels` behind «Recompute levels» on /v2/players). NTRP start values, Elo-style moves on counting matches (falling K, 2-1 worth 0.85), the accuracy-weighted crowd at a quarter weight, pending until 3 matches or 10 votes, direction against a week ago, one snapshot a day. Five defaults listed in the spec for the founder to confirm.
+
 ## Pro: real, not a fake door (decided 12 Oct 2026)
 - The founder dropped the fake door: Pro is built for real and sold on the web first (Apple/Google billing comes with the store release). Pro belongs to the account, so a web purchase unlocks the phone apps.
 - Pro at launch: «Τα τουρνουά σου», «Ο αντίπαλος πριν το ματς», «Πού κερδίζεις, πού χάνεις», «Τα νούμερα του level σου». 8,99€ a month.

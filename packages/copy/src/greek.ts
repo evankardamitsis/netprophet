@@ -152,3 +152,9 @@ export function withArticleAccusative(firstName: string, surname: string, known?
     const g = nameGender(firstName, known);
     return `${g === 'f' ? 'την' : 'τον'} ${accusativeName(firstName, surname, g)}`;
 }
+
+/** «4», «4,5»: levels go in halves (founder, 12 Oct 2026); Greek writes the decimal with a comma */
+export function levelNumber(level: number, locale: 'el' | 'en' = 'el'): string {
+    const text = String(Math.floor(level * 2) / 2);
+    return locale === 'el' ? text.replace('.', ',') : text;
+}

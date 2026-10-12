@@ -1,3 +1,4 @@
+import { levelNumber } from '@netprophet/copy';
 import type { Copy } from '@netprophet/copy';
 import type { MePage, MeResult, PlayerProfile } from '@netprophet/db';
 import { initials } from './feed';
@@ -18,7 +19,8 @@ export interface MeView {
   /** «Γλυφάδα · δεξί χέρι · τένις» */
   sub: string;
   isNew: boolean;
-  level: number | null;
+  /** «4», «4,5» */
+  level: string | null;
   direction: { arrow: '↑' | '=' | '↓'; word: string };
   streak: number;
   best: string;
@@ -71,7 +73,7 @@ export function toMeView(
     surname,
     sub: [area, hand, sport].filter(Boolean).join(' · '),
     isNew,
-    level,
+    level: level === null ? null : levelNumber(level),
     direction: dir === 'up' ? { arrow: '↑', word: m.direction.up } : dir === 'down' ? { arrow: '↓', word: m.direction.down } : { arrow: '=', word: m.direction.same },
     streak: me.game.streak,
     best: fmt(m.best, { n: me.game.streak_best }),

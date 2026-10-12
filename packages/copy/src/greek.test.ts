@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative,
-} from './greek';
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber } from './greek';
 
 describe('greekCaps', () => {
     it('drops accents, which toUpperCase does not', () => {
@@ -110,5 +109,15 @@ describe('accusativeName', () => {
   it('drops the final -ς of masculine names, keeps feminine ones', () => {
     expect(accusativeName('Δημήτρης', 'Γκότσης')).toBe('Δημήτρη Γκότση');
     expect(accusativeName('Μαρία', 'Καρρά')).toBe('Μαρία Καρρά');
+  });
+});
+
+describe('levelNumber', () => {
+  it('halves with a Greek comma, never rounded up', () => {
+    expect(levelNumber(4)).toBe('4');
+    expect(levelNumber(4.5)).toBe('4,5');
+    expect(levelNumber(4.49)).toBe('4');
+    expect(levelNumber(3.99)).toBe('3,5');
+    expect(levelNumber(4.5, 'en')).toBe('4.5');
   });
 });

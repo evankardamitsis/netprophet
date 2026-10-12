@@ -1,4 +1,4 @@
-import { accusativeName, nameGender, type Copy } from '@netprophet/copy';
+import { accusativeName, nameGender, type Copy, levelNumber } from '@netprophet/copy';
 import type { PlayerCard, PlayerMatchLine, PlayerProfile, PlayerRef } from '@netprophet/db';
 import { initials, when } from './feed';
 import { dayLabel } from './results';
@@ -59,7 +59,7 @@ const fullName = (p: Pick<PlayerRef, 'first_name' | 'surname'>) => `${p.first_na
 export function toPlayerRow(card: PlayerCard, areas: Record<string, string>, t: Copy): PlayerRow {
   const g = nameGender(card.first_name, card.gender);
   const parts = [
-    card.level_tier != null ? `${t.level.label} ${card.level_tier}` : null,
+    card.level_tier != null ? `${t.level.label} ${levelNumber(card.level_tier)}` : null,
     card.area_id ? areas[card.area_id] ?? null : null,
     card.is_followed ? t.players.friend[g] : null,
   ].filter(Boolean);
@@ -100,7 +100,7 @@ export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Co
     id: p.id,
     first: p.first_name,
     surname: p.surname,
-    level: p.level_tier != null ? `${t.level.label} ${p.level_tier}` : null,
+    level: p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
     sub: [area, p.level_tier != null ? dir : null].filter(Boolean).join(' · '),
     record: fmt(t.players.record, { w, wins: plural(w, t.players.wins), l, losses: plural(l, t.players.losses) }),
     form: p.form,

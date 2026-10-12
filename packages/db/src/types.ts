@@ -392,6 +392,10 @@ export type Database = {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
       };
+      admin_recompute_levels: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_resolve_dispute: {
         Args: { p_match_id: string; p_decision: string };
         Returns: Json;

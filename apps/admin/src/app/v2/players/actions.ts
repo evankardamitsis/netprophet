@@ -44,3 +44,15 @@ export async function unclaimPlayer(playerId: string): Promise<ActionResult> {
 export async function mergeInto(playerId: string, targetId: string): Promise<ActionResult> {
   return act('admin_decide_player', { p_player_id: playerId, p_action: 'merge', p_target: targetId }, 'Merged.');
 }
+
+/** the nightly level run, now (api.admin_recompute_levels) */
+export async function recomputeLevels(): Promise<ActionResult> {
+  try {
+    const { data, error } = await (await staffRpc())('admin_recompute_levels', {});
+    if (error) return { ok: false, message: error.message };
+    revalidatePath('/v2/players');
+    return { ok: true, message: `Levels recomputed for ${(data as { players: number }).players} players.` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'failed' };
+  }
+}
