@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type ProState, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { MOCK_MATCHES } from '../mock/matches';
@@ -270,6 +270,60 @@ export function useMePage(): MePageState {
   }, [refresh]);
 
   return { view, loading, error, refresh };
+}
+
+/** The guest's Pro on sample data: off, and «Γίνε μέλος» puts them on the list for this session. */
+let mockPro: ProState = { pro: false, current: null, waitlisted: false };
+
+export interface ProHookState {
+  state: ProState | null;
+  loading: boolean;
+  /** «Γίνε μέλος» while checkout is not live: the list; false when it failed */
+  join: () => Promise<boolean>;
+  refresh: () => Promise<void>;
+}
+
+/** Whether you have Pro (api.get_pro); one rule for every Pro gate in the app. */
+export function usePro(): ProHookState {
+  const api = useApi();
+  const [state, setState] = useState<ProState | null>(api ? null : mockPro);
+  const [loading, setLoading] = useState(api !== null);
+
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setState(mockPro);
+      return;
+    }
+    setLoading(true);
+    try {
+      setState(await api.getPro());
+    } catch {
+      // keep the last state; the screen treats unknown as no Pro
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const join = useCallback(async () => {
+    if (!api) {
+      mockPro = { ...mockPro, waitlisted: true };
+      setState(mockPro);
+      return true;
+    }
+    try {
+      await api.joinProWaitlist();
+      setState((s) => (s ? { ...s, waitlisted: true } : s));
+      return true;
+    } catch {
+      return false;
+    }
+  }, [api]);
+
+  return { state, loading, join, refresh };
 }
 
 /** Area names for the guest's sample data or from the database. */

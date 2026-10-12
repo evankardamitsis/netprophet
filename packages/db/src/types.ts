@@ -364,6 +364,10 @@ export type Database = {
         Args: { p_days?: number };
         Returns: Json;
       };
+      admin_grant_pro: {
+        Args: { p_user_id: string; p_days?: number };
+        Returns: Json;
+      };
       admin_set_result: {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
         Returns: Json;
@@ -420,9 +424,17 @@ export type Database = {
         Args: { p_limit?: number };
         Returns: Json;
       };
+      get_pro: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_results: {
         Args: { p_days?: number; p_limit?: number };
         Returns: Json;
+      };
+      join_pro_waitlist: {
+        Args: Record<PropertyKey, never>;
+        Returns: boolean;
       };
       mark_inbox_seen: {
         Args: { p_ids: string[] };

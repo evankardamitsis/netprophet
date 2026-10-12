@@ -64,7 +64,7 @@ Base assumes 2.5% pay, which is unproven.
 1. **Questionnaire:**
    - Ask 10 to 15 roster players: "Which of the 5 Pro points would you pay for, and how much?"
    - Cost: zero.
-2. **Fake door in the prototype:**
+2. **Fake door in the prototype:** dropped 12 Oct 2026; Pro is built for real and sold on the web first (see STATUS.md).
    - Share the prototype (or a 30-second video) with 50 to 100 roster players.
    - At the end, a «Γίνε μέλος» button shows a price (3,99 or 7,99).
    - Pressing it says "not yet, you're on the list".

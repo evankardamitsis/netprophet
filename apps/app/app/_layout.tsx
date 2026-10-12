@@ -54,6 +54,7 @@ function Routes() {
         <Stack.Protected guard={signedIn && !onboarding}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="add-match" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="pro" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && (onboarding || (__DEV__ && (guest || !isLive)))}>
           <Stack.Screen name="onboarding" />
