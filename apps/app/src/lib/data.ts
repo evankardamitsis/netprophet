@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RpcError, type ProState, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
+import { mockScout } from '../mock/scout';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
@@ -10,6 +11,8 @@ import { useAuth } from './auth';
 import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
+import { toScoutView, type ScoutView } from './scout';
+import { when } from './feed';
 import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
 import {
@@ -270,6 +273,48 @@ export function useMePage(): MePageState {
   }, [refresh]);
 
   return { view, loading, error, refresh };
+}
+
+export type ScoutError = 'pro_required' | 'not_your_match' | 'match_over' | 'failed';
+
+export interface ScoutState {
+  /** «Σήμερα 18:00» */
+  when: string | null;
+  opponents: ScoutView[];
+  loading: boolean;
+  error: ScoutError | null;
+  refresh: () => Promise<void>;
+}
+
+/** «Ο αντίπαλος πριν το ματς» for your match; the database refuses anything but your own upcoming match with Pro. */
+export function useScout(matchId: string): ScoutState {
+  const t = useCopy();
+  const api = useApi();
+  const [state, setState] = useState<Omit<ScoutState, 'refresh'>>({ when: null, opponents: [], loading: true, error: null });
+
+  const refresh = useCallback(async () => {
+    setState((s) => ({ ...s, loading: true }));
+    try {
+      const now = new Date();
+      const [scout, areas] = await Promise.all([api ? api.getScout(matchId) : mockScout(matchId, now), areasFor(api !== null)]);
+      setState({
+        when: scout.starts_at ? when(scout.starts_at, now, t).label ?? null : null,
+        opponents: scout.opponents.map((p) => toScoutView(p, areas, t)),
+        loading: false,
+        error: null,
+      });
+    } catch (err) {
+      const code = err instanceof RpcError ? err.code : '';
+      const error: ScoutError = code === 'pro_required' || code === 'not_your_match' || code === 'match_over' ? code : 'failed';
+      setState({ when: null, opponents: [], loading: false, error });
+    }
+  }, [api, matchId, t]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { ...state, refresh };
 }
 
 /** The guest's Pro on sample data: off, and «Γίνε μέλος» puts them on the list for this session. */

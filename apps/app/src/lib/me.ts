@@ -29,6 +29,8 @@ export interface MeView {
   votes: { title: string; sub: string };
   last: { win: boolean; score: string; when: string; against: string }[];
   next: string | null;
+  /** your next match, for «Ο αντίπαλος πριν το ματς» */
+  nextMatchId: string | null;
   friends: { count: number; initials: string[] };
 }
 
@@ -121,6 +123,7 @@ export function toMeView(
       against: (profile?.last[i]?.against ?? '').replace(/^·\s*/, ''),
     })),
     next: profile?.next ?? null,
+    nextMatchId: player?.next_match?.match_id ?? null,
     friends: { count: page.friends.count, initials: page.friends.first.map((f) => initials(f.first_name, f.surname)) },
   };
 }
