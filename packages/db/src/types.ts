@@ -360,6 +360,10 @@ export type Database = {
       };
     };
     Functions: {
+      admin_decide_player: {
+        Args: { p_player_id: string; p_action: string; p_target?: string; p_first?: string; p_surname?: string };
+        Returns: Json;
+      };
       admin_desk: {
         Args: { p_days?: number };
         Returns: Json;
@@ -376,12 +380,24 @@ export type Database = {
         Args: { p_people: Json };
         Returns: Json;
       };
+      admin_moderation: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_resolve_dispute: {
+        Args: { p_match_id: string; p_decision: string };
+        Returns: Json;
+      };
       admin_save_tournament: {
         Args: { p: Json };
         Returns: string;
       };
       admin_set_result: {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
+        Returns: Json;
+      };
+      admin_tournament_suggestion: {
+        Args: { p_text: string; p_tournament_id?: string };
         Returns: Json;
       };
       admin_tournaments: {
