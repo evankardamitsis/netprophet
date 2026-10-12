@@ -103,7 +103,22 @@ export function Segmented<T extends string>({ options, value, onChange }: { opti
 }
 
 /** .jc: a white chip that turns ink with a lime dot when chosen, settling with a small bounce */
-export function Chip({ on, onPress, children, minHeight = 50, center = true }: { on: boolean; onPress: () => void; children: ReactNode; minHeight?: number; center?: boolean }) {
+export function Chip({
+  on,
+  onPress,
+  children,
+  minHeight = 50,
+  center = true,
+  bg = colors.white,
+}: {
+  on: boolean;
+  onPress: () => void;
+  children: ReactNode;
+  minHeight?: number;
+  center?: boolean;
+  /** the chip's colour when not chosen; paper inside a white card */
+  bg?: string;
+}) {
   const settle = useSharedValue(1);
   const fill = useSharedValue(on ? 1 : 0);
   const mounted = useRef(false);
@@ -122,7 +137,7 @@ export function Chip({ on, onPress, children, minHeight = 50, center = true }: {
   const ink = useAnimatedStyle(() => ({ opacity: fill.value }));
   return (
     <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: on }} onPress={onPress} style={{ flex: 1 }}>
-      <Animated.View style={[styles.chip, { minHeight, alignItems: center ? 'center' : 'flex-start' }, box]}>
+      <Animated.View style={[styles.chip, { minHeight, alignItems: center ? 'center' : 'flex-start', backgroundColor: bg }, box]}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.chipInk, ink]} />
         {on ? <View style={styles.chipDot} /> : null}
         <ChipText on={on}>{children}</ChipText>

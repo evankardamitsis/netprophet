@@ -125,8 +125,10 @@ export interface ResultRow {
   tournament: string | null;
   sides: { side: Side; players: FeedPlayer[] }[];
   winner_side: Side;
-  /** winner first */
+  /** winner first; empty when only the sets are known (player-logged), see score_summary */
   sets: SetScore[];
+  /** «2-1», sets won by the winner first */
+  score_summary?: string | null;
   retired: boolean;
   walkover: boolean;
   /** vote counts; null when nobody voted */
@@ -305,6 +307,45 @@ export interface ProState {
   current: { source: 'subscription' | 'gift' | 'promo' | 'migration'; starts_at: string; ends_at: string | null } | null;
   /** pressed «Γίνε μέλος» while checkout was not live */
   waitlisted: boolean;
+}
+
+/** A tournament for the «+ Ματς» picker (api.list_tournaments: active, not long finished). */
+export interface PublicTournament {
+  id: string;
+  name: string;
+  venue: string | null;
+  area_id: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+}
+
+/** Someone in the «+ Ματς» form: a roster player, or a new name (a pending player). */
+export type LogPerson = { player_id: string } | { new: { first: string; surname: string } };
+
+export type MatchFormat = 'singles' | 'doubles' | 'mixed';
+
+export interface LogMatchInput {
+  mode: 'played' | 'soon';
+  /** «2026-10-12», Athens day */
+  date: string;
+  format: MatchFormat;
+  tournament_id?: string | null;
+  /** «Άλλο»: a tournament we do not have yet, for the moderation queue */
+  tournament_suggestion?: string | null;
+  partner?: LogPerson;
+  opponents?: LogPerson[];
+  result?: { won: boolean; sets: '2-0' | '2-1' };
+  /** «Αυτό είναι το ματς σου;»: add the result to this match instead of a new one */
+  match_id?: string;
+}
+
+/** A match of yours with the same people, a day either way, no result yet (api.find_my_matches). */
+export interface MyMatchCandidate {
+  match_id: string;
+  starts_at: string;
+  format: MatchFormat;
+  tournament: string | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
 }
 
 export interface MeResult {

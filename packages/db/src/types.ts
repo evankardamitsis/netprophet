@@ -404,6 +404,10 @@ export type Database = {
         Args: { p_name: string; p_surname: string };
         Returns: { id: string; first_name: string; surname: string; area_id: string; match_score: number }[];
       };
+      find_my_matches: {
+        Args: { p_people: string[]; p_date: string; p_format: string };
+        Returns: Json;
+      };
       find_players: {
         Args: { p_query: string; p_limit?: number };
         Returns: Json;
@@ -459,6 +463,14 @@ export type Database = {
       join_pro_waitlist: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      list_tournaments: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      log_match: {
+        Args: { p: Json };
+        Returns: Json;
       };
       mark_inbox_seen: {
         Args: { p_ids: string[] };
