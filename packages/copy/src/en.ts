@@ -560,7 +560,7 @@ export const en: Copy = {
     sent: 'Got it. We will look into it.',
     block: 'Block',
     blockTitle: 'Block {to}?',
-    blockSub: 'You will not see the matches they log and they cannot send you kudos. They will not be told.',
+    blockSub: 'You will not see the matches they log and they cannot leave you comments. They will not be told.',
     blocked: 'Done. You will not see him again.',
     blockedF: 'Done. You will not see her again.',
     list: 'Blocked',
