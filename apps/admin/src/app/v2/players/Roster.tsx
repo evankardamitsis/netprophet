@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useTransition } from 'react';
 import { colors, ui } from '../ui';
-import { mergeInto, searchRoster, unclaimPlayer, updatePlayer, type ActionResult } from './actions';
+import { mergeInto, recomputeLevels, searchRoster, unclaimPlayer, updatePlayer, type ActionResult } from './actions';
 
 export interface RosterPlayer {
   player_id: string;
@@ -38,6 +38,8 @@ export function Roster() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<(ActionResult & { what: string }) | null>(null);
   const [tick, setTick] = useState(0);
+  // levels also recompute every night (docs/v2/level-algorithm.md)
+  const [recomputing, recompute] = useTransition();
 
   useEffect(() => {
     if (filter === 'all' && q.trim().length < 2) {
@@ -62,7 +64,12 @@ export function Roster() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h1 style={ui.h1}>Players</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <h1 style={ui.h1}>Players</h1>
+        <button style={ui.secondary} disabled={recomputing} onClick={() => recompute(async () => onNotice({ ...(await recomputeLevels()), what: 'Levels:' }))}>
+          Recompute levels
+        </button>
+      </div>
       {notice ? (
         <div
           role="status"

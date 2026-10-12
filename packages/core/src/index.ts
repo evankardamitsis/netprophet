@@ -8,6 +8,7 @@ export * from './rules/badges';
 export * from './rules/activity';
 export * from './rules/unlocks';
 export * from './rules/leaderboard';
+export * from './rules/level';
 export * from './rules/entitlements';
 export * from './sports/tennis';
 export * from './sports/tennisScore';
