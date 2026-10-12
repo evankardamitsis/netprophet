@@ -401,7 +401,7 @@ export type Database = {
         Returns: Json;
       };
       get_ladder: {
-        Args: { p_limit?: number; p_scope?: string };
+        Args: { p_scope?: string; p_limit?: number };
         Returns: Json;
       };
       get_me: {
