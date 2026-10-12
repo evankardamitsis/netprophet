@@ -157,6 +157,20 @@ export interface PlayerCard extends PlayerRef {
   form: ('W' | 'L')[];
 }
 
+/** «Ποια είναι η παρέα σου;» (api.suggest_players): a list row plus how many follow them. */
+export interface SuggestedPlayer extends PlayerCard {
+  followers: number;
+}
+
+/** api.find_matching_players: unclaimed players whose name matches the user's, best first. */
+export interface ClaimCandidate {
+  id: string;
+  first_name: string;
+  surname: string;
+  area_id: string | null;
+  match_score: number;
+}
+
 export interface PlayersHome {
   total_players: number;
   /** friends who do not play today, then today's players; never the viewer's own player */

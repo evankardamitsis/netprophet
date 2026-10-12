@@ -1,0 +1,54 @@
+import type { Copy } from '@netprophet/copy';
+import { fmt } from './votes';
+
+/**
+ * Onboarding (prototype V2, after the welcome screen): the order of steps and the small rules the
+ * screens share. Differs from the prototype in one place: the name comes first, because a real
+ * search for your player needs it (the prototype hard-codes «Βαγγέλης Κ»).
+ */
+export type Step = 'name' | 'claim' | 'play' | 'area' | 'known';
+
+/** the claimed path skips «Πώς παίζεις;»: a roster player already has a hand and a history */
+export function stepsFor(isNew: boolean): Step[] {
+  return isNew ? ['name', 'claim', 'play', 'area', 'known'] : ['name', 'claim', 'area', 'known'];
+}
+
+export const KNOWN_MIN = 3;
+
+/** «Διάλεξε 2 ακόμα» until the minimum, then «Συνέχεια · 3 φίλοι». */
+export function knownButton(n: number, t: Copy): { label: string; ready: boolean } {
+  if (n < KNOWN_MIN) return { label: fmt(t.onboarding.known.need, { n: KNOWN_MIN - n }), ready: false };
+  return {
+    label: fmt(t.onboarding.known.go, { n, friends: n === 1 ? t.onboarding.known.friends.one : t.onboarding.known.friends.many }),
+    ready: true,
+  };
+}
+
+export type Region = 'north' | 'center' | 'south';
+export const REGIONS: Region[] = ['north', 'center', 'south'];
+
+export interface Area {
+  id: string;
+  region: Region;
+  name: string;
+  sort: number;
+}
+
+/** Areas of one region, in their set order. */
+export function areasOf(areas: Area[], region: Region): Area[] {
+  return areas.filter((a) => a.region === region).sort((a, b) => a.sort - b.sort);
+}
+
+/** Split «Βαγγέλης Καρδαμίτσης» (from Google or the email name) into a first name and the rest. */
+export function splitName(full: string | null | undefined): { first: string; surname: string } {
+  const parts = (full ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2 || /[@\d_.]/.test(full ?? '')) return { first: parts.length === 1 && !/[@\d_.]/.test(parts[0]!) ? parts[0]! : '', surname: '' };
+  return { first: parts[0]!, surname: parts.slice(1).join(' ') };
+}
+
+export type SportChoice = 'tennis' | 'padel' | 'both';
+
+/** The profile keeps one primary sport; «Και τα δύο» starts with tennis and remembers both. */
+export function primarySport(choice: SportChoice): 'tennis' | 'padel' {
+  return choice === 'padel' ? 'padel' : 'tennis';
+}
