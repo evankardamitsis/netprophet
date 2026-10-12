@@ -25,10 +25,18 @@
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      "expo-image"
+      "expo-image",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7136d3b3-4932-48d5-a8f6-64b527e13d2a"
+      }
+    },
+    "owner": "evankardamitsis"
   }
 }

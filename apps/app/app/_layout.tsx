@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -6,7 +7,8 @@ import { StyleSheet } from 'react-native';
 import { useFonts } from 'expo-font';
 import { AuthProvider, useAuth } from '../src/lib/auth';
 import { OnboardingGateProvider, useOnboardingGate } from '../src/lib/onboardingGate';
-import { isLive } from '../src/lib/supabase';
+import { refreshPushToken } from '../src/lib/push';
+import { api, isLive } from '../src/lib/supabase';
 import { colors } from '../src/theme';
 
 export default function RootLayout() {
@@ -40,6 +42,11 @@ export default function RootLayout() {
 function Routes() {
   const { ready, session, guest } = useAuth();
   const gate = useOnboardingGate();
+  const userId = session?.user.id ?? null;
+  // a signed-in phone keeps its push token current (asking happens after the first vote)
+  useEffect(() => {
+    if (userId && api) void refreshPushToken(api);
+  }, [userId]);
   if (!ready) return null;
   // without a backend (mock mode) the app is open; live, everything but sign-in needs a session
   // (or, in development builds, the «Άλλη φορά» guest)
