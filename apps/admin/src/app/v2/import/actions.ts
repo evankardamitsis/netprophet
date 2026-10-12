@@ -36,7 +36,18 @@ export async function listTournaments(): Promise<Tournament[]> {
   return (await rpc('admin_tournaments', {})) as Tournament[];
 }
 
-export async function saveTournament(t: Partial<Tournament> & { name: string }): Promise<string> {
+export interface TournamentDraft {
+  id?: string;
+  name: string;
+  venue?: string;
+  area_id?: string;
+  /** clay, hard, grass, carpet, or '' for none yet; the database checks the value */
+  surface?: string;
+  starts_on?: string;
+  ends_on?: string;
+}
+
+export async function saveTournament(t: TournamentDraft): Promise<string> {
   return (await rpc('admin_save_tournament', { p: t })) as string;
 }
 
