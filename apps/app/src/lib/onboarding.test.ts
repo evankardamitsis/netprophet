@@ -1,13 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { areasOf, knownButton, primarySport, splitName, stepsFor, type Area } from './onboarding';
+import { areasOf, introNumber, knownButton, primarySport, splitName, stepsFor, type Area } from './onboarding';
 
 const t = getCopy('el');
 
 describe('stepsFor', () => {
   it('a new player also answers «Πώς παίζεις;»', () => {
-    expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known']);
-    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known']);
+    expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known', 'e1', 'e2', 'e3', 'e4']);
+    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known', 'e1', 'e2', 'e3', 'e4']);
+  });
+});
+
+describe('introNumber', () => {
+  it('numbers the four slides, not the setup steps', () => {
+    expect(introNumber('e1')).toBe(1);
+    expect(introNumber('e4')).toBe(4);
+    expect(introNumber('known')).toBe(0);
   });
 });
 

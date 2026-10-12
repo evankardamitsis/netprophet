@@ -4,12 +4,13 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GoSplash, IntroSlideView } from '../src/components/IntroSlides';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { useAuth } from '../src/lib/auth';
 import { useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
 import { usePress, useStgIn } from '../src/lib/motion';
-import { areasOf, knownButton, KNOWN_MIN, primarySport, REGIONS, splitName, stepsFor, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
+import { areasOf, introNumber, knownButton, KNOWN_MIN, primarySport, REGIONS, splitName, stepsFor, type IntroSlide, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
 import { colors, ease, fonts } from '../src/theme';
@@ -17,8 +18,8 @@ import { useOnboardingGate } from '../src/lib/onboardingGate';
 
 /**
  * Onboarding (prototype V2, after the welcome screen): your name, your player on the roster («Είσαι
- * ήδη εδώ;»), how you play (new players only), where you play, and who you know. The intro slides
- * come next (their own PR). No header or tab bar, one blue button per screen.
+ * ήδη εδώ;»), how you play (new players only), where you play, who you know, then the four intro
+ * slides and the «Ας ξεκινήσουμε» splash. No header or tab bar, one blue button per screen.
  */
 const IN_MS = 400;
 /** 60px titles: the padding, cancelled by a margin, keeps the tonos on iOS */
@@ -60,6 +61,7 @@ export default function OnboardingScreen() {
   const [known, setKnown] = useState<string[]>([]);
   const [skipped, setSkipped] = useState(false);
 
+  const [going, setGoing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -155,12 +157,18 @@ export default function OnboardingScreen() {
       ob.suggestions().then(setSuggested).catch(() => setSuggested([]));
     });
 
+  // the setup is saved here, so quitting during the slides still opens the app next time
   const knownDone = () =>
     run(async () => {
       await ob.follow(known);
-      await gate.finish({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null });
-      if (!session) router.replace('/');
+      await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null });
+      go(i + 1);
     });
+
+  const enterApp = useCallback(() => {
+    gate.open();
+    if (!session) router.replace('/');
+  }, [gate, session]);
 
   const skipKnown = () => {
     setSkipped(true);
@@ -306,6 +314,10 @@ export default function OnboardingScreen() {
             </>
           ) : null}
 
+          {introNumber(step) > 0 ? (
+            <IntroSlideView slide={step as IntroSlide} onNext={() => (step === 'e4' ? setGoing(true) : go(i + 1))} onBack={back} />
+          ) : null}
+
           {step === 'known' ? (
             <>
               <Title text={o.known.title} />
@@ -346,6 +358,7 @@ export default function OnboardingScreen() {
           ) : null}
         </StepIn>
       </ScrollView>
+      {going ? <GoSplash onDone={enterApp} /> : null}
     </KeyboardAvoidingView>
   );
 }
@@ -415,7 +428,7 @@ function Link({ label, onPress }: { label: string; onPress: () => void }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { flexGrow: 1, paddingHorizontal: 20 },
-  step: { gap: 12 },
+  step: { flexGrow: 1, gap: 12 },
   title: {
     fontFamily: fonts.displayHeavy,
     fontSize: 60,
