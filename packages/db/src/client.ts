@@ -18,6 +18,7 @@ import type {
   SetScore,
   Side,
   SuggestedPlayer,
+  WinLossSplits,
 } from './rpc';
 
 export const API_SCHEMA = 'api' as const;
@@ -75,6 +76,7 @@ export function rpc(client: NetprophetClient) {
     getMe: () => call<MeResult>(client, 'get_me', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),
+    getWinLoss: () => call<WinLossSplits>(client, 'get_win_loss', {}),
     getScout: (matchId: string) => call<Scout>(client, 'get_scout', { p_match_id: matchId }),
     joinProWaitlist: () => call<boolean>(client, 'join_pro_waitlist', {}),
     adminGrantPro: (userId: string, days = 30) => call<{ id: string; ends_at: string }>(client, 'admin_grant_pro', { p_user_id: userId, p_days: days }),

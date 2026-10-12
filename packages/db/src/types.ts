@@ -436,6 +436,10 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      get_win_loss: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       join_pro_waitlist: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;

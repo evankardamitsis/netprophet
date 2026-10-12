@@ -377,6 +377,23 @@ export const en: Copy = {
     over: 'This match has been played.',
     error: 'It did not load. Pull down to try again.',
   },
+  winLoss: {
+    title: 'Where you win, where you lose',
+    rows: {
+      morning: 'Morning matches',
+      evening: 'Evening matches',
+      deciding: 'In a third set',
+      lost_first: 'After losing the first set',
+      tiebreaks: 'In tie-breaks',
+      lefties: 'Against left-handers',
+      singles: 'Singles',
+      doubles: 'Doubles',
+      tournament: 'In tournaments',
+      friendly: 'In friendlies',
+    },
+    unlock: 'See where you lose with Pro ›',
+    empty: 'It needs a few more matches to show.',
+  },
   placeholder: {
     results: 'Results will show up here.',
     players: 'Players will show up here.',
