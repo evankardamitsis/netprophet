@@ -253,8 +253,8 @@ begin
       from core.matches m
       left join core.tournaments t on t.id = m.tournament_id
      where m.format = p_format and m.status <> 'void'
-       and m.starts_at between (p_date - 1)::timestamp at time zone 'Europe/Athens'
-                           and (p_date + 2)::timestamp at time zone 'Europe/Athens'
+       and m.starts_at >= ((p_date - 1)::timestamp at time zone 'Europe/Athens')
+       and m.starts_at <  ((p_date + 2)::timestamp at time zone 'Europe/Athens')
        and not exists (select 1 from core.match_results r where r.match_id = m.id)
        and exists (select 1 from core.match_participants mp where mp.match_id = m.id and mp.player_id = v_me)
        and coalesce((select bool_and(exists (select 1 from core.match_participants mp where mp.match_id = m.id and mp.player_id = x))
