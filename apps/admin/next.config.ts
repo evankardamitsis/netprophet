@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // v2 workspace packages ship TypeScript source
-  transpilePackages: ["@netprophet/db", "@netprophet/core", "@netprophet/tokens"],
+  transpilePackages: ["@netprophet/db", "@netprophet/core", "@netprophet/tokens", "@netprophet/ingest"],
   eslint: {
     ignoreDuringBuilds: false,
     dirs: ["src"],

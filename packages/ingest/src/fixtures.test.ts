@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { parseCsv, parseSheet } from './index';
+import { parseCsv, parseSheet, parseSheetExport } from './index';
 
 /**
  * The TAF RACE 2026-2027 sheet against parse_oop.py's own output (tools/match-data/fixtures). Every column of
@@ -41,5 +41,15 @@ describe('TAF RACE 2026-2027 against parse_oop.py', () => {
       players: o.players,
       flags: o.flags.join(';'),
     }).toEqual({ ...e, sets: JSON.parse(e.sets!), players: JSON.parse(e.players!) });
+  });
+});
+
+describe('TAF RACE 2026-2027 from the Google Sheet export', () => {
+  it('gives the same matches as the per-tab files', () => {
+    const fromExport = parseSheet(parseSheetExport(readFileSync(join(DIR, 'TAF_RACE_OOP_2026-2027.txt'), 'utf8')), 2026);
+    const manifest = JSON.parse(readFileSync(join(DIR, 'tabs/manifest.json'), 'utf8')) as { file: string; tab: string }[];
+    const fromTabs = parseSheet(manifest.map((m) => ({ name: m.tab, rows: parseCsv(readFileSync(join(DIR, 'tabs', m.file), 'utf8'), ',') })), 2026);
+    expect(fromExport).toHaveLength(54);
+    expect(fromExport.map((m) => [m.fingerprint, m.flags.join(';')])).toEqual(fromTabs.map((m) => [m.fingerprint, m.flags.join(';')]));
   });
 });

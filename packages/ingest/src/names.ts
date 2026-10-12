@@ -34,6 +34,11 @@ const NICKNAMES: Record<string, string> = {
   παναγιωτα: 'γιωτα',
 };
 
+/** the everyday form of a formal first name («ΕΥΑΓΓΕΛΟΣ» → «βαγγελησ»), folded; the name itself otherwise */
+export function everydayFirst(first: string): string {
+  return nameTokens(first).join(' ');
+}
+
 /** words of a name, folded, with formal first names made everyday */
 export function nameTokens(name: string): string[] {
   return fold(name)

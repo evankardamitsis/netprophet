@@ -1,5 +1,6 @@
 import { v2Configured } from '@/lib/v2/env';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
+import { Nav } from '../Nav';
 import { SignOut } from '../SignOut';
 import { ui } from '../ui';
 import { Desk, type DeskItem } from './Desk';
@@ -35,7 +36,7 @@ export default async function ResultsDesk() {
   return (
     <>
       <header style={ui.bar}>
-        <strong>NetProphet v2 · Results</strong>
+        <Nav here="results" />
         <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
           {staff.name} ({staff.role}) <SignOut />
         </span>
