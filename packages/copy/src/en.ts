@@ -358,6 +358,7 @@ export const en: Copy = {
     failed: 'Not saved. Try again.',
   },
   me: {
+    replayOnboarding: 'Run onboarding again',
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
     streak: 'streak',
     best: 'Best: {n}',

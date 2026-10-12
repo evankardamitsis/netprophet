@@ -374,6 +374,8 @@ export const el = {
     failed: 'Δεν αποθηκεύτηκε. Ξαναδοκίμασε.',
   },
   me: {
+    /** development builds only: run onboarding again */
+    replayOnboarding: 'Δες ξανά το onboarding',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
     streak: 'σερί',
     /** «ΠΡ: 9», your best σερί */

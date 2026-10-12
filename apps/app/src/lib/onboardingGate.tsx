@@ -21,9 +21,11 @@ interface Gate {
   save: (state: Record<string, unknown>) => Promise<void>;
   /** leaves onboarding for the app */
   open: () => void;
+  /** development builds: run onboarding again on this device (the server keeps «done»; finishing saves it again) */
+  replay: () => void;
 }
 
-const GateContext = createContext<Gate>({ status: 'done', save: async () => undefined, open: () => undefined });
+const GateContext = createContext<Gate>({ status: 'done', save: async () => undefined, open: () => undefined, replay: () => undefined });
 
 export function OnboardingGateProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
@@ -78,8 +80,9 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
     [userId],
   );
   const open = useCallback(() => setStatus('done'), []);
+  const replay = useCallback(() => setStatus('needed'), []);
 
-  const value = useMemo(() => ({ status, save, open }), [status, save, open]);
+  const value = useMemo(() => ({ status, save, open, replay }), [status, save, open, replay]);
   return <GateContext.Provider value={value}>{children}</GateContext.Provider>;
 }
 

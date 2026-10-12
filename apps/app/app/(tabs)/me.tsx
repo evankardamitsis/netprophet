@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
+import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
 import { useMePage, useMyKudos, usePro, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
@@ -357,6 +358,7 @@ function Settings() {
   const { signOut } = useAuth();
   const { state } = usePro();
   const [open, setOpen] = useState(false);
+  const gate = useOnboardingGate();
   const active = state ? activeLine(state, t) : null;
   return (
     <View style={styles.card}>
@@ -373,6 +375,11 @@ function Settings() {
             </View>
             <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
           </Pressable>
+          {__DEV__ ? (
+            <Pressable accessibilityRole="button" onPress={gate.replay} style={styles.linkHit}>
+              <Text style={styles.signOut}>{t.me.replayOnboarding}</Text>
+            </Pressable>
+          ) : null}
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.auth.signOut}</Text>
           </Pressable>
