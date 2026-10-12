@@ -365,6 +365,36 @@ export interface PendingConfirmation {
 /** «Έτσι έγινε», a fix from your side, or «Δεν έπαιξα εγώ» */
 export type ConfirmationAnswer = { answer: 'yes' } | { answer: 'fix'; fix: { winner: 'me' | 'them'; sets: '2-0' | '2-1' } } | { answer: 'not_me' };
 
+/** a link the logger sends to an opponent not in the app (api.match_links) */
+export interface MatchLink {
+  player_id: string;
+  first_name: string;
+  surname: string;
+  gender: 'm' | 'f' | null;
+  token: string;
+}
+
+/** «Πες κι εσύ μια καλή κουβέντα» */
+export type LinkKudo = 'serve' | 'backhand' | 'calm' | 'feet' | 'fair_play' | 'company';
+
+/** what /m/<token> shows: the match from the opponent's side (api.get_match_link, no account needed) */
+export interface MatchLinkView {
+  match_id: string;
+  format: MatchFormat;
+  starts_at: string;
+  tournament: string | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
+  my_side: Side;
+  winner_side: Side | null;
+  /** «2-1», winner first */
+  score: string | null;
+  player: { id: string; first_name: string; surname: string; gender: 'm' | 'f' | null; hidden: boolean; claimed: boolean };
+  logged_by: { player_id: string; first_name: string; surname: string; gender: 'm' | 'f' | null } | null;
+  state: 'pending' | 'confirmed' | 'disputed' | 'not_me';
+  kudo: LinkKudo | null;
+  expires_at: string;
+}
+
 export interface MeResult {
   user_id: string;
   profile: {

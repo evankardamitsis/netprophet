@@ -8,6 +8,8 @@ describe('stepsFor', () => {
   it('a new player also answers «Πώς παίζεις;»', () => {
     expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known', 'e1', 'e2', 'e3', 'e4']);
     expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known', 'e1', 'e2', 'e3', 'e4']);
+    // from an opponent link: confirm the player, pick who you know, done
+    expect(stepsFor(false, true)).toEqual(['claim', 'known']);
   });
 });
 
@@ -24,6 +26,9 @@ describe('knownButton', () => {
     expect(knownButton(0, t)).toEqual({ label: 'Διάλεξε 3 ακόμα', ready: false });
     expect(knownButton(2, t)).toEqual({ label: 'Διάλεξε 1 ακόμα', ready: false });
     expect(knownButton(3, t)).toEqual({ label: 'Συνέχεια · 3 φίλοι', ready: true });
+    // after a link one is enough
+    expect(knownButton(0, t, 1)).toEqual({ label: 'Διάλεξε 1 ακόμα', ready: false });
+    expect(knownButton(1, t, 1).ready).toBe(true);
   });
 });
 

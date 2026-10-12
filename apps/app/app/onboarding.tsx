@@ -9,9 +9,13 @@ import { track } from '../src/lib/analytics';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { useAuth } from '../src/lib/auth';
-import { useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
+import type { MatchLinkView } from '@netprophet/db';
+import { nameGender } from '@netprophet/copy';
+import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
+import { mockLinkView, who } from '../src/lib/link';
+import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
 import { usePress, useStgIn } from '../src/lib/motion';
-import { areasOf, introNumber, knownButton, KNOWN_MIN, primarySport, REGIONS, splitName, stepsFor, type IntroSlide, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
+import { areasOf, introNumber, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type IntroSlide, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
 import { colors, ease, fonts } from '../src/theme';
@@ -21,6 +25,8 @@ import { useOnboardingGate } from '../src/lib/onboardingGate';
  * Onboarding (prototype V2, after the welcome screen): your name, your player on the roster («Είσαι
  * ήδη εδώ;»), how you play (new players only), where you play, who you know, then the four intro
  * slides and the «Ας ξεκινήσουμε» splash. No header or tab bar, one blue button per screen.
+ * Someone who came from an opponent link confirms the link's player and picks who they know (at least one, the
+ * logger already picked), then goes straight in (prototype fromLink).
  */
 const IN_MS = 400;
 /** 60px titles: the padding, cancelled by a margin, keeps the tonos on iOS */
@@ -36,8 +42,33 @@ export default function OnboardingScreen() {
   const allAreas = useRegionAreas();
   const scroll = useRef<ScrollView>(null);
 
+  const api = useApi();
+  // «Κράτα το ματς στο προφίλ σου»: the link that brought them here, if any
+  const [link, setLink] = useState<{ token: string; view: MatchLinkView } | null>(null);
+  const [linkChecked, setLinkChecked] = useState(false);
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const token = await readPendingLink();
+      let found: { token: string; view: MatchLinkView } | null = null;
+      if (token) {
+        try {
+          found = { token, view: api ? await api.getMatchLink(token) : mockLinkView() };
+        } catch {
+          await clearPendingLink();
+        }
+      }
+      if (!live) return;
+      setLink(found);
+      setLinkChecked(true);
+    })();
+    return () => {
+      live = false;
+    };
+  }, [api]);
+
   const [isNew, setIsNew] = useState(false);
-  const steps = stepsFor(isNew);
+  const steps = stepsFor(isNew, link !== null);
   const [i, setI] = useState(0);
   const step: Step = steps[Math.min(i, steps.length - 1)]!;
 
@@ -144,6 +175,39 @@ export default function OnboardingScreen() {
       setError(r === 'taken' ? o.claim.taken : r === 'other' ? o.claim.otherClaimed : o.claim.failed);
     });
 
+  // from a link: the link's player becomes theirs, and the logger tops «Ποιους ξέρεις», already picked
+  const claimLink = () =>
+    run(async () => {
+      if (!link) return;
+      const p = link.view.player;
+      try {
+        if (api) await api.claimViaLink(link.token);
+        track('link_claimed', { result: 'ok' });
+      } catch {
+        track('link_claimed', { result: 'taken' });
+        setError(t.link.claimTaken);
+        return;
+      }
+      if (!first.trim() && !surname.trim()) {
+        await ob.saveProfile({ first_name: p.first_name, surname: p.surname, display_name: `${p.first_name} ${p.surname}` });
+      }
+      go(i + 1);
+      const lg = link.view.logged_by;
+      const rest = await ob.suggestions().catch(() => []);
+      setSuggested([
+        ...(lg ? [{ id: lg.player_id, name: `${lg.first_name} ${lg.surname}`, initials: '', sub: '', form: [], followers: 0 }] : []),
+        ...rest.filter((r) => r.id !== lg?.player_id),
+      ]);
+      if (lg) setKnown([lg.player_id]);
+    });
+
+  // «Δεν είμαι εγώ»: forget the link and go the usual way
+  const dropLink = () => {
+    void clearPendingLink();
+    setLink(null);
+    go(0);
+  };
+
   const claimNew = () =>
     run(async () => {
       await ob.setClaimStatus('creation_requested');
@@ -164,19 +228,25 @@ export default function OnboardingScreen() {
       ob.suggestions().then(setSuggested).catch(() => setSuggested([]));
     });
 
-  // the setup is saved here, so quitting during the slides still opens the app next time
-  const knownDone = () =>
-    run(async () => {
-      await ob.follow(known);
-      await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null });
-      track('onboarding_done', { claimed: !isNew && picked !== null, known: known.length });
-      go(i + 1);
-    });
-
   const enterApp = useCallback(() => {
     gate.open();
     if (!session) router.replace('/');
   }, [gate, session]);
+
+  // the setup is saved here, so quitting during the slides still opens the app next time
+  const knownDone = () =>
+    run(async () => {
+      await ob.follow(known);
+      if (link) {
+        await gate.save({ via: 'link', claimed: true });
+        track('onboarding_done', { claimed: true, known: known.length });
+        await clearPendingLink();
+        return enterApp();
+      }
+      await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null });
+      track('onboarding_done', { claimed: !isNew && picked !== null, known: known.length });
+      go(i + 1);
+    });
 
   const skipKnown = () => {
     setSkipped(true);
@@ -202,8 +272,11 @@ export default function OnboardingScreen() {
   const toggleArea = (id: string) => setAreaIds((a) => (a.includes(id) ? a.filter((x) => x !== id) : a.concat(id)));
 
   const nameReady = first.trim().length > 0 && surname.trim().length > 0 && sport !== null;
-  const kb = knownButton(known.length, t);
+  const kb = knownButton(known.length, t, link ? KNOWN_MIN_LINK : KNOWN_MIN);
   const knownList: (PlayerRow & { followers?: number })[] = found ?? suggested;
+
+  if (!linkChecked) return <View style={styles.screen} />;
+  const lp = link?.view.player;
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -236,7 +309,18 @@ export default function OnboardingScreen() {
             </>
           ) : null}
 
-          {step === 'claim' ? (
+          {step === 'claim' && link && lp ? (
+            <>
+              <Title text={nameGender(lp.first_name, lp.gender) === 'f' ? t.link.claimTitleF : t.link.claimTitle} />
+              <Text style={styles.sub}>{t.link.claimSub}</Text>
+              <Candidate row={{ id: lp.id, name: `${lp.first_name} ${lp.surname}`, sub: link.view.tournament ?? '' }} index={0} on onPress={() => undefined} />
+              <Err text={error} />
+              <Primary label={t.link.claimYes} busy={busy} onPress={claimLink} />
+              <Dashed label={t.link.claimNo} onPress={dropLink} />
+            </>
+          ) : null}
+
+          {step === 'claim' && !link ? (
             <>
               <Title text={o.claim.title} />
               <Text style={styles.sub}>{fmt(o.claim.subtitle, { n: roster || '1.500' })}</Text>
@@ -330,7 +414,9 @@ export default function OnboardingScreen() {
             <>
               <Title text={o.known.title} />
               <Text style={styles.sub}>{o.known.subtitle}</Text>
-              <Text style={styles.note}>{skipped ? o.known.noteSuggested : o.known.note}</Text>
+              <Text style={styles.note}>
+                {link?.view.logged_by ? fmt(t.link.knownNote, { who: who(link.view.logged_by) }) : skipped ? o.known.noteSuggested : o.known.note}
+              </Text>
               <TextInput
                 value={query}
                 onChangeText={(q) => {
@@ -360,7 +446,7 @@ export default function OnboardingScreen() {
               <Primary label={kb.label} ready={kb.ready} busy={busy} onPress={knownDone} />
               <View style={styles.bottomRow}>
                 <Back label={o.back} onPress={back} />
-                <Link label={o.known.none} onPress={skipKnown} />
+                {link ? null : <Link label={o.known.none} onPress={skipKnown} />}
               </View>
             </>
           ) : null}

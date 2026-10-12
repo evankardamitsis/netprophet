@@ -5,8 +5,11 @@ import type {
   ClaimCandidate,
   ConfirmationAnswer,
   GetFeedResult,
+  LinkKudo,
   LogMatchInput,
   MatchFormat,
+  MatchLink,
+  MatchLinkView,
   MyMatchCandidate,
   Ladder,
   LadderScope,
@@ -89,6 +92,19 @@ export function rpc(client: NetprophetClient) {
         p_answer: a.answer,
         p_fix: a.answer === 'fix' ? a.fix : null,
       }),
+    /** the opponent link: the logger's side */
+    matchLinks: (matchId: string) => call<MatchLink[]>(client, 'match_links', { p_match_id: matchId }),
+    /** the opponent link: the visitor's side, with or without an account */
+    getMatchLink: (token: string) => call<MatchLinkView>(client, 'get_match_link', { p_token: token }),
+    answerLink: (token: string, a: ConfirmationAnswer) =>
+      call<{ match_id: string; outcome: 'confirmed' | 'corrected' | 'disputed' }>(client, 'answer_link', {
+        p_token: token,
+        p_answer: a.answer,
+        p_fix: a.answer === 'fix' ? a.fix : null,
+      }),
+    linkKudo: (token: string, kudo: LinkKudo) => call<null>(client, 'link_kudo', { p_token: token, p_kudo: kudo }),
+    hideViaLink: (token: string, hidden: boolean) => call<{ player_id: string; hidden: boolean }>(client, 'hide_via_link', { p_token: token, p_hidden: hidden }),
+    claimViaLink: (token: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_via_link', { p_token: token }),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),

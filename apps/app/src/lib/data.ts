@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type ConfirmationAnswer, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type ConfirmationAnswer, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockScout } from '../mock/scout';
@@ -12,6 +12,7 @@ import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
 import { askForPushOnce } from './push';
+import { MOCK_TOKEN, mockLinkView } from './link';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
 import { winLossRows, type WinLossRow } from './winLoss';
@@ -407,6 +408,83 @@ export function useConfirmations(): { items: PendingConfirmation[]; answer: (mat
     [api],
   );
   return { items, answer };
+}
+
+/**
+ * The opponent link /m/<token> (prototype isOpv). Works without an account; mock mode and the dev guest get the
+ * prototype's match. `view` is null while loading and 'gone' for a wrong or expired link.
+ */
+export function useMatchLink(token: string) {
+  const api = useApi();
+  const [view, setView] = useState<MatchLinkView | 'gone' | null>(null);
+  useEffect(() => {
+    let live = true;
+    if (!api) {
+      setView(mockLinkView());
+      return;
+    }
+    api
+      .getMatchLink(token)
+      .then((v) => {
+        if (!live) return;
+        setView(v);
+        track('link_opened', { state: v.state });
+      })
+      .catch(() => {
+        if (!live) return;
+        setView('gone');
+        track('link_opened', { state: 'gone' });
+      });
+    return () => {
+      live = false;
+    };
+  }, [api, token]);
+
+  const answer = useCallback(
+    async (a: ConfirmationAnswer): Promise<ConfirmOutcome> => {
+      if (!api) return a.answer === 'yes' ? 'confirmed' : a.answer === 'not_me' ? 'disputed' : a.fix.winner === 'them' ? 'corrected' : 'disputed';
+      try {
+        const r = await api.answerLink(token, a);
+        track('link_answered', { outcome: r.outcome });
+        return r.outcome;
+      } catch {
+        return 'failed';
+      }
+    },
+    [api, token],
+  );
+  const kudo = useCallback(async (k: LinkKudo) => {
+    if (api) await api.linkKudo(token, k).catch(() => undefined);
+  }, [api, token]);
+  const hide = useCallback(
+    async (hidden: boolean): Promise<boolean> => {
+      if (!api) return true;
+      try {
+        await api.hideViaLink(token, hidden);
+        track('link_hidden', { hidden });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [api, token],
+  );
+  return { view, answer, kudo, hide };
+}
+
+/** the logger's links for a match just logged: one per opponent not in the app (none in mock mode) */
+export function useMatchLinks(matchId: string | null) {
+  const api = useApi();
+  const [links, setLinks] = useState<MatchLink[]>([]);
+  useEffect(() => {
+    if (!matchId) return;
+    if (!api) {
+      setLinks(matchId === 'mock' ? [{ player_id: 'gio', first_name: 'Γιώργος', surname: 'Παπαδάκης', gender: 'm', token: MOCK_TOKEN }] : []);
+      return;
+    }
+    api.matchLinks(matchId).then(setLinks).catch(() => setLinks([]));
+  }, [api, matchId]);
+  return links;
 }
 
 const MOCK_TOURNAMENTS: PublicTournament[] = [
