@@ -360,6 +360,10 @@ export type Database = {
       };
     };
     Functions: {
+      admin_close_report: {
+        Args: { p_report_id: string; p_hide: boolean };
+        Returns: Json;
+      };
       admin_decide_player: {
         Args: { p_player_id: string; p_action: string; p_target?: string; p_first?: string; p_surname?: string };
         Returns: Json;
@@ -416,6 +420,14 @@ export type Database = {
         Args: { p_token: string; p_answer: string; p_fix?: Json };
         Returns: Json;
       };
+      block: {
+        Args: { p_player_id?: string; p_match_id?: string };
+        Returns: Json;
+      };
+      block_target: {
+        Args: { p_player_id?: string; p_match_id?: string };
+        Returns: Json;
+      };
       cast_vote: {
         Args: { p_match_id: string; p_side: number; p_client_event_id?: string };
         Returns: Json;
@@ -447,6 +459,10 @@ export type Database = {
       follow_players: {
         Args: { p_player_ids: string[]; p_source?: string };
         Returns: number;
+      };
+      get_blocks: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       get_confirmations: {
         Args: Record<PropertyKey, never>;
@@ -544,6 +560,10 @@ export type Database = {
         Args: { p_token: string; p_platform: string };
         Returns: boolean;
       };
+      report: {
+        Args: { p_entity_type: string; p_entity_id: string; p_reason: string; p_note?: string };
+        Returns: Json;
+      };
       resolve_match: {
         Args: { p_match_id: string };
         Returns: Json;
@@ -559,6 +579,10 @@ export type Database = {
       suggest_players: {
         Args: { p_limit?: number };
         Returns: Json;
+      };
+      unblock: {
+        Args: { p_user_id: string };
+        Returns: undefined;
       };
       unfollow_player: {
         Args: { p_player_id: string };
