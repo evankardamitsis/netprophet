@@ -368,8 +368,24 @@ export type Database = {
         Args: { p_user_id: string; p_days?: number };
         Returns: Json;
       };
+      admin_import_matches: {
+        Args: { p_tournament_id: string; p_rows: Json };
+        Returns: Json;
+      };
+      admin_match_people: {
+        Args: { p_people: Json };
+        Returns: Json;
+      };
+      admin_save_tournament: {
+        Args: { p: Json };
+        Returns: string;
+      };
       admin_set_result: {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
+        Returns: Json;
+      };
+      admin_tournaments: {
+        Args: Record<PropertyKey, never>;
         Returns: Json;
       };
       admin_void_match: {

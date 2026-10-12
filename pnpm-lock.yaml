@@ -60,6 +60,9 @@ importers:
       '@netprophet/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@netprophet/ingest':
+        specifier: workspace:^
+        version: link:../../packages/ingest
       '@netprophet/lib':
         specifier: workspace:*
         version: link:../../packages/lib

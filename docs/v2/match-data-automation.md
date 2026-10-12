@@ -71,7 +71,13 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
 5. Adapters for ITF, tennisleague.gr, athenstennis.gr
 6. Before go-live: one-off import of last season's files
 
-## Open questions (ask Evan)
-- Is a "wo" winner always PLAYER 1?
-- Does the organiser's score always override two players who agreed?
-- Do provisional players appear by name in feeds before they are claimed?
+## Answered (Evan, 12 Oct 2026)
+- A "wo" winner is not always PLAYER 1: the sheet does not say who won, so the admin picks the winner on import.
+- The organiser's score always overrides, including two players who agreed.
+- Imported players show by name in feeds before anyone claims them; claiming only links an account to the player.
+
+## Built (M1 import)
+- `packages/ingest`: the parse_oop.py port, checked against the TAF RACE fixture (54/54).
+- Admin `/v2/import`: tournament (with surface), the sheet export or one CSV tab, people matched to the roster
+  (aliases, trigram scores), a review table, then import. Same fingerprint = update; the organiser's score is the
+  result. Not yet: moved-match detection, the 08:00/22:00 runs, the review email, the records sheet.

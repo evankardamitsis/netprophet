@@ -12,6 +12,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@netprophet/core": "workspace:^",
     "@netprophet/db": "workspace:^",
+    "@netprophet/ingest": "workspace:^",
     "@netprophet/lib": "workspace:*",
     "@netprophet/tokens": "workspace:^",
     "@radix-ui/react-alert-dialog": "^1.1.14",
