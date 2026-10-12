@@ -76,6 +76,8 @@ export default function OnboardingScreen() {
   const [first, setFirst] = useState('');
   const [surname, setSurname] = useState('');
   const [sport, setSport] = useState<SportChoice | null>(null);
+  // sign-up is for 15 and over (founder, 12 Oct 2026; the Greek age of digital consent)
+  const [adult, setAdult] = useState(false);
   // claim
   const [roster, setRoster] = useState('');
   const [candidates, setCandidates] = useState<ClaimRow[] | null>(null);
@@ -238,12 +240,12 @@ export default function OnboardingScreen() {
     run(async () => {
       await ob.follow(known);
       if (link) {
-        await gate.save({ via: 'link', claimed: true });
+        await gate.save({ via: 'link', claimed: true, age_15: true });
         track('onboarding_done', { claimed: true, known: known.length });
         await clearPendingLink();
         return enterApp();
       }
-      await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null });
+      await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null, age_15: true });
       track('onboarding_done', { claimed: !isNew && picked !== null, known: known.length });
       go(i + 1);
     });
@@ -271,7 +273,7 @@ export default function OnboardingScreen() {
   const toggleKnown = (id: string) => setKnown((k) => (k.includes(id) ? k.filter((x) => x !== id) : k.concat(id)));
   const toggleArea = (id: string) => setAreaIds((a) => (a.includes(id) ? a.filter((x) => x !== id) : a.concat(id)));
 
-  const nameReady = first.trim().length > 0 && surname.trim().length > 0 && sport !== null;
+  const nameReady = first.trim().length > 0 && surname.trim().length > 0 && sport !== null && adult;
   const kb = knownButton(known.length, t, link ? KNOWN_MIN_LINK : KNOWN_MIN);
   const knownList: (PlayerRow & { followers?: number })[] = found ?? suggested;
 
@@ -304,6 +306,7 @@ export default function OnboardingScreen() {
                 value={sport}
                 onChange={setSport}
               />
+              <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
               <Err text={error} />
               <Primary label={o.next} ready={nameReady} busy={busy} onPress={nameNext} />
             </>
@@ -314,8 +317,9 @@ export default function OnboardingScreen() {
               <Title text={nameGender(lp.first_name, lp.gender) === 'f' ? t.link.claimTitleF : t.link.claimTitle} />
               <Text style={styles.sub}>{t.link.claimSub}</Text>
               <Candidate row={{ id: lp.id, name: `${lp.first_name} ${lp.surname}`, sub: link.view.tournament ?? '' }} index={0} on onPress={() => undefined} />
+              <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
               <Err text={error} />
-              <Primary label={t.link.claimYes} busy={busy} onPress={claimLink} />
+              <Primary label={t.link.claimYes} ready={adult} busy={busy} onPress={claimLink} />
               <Dashed label={t.link.claimNo} onPress={dropLink} />
             </>
           ) : null}
@@ -457,6 +461,18 @@ export default function OnboardingScreen() {
   );
 }
 
+/** «Είμαι 15 χρονών και πάνω»: required to go on */
+function AgeCheck({ on, onPress }: { on: boolean; onPress: () => void }) {
+  const o = useCopy().onboarding;
+  return (
+    <View style={styles.ageRow}>
+      <Chip on={on} onPress={onPress} minHeight={50}>
+        {o.age.check}
+      </Chip>
+    </View>
+  );
+}
+
 /** inA: each step fades in from 12px below */
 function StepIn({ children, duration = IN_MS }: { children: React.ReactNode; duration?: number }) {
   const p = useSharedValue(0);
@@ -520,6 +536,7 @@ function Link({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 const styles = StyleSheet.create({
+  ageRow: { flexDirection: 'row' },
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { flexGrow: 1, paddingHorizontal: 20 },
   step: { flexGrow: 1, gap: 12 },
