@@ -36,8 +36,8 @@ const REST_MS = 1800;
 const HOP_MS = 700;
 const SQUASH_MS = 140;
 
-type BallKind = 'tennis' | 'padel' | 'basketball' | 'football';
-const BALLS: BallKind[] = ['tennis', 'padel', 'basketball', 'football'];
+export type BallKind = 'tennis' | 'padel' | 'basketball' | 'football';
+export const BALLS: BallKind[] = ['tennis', 'padel', 'basketball', 'football'];
 
 export function BouncingLogo({ height }: { height: number }) {
   const unit = height / VB_H;
@@ -99,7 +99,7 @@ export function BouncingLogo({ height }: { height: number }) {
 }
 
 /** Four balls in their own colours, drawn on a 30×30 box. */
-function Ball({ kind, size }: { kind: BallKind; size: number }) {
+export function Ball({ kind, size }: { kind: BallKind; size: number }) {
   const seam = { fill: 'none', strokeWidth: 2.2, strokeLinecap: 'round' as const };
   const line = { fill: 'none', strokeWidth: 1.5, strokeLinecap: 'round' as const };
   return (
