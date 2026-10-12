@@ -137,6 +137,50 @@ export interface ResultRow {
   my: { pick: Side; outcome: 'correct' | 'wrong' | 'none' | null; points: number } | null;
 }
 
+/** Someone named in a match line («με Δημήτρη Γκότση»). name_forms holds the grammatical forms when known. */
+export interface PlayerRef {
+  id: string;
+  first_name: string;
+  surname: string;
+  gender: 'm' | 'f' | null;
+  name_forms: { accusative?: string; genitive?: string; vocative?: string } & Record<string, unknown>;
+}
+
+/** One row of the Παίκτες list (api.get_players_home / api.find_players). */
+export interface PlayerCard extends PlayerRef {
+  area_id: string | null;
+  level_tier: number | null;
+  level_direction: 'up' | 'same' | 'down' | null;
+  is_followed: boolean;
+  relation: 'known' | 'friend' | null;
+  /** last 5 results, OLDEST first, as the prototype's «ΝΝΗΝΝ» */
+  form: ('W' | 'L')[];
+}
+
+export interface PlayersHome {
+  total_players: number;
+  /** friends who do not play today, then today's players; never the viewer's own player */
+  players: PlayerCard[];
+}
+
+export interface PlayerMatchLine {
+  match_id: string;
+  starts_at: string;
+  format: 'singles' | 'doubles' | 'mixed';
+  partner: PlayerRef[];
+  opponents: PlayerRef[];
+}
+
+/** One player's profile (api.get_player). */
+export interface PlayerProfile extends PlayerCard {
+  is_me: boolean;
+  /** «Φέτος»: this Athens year */
+  record_year: { w: number; l: number };
+  /** «Τελευταία ματς», newest first, at most 5 */
+  last_matches: (PlayerMatchLine & { won: boolean; score: string | null; retired: boolean; walkover: boolean })[];
+  next_match: PlayerMatchLine | null;
+}
+
 export interface MeResult {
   user_id: string;
   profile: {

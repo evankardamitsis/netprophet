@@ -138,12 +138,17 @@ export function accusativeWord(word: string, gender: NameGender): string {
     return word.replace(/([αεηιουωάέήίόύώϊϋΐΰΑΕΗΙΟΥΩΆΈΉΊΌΎΏΪΫ])[ςσΣ]$/u, '$1');
 }
 
-/** «τον Νίκο Ροδίτη», «την Μαρία Καρρά»: article plus the full name in the accusative. */
-export function withArticleAccusative(firstName: string, surname: string, known?: NameGender | null): string {
+/** «Νίκο Ροδίτη», «Μαρία Καρρά»: the full name in the accusative, no article («με Νίκο Ροδίτη»). */
+export function accusativeName(firstName: string, surname: string, known?: NameGender | null): string {
     const g = nameGender(firstName, known);
-    const name = [firstName, surname]
+    return [firstName, surname]
         .filter(Boolean)
         .map((part) => part.split(/\s+/).map((w) => accusativeWord(w, g)).join(' '))
         .join(' ');
-    return `${g === 'f' ? 'την' : 'τον'} ${name}`;
+}
+
+/** «τον Νίκο Ροδίτη», «την Μαρία Καρρά»: article plus the full name in the accusative. */
+export function withArticleAccusative(firstName: string, surname: string, known?: NameGender | null): string {
+    const g = nameGender(firstName, known);
+    return `${g === 'f' ? 'την' : 'τον'} ${accusativeName(firstName, surname, g)}`;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative,
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative,
 } from './greek';
 
 describe('greekCaps', () => {
@@ -104,4 +104,11 @@ describe('names in a sentence', () => {
         expect(withArticleAccusative('ΒΑΓΓΕΛΗΣ', 'ΚΑΡΔΑΜΙΤΣΗΣ')).toBe('τον ΒΑΓΓΕΛΗ ΚΑΡΔΑΜΙΤΣΗ');
         expect(withArticleAccusative('Γιώργος', 'Δεσύπρης')).toBe('τον Γιώργο Δεσύπρη');
     });
+});
+
+describe('accusativeName', () => {
+  it('drops the final -ς of masculine names, keeps feminine ones', () => {
+    expect(accusativeName('Δημήτρης', 'Γκότσης')).toBe('Δημήτρη Γκότση');
+    expect(accusativeName('Μαρία', 'Καρρά')).toBe('Μαρία Καρρά');
+  });
 });

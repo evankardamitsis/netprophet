@@ -384,6 +384,10 @@ export type Database = {
         Args: { p_name: string; p_surname: string };
         Returns: { id: string; first_name: string; surname: string; area_id: string; match_score: number }[];
       };
+      find_players: {
+        Args: { p_query: string; p_limit?: number };
+        Returns: Json;
+      };
       follow_player: {
         Args: { p_player_id: string; p_relation?: string; p_source?: string };
         Returns: undefined;
@@ -394,6 +398,14 @@ export type Database = {
       };
       get_me: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_player: {
+        Args: { p_player_id: string };
+        Returns: Json;
+      };
+      get_players_home: {
+        Args: { p_limit?: number };
         Returns: Json;
       };
       get_results: {

@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { CardMatch, CardPct, CardSide } from '../lib/feed';
+import { FitText } from './FitText';
 import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
 import type { Side } from '../lib/votes';
 import { cardSurface, colors, ease, fonts } from '../theme';
@@ -190,9 +191,7 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
             <Animated.Text style={[styles.pct, doubles && styles.pctDbl, pctStyle]}>{pct === null ? '' : `${pct}%`}</Animated.Text>
             {data.people.map((p, i) => (
               <View key={i}>
-                <Text numberOfLines={1} style={[styles.sn, doubles && styles.snDbl]}>
-                  {p.surname}
-                </Text>
+                <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
                 <Text numberOfLines={1} style={styles.fn}>
                   {p.first}
                 </Text>
@@ -257,9 +256,7 @@ function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
       <View style={styles.halfNames}>
         {data.people.map((p, i) => (
           <View key={i}>
-            <Text numberOfLines={1} style={[styles.rowSn, { color: fg }, i > 0 && styles.rowSnNext]}>
-              {p.surname}
-            </Text>
+            <FitText text={p.surname} style={[styles.rowSn, { color: fg }, i > 0 && styles.rowSnNext]} />
             <Text numberOfLines={1} style={styles.rowFn}>
               {p.first}
             </Text>

@@ -23,6 +23,10 @@ export const colors = {
   navLine: '#DDE3D8',
   /** sponsored card surface */
   sand: '#E6EAE0',
+  /** a loss in the form dots on paper */
+  stone: '#C9D1C4',
+  /** search input outline while idle */
+  fog: '#7C8A82',
   /** cards, inputs, tab bar */
   white: '#FFFFFF',
 } as const;
