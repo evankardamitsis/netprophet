@@ -408,6 +408,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      get_me_page: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_player: {
         Args: { p_player_id: string };
         Returns: Json;

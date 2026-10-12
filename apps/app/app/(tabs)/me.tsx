@@ -1,31 +1,388 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState, type ReactNode } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { router } from 'expo-router';
+import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
-import { isLive } from '../../src/lib/supabase';
-import { colors, fonts, spacing } from '../../src/theme';
+import { useMePage } from '../../src/lib/data';
+import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
+import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
+import { colors, fonts } from '../../src/theme';
 
-export default function Screen() {
+/**
+ * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
+ * name), the σερί with its freezes, «Το σκορ σου», «Οι ψήφοι σου», «Τα ματς σου», «Οι φίλοι σου» and Ρυθμίσεις
+ * with Αποσύνδεση. Avatar, stats flip, Εμφάνιση, freeze purchase, Αποστολές, badges, kudos, «Πώς σε βλέπουν»,
+ * «Πού κερδίζεις», Απολογισμός and Τουρνουά come with their milestones (M2 to M5).
+ */
+const STG_MS = 450;
+const STAGGER = 70;
+/** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
+const ACCENT_PAD = 10;
+
+export default function MeScreen() {
   const t = useCopy();
-  const { session, signOut } = useAuth();
+  const { view, loading, error, refresh } = useMePage();
+  const back = usePress();
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  let n = 0;
+  const next = () => n++;
+
   return (
     <View style={styles.screen}>
-      <Text style={styles.text}>{t.placeholder.me}</Text>
-      {isLive && session ? (
-        <>
-          <Text style={styles.email}>{session.user.email}</Text>
-          <Pressable accessibilityRole="button" onPress={signOut} hitSlop={12}>
-            {({ pressed }) => <Text style={[styles.link, pressed && styles.pressed]}>{t.auth.signOut}</Text>}
-          </Pressable>
-        </>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={loading && view !== null} onRefresh={refresh} tintColor={colors.ink} />}
+      >
+        <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
+          <Animated.Text style={[styles.back, back.style]}>‹ {t.common.back}</Animated.Text>
+        </Pressable>
+        {view ? (
+          <>
+            <Section i={next()}>{view.isNew ? <NewHero v={view} /> : <Hero v={view} />}</Section>
+            <Section i={next()}>
+              <StreakBox v={view} />
+            </Section>
+            {view.isNew ? (
+              <Section i={next()}>
+                <Progress v={view} />
+              </Section>
+            ) : null}
+            <Section i={next()}>
+              <Score v={view} />
+            </Section>
+            <Section i={next()}>
+              <Matches v={view} />
+            </Section>
+            <Section i={next()}>
+              <Friends v={view} />
+            </Section>
+            <Section i={next()}>
+              <Settings />
+            </Section>
+          </>
+        ) : null}
+        {!loading && error && !view ? <Text style={styles.empty}>{t.me.error}</Text> : null}
+      </ScrollView>
+    </View>
+  );
+}
+
+function Section({ i, children }: { i: number; children: ReactNode }) {
+  const enter = useStgIn(STG_MS, 50 + Math.min(i, 6) * STAGGER);
+  return <Animated.View style={enter}>{children}</Animated.View>;
+}
+
+/** the ink hero: level, σερί, πόντοι μήνα, then the name */
+function Hero({ v }: { v: MeView }) {
+  const t = useCopy();
+  return (
+    <View style={styles.hero}>
+      <View style={styles.chips}>
+        <View style={styles.chip}>
+          <Text style={styles.chipBig}>{v.level}</Text>
+          <View>
+            <Text style={styles.chipSmall}>{t.level.label}</Text>
+            <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
+          </View>
+        </View>
+        <View style={styles.chip}>
+          <Text style={[styles.chipBig, styles.lime]}>{v.streak}</Text>
+          <View>
+            <Text style={styles.chipSmall}>{t.me.streak}</Text>
+            <Text style={styles.chipSmallBold}>{v.best}</Text>
+          </View>
+        </View>
+        <View style={styles.chip}>
+          <Text style={[styles.chipBig, styles.lime]}>{v.monthPoints}</Text>
+          <Text style={styles.chipSmall}>{t.me.monthPoints}</Text>
+        </View>
+      </View>
+      <Name v={v} />
+    </View>
+  );
+}
+
+/** no level yet: what it takes, then the name */
+function NewHero({ v }: { v: MeView }) {
+  const t = useCopy();
+  return (
+    <View style={styles.hero}>
+      <View style={styles.newTop}>
+        <Text style={styles.newTitle}>{t.me.noLevel}</Text>
+        <Text style={styles.heroSub}>{t.me.noLevelSub}</Text>
+      </View>
+      <Name v={v} />
+    </View>
+  );
+}
+
+function Name({ v }: { v: MeView }) {
+  return (
+    <View style={styles.nameBox}>
+      <Text style={styles.first}>{v.first}</Text>
+      <FitText text={v.surname} style={styles.surname} />
+      {v.sub ? <Text style={styles.heroSub}>{v.sub}</Text> : null}
+    </View>
+  );
+}
+
+/** σερί with ΠΡ, and the freeze slots (= ready, dashed empty) */
+function StreakBox({ v }: { v: MeView }) {
+  const t = useCopy();
+  return (
+    <View style={styles.card}>
+      <View style={styles.rowBetween}>
+        <View style={styles.streakLeft}>
+          <Text style={styles.streakNum}>{v.streak}</Text>
+          <View>
+            <Text style={styles.streakWord}>{t.me.streak}</Text>
+            <Text style={styles.muted}>{v.best}</Text>
+          </View>
+        </View>
+        <View style={styles.freezes}>
+          {v.freezes.slots.map((s, i) => (
+            <Freeze key={i} ready={s.ready} label={s.label} index={i} />
+          ))}
+        </View>
+      </View>
+      <Text style={styles.muted}>{v.freezes.line}</Text>
+    </View>
+  );
+}
+
+function Freeze({ ready, label, index }: { ready: boolean; label: string; index: number }) {
+  const pop = usePopIn(450, 400 + index * 120);
+  return (
+    <Animated.View accessibilityRole="image" accessibilityLabel={label} style={[styles.freeze, ready ? styles.freezeReady : styles.freezeEmpty, ready ? pop : null]}>
+      {ready ? <Text style={styles.freezeMark}>=</Text> : null}
+    </Animated.View>
+  );
+}
+
+/** «Ματς · 1 από 3» slots and «Ψήφοι · 4 από 10» ticks, then the one blue button */
+function Progress({ v }: { v: MeView }) {
+  const press = usePress();
+  return (
+    <View style={styles.card}>
+      <Text style={styles.label}>{v.progress.matchesLabel}</Text>
+      <View style={styles.slots}>
+        {Array.from({ length: LEVEL_MATCHES }, (_, i) => (
+          <Slot key={i} on={i < v.progress.matches} delay={600 + i * 180} />
+        ))}
+      </View>
+      <Text style={styles.label}>{v.progress.votesLabel}</Text>
+      <View style={styles.ticks}>
+        {Array.from({ length: LEVEL_VOTES }, (_, i) => (
+          <Tick key={i} on={i < v.progress.votes} delay={600 + i * 70} />
+        ))}
+      </View>
+      <Pressable accessibilityRole="button" onPress={() => router.push('/add-match')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+        <Animated.View style={[styles.primary, press.style]}>
+          <Text style={styles.primaryText}>{v.progress.cta}</Text>
+        </Animated.View>
+      </Pressable>
+    </View>
+  );
+}
+
+function Slot({ on, delay }: { on: boolean; delay: number }) {
+  const pop = usePopIn(500, delay);
+  return <Animated.View style={[styles.slot, on ? styles.slotOn : styles.slotOff, on ? pop : null]}>{on ? <Text style={styles.slotMark}>✓</Text> : null}</Animated.View>;
+}
+
+function Tick({ on, delay }: { on: boolean; delay: number }) {
+  const pop = usePopIn(450, delay);
+  return <Animated.View style={[styles.tick, on ? styles.tickOn : styles.tickOff, on ? pop : null]} />;
+}
+
+/** «Το σκορ σου» tiles, then «Οι ψήφοι σου» back to the feed */
+function Score({ v }: { v: MeView }) {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <View style={styles.block}>
+      <Text style={styles.heading}>{t.me.score}</Text>
+      <View style={styles.tiles}>
+        {v.stats.map((s) => (
+          <View key={s.label} style={styles.tile}>
+            <Text style={styles.tileValue}>{s.value}</Text>
+            <Text style={styles.tileLabel}>{s.label}</Text>
+          </View>
+        ))}
+      </View>
+      <Pressable accessibilityRole="button" onPress={() => router.navigate('/')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+        <Animated.View style={[styles.votes, press.style]}>
+          <Text style={styles.votesKicker}>{t.me.votes.title}</Text>
+          <Text style={styles.votesTitle}>{v.votes.title}</Text>
+          <Text style={styles.votesSub}>{v.votes.sub}</Text>
+        </Animated.View>
+      </Pressable>
+    </View>
+  );
+}
+
+/** «Τα ματς σου»: last results with Ν / Η, then the next match or how to add one */
+function Matches({ v }: { v: MeView }) {
+  const t = useCopy();
+  return (
+    <View style={styles.block}>
+      <Text style={styles.heading}>{t.me.matches.title}</Text>
+      <View style={styles.card}>
+        {v.last.map((m, i) => (
+          <View key={i} style={[styles.matchRow, i > 0 && styles.matchLine]}>
+            <View style={[styles.letter, m.win ? styles.letterWin : styles.letterLoss]}>
+              <Text style={[styles.letterText, { color: m.win ? colors.ink : colors.lime }]}>{m.win ? t.me.matches.win : t.me.matches.loss}</Text>
+            </View>
+            <View style={styles.matchText}>
+              <Text style={styles.matchAgainst} numberOfLines={1}>
+                {m.against}
+              </Text>
+              <Text style={styles.muted}>{[m.score, m.when].filter(Boolean).join(' · ')}</Text>
+            </View>
+          </View>
+        ))}
+        {v.next ? (
+          <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
+            <Text style={styles.label}>{t.me.matches.next}</Text>
+            <Text style={styles.nextText}>{v.next}</Text>
+          </View>
+        ) : (
+          <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
+            <Text style={styles.muted}>{t.me.matches.nextEmpty}</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/add-match')} style={styles.linkHit}>
+              <Text style={styles.link}>{t.me.matches.add}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+/** «Οι φίλοι σου»: fanned initials and the count, to Παίκτες */
+function Friends({ v }: { v: MeView }) {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.navigate('/players')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.card, styles.friends, press.style]}>
+        {v.friends.count > 0 ? (
+          <>
+            <View style={styles.fan}>
+              {v.friends.initials.map((ini, i) => (
+                <View key={i} style={[styles.avatar, { marginLeft: i === 0 ? 0 : -10 }]}>
+                  <Text style={styles.avatarText}>{ini}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.friendsText}>
+              <Text style={styles.friendsTitle}>{t.me.friends.title}</Text>
+              <Text style={styles.friendsCount}>{`${v.friends.count} ›`}</Text>
+            </View>
+          </>
+        ) : (
+          <Text style={styles.friendsTitle}>{t.me.friends.empty}</Text>
+        )}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** «Ρυθμίσεις», closed until tapped; M1 has only Αποσύνδεση */
+function Settings() {
+  const t = useCopy();
+  const { signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.card}>
+      <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={styles.rowBetween}>
+        <Text style={styles.settingsTitle}>{t.me.settings}</Text>
+        <Text style={styles.settingsMark}>{open ? '−' : '+'}</Text>
+      </Pressable>
+      {open ? (
+        <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
+          <Text style={styles.signOut}>{t.auth.signOut}</Text>
+        </Pressable>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center', padding: spacing[5], gap: spacing[3] },
-  text: { color: colors.muted, fontFamily: fonts.body, fontSize: 16, textAlign: 'center' },
-  email: { color: colors.ink, fontFamily: fonts.bodySemi, fontSize: 14 },
-  link: { color: colors.ink, fontFamily: fonts.bodySemi, fontSize: 14, textDecorationLine: 'underline' },
-  pressed: { opacity: 0.5 },
+  screen: { flex: 1, backgroundColor: colors.paper },
+  scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
+  backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  empty: { paddingTop: 4, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
+  lime: { color: colors.lime },
+  hero: { padding: 18, borderRadius: 28, backgroundColor: colors.ink, gap: 22 },
+  chips: { flexDirection: 'row', gap: 8 },
+  chip: { flex: 1, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.inkRaised, gap: 2 },
+  chipBig: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 34, color: colors.paper },
+  chipSmall: { fontFamily: fonts.body, fontSize: 12, lineHeight: 15, color: colors.mist },
+  chipSmallBold: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 15, color: colors.paper },
+  newTop: { gap: 6 },
+  newTitle: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 36, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  nameBox: { gap: 2 },
+  first: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, color: colors.paper },
+  surname: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  heroSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
+  card: { padding: 16, borderRadius: 22, backgroundColor: colors.white, gap: 10 },
+  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, color: colors.ink },
+  streakWord: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  muted: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
+  freezes: { flexDirection: 'row', gap: 8 },
+  freeze: { width: 34, height: 34, borderRadius: 999, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  freezeReady: { backgroundColor: colors.lime, borderColor: colors.ink },
+  freezeEmpty: { borderColor: colors.fog, borderStyle: 'dashed' },
+  freezeMark: { fontFamily: fonts.bodyBold, fontSize: 18, lineHeight: 20, color: colors.ink },
+  label: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
+  slots: { flexDirection: 'row', gap: 8 },
+  slot: { flex: 1, height: 44, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  slotOn: { backgroundColor: colors.lime, borderColor: colors.ink },
+  slotOff: { borderColor: colors.fog, borderStyle: 'dashed' },
+  slotMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
+  ticks: { flexDirection: 'row', gap: 4 },
+  tick: { flex: 1, height: 12, borderRadius: 999, borderWidth: 2 },
+  tickOn: { backgroundColor: colors.lime, borderColor: colors.ink },
+  tickOff: { borderColor: colors.stone },
+  primary: { minHeight: 52, borderRadius: 16, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, marginTop: 4 },
+  primaryText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.white },
+  block: { gap: 8 },
+  heading: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tile: { width: '48.5%', padding: 14, borderRadius: 18, backgroundColor: colors.white, gap: 2 },
+  tileValue: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, color: colors.ink },
+  tileLabel: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
+  votes: { padding: 16, borderRadius: 22, backgroundColor: colors.ink, gap: 4 },
+  votesKicker: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.mist },
+  votesTitle: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, color: colors.paper },
+  votesSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.lime },
+  matchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
+  matchLine: { borderTopWidth: 1, borderTopColor: colors.navLine, paddingTop: 10 },
+  letter: { width: 34, height: 34, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  letterWin: { backgroundColor: colors.lime },
+  letterLoss: { backgroundColor: colors.ink },
+  letterText: { fontFamily: fonts.displayHeavy, fontSize: 18, lineHeight: 20 },
+  matchText: { flex: 1, minWidth: 0 },
+  matchAgainst: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  nextBox: { gap: 4 },
+  nextText: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
+  linkHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
+  friends: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  fan: { flexDirection: 'row' },
+  avatar: { width: 38, height: 38, borderRadius: 999, borderWidth: 2, borderColor: colors.white, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.lime },
+  friendsText: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  friendsTitle: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  friendsCount: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
+  signOut: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
 });
