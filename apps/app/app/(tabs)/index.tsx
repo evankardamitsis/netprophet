@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
+import { ConfirmCard } from '../../src/components/ConfirmCard';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useFeed, type VoteErrorKind } from '../../src/lib/data';
+import { useConfirmations, useFeed, type VoteErrorKind } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
 import { useHud } from '../../src/lib/hud';
 import { colors, ease, fonts } from '../../src/theme';
@@ -22,6 +23,13 @@ export default function VoteScreen() {
   const [notice, setNotice] = useState<{ kind: VoteErrorKind; n: number } | null>(null);
   const onVoteError = useCallback((kind: VoteErrorKind) => setNotice((p) => ({ kind, n: (p?.n ?? 0) + 1 })), []);
   const { cards, results, dismissResult, loading, error, refresh, vote } = useFeed(onVoteError);
+  const confirmations = useConfirmations();
+  const [answered, setAnswered] = useState<string | null>(null);
+  useEffect(() => {
+    if (!answered) return undefined;
+    const id = setTimeout(() => setAnswered(null), TOAST_MS);
+    return () => clearTimeout(id);
+  }, [answered]);
   const hud = useHud();
   const [between, setBetween] = useState(false);
   const [played, setPlayed] = useState(0);
@@ -72,6 +80,15 @@ export default function VoteScreen() {
               onDone={onResultDone}
             />
           ) : null}
+          {confirmations.items.slice(0, 1).map((item) => (
+            <ConfirmCard
+              key={item.match_id}
+              item={item}
+              onAnswer={(a) =>
+                void confirmations.answer(item.match_id, a).then((o) => setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]))
+              }
+            />
+          ))}
           {cards.map((c) =>
             c.kind === 'match' ? (
               <VoteCard key={c.id} match={c} onVote={vote} />
@@ -85,6 +102,7 @@ export default function VoteScreen() {
         </View>
       </ScrollView>
       {notice ? <Toast key={notice.n} text={t.feed[notice.kind]} /> : null}
+      {answered ? <Toast key={answered} text={answered} /> : null}
       <AddMatchButton />
     </View>
   );

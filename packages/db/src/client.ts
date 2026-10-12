@@ -3,6 +3,7 @@ import type { Database } from './types';
 import type {
   CastVoteResult,
   ClaimCandidate,
+  ConfirmationAnswer,
   GetFeedResult,
   LogMatchInput,
   MatchFormat,
@@ -13,6 +14,7 @@ import type {
   MeResult,
   PlayerCard,
   PlayerProfile,
+  PendingConfirmation,
   PlayersHome,
   ProState,
   PublicTournament,
@@ -80,6 +82,13 @@ export function rpc(client: NetprophetClient) {
     getMe: () => call<MeResult>(client, 'get_me', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),
+    getConfirmations: () => call<PendingConfirmation[]>(client, 'get_confirmations', {}),
+    answerConfirmation: (matchId: string, a: ConfirmationAnswer) =>
+      call<{ match_id: string; outcome: 'confirmed' | 'corrected' | 'disputed' }>(client, 'answer_confirmation', {
+        p_match_id: matchId,
+        p_answer: a.answer,
+        p_fix: a.answer === 'fix' ? a.fix : null,
+      }),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),
