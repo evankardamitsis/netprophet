@@ -14,6 +14,12 @@ export interface AnalyticsEvents {
   push_permission: { granted: boolean };
   match_confirmed: { outcome: 'confirmed' | 'corrected' | 'disputed' };
   match_logged: { mode: 'played' | 'soon'; format: 'singles' | 'doubles' | 'mixed'; attached: boolean; new_people: number };
+  /** the opponent link: shared by the logger, then opened, answered, hidden or claimed by the other side */
+  link_shared: { app: 'whatsapp' | 'viber' | 'sms' | 'other'; links: number };
+  link_opened: { state: 'pending' | 'confirmed' | 'disputed' | 'not_me' | 'gone' };
+  link_answered: { outcome: 'confirmed' | 'corrected' | 'disputed' };
+  link_hidden: { hidden: boolean };
+  link_claimed: { result: 'ok' | 'taken' | 'other' | 'failed' };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

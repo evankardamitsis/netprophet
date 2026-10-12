@@ -96,6 +96,8 @@ function Routes() {
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="sign-in" />
         </Stack.Protected>
+        {/* the opponent link works for anyone, signed in or not */}
+        <Stack.Screen name="m/[token]" />
       </Stack>
     </>
   );

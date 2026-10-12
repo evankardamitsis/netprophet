@@ -396,12 +396,20 @@ export type Database = {
         Args: { p_match_id: string; p_answer: string; p_fix?: Json };
         Returns: Json;
       };
+      answer_link: {
+        Args: { p_token: string; p_answer: string; p_fix?: Json };
+        Returns: Json;
+      };
       cast_vote: {
         Args: { p_match_id: string; p_side: number; p_client_event_id?: string };
         Returns: Json;
       };
       claim_player: {
         Args: { p_player_id: string };
+        Returns: Json;
+      };
+      claim_via_link: {
+        Args: { p_token: string };
         Returns: Json;
       };
       find_matching_players: {
@@ -436,6 +444,10 @@ export type Database = {
         Args: { p_scope?: string; p_limit?: number };
         Returns: Json;
       };
+      get_match_link: {
+        Args: { p_token: string };
+        Returns: Json;
+      };
       get_me: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
@@ -468,9 +480,17 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      hide_via_link: {
+        Args: { p_token: string; p_hidden: boolean };
+        Returns: Json;
+      };
       join_pro_waitlist: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      link_kudo: {
+        Args: { p_token: string; p_kudo: string };
+        Returns: undefined;
       };
       list_tournaments: {
         Args: Record<PropertyKey, never>;
@@ -483,6 +503,10 @@ export type Database = {
       mark_inbox_seen: {
         Args: { p_ids: string[] };
         Returns: number;
+      };
+      match_links: {
+        Args: { p_match_id: string };
+        Returns: Json;
       };
       register_push_token: {
         Args: { p_token: string; p_platform: string };

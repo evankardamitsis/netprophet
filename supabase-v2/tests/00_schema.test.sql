@@ -21,7 +21,10 @@ select is((select count(*)::int from information_schema.table_privileges
 select is((select count(*)::int from pg_proc where pronamespace = 'api'::regnamespace and not prosecdef), 0, 'every api function is SECURITY DEFINER');
 select is((select count(*)::int from pg_proc where pronamespace = 'api'::regnamespace
             and (proconfig is null or not exists (select 1 from unnest(proconfig) c where c like 'search_path=%'))), 0, 'every api function pins its search_path');
-select is((select count(*)::int from pg_proc p where pronamespace = 'api'::regnamespace and has_function_privilege('anon', p.oid, 'execute')), 0, 'anon can execute no api function');
+-- the opponent link (/m/<token>) is the one surface that works without an account
+select is((select coalesce(array_agg(proname::text order by proname), '{}') from pg_proc p
+            where pronamespace = 'api'::regnamespace and has_function_privilege('anon', p.oid, 'execute')),
+          array['answer_link', 'get_match_link', 'hide_via_link', 'link_kudo'], 'anon can execute only the opponent link functions');
 
 -- seed sanity
 select cmp_ok((select count(*)::int from core.players where id::text like '10000000-%'), '=', 20, 'seed: 20 players');

@@ -7,7 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MyMatchCandidate, PlayerCard } from '@netprophet/db';
 import { Back, Chip, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
-import { useLogMatch, type LogError } from '../src/lib/data';
+import { ShareSheet } from '../src/components/ShareSheet';
+import { TOAST_MS, Toast } from '../src/components/Toast';
+import { useLogMatch, useMatchLinks, useMe, type LogError } from '../src/lib/data';
+import { linkLabel, shareMessage, whoShort } from '../src/lib/link';
+import { linkBase } from '../src/lib/linkHost';
 import {
   emptyForm,
   knownPeople,
@@ -54,6 +58,7 @@ export default function AddMatch() {
   const [error, setError] = useState<LogError | null>(null);
   const [mine, setMine] = useState<MyMatchCandidate[] | null>(null);
   const [done, setDone] = useState(false);
+  const [doneId, setDoneId] = useState<string | null>(null);
 
   const set = (patch: Partial<LogForm>) => {
     setError(null);
@@ -72,7 +77,10 @@ export default function AddMatch() {
     setBusy(true);
     const r = await data.submit(toInput(form, matchId));
     setBusy(false);
-    if (r.ok) setDone(true);
+    if (r.ok) {
+      setDoneId(r.matchId);
+      setDone(true);
+    }
     else setError(r.error);
   };
 
@@ -89,7 +97,7 @@ export default function AddMatch() {
     await send();
   };
 
-  if (done) return <Done form={form} onAgain={() => { setForm(emptyForm(form.mode)); setOpen('d'); setDone(false); setMine(null); }} />;
+  if (done) return <Done form={form} matchId={doneId} onAgain={() => { setForm(emptyForm(form.mode)); setOpen('d'); setDone(false); setDoneId(null); setMine(null); }} />;
 
   const single = form.format === 'singles';
   return (
@@ -394,10 +402,29 @@ function IsYours({ candidates, busy, onYes, onNo }: { candidates: MyMatchCandida
   );
 }
 
-/** isDone: «Μπήκε», the match, what happens now */
-function Done({ form, onAgain }: { form: LogForm; onAgain: () => void }) {
+/**
+ * isDone: «Μπήκε», the match, what happens now. A played match against people not in the app gets
+ * «Στείλ’ το απέναντι» (the share sheet with their link) and «Δες τι βλέπει απέναντι ›».
+ */
+function Done({ form, matchId, onAgain }: { form: LogForm; matchId: string | null; onAgain: () => void }) {
   const t = useCopy();
   const d = t.addMatch.done;
+  const s = t.addMatch.share;
+  const links = useMatchLinks(form.mode === 'played' ? matchId : null);
+  const { raw } = useMe();
+  const [sharing, setSharing] = useState(false);
+  const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
+  const say = (text: string) => {
+    setToast({ text, n: Date.now() });
+    setTimeout(() => setToast(null), TOAST_MS);
+  };
+  const me = raw?.profile ?? { first_name: 'Βαγγέλης', surname: 'Καρδαμίτσης', gender: 'm' as const };
+  const base = linkBase();
+  const title = fmt(s.title, { who: whoShort(me) });
+  const peek = () => {
+    setSharing(false);
+    if (links[0]) router.push(`/m/${links[0].token}`);
+  };
   const insets = useSafeAreaInsets();
   const enter = useStgIn(450, 50);
   const us = [t.ladder.you, ...(form.partner ? [personName(form.partner)] : [])].join(' & ');
@@ -413,12 +440,35 @@ function Done({ form, onAgain }: { form: LogForm; onAgain: () => void }) {
         <Text style={styles.doneLine}>{fmt(d.line, { me: us, them })}</Text>
         <Text style={styles.doneSub}>{form.mode === 'played' ? d.subPlayed : d.subSoon}</Text>
       </Animated.View>
-      <View style={styles.doneActions}>
-        <Primary label={form.mode === 'played' ? d.goPlayed : d.goSoon} onPress={() => router.replace(form.mode === 'played' ? '/results' : '/')} />
-        <Pressable accessibilityRole="button" onPress={onAgain} style={styles.againHit}>
-          <Text style={styles.again}>{d.again}</Text>
-        </Pressable>
-      </View>
+      {links.length > 0 ? (
+        <View style={styles.doneActions}>
+          <Primary label={links.length === 1 ? s.one : s.many} onPress={() => setSharing(true)} />
+          <Pressable accessibilityRole="button" onPress={peek} style={styles.againHit}>
+            <Text style={styles.peek}>{s.peek}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.replace('/results')} style={styles.againHit}>
+            <Text style={[styles.again, styles.underline]}>{d.goPlayed}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.doneActions}>
+          <Primary label={form.mode === 'played' ? d.goPlayed : d.goSoon} onPress={() => router.replace(form.mode === 'played' ? '/results' : '/')} />
+          <Pressable accessibilityRole="button" onPress={onAgain} style={styles.againHit}>
+            <Text style={styles.again}>{d.again}</Text>
+          </Pressable>
+        </View>
+      )}
+      <ShareSheet
+        open={sharing}
+        title={title}
+        host={links[0] ? linkLabel(links[0].token, base).split('/')[0]! : ''}
+        message={shareMessage(links, title, s.body, base)}
+        links={links.length}
+        onPeek={peek}
+        onClose={() => setSharing(false)}
+        onSaid={say}
+      />
+      {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </View>
   );
 }
@@ -480,4 +530,6 @@ const styles = StyleSheet.create({
   doneActions: { gap: 4 },
   againHit: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   again: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  underline: { textDecorationLine: 'underline' },
+  peek: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
 });
