@@ -210,7 +210,7 @@ export const en: Copy = {
     },
     intro: {
       of: '{n} of {total}',
-      ready: 'Ready',
+      ready: 'Go',
       vote: {
         title: 'Vote for the winners.',
         sub: 'See matches from your crowd and vote who wins. We want a full stand, right?',

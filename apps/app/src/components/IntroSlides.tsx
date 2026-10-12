@@ -13,7 +13,7 @@ import { Back, Primary } from './OnboardingControls';
 
 /**
  * The prototype's intro slides E1 to E4 («1 από 4»): a pill, a title, a line, and an ink card that
- * shows the idea with sample data, built up with stg, grow and pop. The last one's «Έτοιμος» opens
+ * shows the idea with sample data, built up with stg, grow and pop. The last one's «Πάμε» opens
  * the «Ας ξεκινήσουμε» splash.
  */
 const STG_MS = 450;
@@ -197,7 +197,7 @@ function Bar({ name, value, width, stg, grow }: { name: string; value: number; w
 
 /* ---------- «Ας ξεκινήσουμε» ---------- */
 
-/** the ink splash after «Έτοιμος»: a beating lime dot, the line, and a bar that fills over GO_MS */
+/** the ink splash after «Πάμε»: a beating lime dot, the line, and a bar that fills over GO_MS */
 export function GoSplash({ onDone }: { onDone: () => void }) {
   const g = useCopy().onboarding.intro.go;
   const insets = useSafeAreaInsets();
