@@ -90,6 +90,9 @@ export function rpc(client: NetprophetClient) {
     setClaimStatus: (status: 'skipped' | 'creation_requested') => call<string>(client, 'set_claim_status', { p_status: status }),
     findMatchingPlayers: (firstName: string, surname: string) =>
       call<ClaimCandidate[]>(client, 'find_matching_players', { p_name: firstName, p_surname: surname }),
+    registerPushToken: (token: string, platform: 'ios' | 'android') =>
+      call<boolean>(client, 'register_push_token', { p_token: token, p_platform: platform }),
+    unregisterPushToken: (token: string) => call<boolean>(client, 'unregister_push_token', { p_token: token }),
     markInboxSeen: (ids: string[]) => call<number>(client, 'mark_inbox_seen', { p_ids: ids }),
     claimPlayer: (playerId: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_player', { p_player_id: playerId }),
     followPlayer: (playerId: string, relation: 'known' | 'friend' = 'known', source: 'onboarding' | 'profile' | 'card' | 'invite' = 'profile') =>

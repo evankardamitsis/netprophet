@@ -448,6 +448,10 @@ export type Database = {
         Args: { p_ids: string[] };
         Returns: number;
       };
+      register_push_token: {
+        Args: { p_token: string; p_platform: string };
+        Returns: boolean;
+      };
       resolve_match: {
         Args: { p_match_id: string };
         Returns: Json;
@@ -467,6 +471,10 @@ export type Database = {
       unfollow_player: {
         Args: { p_player_id: string };
         Returns: undefined;
+      };
+      unregister_push_token: {
+        Args: { p_token: string };
+        Returns: boolean;
       };
       update_profile: {
         Args: { p_patch: Json };

@@ -394,6 +394,10 @@ export const en: Copy = {
     unlock: 'See where you lose with Pro ›',
     empty: 'It needs a few more matches to show.',
   },
+  push: {
+    one: { title: 'A result is in', body: 'Did you call it? Come and see.' },
+    many: { title: '{n} results are in', body: 'How many did you call? Come and see.' },
+  },
   placeholder: {
     results: 'Results will show up here.',
     players: 'Players will show up here.',

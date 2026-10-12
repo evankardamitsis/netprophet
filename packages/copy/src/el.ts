@@ -415,6 +415,11 @@ export const el = {
     unlock: 'Δες πού χάνεις με το Pro ›',
     empty: 'Θέλει μερικά ματς ακόμα για να φανεί.',
   },
+  /** push for results; the database sends these (core.take_push_batch), keep both in step */
+  push: {
+    one: { title: 'Βγήκε αποτέλεσμα', body: 'Το ’πες; Μπες να δεις.' },
+    many: { title: 'Βγήκαν {n} αποτελέσματα', body: 'Πόσα το ’πες; Μπες να δεις.' },
+  },
   placeholder: {
     results: 'Τα αποτελέσματα έρχονται εδώ.',
     players: 'Οι παίκτες έρχονται εδώ.',

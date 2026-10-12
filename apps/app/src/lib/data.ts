@@ -11,6 +11,7 @@ import { useAuth } from './auth';
 import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
+import { askForPushOnce } from './push';
 import { toScoutView, type ScoutView } from './scout';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
@@ -105,6 +106,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     }
     try {
       const res = await api.castVote(matchId, toDbSide(side));
+      void askForPushOnce(api);
       return toPct(res.split);
     } catch (err) {
       onError.current?.(voteErrorKind(err));
