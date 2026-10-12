@@ -388,6 +388,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_players: {
+        Args: { p_query?: string; p_filter?: string; p_limit?: number };
+        Returns: Json;
+      };
       admin_resolve_dispute: {
         Args: { p_match_id: string; p_decision: string };
         Returns: Json;
@@ -406,6 +410,14 @@ export type Database = {
       };
       admin_tournaments: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_unclaim: {
+        Args: { p_player_id: string };
+        Returns: Json;
+      };
+      admin_update_player: {
+        Args: { p_player_id: string; p: Json };
         Returns: Json;
       };
       admin_void_match: {

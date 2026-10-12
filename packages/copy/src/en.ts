@@ -255,6 +255,7 @@ export const en: Copy = {
     followFailed: 'That did not work. Try again.',
   },
   onboarding: {
+    age: { check: 'I am 15 or older' },
     back: '‹ Back',
     next: 'Continue',
     name: {

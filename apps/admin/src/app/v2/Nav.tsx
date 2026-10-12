@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 /** the v2 admin's desks */
-type Desk = 'results' | 'import' | 'moderation';
+type Desk = 'results' | 'import' | 'moderation' | 'players';
 
 export function Nav({ here }: { here: Desk }) {
   const item = (key: Desk, label: string) => (
@@ -15,6 +15,7 @@ export function Nav({ here }: { here: Desk }) {
       {item('results', 'Results')}
       {item('import', 'Import')}
       {item('moderation', 'Moderation')}
+      {item('players', 'Players')}
     </span>
   );
 }

@@ -268,6 +268,8 @@ export const el = {
     followFailed: 'Δεν έγινε. Ξαναδοκίμασε.',
   },
   onboarding: {
+    /** sign-up is for 15 and over */
+    age: { check: 'Είμαι 15 χρονών και πάνω' },
     back: '‹ Πίσω',
     next: 'Συνέχεια',
     name: {
