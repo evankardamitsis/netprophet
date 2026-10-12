@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { mockLadder } from '../mock/ladder';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
@@ -188,6 +189,43 @@ export function useResults(): ResultsState {
 
   const groups = useMemo(() => groupResults(rows, t, new Date()), [rows, t]);
   return { groups, loading, error, refresh };
+}
+
+export interface LadderState {
+  ladder: Ladder | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** This month's Κατάταξη in one scope; sample data for the guest. */
+export function useLadder(scope: LadderScope): LadderState {
+  const api = useApi();
+  const [ladder, setLadder] = useState<Ladder | null>(() => (api ? null : mockLadder(scope)));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setLadder(mockLadder(scope));
+      return;
+    }
+    setLoading(true);
+    try {
+      setLadder(await api.getLadder(scope, 20));
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, scope]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { ladder, loading, error, refresh };
 }
 
 /** Area names for the guest's sample data or from the database. */

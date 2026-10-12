@@ -195,6 +195,43 @@ export interface PlayerProfile extends PlayerCard {
   next_match: PlayerMatchLine | null;
 }
 
+/** Κατάταξη scopes in M1; leagues («Κατηγορία») come with M3. */
+export type LadderScope = 'friends' | 'all';
+
+export interface LadderRow {
+  position: number;
+  user_id: string;
+  first_name: string | null;
+  surname: string | null;
+  display_name: string | null;
+  points: number;
+  last_point_at: string | null;
+  is_me: boolean;
+}
+
+/** This month's Κατάταξη (api.get_ladder). */
+export interface Ladder {
+  scope: LadderScope;
+  month_key: string;
+  /** days until the month ends, Athens time; 1 on the last day */
+  days_left: number;
+  total: number;
+  /** the top rows, then the viewer's own row if it is lower */
+  rows: LadderRow[];
+  me: {
+    position: number;
+    points: number;
+    /** points to pass the row above (the gap plus one); null at the top */
+    to_next: number | null;
+    above: Pick<LadderRow, 'first_name' | 'surname' | 'display_name'> | null;
+  } | null;
+  streak: number;
+  /** what the votes still waiting for a result pay if they come in */
+  pending: number;
+  /** open matches the viewer has not voted on */
+  open_votes: number;
+}
+
 export interface MeResult {
   user_id: string;
   profile: {
