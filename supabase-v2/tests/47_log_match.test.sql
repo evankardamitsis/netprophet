@@ -44,8 +44,10 @@ select ok(core.match_sides_json(:'m2'::uuid)::text like '%Αντίπαλος%', 
 -- someone votes for the logger, then the logger adds the result to that same match
 select tests.login(:'v'::uuid);
 select api.cast_vote(:'m2'::uuid, 1) is not null as x \gset
+select tests.logout();
+select id as newbie from core.players where surname = 'Αντίπαλος' \gset
 select tests.login(:'u'::uuid);
-select is(jsonb_array_length(api.find_my_matches(array[(select id from core.players where surname = 'Αντίπαλος')], core.athens_day() + 1, 'singles')),
+select is(jsonb_array_length(api.find_my_matches(array[:'newbie'::uuid], core.athens_day() + 1, 'singles')),
           1, '«Αυτό είναι το ματς σου;» finds it');
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}',
                             core.athens_day() + 1, :'m2')::jsonb) is not null as x \gset

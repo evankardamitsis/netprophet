@@ -333,7 +333,14 @@ begin
       raise exception 'same_player_twice' using errcode = '22023';
     end if;
     -- never two of the same match: the screen asks «Αυτό είναι το ματς σου;» first
-    if jsonb_array_length(api.find_my_matches(array_remove(v_opps || v_partner, null), v_date, v_format)) > 0 then
+    if exists (
+      select 1 from core.matches m
+       where m.format = v_format and m.status <> 'void'
+         and m.starts_at >= ((v_date - 1)::timestamp at time zone 'Europe/Athens')
+         and m.starts_at <  ((v_date + 2)::timestamp at time zone 'Europe/Athens')
+         and (select count(*) from core.match_participants mp
+               where mp.match_id = m.id and mp.player_id = any (array_remove(v_opps || v_partner || v_me, null)))
+             = 1 + array_length(v_opps, 1) + (case when v_partner is null then 0 else 1 end)) then
       raise exception 'duplicate_match' using errcode = '23505';
     end if;
 
