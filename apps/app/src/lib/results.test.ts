@@ -75,6 +75,15 @@ describe('toResultItem', () => {
     expect(it1.score).toBe('4-6, 6-3, 7-5');
     expect(it1.winner[0]).toEqual({ first: 'Ηλίας', surname: 'Μέμμος' });
   });
+  it('reactions and «Πες κάτι στον …»', () => {
+    const r = { options: [{ key: 'bravo', label: 'Μπράβο' }, { key: 'rematch', label: 'Ρεβάνς' }], counts: { bravo: 2 }, mine: null };
+    const it0 = toResultItem(row({ reactions: r, kudo_to: { player_id: 'p', first_name: 'Νίκος', gender: null } }), t);
+    expect(it0.reactions).toEqual(r);
+    expect(it0.thank).toMatchObject({ label: 'Πες κάτι στον Νίκο ›', playerId: 'p' });
+    const none = toResultItem(row({ reactions: { options: [], counts: {}, mine: null }, kudo_to: null }), t);
+    expect(none.reactions).toBeNull();
+    expect(none.thank).toBeNull();
+  });
   it('no votes, no line; a wrong call, no pill', () => {
     const it2 = toResultItem(row({ split: null, upset: false, my: { pick: 2, outcome: 'wrong', points: 0 } }), t);
     expect(it2.line).toBeNull();

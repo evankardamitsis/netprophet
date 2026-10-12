@@ -5,6 +5,7 @@ import type {
   ClaimCandidate,
   ConfirmationAnswer,
   GetFeedResult,
+  KudoOption,
   LinkKudo,
   LogMatchInput,
   MatchFormat,
@@ -18,6 +19,8 @@ import type {
   PlayerCard,
   PlayerProfile,
   PendingConfirmation,
+  Reactions,
+  ReceivedKudo,
   PlayersHome,
   ProState,
   PublicTournament,
@@ -105,6 +108,12 @@ export function rpc(client: NetprophetClient) {
     linkKudo: (token: string, kudo: LinkKudo) => call<null>(client, 'link_kudo', { p_token: token, p_kudo: kudo }),
     hideViaLink: (token: string, hidden: boolean) => call<{ player_id: string; hidden: boolean }>(client, 'hide_via_link', { p_token: token, p_hidden: hidden }),
     claimViaLink: (token: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_via_link', { p_token: token }),
+    kudosOptions: (matchId: string, toPlayer?: string) =>
+      call<KudoOption[]>(client, 'kudos_options', { p_match_id: matchId, ...(toPlayer ? { p_to_player: toPlayer } : {}) }),
+    giveKudo: (matchId: string, key: string, toPlayer?: string) =>
+      call<{ match_id: string; given: number }>(client, 'give_kudo', { p_match_id: matchId, p_option_key: key, ...(toPlayer ? { p_to_player: toPlayer } : {}) }),
+    react: (matchId: string, key: string | null) => call<Reactions>(client, 'react', { p_match_id: matchId, p_key: key as string }),
+    getMyKudos: () => call<ReceivedKudo[]>(client, 'get_my_kudos', {}),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),

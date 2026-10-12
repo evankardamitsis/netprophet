@@ -5,9 +5,10 @@ import { router } from 'expo-router';
 import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
-import { useMePage, usePro, useWinLoss } from '../../src/lib/data';
+import { KudosCloud } from '../../src/components/KudosCloud';
+import { useMePage, useMyKudos, usePro, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
-import { greekCaps } from '@netprophet/copy';
+import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { activeLine, priceLine } from '../../src/lib/pro';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
@@ -16,7 +17,7 @@ import { colors, fonts } from '../../src/theme';
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
  * name), the σερί with its freezes, «Το σκορ σου», «Οι ψήφοι σου», «Τα ματς σου», «Οι φίλοι σου» and Ρυθμίσεις
- * with Αποσύνδεση. Avatar, stats flip, Εμφάνιση, freeze purchase, Αποστολές, badges, kudos, «Πώς σε βλέπουν»,
+ * with Αποσύνδεση, plus «Τι λένε για σένα» (M2). Avatar, stats flip, Εμφάνιση, freeze purchase, Αποστολές, badges, «Πώς σε βλέπουν»,
  * «Πού κερδίζεις», Απολογισμός and Τουρνουά come with their milestones (M2 to M5).
  */
 const STG_MS = 450;
@@ -27,6 +28,7 @@ const ACCENT_PAD = 10;
 export default function MeScreen() {
   const t = useCopy();
   const { view, loading, error, refresh } = useMePage();
+  const kudos = useMyKudos();
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
   let n = 0;
@@ -56,6 +58,11 @@ export default function MeScreen() {
             <Section i={next()}>
               <Score v={view} />
             </Section>
+            {kudos ? (
+              <Section i={next()}>
+                <KudosCloud list={kudos} gender={nameGender(view.first)} />
+              </Section>
+            ) : null}
             {!view.isNew ? (
               <Section i={next()}>
                 <WinLoss />

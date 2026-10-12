@@ -456,6 +456,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      get_my_kudos: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_player: {
         Args: { p_player_id: string };
         Returns: Json;
@@ -480,6 +484,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      give_kudo: {
+        Args: { p_match_id: string; p_option_key: string; p_to_player?: string };
+        Returns: Json;
+      };
       hide_via_link: {
         Args: { p_token: string; p_hidden: boolean };
         Returns: Json;
@@ -487,6 +495,10 @@ export type Database = {
       join_pro_waitlist: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;
+      };
+      kudos_options: {
+        Args: { p_match_id: string; p_to_player?: string };
+        Returns: Json;
       };
       link_kudo: {
         Args: { p_token: string; p_kudo: string };
@@ -506,6 +518,10 @@ export type Database = {
       };
       match_links: {
         Args: { p_match_id: string };
+        Returns: Json;
+      };
+      react: {
+        Args: { p_match_id: string; p_key: string };
         Returns: Json;
       };
       register_push_token: {

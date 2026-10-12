@@ -137,6 +137,28 @@ export interface ResultRow {
   upset: boolean;
   /** the viewer's own vote; null when they did not vote */
   my: { pick: Side; outcome: 'correct' | 'wrong' | 'none' | null; points: number } | null;
+  /** the two chips on the card, their counts and the viewer's pick */
+  reactions?: Reactions;
+  /** «Πες κάτι στον …»: an opponent the viewer has not thanked, or a player they follow; null when nobody */
+  kudo_to?: { player_id: string; first_name: string; gender: 'm' | 'f' | null } | null;
+}
+
+export interface Reactions {
+  options: { key: string; label: string }[];
+  counts: Record<string, number>;
+  mine: string | null;
+}
+
+/** a line of «Πες μια καλή κουβέντα» in its three forms (the app picks by gender, plural for doubles) */
+export interface KudoOption {
+  key: string;
+  forms: { m: string; f: string; plural: string };
+}
+
+/** «Τι λένε για σένα» */
+export interface ReceivedKudo extends KudoOption {
+  doubles_only: boolean;
+  n: number;
 }
 
 /** Someone named in a match line («με Δημήτρη Γκότση»). name_forms holds the grammatical forms when known. */

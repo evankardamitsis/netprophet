@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type ConfirmationAnswer, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type ConfirmationAnswer, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockScout } from '../mock/scout';
@@ -485,6 +485,82 @@ export function useMatchLinks(matchId: string | null) {
     api.matchLinks(matchId).then(setLinks).catch(() => setLinks([]));
   }, [api, matchId]);
   return links;
+}
+
+/* the prototype's five-line samples for mock mode and the dev guest */
+const MOCK_KUDOS: KudoOption[] = [
+  { key: 'strong_serve', forms: { m: 'Δυνατό σερβίς', f: 'Δυνατό σερβίς', plural: 'Δυνατό σερβίς' } },
+  { key: 'steady_baseline', forms: { m: 'Σταθερός στη baseline', f: 'Σταθερή στη baseline', plural: 'Σταθεροί στη baseline' } },
+  { key: 'got_everything', forms: { m: 'Τα γύρναγε όλα', f: 'Τα γύρναγε όλα', plural: 'Τα γύρναγαν όλα' } },
+  { key: 'fair_calls', forms: { m: 'Δίκαιος στα αμφιλεγόμενα', f: 'Δίκαιη στα αμφιλεγόμενα', plural: 'Δίκαιοι στα αμφιλεγόμενα' } },
+  { key: 'rematch', forms: { m: 'Πάμε για ρεβάνς', f: 'Πάμε για ρεβάνς', plural: 'Πάμε για ρεβάνς' } },
+];
+
+/** «Πες μια καλή κουβέντα»: five lines for a match (one player when `toPlayer` is given), and sending one */
+export function useKudos(matchId: string | null, toPlayer?: string) {
+  const api = useApi();
+  const [options, setOptions] = useState<KudoOption[] | null>(null);
+  useEffect(() => {
+    if (!matchId) return;
+    if (!api) {
+      setOptions(MOCK_KUDOS);
+      return;
+    }
+    api.kudosOptions(matchId, toPlayer).then(setOptions).catch(() => setOptions([]));
+  }, [api, matchId, toPlayer]);
+  const give = useCallback(
+    async (key: string, source: 'log' | 'results'): Promise<boolean> => {
+      if (!matchId) return false;
+      if (!api) return true;
+      try {
+        await api.giveKudo(matchId, key, toPlayer);
+        track('kudo_given', { source });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [api, matchId, toPlayer],
+  );
+  return { options, give };
+}
+
+/** a reaction on a result: the chip moves at once, the server's counts follow */
+export function useReact() {
+  const api = useApi();
+  return useCallback(
+    async (matchId: string, key: string | null): Promise<Reactions | null> => {
+      if (!api) return null;
+      try {
+        const r = await api.react(matchId, key);
+        track('reaction_set', { key });
+        return r;
+      } catch {
+        return null;
+      }
+    },
+    [api],
+  );
+}
+
+/** «Τι λένε για σένα» */
+export function useMyKudos(): ReceivedKudo[] | null {
+  const api = useApi();
+  const [list, setList] = useState<ReceivedKudo[] | null>(null);
+  useEffect(() => {
+    if (!api) {
+      setList([
+        { ...MOCK_KUDOS[0]!, doubles_only: false, n: 4 },
+        { ...MOCK_KUDOS[3]!, doubles_only: false, n: 3 },
+        { ...MOCK_KUDOS[1]!, doubles_only: false, n: 2 },
+        { key: 'quick_feet', forms: { m: 'Γρήγορα πόδια', f: 'Γρήγορα πόδια', plural: 'Γρήγορα πόδια' }, doubles_only: false, n: 1 },
+        { key: 'chemistry', forms: { m: 'Ωραία χημεία', f: 'Ωραία χημεία', plural: 'Ωραία χημεία' }, doubles_only: true, n: 1 },
+      ]);
+      return;
+    }
+    api.getMyKudos().then(setList).catch(() => setList([]));
+  }, [api]);
+  return list;
 }
 
 const MOCK_TOURNAMENTS: PublicTournament[] = [
