@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 11 Oct 2026. Read this after CLAUDE.md. It says what is done, what is left of M0, and what M1 is.
+Last updated: 12 Oct 2026. Read this after CLAUDE.md. It says what is done, what is left of M0, and what M1 is.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
@@ -39,6 +39,13 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Παίκτες: `get_players_home`, `find_players`, `get_player` and the tab + profile from the prototype. Follow from the profile is a friend (relation 'friend'); onboarding's «Ποιους ξέρεις» will use 'known'. Traits («Πώς παίζει»), head-to-head and gifts are later. Hosted needs `scripts/v2-db-remote.sh push` after merge.
 - Testing: iOS Simulator works (Xcode installed; iPhone 18 Pro). Android Studio still to install. `preview` is a local branch combining open PRs for the founder's phone; new work is built in a second clone (`../netprophet-dev`; worktrees there get cleaned up) so the main folder stays on `v2`.
 - Lessons: on iOS, text clips when its line height is below its font size (accents, digits); any function called inside an animated style must be a worklet.
+
+## M1 progress (12 Oct): the M1 list is built
+- #18 to #31 merged and live on hosted: Παίκτες, onboarding (name, claim, how you play, area, who you know, 4 slides, «Ας ξεκινήσουμε»), Κατάταξη (`get_ladder`, two scopes; leagues are M3), Εγώ (`get_me_page`), Pro foundations + scouting + «Πού κερδίζεις», the import desk (`/v2/import`, `packages/ingest` = the parse_oop.py port, 54/54 on the TAF fixture), push for results (`core.push_tokens`, `core.send_push` with pg_net under pg_cron), PostHog analytics.
+- Accounts: Expo project `@evankardamitsis/netprophet` (eas init, projectId in app.json). PostHog Cloud EU project «NetProphet» (key in `apps/app/.env.local`, sends only from release builds).
+- Founder answers (12 Oct): «wo» winner is picked by the admin; the organiser's score always overrides; imported players show by name before a claim; «Πάμε» on the last slide; «δεξί χέρι»; no month-end line on Κατάταξη; surface comes per tournament.
+- Before the closed beta: deploy the web app (`apps/app/vercel.json`, a new Vercel project rooted at `apps/app` with the EXPO_PUBLIC_ env values; add its URL to Supabase auth redirect URLs), development builds for push (Apple Developer account for APNs, a Firebase project for Android), the first real import (TAF), a web consent banner for the public launch.
+- Lessons: the admin had no type-check script, so the pre-commit check skipped it (fixed in #30); `expo install` in this monorepo updates the lockfile but not `apps/app/package.json` (add the entries by hand); a broken `unrs-resolver` postinstall needs `pnpm install --ignore-scripts` locally.
 
 ## Pro: real, not a fake door (decided 12 Oct 2026)
 - The founder dropped the fake door: Pro is built for real and sold on the web first (Apple/Google billing comes with the store release). Pro belongs to the account, so a web purchase unlocks the phone apps.
