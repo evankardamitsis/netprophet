@@ -8,13 +8,6 @@ import { fmt } from './votes';
  * api.get_ladder; this only turns them into the prototype's lines.
  */
 
-/** «Τελειώνει ο μήνας σε 12 μέρες · ανανεώνεται την 1η» */
-export function endsLabel(daysLeft: number, t: Copy): string {
-  const l = t.ladder;
-  if (daysLeft <= 1) return l.endsToday;
-  return fmt(l.ends, { n: daysLeft, days: l.days.many });
-}
-
 /** The name on a row: first name and surname, else the display name; «Εσύ» for the viewer. */
 export function rowName(row: Pick<LadderRow, 'first_name' | 'surname' | 'display_name'> & { is_me?: boolean }, t: Copy): string {
   if (row.is_me) return t.ladder.you;

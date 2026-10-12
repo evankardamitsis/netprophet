@@ -14,9 +14,6 @@ export const en: Copy = {
   ladder: {
     title: 'Ladder',
     subtitle: 'Who calls it right most often this month.',
-    ends: 'The month ends in {n} {days} · renews on the 1st',
-    endsToday: 'The month ends today · renews on the 1st',
-    days: { one: 'day', many: 'days' },
     scopes: { friends: 'People you know', all: 'All of Attica' },
     scopeName: { friends: 'People you know · this month', all: 'All of Attica · this month' },
     position: '#{n}',
