@@ -610,6 +610,21 @@ export const el = {
     unblock: 'Ξεμπλόκαρε',
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
   },
+  /** full-screen moments (prototype celOn): σερί milestones for now */
+  celebrate: {
+    label: 'Σερί',
+    titles: { 3: 'Τρία στη σειρά!', 5: 'Πέντε στη σειρά!', 7: 'Επτά στη σειρά!', 10: 'Το δέκα το καλό' } as Record<number, string>,
+    rewards: {
+      freeze: 'Πάρε κι ένα πάγωμα για τις δύσκολες μέρες',
+      frame: 'Κορνίζα «{name}»',
+      both: 'Πάγωμα και κορνίζα',
+      none: 'Συνέχισε έτσι',
+    },
+    frames: { frame_seven: 'Επτά', frame_ten: 'Δέκα' } as Record<string, string>,
+    /** «σερί» in the pill */
+    unit: 'σερί',
+    aria: 'Γιορτή',
+  },
   placeholder: {
     results: 'Τα αποτελέσματα έρχονται εδώ.',
     players: 'Οι παίκτες έρχονται εδώ.',

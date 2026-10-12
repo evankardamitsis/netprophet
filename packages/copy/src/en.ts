@@ -569,6 +569,19 @@ export const en: Copy = {
     unblock: 'Unblock',
     failed: 'That did not work. Try again.',
   },
+  celebrate: {
+    label: 'Streak',
+    titles: { 3: 'Three in a row!', 5: 'Five in a row!', 7: 'Seven in a row!', 10: 'Ten, the good one' } as Record<number, string>,
+    rewards: {
+      freeze: 'Here is a freeze for the hard days',
+      frame: 'Frame «{name}»',
+      both: 'A freeze and a frame',
+      none: 'Keep it going',
+    },
+    frames: { frame_seven: 'Seven', frame_ten: 'Ten' } as Record<string, string>,
+    unit: 'streak',
+    aria: 'Celebration',
+  },
   placeholder: {
     results: 'Results will show up here.',
     players: 'Players will show up here.',

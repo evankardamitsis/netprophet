@@ -29,6 +29,8 @@ export const colors = {
   fog: '#7C8A82',
   /** cards, inputs, tab bar */
   white: '#FFFFFF',
+  /** the deeper lime among the celebration confetti */
+  leaf: '#9BD05A',
 } as const;
 
 export const radii = { sm: 12, md: 16, lg: 24, pill: 999 } as const;
