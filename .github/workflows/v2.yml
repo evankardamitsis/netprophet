@@ -18,6 +18,7 @@ env:
     --filter @netprophet/copy
     --filter @netprophet/tokens
     --filter @netprophet/db
+    --filter @netprophet/ingest
     --filter @netprophet/app
 
 jobs:
