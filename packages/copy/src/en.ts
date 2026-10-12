@@ -526,6 +526,23 @@ export const en: Copy = {
     claimNo: 'That is not me',
     knownNote: 'Pick the people you know. {who} is already in.',
   },
+  kudos: {
+    title: 'Say something nice',
+    ask: { m: 'What did you like most about your opponent?', f: 'What did you like most about your opponent?', plural: 'What did you like most about your opponents?' },
+    askTo: { m: 'What do you want to tell him?', f: 'What do you want to tell her?' },
+    later: 'Another time',
+    yours: 'Your good word',
+    prompt: 'Say something to {to} ›',
+    sent: 'Sent',
+    failed: 'That did not go through. Try again.',
+    me: {
+      title: 'What they say about you',
+      all: 'All',
+      less: 'Less',
+      emptyTitle: 'This is where your week shows up.',
+      emptySub: 'After your first match, your opponents say something nice.',
+    },
+  },
   placeholder: {
     results: 'Results will show up here.',
     players: 'Players will show up here.',

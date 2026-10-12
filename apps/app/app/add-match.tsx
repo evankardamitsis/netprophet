@@ -7,9 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MyMatchCandidate, PlayerCard } from '@netprophet/db';
 import { Back, Chip, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
+import { KudosPicker } from '../src/components/KudosPicker';
 import { ShareSheet } from '../src/components/ShareSheet';
 import { TOAST_MS, Toast } from '../src/components/Toast';
-import { useLogMatch, useMatchLinks, useMe, type LogError } from '../src/lib/data';
+import { useKudos, useLogMatch, useMatchLinks, useMe, type LogError } from '../src/lib/data';
+import { kudoQuestion, kudoText } from '../src/lib/kudos';
+import { nameGender } from '@netprophet/copy';
 import { linkLabel, shareMessage, whoShort } from '../src/lib/link';
 import { linkBase } from '../src/lib/linkHost';
 import {
@@ -59,6 +62,9 @@ export default function AddMatch() {
   const [mine, setMine] = useState<MyMatchCandidate[] | null>(null);
   const [done, setDone] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
+  // a played match asks for a good word first (prototype fstep 'kudos'), then shows the Done card
+  const [thanking, setThanking] = useState(false);
+  const [kudo, setKudo] = useState<string | null>(null);
 
   const set = (patch: Partial<LogForm>) => {
     setError(null);
@@ -79,6 +85,8 @@ export default function AddMatch() {
     setBusy(false);
     if (r.ok) {
       setDoneId(r.matchId);
+      setThanking(form.mode === 'played');
+      setKudo(null);
       setDone(true);
     }
     else setError(r.error);
@@ -97,7 +105,8 @@ export default function AddMatch() {
     await send();
   };
 
-  if (done) return <Done form={form} matchId={doneId} onAgain={() => { setForm(emptyForm(form.mode)); setOpen('d'); setDone(false); setDoneId(null); setMine(null); }} />;
+  if (done && thanking) return <Thank form={form} matchId={doneId} onDone={(text) => { setKudo(text); setThanking(false); }} />;
+  if (done) return <Done form={form} matchId={doneId} kudo={kudo} onAgain={() => { setForm(emptyForm(form.mode)); setOpen('d'); setDone(false); setDoneId(null); setMine(null); }} />;
 
   const single = form.format === 'singles';
   return (
@@ -402,11 +411,40 @@ function IsYours({ candidates, busy, onYes, onNo }: { candidates: MyMatchCandida
   );
 }
 
+/** «Πες μια καλή κουβέντα» for the other side: by the opponent's gender, plural in doubles */
+function Thank({ form, matchId, onDone }: { form: LogForm; matchId: string | null; onDone: (text: string | null) => void }) {
+  const t = useCopy();
+  const insets = useSafeAreaInsets();
+  const { options, give } = useKudos(matchId);
+  const plural = form.opponents.length > 1;
+  const first = form.opponents[0]?.first ?? '';
+  const gender = nameGender(first);
+  // nothing to pick (the server had no lines, or nobody to thank): straight to Done
+  useEffect(() => {
+    if (options && options.length === 0) onDone(null);
+  }, [options, onDone]);
+  if (!options || options.length === 0) return <View style={styles.screen} />;
+  return (
+    <ScrollView style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
+      <StatusBar style="dark" />
+      <KudosPicker
+        question={kudoQuestion(t, gender, plural, false)}
+        options={options.map((o) => ({ key: o.key, text: kudoText(o, gender, plural) }))}
+        onPick={async (key, text) => {
+          const ok = await give(key, 'log');
+          onDone(ok ? text : null);
+        }}
+        onSkip={() => onDone(null)}
+      />
+    </ScrollView>
+  );
+}
+
 /**
  * isDone: «Μπήκε», the match, what happens now. A played match against people not in the app gets
  * «Στείλ’ το απέναντι» (the share sheet with their link) and «Δες τι βλέπει απέναντι ›».
  */
-function Done({ form, matchId, onAgain }: { form: LogForm; matchId: string | null; onAgain: () => void }) {
+function Done({ form, matchId, kudo, onAgain }: { form: LogForm; matchId: string | null; kudo: string | null; onAgain: () => void }) {
   const t = useCopy();
   const d = t.addMatch.done;
   const s = t.addMatch.share;
@@ -439,6 +477,7 @@ function Done({ form, matchId, onAgain }: { form: LogForm; matchId: string | nul
         <Text style={styles.doneHead}>{form.mode === 'played' ? d.headPlayed : d.head}</Text>
         <Text style={styles.doneLine}>{fmt(d.line, { me: us, them })}</Text>
         <Text style={styles.doneSub}>{form.mode === 'played' ? d.subPlayed : d.subSoon}</Text>
+        {kudo ? <Text style={styles.doneSub}>{`${t.kudos.yours}: ${kudo}`}</Text> : null}
       </Animated.View>
       {links.length > 0 ? (
         <View style={styles.doneActions}>

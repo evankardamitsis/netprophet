@@ -1,6 +1,6 @@
 import { dayKey, formatWinnerSets, localParts } from '@netprophet/core';
-import { greekCaps, type Copy } from '@netprophet/copy';
-import type { FeedPlayer, ResultRow, Side } from '@netprophet/db';
+import { greekCaps, withArticleAccusative, type Copy } from '@netprophet/copy';
+import type { FeedPlayer, Reactions, ResultRow, Side } from '@netprophet/db';
 import { fmt } from './votes';
 
 /**
@@ -30,6 +30,10 @@ export interface ResultItem {
   loserSets: string;
   /** «6-4, 3-6, 7-5» winner first, «απ.» / «w/o» */
   score: string;
+  /** the two chips; null when the server sent none */
+  reactions: Reactions | null;
+  /** «Πες κάτι στον Νίκο ›» and who it goes to */
+  thank: { label: string; playerId: string; first: string; gender: 'm' | 'f' | null } | null;
 }
 
 export interface ResultGroup {
@@ -103,6 +107,15 @@ export function toResultItem(row: ResultRow, t: Copy): ResultItem {
     winnerSets: row.walkover ? '' : String(wonSets),
     loserSets: row.walkover ? '' : String(lostSets),
     score: summary ? '' : formatWinnerSets(row.sets, { retired: row.retired, walkover: row.walkover }, t.results),
+    reactions: row.reactions && row.reactions.options.length > 0 ? row.reactions : null,
+    thank: row.kudo_to
+      ? {
+          label: fmt(t.kudos.prompt, { to: withArticleAccusative(row.kudo_to.first_name, '', row.kudo_to.gender).trim() }),
+          playerId: row.kudo_to.player_id,
+          first: row.kudo_to.first_name,
+          gender: row.kudo_to.gender,
+        }
+      : null,
   };
 }
 

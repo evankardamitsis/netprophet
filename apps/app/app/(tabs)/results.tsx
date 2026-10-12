@@ -9,7 +9,7 @@ import { colors, ease, fonts } from '../../src/theme';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): the scoreboard of the last two weeks, grouped by day and event.
- * M1 scope: scoreboard, «Ανατροπή» and «Το ’πες». Reactions, kudos, the filter and the sponsored card come later.
+ * Scoreboard, «Ανατροπή», «Το ’πες», reactions and «Πες κάτι στον …». The filter and the sponsored card come later.
  */
 const TITLE_IN_MS = 400;
 /**

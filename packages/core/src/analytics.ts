@@ -20,6 +20,8 @@ export interface AnalyticsEvents {
   link_answered: { outcome: 'confirmed' | 'corrected' | 'disputed' };
   link_hidden: { hidden: boolean };
   link_claimed: { result: 'ok' | 'taken' | 'other' | 'failed' };
+  kudo_given: { source: 'log' | 'results' };
+  reaction_set: { key: string | null };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

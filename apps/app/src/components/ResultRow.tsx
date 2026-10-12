@@ -1,15 +1,18 @@
 import { Fragment, useEffect, useState } from 'react';
-import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
+import { router } from 'expo-router';
 import Animated from 'react-native-reanimated';
 import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
 import { colors, fonts } from '../theme';
 import { FitText } from './FitText';
+import { ReactionChips } from './ReactionChips';
 
 /**
  * One finished match on Αποτελέσματα (prototype V2, result card): white, or ink for an upset.
  * Top row: «Ανατροπή» tag, «Το 69% έλεγε …», «Το ’πες · +10». Then the winner (big) and the loser
- * (smaller, faded) with sets won, and the set scores winner first.
+ * (smaller, faded) with sets won, and the set scores winner first. Under them the two reactions and
+ * «Πες κάτι στον …» (blue, lime on the dark card).
  */
 const STG_MS = 450;
 const TAG_MS = 450;
@@ -44,6 +47,21 @@ export function ResultRow({ item, index }: { item: ResultItem; index: number }) 
         <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
       </View>
       <Text style={[styles.sets, { color: hot ? colors.mist : colors.inkSoft }]}>{item.score}</Text>
+      {item.reactions ? <ReactionChips matchId={item.id} initial={item.reactions} dark={hot} /> : null}
+      {item.thank ? (
+        <Pressable
+          accessibilityRole="button"
+          style={styles.thankHit}
+          onPress={() =>
+            router.push({
+              pathname: '/kudos',
+              params: { match: item.id, to: item.thank!.playerId, first: item.thank!.first, gender: item.thank!.gender ?? '' },
+            })
+          }
+        >
+          <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank.label}</Text>
+        </Pressable>
+      ) : null}
     </Animated.View>
   );
 }
@@ -122,4 +140,6 @@ const styles = StyleSheet.create({
   // the revealed first name is smaller and lighter (prototype .ns)
   firstName: { fontSize: 21, fontFamily: fonts.bodySemi },
   sets: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
+  thankHit: { minHeight: 32, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
+  thank: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });
