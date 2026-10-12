@@ -77,8 +77,10 @@ const playersOf = (row: ResultRow, side: Side) => row.sides.find((s) => s.side =
 export function toResultItem(row: ResultRow, t: Copy): ResultItem {
   const win = row.winner_side;
   const lose: Side = win === 1 ? 2 : 1;
-  const wonSets = row.sets.filter((s) => s.w > s.l).length;
-  const lostSets = row.sets.filter((s) => s.l > s.w).length;
+  // a player-logged result knows only the sets («2-1»), not the games
+  const summary = row.sets.length === 0 && row.score_summary ? row.score_summary.split('-').map(Number) : null;
+  const wonSets = summary ? summary[0] ?? 0 : row.sets.filter((s) => s.w > s.l).length;
+  const lostSets = summary ? summary[1] ?? 0 : row.sets.filter((s) => s.l > s.w).length;
 
   let line: string | null = null;
   if (row.split && row.split.total > 0) {
@@ -100,7 +102,7 @@ export function toResultItem(row: ResultRow, t: Copy): ResultItem {
     loser: names(playersOf(row, lose)),
     winnerSets: row.walkover ? '' : String(wonSets),
     loserSets: row.walkover ? '' : String(lostSets),
-    score: formatWinnerSets(row.sets, { retired: row.retired, walkover: row.walkover }, t.results),
+    score: summary ? '' : formatWinnerSets(row.sets, { retired: row.retired, walkover: row.walkover }, t.results),
   };
 }
 

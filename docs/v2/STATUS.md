@@ -47,6 +47,11 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Before the closed beta: deploy the web app (`apps/app/vercel.json`, a new Vercel project rooted at `apps/app` with the EXPO_PUBLIC_ env values; add its URL to Supabase auth redirect URLs), development builds for push (Apple Developer account for APNs, a Firebase project for Android), the first real import (TAF), a web consent banner for the public launch.
 - Lessons: the admin had no type-check script, so the pre-commit check skipped it (fixed in #30); `expo install` in this monorepo updates the lockfile but not `apps/app/package.json` (add the entries by hand); a broken `unrs-resolver` postinstall needs `pnpm install --ignore-scripts` locally.
 
+## M2 (started 12 Oct)
+- Founder decisions: player-logged results resolve votes at once (a dispute undoes them); player-logged matches show without approval; minors hidden from votes, cards and public pages, sign-up under 15 blocked; a new opponent name creates a pending player.
+- Part 1, «+ Ματς» (`api.log_match`, `api.find_my_matches`, `api.list_tournaments`, `core.set_result`): played or coming up, «Αυτό είναι το ματς σου;» attaches a result to an existing match so its votes pay out. Player-logged results know only the sets (`match_results.sets_won/sets_lost`). A logger without a player gets a pending one from their profile. Known gap: «Πού κερδίζεις» and scouting count deciding sets from game scores, so sets-only 2-1 results are not counted as deciding yet.
+- Next: confirmations in the feed and dispute reversal, the opponent link `/m/<token>`, kudos and reactions, moderation, minors.
+
 ## Pro: real, not a fake door (decided 12 Oct 2026)
 - The founder dropped the fake door: Pro is built for real and sold on the web first (Apple/Google billing comes with the store release). Pro belongs to the account, so a web purchase unlocks the phone apps.
 - Pro at launch: «Τα τουρνουά σου», «Ο αντίπαλος πριν το ματς», «Πού κερδίζεις, πού χάνεις», «Τα νούμερα του level σου». 8,99€ a month.

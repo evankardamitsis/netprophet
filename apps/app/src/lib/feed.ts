@@ -103,7 +103,8 @@ export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
     winnerSurname: winners.map((w) => w.surname).join(' & '),
     winnerFirst: winners.map((w) => w.first_name).join(' & '),
     line,
-    sets: (p.sets ?? []).map((x) => `${x.w}-${x.l}`).join(', '),
+    // a player-logged result has no games: the card shows the sets («2-1»)
+    sets: p.sets?.length ? p.sets.map((x) => `${x.w}-${x.l}`).join(', ') : p.score ?? '',
     pill: ok ? fmt(t.result.points, { points: p.points, streak: p.streak }) : frozen ? t.result.kept : null,
   };
 }

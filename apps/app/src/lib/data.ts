@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type ProState, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockScout } from '../mock/scout';
@@ -357,6 +357,77 @@ export function useWinLoss(pro: boolean): { rows: WinLossRow[] | null } {
       .catch(() => setRows([]));
   }, [api, pro, t]);
   return { rows };
+}
+
+const MOCK_TOURNAMENTS: PublicTournament[] = [
+  { id: 'open-glyfadas', name: 'Open Γλυφάδας', venue: null, area_id: 'glyfada', starts_on: null, ends_on: null },
+  { id: 'kypello-voulas', name: 'Κύπελλο Βούλας', venue: null, area_id: 'voula', starts_on: null, ends_on: null },
+];
+
+export type LogError = 'duplicate' | 'name_required' | 'failed';
+
+export interface LogMatchData {
+  tournaments: PublicTournament[];
+  /** friends first, then today's players: the quick picks */
+  suggestions: PlayerCard[];
+  /** «1.632», for «Ψάξε στους … παίκτες» */
+  total: string;
+  areas: Record<string, string>;
+  search: (q: string) => Promise<PlayerCard[]>;
+  findMine: (people: string[], date: string, format: MatchFormat) => Promise<MyMatchCandidate[]>;
+  submit: (input: LogMatchInput) => Promise<{ ok: true; matchId: string } | { ok: false; error: LogError }>;
+}
+
+/** what «+ Ματς» needs: the pickers, search, «Αυτό είναι το ματς σου;» and the submit */
+export function useLogMatch(): LogMatchData {
+  const api = useApi();
+  const [tournaments, setTournaments] = useState<PublicTournament[]>(api ? [] : MOCK_TOURNAMENTS);
+  const [suggestions, setSuggestions] = useState<PlayerCard[]>([]);
+  const [total, setTotal] = useState('');
+  const [areas, setAreas] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      const [home, list, a] = await Promise.all([
+        api ? api.getPlayersHome(12) : Promise.resolve(mockPlayersHome()),
+        api ? api.listTournaments() : Promise.resolve(MOCK_TOURNAMENTS),
+        areasFor(api !== null),
+      ]).catch(() => [null, null, {}] as const);
+      if (!live) return;
+      if (home) {
+        setSuggestions(home.players.slice(0, 6));
+        setTotal(thousands(home.total_players));
+      }
+      if (list) setTournaments(list);
+      setAreas(a ?? {});
+    })();
+    return () => {
+      live = false;
+    };
+  }, [api]);
+
+  const search = useCallback(async (q: string) => (api ? api.findPlayers(q, 8) : mockFindPlayers(q)), [api]);
+  const findMine = useCallback(
+    async (people: string[], date: string, format: MatchFormat) => (api && people.length ? api.findMyMatches(people, date, format).catch(() => []) : []),
+    [api],
+  );
+  const submit = useCallback(
+    async (input: LogMatchInput) => {
+      if (!api) return { ok: true as const, matchId: 'mock' };
+      try {
+        const r = await api.logMatch(input);
+        track('match_logged', { mode: input.mode, format: input.format, attached: !!input.match_id, new_people: (input.opponents ?? []).filter((p) => 'new' in p).length + (input.partner && 'new' in input.partner ? 1 : 0) });
+        return { ok: true as const, matchId: r.match_id };
+      } catch (err) {
+        const code = err instanceof RpcError ? err.code : '';
+        return { ok: false as const, error: code === 'duplicate_match' ? 'duplicate' : code === 'name_required' ? 'name_required' : 'failed' } as const;
+      }
+    },
+    [api],
+  );
+
+  return { tournaments, suggestions, total, areas, search, findMine, submit };
 }
 
 /** The guest's Pro on sample data: off, and «Γίνε μέλος» puts them on the list for this session. */
