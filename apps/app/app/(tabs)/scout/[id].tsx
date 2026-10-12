@@ -29,7 +29,7 @@ export default function ScoutScreen() {
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/me'));
 
   useEffect(() => {
-    if (scout.error === 'pro_required') router.replace('/pro');
+    if (scout.error === 'pro_required') router.replace('/pro?from=scout');
   }, [scout.error]);
 
   const message = scout.error === 'not_your_match' ? s.notYours : scout.error === 'match_over' ? s.over : scout.error === 'failed' ? s.error : null;

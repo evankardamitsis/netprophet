@@ -259,7 +259,7 @@ function WinLoss() {
         {pro && rows && rows.length === 0 ? <Text style={styles.muted}>{t.winLoss.empty}</Text> : null}
       </View>
       {!pro ? (
-        <Pressable accessibilityRole="button" onPress={() => router.push('/pro')} style={styles.linkHit}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=win_loss')} style={styles.linkHit}>
           <Text style={styles.unlock}>{t.winLoss.unlock}</Text>
         </Pressable>
       ) : null}
@@ -271,7 +271,7 @@ function WinLoss() {
 function Matches({ v }: { v: MeView }) {
   const t = useCopy();
   const { state } = usePro();
-  const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : router.push('/pro'));
+  const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : router.push('/pro?from=scout'));
   return (
     <View style={styles.block}>
       <Text style={styles.heading}>{t.me.matches.title}</Text>
@@ -359,7 +359,7 @@ function Settings() {
       </Pressable>
       {open ? (
         <>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/pro')} style={styles.proRow}>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=settings')} style={styles.proRow}>
             <View style={styles.proText}>
               <Text style={styles.proTitle}>{t.pro.title}</Text>
               <Text style={styles.muted}>{t.pro.settingsLine}</Text>

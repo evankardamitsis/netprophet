@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
+import { resetAnalytics } from './analytics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
@@ -101,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (exchanged.error) fail(exchanged.error);
       },
       async signOut() {
+        resetAnalytics();
         AsyncStorage.removeItem(GUEST_KEY).catch(() => undefined);
         setGuest(false);
         await supabase?.auth.signOut();

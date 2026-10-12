@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
 import { usePro } from '../src/lib/data';
 import { usePopIn, usePress, useRiseIn, useStgIn } from '../src/lib/motion';
-import { activeLine, priceLine } from '../src/lib/pro';
+import { track } from '../src/lib/analytics';
+import { activeLine, priceLine, proPrice } from '../src/lib/pro';
 import { colors, fonts } from '../src/theme';
 
 /**
@@ -25,6 +26,8 @@ export default function ProScreen() {
   const insets = useSafeAreaInsets();
   const { state, join } = usePro();
   const [failed, setFailed] = useState(false);
+  const moment = String(useLocalSearchParams<{ from?: string }>().from ?? 'direct');
+  useEffect(() => track('pro_sheet_viewed', { moment }), [moment]);
   const titleIn = useRiseIn(550, 50);
   const priceIn = usePopIn(450, 250);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -33,6 +36,7 @@ export default function ProScreen() {
 
   const onJoin = async () => {
     setFailed(false);
+    track('pro_cta_pressed', { price: proPrice(), moment });
     if (!(await join())) setFailed(true);
   };
 
