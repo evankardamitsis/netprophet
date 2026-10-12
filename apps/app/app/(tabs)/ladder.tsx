@@ -7,7 +7,7 @@ import type { Ladder, LadderRow, LadderScope } from '@netprophet/db';
 import { Segmented } from '../../src/components/OnboardingControls';
 import { useCopy } from '../../src/i18n';
 import { useLadder } from '../../src/lib/data';
-import { endsLabel, motivation, nextLine, pointRules, rowName } from '../../src/lib/ladder';
+import { motivation, nextLine, pointRules, rowName } from '../../src/lib/ladder';
 import { usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { fmt } from '../../src/lib/votes';
 import { colors, ease, fonts } from '../../src/theme';
@@ -41,7 +41,6 @@ export default function LadderScreen() {
         <Animated.View style={[styles.head, titleIn]}>
           <Text style={styles.title}>{l.title}</Text>
           <Text style={styles.subtitle}>{l.subtitle}</Text>
-          {ladder ? <Text style={styles.ends}>{endsLabel(ladder.days_left, t)}</Text> : null}
         </Animated.View>
         <Segmented
           options={[
@@ -204,7 +203,6 @@ const styles = StyleSheet.create({
     marginTop: -ACCENT_PAD,
   },
   subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
-  ends: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17.5, color: colors.inkSoft },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   cards: { gap: 12 },
   me: { padding: 22, borderRadius: 28, backgroundColor: colors.ink, gap: 10 },

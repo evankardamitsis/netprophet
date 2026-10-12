@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { Ladder } from '@netprophet/db';
-import { endsLabel, motivation, nextLine, pointRules, rowName, votesToPass } from './ladder';
+import { motivation, nextLine, pointRules, rowName, votesToPass } from './ladder';
 
 const t = getCopy('el');
 
@@ -16,13 +16,6 @@ const base: Ladder = {
   pending: 0,
   open_votes: 3,
 };
-
-describe('endsLabel', () => {
-  it('counts the days, then says today', () => {
-    expect(endsLabel(12, t)).toBe('Τελειώνει ο μήνας σε 12 μέρες · ανανεώνεται την 1η');
-    expect(endsLabel(1, t)).toBe('Τελειώνει ο μήνας σήμερα · ανανεώνεται την 1η');
-  });
-});
 
 describe('rowName', () => {
   it('first name and surname, the display name as a fallback, «Εσύ» for you', () => {

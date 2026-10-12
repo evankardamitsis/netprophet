@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RpcError, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
+import { mockMe } from '../mock/me';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
@@ -8,6 +9,7 @@ import { useCopy } from '../i18n';
 import { useAuth } from './auth';
 import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
+import { toMeView, type MeView } from './me';
 import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
 import {
@@ -226,6 +228,48 @@ export function useLadder(scope: LadderScope): LadderState {
   }, [refresh]);
 
   return { ladder, loading, error, refresh };
+}
+
+export interface MePageState {
+  view: MeView | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** Εγώ: get_me, get_me_page and your player's profile in one view; sample data for the guest. */
+export function useMePage(): MePageState {
+  const t = useCopy();
+  const api = useApi();
+  const [view, setView] = useState<MeView | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    try {
+      const now = new Date();
+      if (!api) {
+        const m = mockMe(now);
+        setView(toMeView(m.me, m.page, m.player, await areasFor(false), t, now));
+      } else {
+        const [me, page, areas] = await Promise.all([api.getMe(), api.getMePage(), areasFor(true)]);
+        const player = me.player ? await api.getPlayer(me.player.id).catch(() => null) : null;
+        setView(toMeView(me, page, player, areas, t, now));
+      }
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, t]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  return { view, loading, error, refresh };
 }
 
 /** Area names for the guest's sample data or from the database. */

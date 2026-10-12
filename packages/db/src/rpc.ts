@@ -232,6 +232,30 @@ export interface Ladder {
   open_votes: number;
 }
 
+export interface WinLoss {
+  w: number;
+  l: number;
+}
+
+/** The numbers on Εγώ beyond get_me and get_player (api.get_me_page). */
+export interface MePage {
+  /** this Athens year, singles and doubles apart; null without a player */
+  record_year: { singles: WinLoss; doubles: WinLoss } | null;
+  /** results of your player ever */
+  matches: number;
+  votes: {
+    resolved: number;
+    correct: number;
+    /** votes waiting for a result and what they pay if they come in */
+    waiting: number;
+    pending_points: number;
+    /** open matches you have not voted on */
+    open: number;
+  };
+  /** players you follow: how many, and the newest five */
+  friends: { count: number; first: PlayerRef[] };
+}
+
 export interface MeResult {
   user_id: string;
   profile: {
