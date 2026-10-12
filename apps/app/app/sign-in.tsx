@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
 import { AuthFailure, EMAIL_RE, guestAllowed, useAuth, type AuthErrorKind } from '../src/lib/auth';
 import { usePopIn, usePress } from '../src/lib/motion';
+import { SKIP_ONBOARDING_KEY } from '../src/lib/onboardingGate';
 import { fmt } from '../src/lib/votes';
 import { cardSurface, colors, ease, fonts } from '../src/theme';
 
@@ -22,7 +23,7 @@ const HERO_LOGO_H = 30;
 
 type Step = 'welcome' | 'email' | 'code';
 /** «Άλλη φορά»: after the email code, go straight to the feed and skip claim, area and Ποιους ξέρεις */
-export const SKIP_ONBOARDING_KEY = 'np.skipOnboarding';
+export { SKIP_ONBOARDING_KEY };
 const CODE_LEN = 6;
 /** prototype .sw: a 1em box (70px), words slide by 110% */
 const SWAP_H = 70;

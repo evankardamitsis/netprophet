@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@
 import type { Database } from './types';
 import type {
   CastVoteResult,
+  ClaimCandidate,
   GetFeedResult,
   MeResult,
   PlayerCard,
@@ -11,6 +12,7 @@ import type {
   ResultRow,
   SetScore,
   Side,
+  SuggestedPlayer,
 } from './rpc';
 
 export const API_SCHEMA = 'api' as const;
@@ -70,6 +72,11 @@ export function rpc(client: NetprophetClient) {
     getPlayersHome: (limit = 60) => call<PlayersHome>(client, 'get_players_home', { p_limit: limit }),
     findPlayers: (query: string, limit = 20) => call<PlayerCard[]>(client, 'find_players', { p_query: query, p_limit: limit }),
     getPlayer: (playerId: string) => call<PlayerProfile>(client, 'get_player', { p_player_id: playerId }),
+    suggestPlayers: (limit = 30) => call<SuggestedPlayer[]>(client, 'suggest_players', { p_limit: limit }),
+    followPlayers: (playerIds: string[]) => call<number>(client, 'follow_players', { p_player_ids: playerIds, p_source: 'onboarding' }),
+    setClaimStatus: (status: 'skipped' | 'creation_requested') => call<string>(client, 'set_claim_status', { p_status: status }),
+    findMatchingPlayers: (firstName: string, surname: string) =>
+      call<ClaimCandidate[]>(client, 'find_matching_players', { p_name: firstName, p_surname: surname }),
     markInboxSeen: (ids: string[]) => call<number>(client, 'mark_inbox_seen', { p_ids: ids }),
     claimPlayer: (playerId: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_player', { p_player_id: playerId }),
     followPlayer: (playerId: string, relation: 'known' | 'friend' = 'known', source: 'onboarding' | 'profile' | 'card' | 'invite' = 'profile') =>

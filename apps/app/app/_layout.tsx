@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { useFonts } from 'expo-font';
 import { AuthProvider, useAuth } from '../src/lib/auth';
+import { OnboardingGateProvider, useOnboardingGate } from '../src/lib/onboardingGate';
 import { isLive } from '../src/lib/supabase';
 import { colors } from '../src/theme';
 
@@ -27,7 +28,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <AuthProvider>
-          <Routes />
+          <OnboardingGateProvider>
+            <Routes />
+          </OnboardingGateProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -36,17 +39,24 @@ export default function RootLayout() {
 
 function Routes() {
   const { ready, session, guest } = useAuth();
+  const gate = useOnboardingGate();
   if (!ready) return null;
   // without a backend (mock mode) the app is open; live, everything but sign-in needs a session
   // (or, in development builds, the «Άλλη φορά» guest)
   const signedIn = !isLive || session !== null || guest;
+  // a new account goes through onboarding first; the dev guest can open it by hand at /onboarding
+  const onboarding = session !== null && gate.status === 'needed';
+  if (session !== null && gate.status === 'unknown') return null;
   return (
     <>
       <StatusBar style={signedIn ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={signedIn && !onboarding}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="add-match" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        </Stack.Protected>
+        <Stack.Protected guard={signedIn && (onboarding || (__DEV__ && (guest || !isLive)))}>
+          <Stack.Screen name="onboarding" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="sign-in" />

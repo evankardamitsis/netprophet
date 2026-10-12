@@ -392,6 +392,10 @@ export type Database = {
         Args: { p_player_id: string; p_relation?: string; p_source?: string };
         Returns: undefined;
       };
+      follow_players: {
+        Args: { p_player_ids: string[]; p_source?: string };
+        Returns: number;
+      };
       get_feed: {
         Args: { p_limit?: number };
         Returns: Json;
@@ -423,6 +427,14 @@ export type Database = {
       search_players: {
         Args: { p_query: string; p_limit?: number };
         Returns: { id: string; first_name: string; surname: string; area_id: string; photo_path: string; level_tier: number; level_direction: string; is_claimed: boolean; is_followed: boolean }[];
+      };
+      set_claim_status: {
+        Args: { p_status: string };
+        Returns: string;
+      };
+      suggest_players: {
+        Args: { p_limit?: number };
+        Returns: Json;
       };
       unfollow_player: {
         Args: { p_player_id: string };

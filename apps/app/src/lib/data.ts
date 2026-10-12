@@ -5,6 +5,7 @@ import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../moc
 import { mockResults } from '../mock/results';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
+import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
@@ -26,7 +27,7 @@ import {
 import type { Side } from './votes';
 
 /** The RPC client, or null for mock data: no backend, or the dev-only guest. */
-function useApi() {
+export function useApi() {
   const { guest } = useAuth();
   return guest ? null : liveApi;
 }
@@ -332,4 +333,112 @@ export function usePlayer(id: string): PlayerState {
 
   const profile = useMemo(() => (raw ? toProfile(raw, areas, t, new Date()) : null), [raw, areas, t]);
   return { profile, loading, error, notFound, refresh, toggleFollow };
+}
+
+/* ---------- onboarding ---------- */
+
+const MOCK_REGION_AREAS: Area[] = [
+  { id: 'kifisia', region: 'north', name: 'Κηφισιά', sort: 1 },
+  { id: 'marousi', region: 'north', name: 'Μαρούσι', sort: 2 },
+  { id: 'halandri', region: 'north', name: 'Χαλάνδρι', sort: 3 },
+  { id: 'athens', region: 'center', name: 'Αθήνα', sort: 4 },
+  { id: 'pagrati', region: 'center', name: 'Παγκράτι', sort: 5 },
+  { id: 'psychiko', region: 'center', name: 'Ψυχικό', sort: 6 },
+  { id: 'glyfada', region: 'south', name: 'Γλυφάδα', sort: 7 },
+  { id: 'voula', region: 'south', name: 'Βούλα', sort: 8 },
+  { id: 'palaio_faliro', region: 'south', name: 'Παλαιό Φάληρο', sort: 9 },
+];
+
+/** Areas with their region, for the «Πού παίζεις;» step. */
+export function useRegionAreas(): Area[] {
+  const api = useApi();
+  const [areas, setAreas] = useState<Area[]>(api ? [] : MOCK_REGION_AREAS);
+  useEffect(() => {
+    if (!api || !supabase) {
+      setAreas(MOCK_REGION_AREAS);
+      return;
+    }
+    supabase
+      .from('areas')
+      .select('id, region, name_el, sort')
+      .then(({ data }) =>
+        setAreas((data ?? []).map((a) => ({ id: a.id as string, region: a.region as Area['region'], name: a.name_el as string, sort: a.sort as number }))),
+      );
+  }, [api]);
+  return areas;
+}
+
+export interface ClaimRow {
+  id: string;
+  name: string;
+  /** «Γλυφάδα · level 4» */
+  sub: string;
+}
+
+/** The onboarding calls, against the database or (mock mode, the dev guest) the sample data. */
+export function useOnboardingApi() {
+  const api = useApi();
+  const t = useCopy();
+  return useMemo(
+    () => ({
+      async me() {
+        return api ? api.getMe() : null;
+      },
+      async rosterSize(): Promise<string> {
+        return thousands(api ? (await api.getPlayersHome(1)).total_players : mockPlayersHome().total_players);
+      },
+      async saveProfile(patch: Record<string, unknown>) {
+        if (api) await api.updateProfile(patch);
+      },
+      async candidates(first: string, surname: string): Promise<ClaimRow[]> {
+        const areas = await areasFor(api !== null);
+        if (!api) {
+          return mockFindPlayers(surname.slice(0, 3)).map((p) => ({
+            id: p.id,
+            name: `${p.first_name} ${p.surname}`,
+            sub: [p.area_id ? areas[p.area_id] : null, p.level_tier != null ? `${t.level.label} ${p.level_tier}` : null].filter(Boolean).join(' · '),
+          }));
+        }
+        const rows = await api.findMatchingPlayers(first, surname);
+        // the level is on the list row; look the candidates up in one search for their cards
+        const cards = rows.length ? await api.findPlayers(surname, 50) : [];
+        return rows.map((r) => {
+          const c = cards.find((x) => x.id === r.id);
+          return {
+            id: r.id,
+            name: `${r.first_name} ${r.surname}`,
+            sub: [r.area_id ? areas[r.area_id] : null, c?.level_tier != null ? `${t.level.label} ${c.level_tier}` : null].filter(Boolean).join(' · '),
+          };
+        });
+      },
+      async claim(playerId: string): Promise<'ok' | 'taken' | 'other' | 'failed'> {
+        if (!api) return 'ok';
+        try {
+          await api.claimPlayer(playerId);
+          return 'ok';
+        } catch (err) {
+          if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
+          if (err instanceof RpcError && err.code.startsWith('already_claimed')) return 'other';
+          return 'failed';
+        }
+      },
+      async setClaimStatus(status: 'skipped' | 'creation_requested') {
+        if (api) await api.setClaimStatus(status);
+      },
+      async suggestions(): Promise<(PlayerRow & { followers: number })[]> {
+        const areas = await areasFor(api !== null);
+        const list = api ? await api.suggestPlayers(30) : mockPlayersHome().players.map((p, i) => ({ ...p, followers: 140 - i * 17 }));
+        return list.map((p) => ({ ...toPlayerRow({ ...p, is_followed: false }, areas, t), followers: p.followers }));
+      },
+      async search(query: string): Promise<PlayerRow[]> {
+        const areas = await areasFor(api !== null);
+        const list = api ? await api.findPlayers(query, 30) : mockFindPlayers(query);
+        return list.map((p) => toPlayerRow({ ...p, is_followed: false }, areas, t));
+      },
+      async follow(ids: string[]) {
+        if (api && ids.length) await api.followPlayers(ids);
+      },
+    }),
+    [api, t],
+  );
 }
