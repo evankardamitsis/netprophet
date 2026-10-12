@@ -5,7 +5,9 @@ import { router } from 'expo-router';
 import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
-import { useMePage, usePro } from '../../src/lib/data';
+import { useMePage, usePro, useWinLoss } from '../../src/lib/data';
+import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
+import { greekCaps } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { activeLine, priceLine } from '../../src/lib/pro';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
@@ -54,6 +56,11 @@ export default function MeScreen() {
             <Section i={next()}>
               <Score v={view} />
             </Section>
+            {!view.isNew ? (
+              <Section i={next()}>
+                <WinLoss />
+              </Section>
+            ) : null}
             <Section i={next()}>
               <Matches v={view} />
             </Section>
@@ -221,6 +228,41 @@ function Score({ v }: { v: MeView }) {
           <Text style={styles.votesSub}>{v.votes.sub}</Text>
         </Animated.View>
       </Pressable>
+    </View>
+  );
+}
+
+/** «Πού κερδίζεις, πού χάνεις» (Pro): your strengths ↑ and weaknesses ↓; blurred sample rows without Pro */
+function WinLoss() {
+  const t = useCopy();
+  const { state } = usePro();
+  const pro = state?.pro ?? false;
+  const { rows } = useWinLoss(pro);
+  const shown: WinLossRow[] = pro ? rows ?? [] : teaserRows(t);
+  return (
+    <View style={styles.block}>
+      <View style={styles.rowBetween}>
+        <Text style={styles.kicker}>{greekCaps(t.winLoss.title)}</Text>
+        {pro ? (
+          <View style={styles.proPill}>
+            <Text style={styles.proPillText}>{t.pro.title}</Text>
+          </View>
+        ) : null}
+      </View>
+      <View style={[styles.wlRows, !pro && styles.wlLocked]} importantForAccessibility={pro ? 'auto' : 'no-hide-descendants'}>
+        {shown.map((r) => (
+          <View key={r.key} style={styles.wlRow}>
+            <Text style={styles.wlLabel}>{r.label}</Text>
+            <Text style={[styles.wlValue, !r.up && styles.wlDown]}>{r.value}</Text>
+          </View>
+        ))}
+        {pro && rows && rows.length === 0 ? <Text style={styles.muted}>{t.winLoss.empty}</Text> : null}
+      </View>
+      {!pro ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/pro')} style={styles.linkHit}>
+          <Text style={styles.unlock}>{t.winLoss.unlock}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -407,6 +449,14 @@ const styles = StyleSheet.create({
   settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
   signOut: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.blue },
+  wlRows: { gap: 6 },
+  wlLocked: { opacity: 0.3 },
+  wlRow: { minHeight: 48, paddingHorizontal: 16, borderRadius: 16, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  wlLabel: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  wlValue: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, color: colors.ink },
+  wlDown: { color: colors.inkSoft },
+  unlock: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
   scoutRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
   proPill: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: colors.ink },
   proPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },

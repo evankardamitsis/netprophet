@@ -12,6 +12,7 @@ import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
 import { toScoutView, type ScoutView } from './scout';
+import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
 import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
@@ -315,6 +316,39 @@ export function useScout(matchId: string): ScoutState {
   }, [refresh]);
 
   return { ...state, refresh };
+}
+
+const MOCK_WIN_LOSS = {
+  total: { w: 16, l: 9 },
+  rows: [
+    { key: 'morning' as const, w: 7, l: 3 },
+    { key: 'evening' as const, w: 3, l: 5 },
+    { key: 'deciding' as const, w: 5, l: 1 },
+    { key: 'lefties' as const, w: 2, l: 4 },
+    { key: 'singles' as const, w: 12, l: 7 },
+  ],
+};
+
+/** «Πού κερδίζεις, πού χάνεις» rows; only asked for with Pro (the database refuses otherwise). */
+export function useWinLoss(pro: boolean): { rows: WinLossRow[] | null } {
+  const t = useCopy();
+  const api = useApi();
+  const [rows, setRows] = useState<WinLossRow[] | null>(null);
+  useEffect(() => {
+    if (!pro) {
+      setRows(null);
+      return;
+    }
+    if (!api) {
+      setRows(winLossRows(MOCK_WIN_LOSS, t));
+      return;
+    }
+    api
+      .getWinLoss()
+      .then((d) => setRows(winLossRows(d, t)))
+      .catch(() => setRows([]));
+  }, [api, pro, t]);
+  return { rows };
 }
 
 /** The guest's Pro on sample data: off, and «Γίνε μέλος» puts them on the list for this session. */

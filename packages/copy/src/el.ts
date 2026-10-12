@@ -397,6 +397,24 @@ export const el = {
     over: 'Αυτό το ματς έχει παιχτεί.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
   },
+  winLoss: {
+    title: 'Πού κερδίζεις, πού χάνεις',
+    rows: {
+      morning: 'Πρωινά ματς',
+      evening: 'Βραδινά ματς',
+      deciding: 'Στο τρίτο σετ',
+      lost_first: 'Όταν χάνεις το πρώτο σετ',
+      tiebreaks: 'Στα tie-break',
+      lefties: 'Με αριστερόχειρες',
+      singles: 'Στα μονά',
+      doubles: 'Στα διπλά',
+      tournament: 'Σε τουρνουά',
+      friendly: 'Σε φιλικά',
+    },
+    /** the free teaser under the blurred rows */
+    unlock: 'Δες πού χάνεις με το Pro ›',
+    empty: 'Θέλει μερικά ματς ακόμα για να φανεί.',
+  },
   placeholder: {
     results: 'Τα αποτελέσματα έρχονται εδώ.',
     players: 'Οι παίκτες έρχονται εδώ.',

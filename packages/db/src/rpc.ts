@@ -272,6 +272,24 @@ export interface ScoutPlayer extends PlayerCard {
   known: WinLoss;
 }
 
+export type WinLossKey =
+  | 'morning'
+  | 'evening'
+  | 'deciding'
+  | 'lost_first'
+  | 'tiebreaks'
+  | 'lefties'
+  | 'singles'
+  | 'doubles'
+  | 'tournament'
+  | 'friendly';
+
+/** «Πού κερδίζεις, πού χάνεις» (Pro, api.get_win_loss): your results split; empty splits are left out. */
+export interface WinLossSplits {
+  total: WinLoss | null;
+  rows: (WinLoss & { key: WinLossKey })[];
+}
+
 /** «Ο αντίπαλος πριν το ματς» (Pro): only your own upcoming match. */
 export interface Scout {
   match_id: string;
