@@ -6,12 +6,25 @@ import { fmt } from './votes';
  * screens share. Differs from the prototype in one place: the name comes first, because a real
  * search for your player needs it (the prototype hard-codes «Βαγγέλης Κ»).
  */
-export type Step = 'name' | 'claim' | 'play' | 'area' | 'known';
+export type Step = 'name' | 'claim' | 'play' | 'area' | 'known' | IntroSlide;
+
+/** the four intro slides after «Ποια είναι η παρέα σου;», «1 από 4» to «4 από 4» */
+export type IntroSlide = 'e1' | 'e2' | 'e3' | 'e4';
+export const INTRO: IntroSlide[] = ['e1', 'e2', 'e3', 'e4'];
 
 /** the claimed path skips «Πώς παίζεις;»: a roster player already has a hand and a history */
 export function stepsFor(isNew: boolean): Step[] {
-  return isNew ? ['name', 'claim', 'play', 'area', 'known'] : ['name', 'claim', 'area', 'known'];
+  const setup: Step[] = isNew ? ['name', 'claim', 'play', 'area', 'known'] : ['name', 'claim', 'area', 'known'];
+  return setup.concat(INTRO);
 }
+
+/** «2 από 4»: the slide's place among the intro slides, from 1; 0 for a setup step */
+export function introNumber(step: Step): number {
+  return INTRO.indexOf(step as IntroSlide) + 1;
+}
+
+/** the «Ας ξεκινήσουμε» splash stays this long unless tapped (prototype goStart) */
+export const GO_MS = 2300;
 
 export const KNOWN_MIN = 3;
 

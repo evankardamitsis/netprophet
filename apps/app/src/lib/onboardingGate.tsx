@@ -17,11 +17,13 @@ const doneKey = (userId: string) => `np.onboarded.${userId}`;
 
 interface Gate {
   status: OnboardingStatus;
-  /** onboarding finished (or skipped): saves it and opens the app */
-  finish: (state: Record<string, unknown>) => Promise<void>;
+  /** the setup is done: saves it (server and device) but stays on onboarding for the intro slides */
+  save: (state: Record<string, unknown>) => Promise<void>;
+  /** leaves onboarding for the app */
+  open: () => void;
 }
 
-const GateContext = createContext<Gate>({ status: 'done', finish: async () => undefined });
+const GateContext = createContext<Gate>({ status: 'done', save: async () => undefined, open: () => undefined });
 
 export function OnboardingGateProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
@@ -68,16 +70,16 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
     };
   }, [userId]);
 
-  const finish = useCallback(
+  const save = useCallback(
     async (state: Record<string, unknown>) => {
       if (api) await api.updateProfile({ onboarding_state: { ...state, done: true, at: new Date().toISOString() } });
       if (userId) await AsyncStorage.setItem(doneKey(userId), '1').catch(() => undefined);
-      setStatus('done');
     },
     [userId],
   );
+  const open = useCallback(() => setStatus('done'), []);
 
-  const value = useMemo(() => ({ status, finish }), [status, finish]);
+  const value = useMemo(() => ({ status, save, open }), [status, save, open]);
   return <GateContext.Provider value={value}>{children}</GateContext.Provider>;
 }
 

@@ -10,7 +10,7 @@ import { colors, fonts, springEase } from '../theme';
  * the dashed secondary button.
  */
 
-export function Primary({ label, onPress, ready = true, busy = false }: { label: string; onPress: () => void; ready?: boolean; busy?: boolean }) {
+export function Primary({ label, onPress, ready = true, busy = false, tall = false }: { label: string; onPress: () => void; ready?: boolean; busy?: boolean; tall?: boolean }) {
   const press = usePress();
   return (
     <Pressable
@@ -20,8 +20,8 @@ export function Primary({ label, onPress, ready = true, busy = false }: { label:
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
     >
-      <Animated.View style={[styles.primary, { opacity: ready ? 1 : 0.45 }, press.style]}>
-        {busy ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryText}>{label}</Text>}
+      <Animated.View style={[styles.primary, tall && styles.primaryTall, { opacity: ready ? 1 : 0.45 }, press.style]}>
+        {busy ? <ActivityIndicator color={colors.white} /> : <Text style={[styles.primaryText, tall && styles.primaryTallText]}>{label}</Text>}
       </Animated.View>
     </Pressable>
   );
@@ -168,6 +168,9 @@ export function KnownRow({ name, sub, on, onPress, last }: { name: string; sub: 
 const styles = StyleSheet.create({
   primary: { minHeight: 56, borderRadius: 18, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   primaryText: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.white, textAlign: 'center' },
+  /** the intro slides' button, a touch bigger */
+  primaryTall: { minHeight: 58 },
+  primaryTallText: { fontSize: 18 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   dashed: {
