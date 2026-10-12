@@ -11,7 +11,7 @@ import { colors, ease, fonts } from '../theme';
 /**
  * A full-screen celebration (prototype V2 celOn), waiting for «Συνέχεια»: ink with a lime glow, 30 pieces of
  * confetti bursting from the middle, «ΣΕΡΙ», the lime pill counting up to the σερί, the title, the reward line and,
- * at 3.5s, the blue «Συνέχεια». The 3D avatar's stage comes with the avatar (M3 part 9).
+ * at 3.5s, the blue «Συνέχεια». There is no avatar yet, so the prototype's avatar stage is left out.
  */
 const DIM_MS = 600;
 const COUNT_MS = 1100;
@@ -52,7 +52,9 @@ export function Celebration({ item, onDone }: { item: CelebrationItem; onDone: (
         <View style={styles.middle}>
           <Animated.Text style={[styles.label, label]}>{v.label}</Animated.Text>
           <Animated.View style={[styles.pill, pill]}>
-            <Text style={styles.pillNum}>{count}</Text>
+            <View style={styles.pillNumBox}>
+              <Text style={styles.pillNum}>{count}</Text>
+            </View>
             <Text style={styles.pillUnit}>{t.celebrate.unit}</Text>
           </Animated.View>
           <Animated.Text style={[styles.title, title]}>{v.title}</Animated.Text>
@@ -177,9 +179,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, overflow: 'hidden' },
   middle: { alignItems: 'center', gap: 10 },
   label: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.lime },
-  pill: { flexDirection: 'row', alignItems: 'baseline', gap: 12, paddingTop: 12, paddingHorizontal: 34, paddingBottom: 20, borderRadius: 999, backgroundColor: colors.lime },
-  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 110, lineHeight: 104, color: colors.ink },
-  pillUnit: { fontFamily: fonts.bodyBold, fontSize: 28, color: colors.ink },
+  // number and «σερί» centred in the pill (founder, 12 Oct)
+  pill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 34, borderRadius: 999, backgroundColor: colors.lime },
+  // the display face draws digits high in their line box; this brings the 5 to the pill's middle
+  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 110, lineHeight: 110, color: colors.ink, includeFontPadding: false, transform: [{ translateY: 9 }] },
+  pillNumBox: { height: 96, justifyContent: 'center', overflow: 'visible' },
+  pillUnit: { fontFamily: fonts.bodyBold, fontSize: 28, lineHeight: 34, color: colors.ink, includeFontPadding: false },
   title: { fontFamily: fonts.displayHeavy, fontSize: 54, lineHeight: 54, color: colors.paper, textAlign: 'center' },
   bottom: { alignItems: 'center', gap: 12, marginTop: 44 },
   reward: { minHeight: 24, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime, textAlign: 'center' },
