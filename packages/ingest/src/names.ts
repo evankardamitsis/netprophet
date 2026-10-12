@@ -55,3 +55,39 @@ export function splitSide(raw: string): string[] {
     .map((s) => s.trim())
     .filter(Boolean);
 }
+
+/** a person as the sheet writes them: SURNAME first, then the first name (which can be missing) */
+export interface SheetPerson {
+  surname: string;
+  first: string;
+  /** folded «surname first», the fingerprint key (parse_oop.py norm_key) */
+  key: string;
+}
+
+/** accents off, lowercase, final ς as σ, single spaces: parse_oop.py norm_key */
+export function sheetKey(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/ς/g, 'σ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** one side of a match: one person, or two with «/»; flags first_name_missing and latin_name */
+export function parseSheetSide(raw: string): { people: SheetPerson[]; flags: string[]; pair: boolean } {
+  const pair = raw.includes('/');
+  const parts = pair ? raw.split('/').map((p) => p.trim()) : [raw.trim()];
+  const flags = new Set<string>();
+  const people = parts.map((p) => {
+    const n = p.trim().replace(/\s+/g, ' ');
+    const at = n.indexOf(' ');
+    const surname = at < 0 ? n : n.slice(0, at);
+    const first = at < 0 ? '' : n.slice(at + 1);
+    if (!first) flags.add('first_name_missing');
+    if (/[A-Za-z]/.test(p)) flags.add('latin_name');
+    return { surname, first, key: sheetKey(surname + (first ? ` ${first}` : '')) };
+  });
+  return { people, flags: [...flags], pair };
+}
