@@ -110,6 +110,21 @@ export type FeedItem = FeedResultCard | FeedMatchCard | FeedSponsoredCard;
 export interface GetFeedResult {
   items: FeedItem[];
   count: number;
+  /** unseen celebrations, oldest first; they play after the result cards */
+  celebrations?: Celebration[];
+}
+
+/** a full-screen moment (prototype celOn); σερί milestones for now */
+export interface Celebration {
+  id: string;
+  created_at: string;
+  payload: {
+    type: 'streak_milestone';
+    streak: number;
+    match_id: string;
+    /** what this milestone actually gave */
+    reward?: { freeze: boolean; frame: string | null };
+  };
 }
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */

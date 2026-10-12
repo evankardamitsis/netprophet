@@ -491,7 +491,7 @@ export const el = {
     many: { title: 'Βγήκαν {n} αποτελέσματα', body: 'Πόσα το ’πες; Μπες να δεις.' },
   },
   confirm: {
-    /** «Βαγγέλης Καρδαμίτσης πέρασε ένα ματς σας» */
+    /** «Ο Βαγγέλης Καρδαμίτσης πέρασε ένα ματς σας» ({name} carries the article) */
     title: '{name} πέρασε ένα ματς σας',
     titleDoubles: '{name} πέρασε ένα ματς σας στο διπλό',
     ask: 'Έγινε έτσι;',
@@ -609,6 +609,21 @@ export const el = {
     list: 'Μπλοκαρισμένοι',
     unblock: 'Ξεμπλόκαρε',
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
+  },
+  /** full-screen moments (prototype celOn): σερί milestones for now */
+  celebrate: {
+    label: 'Σερί',
+    titles: { 3: 'Τρία στη σειρά!', 5: 'Πέντε στη σειρά!', 7: 'Επτά στη σειρά!', 10: 'Το δέκα το καλό' } as Record<number, string>,
+    rewards: {
+      freeze: 'Πάρε κι ένα πάγωμα για τις δύσκολες μέρες',
+      frame: 'Κορνίζα «{name}»',
+      both: 'Πάγωμα και κορνίζα',
+      none: 'Συνέχισε έτσι',
+    },
+    frames: { frame_seven: 'Επτά', frame_ten: 'Δέκα' } as Record<string, string>,
+    /** «σερί» in the pill */
+    unit: 'σερί',
+    aria: 'Γιορτή',
   },
   placeholder: {
     results: 'Τα αποτελέσματα έρχονται εδώ.',

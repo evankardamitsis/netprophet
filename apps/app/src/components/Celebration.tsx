@@ -1,0 +1,193 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+import * as Haptics from 'expo-haptics';
+import type { Celebration as CelebrationItem } from '@netprophet/db';
+import { useCopy } from '../i18n';
+import { celebrationView } from '../lib/celebrate';
+import { colors, ease, fonts } from '../theme';
+
+/**
+ * A full-screen celebration (prototype V2 celOn), waiting for «Συνέχεια»: ink with a lime glow, 30 pieces of
+ * confetti bursting from the middle, «ΣΕΡΙ», the lime pill counting up to the σερί, the title, the reward line and,
+ * at 3.5s, the blue «Συνέχεια». There is no avatar yet, so the prototype's avatar stage is left out.
+ */
+const DIM_MS = 600;
+const COUNT_MS = 1100;
+const BURST_MS = 1000;
+const CONFETTI = [colors.lime, colors.paper, colors.lime, colors.leaf];
+
+export function Celebration({ item, onDone }: { item: CelebrationItem; onDone: () => void }) {
+  const t = useCopy();
+  const v = celebrationView(item, t);
+  const { width, height } = useWindowDimensions();
+  const dim = useSharedValue(0);
+  const count = useCountTo(v.streak, COUNT_MS);
+  useEffect(() => {
+    dim.value = withTiming(1, { duration: DIM_MS, easing: Easing.linear });
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+  }, [dim]);
+  const dimStyle = useAnimatedStyle(() => ({ opacity: dim.value }));
+  const label = useMeIn(500, 500);
+  const pill = useSlam(600, 800);
+  const title = useSlam(600, 1000);
+  const reward = useMeIn(600, 2900);
+  const cta = useMeIn(500, 3500);
+
+  return (
+    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onDone}>
+      <Animated.View style={[styles.screen, dimStyle]} accessibilityViewIsModal accessibilityLabel={t.celebrate.aria}>
+        <Svg style={StyleSheet.absoluteFill} width={width} height={height}>
+          <Defs>
+            <RadialGradient id="glow" cx="50%" cy="27%" rx="85%" ry="34%">
+              <Stop offset="0" stopColor={colors.lime} stopOpacity={0.26} />
+              <Stop offset="0.7" stopColor={colors.lime} stopOpacity={0} />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width={width} height={height} fill={colors.ink} />
+          <Rect x="0" y="0" width={width} height={height} fill="url(#glow)" />
+        </Svg>
+        <Burst x={width / 2} y={height * 0.46} />
+        <View style={styles.middle}>
+          <Animated.Text style={[styles.label, label]}>{v.label}</Animated.Text>
+          <Animated.View style={[styles.pill, pill]}>
+            <View style={styles.pillNumBox}>
+              <Text style={styles.pillNum}>{count}</Text>
+            </View>
+            <Text style={styles.pillUnit}>{t.celebrate.unit}</Text>
+          </Animated.View>
+          <Animated.Text style={[styles.title, title]}>{v.title}</Animated.Text>
+        </View>
+        <View style={styles.bottom}>
+          <Animated.Text style={[styles.reward, reward]}>{v.reward}</Animated.Text>
+          <Animated.View style={cta}>
+            <Pressable accessibilityRole="button" onPress={onDone} style={styles.cta}>
+              <Text style={styles.ctaText}>{t.common.continue}</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </Animated.View>
+    </Modal>
+  );
+}
+
+/** the pill's number: 0 to n over 1.1s, ease-out cubic (prototype .cn data-fresh) */
+function useCountTo(n: number, ms: number): number {
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const t0 = Date.now();
+    const step = () => {
+      const q = Math.min(1, (Date.now() - t0) / ms);
+      setShown(Math.round(n * (1 - Math.pow(1 - q, 3))));
+      if (q < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [n, ms]);
+  return shown;
+}
+
+/** meIn: up from 16px and in */
+function useMeIn(ms: number, delay: number) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withDelay(delay, withTiming(1, { duration: ms, easing: ease }));
+  }, [p, ms, delay]);
+  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
+}
+
+/** slam: from 2.4× down past 1 (0.94 at 70%) and settle */
+function useSlam(ms: number, delay: number) {
+  const s = useSharedValue(2.4);
+  const o = useSharedValue(0);
+  useEffect(() => {
+    s.value = withDelay(delay, withSequence(withTiming(0.94, { duration: ms * 0.7, easing: ease }), withTiming(1, { duration: ms * 0.3, easing: ease })));
+    o.value = withDelay(delay, withTiming(1, { duration: ms * 0.7, easing: ease }));
+  }, [s, o, ms, delay]);
+  return useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
+}
+
+/** a stable pseudo-random in [0, 1) per piece */
+const rnd = (i: number, k: number) => {
+  const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/** prototype celParts: 14 near pieces, 16 far ones, circles, triangles and squares */
+function Burst({ x, y }: { x: number; y: number }) {
+  const parts = useMemo(
+    () =>
+      Array.from({ length: 30 }, (_, i) => {
+        const r1 = rnd(i, 11);
+        const r2 = rnd(i, 12);
+        const far = i >= 14;
+        return {
+          shape: (['c', 't', 'r'] as const)[i % 3]!,
+          angle: i * 12 + r1 * 10,
+          dist: far ? 150 + r2 * 120 : 110 + r2 * 90,
+          spin: r1 * 360,
+          w: 9 + Math.round(r2 * 9),
+          h: 9 + Math.round(r1 * 9),
+          delay: (far ? 1.1 + (i % 3) * 0.45 + r2 * 0.1 : 0.5 + r2 * 0.15) * 1000,
+          color: CONFETTI[i % 4]!,
+        };
+      }),
+    [],
+  );
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {parts.map((p, i) => (
+        <Piece key={i} x={x} y={y} {...p} />
+      ))}
+    </View>
+  );
+}
+
+function Piece({ x, y, shape, angle, dist, spin, w, h, delay, color }: { x: number; y: number; shape: 'c' | 't' | 'r'; angle: number; dist: number; spin: number; w: number; h: number; delay: number; color: string }) {
+  const p = useSharedValue(0);
+  useEffect(() => {
+    p.value = withDelay(delay, withTiming(1, { duration: BURST_MS, easing: Easing.bezier(0.2, 0.8, 0.3, 1) }));
+  }, [p, delay]);
+  const style = useAnimatedStyle(() => fly(p, angle, dist, spin));
+  const body =
+    shape === 't'
+      ? { width: 0, height: 0, borderLeftWidth: w / 2, borderRightWidth: w / 2, borderBottomWidth: h, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: color }
+      : { width: w, height: h, borderRadius: shape === 'c' ? 999 : 2, backgroundColor: color };
+  return <Animated.View style={[{ position: 'absolute', left: x - w / 2, top: y - h / 2 }, body, style]} />;
+}
+
+function fly(p: SharedValue<number>, angle: number, dist: number, spin: number) {
+  'worklet';
+  const q = p.value;
+  // opacity 0 → 1 by 14%, then down to 0 at the end
+  const opacity = q === 0 ? 0 : q < 0.14 ? q / 0.14 : 1 - (q - 0.14) / 0.86;
+  const rad = (angle * Math.PI) / 180;
+  return {
+    opacity,
+    transform: [
+      { translateX: Math.sin(rad) * dist * q },
+      { translateY: -Math.cos(rad) * dist * q },
+      { rotate: `${angle + spin * q}deg` },
+      { scale: 0.3 + 0.7 * q },
+    ],
+  };
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, overflow: 'hidden' },
+  middle: { alignItems: 'center', gap: 10 },
+  label: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.lime },
+  // number and «σερί» centred in the pill (founder, 12 Oct)
+  pill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 34, borderRadius: 999, backgroundColor: colors.lime },
+  // the display face draws digits high in their line box; this brings the 5 to the pill's middle
+  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 110, lineHeight: 110, color: colors.ink, includeFontPadding: false, transform: [{ translateY: 9 }] },
+  pillNumBox: { height: 96, justifyContent: 'center', overflow: 'visible' },
+  pillUnit: { fontFamily: fonts.bodyBold, fontSize: 28, lineHeight: 34, color: colors.ink, includeFontPadding: false },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 54, lineHeight: 54, color: colors.paper, textAlign: 'center' },
+  bottom: { alignItems: 'center', gap: 12, marginTop: 44 },
+  reward: { minHeight: 24, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime, textAlign: 'center' },
+  cta: { marginTop: 18, minHeight: 52, paddingHorizontal: 44, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
+  ctaText: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.paper },
+});

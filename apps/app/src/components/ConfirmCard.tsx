@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import type { ConfirmationAnswer, PendingConfirmation } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
+import { who } from '../lib/link';
 import { fmt } from '../lib/votes';
 import { colors, fonts } from '../theme';
 
@@ -25,7 +26,8 @@ export function ConfirmCard({ item, onAnswer }: { item: PendingConfirmation; onA
     (item.sides.find((s) => s.side === side)?.players ?? []).map((p) => p.first_name).join(' & ');
   const winner = firsts(item.winner_side);
   const loser = firsts(item.winner_side === 1 ? 2 : 1);
-  const logger = [item.logged_by?.first_name, item.logged_by?.surname].filter(Boolean).join(' ');
+  // «Ο Γιάννης Πράτσας», «Η Μαρία Καρρά» (founder, 12 Oct: with the article)
+  const logger = item.logged_by?.first_name ? who({ first_name: item.logged_by.first_name, surname: item.logged_by.surname }, true) : '';
   const us = firsts(item.my_side);
   const them = firsts(item.my_side === 1 ? 2 : 1);
   const fixes: { label: string; fix: { winner: 'me' | 'them'; sets: '2-0' | '2-1' } }[] = [

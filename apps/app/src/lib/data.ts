@@ -1,6 +1,6 @@
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type BlockedUser, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockScout } from '../mock/scout';
@@ -61,6 +61,9 @@ interface FeedState {
   results: CardResult[];
   /** the viewer closed a result card: mark it seen and drop it */
   dismissResult: (id: string) => void;
+  /** σερί milestones waiting to play after the result cards */
+  celebrations: Celebration[];
+  dismissCelebration: (id: string) => void;
   loading: boolean;
   error: boolean;
   refresh: () => Promise<void>;
@@ -72,6 +75,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
   const api = useApi();
   const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
   const [results, setResults] = useState<CardResult[]>([]);
+  const [celebrations, setCelebrations] = useState<Celebration[]>(() => (api ? [] : mockCelebrations()));
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
   const onError = useRef(onVoteError);
@@ -85,6 +89,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       const [feed, areas] = await Promise.all([api.getFeed(30), loadAreas().catch(() => ({}))]);
       const now = new Date();
       setResults(feed.items.flatMap((it) => (it.kind === 'result' ? [fromResultCard(it, t)] : [])));
+      setCelebrations(feed.celebrations ?? []);
       setCards(
         feed.items.flatMap((it): FeedCard[] =>
           it.kind === 'match' ? [fromFeedCard(it, areas, t, now)] : it.kind === 'sponsored' ? [fromSponsored(it)] : [],
@@ -127,7 +132,20 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     api?.markInboxSeen([id]).catch(() => undefined);
   }, [api]);
 
-  return { cards, results, dismissResult, loading, error, refresh, vote };
+  const dismissCelebration = useCallback((id: string) => {
+    setCelebrations((c) => c.filter((x) => x.id !== id));
+    mockCelebrationSeen = true;
+    api?.markInboxSeen([id]).catch(() => undefined);
+  }, [api]);
+
+  return { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote };
+}
+
+/* mock mode and the dev guest: the σερί 5 moment, once per app session */
+let mockCelebrationSeen = false;
+function mockCelebrations(): Celebration[] {
+  if (mockCelebrationSeen) return [];
+  return [{ id: 'mock-cel', created_at: new Date().toISOString(), payload: { type: 'streak_milestone', streak: 5, match_id: 'mock', reward: { freeze: false, frame: null } } }];
 }
 
 export interface MeSummary {

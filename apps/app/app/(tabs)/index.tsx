@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
+import { Celebration } from '../../src/components/Celebration';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
@@ -23,7 +24,7 @@ export default function VoteScreen() {
   const t = useCopy();
   const [notice, setNotice] = useState<{ kind: VoteErrorKind; n: number } | null>(null);
   const onVoteError = useCallback((kind: VoteErrorKind) => setNotice((p) => ({ kind, n: (p?.n ?? 0) + 1 })), []);
-  const { cards, results, dismissResult, loading, error, refresh, vote } = useFeed(onVoteError);
+  const { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote } = useFeed(onVoteError);
   const confirmations = useConfirmations();
   const [answered, setAnswered] = useState<string | null>(null);
   // «Αναφορά» from a long press on a card
@@ -53,6 +54,8 @@ export default function VoteScreen() {
     [dismissResult],
   );
   const current = !between ? results[0] : undefined;
+  // celebrations wait until every result card has played
+  const celebrating = results.length === 0 && !between ? celebrations[0] : undefined;
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -110,6 +113,7 @@ export default function VoteScreen() {
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
       <AddMatchButton />
+      {celebrating ? <Celebration key={celebrating.id} item={celebrating} onDone={() => dismissCelebration(celebrating.id)} /> : null}
     </View>
   );
 }
