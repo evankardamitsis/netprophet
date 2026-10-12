@@ -7,7 +7,7 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useMePage, useMyKudos, usePro, useWinLoss } from '../../src/lib/data';
+import { useBlocks, useMePage, useMyKudos, usePro, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
@@ -359,6 +359,7 @@ function Settings() {
   const { state } = usePro();
   const [open, setOpen] = useState(false);
   const gate = useOnboardingGate();
+  const blocks = useBlocks();
   const active = state ? activeLine(state, t) : null;
   return (
     <View style={styles.card}>
@@ -375,6 +376,19 @@ function Settings() {
             </View>
             <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
           </Pressable>
+          {blocks.list.length > 0 ? (
+            <View style={styles.blocks}>
+              <Text style={styles.blocksTitle}>{t.safety.list}</Text>
+              {blocks.list.map((b) => (
+                <View key={b.user_id} style={styles.rowBetween}>
+                  <Text style={styles.blockName}>{[b.first_name, b.surname].filter(Boolean).join(' ')}</Text>
+                  <Pressable accessibilityRole="button" onPress={() => void blocks.unblock(b.user_id)} style={styles.linkHit}>
+                    <Text style={styles.unblock}>{t.safety.unblock}</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          ) : null}
           {__DEV__ ? (
             <Pressable accessibilityRole="button" onPress={gate.replay} style={styles.linkHit}>
               <Text style={styles.signOut}>{t.me.replayOnboarding}</Text>
@@ -390,6 +404,10 @@ function Settings() {
 }
 
 const styles = StyleSheet.create({
+  blocks: { gap: 2 },
+  blocksTitle: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft },
+  blockName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  unblock: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },

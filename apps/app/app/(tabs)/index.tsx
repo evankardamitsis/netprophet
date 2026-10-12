@@ -6,9 +6,10 @@ import { ConfirmCard } from '../../src/components/ConfirmCard';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
+import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useConfirmations, useFeed, type VoteErrorKind } from '../../src/lib/data';
+import { useConfirmations, useFeed, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
 import { useHud } from '../../src/lib/hud';
 import { colors, ease, fonts } from '../../src/theme';
@@ -25,6 +26,9 @@ export default function VoteScreen() {
   const { cards, results, dismissResult, loading, error, refresh, vote } = useFeed(onVoteError);
   const confirmations = useConfirmations();
   const [answered, setAnswered] = useState<string | null>(null);
+  // «Αναφορά» from a long press on a card
+  const [safety, setSafety] = useState<SafetyTarget | null>(null);
+  const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
   useEffect(() => {
     if (!answered) return undefined;
     const id = setTimeout(() => setAnswered(null), TOAST_MS);
@@ -91,7 +95,7 @@ export default function VoteScreen() {
           ))}
           {cards.map((c) =>
             c.kind === 'match' ? (
-              <VoteCard key={c.id} match={c} onVote={vote} />
+              <VoteCard key={c.id} match={c} onVote={vote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
             ) : c.kind === 'sponsored' ? (
               <SponsoredCard key={c.id} card={c} />
             ) : null,
@@ -103,6 +107,8 @@ export default function VoteScreen() {
       </ScrollView>
       {notice ? <Toast key={notice.n} text={t.feed[notice.kind]} /> : null}
       {answered ? <Toast key={answered} text={answered} /> : null}
+      {said ? <Toast key={said.n} text={said.text} /> : null}
+      <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
       <AddMatchButton />
     </View>
   );

@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { ResultRow } from '../../src/components/ResultRow';
+import { SafetySheet } from '../../src/components/SafetySheet';
+import { Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
-import { useResults } from '../../src/lib/data';
+import { useResults, type SafetyTarget } from '../../src/lib/data';
 import { colors, ease, fonts } from '../../src/theme';
 
 /**
@@ -22,6 +24,8 @@ export default function ResultsScreen() {
   const t = useCopy();
   const { groups, loading, error, refresh } = useResults();
   const titleIn = useInA();
+  const [safety, setSafety] = useState<SafetyTarget | null>(null);
+  const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
   let index = 0;
 
   return (
@@ -40,7 +44,7 @@ export default function ResultsScreen() {
             <View key={g.key} style={styles.group}>
               <Text style={styles.groupTitle}>{g.title}</Text>
               {g.items.map((item) => (
-                <ResultRow key={item.id} item={item} index={index++} />
+                <ResultRow key={item.id} item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
               ))}
             </View>
           ))}
@@ -48,6 +52,8 @@ export default function ResultsScreen() {
         </View>
       </ScrollView>
       <AddMatchButton />
+      {said ? <Toast key={said.n} text={said.text} /> : null}
+      <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
     </View>
   );
 }
