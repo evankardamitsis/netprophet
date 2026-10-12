@@ -1,6 +1,6 @@
 -- «+ Ματς»: players log played and upcoming matches; votes on a logged match pay out when its result comes in.
 begin;
-select plan(16);
+select plan(15);
 
 select tests.create_user('lm-u@test.local') as u \gset
 select tests.create_user('lm-v@test.local') as v \gset
