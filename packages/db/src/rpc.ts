@@ -348,6 +348,23 @@ export interface MyMatchCandidate {
   sides: { side: Side; players: FeedPlayer[] }[];
 }
 
+/** A player-logged match against your player, waiting for your answer (api.get_confirmations). */
+export interface PendingConfirmation {
+  match_id: string;
+  format: MatchFormat;
+  starts_at: string;
+  tournament: string | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
+  my_side: Side;
+  winner_side: Side;
+  /** «2-1», winner first */
+  score: string | null;
+  logged_by: { first_name: string | null; surname: string | null } | null;
+}
+
+/** «Έτσι έγινε», a fix from your side, or «Δεν έπαιξα εγώ» */
+export type ConfirmationAnswer = { answer: 'yes' } | { answer: 'fix'; fix: { winner: 'me' | 'them'; sets: '2-0' | '2-1' } } | { answer: 'not_me' };
+
 export interface MeResult {
   user_id: string;
   profile: {

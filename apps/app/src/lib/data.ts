@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type ConfirmationAnswer, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockScout } from '../mock/scout';
@@ -357,6 +357,56 @@ export function useWinLoss(pro: boolean): { rows: WinLossRow[] | null } {
       .catch(() => setRows([]));
   }, [api, pro, t]);
   return { rows };
+}
+
+/** the guest's sample: a match Γιάννης Πράτσας logged against them */
+let mockConfirmations: PendingConfirmation[] = [
+  {
+    match_id: 'mock-confirm',
+    format: 'singles',
+    starts_at: new Date().toISOString(),
+    tournament: null,
+    sides: [
+      { side: 1, players: [{ id: 'pra', first_name: 'Γιάννης', surname: 'Πράτσας', photo_path: null, area_id: 'glyfada', level_tier: 4, level_direction: 'up' }] },
+      { side: 2, players: [{ id: 'me', first_name: 'Βαγγέλης', surname: 'Καρδαμίτσης', photo_path: null, area_id: 'glyfada', level_tier: 4, level_direction: 'up' }] },
+    ],
+    my_side: 2,
+    winner_side: 1,
+    score: '2-1',
+    logged_by: { first_name: 'Γιάννης', surname: 'Πράτσας' },
+  },
+];
+
+export type ConfirmOutcome = 'confirmed' | 'corrected' | 'disputed' | 'failed';
+
+/** matches others logged against your player, waiting for «Έγινε έτσι;» */
+export function useConfirmations(): { items: PendingConfirmation[]; answer: (matchId: string, a: ConfirmationAnswer) => Promise<ConfirmOutcome> } {
+  const api = useApi();
+  const [items, setItems] = useState<PendingConfirmation[]>(api ? [] : mockConfirmations);
+  useEffect(() => {
+    if (!api) return;
+    api.getConfirmations().then(setItems).catch(() => setItems([]));
+  }, [api]);
+  const answer = useCallback(
+    async (matchId: string, a: ConfirmationAnswer): Promise<ConfirmOutcome> => {
+      const drop = () => setItems((xs) => xs.filter((x) => x.match_id !== matchId));
+      if (!api) {
+        mockConfirmations = mockConfirmations.filter((x) => x.match_id !== matchId);
+        drop();
+        return a.answer === 'yes' ? 'confirmed' : a.answer === 'not_me' ? 'disputed' : 'corrected';
+      }
+      try {
+        const r = await api.answerConfirmation(matchId, a);
+        track('match_confirmed', { outcome: r.outcome });
+        drop();
+        return r.outcome;
+      } catch {
+        return 'failed';
+      }
+    },
+    [api],
+  );
+  return { items, answer };
 }
 
 const MOCK_TOURNAMENTS: PublicTournament[] = [

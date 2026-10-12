@@ -392,6 +392,10 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      answer_confirmation: {
+        Args: { p_match_id: string; p_answer: string; p_fix?: Json };
+        Returns: Json;
+      };
       cast_vote: {
         Args: { p_match_id: string; p_side: number; p_client_event_id?: string };
         Returns: Json;
@@ -419,6 +423,10 @@ export type Database = {
       follow_players: {
         Args: { p_player_ids: string[]; p_source?: string };
         Returns: number;
+      };
+      get_confirmations: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       get_feed: {
         Args: { p_limit?: number };

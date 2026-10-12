@@ -12,6 +12,7 @@ export interface AnalyticsEvents {
   pro_sheet_viewed: { moment: string };
   pro_cta_pressed: { price: string; moment: string };
   push_permission: { granted: boolean };
+  match_confirmed: { outcome: 'confirmed' | 'corrected' | 'disputed' };
   match_logged: { mode: 'played' | 'soon'; format: 'singles' | 'doubles' | 'mixed'; attached: boolean; new_people: number };
 }
 

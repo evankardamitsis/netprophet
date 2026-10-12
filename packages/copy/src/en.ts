@@ -450,6 +450,21 @@ export const en: Copy = {
     one: { title: 'A result is in', body: 'Did you call it? Come and see.' },
     many: { title: '{n} results are in', body: 'How many did you call? Come and see.' },
   },
+  confirm: {
+    title: '{name} logged a match of yours',
+    titleDoubles: '{name} logged a doubles match of yours',
+    ask: 'Is that how it went?',
+    yes: 'That is how it went',
+    no: 'Not quite',
+    how: 'How did it end?',
+    notMe: "I didn't play this",
+    done: {
+      confirmed: 'Done. It counts for your level.',
+      corrected: 'We corrected it.',
+      disputed: 'We sent it for a check.',
+    },
+    failed: 'That did not work. Try again.',
+  },
   placeholder: {
     results: 'Results will show up here.',
     players: 'Players will show up here.',
