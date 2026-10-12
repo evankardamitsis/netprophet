@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Linking, Modal, Platform, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Image } from 'expo-image';
 import { useCopy } from '../i18n';
+import { BouncingLogo } from './BouncingLogo';
 import { track } from '../lib/analytics';
 import { useStgIn } from '../lib/motion';
 import { alpha, colors, ease, fonts } from '../theme';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const LOGO = require('../../assets/logo-on-ink.svg');
-const LOGO_RATIO = 426.4 / 80;
 
 type App = 'whatsapp' | 'viber' | 'sms' | 'other';
 const APPS: { id: App; glyph: string }[] = [
@@ -95,7 +92,7 @@ export function ShareSheet({
           <Animated.View style={[styles.frame, preview]}>
             <View style={styles.bubble}>
               <View style={styles.brand}>
-                <Image source={LOGO} style={styles.logo} contentFit="contain" accessibilityLabel="NetProphet" />
+                <BouncingLogo height={20} />
               </View>
               <View style={styles.previewText}>
                 <Text style={styles.host}>{host}</Text>
@@ -144,7 +141,6 @@ const styles = StyleSheet.create({
   frame: { padding: 12, borderRadius: 20, backgroundColor: colors.navLine },
   bubble: { borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomRightRadius: 16, borderBottomLeftRadius: 5, backgroundColor: colors.white, overflow: 'hidden' },
   brand: { paddingVertical: 14, paddingHorizontal: 16, backgroundColor: colors.ink },
-  logo: { height: 20, width: 20 * LOGO_RATIO },
   previewText: { paddingTop: 12, paddingHorizontal: 14, paddingBottom: 14, gap: 3 },
   host: { fontFamily: fonts.bodySemi, fontSize: 12, color: colors.inkSoft },
   title: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 20, color: colors.ink },

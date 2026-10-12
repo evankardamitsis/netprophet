@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ConfirmationAnswer, LinkKudo, MatchLinkView } from '@netprophet/db';
+import { BouncingLogo } from '../../src/components/BouncingLogo';
 import { Primary } from '../../src/components/OnboardingControls';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
@@ -19,9 +19,6 @@ import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { fmt } from '../../src/lib/votes';
 import { colors, fonts } from '../../src/theme';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const LOGO = require('../../assets/logo-on-ink.svg');
-const LOGO_RATIO = 426.4 / 80;
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
 
@@ -112,7 +109,7 @@ export default function MatchLinkScreen() {
       <StatusBar style="dark" />
       <ScrollView ref={scroll} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.bar}>
-          <Image source={LOGO} style={styles.logo} contentFit="contain" accessibilityLabel="NetProphet" />
+          <BouncingLogo height={16} />
           <Text style={styles.barText} numberOfLines={1}>
             {linkLabel(token, linkBase())}
           </Text>
@@ -348,7 +345,6 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   scroll: { flexGrow: 1, paddingHorizontal: 16, gap: 12 },
   bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: colors.ink },
-  logo: { height: 16, width: 16 * LOGO_RATIO },
   barText: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 12, color: colors.mist },
   step: { gap: 12 },
   grow: { flexGrow: 1 },

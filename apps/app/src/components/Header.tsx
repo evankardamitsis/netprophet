@@ -6,7 +6,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
@@ -14,11 +13,10 @@ import type { MeSummary } from '../lib/data';
 import { useHud, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
+import { BouncingLogo } from './BouncingLogo';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const LOGO = require('../../assets/logo-on-ink.svg');
-/** brand/logo/lockup-on-ink-tight.svg: 426.4 × 80 */
-const LOGO_RATIO = 426.4 / 80;
+/** the lockup's height; its ball hops over the net every few seconds (as on sign-in) */
+const LOGO_H = 22;
 
 /**
  * Prototype V2 app header: logo left; σερί, πόντοι and the avatar (opens Εγώ) right. σερί is a lime pill (as on
@@ -34,7 +32,7 @@ export function Header({ me }: { me: MeSummary | null }) {
   const streak = me ? hud.streakShown ?? me.streak : undefined;
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
-      <Image source={LOGO} style={styles.logo} contentFit="contain" accessibilityLabel="NetProphet" />
+      <BouncingLogo height={LOGO_H} />
       <View style={styles.right}>
         <Stat value={streak} label={t.streak.label} onPress={goMe} target={hud.targets.streak} fx={hud.streakFx} pill />
         <Stat value={points} label={t.header.points} target={hud.targets.points} countUp />
@@ -168,7 +166,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  logo: { height: 22, width: 22 * LOGO_RATIO },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stat: { minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', gap: 0 },
   // line heights at least the font size: iOS clips glyphs that rise above the line box (web lets them spill)
