@@ -38,7 +38,12 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const ob = useOnboardingApi();
   const gate = useOnboardingGate();
-  const { session } = useAuth();
+  const { session, signOut } = useAuth();
+  // «‹ Πίσω» on the first step: back to the welcome screen (founder, 12 Oct), which means signing out
+  const toWelcome = () => {
+    void clearPendingLink();
+    void signOut();
+  };
   const allAreas = useRegionAreas();
   const scroll = useRef<ScrollView>(null);
 
@@ -309,6 +314,7 @@ export default function OnboardingScreen() {
               <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
               <Err text={error} />
               <Primary label={o.next} ready={nameReady} busy={busy} onPress={nameNext} />
+              <Back label={o.back} onPress={toWelcome} />
             </>
           ) : null}
 
@@ -321,6 +327,7 @@ export default function OnboardingScreen() {
               <Err text={error} />
               <Primary label={t.link.claimYes} ready={adult} busy={busy} onPress={claimLink} />
               <Dashed label={t.link.claimNo} onPress={dropLink} />
+              <Back label={o.back} onPress={toWelcome} />
             </>
           ) : null}
 
