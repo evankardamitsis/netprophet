@@ -1,3 +1,4 @@
+import { levelNumber } from '@netprophet/copy';
 import type { Copy } from '@netprophet/copy';
 import type { PlayerRef, ScoutPlayer, WinLoss } from '@netprophet/db';
 import type { FormDot } from './players';
@@ -37,7 +38,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
     first: p.first_name,
     surname: p.surname,
     sub: [
-      p.level_tier != null ? `${t.level.label} ${p.level_tier}` : null,
+      p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
       p.area_id ? areas[p.area_id] ?? null : null,
       p.hand ? s.hands[p.hand] : null,
     ]

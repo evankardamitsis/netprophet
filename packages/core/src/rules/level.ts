@@ -1,6 +1,7 @@
 /**
  * Level algorithm v1 (docs/v2/level-algorithm.md): a full recompute from the start values and the counting matches,
- * oldest first. Elo-style moves with a K that falls over a player's first matches; the crowd's accuracy-weighted vote
+ * oldest first. Elo-style moves with a K that falls over a player's first matches (every win counts the same); the
+ * crowd's accuracy-weighted vote
  * split counts as a softer second result. Pure and deterministic; core.level_compute (SQL) runs the same vectors.
  */
 
@@ -15,7 +16,7 @@ export interface LevelConfig {
   kEnd: number;
   /** matches over which K falls from kStart to kEnd */
   kMatches: number;
-  /** a 2-1 (or retired) win scores this, a 2-0 scores 1 */
+  /** a 2-1 (or retired) win scores this, a 2-0 scores 1 (founder: wins count the same, so 1) */
   twoOneScore: number;
   crowdWeight: number;
   crowdMinVotes: number;
@@ -31,7 +32,7 @@ export const DEFAULT_LEVEL_CONFIG: LevelConfig = {
   kStart: 0.4,
   kEnd: 0.1,
   kMatches: 10,
-  twoOneScore: 0.85,
+  twoOneScore: 1,
   crowdWeight: 0.25,
   crowdMinVotes: 10,
   pendingMatches: 3,
@@ -61,7 +62,7 @@ export interface LevelResult {
   id: string;
   /** 4 decimals */
   value: number;
-  /** the shown whole number; null while pending */
+  /** the shown level in halves, never rounded up (4.37 shows 4, 4.5 shows 4,5); null while pending */
   tier: number | null;
   status: 'pending' | 'active';
   matches: number;
@@ -140,7 +141,7 @@ export function recomputeLevels(input: LevelInput): LevelResult[] {
       return {
         id,
         value,
-        tier: active ? Math.min(c.max, Math.max(c.min, Math.round(value))) : null,
+        tier: active ? Math.min(c.max, Math.max(c.min, Math.floor(value * 2) / 2)) : null,
         status: active ? 'active' : 'pending',
         matches: s.n,
         votes: s.votes,

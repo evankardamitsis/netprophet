@@ -57,7 +57,7 @@ select api.admin_recompute_levels() is not null as x \gset
 select tests.logout();
 
 select is((select level_status || ':' || coalesce(level_tier::text, '-') from core.player_sports where player_id = :'o'::uuid and sport_id = 'tennis'),
-          'active:4', 'an NTRP player is active at their level');
+          'active:3.5', 'an NTRP player is active; one loss takes 4.0 just under 4, shown as 3,5');
 select ok((select level_value < 4.0 from core.player_sports where player_id = :'o'::uuid and sport_id = 'tennis'),
           'and drops a little after losing the one counting match');
 select is((select level_status from core.player_sports where player_id = :'me'::uuid and sport_id = 'tennis'), 'pending',

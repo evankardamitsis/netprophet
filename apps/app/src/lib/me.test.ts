@@ -12,7 +12,7 @@ describe('toMeView', () => {
     const m = mockMe(now);
     const v = toMeView(m.me, m.page, m.player, areas, t, now);
     expect(v.isNew).toBe(false);
-    expect(v.level).toBe(4);
+    expect(v.level).toBe('4');
     expect(v.direction).toEqual({ arrow: '↑', word: 'Ανεβαίνεις' });
     expect(v.sub).toBe('Γλυφάδα · δεξί χέρι · τένις');
     expect(v.best).toBe('ΠΡ: 9');

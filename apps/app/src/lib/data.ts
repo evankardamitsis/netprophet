@@ -1,3 +1,4 @@
+import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RpcError, type BlockedUser, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
@@ -955,7 +956,7 @@ export function useOnboardingApi() {
           return mockFindPlayers(surname.slice(0, 3)).map((p) => ({
             id: p.id,
             name: `${p.first_name} ${p.surname}`,
-            sub: [p.area_id ? areas[p.area_id] : null, p.level_tier != null ? `${t.level.label} ${p.level_tier}` : null].filter(Boolean).join(' · '),
+            sub: [p.area_id ? areas[p.area_id] : null, p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null].filter(Boolean).join(' · '),
           }));
         }
         const rows = await api.findMatchingPlayers(first, surname);
@@ -966,7 +967,7 @@ export function useOnboardingApi() {
           return {
             id: r.id,
             name: `${r.first_name} ${r.surname}`,
-            sub: [r.area_id ? areas[r.area_id] : null, c?.level_tier != null ? `${t.level.label} ${c.level_tier}` : null].filter(Boolean).join(' · '),
+            sub: [r.area_id ? areas[r.area_id] : null, c?.level_tier != null ? `${t.level.label} ${levelNumber(c.level_tier)}` : null].filter(Boolean).join(' · '),
           };
         });
       },

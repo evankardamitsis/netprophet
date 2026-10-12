@@ -1,5 +1,5 @@
 import { dayKey, localParts } from '@netprophet/core';
-import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy } from '@netprophet/copy';
+import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy, levelNumber } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { fmt, voteSplit, type Side } from './votes';
@@ -159,15 +159,15 @@ function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): Ca
     const area = p.area_id ? areas[p.area_id] ?? null : null;
     const sub =
       p.level_tier != null && area
-        ? fmt(t.match.levelArea, { level: p.level_tier, area })
+        ? fmt(t.match.levelArea, { level: levelNumber(p.level_tier), area })
         : p.level_tier != null
-          ? `${t.level.label} ${p.level_tier}`
+          ? `${t.level.label} ${levelNumber(p.level_tier)}`
           : area;
     return { people, sub };
   }
   // doubles: «level 5 & 4», only when both levels are known
   const levels = players.map((p) => p.level_tier);
-  const sub = levels.every((l) => l != null) ? `${t.level.label} ${levels.join(' & ')}` : null;
+  const sub = levels.every((l) => l != null) ? `${t.level.label} ${levels.map((l) => levelNumber(l as number)).join(' & ')}` : null;
   return { people, sub };
 }
 
