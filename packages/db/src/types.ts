@@ -368,6 +368,10 @@ export type Database = {
         Args: { p_player_id: string; p_action: string; p_target?: string; p_first?: string; p_surname?: string };
         Returns: Json;
       };
+      admin_demo: {
+        Args: { p_on: boolean };
+        Returns: Json;
+      };
       admin_desk: {
         Args: { p_days?: number };
         Returns: Json;

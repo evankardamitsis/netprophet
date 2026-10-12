@@ -31,6 +31,9 @@ export const colors = {
   white: '#FFFFFF',
   /** the deeper lime among the celebration confetti */
   leaf: '#9BD05A',
+  /** the logo's bouncing balls in their own colours (tennis is lime, football paper and ink) */
+  padelBall: '#F2E14C',
+  basketBall: '#E8742A',
 } as const;
 
 export const radii = { sm: 12, md: 16, lg: 24, pill: 999 } as const;

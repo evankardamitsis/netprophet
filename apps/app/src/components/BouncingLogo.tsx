@@ -14,7 +14,7 @@ import { colors } from '../theme';
 
 /**
  * The «net» lockup with its ball in play: every few seconds the ball hops over the net and lands as
- * another sport's ball (tennis, padel, pickleball, beach volley), a hint that more sports are coming.
+ * another sport's ball in its own colours (tennis, padel, basketball, football), a hint that more sports are coming.
  * The lockup without its ball is brand/logo/lockup-on-ink-tight-noball.svg; the ball is drawn here.
  */
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -36,8 +36,8 @@ const REST_MS = 1800;
 const HOP_MS = 700;
 const SQUASH_MS = 140;
 
-type BallKind = 'tennis' | 'padel' | 'pickle' | 'volley';
-const BALLS: BallKind[] = ['tennis', 'padel', 'pickle', 'volley'];
+type BallKind = 'tennis' | 'padel' | 'basketball' | 'football';
+const BALLS: BallKind[] = ['tennis', 'padel', 'basketball', 'football'];
 
 export function BouncingLogo({ height }: { height: number }) {
   const unit = height / VB_H;
@@ -98,48 +98,41 @@ export function BouncingLogo({ height }: { height: number }) {
   );
 }
 
-/** Four balls in the brand colours, drawn on a 30×30 box. */
+/** Four balls in their own colours, drawn on a 30×30 box. */
 function Ball({ kind, size }: { kind: BallKind; size: number }) {
   const seam = { fill: 'none', strokeWidth: 2.2, strokeLinecap: 'round' as const };
+  const line = { fill: 'none', strokeWidth: 1.5, strokeLinecap: 'round' as const };
   return (
     <Svg width={size} height={size} viewBox="0 0 30 30">
-      {kind === 'volley' ? (
+      {kind === 'tennis' || kind === 'padel' ? (
+        <>
+          <Circle cx={15} cy={15} r={15} fill={kind === 'tennis' ? colors.lime : colors.padelBall} />
+          <Path d="M4 6 C 11 11, 11 19, 4 24" stroke={colors.paper} {...seam} />
+          <Path d="M26 6 C 19 11, 19 19, 26 24" stroke={colors.paper} {...seam} />
+        </>
+      ) : null}
+      {kind === 'basketball' ? (
+        <>
+          <Circle cx={15} cy={15} r={15} fill={colors.basketBall} />
+          <Path d="M15 0 V30" stroke={colors.ink} {...line} />
+          <Path d="M0 15 H30" stroke={colors.ink} {...line} />
+          <Path d="M5 3.5 C 11 9, 11 21, 5 26.5" stroke={colors.ink} {...line} />
+          <Path d="M25 3.5 C 19 9, 19 21, 25 26.5" stroke={colors.ink} {...line} />
+        </>
+      ) : null}
+      {kind === 'football' ? (
         <>
           <Circle cx={15} cy={15} r={15} fill={colors.paper} />
-          <Path d="M15 1 C 8 9, 8 21, 15 29" stroke={colors.ink} {...seam} />
-          <Path d="M2 10 C 11 13, 20 12, 28 7" stroke={colors.ink} {...seam} />
-          <Path d="M3 21 C 12 18, 21 19, 28 23" stroke={colors.ink} {...seam} />
+          {['M15.0 9.8 L15.0 0.0', 'M19.9 13.4 L29.3 10.4', 'M18.1 19.2 L23.8 27.1', 'M11.9 19.2 L6.2 27.1', 'M10.1 13.4 L0.7 10.4'].map((d) => (
+            <Path key={d} d={d} stroke={colors.ink} {...line} />
+          ))}
+          <Path d="M15.0 9.8 L19.9 13.4 L18.1 19.2 L11.9 19.2 L10.1 13.4 Z" fill={colors.ink} />
         </>
-      ) : (
-        <>
-          <Circle cx={15} cy={15} r={15} fill={colors.lime} />
-          {kind === 'tennis' ? (
-            <>
-              <Path d="M4 6 C 11 11, 11 19, 4 24" stroke={colors.ink} {...seam} />
-              <Path d="M26 6 C 19 11, 19 19, 26 24" stroke={colors.ink} {...seam} />
-            </>
-          ) : null}
-          {kind === 'padel' ? (
-            <>
-              <Path d="M4 6 C 11 11, 11 19, 4 24" stroke={colors.paper} {...seam} />
-              <Path d="M26 6 C 19 11, 19 19, 26 24" stroke={colors.paper} {...seam} />
-            </>
-          ) : null}
-          {kind === 'pickle'
-            ? [
-                [15, 7],
-                [8, 13],
-                [22, 13],
-                [11, 21],
-                [19, 21],
-                [15, 15],
-              ].map(([cx, cy]) => <Circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={1.9} fill={colors.ink} />)
-            : null}
-        </>
-      )}
+      ) : null}
     </Svg>
   );
 }
+
 
 const styles = StyleSheet.create({
   ball: { position: 'absolute', left: 0, top: 0 },

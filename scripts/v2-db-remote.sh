@@ -10,6 +10,8 @@
 #   scripts/v2-db-remote.sh link <ref>     link the v2 project (asks for the database password)
 #   scripts/v2-db-remote.sh push           dry run, then apply migrations/ to the linked v2 project (no seed)
 #   scripts/v2-db-remote.sh check          read-only check of the linked project: tables, views, RPCs
+#   scripts/v2-db-remote.sh demo on|off    demo matches and results between real roster players (core.seed_demo),
+#                                          for phone demos; `off` removes every demo match again
 #
 # The pgTAP suite needs seed.sql, so it runs on the local stack only. The real project gets migrations only;
 # seeding it is the founder's call.
@@ -96,6 +98,14 @@ for k, v in dict(PGHOST=d.hostname, PGPORT=d.port, PGUSER=d.username, PGPASSWORD
         (select count(*) from core.sports) as sports,
         (select count(*) from core.players) as players"
     ;;
+  demo)
+    require_v2_link
+    case "${2:-}" in
+      on) sb db query --linked "select core.seed_demo(true) as demo" ;;
+      off) sb db query --linked "select core.seed_demo(false) as demo" ;;
+      *) echo "usage: demo on|off" >&2; exit 2 ;;
+    esac
+    ;;
   *)
-    sed -n '2,16p' "$0"; exit 2 ;;
+    sed -n '2,18p' "$0"; exit 2 ;;
 esac
