@@ -24,7 +24,7 @@ select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}', core.athens_day(), :'m2')::jsonb) is not null as x \gset
 select tests.logout();
 select core.process_outbox(50) is not null as x \gset
-select is((select coalesce(sum(delta), 0)::int from core.points_ledger where user_id = :'v'::uuid and ref_id = :'m2'::uuid), 10, 'the vote paid at once');
+select is((select coalesce(sum(delta), 0)::int from core.points_ledger where user_id = :'v'::uuid and ref_id = :'m2'::uuid), 15, 'the vote paid at once (+10 and the chain bonus)');
 
 select tests.as_anon();
 select throws_ok($$select api.get_confirmations()$$, '42501', null, 'anonymous callers have nothing to confirm');
