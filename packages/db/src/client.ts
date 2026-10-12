@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient, type SupabaseClientOptions } from '@supabase/supabase-js';
 import type { Database } from './types';
 import type {
+  BlockedUser,
   CastVoteResult,
   ClaimCandidate,
   ConfirmationAnswer,
@@ -21,6 +22,7 @@ import type {
   PendingConfirmation,
   Reactions,
   ReceivedKudo,
+  ReportReason,
   PlayersHome,
   ProState,
   PublicTournament,
@@ -114,6 +116,15 @@ export function rpc(client: NetprophetClient) {
       call<{ match_id: string; given: number }>(client, 'give_kudo', { p_match_id: matchId, p_option_key: key, ...(toPlayer ? { p_to_player: toPlayer } : {}) }),
     react: (matchId: string, key: string | null) => call<Reactions>(client, 'react', { p_match_id: matchId, p_key: key as string }),
     getMyKudos: () => call<ReceivedKudo[]>(client, 'get_my_kudos', {}),
+    report: (type: 'match' | 'player', id: string, reason: ReportReason, note?: string) =>
+      call<{ reported: boolean }>(client, 'report', { p_entity_type: type, p_entity_id: id, p_reason: reason, ...(note ? { p_note: note } : {}) }),
+    block: (by: { playerId: string } | { matchId: string }) =>
+      call<{ blocked: boolean }>(client, 'block', 'playerId' in by ? { p_player_id: by.playerId } : { p_match_id: by.matchId }),
+    blockTarget: (by: { playerId: string } | { matchId: string }) =>
+      call<{ first_name: string | null; gender: 'm' | 'f' | null; blocked: boolean } | null>(
+        client, 'block_target', 'playerId' in by ? { p_player_id: by.playerId } : { p_match_id: by.matchId }),
+    unblock: (userId: string) => call<null>(client, 'unblock', { p_user_id: userId }),
+    getBlocks: () => call<BlockedUser[]>(client, 'get_blocks', {}),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),

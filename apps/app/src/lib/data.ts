@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type ConfirmationAnswer, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockScout } from '../mock/scout';
@@ -561,6 +561,67 @@ export function useMyKudos(): ReceivedKudo[] | null {
     api.getMyKudos().then(setList).catch(() => setList([]));
   }, [api]);
   return list;
+}
+
+export type SafetyTarget = { kind: 'match'; id: string } | { kind: 'player'; id: string };
+
+/** «Αναφορά» and «Μπλοκ»: who would be blocked, and the two actions (mock mode: always fine) */
+export function useSafety(target: SafetyTarget | null) {
+  const api = useApi();
+  const [who, setWho] = useState<{ first_name: string | null; gender: 'm' | 'f' | null; blocked: boolean } | null>(null);
+  useEffect(() => {
+    setWho(null);
+    if (!target) return;
+    if (!api) {
+      setWho({ first_name: 'Γιάννης', gender: 'm', blocked: false });
+      return;
+    }
+    const by = target.kind === 'match' ? { matchId: target.id } : { playerId: target.id };
+    api.blockTarget(by).then(setWho).catch(() => setWho(null));
+  }, [api, target]);
+  const report = useCallback(
+    async (reason: ReportReason, note: string): Promise<boolean> => {
+      if (!target) return false;
+      if (!api) return true;
+      try {
+        await api.report(target.kind, target.id, reason, note.trim() || undefined);
+        track('report_sent', { kind: target.kind, reason });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [api, target],
+  );
+  const block = useCallback(async (): Promise<boolean> => {
+    if (!target) return false;
+    if (!api) return true;
+    try {
+      await api.block(target.kind === 'match' ? { matchId: target.id } : { playerId: target.id });
+      track('user_blocked', { from: target.kind });
+      return true;
+    } catch {
+      return false;
+    }
+  }, [api, target]);
+  return { who, report, block };
+}
+
+/** Εγώ › «Μπλοκαρισμένοι» */
+export function useBlocks() {
+  const api = useApi();
+  const [list, setList] = useState<BlockedUser[]>([]);
+  useEffect(() => {
+    if (api) api.getBlocks().then(setList).catch(() => setList([]));
+  }, [api]);
+  const unblock = useCallback(
+    async (userId: string) => {
+      setList((l) => l.filter((b) => b.user_id !== userId));
+      if (api) await api.unblock(userId).catch(() => undefined);
+    },
+    [api],
+  );
+  return { list, unblock };
 }
 
 const MOCK_TOURNAMENTS: PublicTournament[] = [

@@ -51,6 +51,10 @@ export async function linkSuggestion(text: string, tournamentId: string | null):
   });
 }
 
+export async function closeReport(reportId: string, hide: boolean): Promise<ActionResult> {
+  return act('admin_close_report', { p_report_id: reportId, p_hide: hide }, () => (hide ? 'Hidden. Reports closed.' : 'Dismissed.'));
+}
+
 export interface FoundPlayer {
   id: string;
   name: string;

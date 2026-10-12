@@ -22,47 +22,49 @@ const PILL_DELAY = 350;
 /** prototype revName: a tapped name opens for 4s */
 const REVEAL_MS = 4000;
 
-export function ResultRow({ item, index }: { item: ResultItem; index: number }) {
+export function ResultRow({ item, index, onLongPress }: { item: ResultItem; index: number; onLongPress?: (matchId: string) => void }) {
   // prototype ms(min(i, 4), 100): 50, 100 ... 250ms
   const enter = useStgIn(STG_MS, 50 + Math.min(index, 4) * 50);
   const hot = item.upset;
   const fg = hot ? colors.paper : colors.ink;
   return (
-    <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
-      <View style={styles.top}>
-        {item.tag ? <Tag text={item.tag} /> : null}
-        <Text style={[styles.line, { color: fg }]}>{item.line ?? ''}</Text>
-        {item.calledIt ? <Pill text={item.calledIt} /> : null}
-      </View>
-      <View style={styles.winner}>
-        <View style={styles.nameBox}>
-          <Names people={item.winner} style={[styles.winName, { color: fg }]} />
+    <Pressable onLongPress={onLongPress ? () => onLongPress(item.id) : undefined} delayLongPress={450}>
+      <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
+        <View style={styles.top}>
+          {item.tag ? <Tag text={item.tag} /> : null}
+          <Text style={[styles.line, { color: fg }]}>{item.line ?? ''}</Text>
+          {item.calledIt ? <Pill text={item.calledIt} /> : null}
         </View>
-        <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
-      </View>
-      <View style={styles.loser}>
-        <View style={styles.nameBox}>
-          <Names people={item.loser} style={[styles.loseName, { color: fg }]} />
+        <View style={styles.winner}>
+          <View style={styles.nameBox}>
+            <Names people={item.winner} style={[styles.winName, { color: fg }]} />
+          </View>
+          <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
         </View>
-        <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
-      </View>
-      <Text style={[styles.sets, { color: hot ? colors.mist : colors.inkSoft }]}>{item.score}</Text>
-      {item.reactions ? <ReactionChips matchId={item.id} initial={item.reactions} dark={hot} /> : null}
-      {item.thank ? (
-        <Pressable
-          accessibilityRole="button"
-          style={styles.thankHit}
-          onPress={() =>
-            router.push({
-              pathname: '/kudos',
-              params: { match: item.id, to: item.thank!.playerId, first: item.thank!.first, gender: item.thank!.gender ?? '' },
-            })
+        <View style={styles.loser}>
+          <View style={styles.nameBox}>
+            <Names people={item.loser} style={[styles.loseName, { color: fg }]} />
+          </View>
+          <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
+        </View>
+        <Text style={[styles.sets, { color: hot ? colors.mist : colors.inkSoft }]}>{item.score}</Text>
+        {item.reactions ? <ReactionChips matchId={item.id} initial={item.reactions} dark={hot} /> : null}
+        {item.thank ? (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.thankHit}
+            onPress={() =>
+              router.push({
+                pathname: '/kudos',
+                params: { match: item.id, to: item.thank!.playerId, first: item.thank!.first, gender: item.thank!.gender ?? '' },
+              })
           }
-        >
-          <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank.label}</Text>
-        </Pressable>
-      ) : null}
-    </Animated.View>
+          >
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank.label}</Text>
+          </Pressable>
+        ) : null}
+      </Animated.View>
+    </Pressable>
   );
 }
 

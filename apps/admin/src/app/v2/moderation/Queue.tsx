@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
 import { colors, ui } from '../ui';
-import { approvePlayer, linkSuggestion, mergePlayer, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
+import { approvePlayer, closeReport, linkSuggestion, mergePlayer, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
   match_id: string;
@@ -29,7 +29,21 @@ export interface PendingPlayer {
   similar: { player_id: string; name: string; claimed: boolean }[];
 }
 
+export interface Report {
+  id: string;
+  entity_type: 'match' | 'player';
+  entity_id: string;
+  reason: 'wrong_result' | 'never_played' | 'offensive' | 'fake' | 'other';
+  note: string | null;
+  created_at: string;
+  reporter: string | null;
+  what: { name?: string; hidden: boolean; sides?: { side: Side; players: FeedPlayer[] }[]; starts_at?: string; source?: string } | null;
+  /** open reports on the same thing */
+  reports: number;
+}
+
 export interface Moderation {
+  reports: Report[];
   disputes: Dispute[];
   players: PendingPlayer[];
   tournaments: { text: string; matches: number; last: string }[];
@@ -47,7 +61,8 @@ const sideName = (d: Dispute, side: Side) =>
   (d.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || `Side ${side}`;
 
 /**
- * The moderation queue. Player-logged matches and names are live at once; this is where staff review them:
+ * The moderation queue. Player-logged matches and names are live at once; this is where staff review them,
+ * along with reports from users (hide the match or player, or dismiss):
  * disputes (keep, turn round, void), new players (approve, fix the spelling, merge into the roster player),
  * tournament names typed under «Άλλο» (link to a tournament or keep as friendlies).
  */
@@ -68,6 +83,11 @@ export function Queue({ data, tournaments }: { data: Moderation; tournaments: To
           </button>
         </div>
       ) : null}
+      <Section title="Reports" hint="Someone flagged a match or a player. Hiding takes it out of every feed and list." n={data.reports.length}>
+        {data.reports.map((r) => (
+          <ReportRow key={r.id} r={r} onNotice={setNotice} />
+        ))}
+      </Section>
       <Section title="Disputed matches" hint="The other side said it went differently. Votes were paid, then taken back." n={data.disputes.length}>
         {data.disputes.map((d) => (
           <DisputeRow key={d.match_id} d={d} onNotice={setNotice} />
@@ -139,6 +159,47 @@ function DisputeRow({ d, onNotice }: { d: Dispute; onNotice: Notice }) {
         </button>
         <button style={ui.secondary} disabled={pending} onClick={() => run('void')}>
           Void
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const REASONS: Record<Report['reason'], string> = {
+  wrong_result: 'Wrong result',
+  never_played: 'Never happened',
+  offensive: 'Offensive',
+  fake: 'Fake profile',
+  other: 'Something else',
+};
+
+function ReportRow({ r, onNotice }: { r: Report; onNotice: Notice }) {
+  const [pending, start] = useTransition();
+  const subject =
+    r.entity_type === 'player'
+      ? `Player: ${r.what?.name ?? 'removed'}`
+      : `Match: ${(r.what?.sides ?? []).map((s) => s.players.map((p) => `${p.first_name} ${p.surname}`).join(' / ')).join(' vs ')}${
+          r.what?.starts_at ? ` (${when(r.what.starts_at)}${r.what.source === 'user' ? ', player-logged' : ''})` : ''
+        }`;
+  const run = (hide: boolean) => start(async () => onNotice({ ...(await closeReport(r.id, hide)), what: `${subject}:` }));
+  return (
+    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span style={ui.muted}>
+        {when(r.created_at)} · by {r.reporter ?? 'someone'}
+        {r.reports > 1 ? ` · ${r.reports} open reports` : ''}
+        {r.what?.hidden ? ' · already hidden' : ''}
+      </span>
+      <div style={{ fontSize: 16, fontWeight: 700 }}>{subject}</div>
+      <div>
+        <strong>{REASONS[r.reason]}</strong>
+        {r.note ? <span>: «{r.note}»</span> : null}
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button style={ui.secondary} disabled={pending} onClick={() => run(true)}>
+          Hide it
+        </button>
+        <button style={ui.secondary} disabled={pending} onClick={() => run(false)}>
+          Dismiss
         </button>
       </div>
     </div>

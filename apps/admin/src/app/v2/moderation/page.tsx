@@ -7,7 +7,7 @@ import { Queue, type Moderation, type TournamentOption } from './Queue';
 
 export const dynamic = 'force-dynamic';
 
-/** Moderation queue (api.admin_moderation): disputed matches, new players, «Άλλο» tournament names. */
+/** Moderation queue (api.admin_moderation): reports, disputed matches, new players, «Άλλο» tournament names. */
 export default async function ModerationPage() {
   if (!v2Configured) {
     return (

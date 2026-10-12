@@ -57,13 +57,18 @@ function useEnter(run = true) {
   return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 10 }] }));
 }
 
+/** hold a card this long for «Αναφορά» */
+const LONG_PRESS_MS = 450;
+
 interface Props {
   match: CardMatch;
   /** Sends the vote and resolves with the split to reveal. A rejection puts the card back to idle. */
   onVote: (matchId: string, side: Side) => Promise<CardPct>;
+  /** a long press opens «Αναφορά» */
+  onLongPress?: (matchId: string) => void;
 }
 
-export const VoteCard = memo(function VoteCard({ match, onVote }: Props) {
+export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: Props) {
   const voted = match.myVote !== undefined && match.split !== undefined;
   const [phase, setPhase] = useState<Phase>(voted ? 'folded' : 'idle');
   const [pick, setPick] = useState<Side | undefined>(match.myVote);
@@ -103,35 +108,42 @@ export const VoteCard = memo(function VoteCard({ match, onVote }: Props) {
     return () => clearTimeout(id);
   }, [phase]);
 
+  const hold = onLongPress ? () => onLongPress(match.id) : undefined;
   if (phase === 'folded' && pick && split) {
-    return <FoldedCard match={match} pick={pick} split={split} fresh={voted} />;
+    return (
+      <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
+        <FoldedCard match={match} pick={pick} split={split} fresh={voted} />
+      </Pressable>
+    );
   }
 
   const revealed = phase === 'revealed' && split !== undefined;
   return (
-    <Animated.View style={[styles.card, enter]}>
-      <Text style={styles.meta}>{match.meta}</Text>
-      <View style={styles.grid}>
-        <VoteButton
-          side="a"
-          data={match.a}
-          doubles={match.doubles}
-          picked={pick === 'a'}
-          disabled={phase !== 'idle'}
-          pct={revealed ? split.pctA : null}
-          onPress={vote}
-        />
-        <VoteButton
-          side="b"
-          data={match.b}
-          doubles={match.doubles}
-          picked={pick === 'b'}
-          disabled={phase !== 'idle'}
-          pct={revealed ? split.pctB : null}
-          onPress={vote}
-        />
-      </View>
-    </Animated.View>
+    <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
+      <Animated.View style={[styles.card, enter]}>
+        <Text style={styles.meta}>{match.meta}</Text>
+        <View style={styles.grid}>
+          <VoteButton
+            side="a"
+            data={match.a}
+            doubles={match.doubles}
+            picked={pick === 'a'}
+            disabled={phase !== 'idle'}
+            pct={revealed ? split.pctA : null}
+            onPress={vote}
+          />
+          <VoteButton
+            side="b"
+            data={match.b}
+            doubles={match.doubles}
+            picked={pick === 'b'}
+            disabled={phase !== 'idle'}
+            pct={revealed ? split.pctB : null}
+            onPress={vote}
+          />
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 });
 

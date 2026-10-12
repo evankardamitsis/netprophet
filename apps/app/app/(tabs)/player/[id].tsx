@@ -5,9 +5,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import { FitText } from '../../../src/components/FitText';
 import { FormDots } from '../../../src/components/PlayerListRow';
+import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { usePlayer, type FollowOutcome } from '../../../src/lib/data';
+import { usePlayer, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
 import { colors, fonts } from '../../../src/theme';
@@ -25,6 +26,7 @@ export default function PlayerScreen() {
   const { profile, loading, error, notFound, refresh, toggleFollow } = usePlayer(String(id));
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const back = usePress();
+  const [safety, setSafety] = useState<SafetyTarget | null>(null);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -58,12 +60,20 @@ export default function PlayerScreen() {
           <Animated.Text style={[styles.back, back.style]}>‹ {t.common.back}</Animated.Text>
         </Pressable>
         {profile ? (
-          <Profile key={profile.id} p={profile} onFollow={onFollow} />
+          <>
+            <Profile key={profile.id} p={profile} onFollow={onFollow} />
+            {!profile.isMe ? (
+              <Pressable accessibilityRole="button" onPress={() => setSafety({ kind: 'player', id: profile.id })} style={styles.reportHit}>
+                <Text style={styles.report}>{t.safety.report}</Text>
+              </Pressable>
+            ) : null}
+          </>
         ) : !loading ? (
           <Text style={styles.note}>{notFound ? t.players.notFound : error ? t.players.error : ''}</Text>
         ) : null}
       </ScrollView>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
+      <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
     </View>
   );
 }
@@ -175,6 +185,8 @@ const FIRST_PAD = 14;
 const SUR_PAD = 8;
 
 const styles = StyleSheet.create({
+  reportHit: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', marginTop: 8 },
+  report: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 14, gap: 12 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },

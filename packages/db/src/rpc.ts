@@ -161,6 +161,16 @@ export interface ReceivedKudo extends KudoOption {
   n: number;
 }
 
+/** «Αναφορά» */
+export type ReportReason = 'wrong_result' | 'never_played' | 'offensive' | 'fake' | 'other';
+
+/** Εγώ › «Μπλοκαρισμένοι» */
+export interface BlockedUser {
+  user_id: string;
+  first_name: string | null;
+  surname: string | null;
+}
+
 /** Someone named in a match line («με Δημήτρη Γκότση»). name_forms holds the grammatical forms when known. */
 export interface PlayerRef {
   id: string;

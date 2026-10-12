@@ -22,6 +22,8 @@ export interface AnalyticsEvents {
   link_claimed: { result: 'ok' | 'taken' | 'other' | 'failed' };
   kudo_given: { source: 'log' | 'results' };
   reaction_set: { key: string | null };
+  report_sent: { kind: 'match' | 'player'; reason: string };
+  user_blocked: { from: 'match' | 'player' };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;
