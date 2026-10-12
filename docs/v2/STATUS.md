@@ -40,6 +40,13 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Testing: iOS Simulator works (Xcode installed; iPhone 18 Pro). Android Studio still to install. `preview` is a local branch combining open PRs for the founder's phone; new work is built in a second clone (`../netprophet-dev`; worktrees there get cleaned up) so the main folder stays on `v2`.
 - Lessons: on iOS, text clips when its line height is below its font size (accents, digits); any function called inside an animated style must be a worklet.
 
+## Pro: real, not a fake door (decided 12 Oct 2026)
+- The founder dropped the fake door: Pro is built for real and sold on the web first (Apple/Google billing comes with the store release). Pro belongs to the account, so a web purchase unlocks the phone apps.
+- Pro at launch: «Τα τουρνουά σου», «Ο αντίπαλος πριν το ματς», «Πού κερδίζεις, πού χάνεις», «Τα νούμερα του level σου». 8,99€ a month.
+- Order: foundations (is_pro, get_pro, waitlist, staff grant, Pro screen) → scouting → πού κερδίζεις → level numbers → web checkout + webhook → tournaments.
+- Blocked on the founder: a payment provider account (merchant of record or Stripe, an accountant's call for Greek receipts), the web app's domain for checkout, and `parse_oop.py` + the TAF sheet for tournaments. Level numbers show nothing until the M3 level algorithm runs (levels are null on hosted; v1 NTRP is only `initial_level`).
+- Until checkout is live «Γίνε μέλος» puts you on the list (`entitlements.source = 'waitlist'`), which grants nothing.
+
 ## Queued phases
 - **Match data automation** (after the admin desk): spec in `docs/v2/match-data-automation.md`. Port `parse_oop.py` to TypeScript, keep the TAF RACE sheet as a test fixture, build order step 1 first (tournaments page, Google Sheets adapter, records sheet writer). Ask the founder the open questions before dedupe and results logic. **Waiting for `parse_oop.py` and the TAF sheet** (not in the repo yet; put them in `tools/match-data/fixtures/`).
 - **v1 names accent pass**: propose accented spellings for the 1,611 capital surnames, admin approves in bulk.

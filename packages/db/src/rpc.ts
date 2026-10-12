@@ -256,6 +256,14 @@ export interface MePage {
   friends: { count: number; first: PlayerRef[] };
 }
 
+/** The Pro screen (api.get_pro). Pro belongs to the account, whichever platform paid for it. */
+export interface ProState {
+  pro: boolean;
+  current: { source: 'subscription' | 'gift' | 'promo' | 'migration'; starts_at: string; ends_at: string | null } | null;
+  /** pressed «Γίνε μέλος» while checkout was not live */
+  waitlisted: boolean;
+}
+
 export interface MeResult {
   user_id: string;
   profile: {

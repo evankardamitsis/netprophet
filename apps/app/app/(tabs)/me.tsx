@@ -5,8 +5,9 @@ import { router } from 'expo-router';
 import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
-import { useMePage } from '../../src/lib/data';
+import { useMePage, usePro } from '../../src/lib/data';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
+import { activeLine, priceLine } from '../../src/lib/pro';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import { colors, fonts } from '../../src/theme';
 
@@ -291,11 +292,13 @@ function Friends({ v }: { v: MeView }) {
   );
 }
 
-/** «Ρυθμίσεις», closed until tapped; M1 has only Αποσύνδεση */
+/** «Ρυθμίσεις», closed until tapped: Pro, then Αποσύνδεση */
 function Settings() {
   const t = useCopy();
   const { signOut } = useAuth();
+  const { state } = usePro();
   const [open, setOpen] = useState(false);
+  const active = state ? activeLine(state, t) : null;
   return (
     <View style={styles.card}>
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={styles.rowBetween}>
@@ -303,9 +306,18 @@ function Settings() {
         <Text style={styles.settingsMark}>{open ? '−' : '+'}</Text>
       </Pressable>
       {open ? (
-        <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
-          <Text style={styles.signOut}>{t.auth.signOut}</Text>
-        </Pressable>
+        <>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/pro')} style={styles.proRow}>
+            <View style={styles.proText}>
+              <Text style={styles.proTitle}>{t.pro.title}</Text>
+              <Text style={styles.muted}>{t.pro.settingsLine}</Text>
+            </View>
+            <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
+            <Text style={styles.signOut}>{t.auth.signOut}</Text>
+          </Pressable>
+        </>
       ) : null}
     </View>
   );
@@ -385,4 +397,8 @@ const styles = StyleSheet.create({
   settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
   signOut: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  proRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.navLine },
+  proText: { flex: 1, minWidth: 0, gap: 2 },
+  proTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  proPrice: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
 });
