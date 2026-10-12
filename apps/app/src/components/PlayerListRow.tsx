@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import type { FormDot, PlayerRow } from '../lib/players';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
+import { FitText } from './FitText';
 import { colors, fonts } from '../theme';
 
 /**
@@ -29,9 +30,7 @@ export function PlayerListRow({ row, index, onPress }: { row: PlayerRow; index: 
             <Text style={styles.initials}>{row.initials}</Text>
           </View>
           <View style={styles.text}>
-            <Text style={styles.name} numberOfLines={1}>
-              {row.name}
-            </Text>
+            <FitText text={row.name} style={styles.name} />
             {row.sub ? (
               <Text style={styles.sub} numberOfLines={1}>
                 {row.sub}

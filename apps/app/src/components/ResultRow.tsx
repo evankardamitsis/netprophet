@@ -1,9 +1,10 @@
 import { Fragment, useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
 import Animated from 'react-native-reanimated';
 import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
 import { colors, fonts } from '../theme';
+import { FitText } from './FitText';
 
 /**
  * One finished match on Αποτελέσματα (prototype V2, result card): white, or ink for an upset.
@@ -31,11 +32,15 @@ export function ResultRow({ item, index }: { item: ResultItem; index: number }) 
         {item.calledIt ? <Pill text={item.calledIt} /> : null}
       </View>
       <View style={styles.winner}>
-        <Names people={item.winner} style={[styles.winName, { color: fg }]} />
+        <View style={styles.nameBox}>
+          <Names people={item.winner} style={[styles.winName, { color: fg }]} />
+        </View>
         <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
       </View>
       <View style={styles.loser}>
-        <Names people={item.loser} style={[styles.loseName, { color: fg }]} />
+        <View style={styles.nameBox}>
+          <Names people={item.loser} style={[styles.loseName, { color: fg }]} />
+        </View>
         <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
       </View>
       <Text style={[styles.sets, { color: hot ? colors.mist : colors.inkSoft }]}>{item.score}</Text>
@@ -67,16 +72,18 @@ function Pill({ text }: { text: string }) {
  * «Δεσύπρης Γ. & Μέμμος Η.»: the surname large, as on the feed cards, and the first name's initial;
  * a tap shows the first name for 4s (founder, 10 Oct; the prototype had it the other way round).
  */
-function Names({ people, style }: { people: ResultName[]; style: object }) {
+function Names({ people, style }: { people: ResultName[]; style: StyleProp<TextStyle> }) {
+  // measured as shown collapsed: «Δεσύπρης Γ. & Μέμμος Η.»
+  const shown = people.map((p) => `${p.surname} ${p.first.slice(0, 1)}.`).join(' & ');
   return (
-    <Text style={[styles.names, style]}>
+    <FitText text={shown} style={[styles.names, style]}>
       {people.map((p, i) => (
         <Fragment key={`${p.first}-${p.surname}-${i}`}>
           {i > 0 ? ' & ' : ''}
           <Name person={p} />
         </Fragment>
       ))}
-    </Text>
+    </FitText>
   );
 }
 
@@ -103,7 +110,8 @@ const styles = StyleSheet.create({
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 14, letterSpacing: 0.48, color: colors.ink },
   pill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
   pillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },
-  names: { flexShrink: 1 },
+  names: {},
+  nameBox: { flex: 1, minWidth: 0 },
   // line heights at least the font size: iOS clips the tonos that rises above the line box
   winner: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   winName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38 },

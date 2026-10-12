@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
+import { FitText } from '../../../src/components/FitText';
 import { FormDots } from '../../../src/components/PlayerListRow';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
@@ -85,8 +86,8 @@ function Profile({ p, onFollow }: { p: ProfileView; onFollow: () => void }) {
           {p.isMe ? null : <FollowPill on={p.isFollowed} onPress={onFollow} />}
         </View>
         <Animated.View style={nameIn}>
-          <Text style={styles.first}>{p.first}</Text>
-          <Text style={styles.surname}>{p.surname}</Text>
+          <FitText text={p.first} style={styles.first} />
+          <FitText text={p.surname} style={styles.surname} />
         </Animated.View>
         {p.sub ? <Animated.Text style={[styles.heroSub, subIn]}>{p.sub}</Animated.Text> : null}
         <View style={styles.dividerTrack}>
