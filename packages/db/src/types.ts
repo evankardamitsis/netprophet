@@ -432,6 +432,10 @@ export type Database = {
         Args: { p_days?: number; p_limit?: number };
         Returns: Json;
       };
+      get_scout: {
+        Args: { p_match_id: string };
+        Returns: Json;
+      };
       join_pro_waitlist: {
         Args: Record<PropertyKey, never>;
         Returns: boolean;

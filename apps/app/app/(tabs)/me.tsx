@@ -228,6 +228,8 @@ function Score({ v }: { v: MeView }) {
 /** «Τα ματς σου»: last results with Ν / Η, then the next match or how to add one */
 function Matches({ v }: { v: MeView }) {
   const t = useCopy();
+  const { state } = usePro();
+  const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : router.push('/pro'));
   return (
     <View style={styles.block}>
       <Text style={styles.heading}>{t.me.matches.title}</Text>
@@ -249,6 +251,14 @@ function Matches({ v }: { v: MeView }) {
           <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
             <Text style={styles.label}>{t.me.matches.next}</Text>
             <Text style={styles.nextText}>{v.next}</Text>
+            {v.nextMatchId ? (
+              <Pressable accessibilityRole="button" onPress={scout} style={styles.scoutRow}>
+                <Text style={styles.link}>{t.scout.open}</Text>
+                <View style={styles.proPill}>
+                  <Text style={styles.proPillText}>{t.pro.title}</Text>
+                </View>
+              </Pressable>
+            ) : null}
           </View>
         ) : (
           <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
@@ -397,6 +407,9 @@ const styles = StyleSheet.create({
   settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
   signOut: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  scoutRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  proPill: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: colors.ink },
+  proPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   proRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.navLine },
   proText: { flex: 1, minWidth: 0, gap: 2 },
   proTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },

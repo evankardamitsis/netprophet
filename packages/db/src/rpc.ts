@@ -256,6 +256,31 @@ export interface MePage {
   friends: { count: number; first: PlayerRef[] };
 }
 
+/** One player on the other side of your match (api.get_scout), from their results. */
+export interface ScoutPlayer extends PlayerCard {
+  hand: 'R' | 'L' | null;
+  year: WinLoss;
+  /** matches that went to a deciding set */
+  deciding: WinLoss;
+  /** sets decided in a tie-break */
+  tiebreaks: WinLoss;
+  /** you against them, from your side */
+  h2h: WinLoss & { last: { won: boolean; score: string | null; starts_at: string } | null };
+  /** players you both played: your record and theirs against each */
+  common: (PlayerRef & { me: WinLoss; them: WinLoss })[];
+  /** their record against the players you follow */
+  known: WinLoss;
+}
+
+/** «Ο αντίπαλος πριν το ματς» (Pro): only your own upcoming match. */
+export interface Scout {
+  match_id: string;
+  starts_at: string | null;
+  format: 'singles' | 'doubles' | 'mixed';
+  partner: PlayerRef[];
+  opponents: ScoutPlayer[];
+}
+
 /** The Pro screen (api.get_pro). Pro belongs to the account, whichever platform paid for it. */
 export interface ProState {
   pro: boolean;
