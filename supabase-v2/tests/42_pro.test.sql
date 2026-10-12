@@ -19,6 +19,8 @@ select throws_ok(format($$select api.admin_grant_pro(%L, 30)$$, :'u'), '42501', 
 select tests.login(:'a'::uuid);
 select ok((api.admin_grant_pro(:'u'::uuid, 30) ->> 'ends_at') is not null, 'an admin grants Pro for 30 days');
 select api.admin_grant_pro(:'u'::uuid, 7) is not null as x \gset
+-- count as the owner: row security only shows a user their own entitlements
+select tests.logout();
 select is((select count(*)::int from core.entitlements where user_id = :'u'::uuid and source = 'promo' and status = 'active'),
           1, 'a new grant replaces the earlier one');
 
