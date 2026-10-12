@@ -14,7 +14,6 @@ import type { MeSummary } from '../lib/data';
 import { useHud, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
-import { Shine } from './Shine';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LOGO = require('../../assets/logo-on-ink.svg');
@@ -22,7 +21,8 @@ const LOGO = require('../../assets/logo-on-ink.svg');
 const LOGO_RATIO = 426.4 / 80;
 
 /**
- * Prototype V2 app header: logo left; σερί, πόντοι and the avatar (opens Εγώ) right.
+ * Prototype V2 app header: logo left; σερί, πόντοι and the avatar (opens Εγώ) right. σερί is a lime pill (as on
+ * Εγώ), πόντοι a plain lime number (founder, 12 Oct: no moving shine, and σερί must not look like πόντοι).
  * `me` comes from the tabs layout, so all tabs share one get_me call. Null while loading.
  * While result cards are waiting to play, the numbers are the ones from before them (see lib/hud).
  */
@@ -36,8 +36,8 @@ export function Header({ me }: { me: MeSummary | null }) {
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
       <Image source={LOGO} style={styles.logo} contentFit="contain" accessibilityLabel="NetProphet" />
       <View style={styles.right}>
-        <Stat value={streak} label={t.streak.label} onPress={goMe} target={hud.targets.streak} fx={hud.streakFx} />
-        <Stat value={points} label={t.header.points} target={hud.targets.points} shine countUp />
+        <Stat value={streak} label={t.streak.label} onPress={goMe} target={hud.targets.streak} fx={hud.streakFx} pill />
+        <Stat value={points} label={t.header.points} target={hud.targets.points} countUp />
         <Avatar initials={me?.initials ?? ''} />
       </View>
     </View>
@@ -51,7 +51,7 @@ function Stat({
   label,
   onPress,
   target,
-  shine = false,
+  pill = false,
   countUp = false,
   fx = null,
 }: {
@@ -60,8 +60,8 @@ function Stat({
   onPress?: () => void;
   /** measured by result cards as the place their «+10» flies to */
   target: RefObject<View | null>;
-  /** πόντοι carry the prototype's moving shine */
-  shine?: boolean;
+  /** σερί: ink number and label side by side in a lime pill */
+  pill?: boolean;
   countUp?: boolean;
   fx?: StreakFx;
 }) {
@@ -80,14 +80,17 @@ function Stat({
     >
       <Animated.View ref={target} collapsable={false} style={[styles.stat, press.style, fxStyle.box]}>
         <Animated.View style={fxStyle.ring} pointerEvents="none" />
-        {shine && shown !== undefined ? (
-          <Animated.View style={pop}>
-            <Shine text={String(shown)} style={styles.num} />
+        {pill ? (
+          <Animated.View style={[styles.pill, pop]}>
+            <Text style={styles.pillNum}>{shown ?? ' '}</Text>
+            <Text style={styles.pillLabel}>{label}</Text>
           </Animated.View>
         ) : (
-          <Animated.Text style={[styles.num, styles.lime, pop]}>{shown ?? ' '}</Animated.Text>
+          <>
+            <Animated.Text style={[styles.num, styles.lime, pop]}>{shown ?? ' '}</Animated.Text>
+            <Text style={styles.label}>{label}</Text>
+          </>
         )}
-        <Text style={styles.label}>{label}</Text>
       </Animated.View>
     </Pressable>
   );
@@ -129,7 +132,7 @@ function useStreakFx(fx: StreakFx) {
     bottom: -4,
     left: -4,
     right: -4,
-    borderRadius: 14,
+    borderRadius: 999,
     borderWidth: 3 + 9 * frost.value,
     borderColor: alpha(colors.paper, 0.35 * ring.value + 0.2 * frost.value),
     opacity: ring.value > 0 ? 1 : 0,
@@ -171,6 +174,10 @@ const styles = StyleSheet.create({
   // line heights at least the font size: iOS clips glyphs that rise above the line box (web lets them spill)
   num: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32 },
   lime: { color: colors.lime },
+  // prototype σερί pill (Εγώ): lime, ink number in the display face, «σερί» bold beside it on the baseline
+  pill: { flexDirection: 'row', alignItems: 'baseline', gap: 4, paddingTop: 3, paddingBottom: 5, paddingLeft: 10, paddingRight: 12, borderRadius: 999, backgroundColor: colors.lime },
+  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, color: colors.ink },
+  pillLabel: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 14, color: colors.ink },
   label: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.33, color: colors.mist },
   avatarHit: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   avatar: {
