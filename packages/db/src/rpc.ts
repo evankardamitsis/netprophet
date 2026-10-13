@@ -144,8 +144,8 @@ export interface QuizPlayer {
   gender: 'm' | 'f' | null;
 }
 
-/** s Σενάριο, c Διάλεξε έναν, q Ποιος είναι;, o Άποψη */
-export type QuizFamily = 's' | 'c' | 'q' | 'o';
+/** s Σενάριο, c Διάλεξε έναν, q Ποιος είναι;, o Άποψη, d dynamic (Πριν το ματς, Μετά το αποτέλεσμα, Εβδομαδιαίο) */
+export type QuizFamily = 's' | 'c' | 'q' | 'o' | 'd';
 
 export interface QuizCard {
   id: string;
@@ -160,6 +160,10 @@ export interface QuizCard {
     /** 0-based index of the right option; only on a 'q' card */
     right?: number;
     players: QuizPlayer[];
+    /** a dynamic card about this week («αυτή τη βδομάδα») */
+    week?: boolean;
+    /** the match a dynamic card asks about */
+    match_id?: string | null;
   };
   /** 1-based, null before the player answers */
   my_option: number | null;

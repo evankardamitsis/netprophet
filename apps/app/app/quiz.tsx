@@ -115,8 +115,11 @@ function Game({ quiz, index, onAnswer, onPrev, onNext }: { quiz: GetQuizResult; 
           <View key={c.id} style={[styles.dot, i < index || (i === index && answered) ? styles.dotOn : styles.dotOff]} />
         ))}
       </View>
-      <View style={styles.tag}>
-        <Text style={styles.tagText}>{greekCaps(v.tag)}</Text>
+      <View style={styles.tagRow}>
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>{greekCaps(v.tag)}</Text>
+        </View>
+        {v.week ? <Text style={styles.week}>{t.quiz.thisWeek}</Text> : null}
       </View>
       <Text style={styles.question}>{v.question}</Text>
       {v.clues.length > 0 ? (
@@ -250,6 +253,8 @@ const styles = StyleSheet.create({
   dot: { flex: 1, height: 5, borderRadius: 999 },
   dotOn: { backgroundColor: colors.ink },
   dotOff: { backgroundColor: colors.stone },
+  tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  week: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft },
   tag: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: colors.lime },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.48, color: colors.ink },
   question: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 43, color: colors.ink },

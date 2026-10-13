@@ -680,6 +680,7 @@ export const en: Copy = {
     next: 'Next ›',
     pick: 'Tap one.',
     pickWho: 'This one has a right answer.',
+    thisWeek: 'this week',
     pickOpinion: 'There is no right or wrong here.',
     right: 'Right. ',
     wrong: 'Not this time. ',
