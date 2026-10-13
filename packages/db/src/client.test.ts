@@ -47,6 +47,18 @@ describe('@netprophet/db client', () => {
     expect(JSON.parse(seen[0]?.body ?? '{}')).toEqual({ p_match_id: 'm1', p_side: 1, p_client_event_id: 'evt-1' });
   });
 
+  it('answerCard sends a 1-based option and returns the answer', async () => {
+    const seen: Seen[] = [];
+    const reply = { option: 2, right: null, split: null, answered: 6, awarded: 30 };
+    const client = createNetprophetClient(URL_, 'anon-key', { global: { fetch: stubFetch(200, reply, seen) } });
+
+    const res = await rpc(client).answerCard('c1', 2, 'evt-2');
+
+    expect(res.awarded).toBe(30);
+    expect(seen[0]?.url).toContain('/rest/v1/rpc/answer_card');
+    expect(JSON.parse(seen[0]?.body ?? '{}')).toEqual({ p_card: 'c1', p_option: 2, p_client_event_id: 'evt-2' });
+  });
+
   it('turns a database error into an RpcError carrying the machine code', async () => {
     const seen: Seen[] = [];
     const err = { code: '55000', message: 'voting_closed', details: null, hint: null };

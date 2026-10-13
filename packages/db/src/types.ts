@@ -440,6 +440,10 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      answer_card: {
+        Args: { p_card: string; p_option: number; p_client_event_id?: string };
+        Returns: Json;
+      };
       answer_confirmation: {
         Args: { p_match_id: string; p_answer: string; p_fix?: Json };
         Returns: Json;
@@ -541,6 +545,10 @@ export type Database = {
         Returns: Json;
       };
       get_quests: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_quiz: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
