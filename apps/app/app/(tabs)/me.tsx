@@ -9,12 +9,14 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useBadges, useBlocks, useMePage, useMyKudos, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { useApi, useBadges, useBlocks, useMePage, useMyKudos, usePro, useQuests, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
 import { activeLine, priceLine } from '../../src/lib/pro';
+import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
+import { useUnlocks } from '../../src/lib/unlocks';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { colors, ease, fonts } from '../../src/theme';
@@ -37,12 +39,16 @@ export default function MeScreen() {
   const quests = useQuests();
   const badges = useBadges();
   const [questsOpen, setQuestsOpen] = useState(false);
+  const unlocks = useUnlocks();
+  const { has } = unlocks;
   useFocusEffect(
     useCallback(() => {
       void quests.refresh();
       void badges.refresh();
+      // a vote or a moment may have opened something since last time
+      void unlocks.refresh({ afterMoment: true });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh, badges.refresh]),
+    }, [quests.refresh, badges.refresh, unlocks.refresh]),
   );
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -62,10 +68,12 @@ export default function MeScreen() {
         {view ? (
           <>
             <Section i={next()}>{view.isNew ? <NewHero v={view} badges={badges.badges} /> : <Hero v={view} badges={badges.badges} />}</Section>
-            <Section i={next()}>
-              <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
-            </Section>
-            {badges.badges && earned(badges.badges.badges).length > 0 ? (
+            {has('daily_quests') ? (
+              <Section i={next()}>
+                <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
+              </Section>
+            ) : null}
+            {has('badges_shelf') && badges.badges && earned(badges.badges.badges).length > 0 ? (
               <Section i={next()}>
                 <BadgesCard data={badges.badges} />
               </Section>
@@ -81,12 +89,12 @@ export default function MeScreen() {
             <Section i={next()}>
               <Score v={view} />
             </Section>
-            {kudos ? (
+            {kudos && has('kudos') ? (
               <Section i={next()}>
                 <KudosCloud list={kudos} gender={nameGender(view.first)} />
               </Section>
             ) : null}
-            {!view.isNew ? (
+            {!view.isNew && has('pro_sheet') ? (
               <Section i={next()}>
                 <WinLoss />
               </Section>
@@ -104,7 +112,7 @@ export default function MeScreen() {
         ) : null}
         {!loading && error && !view ? <Text style={styles.empty}>{t.me.error}</Text> : null}
       </ScrollView>
-      <QuestsSheet open={questsOpen} quests={quests.quests} onClose={() => setQuestsOpen(false)} />
+      {has('daily_quests') ? <QuestsSheet open={questsOpen} quests={quests.quests} onClose={() => setQuestsOpen(false)} /> : null}
     </View>
   );
 }
@@ -213,16 +221,19 @@ function Section({ i, children }: { i: number; children: ReactNode }) {
 /** the ink hero: level, σερί, πόντοι μήνα, then the name */
 function Hero({ v, badges }: { v: MeView; badges: GetBadgesResult | null }) {
   const t = useCopy();
+  const { has } = useUnlocks();
   return (
     <View style={styles.hero}>
       <View style={styles.chips}>
-        <View style={styles.chip}>
-          <Text style={styles.chipBig}>{v.level}</Text>
-          <View>
-            <Text style={styles.chipSmall}>{t.level.label}</Text>
-            <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
+        {has('level_bar') ? (
+          <View style={styles.chip}>
+            <Text style={styles.chipBig}>{v.level}</Text>
+            <View>
+              <Text style={styles.chipSmall}>{t.level.label}</Text>
+              <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
+            </View>
           </View>
-        </View>
+        ) : null}
         <View style={styles.chip}>
           <Text style={[styles.chipBig, styles.lime]}>{v.streak}</Text>
           <View>
@@ -400,6 +411,7 @@ function WinLoss() {
 function Matches({ v }: { v: MeView }) {
   const t = useCopy();
   const { state } = usePro();
+  const proOpen = useUnlocks().has('pro_sheet');
   const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : router.push('/pro?from=scout'));
   return (
     <View style={styles.block}>
@@ -422,7 +434,7 @@ function Matches({ v }: { v: MeView }) {
           <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
             <Text style={styles.label}>{t.me.matches.next}</Text>
             <Text style={styles.nextText}>{v.next}</Text>
-            {v.nextMatchId ? (
+            {v.nextMatchId && proOpen ? (
               <Pressable accessibilityRole="button" onPress={scout} style={styles.scoutRow}>
                 <Text style={styles.link}>{t.scout.open}</Text>
                 <View style={styles.proPill}>
@@ -481,6 +493,9 @@ function Settings() {
   const [open, setOpen] = useState(false);
   const gate = useOnboardingGate();
   const blocks = useBlocks();
+  const proOpen = useUnlocks().has('pro_sheet');
+  const newPlayer = useNewPlayer();
+  const mockMode = useApi() === null;
   const active = state ? activeLine(state, t) : null;
   return (
     <View style={styles.card}>
@@ -490,13 +505,15 @@ function Settings() {
       </Pressable>
       {open ? (
         <>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=settings')} style={styles.proRow}>
-            <View style={styles.proText}>
-              <Text style={styles.proTitle}>{t.pro.title}</Text>
-              <Text style={styles.muted}>{t.pro.settingsLine}</Text>
-            </View>
-            <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
-          </Pressable>
+          {proOpen ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=settings')} style={styles.proRow}>
+              <View style={styles.proText}>
+                <Text style={styles.proTitle}>{t.pro.title}</Text>
+                <Text style={styles.muted}>{t.pro.settingsLine}</Text>
+              </View>
+              <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
+            </Pressable>
+          ) : null}
           {blocks.list.length > 0 ? (
             <View style={styles.blocks}>
               <Text style={styles.blocksTitle}>{t.safety.list}</Text>
@@ -513,6 +530,11 @@ function Settings() {
           {__DEV__ ? (
             <Pressable accessibilityRole="button" onPress={gate.replay} style={styles.linkHit}>
               <Text style={styles.signOut}>{t.me.replayOnboarding}</Text>
+            </Pressable>
+          ) : null}
+          {__DEV__ && mockMode ? (
+            <Pressable accessibilityRole="button" onPress={() => setNewPlayer(!newPlayer.on)} style={styles.linkHit}>
+              <Text style={styles.signOut}>{newPlayer.on ? t.me.newPlayerOn : t.me.newPlayer}</Text>
             </Pressable>
           ) : null}
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>

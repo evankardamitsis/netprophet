@@ -13,7 +13,10 @@ import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
 import { useBadges, useConfirmations, useFeed, useQuests, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
-import { nextGroup } from '../../src/lib/celebrate';
+import type { Celebration as CelebrationItem } from '@netprophet/db';
+import { isUnlock, nextGroup } from '../../src/lib/celebrate';
+import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
+import { useUnlocks } from '../../src/lib/unlocks';
 import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
 import type { Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
@@ -30,6 +33,9 @@ export default function VoteScreen() {
   const onVoteError = useCallback((kind: VoteErrorKind) => setNotice((p) => ({ kind, n: (p?.n ?? 0) + 1 })), []);
   const { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote } = useFeed(onVoteError);
   const confirmations = useConfirmations();
+  const unlocks = useUnlocks();
+  const unlocksNow = useRef(unlocks);
+  unlocksNow.current = unlocks;
   const quests = useQuests();
   const questsNow = useRef(quests.quests);
   questsNow.current = quests.quests;
@@ -45,9 +51,14 @@ export default function VoteScreen() {
       const badgesBefore = badgesNow.current;
       const pct = await vote(matchId, side);
       void Promise.all([quests.refresh(), badges.refresh()]).then(([after, badgesAfter]) => {
-        const f = after ? feedbackAfterVote(before, after, t, { before: badgesBefore, after: badgesAfter }) : null;
+        // quests and badges that are not open yet say nothing
+        const { has } = unlocksNow.current;
+        const f = after
+          ? feedbackAfterVote(before && gateQuests(before, has), gateQuests(after, has), t, has('badges_shelf') ? { before: badgesBefore, after: badgesAfter } : undefined)
+          : null;
         if (f) setQuestNote({ ...f, n: Date.now() });
       });
+      void unlocksNow.current.refresh();
       return pct;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,6 +106,18 @@ export default function VoteScreen() {
   // σερί ones first, one by one; every queued quest together as one
   const group = results.length === 0 && !between ? nextGroup(celebrations) : [];
   const celebrating = group.length > 0 ? group : undefined;
+  // a step that opens quietly has no moment: mark it seen without showing anything
+  const quiet = celebrations.filter((c) => isUnlock(c) && !hasMoment(c.payload.key)).map((c) => c.id).join();
+  useEffect(() => {
+    if (quiet) {
+      dismissCelebration(quiet.split(','));
+    }
+  }, [quiet, dismissCelebration]);
+  // after a moment, read the ladder again so what it opened shows
+  const onCelebrated = (list: CelebrationItem[]) => {
+    dismissCelebration(list.map((c) => c.id));
+    if (list.some(isUnlock)) void unlocks.refresh({ afterMoment: true });
+  };
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -153,7 +176,7 @@ export default function VoteScreen() {
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
       <AddMatchButton />
-      {celebrating ? <Celebration key={celebrating.map((c) => c.id).join()} items={celebrating} onDone={() => dismissCelebration(celebrating.map((c) => c.id))} /> : null}
+      {celebrating ? <Celebration key={celebrating.map((c) => c.id).join()} items={celebrating} onDone={() => onCelebrated(celebrating)} /> : null}
     </View>
   );
 }

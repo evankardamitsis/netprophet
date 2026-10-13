@@ -18,6 +18,8 @@ import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } f
 import { toMeView, type MeView } from './me';
 import { askForPushOnce } from './push';
 import { MOCK_TOKEN, mockLinkView } from './link';
+import { hasMoment } from './unlockLadder';
+import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
 import { winLossRows, type WinLossRow } from './winLoss';
@@ -125,6 +127,14 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       const m = MOCK_MATCHES.find((x) => x.id === matchId);
       mockQuestVote();
       mockBadgeVote();
+      // the dev «Νέος παίκτης»: a vote that opens a step queues its moment, a beat after the reveal
+      const opened = recordMockVote().filter(hasMoment);
+      if (opened.length > 0) {
+        setTimeout(
+          () => setCelebrations((c) => c.concat(opened.map((key) => ({ id: `mock-unlock-${key}`, created_at: new Date().toISOString(), payload: { type: 'unlock' as const, key } })))),
+          MOCK_UNLOCK_DELAY_MS,
+        );
+      }
       return m ? mockVote(m, side) : { pctA: 50, pctB: 50 };
     }
     try {
@@ -150,7 +160,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
   const dismissCelebration = useCallback((ids: string[]) => {
     setCelebrations((c) => c.filter((x) => !ids.includes(x.id)));
     if (api) api.markInboxSeen(ids).catch(() => undefined);
-    else AsyncStorage.setItem(MOCK_CELEBRATION_KEY, '1').catch(() => undefined);
+    else if (ids.includes('mock-cel')) AsyncStorage.setItem(MOCK_CELEBRATION_KEY, '1').catch(() => undefined);
   }, [api]);
 
   return { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote };
@@ -158,7 +168,11 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
 
 /* mock mode and the dev guest: the σερί 5 moment, once per device (founder, 13 Oct) */
 const MOCK_CELEBRATION_KEY = 'np.mock.celebrationSeen';
+const MOCK_UNLOCK_DELAY_MS = 1400;
 async function mockCelebrations(): Promise<Celebration[]> {
+  // a new player has no σερί 5 yet
+  await hydrateNewPlayer();
+  if (isNewPlayerOn()) return [];
   if ((await AsyncStorage.getItem(MOCK_CELEBRATION_KEY).catch(() => null)) === '1') return [];
   return [{ id: 'mock-cel', created_at: new Date().toISOString(), payload: { type: 'streak_milestone', streak: 5, match_id: 'mock', reward: { freeze: false, frame: null } } }];
 }

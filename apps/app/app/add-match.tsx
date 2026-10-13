@@ -34,6 +34,7 @@ import {
   type PickedPerson,
 } from '../src/lib/logMatch';
 import { usePress, useStgIn } from '../src/lib/motion';
+import { useUnlocks } from '../src/lib/unlocks';
 import { fmt } from '../src/lib/votes';
 import { colors, fonts } from '../src/theme';
 
@@ -65,6 +66,8 @@ export default function AddMatch() {
   // a played match asks for a good word first (prototype fstep 'kudos'), then shows the Done card
   const [thanking, setThanking] = useState(false);
   const [kudo, setKudo] = useState<string | null>(null);
+  // the good word waits for the kudos step of the unlock ladder
+  const kudosOpen = useUnlocks().has('kudos');
 
   const set = (patch: Partial<LogForm>) => {
     setError(null);
@@ -85,7 +88,7 @@ export default function AddMatch() {
     setBusy(false);
     if (r.ok) {
       setDoneId(r.matchId);
-      setThanking(form.mode === 'played');
+      setThanking(form.mode === 'played' && kudosOpen);
       setKudo(null);
       setDone(true);
     }

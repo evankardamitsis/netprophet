@@ -5,12 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { usePress } from '../lib/motion';
+import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts } from '../theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
 /**
  * Tabs in the bar and their column weights (prototype: 1fr 1.5fr 1fr 1.2fr). Εγώ opens from the header avatar.
+ * Until the Ladder unlocks it is left out (the route stays) and the other three keep the prototype's 1fr 1.5fr 1fr.
  * Ink bar like the header, so the feed sits between two dark bands; the open tab is a paper pill.
  */
 const WEIGHTS: Record<string, number> = { index: 1, results: 1.5, players: 1, ladder: 1.2 };
@@ -18,11 +20,12 @@ const COLOR_MS = 350;
 
 export function TabBar({ state, descriptors, navigation }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const { has } = useUnlocks();
   return (
     <Animated.View style={[styles.bar, { paddingBottom: 14 + insets.bottom }]}>
       {state.routes.map((route, index) => {
         const weight = WEIGHTS[route.name];
-        if (weight === undefined) return null;
+        if (weight === undefined || (route.name === 'ladder' && !has('ladder_friends'))) return null;
         const focused = state.index === index;
         const label = String(descriptors[route.key]?.options.title ?? route.name);
         return (

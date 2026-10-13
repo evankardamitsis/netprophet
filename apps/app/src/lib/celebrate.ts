@@ -1,7 +1,8 @@
 import { greekCaps, type Copy } from '@netprophet/copy';
-import type { BadgeCelebration, Celebration, QuestCelebration, StreakCelebration } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
 import { badgeName } from './badges';
 import { questCelebrationView } from './quests';
+import { hasMoment } from './unlockLadder';
 import { fmt } from './votes';
 
 /**
@@ -19,18 +20,32 @@ export interface CelebrationView {
   reward: string;
 }
 
-/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE, then badges one by one */
+/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE, then badges, then unlocks, one by one */
 export function nextGroup(list: Celebration[]): Celebration[] {
   const streak = list.find((c) => c.payload.type === 'streak_milestone');
   if (streak) return [streak];
   const quests = list.filter((c) => c.payload.type === 'quest');
   if (quests.length > 0) return quests;
   const badge = list.find((c) => c.payload.type === 'badge');
-  return badge ? [badge] : [];
+  if (badge) return [badge];
+  const unlock = list.find((c) => isUnlock(c) && hasMoment(c.payload.key));
+  return unlock ? [unlock] : [];
 }
 
 const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
 const isBadge = (c: Celebration): c is BadgeCelebration => c.payload.type === 'badge';
+export const isUnlock = (c: Celebration): c is UnlockCelebration => c.payload.type === 'unlock';
+
+/** an unlock step opening: «Νέο», the title by step and its line (empty for most) */
+export function unlockCelebrationView(c: UnlockCelebration, t: Copy): CelebrationView {
+  const m = t.unlocks.moments[c.payload.key];
+  return { label: greekCaps(t.unlocks.label), streak: null, tier: null, title: m?.title ?? '', reward: m?.line ?? '' };
+}
+
+/** the big title shrinks for the long ones so it fits in a few lines (54 → 40 past ~22 characters) */
+export function celebrationTitleSize(title: string): number {
+  return title.length > 22 ? 40 : 54;
+}
 
 /** «Νέο badge» / «Νέα βαθμίδα», the badge's name, then «Βαθμίδα Χάλκινο» (gold also names the Frame Level) */
 export function badgeCelebrationView(c: BadgeCelebration, t: Copy): CelebrationView {
@@ -53,6 +68,7 @@ export function groupView(group: Celebration[], t: Copy): CelebrationView {
     return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
   }
   if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
+  if (isUnlock(group[0]!)) return unlockCelebrationView(group[0], t);
   return celebrationView(group[0] as StreakCelebration, t);
 }
 

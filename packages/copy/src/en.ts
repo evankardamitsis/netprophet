@@ -362,6 +362,8 @@ export const en: Copy = {
   },
   me: {
     replayOnboarding: 'Run onboarding again',
+    newPlayer: 'New player',
+    newPlayerOn: 'New player ✓',
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
     streak: 'streak',
     best: 'Best: {n}',
@@ -583,6 +585,18 @@ export const en: Copy = {
     frames: { frame_seven: 'Seven', frame_ten: 'Ten' } as Record<string, string>,
     unit: 'streak',
     aria: 'Celebration',
+  },
+  unlocks: {
+    label: 'New',
+    moments: {
+      level_bar: { title: 'You levelled up!', line: '' },
+      daily_quests: { title: 'New: Quests', line: 'Three small ones for today' },
+      ladder_friends: { title: 'You are on the Ladder!', line: 'Bring a friend to chase you' },
+      kudos_reactions: { title: 'It is confirmed!', line: 'Say something kind' },
+      badges_shelf: { title: 'Your first badge!', line: '' },
+      pro_first_view: { title: 'Thirty votes!', line: '' },
+      stats_area: { title: 'Now you see your stats and all of Attica', line: '' },
+    } as Record<string, { title: string; line: string }>,
   },
   quests: {
     title: 'Quests',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import questDefs from '../test-vectors/quest-defs.json';
 import badgeDefs from '../test-vectors/badge-defs.json';
+import unlockDefs from '../test-vectors/unlock-defs.json';
 import {
   ALL_QUESTS,
   BADGES,
@@ -198,6 +199,7 @@ describe('activity', () => {
 
 describe('unlock table', () => {
   it('has 13 steps and each has a vote-count backup', () => {
+    expect(JSON.parse(JSON.stringify(UNLOCK_STEPS))).toEqual(unlockDefs.steps);
     expect(UNLOCK_STEPS).toHaveLength(13);
     expect(UNLOCK_STEPS.map((s) => s.step)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]);
     expect(UNLOCK_STEPS.slice(1).every((s) => s.backupVotes > 0)).toBe(true);
