@@ -1,5 +1,5 @@
 import { addDays, dayKey, localParts, toInstant } from '@netprophet/core';
-import type { DrawMatchRow, FeedPlayer, SetScore, GetTournamentResult, GetTournamentsResult, TournamentMatch } from '@netprophet/db';
+import type { DrawMatchRow, TournamentDraw, FeedPlayer, SetScore, GetTournamentResult, GetTournamentsResult, TournamentMatch } from '@netprophet/db';
 
 /**
  * Sample tournaments for mock mode and the dev guest: one on now (you are in it), one coming, one just finished.
@@ -67,6 +67,45 @@ const bm = (round: number, slot: number, side1: string | null, side2: string | n
   round, slot, side1, side2, winner: null, bye: false, scoreRaw: '', walkover: false, retired: false, when: '', deadline: null, ...extra,
 });
 
+
+const SCORES = ['64 63', '62 61', '67(4) 64 10-8', '75 46 10-6', '63 64', '61 60', '76(3) 62', '64 75'];
+
+/**
+ * A knockout draw for the mock: `names` fill round one in order, `played[r]` is how many matches of round r are
+ * decided (the first ones), side 1 wins unless the name is in `lose`. Later rounds fill from the winners.
+ */
+function knockout(tab: string, names: string[], played: number[], today: string, lose: string[] = [], seeds: Record<string, number> = {}): TournamentDraw {
+  const size = names.length;
+  const rounds: DrawMatchRow[][] = [];
+  let field: (string | null)[] = names;
+  let r = 1;
+  while (field.length >= 2) {
+    const row: DrawMatchRow[] = [];
+    const next: (string | null)[] = [];
+    for (let i = 0; i < field.length; i += 2) {
+      const a = field[i] ?? null;
+      const b = field[i + 1] ?? null;
+      const done = i / 2 < (played[r - 1] ?? 0) && a !== null && b !== null;
+      const winner: 1 | 2 | null = done ? (lose.includes(a!) ? 2 : 1) : null;
+      row.push(bm(r, i / 2 + 1, a, b, done ? { winner, scoreRaw: SCORES[(i / 2 + r) % SCORES.length]! } : a !== null && b !== null ? { when: i === 0 ? 'ΣΑΒ 18.30' : '', deadline: addDays(today, r) } : { deadline: addDays(today, r + 1) }));
+      next.push(winner === 1 ? a : winner === 2 ? b : null);
+    }
+    rounds.push(row);
+    field = next;
+    r += 1;
+  }
+  return {
+    tab, title: `${tab} MAIN DRAW (${size})`, discipline: 'MS', level: tab, format: 'knockout', size, updated_at: new Date().toISOString(),
+    entrants: names.map((raw, k) => ({ pos: k + 1, raw, seed: seeds[raw] ?? null, bye: false, players: [{ raw, player_id: raw.startsWith('ΚΑΡΔΑΜΙΤΣΗΣ') ? 'me' : null }] })),
+    rounds,
+  };
+}
+
+const SIXTEEN = [
+  'ΡΟΔΙΤΗΣ ΝΙΚΟΣ', 'ΠΑΠΑΔΟΠΟΥΛΟΣ ΑΝΤΩΝΗΣ', 'ΔΕΣΥΠΡΗΣ ΓΙΩΡΓΟΣ', 'ΛΑΜΠΡΙΝΟΣ ΣΤΑΘΗΣ', 'ΜΕΜΜΟΣ ΗΛΙΑΣ', 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', 'ΠΡΑΤΣΑΣ ΓΙΑΝΝΗΣ', 'ΒΑΣΙΛΕΙΟΥ ΠΕΤΡΟΣ',
+  'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓΓΕΛΗΣ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ', 'ΑΝΑΓΝΩΣΤΟΥ ΜΑΝΩΛΗΣ', 'ΚΟΝΤΟΣ ΘΑΝΟΣ', 'ΜΙΧΑΛΟΠΟΥΛΟΣ ΧΡΗΣΤΟΣ', 'ΒΛΑΧΟΣ ΣΩΤΗΡΗΣ', 'ΞΕΝΟΣ ΑΛΕΞΗΣ', 'ΖΑΧΑΡΙΟΥ ΛΕΩΝΙΔΑΣ',
+];
+
 export function mockTournament(id: string, now: Date = new Date()): GetTournamentResult | null {
   const item = mockTournaments(false, now).items.find((i) => i.id === id);
   if (!item) return null;
@@ -112,12 +151,15 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
               [bm(3, 1, null, null, { deadline: addDays(today, 3) })],
             ],
           },
+          knockout('Μ 50+', SIXTEEN, [8, 3, 0, 0], today, ['ΠΑΠΑΔΟΠΟΥΛΟΣ ΑΝΤΩΝΗΣ', 'ΛΑΜΠΡΙΝΟΣ ΣΤΑΘΗΣ', 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', 'ΒΑΣΙΛΕΙΟΥ ΠΕΤΡΟΣ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ'], { 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ': 1, 'ΜΕΜΜΟΣ ΗΛΙΑΣ': 2 }),
           {
             tab: 'MD MASTER', title: 'MD MASTER ROUND ROBIN', discipline: 'MD', level: 'MASTER', format: 'round_robin', size: 4, updated_at: now.toISOString(),
             entrants: [], rounds: [],
           },
         ]
-      : [],
+      : id === 'tour-vari'
+        ? [knockout('Μ 40+', SIXTEEN.slice(0, 8), [4, 2, 1], today, ['ΔΕΣΥΠΡΗΣ ΓΙΩΡΓΟΣ'], { 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ': 1 })]
+        : [],
     masked: [],
     days,
   };
