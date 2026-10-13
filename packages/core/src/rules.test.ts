@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import questDefs from '../test-vectors/quest-defs.json';
 import {
   ALL_QUESTS,
   BADGES,
@@ -100,18 +101,22 @@ describe('points events', () => {
 describe('quests', () => {
   it('rewards never carry points', () => {
     for (const q of ALL_QUESTS) {
-      expect(Object.keys(q.reward).sort()).toEqual(['badgeAmount', 'badgeId', 'cosmeticId']);
+      expect(Object.keys(q.reward).sort()).toEqual(['badgeAmount', 'badgeId', 'cosmeticIds']);
     }
+  });
+  it('the quest table equals the shared list the database is checked against', () => {
+    expect(JSON.parse(JSON.stringify(ALL_QUESTS))).toEqual(questDefs.quests);
   });
   it('catalogue matches the spec', () => {
     expect(DAILY_QUESTS).toHaveLength(3);
     expect(ALL_QUESTS.filter((q) => q.window === 'weekly')).toHaveLength(2);
   });
-  it('reward is the cosmetic if not owned, else the badge bonus', () => {
-    const r = { cosmeticId: 'frame.x', badgeId: 'b', badgeAmount: 2 };
-    expect(resolveQuestReward(r, new Set())).toEqual({ kind: 'cosmetic', cosmeticId: 'frame.x' });
-    expect(resolveQuestReward(r, new Set(['frame.x']))).toEqual({ kind: 'badge', badgeId: 'b', amount: 2 });
-    expect(resolveQuestReward({ ...r, cosmeticId: null }, new Set())).toEqual({ kind: 'badge', badgeId: 'b', amount: 2 });
+  it('reward is the first cosmetic not owned, else the badge bonus', () => {
+    const r = { cosmeticIds: ['bg_night', 'bg_clay'], badgeId: 'b', badgeAmount: 2 };
+    expect(resolveQuestReward(r, new Set())).toEqual({ kind: 'cosmetic', cosmeticId: 'bg_night' });
+    expect(resolveQuestReward(r, new Set(['bg_night']))).toEqual({ kind: 'cosmetic', cosmeticId: 'bg_clay' });
+    expect(resolveQuestReward(r, new Set(['bg_night', 'bg_clay']))).toEqual({ kind: 'badge', badgeId: 'b', amount: 2 });
+    expect(resolveQuestReward({ ...r, cosmeticIds: [] }, new Set())).toEqual({ kind: 'badge', badgeId: 'b', amount: 2 });
   });
   it('one event can advance several quests', () => {
     const res = applyQuestEvent(DAILY_QUESTS, [], { type: 'vote_card', at: '2026-10-09T10:00:00Z' });

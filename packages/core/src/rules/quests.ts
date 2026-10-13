@@ -8,21 +8,21 @@ export const DAILY_QUESTS: readonly QuestDef[] = [
     window: 'daily',
     target: 3,
     triggers: [{ event: 'vote_card', mode: 'inc' }],
-    reward: { cosmeticId: 'frame.daily.1', badgeId: 'polla-ta-psifalakia', badgeAmount: 3 },
+    reward: { cosmeticIds: [], badgeId: 'many_votes', badgeAmount: 5 },
   },
   {
     id: 'daily_kudos_1',
     window: 'daily',
     target: 1,
     triggers: [{ event: 'kudos_given', mode: 'inc' }],
-    reward: { cosmeticId: 'background.daily.2', badgeId: 'o-evgenikos', badgeAmount: 1 },
+    reward: { cosmeticIds: [], badgeId: 'gentleman', badgeAmount: 1 },
   },
   {
     id: 'daily_vote_2_matches',
     window: 'daily',
     target: 2,
     triggers: [{ event: 'vote_match', mode: 'inc' }],
-    reward: { cosmeticId: 'frame.daily.3', badgeId: 'manths-tou-klab', badgeAmount: 2 },
+    reward: { cosmeticIds: ['bg_night', 'bg_clay'], badgeId: 'many_votes', badgeAmount: 3 },
   },
 ];
 
@@ -32,14 +32,14 @@ export const WEEKLY_QUESTS: readonly QuestDef[] = [
     window: 'weekly',
     target: 2,
     triggers: [{ event: 'match_logged', mode: 'inc' }],
-    reward: { cosmeticId: 'frame.weekly.1', badgeId: 'proto-servis', badgeAmount: 2 },
+    reward: { cosmeticIds: ['frame_week'], badgeId: 'first_serve', badgeAmount: 1 },
   },
   {
     id: 'weekly_vote_5_days',
     window: 'weekly',
     target: 5,
     triggers: [{ event: 'active_day', mode: 'distinct_day' }],
-    reward: { cosmeticId: 'background.weekly.2', badgeId: 'oli-i-vdomada', badgeAmount: 1 },
+    reward: { cosmeticIds: ['bg_grass'], badgeId: 'many_votes', badgeAmount: 5 },
   },
 ];
 
@@ -52,7 +52,7 @@ export const INVITE_QUEST: QuestDef = {
     { event: 'friend_invited', mode: 'at_least', value: 1 },
     { event: 'friend_activated', mode: 'at_least', value: 2 },
   ],
-  reward: { cosmeticId: 'frame.invite', badgeId: 'influencer', badgeAmount: 1 },
+  reward: { cosmeticIds: ['frame_friends'], badgeId: 'influencer', badgeAmount: 1 },
 };
 
 export const ALL_QUESTS: readonly QuestDef[] = [...DAILY_QUESTS, ...WEEKLY_QUESTS, INVITE_QUEST];
@@ -148,11 +148,10 @@ export type ResolvedReward =
   | { kind: 'cosmetic'; cosmeticId: string }
   | { kind: 'badge'; badgeId: string; amount: number };
 
-/** A frame or background not yet owned, else the badge bonus. There is no points variant by construction. */
+/** The first frame or background not yet owned, else the badge bonus. There is no points variant by construction. */
 export function resolveQuestReward(reward: QuestReward, ownedCosmeticIds: ReadonlySet<string>): ResolvedReward {
-  if (reward.cosmeticId !== null && !ownedCosmeticIds.has(reward.cosmeticId)) {
-    return { kind: 'cosmetic', cosmeticId: reward.cosmeticId };
-  }
+  const cosmeticId = reward.cosmeticIds.find((id) => !ownedCosmeticIds.has(id));
+  if (cosmeticId !== undefined) return { kind: 'cosmetic', cosmeticId };
   return { kind: 'badge', badgeId: reward.badgeId, amount: reward.badgeAmount };
 }
 

@@ -18,7 +18,7 @@ select is((select streak from tests.state(:'u1'::uuid)), 3, 'u1: σερί 3');
 select is(tests.unused_freezes(:'u1'::uuid), 1, 'u1: the first free freeze arrives at σερί 3');
 select is((select kind || '/' || source from core.freezes where user_id = :'u1'::uuid), 'free/streak3', 'u1: it is a free freeze from streak3');
 select is((select first_free_at3_done from tests.state(:'u1'::uuid)), true, 'u1: first-at-3 flag set');
-select is((select count(*)::int from core.feed_inbox where user_id = :'u1'::uuid and kind = 'celebration'), 1, 'u1: σερί 3 milestone celebration queued');
+select is((select count(*)::int from core.feed_inbox where user_id = :'u1'::uuid and kind = 'celebration' and payload ->> 'type' = 'streak_milestone'), 1, 'u1: σερί 3 milestone celebration queued');
 select is((select total_points from tests.state(:'u1'::uuid)), 40, 'u1: 10 + 15 + 15 points');
 
 select tests.play(:'u1'::uuid, false) as wrong1 \gset
