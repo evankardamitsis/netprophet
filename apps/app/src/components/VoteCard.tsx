@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   // the % moves to the bottom corner so a long first surname never runs under it
   vbDbl: { paddingTop: 32, justifyContent: 'space-between' },
   pctDbl: { top: 'auto', bottom: 12, fontSize: 24, lineHeight: 24 },
-  sn: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, color: colors.ink },
+  sn: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   snDbl: { fontSize: 25, lineHeight: 25 },
   fn: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18.75, color: colors.inkSoft },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   half: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
   tick: { fontFamily: fonts.bodyBold, fontSize: 15 },
   halfNames: { flexShrink: 1, minWidth: 0 },
-  rowSn: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20 },
+  rowSn: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, paddingBottom: 4, marginBottom: -4 },
   rowSnNext: { paddingTop: 4 },
   rowFn: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18, color: colors.inkSoft },
   rowPct: { marginLeft: 'auto', fontFamily: fonts.bodySemi, fontSize: 15 },

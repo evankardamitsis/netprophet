@@ -169,11 +169,11 @@ const styles = StyleSheet.create({
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stat: { minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', gap: 0 },
   // line heights at least the font size: iOS clips glyphs that rise above the line box (web lets them spill)
-  num: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32 },
+  num: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6 },
   lime: { color: colors.lime },
   // prototype σερί pill (Εγώ): lime, ink number in the display face, «σερί» bold beside it on the baseline
   pill: { flexDirection: 'row', alignItems: 'baseline', gap: 4, paddingTop: 3, paddingBottom: 5, paddingLeft: 10, paddingRight: 12, borderRadius: 999, backgroundColor: colors.lime },
-  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, color: colors.ink },
+  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   pillLabel: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 14, color: colors.ink },
   label: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.33, color: colors.mist },
   avatarHit: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },

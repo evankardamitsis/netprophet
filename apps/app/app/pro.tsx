@@ -92,8 +92,8 @@ function Button({ label, onPress, primary = false }: { label: string; onPress: (
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink, paddingHorizontal: 20 },
   scroll: { gap: 12, paddingBottom: 12 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 56, lineHeight: 52, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
-  price: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 36, color: colors.lime, alignSelf: 'flex-start', paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 56, lineHeight: 56, paddingBottom: 11, marginBottom: -15, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  price: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.lime, alignSelf: 'flex-start', paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   rows: { gap: 8, marginTop: 6 },
   row: {
     minHeight: 44,

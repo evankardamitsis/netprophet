@@ -50,7 +50,7 @@ export function QuizStrip({ quiz, onPress }: { quiz: GetQuizResult; onPress: () 
 const styles = StyleSheet.create({
   card: { padding: 20, borderRadius: 24, backgroundColor: colors.ink, gap: 8, overflow: 'hidden' },
   label: { fontFamily: fonts.bodyBold, fontSize: 15, letterSpacing: 0.9, color: colors.lime, paddingRight: 56 },
-  head: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 40.5, color: colors.paper },
+  head: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, paddingBottom: 9, marginBottom: -12.5, color: colors.paper },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20.25, color: colors.mist },
   subDone: { color: colors.lime },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingTop: 6 },

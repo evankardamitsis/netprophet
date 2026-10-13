@@ -62,7 +62,7 @@ function Line({ delay, dim, children }: { delay: number; dim: boolean; children:
 
 const styles = StyleSheet.create({
   wrap: { gap: 14 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 57, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   list: { gap: 8 },
   row: { flexDirection: 'row' },

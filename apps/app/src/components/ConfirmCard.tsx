@@ -84,8 +84,8 @@ function Button({ label, onPress, solid = false }: { label: string; onPress: () 
 const styles = StyleSheet.create({
   card: { padding: 22, borderRadius: 28, backgroundColor: colors.ink, gap: 8 },
   title: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.mist },
-  big: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
-  score: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, color: colors.lime, alignSelf: 'flex-start', paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  big: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, paddingBottom: 9, marginBottom: -9, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  score: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, paddingBottom: 10, marginBottom: -10, color: colors.lime, alignSelf: 'flex-start', paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   rule: { height: 1, backgroundColor: colors.inkLine, marginVertical: 4 },
   ask: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.paper },
   row: { flexDirection: 'row', gap: 8 },

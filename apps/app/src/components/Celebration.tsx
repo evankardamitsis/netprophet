@@ -206,10 +206,10 @@ const styles = StyleSheet.create({
   // number and «σερί» centred in the pill (founder, 12 Oct)
   pill: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 34, borderRadius: 999, backgroundColor: colors.lime },
   // the display face draws digits high in their line box; this brings the 5 to the pill's middle
-  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 110, lineHeight: 110, color: colors.ink, includeFontPadding: false, transform: [{ translateY: 9 }] },
+  pillNum: { fontFamily: fonts.displayHeavy, fontSize: 110, lineHeight: 110, paddingBottom: 22, marginBottom: -22, color: colors.ink, includeFontPadding: false, transform: [{ translateY: 9 }] },
   pillNumBox: { height: 96, justifyContent: 'center', overflow: 'visible' },
   pillUnit: { fontFamily: fonts.bodyBold, fontSize: 28, lineHeight: 34, color: colors.ink, includeFontPadding: false },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 54, lineHeight: 54, color: colors.paper, textAlign: 'center' },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 54, lineHeight: 54, paddingBottom: 11, marginBottom: -11, color: colors.paper, textAlign: 'center' },
   dots: { flexDirection: 'row', gap: 10, marginTop: 14 },
   dot: { width: 22, height: 22, borderRadius: 999, borderWidth: 3, borderColor: colors.lime },
   // covers the ring too, so no seam shows where fill and ring meet

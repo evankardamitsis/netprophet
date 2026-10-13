@@ -88,7 +88,7 @@ function MatchLine({ m }: { m: GroupMatchView }) {
 const styles = StyleSheet.create({
   stack: { gap: 12 },
   card: { padding: 14, borderRadius: 24, backgroundColor: colors.white, gap: 4 },
-  head: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 30, color: colors.ink, marginBottom: 4 },
+  head: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 30, color: colors.ink, paddingBottom: 5, marginBottom: -1 },
   tableHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8 },
   th: { fontFamily: fonts.bodyBold, fontSize: 11, letterSpacing: 0.3, color: colors.muted },
   row: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, borderRadius: 10, borderWidth: 1.5, borderColor: 'transparent' },

@@ -203,8 +203,8 @@ const styles = StyleSheet.create({
   },
   bar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.lime },
   chipText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
-  chipN: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, color: colors.ink },
-  flash: { position: 'absolute', right: 40, top: 12, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, color: colors.ink },
+  chipN: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  flash: { position: 'absolute', right: 40, top: 12, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingBottom: 4, marginBottom: -4, color: colors.ink },
   pending: {
     minHeight: 50,
     paddingVertical: 8,

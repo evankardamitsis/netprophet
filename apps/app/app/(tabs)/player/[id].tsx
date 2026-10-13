@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   cardHead: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.ink },
   // prototype: the «Τελευταία ματς» heading is blue (open question: one blue per screen)
   blueHead: { color: colors.blue },
-  nextText: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 34, color: colors.ink },
+  nextText: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 34, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   last: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, gap: 8 },
   lastRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   lastText: { flexShrink: 1, fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: colors.ink },

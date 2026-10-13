@@ -138,11 +138,11 @@ const styles = StyleSheet.create({
   nameBox: { flex: 1, minWidth: 0 },
   // line heights at least the font size: iOS clips the tonos that rises above the line box
   winner: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  winName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38 },
-  winScore: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38 },
+  winName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, paddingBottom: 7, marginBottom: -7 },
+  winScore: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, paddingBottom: 7, marginBottom: -7 },
   loser: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, opacity: 0.7 },
-  loseName: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30 },
-  loseScore: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30 },
+  loseName: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30, paddingBottom: 6, marginBottom: -6 },
+  loseScore: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30, paddingBottom: 6, marginBottom: -6 },
   // the revealed first name is smaller and lighter (prototype .ns)
   firstName: { fontSize: 21, fontFamily: fonts.bodySemi },
   sets: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
