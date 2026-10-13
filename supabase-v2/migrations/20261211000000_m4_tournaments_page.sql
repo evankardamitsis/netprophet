@@ -5,19 +5,25 @@
 -- monetization plan. Minors and hidden players never show: their matches are left out and their names in a draw
 -- are masked.
 
--- the state of a tournament today (Athens): on, coming, or done
+-- the state of a tournament today (Athens): on, coming, or done. Without an end date it ends with its last match
+-- (or two weeks after it starts, if that is later), so an old import never stays «on» forever.
 create or replace function core.tournament_state(t core.tournaments)
 returns text
 language sql stable set search_path = core, pg_temp
 as $$
+  with e as (
+    select coalesce(t.ends_on,
+                    greatest(t.starts_on + 14,
+                             (select max(core.athens_day(m.starts_at)) from core.matches m
+                               where m.tournament_id = t.id and m.status <> 'void')),
+                    (select max(core.athens_day(m.starts_at)) from core.matches m
+                      where m.tournament_id = t.id and m.status <> 'void')) as end_day)
   select case
     when t.starts_on is not null and t.starts_on > core.athens_day(now()) then 'upcoming'
-    when t.ends_on is not null and t.ends_on < core.athens_day(now()) then 'done'
-    when t.starts_on is null and t.ends_on is null
-         and not exists (select 1 from core.matches m where m.tournament_id = t.id and m.status <> 'void'
-                          and m.starts_at between now() - interval '7 days' and now() + interval '7 days') then 'done'
+    when e.end_day is null or e.end_day < core.athens_day(now()) then 'done'
     else 'ongoing'
   end
+  from e
 $$;
 
 -- one match as the page shows it
@@ -81,7 +87,8 @@ begin
            where not t.is_minor_event
              and (exists (select 1 from core.matches m where m.tournament_id = t.id and m.status <> 'void')
                   or exists (select 1 from core.tournament_draws d where d.tournament_id = t.id))
-             and (core.tournament_state(t) <> 'done' or t.ends_on >= core.athens_day(now()) - 14)
+             and (core.tournament_state(t) <> 'done'
+                  or coalesce(t.ends_on, (select max(core.athens_day(m.starts_at)) from core.matches m where m.tournament_id = t.id)) >= core.athens_day(now()) - 14)
         ) x), '[]'::jsonb),
     -- «Το πρόγραμμά σου»: my next tournament matches (Pro)
     'mine', case when v_pro and v_me is not null then coalesce((

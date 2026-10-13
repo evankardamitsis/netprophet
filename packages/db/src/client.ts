@@ -12,6 +12,8 @@ import type {
   LookCategory,
   GetQuestsResult,
   GetQuizResult,
+  GetTournamentResult,
+  GetTournamentsResult,
   AnswerCardResult,
   KudoOption,
   LinkKudo,
@@ -152,6 +154,8 @@ export function rpc(client: NetprophetClient) {
         client, 'block_target', 'playerId' in by ? { p_player_id: by.playerId } : { p_match_id: by.matchId }),
     unblock: (userId: string) => call<null>(client, 'unblock', { p_user_id: userId }),
     getBlocks: () => call<BlockedUser[]>(client, 'get_blocks', {}),
+    getTournaments: () => call<GetTournamentsResult>(client, 'get_tournaments', {}),
+    getTournament: (id: string) => call<GetTournamentResult>(client, 'get_tournament', { p_id: id }),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),

@@ -1,7 +1,7 @@
 -- M4 part 3b: the Tournaments page. On, coming and recent tournaments with their draws and schedule by day;
 -- «Το πρόγραμμά σου» only with Pro; minors and hidden players never show (matches left out, draw names masked).
 begin;
-select plan(10);
+select plan(11);
 
 select tests.create_user('tp-u@test.local') as u \gset
 select tests.mk_player('Τάκης', 'Τουρνουάς') as me \gset
@@ -48,6 +48,8 @@ select tests.login(:'u'::uuid);
 select api.get_tournaments() as pro \gset
 select tests.logout();
 select is(jsonb_array_length(:'pro'::jsonb -> 'mine'), 1, 'Pro: my next tournament match');
+insert into core.tournaments (sport_id, name, source, starts_on) values ('tennis', 'Χωρίς τέλος', 'import', current_date - 90) returning id as noend \gset
+select is(core.tournament_state((select t from core.tournaments t where id = :'noend'::uuid)), 'done', 'no end date: done two weeks after it started');
 select throws_ok($$select api.get_tournament(gen_random_uuid())$$, '28000', null, 'signed in only');
 
 select * from finish();
