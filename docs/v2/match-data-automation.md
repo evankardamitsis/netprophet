@@ -95,11 +95,13 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   half the rows of the last one, `empty`, `error` when the sheet could not be read). «Δοκιμή τώρα» applies and rolls
   back. Walkovers publish and wait for staff to pick the winner (`core.ingest_reviews`, kind walkover).
 - Admin `/v2/sources`: tournaments with their source and last run, «Δοκιμή τώρα», «Τρέξε τώρα», and the review list.
-- The schedule: `apps/admin` cron `/api/cron/v2-ingest` at 08:00 and 22:00 Athens (Vercel cron, UTC hours checked
-  against Athens time). Sheets are read with the Google Sheets API as NetProphet's service account
+- The schedule: `apps/admin` cron `/api/cron/v2-ingest` (Vercel cron, UTC hours checked against Athens time; now
+  08:00, 15:00, 22:00). Vercel fires crons only on Production deployments, and `netprophet-admin` deploys `main` (v1)
+  to Production, so the v2 admin runs in its own Vercel project `netprophet-admin-v2` (root `apps/admin`,
+  production branch `v2`) until cutover, when it is deleted and `netprophet-admin` deploys v2. Sheets are read with the Google Sheets API as NetProphet's service account
   (`GOOGLE_SERVICE_ACCOUNT_JSON`; the organiser or the founder shares each sheet with its email, as with a person),
   or, for sheets shared with anyone who has the link, an API key (`GOOGLE_SHEETS_API_KEY`).
-- Needs in Vercel (admin project, `netprophet-admin`): `GOOGLE_SERVICE_ACCOUNT_JSON`, `V2_SUPABASE_SECRET_KEY`
+- Needs in Vercel (the v2 admin project, `netprophet-admin-v2`): `GOOGLE_SERVICE_ACCOUNT_JSON`, `V2_SUPABASE_SECRET_KEY`
   (the v2 Supabase project's secret key, `sb_secret_...`, not the legacy service_role JWT), `CRON_SECRET`.
 - Service account: `netprophet-sheets@netprophet-466714.iam.gserviceaccount.com` (Google Cloud project NetProphet,
   Sheets API on, no roles). Organisers share their sheets with it as Viewer.
