@@ -103,6 +103,9 @@ export interface FeedSponsoredCard {
   title: string;
   subtitle: string | null;
   cta_url: string | null;
+  /** a picture wins; else the app draws the art key */
+  image_url: string | null;
+  art: string | null;
 }
 
 export type FeedItem = FeedResultCard | FeedMatchCard | FeedSponsoredCard;

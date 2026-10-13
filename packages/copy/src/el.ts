@@ -192,6 +192,7 @@ export const el = {
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
     voteFailed: 'Η ψήφος δεν πέρασε. Ξαναδοκίμασε.',
     votingClosed: 'Η ψηφοφορία έκλεισε.',
+    sponsoredMore: 'Δες περισσότερα ›',
   },
   result: {
     correct: "Το 'πες!",
