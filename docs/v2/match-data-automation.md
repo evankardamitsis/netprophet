@@ -105,8 +105,7 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   (the v2 Supabase project's secret key, `sb_secret_...`, not the legacy service_role JWT), `CRON_SECRET`.
 - Service account: `netprophet-sheets@netprophet-466714.iam.gserviceaccount.com` (Google Cloud project NetProphet,
   Sheets API on, no roles). Organisers share their sheets with it as Viewer.
-- Not yet: moved and cancelled matches, dedupe against player-logged matches, the 08:30 email, the records sheet,
-  other platforms.
+- Not yet: the 08:30 email, the records sheet, other platforms.
 
 ## Built (M4 part 2, name matching)
 - First names compare by family (`core.first_name_families`: formal, everyday and nicknames, e.g. Φιλοθέη = Φαίη,
@@ -130,3 +129,12 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
 - `core.tournament_draws` keeps each category's bracket for the app; names link to roster players only where the
   matcher is sure; a draw never creates players or matches. Runs log draw reads apart (`ingest_runs.kind`).
 - ΑΟΚ on the real roster: 26 draws, 245 of 597 names linked.
+
+## Built (M4 part 3c, moved and cancelled, player-logged)
+- Moved: a new fingerprint whose people and category match an unplayed match the sheet no longer lists (within two
+  weeks) moves that match to the new day; votes carry over and voting reopens until the new time.
+- Player-logged: the same people, format and day (a day either way) as a + Ματς match attaches the sheet as its
+  official source (tournament, category, fingerprint) instead of a second match; the organiser's score overrides
+  while unsettled; a different score on a settled match goes to staff (review kind score_conflict).
+- Cancelled: an unplayed match the sheet stops listing is counted missing on each healthy run (not on drop, empty
+  or error) and voided on the second in a row, votes cancelled as staff voiding does.
