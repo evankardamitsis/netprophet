@@ -35,7 +35,8 @@ const ACCENT_PAD = 10;
 export default function TournamentScreen() {
   const t = useCopy();
   const c = t.tournaments;
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // ?draw=<tab>: a «Βγήκε η κλήρωση» push opens straight on that draw
+  const { id, draw } = useLocalSearchParams<{ id: string; draw?: string }>();
   const { data, loading, error, notFound, refresh } = useTournament(String(id));
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/tournaments'));
@@ -51,7 +52,7 @@ export default function TournamentScreen() {
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>{c.detail.back}</Animated.Text>
         </Pressable>
-        {data ? <Body key={data.id} d={data} today={today} /> : null}
+        {data ? <Body key={data.id} d={data} today={today} openDraw={draw} /> : null}
         {!data && notFound ? <Text style={styles.empty}>{c.detail.notFound}</Text> : null}
         {!data && !loading && error && !notFound ? <Text style={styles.empty}>{c.detail.error}</Text> : null}
       </ScrollView>
@@ -64,10 +65,10 @@ function Reveal({ i, children }: { i: number; children: ReactNode }) {
   return <Animated.View style={enter}>{children}</Animated.View>;
 }
 
-function Body({ d, today }: { d: GetTournamentResult; today: string }) {
+function Body({ d, today, openDraw }: { d: GetTournamentResult; today: string; openDraw?: string }) {
   const t = useCopy();
   const segments = segmentsOf(d);
-  const [picked, setPicked] = useState<Segment | null>(null);
+  const [picked, setPicked] = useState<Segment | null>(openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : null);
   const seg = picked && segments.includes(picked) ? picked : defaultSegment(d, today);
   const sub = subLine(d, t);
   return (
@@ -93,7 +94,7 @@ function Body({ d, today }: { d: GetTournamentResult; today: string }) {
       ) : null}
       {segments.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : null}
       {segments.length > 0 && seg === 'schedule' ? <Schedule d={d} today={today} /> : null}
-      {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} /> : null}
+      {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={openDraw} /> : null}
     </>
   );
 }
@@ -177,9 +178,9 @@ function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
 }
 /* ================= Ταμπλό ================= */
 
-function Bracket({ d }: { d: GetTournamentResult }) {
+function Bracket({ d, openDraw }: { d: GetTournamentResult; openDraw?: string }) {
   const t = useCopy();
-  const [pickedTab, setPickedTab] = useState<string | null>(null);
+  const [pickedTab, setPickedTab] = useState<string | null>(openDraw ?? null);
   const draw = d.draws.find((x) => x.tab === pickedTab) ?? d.draws[0]!;
   const robin = draw.format === 'round_robin';
   const rounds = robin ? [] : bracketRounds(draw, d.masked, t);
