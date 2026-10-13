@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { colors, ui } from '../ui';
-import { loadReviews, loadTournaments, resolveReview, runNow, saveSource, type ReviewDecision } from './actions';
+import { loadReviews, loadTournaments, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from './actions';
 import type { Health, IngestCounts, ReviewItem, ReviewPerson, SourceTournament } from './types';
 
 const NEW = 'new';
@@ -98,13 +98,14 @@ function TournamentCard({
   const [url, setUrl] = useState(t.source_url ?? '');
   const [kind, setKind] = useState(t.source_kind ?? 'sheet');
   const [season, setSeason] = useState(t.season_start_year ? String(t.season_start_year) : '');
+  const [drawUrl, setDrawUrl] = useState(t.draw_url ?? '');
   const [confirming, setConfirming] = useState(false);
   const [note, setNote] = useState<{ text: string; error: boolean; counts?: IngestCounts } | null>(null);
-  const dirty = url !== (t.source_url ?? '') || kind !== (t.source_kind ?? 'sheet') || season !== (t.season_start_year ? String(t.season_start_year) : '');
+  const dirty = url !== (t.source_url ?? '') || drawUrl !== (t.draw_url ?? '') || kind !== (t.source_kind ?? 'sheet') || season !== (t.season_start_year ? String(t.season_start_year) : '');
 
   const save = () =>
     start(async () => {
-      const r = await saveSource(t.id, { source_kind: url ? kind : '', source_url: url, season_start_year: season ? Number(season) : null });
+      const r = await saveSource(t.id, { source_kind: url ? kind : '', source_url: url, draw_url: drawUrl, season_start_year: season ? Number(season) : null });
       setNote({ text: r.message, error: !r.ok });
       if (r.ok) await onChanged();
     });
@@ -125,7 +126,16 @@ function TournamentCard({
       if (r.ok && !dry) await onChanged();
     });
 
+  const draws = (dry: boolean) =>
+    start(async () => {
+      setNote({ text: 'Reading the draw sheet…', error: false });
+      const r = await readDraws(t.id, dry);
+      setNote({ text: `${r.message}${r.data ? ` · ${r.data.draws ?? 0} draws, ${r.data.linked ?? 0} of ${r.data.people ?? 0} names linked` : ''}`, error: !r.ok });
+      if (r.ok && !dry) await onChanged();
+    });
+
   const last = t.last_run;
+  const lastDraw = t.last_draw_run;
   return (
     <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -134,7 +144,7 @@ function TournamentCard({
           <input type="checkbox" checked={t.ongoing} disabled={busy} onChange={toggle} /> ongoing
         </label>
         <span style={ui.muted}>
-          {t.matches} matches · {t.open_reviews} open reviews
+          {t.matches} matches · {t.draws} draws · {t.open_reviews} open reviews
         </span>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -152,6 +162,16 @@ function TournamentCard({
           Save
         </button>
       </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ ...ui.muted, width: 110 }}>Draw sheet</span>
+        <input style={{ ...ui.input, flex: '1 1 320px', width: 'auto' }} placeholder="https://docs.google.com/spreadsheets/d/... (one bracket per tab)" value={drawUrl} onChange={(e) => setDrawUrl(e.target.value)} />
+        <button style={ui.secondary} disabled={busy || !t.draw_url} onClick={() => draws(true)}>
+          Δοκιμή draws
+        </button>
+        <button style={ui.secondary} disabled={busy || !t.draw_url} onClick={() => draws(false)}>
+          Read draws
+        </button>
+      </div>
       <div style={{ fontSize: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         {last ? (
           <>
@@ -166,6 +186,18 @@ function TournamentCard({
           <span style={ui.muted}>Never run.</span>
         )}
       </div>
+      {lastDraw ? (
+        <div style={{ fontSize: 14, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span>
+            Last draw read {when(lastDraw.at)} ({lastDraw.trigger})
+          </span>
+          <HealthWord health={lastDraw.health} />
+          <span style={ui.muted}>
+            {lastDraw.counts.draws ?? 0} draws, {lastDraw.counts.linked ?? 0} of {lastDraw.counts.people ?? 0} names linked
+          </span>
+          {lastDraw.error ? <span style={ui.error}>{lastDraw.error}</span> : null}
+        </div>
+      ) : null}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <button style={ui.secondary} disabled={busy || !t.source_url} onClick={() => run(true)}>
           Δοκιμή τώρα

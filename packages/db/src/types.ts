@@ -396,6 +396,10 @@ export type Database = {
         Args: { p_tournament_id: string; p_rows: Json };
         Returns: Json;
       };
+      admin_ingest_draws: {
+        Args: { p_tournament_id: string; p_draws: Json; p_dry?: boolean };
+        Returns: Json;
+      };
       admin_ingest_reviews: {
         Args: { p_tournament_id?: string };
         Returns: Json;
@@ -630,6 +634,10 @@ export type Database = {
       };
       hide_via_link: {
         Args: { p_token: string; p_hidden: boolean };
+        Returns: Json;
+      };
+      ingest_cron_draws: {
+        Args: { p_tournament_id: string; p_draws: Json; p_error?: string };
         Returns: Json;
       };
       ingest_cron_run: {

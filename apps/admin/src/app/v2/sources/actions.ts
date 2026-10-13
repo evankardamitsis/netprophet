@@ -1,7 +1,7 @@
 'use server';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
-import { rowsForTournament } from '@/lib/v2/sheets';
-import type { IngestCounts, ReviewItem, SourceTournament } from './types';
+import { drawsForTournament, rowsForTournament } from '@/lib/v2/sheets';
+import type { DrawCounts, IngestCounts, ReviewItem, SourceTournament } from './types';
 
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
 
@@ -36,6 +36,7 @@ export async function loadReviews(): Promise<ReviewItem[]> {
 export interface SourcePatch {
   source_kind?: string;
   source_url?: string;
+  draw_url?: string;
   ongoing?: boolean;
   season_start_year?: number | null;
 }
@@ -76,6 +77,20 @@ export async function runNow(id: string, dry: boolean): Promise<ActionResult<Ing
     const rows = await rowsForTournament(t);
     const data = (await call(rpc, 'admin_ingest_run', { p_tournament_id: id, p_rows: rows, p_dry: dry })) as IngestCounts;
     return { ok: true, message: dry ? 'Dry run, nothing saved' : 'Run saved', data };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** read the draw sheet now: dry shows what it would store, else it stores every category's bracket */
+export async function readDraws(id: string, dry: boolean): Promise<ActionResult<DrawCounts>> {
+  try {
+    const rpc = await staffRpc();
+    const t = ((await call(rpc, 'admin_tournaments', {})) as SourceTournament[]).find((x) => x.id === id);
+    if (!t) return { ok: false, message: 'tournament not found' };
+    const draws = await drawsForTournament(t);
+    const data = (await call(rpc, 'admin_ingest_draws', { p_tournament_id: id, p_draws: draws, p_dry: dry })) as DrawCounts;
+    return { ok: true, message: dry ? 'Draws read, nothing saved' : 'Draws saved', data };
   } catch (e) {
     return fail(e);
   }
