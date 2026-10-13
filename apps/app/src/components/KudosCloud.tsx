@@ -113,6 +113,6 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 10, paddingTop: 8, paddingBottom: 6 },
   ghosts: { flexDirection: 'row', gap: 8 },
   ghost: { height: 34, borderRadius: 999, backgroundColor: colors.navLine },
-  emptyTitle: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, color: colors.ink, textAlign: 'center' },
+  emptyTitle: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.ink, textAlign: 'center' },
   emptySub: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft, textAlign: 'center' },
 });

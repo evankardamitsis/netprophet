@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   back: { flex: 1, backgroundColor: alpha(colors.ink, 0.55), justifyContent: 'flex-end' },
   sheet: { paddingTop: 24, paddingHorizontal: 22, borderTopLeftRadius: 28, borderTopRightRadius: 28, backgroundColor: colors.ink, gap: 14, width: '100%', maxWidth: 520, alignSelf: 'center' },
   handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 999, backgroundColor: colors.slate, marginTop: -12 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 43, color: colors.paper },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -15, color: colors.paper },
   scroll: { gap: 14 },
   group: { gap: 12 },
   header: { fontSize: 13 },

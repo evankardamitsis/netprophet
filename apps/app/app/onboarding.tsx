@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
   query: { height: 52, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.white, justifyContent: 'center' },
   queryText: { fontFamily: fonts.bodySemi, fontSize: 17, color: colors.ink },
   candidate: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.white, borderWidth: 2, gap: 2 },
-  candName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, color: colors.ink },
+  candName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, paddingBottom: 7, marginBottom: -7, color: colors.ink },
   candSub: { fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   stack: { gap: 8 },
   row: { flexDirection: 'row' },

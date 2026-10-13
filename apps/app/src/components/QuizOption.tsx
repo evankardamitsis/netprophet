@@ -76,5 +76,5 @@ const styles = StyleSheet.create({
   name: { flexShrink: 1, fontFamily: fonts.displayHeavy, color: colors.ink },
   nameTall: { fontSize: 48, lineHeight: 44 },
   nameShort: { fontSize: 32, lineHeight: 29.5 },
-  mark: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 31, color: colors.ink },
+  mark: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 34, paddingBottom: 7, marginBottom: -10, color: colors.ink },
 });

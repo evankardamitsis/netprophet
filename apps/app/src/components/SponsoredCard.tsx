@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: ART_H },
   body: { padding: 16, gap: 4 },
   label: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.52, color: colors.inkSoft },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, color: colors.ink },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
   link: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 19.5, color: colors.ink, marginTop: 6 },
 });

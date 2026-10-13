@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   row: { minHeight: 52, paddingHorizontal: 16, borderRadius: 16, backgroundColor: colors.white, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   bar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.lime },
   label: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
-  count: { fontFamily: fonts.displayHeavy, fontSize: 28, lineHeight: 30, color: colors.ink },
+  count: { fontFamily: fonts.displayHeavy, fontSize: 28, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   // free players see the order, not the numbers: a grey pill where the number would be
   locked: { width: 34, height: 24, borderRadius: 8, overflow: 'hidden', backgroundColor: alpha(colors.ink, 0.18) },
   sweep: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: alpha(colors.white, 0.55) },
@@ -134,6 +134,6 @@ const styles = StyleSheet.create({
   underline: { textDecorationLine: 'underline' },
   footer: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   ghost: { minHeight: 52, borderRadius: 16, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.fog, overflow: 'hidden' },
-  emptyTitle: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, color: colors.ink },
+  emptyTitle: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   emptySub: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
 });

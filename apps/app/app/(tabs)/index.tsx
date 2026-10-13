@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 84 },
   feed: { gap: 14 },
   head: { gap: 6 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 57, color: colors.ink },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
   subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
   tourLink: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: 2 },
   tourLinkText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },

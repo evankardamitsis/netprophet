@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   initials: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.lime },
   text: { flex: 1, minWidth: 0, gap: 2 },
   // line height at least the font size: iOS clips the tonos above the line box
-  name: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, color: colors.ink },
+  name: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   sub: { fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   dots: { flexDirection: 'row' },
 });

@@ -139,11 +139,11 @@ function useMeIn(delay: number) {
 const styles = StyleSheet.create({
   card: { padding: 18, borderRadius: 24, gap: 8 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  glyph: { fontFamily: fonts.displayHeavy, fontSize: 56, lineHeight: 45, minWidth: 36 },
+  glyph: { fontFamily: fonts.displayHeavy, fontSize: 56, lineHeight: 56, paddingBottom: 11, marginBottom: -22, minWidth: 36 },
   chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999 },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   winner: { gap: 2 },
-  winSurname: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 38, color: colors.paper },
+  winSurname: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 40, paddingBottom: 8, marginBottom: -10, color: colors.paper },
   winFirst: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18, color: colors.mist },
   line: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.mist },
   sets: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.mist },

@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     alignSelf: 'center',
   },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 42, color: colors.ink, paddingTop: 6, marginTop: -6 },
+  title: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 42, paddingBottom: 8, marginBottom: -8, color: colors.ink, paddingTop: 6, marginTop: -6 },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   reasons: { gap: 8 },
   row: { flexDirection: 'row' },

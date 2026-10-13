@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   meta: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
   row: { minHeight: 56, borderRadius: 12, backgroundColor: colors.paper, flexDirection: 'row', gap: 12, paddingVertical: 8, paddingHorizontal: 12 },
   half: { flex: 1, minWidth: 0, justifyContent: 'center' },
-  sn: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, color: colors.inkSoft },
+  sn: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, paddingBottom: 4, marginBottom: -4, color: colors.inkSoft },
   snNext: { paddingTop: 4 },
   fn: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18, color: colors.inkSoft },
   note: { paddingHorizontal: 4, paddingBottom: 2, fontFamily: fonts.body, fontSize: 15, lineHeight: 20, color: colors.inkSoft },

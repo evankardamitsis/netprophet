@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 18,
   },
-  heroTitle: { fontFamily: fonts.displayHeavy, fontSize: 70, lineHeight: 62, color: colors.paper },
+  heroTitle: { fontFamily: fonts.displayHeavy, fontSize: 70, lineHeight: 70, paddingBottom: 14, marginBottom: -22, color: colors.paper },
   lime: { color: colors.lime },
   accentRoom: { paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   swap: { height: SWAP_H + ACCENT_PAD, marginTop: -ACCENT_PAD, overflow: 'hidden' },
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
 
   // email and code
   form: { gap: 12 },
-  h1: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 57, color: colors.ink },
+  h1: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
   lead: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
   input: {
     height: 52,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: colors.ink,
   },
-  code: { fontFamily: fonts.displayHeavy, fontSize: 30, letterSpacing: 8, textAlign: 'center' },
+  code: { fontFamily: fonts.displayHeavy, fontSize: 30, paddingBottom: 6, marginBottom: -6, letterSpacing: 8, textAlign: 'center' },
   error: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.ink },
 
   // buttons
