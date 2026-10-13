@@ -82,7 +82,8 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
   - App: «Τα τουρνουά σου» with «Πρόγραμμα» and the «Ταμπλό» bracket tree (and groups); «Το πρόγραμμά σου» for Pro.
   - Admin rebuilt for the founder (13 Oct): Tournaments (add = name, surface, schedule link, draws link), every page in plain words with banners, confirms and menu counts; 08:30 email to staff (Resend).
   - Hosted sources: TAF RACE 2026-2027 (schedule), ΑΟΚ Tennis Open (schedule and draws; first import 13 Oct: 117 matches, 77 results, 26 draws, 109 new players).
-  - Next: the second results platform (founder to send the URL), the records sheet (later), Pro draw alerts («Βγήκε η κλήρωση»), a v2 admin placeholder `NEXT_PUBLIC_SUPABASE_ANON_KEY` to remove at cutover.
+  - 13 Oct: first scheduled runs at 22:00 Athens, all three sheets ok. Morning email only to staff with `profiles.morning_email` (the founder). Feed: «Για σένα» folds the game of the day and matches to confirm. Pro draw alerts («Βγήκε η κλήρωση») open on that draw.
+  - Next: the second results platform (founder to send the URL), the records sheet (later), a v2 admin placeholder `NEXT_PUBLIC_SUPABASE_ANON_KEY` to remove at cutover.
 - **Next:** M4 (tournaments and ingestion at scale). `parse_oop.py` and the TAF sheet are in `tools/match-data/fixtures/` and ported (`packages/ingest`, 54/54); a second results platform is to be named by the founder. The v1 names accent pass (below) is built and waits for the founder's apply on /v2/names.
 - Ads: sponsored cards are banners (`20261126000000_ad_banners.sql`): `image_url` for a sponsor's own banner, else one of five drawn scenes (`art`). The demo ads use the drawn ones.
 
