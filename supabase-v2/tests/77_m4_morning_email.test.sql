@@ -1,9 +1,11 @@
--- M4: the morning email's data: staff recipients, decisions, results only staff can enter, sheet problems, service only.
+-- M4: the morning email's data: staff who asked for it, decisions, results only staff can enter, sheet problems, service only.
 begin;
-select plan(6);
+select plan(7);
 
 select tests.create_user('mail-adm@test.local', 'admin') as adm \gset
 select tests.create_user('mail-u@test.local') as u \gset
+select tests.create_user('mail-adm2@test.local', 'admin') as adm2 \gset
+update core.profiles set morning_email = true where user_id = :'adm'::uuid;
 select tests.mk_player('Α', 'Πρωινός') as a \gset
 select tests.mk_player('Β', 'Πρωινός') as b \gset
 select tests.mk_match(:'a'::uuid, :'b'::uuid, now() - interval '5 hours') as m \gset
@@ -21,7 +23,8 @@ set local role service_role;
 select api.admin_morning_digest() as d \gset
 reset role;
 
-select ok((:'d'::jsonb -> 'recipients') ? 'mail-adm@test.local', 'staff get it');
+select ok((:'d'::jsonb -> 'recipients') ? 'mail-adm@test.local', 'staff who asked for it get it');
+select ok(not ((:'d'::jsonb -> 'recipients') ? 'mail-adm2@test.local'), 'other staff do not');
 select ok(not ((:'d'::jsonb -> 'recipients') ? 'mail-u@test.local'), 'users do not');
 select ok((:'d'::jsonb -> 'decisions' ->> 'walkovers')::int >= 1, 'the walkover waiting');
 select ok((:'d'::jsonb ->> 'results_for_you')::int >= 1, 'a friendly with no result');
