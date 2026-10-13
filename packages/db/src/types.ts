@@ -424,6 +424,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_morning_digest: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_name_pass: {
         Args: { p_confidence?: string; p_limit?: number; p_offset?: number };
         Returns: Json;
