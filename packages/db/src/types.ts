@@ -368,6 +368,10 @@ export type Database = {
         Args: { p_player_id: string; p_action: string; p_target?: string; p_first?: string; p_surname?: string };
         Returns: Json;
       };
+      admin_decide_trait: {
+        Args: { p_trait: string; p_approve: boolean; p_label_m?: string; p_label_f?: string; p_label_en?: string };
+        Returns: Json;
+      };
       admin_demo: {
         Args: { p_on: boolean };
         Returns: Json;
@@ -520,6 +524,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      get_my_traits: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_player: {
         Args: { p_player_id: string };
         Returns: Json;
@@ -542,6 +550,10 @@ export type Database = {
       };
       get_scout: {
         Args: { p_match_id: string };
+        Returns: Json;
+      };
+      get_traits: {
+        Args: { p_player: string };
         Returns: Json;
       };
       get_win_loss: {
@@ -612,6 +624,10 @@ export type Database = {
         Args: { p_limit?: number };
         Returns: Json;
       };
+      suggest_trait: {
+        Args: { p_player: string; p_label: string };
+        Returns: Json;
+      };
       unblock: {
         Args: { p_user_id: string };
         Returns: undefined;
@@ -626,6 +642,10 @@ export type Database = {
       };
       update_profile: {
         Args: { p_patch: Json };
+        Returns: Json;
+      };
+      vote_trait: {
+        Args: { p_player: string; p_trait: string; p_on?: boolean };
         Returns: Json;
       };
       wear_badge: {
