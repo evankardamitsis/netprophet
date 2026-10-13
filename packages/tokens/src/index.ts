@@ -40,6 +40,53 @@ export const colors = {
   basketBall: '#E8742A',
 } as const;
 
+/**
+ * The cosmetics (Εμφάνιση): the colours of the card backgrounds, frames and kits, from the prototype's
+ * `.bgl`, `.frm` and catalogue. They dress the Εγώ card only; they are never UI chrome, and lime still means earned.
+ */
+export const cosmetics = {
+  bg: {
+    clay: '#A24E2A',
+    hard: '#2F6B8F',
+    grassDark: '#2B6B33',
+    grassLight: '#33803C',
+    nightTop: '#0B1233',
+    nightMid: '#1A2A6E',
+    indoorDark: '#BC8C52',
+    indoorLight: '#C99A5E',
+    centerSky: '#1B2440',
+    centerGrass: '#2E7A3A',
+  },
+  frame: {
+    /** the glow and ring of «Επτά» */
+    glow: '#F2D36B',
+    bronze: '#B87333',
+    silver: '#C9D1C4',
+    gold: '#E4C25A',
+    goldDeep: '#7A5E14',
+    goldShadow: '#B8902A',
+    goldLight: '#F7E7A3',
+    goldInk: '#2B2208',
+    goldDark: '#8C6A12',
+    retroRed: '#C45A3A',
+    retroCream: '#F1E4C6',
+    retroInk: '#7A2A12',
+    grassDark: '#3E8A33',
+    grassLight: '#68B84A',
+    grassPlate: '#2E7D3A',
+    grassPlateLight: '#3E9244',
+  },
+  /** shirt and racket colours of the kits */
+  kit: {
+    kit_green: { shirt: '#2B4A3C', racket: '#5A8070' },
+    kit_white: { shirt: '#E8EDE3', racket: '#9BA39F' },
+    kit_black: { shirt: '#1B1F1D', racket: '#D5DDD3' },
+    kit_grass: { shirt: '#2E7D3A', racket: '#D9F03F' },
+    kit_clay: { shirt: '#B4532A', racket: '#F3F5EE' },
+    kit_night: { shirt: '#1B2A6B', racket: '#9DB0FF' },
+  },
+} as const;
+
 export const radii = { sm: 12, md: 16, lg: 24, pill: 999 } as const;
 
 /** 4pt scale. */
@@ -57,7 +104,7 @@ export const motion = {
   spring: { damping: 14, stiffness: 180, mass: 1 },
 } as const;
 
-export const tokens = { colors, radii, spacing, motion } as const;
+export const tokens = { colors, cosmetics, radii, spacing, motion } as const;
 
 /** CSS custom properties for web, as a `:root { ... }` block. */
 export function cssVars(): string {
