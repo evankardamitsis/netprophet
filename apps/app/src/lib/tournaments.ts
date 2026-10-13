@@ -1,6 +1,6 @@
 import { dayKey, formatWinnerSets, localParts } from '@netprophet/core';
 import { stripAccents, type Copy } from '@netprophet/copy';
-import type { DrawMatchRow, GetTournamentResult, GetTournamentsResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
+import type { DrawGroupRow, DrawMatchRow, GetTournamentResult, GetTournamentsResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
 import { fmt } from './votes';
 
 /**
@@ -323,4 +323,116 @@ export function bracketRounds(draw: TournamentDraw, masked: string[], t: Copy): 
       return { key: `${m.round}-${m.slot}`, sides: [a, b], winner: m.winner, advances, line: advances ? '' : line(m), sets, note };
     }),
   }));
+}
+
+/* ================= Ταμπλό: round robin groups ================= */
+
+export interface GroupTeamView {
+  pos: number;
+  parts: SidePart[];
+  /** I am in this pair */
+  mine: boolean;
+}
+
+export interface GroupRow {
+  team: GroupTeamView;
+  /** place, 1-based */
+  place: number;
+  won: number;
+  played: number;
+  /** «2/3» */
+  record: string;
+  /** the group is finished and this pair won it: a lime ✓ */
+  champion: boolean;
+}
+
+export interface GroupMatchView {
+  key: string;
+  a: GroupTeamView;
+  b: GroupTeamView;
+  /** games per set, team a first */
+  sets: [number, number][];
+  winner: 1 | 2 | null;
+  walkover: boolean;
+  /** has a result (a winner, or sets); false: «Δεν έχει παίξει» */
+  played: boolean;
+  mine: boolean;
+}
+
+export interface GroupView {
+  name: string;
+  finished: boolean;
+  rows: GroupRow[];
+  matches: GroupMatchView[];
+}
+
+/** wins, then fewer played, then the place in the grid */
+export function orderStandings(standings: { pos: number; won: number; played: number }[]): { pos: number; won: number; played: number }[] {
+  return [...standings].sort((x, y) => y.won - x.won || x.played - y.played || x.pos - y.pos);
+}
+
+/** every pair of positions, lower first: n*(n-1)/2 of them */
+export function allPairs(positions: number[]): [number, number][] {
+  const ps = [...positions].sort((x, y) => x - y);
+  const out: [number, number][] = [];
+  for (let i = 0; i < ps.length; i += 1) for (let j = i + 1; j < ps.length; j += 1) out.push([ps[i]!, ps[j]!]);
+  return out;
+}
+
+/** all pairs have played: every pair has a match with a winner */
+export function groupFinished(teams: { pos: number }[], matches: { a: number; b: number; winner: 1 | 2 | null }[]): boolean {
+  const pairs = allPairs(teams.map((x) => x.pos));
+  if (pairs.length === 0) return false;
+  return pairs.every(([x, y]) => matches.some((m) => m.winner !== null && ((m.a === x && m.b === y) || (m.a === y && m.b === x))));
+}
+
+/** the groups of a round robin draw, ready to lay out */
+export function groupViews(draw: Pick<TournamentDraw, 'entrants' | 'groups'>, masked: string[], me: string | null, t: Copy): GroupView[] {
+  const d = t.tournaments.detail;
+  const maskedSet = new Set(masked.map(norm));
+  const playerOf = new Map<string, string | null>();
+  for (const e of draw.entrants) for (const p of e.players) playerOf.set(norm(p.raw), p.player_id);
+
+  const team = (g: DrawGroupRow, pos: number): GroupTeamView => {
+    const raw = (g.teams.find((x) => x.pos === pos)?.raw ?? '').trim();
+    const parts = raw
+      .split('/')
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map((p): SidePart => (maskedSet.has(norm(p)) || maskedSet.has(norm(raw)) ? { text: d.masked, playerId: null } : { text: p, playerId: playerOf.get(norm(p)) ?? null }));
+    return { pos, parts, mine: me !== null && parts.some((p) => p.playerId === me) };
+  };
+
+  return (draw.groups ?? []).map((g) => {
+    const finished = groupFinished(g.teams, g.matches);
+    const positions = g.teams.map((x) => x.pos);
+    const standings = orderStandings(positions.map((pos) => g.standings.find((s) => s.pos === pos) ?? { pos, won: 0, played: 0 }));
+    const rows = standings.map((s, i): GroupRow => ({
+      team: team(g, s.pos),
+      place: i + 1,
+      won: s.won,
+      played: s.played,
+      record: `${s.won}/${s.played}`,
+      champion: finished && i === 0,
+    }));
+    const matches = allPairs(positions).map(([x, y]): GroupMatchView => {
+      const found = g.matches.find((m) => (m.a === x && m.b === y) || (m.a === y && m.b === x));
+      const a = team(g, found?.a ?? x);
+      const b = team(g, found?.b ?? y);
+      const sets = (found?.sets ?? []).map((st): [number, number] => [st.g[0], st.g[1]]);
+      const winner = found?.winner ?? null;
+      const walkover = found?.walkover === true;
+      return {
+        key: `${x}-${y}`,
+        a,
+        b,
+        sets,
+        winner,
+        walkover,
+        played: winner !== null || sets.length > 0,
+        mine: a.mine || b.mine,
+      };
+    });
+    return { name: g.name, finished, rows, matches };
+  });
 }

@@ -6,9 +6,11 @@ import type { GetTournamentResult } from '@netprophet/db';
 import { useCopy } from '../../../src/i18n';
 import { useTournament } from '../../../src/lib/data';
 import { BracketTree } from '../../../src/components/BracketTree';
+import { RoundRobin } from '../../../src/components/RoundRobin';
 import { usePress, useStgIn } from '../../../src/lib/motion';
 import {
   bracketRounds,
+  groupViews,
   dayChips,
   defaultDay,
   defaultSegment,
@@ -179,7 +181,9 @@ function Bracket({ d }: { d: GetTournamentResult }) {
   const t = useCopy();
   const [pickedTab, setPickedTab] = useState<string | null>(null);
   const draw = d.draws.find((x) => x.tab === pickedTab) ?? d.draws[0]!;
-  const rounds = draw.format === 'round_robin' ? [] : bracketRounds(draw, d.masked, t);
+  const robin = draw.format === 'round_robin';
+  const rounds = robin ? [] : bracketRounds(draw, d.masked, t);
+  const groups = robin ? groupViews(draw, d.masked, d.me, t) : [];
   return (
     <View style={styles.block}>
       {d.draws.length > 1 ? (
@@ -189,8 +193,8 @@ function Bracket({ d }: { d: GetTournamentResult }) {
           ))}
         </ScrollView>
       ) : null}
-      {draw.format === 'round_robin' ? (
-        <Text style={styles.empty}>{t.tournaments.detail.roundRobin}</Text>
+      {robin ? (
+        groups.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : <RoundRobin key={draw.tab} groups={groups} />
       ) : rounds.length === 0 ? (
         <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text>
       ) : (

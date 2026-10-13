@@ -801,6 +801,25 @@ export interface DrawMatchRow {
   deadline: string | null;
 }
 
+/** a round robin group (api.get_tournament, draws[].groups) */
+export interface DrawGroupRow {
+  /** «Όμιλος 1» */
+  name: string;
+  teams: { pos: number; raw: string; people: { surname: string; first: string; key: string }[] }[];
+  matches: {
+    /** positions of the two teams */
+    a: number;
+    b: number;
+    scoreRaw: string;
+    /** games per set, team a first */
+    sets: { g: [number, number]; tb: boolean }[];
+    /** 1 = team a */
+    winner: 1 | 2 | null;
+    walkover: boolean;
+  }[];
+  standings: { pos: number; won: number; played: number }[];
+}
+
 export interface TournamentDraw {
   /** the sheet's tab, «Μ 40+», «MD MASTER» */
   tab: string;
@@ -812,6 +831,8 @@ export interface TournamentDraw {
   updated_at: string;
   entrants: DrawEntrantRow[];
   rounds: DrawMatchRow[][];
+  /** round robin only */
+  groups?: DrawGroupRow[];
 }
 
 /** api.get_tournament */
