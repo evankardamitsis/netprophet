@@ -95,8 +95,10 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   back. Walkovers publish and wait for staff to pick the winner (`core.ingest_reviews`, kind walkover).
 - Admin `/v2/sources`: tournaments with their source and last run, «Δοκιμή τώρα», «Τρέξε τώρα», and the review list.
 - The schedule: `apps/admin` cron `/api/cron/v2-ingest` at 08:00 and 22:00 Athens (Vercel cron, UTC hours checked
-  against Athens time). Sheets are read with the Google Sheets API (an API key; the sheet shared with anyone who has
-  the link).
-- Needs in Vercel (admin project): `GOOGLE_SHEETS_API_KEY`, `V2_SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`.
+  against Athens time). Sheets are read with the Google Sheets API as NetProphet's service account
+  (`GOOGLE_SERVICE_ACCOUNT_JSON`; the organiser or the founder shares each sheet with its email, as with a person),
+  or, for sheets shared with anyone who has the link, an API key (`GOOGLE_SHEETS_API_KEY`).
+- Needs in Vercel (admin project, `netprophet-admin`): `GOOGLE_SERVICE_ACCOUNT_JSON`, `V2_SUPABASE_SERVICE_ROLE_KEY`
+  (from the v2 Supabase project), `CRON_SECRET`.
 - Not yet: moved and cancelled matches, dedupe against player-logged matches, the 08:30 email, the records sheet,
   other platforms.
