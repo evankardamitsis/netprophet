@@ -1,0 +1,212 @@
+{
+ "suite": "unlock-defs",
+ "version": 1,
+ "notes": "The unlock ladder: packages/core UNLOCK_STEPS and core.unlock_defs must both equal this list (rules.test.ts, 61_unlocks.test.sql).",
+ "steps": [
+  {
+   "id": "day1",
+   "step": 1,
+   "primary": [],
+   "backupVotes": 0,
+   "features": [
+    "vote_cards",
+    "results",
+    "streak",
+    "points",
+    "daily_quiz",
+    "log_match_quiet"
+   ]
+  },
+  {
+   "id": "level_bar",
+   "step": 2,
+   "primary": [
+    {
+     "counter": "correctVotes",
+     "min": 3
+    },
+    {
+     "counter": "activeDays",
+     "min": 2
+    }
+   ],
+   "backupVotes": 5,
+   "features": [
+    "level_bar"
+   ]
+  },
+  {
+   "id": "first_freeze",
+   "step": 3,
+   "primary": [
+    {
+     "counter": "bestStreak",
+     "min": 3
+    }
+   ],
+   "backupVotes": 8,
+   "features": [
+    "streak_moment",
+    "free_freeze"
+   ]
+  },
+  {
+   "id": "daily_quests",
+   "step": 4,
+   "primary": [
+    {
+     "counter": "votesCast",
+     "min": 10
+    },
+    {
+     "counter": "activeDays",
+     "min": 2
+    }
+   ],
+   "backupVotes": 12,
+   "features": [
+    "daily_quests"
+   ]
+  },
+  {
+   "id": "bridge_line",
+   "step": 5,
+   "primary": [
+    {
+     "counter": "votesResolved",
+     "min": 1
+    },
+    {
+     "counter": "activeDays",
+     "min": 2
+    }
+   ],
+   "backupVotes": 15,
+   "features": [
+    "bridge_line"
+   ]
+  },
+  {
+   "id": "ladder_friends",
+   "step": 6,
+   "primary": [
+    {
+     "counter": "votesCast",
+     "min": 20
+    },
+    {
+     "counter": "activeDays",
+     "min": 3
+    }
+   ],
+   "backupVotes": 25,
+   "features": [
+    "ladder_friends",
+    "invite_friend_quest"
+   ]
+  },
+  {
+   "id": "kudos_reactions",
+   "step": 7,
+   "primary": [
+    {
+     "counter": "matchesConfirmed",
+     "min": 1
+    }
+   ],
+   "backupVotes": 20,
+   "features": [
+    "kudos",
+    "reactions"
+   ]
+  },
+  {
+   "id": "avatar_profile",
+   "step": 8,
+   "primary": [
+    {
+     "counter": "fullQuestDays",
+     "min": 3
+    }
+   ],
+   "backupVotes": 35,
+   "features": [
+    "avatar_3d",
+    "backgrounds",
+    "frames"
+   ]
+  },
+  {
+   "id": "badges_shelf",
+   "step": 9,
+   "primary": [
+    {
+     "counter": "correctVotes",
+     "min": 10
+    }
+   ],
+   "backupVotes": 28,
+   "features": [
+    "badges_shelf"
+   ]
+  },
+  {
+   "id": "pro_first_view",
+   "step": 10,
+   "primary": [
+    {
+     "counter": "bestStreak",
+     "min": 5
+    }
+   ],
+   "backupVotes": 30,
+   "features": [
+    "pro_sheet",
+    "win_effect"
+   ]
+  },
+  {
+   "id": "weekly_quests",
+   "step": 11,
+   "primary": [
+    {
+     "counter": "activeDays",
+     "min": 6
+    }
+   ],
+   "backupVotes": 40,
+   "features": [
+    "weekly_quests"
+   ]
+  },
+  {
+   "id": "gifts",
+   "step": 12,
+   "primary": [
+    {
+     "counter": "kudosGiven",
+     "min": 3
+    }
+   ],
+   "backupVotes": 50,
+   "features": [
+    "gifts"
+   ]
+  },
+  {
+   "id": "stats_area",
+   "step": 13,
+   "primary": [
+    {
+     "counter": "votesCast",
+     "min": 45
+    }
+   ],
+   "backupVotes": 45,
+   "features": [
+    "stats",
+    "ladder_area"
+   ]
+  }
+ ]
+}
