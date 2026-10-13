@@ -161,11 +161,11 @@ async function mockCelebrations(): Promise<Celebration[]> {
   return [{ id: 'mock-cel', created_at: new Date().toISOString(), payload: { type: 'streak_milestone', streak: 5, match_id: 'mock', reward: { freeze: false, frame: null } } }];
 }
 
-/* quests in mock mode: a new player's list, moving one step per vote so the bar can be seen */
+/* quests in mock mode: a new player's list; a vote moves both vote quests, like the server */
 let mockQuestState: GetQuestsResult = mockQuests();
 function mockQuestVote() {
   const bump = (q: GetQuestsResult['daily'][number]) =>
-    q.key === 'daily_vote_3_cards' && !q.done ? { ...q, progress: q.progress + 1, done: q.progress + 1 >= q.target } : q;
+    (q.key === 'daily_vote_3_cards' || q.key === 'daily_vote_2_matches') && !q.done ? { ...q, progress: q.progress + 1, done: q.progress + 1 >= q.target } : q;
   mockQuestState = { daily: mockQuestState.daily.map(bump), weekly: mockQuestState.weekly };
 }
 
