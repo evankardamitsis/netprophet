@@ -47,4 +47,6 @@ and tunable without code.
 2. A new player shows a level after 3 counting matches or 10 votes on their matches.
 3. Levels go in halves and never round up (4.37 is level 4, 4.5 is 4,5).
 4. Every win counts the same (`twoOneScore` = 1; still tunable).
-5. Open: the crowd's weight (a quarter of a match for now, `crowdWeight`). Revisit once real votes come in.
+5. Results first (13 Oct 2026): a level is moved by match results; the crowd is felt but small. It counts only on
+   matches with 10+ votes and then at a quarter of that match's move (`crowdWeight` 0.25), so it can tilt a level
+   but never carry it. Revisit the number once real votes come in.
