@@ -212,6 +212,14 @@ export const el = {
     voteFailed: 'Η ψήφος δεν πέρασε. Ξαναδοκίμασε.',
     votingClosed: 'Η ψηφοφορία έκλεισε.',
     sponsoredMore: 'Δες περισσότερα ›',
+    /** the folded row at the top: the game of the day and matches to confirm, opened with a tap (founder, 13 Oct) */
+    daily: {
+      title: 'Για σένα',
+      confirmOne: 'Ένα ματς να επιβεβαιώσεις',
+      confirmMany: '{count} ματς να επιβεβαιώσεις',
+      open: 'Άνοιξε',
+      close: 'Κλείσε',
+    },
   },
   result: {
     correct: "Το 'πες!",

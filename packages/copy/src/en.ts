@@ -204,6 +204,13 @@ export const en: Copy = {
     voteFailed: 'Your vote did not go through. Try again.',
     votingClosed: 'Voting has closed.',
     sponsoredMore: 'See more ›',
+    daily: {
+      title: 'For you',
+      confirmOne: 'One match to confirm',
+      confirmMany: '{count} matches to confirm',
+      open: 'Open',
+      close: 'Close',
+    },
   },
   result: {
     correct: 'You called it!',

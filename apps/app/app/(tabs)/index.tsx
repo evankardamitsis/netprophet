@@ -6,6 +6,7 @@ import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
+import { DailyFold } from '../../src/components/DailyFold';
 import { PostponedCard } from '../../src/components/PostponedCard';
 import { QuizStrip } from '../../src/components/QuizStrip';
 import { ResultCard } from '../../src/components/ResultCard';
@@ -21,6 +22,7 @@ import { isUnlock, nextGroup } from '../../src/lib/celebrate';
 import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { openCount } from '../../src/lib/tournaments';
+import { dailyFold } from '../../src/lib/dailyFold';
 import { fmt } from '../../src/lib/votes';
 import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
 import type { Side } from '../../src/lib/votes';
@@ -143,6 +145,7 @@ export default function VoteScreen() {
   }, [notice]);
 
   const empty = !loading && cards.length === 0;
+  const daily = dailyFold(unlocks.has('daily_quiz') ? quiz.quiz : null, confirmations.items.length, t);
   const titleIn = useInA();
 
   return (
@@ -157,7 +160,19 @@ export default function VoteScreen() {
             <Text style={styles.title}>{t.feed.title}</Text>
             <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
           </Animated.View>
-          {unlocks.has('daily_quiz') && quiz.quiz && quiz.quiz.cards.length > 0 ? <QuizStrip quiz={quiz.quiz} onPress={() => router.push('/quiz')} /> : null}
+          {/* «Για σένα»: the game of the day and the matches to confirm, folded (founder, 13 Oct) */}
+          <DailyFold fold={daily}>
+            {unlocks.has('daily_quiz') && quiz.quiz && quiz.quiz.cards.length > 0 ? <QuizStrip quiz={quiz.quiz} onPress={() => router.push('/quiz')} /> : null}
+            {confirmations.items.slice(0, 1).map((item) => (
+              <ConfirmCard
+                key={item.match_id}
+                item={item}
+                onAnswer={(a) =>
+                  void confirmations.answer(item.match_id, a).then((o) => setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]))
+                }
+              />
+            ))}
+          </DailyFold>
           {current ? (
             <ResultCard
               key={current.id}
@@ -167,15 +182,6 @@ export default function VoteScreen() {
               onDone={onResultDone}
             />
           ) : null}
-          {confirmations.items.slice(0, 1).map((item) => (
-            <ConfirmCard
-              key={item.match_id}
-              item={item}
-              onAnswer={(a) =>
-                void confirmations.answer(item.match_id, a).then((o) => setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]))
-              }
-            />
-          ))}
           {cards.map((c, i) => (
             <Fragment key={c.id}>
               {c.kind === 'match' ? (
