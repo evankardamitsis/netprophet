@@ -1,5 +1,5 @@
--- M4 part 3a: draws. A sheet's brackets are stored per category; names link only where the matcher is sure and
--- never create players; a dry read writes nothing but its log; a tab gone from the sheet is removed.
+-- M4 part 3a: draws. A sheet's brackets are stored per category; a sure name links, an unknown one becomes a new
+-- player (founder, 13 Oct); a dry read writes nothing but its log; a tab gone from the sheet is removed.
 begin;
 select plan(10);
 
@@ -24,13 +24,13 @@ select ok(jsonb_path_exists(api.admin_tournaments(), '$[*] ? (@.draw_url != null
 select tests.logout();
 
 select is((:'dry'::jsonb ->> 'draws')::int, 2, 'a dry read counts the draws');
-select is((:'run'::jsonb ->> 'linked')::int, 1, 'one of two names is a roster player');
+select is((:'run'::jsonb ->> 'linked')::int, 2, 'both names end up on a player');
 select is((select count(*)::int from core.tournament_draws where tournament_id = :'t'::uuid), 1, 'a tab gone from the sheet is removed');
 select is((select draw -> 'entrants' -> 0 -> 'players' -> 0 ->> 'player_id' from core.tournament_draws where tournament_id = :'t'::uuid),
           :'p1', 'the sure name links to the player');
 select is((select draw -> 'entrants' -> 1 -> 'players' -> 0 ->> 'player_id' from core.tournament_draws where tournament_id = :'t'::uuid),
-          null, 'an unknown name stays a name');
-select ok(not exists (select 1 from core.players where surname = 'ΑΓΝΩΣΤΟΣ'), 'a draw never creates players');
+          (select id::text from core.players where surname = 'ΑΓΝΩΣΤΟΣ'), 'an unknown name becomes a new player');
+select is((select count(*)::int from core.players where surname = 'ΑΓΝΩΣΤΟΣ'), 1, 'once, not on every read');
 select is((select count(*)::int from core.ingest_runs where tournament_id = :'t'::uuid and kind = 'draws'), 3, 'every read is logged as a draw read');
 
 select set_config('request.jwt.claims', '{"role": "service_role"}', true);
