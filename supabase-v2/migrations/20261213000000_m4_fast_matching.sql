@@ -8,7 +8,7 @@
 -- A tournament's dates follow its sheet: the first and last day a run sees widen starts_on / ends_on, so adding a
 -- tournament needs only a name, a surface and the two links.
 
-create index if not exists players_surname_trgm_idx on core.players using gin (surname_norm gin_trgm_ops);
+create index if not exists players_surname_trgm_idx on core.players using gin (surname_norm extensions.gin_trgm_ops);
 
 create or replace function core.ingest_candidates(p jsonb)
 returns jsonb
