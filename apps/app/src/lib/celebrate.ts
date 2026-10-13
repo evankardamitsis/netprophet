@@ -1,5 +1,6 @@
 import { greekCaps, type Copy } from '@netprophet/copy';
-import type { Celebration, QuestCelebration, StreakCelebration } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, QuestCelebration, StreakCelebration } from '@netprophet/db';
+import { badgeName } from './badges';
 import { questCelebrationView } from './quests';
 import { fmt } from './votes';
 
@@ -12,25 +13,46 @@ export interface CelebrationView {
   label: string;
   /** the σερί pill's number; null for quests, which have no pill */
   streak: number | null;
+  /** a badge's tier (1 to 3): the three dots under the title fill up to it; null for σερί and quests */
+  tier: number | null;
   title: string;
   reward: string;
 }
 
-/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE */
+/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE, then badges one by one */
 export function nextGroup(list: Celebration[]): Celebration[] {
   const streak = list.find((c) => c.payload.type === 'streak_milestone');
-  return streak ? [streak] : list.filter((c) => c.payload.type === 'quest');
+  if (streak) return [streak];
+  const quests = list.filter((c) => c.payload.type === 'quest');
+  if (quests.length > 0) return quests;
+  const badge = list.find((c) => c.payload.type === 'badge');
+  return badge ? [badge] : [];
 }
 
 const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
+const isBadge = (c: Celebration): c is BadgeCelebration => c.payload.type === 'badge';
+
+/** «Νέο badge» / «Νέα βαθμίδα», the badge's name, then «Βαθμίδα Χάλκινο» (gold also names the Frame Level) */
+export function badgeCelebrationView(c: BadgeCelebration, t: Copy): CelebrationView {
+  const { badge, tier } = c.payload;
+  const tierName = t.badges.tiers[tier - 1] ?? '';
+  return {
+    label: greekCaps(c.payload.new ? t.badges.celebrationNew : t.badges.celebrationTier),
+    streak: null,
+    tier,
+    title: badgeName(badge, t),
+    reward: fmt(tier >= 3 ? t.badges.rewardGold : t.badges.reward, { tier: tierName }),
+  };
+}
 
 /** the same full-screen moment for a group: quests without the pill (prototype), a σερί milestone with it */
 export function groupView(group: Celebration[], t: Copy): CelebrationView {
   const quests = group.filter(isQuest);
   if (quests.length > 0) {
     const v = questCelebrationView(quests.map((q) => ({ quest: q.payload.quest, reward: q.payload.reward })), t);
-    return { label: greekCaps(v.label), streak: null, title: v.title, reward: v.reward };
+    return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
   }
+  if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
   return celebrationView(group[0] as StreakCelebration, t);
 }
 
@@ -39,5 +61,5 @@ export function celebrationView(c: StreakCelebration, t: Copy): CelebrationView 
   const r = c.payload.reward ?? { freeze: false, frame: null };
   const frame = r.frame ? t.celebrate.frames[r.frame] ?? r.frame : null;
   const reward = r.freeze && frame ? t.celebrate.rewards.both : r.freeze ? t.celebrate.rewards.freeze : frame ? fmt(t.celebrate.rewards.frame, { name: frame }) : t.celebrate.rewards.none;
-  return { label: greekCaps(t.celebrate.label), streak: n, title: t.celebrate.titles[n] ?? `${n}`, reward };
+  return { label: greekCaps(t.celebrate.label), streak: n, tier: null, title: t.celebrate.titles[n] ?? `${n}`, reward };
 }

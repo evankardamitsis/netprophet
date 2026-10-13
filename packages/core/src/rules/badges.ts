@@ -8,23 +8,24 @@ const b = (id: string, unit: string, t: [number, number, number], hasCard = fals
   hasCard,
 });
 
+/** The 16 badges (ids and counters as in core.badge_defs). `hasCard`: the four that can be worn on the player card. */
 export const BADGES: readonly BadgeDef[] = [
-  b('proto-servis', 'matches_logged', [1, 5, 25]),
-  b('oraios-o-paichtis', 'confirmations_given', [1, 5, 20]),
-  b('o-evgenikos', 'kudos_given', [3, 15, 50]),
-  b('agapitos', 'kudos_from_distinct_opponents', [3, 15, 50]),
-  b('manths-tou-klab', 'correct_votes', [5, 25, 100]),
-  b('anatropi', 'upset_calls', [1, 5, 15]),
-  b('sti-seira', 'best_streak', [5, 7, 10]),
-  b('influencer', 'friends_joined_and_played', [1, 3, 10]),
-  b('oli-i-vdomada', 'full_weeks', [1, 4, 12]),
-  b('o-diplistas', 'doubles_played', [1, 5, 15]),
-  b('echei-poikilia', 'distinct_opponents', [5, 15, 40]),
-  b('statheros', 'active_weeks', [4, 12, 26]),
-  b('polla-ta-psifalakia', 'votes_cast', [25, 100, 500]),
-  b('chouvarntas', 'treats_given', [1, 5, 15]),
-  b('veteranos-sezon', 'seasons', [1, 2, 4]),
-  b('koryfaios-tou-mina', 'top3_months', [1, 3, 10]),
+  b('first_serve', 'matches_logged', [1, 5, 25], true),
+  b('nice_player', 'confirmations', [1, 5, 20]),
+  b('gentleman', 'kudos_given', [3, 15, 50], true),
+  b('beloved', 'kudos_received', [3, 15, 50]),
+  b('club_oracle', 'votes_correct', [5, 25, 100]),
+  b('upset', 'upset_calls', [1, 5, 15]),
+  b('in_a_row', 'streak_best', [5, 7, 10], true),
+  b('influencer', 'friends_joined', [1, 3, 10]),
+  b('whole_week', 'full_weeks', [1, 4, 12]),
+  b('doubles_player', 'doubles_logged', [1, 5, 15]),
+  b('variety', 'opponents', [5, 15, 40], true),
+  b('steady', 'active_weeks', [4, 12, 26]),
+  b('many_votes', 'votes_cast', [25, 100, 500]),
+  b('generous', 'treats', [1, 5, 15]),
+  b('season_veteran', 'seasons', [1, 2, 4]),
+  b('month_top', 'months_top3', [1, 3, 10]),
 ];
 
 /** Tier 0..3 for a counter value. */

@@ -6,6 +6,7 @@ import type {
   ClaimCandidate,
   ConfirmationAnswer,
   GetFeedResult,
+  GetBadgesResult,
   GetQuestsResult,
   KudoOption,
   LinkKudo,
@@ -89,6 +90,9 @@ export function rpc(client: NetprophetClient) {
       call<CastVoteResult>(client, 'cast_vote', { p_match_id: matchId, p_side: side, p_client_event_id: clientEventId }),
     getFeed: (limit = 20) => call<GetFeedResult>(client, 'get_feed', { p_limit: limit }),
     getQuests: () => call<GetQuestsResult>(client, 'get_quests', {}),
+    getBadges: () => call<GetBadgesResult>(client, 'get_badges', {}),
+    /** wear a badge on the card, or null to take it off */
+    wearBadge: (key: string | null) => call<{ worn: string | null }>(client, 'wear_badge', { p_key: key }),
     getMe: () => call<MeResult>(client, 'get_me', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),

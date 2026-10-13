@@ -1,10 +1,11 @@
 import type { Copy } from '@netprophet/copy';
 import type { QuestReward, QuestRow } from '@netprophet/db';
+import { badgeBarFeedback, type BadgeSnapshot } from './badges';
 import { fmt } from './votes';
 
 /** the cosmetic or badge a reward points at, by its name */
 function rewardName(r: QuestReward, t: Copy): string {
-  const names = r.kind === 'badge' ? t.quests.badges : t.quests.cosmetics;
+  const names = r.kind === 'badge' ? t.badges.names : t.quests.cosmetics;
   return names[r.key] ?? r.key;
 }
 
@@ -42,18 +43,25 @@ export function fraction(q: Pick<QuestRow, 'progress' | 'target'>): number {
 }
 
 export type QuestFeedback = { kind: 'bar'; title: string; from: number; to: number; progress: number; target: number } | { kind: 'toast'; text: string } | null;
+export type { BadgeSnapshot };
 
 /**
  * What to show after a vote (prototype): a finished quest wins and gives a toast; otherwise the first quest
- * (daily before weekly) whose progress went up shows the slim bar. Never both.
+ * (daily before weekly) whose progress went up shows the slim bar; failing that, a badge one vote short of its next
+ * tier shows the same bar («Ένα ακόμα για το badge …»). Never more than one.
  */
-export function feedbackAfterVote(before: { daily: QuestRow[]; weekly: QuestRow[] } | null, after: { daily: QuestRow[]; weekly: QuestRow[] }, t: Copy): QuestFeedback {
+export function feedbackAfterVote(
+  before: { daily: QuestRow[]; weekly: QuestRow[] } | null,
+  after: { daily: QuestRow[]; weekly: QuestRow[] },
+  t: Copy,
+  badges?: { before: BadgeSnapshot | null; after: BadgeSnapshot | null },
+): QuestFeedback {
   const was = new Map([...(before?.daily ?? []), ...(before?.weekly ?? [])].map((q) => [q.key, q]));
   const moved = [...after.daily, ...after.weekly].filter((q) => q.progress > (was.get(q.key)?.progress ?? 0));
   const finished = moved.find((q) => q.done && !was.get(q.key)?.done);
   if (finished) return { kind: 'toast', text: toastLine(finished.reward, t) };
   const q = moved.find((x) => !x.done);
-  if (!q) return null;
+  if (!q) return badges ? badgeBarFeedback(badges.before, badges.after, t) : null;
   return { kind: 'bar', title: questTitle(q.key, t), from: fraction(was.get(q.key) ?? { progress: 0, target: q.target }), to: fraction(q), progress: q.progress, target: q.target };
 }
 

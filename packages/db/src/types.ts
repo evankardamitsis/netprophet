@@ -480,6 +480,10 @@ export type Database = {
         Args: { p_player_ids: string[]; p_source?: string };
         Returns: number;
       };
+      get_badges: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_blocks: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
@@ -618,6 +622,10 @@ export type Database = {
       };
       update_profile: {
         Args: { p_patch: Json };
+        Returns: Json;
+      };
+      wear_badge: {
+        Args: { p_key: string };
         Returns: Json;
       };
     };

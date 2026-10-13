@@ -1,0 +1,252 @@
+{
+ "suite": "badges",
+ "version": 1,
+ "notes": "fn tierFor(thresholds, counter) -> 0..3. Mirrored by core.badge_tier.",
+ "groups": [
+  {
+   "fn": "tierFor",
+   "cases": [
+    {
+     "name": "0 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 0
+     },
+     "expected": 0
+    },
+    {
+     "name": "4 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 4
+     },
+     "expected": 0
+    },
+    {
+     "name": "5 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 5
+     },
+     "expected": 1
+    },
+    {
+     "name": "24 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 24
+     },
+     "expected": 1
+    },
+    {
+     "name": "25 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 25
+     },
+     "expected": 2
+    },
+    {
+     "name": "99 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 99
+     },
+     "expected": 2
+    },
+    {
+     "name": "100 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 100
+     },
+     "expected": 3
+    },
+    {
+     "name": "250 on [5, 25, 100]",
+     "input": {
+      "thresholds": [
+       5,
+       25,
+       100
+      ],
+      "counter": 250
+     },
+     "expected": 3
+    },
+    {
+     "name": "0 on [1, 5, 25]",
+     "input": {
+      "thresholds": [
+       1,
+       5,
+       25
+      ],
+      "counter": 0
+     },
+     "expected": 0
+    },
+    {
+     "name": "1 on [1, 5, 25]",
+     "input": {
+      "thresholds": [
+       1,
+       5,
+       25
+      ],
+      "counter": 1
+     },
+     "expected": 1
+    },
+    {
+     "name": "4 on [1, 5, 25]",
+     "input": {
+      "thresholds": [
+       1,
+       5,
+       25
+      ],
+      "counter": 4
+     },
+     "expected": 1
+    },
+    {
+     "name": "5 on [1, 5, 25]",
+     "input": {
+      "thresholds": [
+       1,
+       5,
+       25
+      ],
+      "counter": 5
+     },
+     "expected": 2
+    },
+    {
+     "name": "25 on [1, 5, 25]",
+     "input": {
+      "thresholds": [
+       1,
+       5,
+       25
+      ],
+      "counter": 25
+     },
+     "expected": 3
+    },
+    {
+     "name": "4 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 4
+     },
+     "expected": 0
+    },
+    {
+     "name": "5 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 5
+     },
+     "expected": 1
+    },
+    {
+     "name": "6 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 6
+     },
+     "expected": 1
+    },
+    {
+     "name": "7 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 7
+     },
+     "expected": 2
+    },
+    {
+     "name": "9 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 9
+     },
+     "expected": 2
+    },
+    {
+     "name": "10 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 10
+     },
+     "expected": 3
+    },
+    {
+     "name": "11 on [5, 7, 10]",
+     "input": {
+      "thresholds": [
+       5,
+       7,
+       10
+      ],
+      "counter": 11
+     },
+     "expected": 3
+    }
+   ]
+  }
+ ]
+}

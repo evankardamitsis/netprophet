@@ -28,6 +28,7 @@ export default function TabsLayout() {
           <Tabs.Screen name="ladder" options={{ title: t.tabs.ladder }} />
           {/* Εγώ opens from the header avatar, not from the tab bar */}
           <Tabs.Screen name="me" options={{ title: t.tabs.me, href: null }} />
+          <Tabs.Screen name="badges" options={{ title: t.badges.title, href: null }} />
           {/* a player's profile keeps the header and tab bar, with no tab highlighted (prototype) */}
           <Tabs.Screen name="player/[id]" options={{ title: t.players.title, href: null }} />
           <Tabs.Screen name="scout/[id]" options={{ title: t.scout.title, href: null }} />

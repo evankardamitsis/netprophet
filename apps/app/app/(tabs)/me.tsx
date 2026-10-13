@@ -1,20 +1,23 @@
-import { useCallback, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { router, useFocusEffect } from 'expo-router';
+import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
 import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useBlocks, useMePage, useMyKudos, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { useBadges, useBlocks, useMePage, useMyKudos, usePro, useQuests, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
+import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
 import { activeLine, priceLine } from '../../src/lib/pro';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
-import { colors, fonts } from '../../src/theme';
+import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
+import { colors, ease, fonts } from '../../src/theme';
 
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
@@ -32,12 +35,14 @@ export default function MeScreen() {
   const { view, loading, error, refresh } = useMePage();
   const kudos = useMyKudos();
   const quests = useQuests();
+  const badges = useBadges();
   const [questsOpen, setQuestsOpen] = useState(false);
   useFocusEffect(
     useCallback(() => {
       void quests.refresh();
+      void badges.refresh();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh]),
+    }, [quests.refresh, badges.refresh]),
   );
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -56,10 +61,15 @@ export default function MeScreen() {
         </Pressable>
         {view ? (
           <>
-            <Section i={next()}>{view.isNew ? <NewHero v={view} /> : <Hero v={view} />}</Section>
+            <Section i={next()}>{view.isNew ? <NewHero v={view} badges={badges.badges} /> : <Hero v={view} badges={badges.badges} />}</Section>
             <Section i={next()}>
               <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
             </Section>
+            {badges.badges && earned(badges.badges.badges).length > 0 ? (
+              <Section i={next()}>
+                <BadgesCard data={badges.badges} />
+              </Section>
+            ) : null}
             <Section i={next()}>
               <StreakBox v={view} />
             </Section>
@@ -113,13 +123,95 @@ function QuestsRow({ done, onPress }: { done: number; onPress: () => void }) {
   );
 }
 
+/** the badge worn on the card, under the name: a lime outline, its name and the tier dots; it slams in late */
+function WornPill({ data }: { data: GetBadgesResult | null }) {
+  const t = useCopy();
+  const row = data?.badges.find((b) => b.key === data.worn);
+  const scale = useSharedValue(1.4);
+  const opacity = useSharedValue(0);
+  useEffect(() => {
+    scale.value = 1.4;
+    opacity.value = 0;
+    scale.value = withDelay(1200, withTiming(1, { duration: 500, easing: ease }));
+    opacity.value = withDelay(1200, withTiming(1, { duration: 500, easing: ease }));
+  }, [scale, opacity, row?.key]);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  if (!row || row.tier === 0) return null;
+  return (
+    <Animated.View style={[styles.worn, style]} accessibilityLabel={badgeName(row.key, t)}>
+      <Text style={styles.wornText}>{badgeName(row.key, t)}</Text>
+      <BadgeDots tier={row.tier} size={7} border={1.5} color={colors.lime} gap={3} />
+    </Animated.View>
+  );
+}
+
+/** «BADGES  Δες τα όλα ›», a row of earned tiles, and the badge closest to its next tier */
+function BadgesCard({ data }: { data: GetBadgesResult }) {
+  const t = useCopy();
+  const list = earned(data.badges);
+  const nb = nextBadge(data.badges);
+  const all = usePress();
+  return (
+    <View style={styles.badgesCard}>
+      <View style={styles.badgesHead}>
+        <Text style={styles.kicker}>{greekCaps(t.badges.title)}</Text>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/badges')} onPressIn={all.onPressIn} onPressOut={all.onPressOut} style={styles.seeAllHit}>
+          <Animated.Text style={[styles.seeAll, all.style]}>{t.badges.seeAll}</Animated.Text>
+        </Pressable>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tileRow}>
+        {list.map((b, i) => (
+          <BadgeTile key={b.key} b={b} i={i} />
+        ))}
+      </ScrollView>
+      {nb ? <NextBadge b={nb} /> : null}
+    </View>
+  );
+}
+
+function BadgeTile({ b, i }: { b: BadgeRow; i: number }) {
+  const t = useCopy();
+  const st = tierStyle(b.tier);
+  const press = usePress(0.96);
+  const enter = useStgIn(STG_MS, 150 + i * 40);
+  return (
+    <Animated.View style={enter}>
+      <Pressable accessibilityRole="button" onPress={() => router.push(`/badges?key=${b.key}`)} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+        <Animated.View style={[styles.badgeTile, { backgroundColor: st.bg, borderColor: st.border, borderWidth: st.borderWidth }, press.style]}>
+          <Text style={[styles.badgeTileName, { color: st.text }]}>{badgeName(b.key, t)}</Text>
+          <View style={styles.badgeTileFoot}>
+            <BadgeDots tier={b.tier} size={11} border={2} color={st.dot} gap={3} />
+            <Text style={[styles.badgeTileTier, { color: st.text }]}>
+              {tileTierLine(b, t)}
+            </Text>
+          </View>
+        </Animated.View>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/** the next tier within reach: name, «Ακόμα N» and a bar */
+function NextBadge({ b }: { b: BadgeRow }) {
+  const t = useCopy();
+  return (
+    <View style={styles.nextBadge} accessibilityLabel={`${badgeName(b.key, t)}. ${leftLine(b, t)}`}>
+      <View style={styles.rowBetween}>
+        <Text style={styles.nextBadgeName}>{badgeName(b.key, t)}</Text>
+        <Text style={styles.nextBadgeLeft}>{moreLine(b, t)}</Text>
+      </View>
+      <GrowBar value={pct(b)} height={8} track={colors.navLine} fill={colors.lime} fillBorder={colors.ink} fillBorderWidth={2} delay={400} />
+    </View>
+  );
+}
+
 function Section({ i, children }: { i: number; children: ReactNode }) {
   const enter = useStgIn(STG_MS, 50 + Math.min(i, 6) * STAGGER);
   return <Animated.View style={enter}>{children}</Animated.View>;
 }
 
 /** the ink hero: level, σερί, πόντοι μήνα, then the name */
-function Hero({ v }: { v: MeView }) {
+function Hero({ v, badges }: { v: MeView; badges: GetBadgesResult | null }) {
   const t = useCopy();
   return (
     <View style={styles.hero}>
@@ -144,12 +236,13 @@ function Hero({ v }: { v: MeView }) {
         </View>
       </View>
       <Name v={v} />
+      <WornPill data={badges} />
     </View>
   );
 }
 
 /** no level yet: what it takes, then the name */
-function NewHero({ v }: { v: MeView }) {
+function NewHero({ v, badges }: { v: MeView; badges: GetBadgesResult | null }) {
   const t = useCopy();
   return (
     <View style={styles.hero}>
@@ -158,6 +251,7 @@ function NewHero({ v }: { v: MeView }) {
         <Text style={styles.heroSub}>{t.me.noLevelSub}</Text>
       </View>
       <Name v={v} />
+      <WornPill data={badges} />
     </View>
   );
 }
@@ -456,6 +550,20 @@ const styles = StyleSheet.create({
   questsRow: { minHeight: 56, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   questsTitle: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.ink },
   questsCount: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  worn: { alignSelf: 'flex-start', minHeight: 26, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.lime, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  wornText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
+  badgesCard: { paddingVertical: 16, paddingLeft: 18, paddingRight: 0, borderRadius: 24, backgroundColor: colors.white, gap: 10, overflow: 'hidden' },
+  badgesHead: { paddingRight: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  seeAllHit: { minHeight: 44, justifyContent: 'center' },
+  seeAll: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  tileRow: { gap: 8, paddingRight: 18 },
+  badgeTile: { width: 136, minHeight: 104, paddingTop: 12, paddingHorizontal: 12, paddingBottom: 10, borderRadius: 18, justifyContent: 'space-between', gap: 8 },
+  badgeTileName: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 25 },
+  badgeTileFoot: { gap: 4 },
+  badgeTileTier: { fontFamily: fonts.bodyBold, fontSize: 12 },
+  nextBadge: { paddingRight: 18, gap: 6 },
+  nextBadgeName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  nextBadgeLeft: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft },
   card: { padding: 16, borderRadius: 22, backgroundColor: colors.white, gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
