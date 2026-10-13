@@ -69,6 +69,13 @@ describe('verdict', () => {
     expect(verdict(vote('a', { my_option: 1 }), el)).toBe('Μέτρησε. Από τέτοιες ψήφους βγαίνουν τα level.');
     expect(verdict(vote('o', { family: 'o', my_option: 1 }), el)).toBe('');
   });
+  it('asks on a dynamic card and then says nothing, with «αυτή τη βδομάδα» only on the weekly', () => {
+    expect(verdict(vote('d', { family: 'd' }), el)).toBe('Πάτα ένα.');
+    expect(verdict(vote('d', { family: 'd', my_option: 1 }), el)).toBe('');
+    const weekly = vote('w', { family: 'd' });
+    expect(cardView({ ...weekly, content: { ...weekly.content, week: true } }).week).toBe(true);
+    expect(cardView(vote('a')).week).toBe(false);
+  });
 });
 
 describe('stripView', () => {

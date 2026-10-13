@@ -19,6 +19,8 @@ export interface QuizCardView {
   /** the option names with the players filled in */
   options: string[];
   clues: string[];
+  /** a dynamic card about this week */
+  week: boolean;
   /** 0-based right option, only for a 'q' card */
   right: number | null;
   mine: number | null;
@@ -35,6 +37,7 @@ export function cardView(card: QuizCard): QuizCardView {
     question: noBreak(renderQuizQuestion(card.content.q, players)),
     options: card.content.options.map((o) => noBreak(renderQuizText(o.label, players))),
     clues: card.content.clues ?? [],
+    week: card.content.week === true,
     right: card.family === 'q' ? card.content.right ?? null : null,
     mine: card.my_option === null ? null : card.my_option - 1,
     split: card.my_option !== null && card.split && card.split.length === card.content.options.length ? card.split : null,
@@ -45,7 +48,8 @@ export function cardView(card: QuizCard): QuizCardView {
 export function verdict(card: QuizCard, t: Copy): string {
   const q = t.quiz;
   if (card.my_option === null) return card.family === 'q' ? q.pickWho : card.family === 'o' ? q.pickOpinion : q.pick;
-  if (card.family === 'o') return '';
+  // opinions and dynamic cards have no right answer and no level line (prototype: dyn cards are not scenarios)
+  if (card.family === 'o' || card.family === 'd') return '';
   if (card.family !== 'q') return q.counted;
   const right = card.content.right;
   if (right === undefined || right === null) return '';
