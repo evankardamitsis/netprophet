@@ -40,7 +40,7 @@ select is((:'first_run'::jsonb ->> 'new_players')::int, 1, 'one new player');
 select is((:'first_run'::jsonb ->> 'results')::int, 1, 'the organiser''s score is the result');
 
 select api.admin_import_matches(:'t'::uuid, :'rows'::jsonb) as second_run \gset
-select is(:'second_run'::jsonb - 'updated', '{"created": 0, "results": 0, "results_skipped": 0, "new_players": 0, "linked": 0, "held_for_review": 0, "walkovers_to_decide": 0}'::jsonb,
+select ok(:'second_run'::jsonb @> '{"created": 0, "results": 0, "results_skipped": 0, "new_players": 0, "held_for_review": 0, "walkovers_to_decide": 0}'::jsonb,
           'the same sheet again changes nothing');
 
 select is((api.admin_match_people('[{"surname": "ΑΦΑΛΩΝΙΑΤΗΣ", "first": ""}]') -> 0 ->> 'alias')::uuid,

@@ -28,6 +28,11 @@ function Counts({ c }: { c: IngestCounts }) {
     ['linked', c.linked],
     ['held for review', c.held_for_review],
     ['walkovers to decide', c.walkovers_to_decide],
+    ['moved', c.moved],
+    ['attached to player matches', c.attached],
+    ['score conflicts', c.score_conflicts],
+    ['missing', c.missing],
+    ['cancelled', c.cancelled],
   ];
   return (
     <span>
@@ -260,7 +265,7 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
   return (
     <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ fontSize: 14 }}>
-        <strong>{item.tournament}</strong> · {item.kind === 'people' ? 'unclear people' : 'walkover'} · {row.date} {row.time} · {row.category_raw}
+        <strong>{item.tournament}</strong> · {item.kind === 'people' ? 'unclear people' : item.kind === 'walkover' ? 'walkover' : 'score differs from the players\' result'} · {row.date} {row.time} · {row.category_raw}
       </div>
       <div style={{ fontWeight: 700 }}>
         {sideNames(row.side1)} vs {sideNames(row.side2)}
@@ -281,7 +286,11 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
           ))
         : null}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        {item.kind === 'people' ? (
+        {item.kind === 'score_conflict' ? (
+          <span style={ui.muted}>
+            Sheet: {row.score_raw ?? 'see the sheet'}. The players already settled this match; if the sheet is right, correct it on Moderation, then dismiss.
+          </span>
+        ) : item.kind === 'people' ? (
           <button style={ui.primary} disabled={pending} onClick={save}>
             Save
           </button>

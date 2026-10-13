@@ -52,6 +52,7 @@ export function sheetMatchToRow(m: SheetMatch, opts: RowOptions) {
     tab: m.tab,
     row: opts.row,
     flags: m.flags,
+    score_raw: m.scoreRaw,
     side1: m.players.side1.map(opts.person),
     side2: m.players.side2.map(opts.person),
     result: resultOf(m, opts.walkover),

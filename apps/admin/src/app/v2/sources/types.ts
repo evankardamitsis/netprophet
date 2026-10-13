@@ -11,6 +11,11 @@ export interface IngestCounts {
   linked?: number;
   held_for_review?: number;
   walkovers_to_decide?: number;
+  moved?: number;
+  attached?: number;
+  score_conflicts?: number;
+  missing?: number;
+  cancelled?: number;
 }
 
 export interface DrawCounts {
@@ -60,11 +65,12 @@ export interface ReviewRow {
   discipline: string;
   side1: { raw?: string; surname?: string; first?: string }[];
   side2: { raw?: string; surname?: string; first?: string }[];
+  score_raw?: string;
 }
 
 export interface ReviewItem {
   id: string;
-  kind: 'people' | 'walkover';
+  kind: 'people' | 'walkover' | 'score_conflict';
   tournament_id: string;
   tournament: string;
   match_id: string | null;
