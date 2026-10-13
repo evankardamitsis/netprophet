@@ -709,3 +709,108 @@ export interface MeResult {
   inbox_unseen: number;
   circle_count: number;
 }
+
+/* Tournaments page (api.get_tournaments, api.get_tournament): «Τα τουρνουά σου» */
+
+export type TournamentState = 'ongoing' | 'upcoming' | 'done';
+
+/** One match as the page shows it (core.tournament_match_json) */
+export interface TournamentMatch {
+  match_id: string;
+  starts_at: string | null;
+  format: 'singles' | 'doubles' | 'mixed';
+  status: string;
+  /** the category, «Μ 40+» */
+  level: string | null;
+  /** MS, WS, MD, WD, XD */
+  discipline: string | null;
+  round: string | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
+  winner_side: Side | null;
+  sets: SetScore[] | null;
+  retired: boolean | null;
+  walkover: boolean | null;
+}
+
+export interface TournamentItem {
+  id: string;
+  name: string;
+  venue: string | null;
+  area_id: string | null;
+  surface: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  entry_deadline: string | null;
+  level_min: number | null;
+  level_max: number | null;
+  state: TournamentState;
+  /** number of draws (brackets) */
+  draws: number;
+  matches: number;
+  /** matches today */
+  today: number;
+  in_it: boolean;
+}
+
+/** api.get_tournaments. `mine` is null unless you have Pro (and a claimed player). */
+export interface GetTournamentsResult {
+  pro: boolean;
+  items: TournamentItem[];
+  mine: (TournamentMatch & { tournament_id: string; tournament: string })[] | null;
+}
+
+export interface DrawEntrantRow {
+  pos: number;
+  raw: string;
+  seed: number | null;
+  bye: boolean;
+  players: { raw: string; player_id: string | null }[];
+}
+
+export interface DrawMatchRow {
+  round: number;
+  slot: number;
+  side1: string | null;
+  side2: string | null;
+  winner: 1 | 2 | null;
+  bye: boolean;
+  scoreRaw: string;
+  walkover: boolean;
+  retired: boolean;
+  /** «ΔΕΥ 18.30» as written by the organiser */
+  when: string;
+  /** the round's last day, «2026-10-14» */
+  deadline: string | null;
+}
+
+export interface TournamentDraw {
+  /** the sheet's tab, «Μ 40+», «MD MASTER» */
+  tab: string;
+  title: string;
+  discipline: string;
+  level: string;
+  format: 'knockout' | 'round_robin';
+  size: number;
+  updated_at: string;
+  entrants: DrawEntrantRow[];
+  rounds: DrawMatchRow[][];
+}
+
+/** api.get_tournament */
+export interface GetTournamentResult {
+  id: string;
+  name: string;
+  venue: string | null;
+  area_id: string | null;
+  surface: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  entry_deadline: string | null;
+  state: TournamentState;
+  /** your player id, when you have claimed one */
+  me: string | null;
+  draws: TournamentDraw[];
+  /** raw names in the draws that belong to hidden players or minors */
+  masked: string[];
+  days: { date: string; matches: TournamentMatch[] }[];
+}

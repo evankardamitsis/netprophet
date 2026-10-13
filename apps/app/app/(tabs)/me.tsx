@@ -11,9 +11,11 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useTournaments, useWinLoss } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
+import { openCount } from '../../src/lib/tournaments';
+import { fmt } from '../../src/lib/votes';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
@@ -45,6 +47,7 @@ export default function MeScreen() {
   const badges = useBadges();
   const myTraits = useMyTraits();
   const look = useLook();
+  const tournaments = useTournaments();
   const myLevel = useMyLevel();
   const { seen } = useLookSeen();
   const [questsOpen, setQuestsOpen] = useState(false);
@@ -56,10 +59,11 @@ export default function MeScreen() {
       void badges.refresh();
       void look.refresh();
       void myLevel.refresh();
+      void tournaments.refresh();
       // a vote or a moment may have opened something since last time
       void unlocks.refresh({ afterMoment: true });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh]),
+    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, tournaments.refresh, unlocks.refresh]),
   );
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -94,6 +98,11 @@ export default function MeScreen() {
             {has('frames') || has('backgrounds') ? (
               <Section i={next()}>
                 <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((i) => i.key) ?? []))} />
+              </Section>
+            ) : null}
+            {tournaments.data ? (
+              <Section i={next()}>
+                <TournamentsRow count={openCount(tournaments.data.items)} />
               </Section>
             ) : null}
             <Section i={next()}>
@@ -261,6 +270,20 @@ function LookRow({ isNew }: { isNew: boolean }) {
           ) : null}
           <Text style={styles.lookMark}>›</Text>
         </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** «Τα τουρνουά σου  3 ›» (prototype: a white row, the count in blue) */
+function TournamentsRow({ count }: { count: number }) {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.questsRow, press.style]}>
+        <Text style={styles.questsTitle}>{t.tournaments.title}</Text>
+        <Text style={styles.questsCount}>{fmt(t.tournaments.meCount, { count })}</Text>
       </Animated.View>
     </Pressable>
   );

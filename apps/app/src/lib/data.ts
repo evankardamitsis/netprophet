@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -11,6 +11,7 @@ import { mockQuests } from '../mock/quests';
 import { mockAnswer, mockQuiz } from '../mock/quiz';
 import { withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
+import { mockTournament, mockTournaments } from '../mock/tournaments';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
@@ -1416,4 +1417,78 @@ export function useOnboardingApi() {
     }),
     [api, t],
   );
+}
+
+export interface TournamentsState {
+  data: GetTournamentsResult | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** «Τα τουρνουά σου»: the tournaments on, coming and just finished, and (Pro) my next matches in them. The guest gets a sample. */
+export function useTournaments(): TournamentsState {
+  const api = useApi();
+  const [data, setData] = useState<GetTournamentsResult | null>(api ? null : mockTournaments(mockPro.pro));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setData(mockTournaments(mockPro.pro));
+      return;
+    }
+    setLoading(true);
+    try {
+      setData(await api.getTournaments());
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { data, loading, error, refresh };
+}
+
+export interface TournamentState {
+  data: GetTournamentResult | null;
+  loading: boolean;
+  error: boolean;
+  notFound: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** One tournament with its draws and its schedule by day. */
+export function useTournament(id: string): TournamentState {
+  const api = useApi();
+  const [data, setData] = useState<GetTournamentResult | null>(api ? null : mockTournament(id));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+  const [notFound, setNotFound] = useState(!api && mockTournament(id) === null);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      const d = mockTournament(id);
+      setData(d);
+      setNotFound(d === null);
+      return;
+    }
+    setLoading(true);
+    try {
+      setData(await api.getTournament(id));
+      setError(false);
+      setNotFound(false);
+    } catch (e) {
+      if (e instanceof RpcError && (e.code === 'not_found' || e.sqlState === 'P0002')) setNotFound(true);
+      else setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, id]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { data, loading, error, notFound, refresh };
 }

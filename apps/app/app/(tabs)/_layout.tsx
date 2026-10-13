@@ -32,6 +32,8 @@ export default function TabsLayout() {
             <Tabs.Screen name="me" options={{ title: t.tabs.me, href: null }} />
             <Tabs.Screen name="badges" options={{ title: t.badges.title, href: null }} />
             <Tabs.Screen name="look" options={{ title: t.look.title, href: null }} />
+            <Tabs.Screen name="tournaments" options={{ title: t.tournaments.title, href: null }} />
+            <Tabs.Screen name="tournament/[id]" options={{ title: t.tournaments.title, href: null }} />
             {/* a player's profile keeps the header and tab bar, with no tab highlighted (prototype) */}
             <Tabs.Screen name="player/[id]" options={{ title: t.players.title, href: null }} />
             <Tabs.Screen name="scout/[id]" options={{ title: t.scout.title, href: null }} />
