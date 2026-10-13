@@ -1,0 +1,1808 @@
+{
+ "suite": "leaderboard",
+ "version": 1,
+ "notes": "fn closeGroup: one league group at the month close. Constants as in leaderboard.ts. Mirrored by core.league_close_group.",
+ "constants": {
+  "groupSize": 20,
+  "promoteTop": 5,
+  "relegateFromPosition": 16,
+  "awardTop": 3
+ },
+ "groups": [
+  {
+   "fn": "closeGroup",
+   "cases": [
+    {
+     "name": "bronze group of 20: top 5 up, nobody down",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 400,
+       "lastPointAt": "2026-10-01T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 390,
+       "lastPointAt": "2026-10-02T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 380,
+       "lastPointAt": "2026-10-03T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 370,
+       "lastPointAt": "2026-10-04T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 360,
+       "lastPointAt": "2026-10-05T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 350,
+       "lastPointAt": "2026-10-06T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u07",
+       "points": 340,
+       "lastPointAt": "2026-10-07T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u08",
+       "points": 330,
+       "lastPointAt": "2026-10-08T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u09",
+       "points": 320,
+       "lastPointAt": "2026-10-09T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u10",
+       "points": 310,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u11",
+       "points": 300,
+       "lastPointAt": "2026-10-11T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u12",
+       "points": 290,
+       "lastPointAt": "2026-10-12T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u13",
+       "points": 280,
+       "lastPointAt": "2026-10-13T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u14",
+       "points": 270,
+       "lastPointAt": "2026-10-14T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u15",
+       "points": 260,
+       "lastPointAt": "2026-10-15T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u16",
+       "points": 250,
+       "lastPointAt": "2026-10-16T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u17",
+       "points": 240,
+       "lastPointAt": "2026-10-17T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u18",
+       "points": 230,
+       "lastPointAt": "2026-10-18T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u19",
+       "points": 220,
+       "lastPointAt": "2026-10-19T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u20",
+       "points": 210,
+       "lastPointAt": "2026-10-20T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u01",
+       "groupId": "bronze-1",
+       "position": 1,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u02",
+       "groupId": "bronze-1",
+       "position": 2,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "bronze-1",
+       "position": 3,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u04",
+       "groupId": "bronze-1",
+       "position": 4,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u05",
+       "groupId": "bronze-1",
+       "position": 5,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u06",
+       "groupId": "bronze-1",
+       "position": 6,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u07",
+       "groupId": "bronze-1",
+       "position": 7,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u08",
+       "groupId": "bronze-1",
+       "position": 8,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u09",
+       "groupId": "bronze-1",
+       "position": 9,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u10",
+       "groupId": "bronze-1",
+       "position": 10,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u11",
+       "groupId": "bronze-1",
+       "position": 11,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u12",
+       "groupId": "bronze-1",
+       "position": 12,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u13",
+       "groupId": "bronze-1",
+       "position": 13,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u14",
+       "groupId": "bronze-1",
+       "position": 14,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u15",
+       "groupId": "bronze-1",
+       "position": 15,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u16",
+       "groupId": "bronze-1",
+       "position": 16,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u17",
+       "groupId": "bronze-1",
+       "position": 17,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u18",
+       "groupId": "bronze-1",
+       "position": 18,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u19",
+       "groupId": "bronze-1",
+       "position": 19,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u20",
+       "groupId": "bronze-1",
+       "position": 20,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "silver group of 20: top 5 up, 16 to 20 down",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 400,
+       "lastPointAt": "2026-10-01T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 390,
+       "lastPointAt": "2026-10-02T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 380,
+       "lastPointAt": "2026-10-03T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 370,
+       "lastPointAt": "2026-10-04T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 360,
+       "lastPointAt": "2026-10-05T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 350,
+       "lastPointAt": "2026-10-06T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u07",
+       "points": 340,
+       "lastPointAt": "2026-10-07T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u08",
+       "points": 330,
+       "lastPointAt": "2026-10-08T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u09",
+       "points": 320,
+       "lastPointAt": "2026-10-09T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u10",
+       "points": 310,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u11",
+       "points": 300,
+       "lastPointAt": "2026-10-11T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u12",
+       "points": 290,
+       "lastPointAt": "2026-10-12T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u13",
+       "points": 280,
+       "lastPointAt": "2026-10-13T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u14",
+       "points": 270,
+       "lastPointAt": "2026-10-14T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u15",
+       "points": 260,
+       "lastPointAt": "2026-10-15T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u16",
+       "points": 250,
+       "lastPointAt": "2026-10-16T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u17",
+       "points": 240,
+       "lastPointAt": "2026-10-17T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u18",
+       "points": 230,
+       "lastPointAt": "2026-10-18T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u19",
+       "points": 220,
+       "lastPointAt": "2026-10-19T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u20",
+       "points": 210,
+       "lastPointAt": "2026-10-20T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u01",
+       "groupId": "silver-1",
+       "position": 1,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u02",
+       "groupId": "silver-1",
+       "position": 2,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "silver-1",
+       "position": 3,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u04",
+       "groupId": "silver-1",
+       "position": 4,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u05",
+       "groupId": "silver-1",
+       "position": 5,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u06",
+       "groupId": "silver-1",
+       "position": 6,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u07",
+       "groupId": "silver-1",
+       "position": 7,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u08",
+       "groupId": "silver-1",
+       "position": 8,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u09",
+       "groupId": "silver-1",
+       "position": 9,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u10",
+       "groupId": "silver-1",
+       "position": 10,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u11",
+       "groupId": "silver-1",
+       "position": 11,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u12",
+       "groupId": "silver-1",
+       "position": 12,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u13",
+       "groupId": "silver-1",
+       "position": 13,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u14",
+       "groupId": "silver-1",
+       "position": 14,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u15",
+       "groupId": "silver-1",
+       "position": 15,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u16",
+       "groupId": "silver-1",
+       "position": 16,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u17",
+       "groupId": "silver-1",
+       "position": 17,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u18",
+       "groupId": "silver-1",
+       "position": 18,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u19",
+       "groupId": "silver-1",
+       "position": 19,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u20",
+       "groupId": "silver-1",
+       "position": 20,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "gold group of 20: nobody up, 16 to 20 down",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 400,
+       "lastPointAt": "2026-10-01T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 390,
+       "lastPointAt": "2026-10-02T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 380,
+       "lastPointAt": "2026-10-03T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 370,
+       "lastPointAt": "2026-10-04T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 360,
+       "lastPointAt": "2026-10-05T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 350,
+       "lastPointAt": "2026-10-06T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u07",
+       "points": 340,
+       "lastPointAt": "2026-10-07T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u08",
+       "points": 330,
+       "lastPointAt": "2026-10-08T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u09",
+       "points": 320,
+       "lastPointAt": "2026-10-09T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u10",
+       "points": 310,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u11",
+       "points": 300,
+       "lastPointAt": "2026-10-11T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u12",
+       "points": 290,
+       "lastPointAt": "2026-10-12T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u13",
+       "points": 280,
+       "lastPointAt": "2026-10-13T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u14",
+       "points": 270,
+       "lastPointAt": "2026-10-14T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u15",
+       "points": 260,
+       "lastPointAt": "2026-10-15T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u16",
+       "points": 250,
+       "lastPointAt": "2026-10-16T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u17",
+       "points": 240,
+       "lastPointAt": "2026-10-17T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u18",
+       "points": 230,
+       "lastPointAt": "2026-10-18T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u19",
+       "points": 220,
+       "lastPointAt": "2026-10-19T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      },
+      {
+       "userId": "u20",
+       "points": 210,
+       "lastPointAt": "2026-10-20T10:00:00Z",
+       "league": "gold",
+       "groupId": "gold-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u01",
+       "groupId": "gold-1",
+       "position": 1,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u02",
+       "groupId": "gold-1",
+       "position": 2,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "gold-1",
+       "position": 3,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u04",
+       "groupId": "gold-1",
+       "position": 4,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u05",
+       "groupId": "gold-1",
+       "position": 5,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u06",
+       "groupId": "gold-1",
+       "position": 6,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u07",
+       "groupId": "gold-1",
+       "position": 7,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u08",
+       "groupId": "gold-1",
+       "position": 8,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u09",
+       "groupId": "gold-1",
+       "position": 9,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u10",
+       "groupId": "gold-1",
+       "position": 10,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u11",
+       "groupId": "gold-1",
+       "position": 11,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u12",
+       "groupId": "gold-1",
+       "position": 12,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u13",
+       "groupId": "gold-1",
+       "position": 13,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u14",
+       "groupId": "gold-1",
+       "position": 14,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u15",
+       "groupId": "gold-1",
+       "position": 15,
+       "league": "gold",
+       "movement": "stay",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u16",
+       "groupId": "gold-1",
+       "position": 16,
+       "league": "gold",
+       "movement": "relegate",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u17",
+       "groupId": "gold-1",
+       "position": 17,
+       "league": "gold",
+       "movement": "relegate",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u18",
+       "groupId": "gold-1",
+       "position": 18,
+       "league": "gold",
+       "movement": "relegate",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u19",
+       "groupId": "gold-1",
+       "position": 19,
+       "league": "gold",
+       "movement": "relegate",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u20",
+       "groupId": "gold-1",
+       "position": 20,
+       "league": "gold",
+       "movement": "relegate",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "ties: the earlier last point wins",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 100,
+       "lastPointAt": "2026-10-20T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 100,
+       "lastPointAt": "2026-10-19T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 100,
+       "lastPointAt": "2026-10-18T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 100,
+       "lastPointAt": "2026-10-17T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 100,
+       "lastPointAt": "2026-10-16T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 100,
+       "lastPointAt": "2026-10-15T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u06",
+       "groupId": "silver-1",
+       "position": 1,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u05",
+       "groupId": "silver-1",
+       "position": 2,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u04",
+       "groupId": "silver-1",
+       "position": 3,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "silver-1",
+       "position": 4,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u02",
+       "groupId": "silver-1",
+       "position": 5,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u01",
+       "groupId": "silver-1",
+       "position": 6,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "ties with the same time: user id decides",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 50,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 50,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 50,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 50,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u01",
+       "groupId": "silver-1",
+       "position": 1,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u02",
+       "groupId": "silver-1",
+       "position": 2,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "silver-1",
+       "position": 3,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u04",
+       "groupId": "silver-1",
+       "position": 4,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "zero points: no promotion, no award",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 30,
+       "lastPointAt": "2026-10-01T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 29,
+       "lastPointAt": "2026-10-02T10:00:00Z",
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 0,
+       "lastPointAt": null,
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 0,
+       "lastPointAt": null,
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 0,
+       "lastPointAt": null,
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 0,
+       "lastPointAt": null,
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      },
+      {
+       "userId": "u07",
+       "points": 0,
+       "lastPointAt": null,
+       "league": "bronze",
+       "groupId": "bronze-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u01",
+       "groupId": "bronze-1",
+       "position": 1,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u02",
+       "groupId": "bronze-1",
+       "position": 2,
+       "league": "bronze",
+       "movement": "promote",
+       "nextLeague": "silver",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "bronze-1",
+       "position": 3,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u04",
+       "groupId": "bronze-1",
+       "position": 4,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u05",
+       "groupId": "bronze-1",
+       "position": 5,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u06",
+       "groupId": "bronze-1",
+       "position": 6,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u07",
+       "groupId": "bronze-1",
+       "position": 7,
+       "league": "bronze",
+       "movement": "stay",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "small silver group of 7: nobody reaches 16",
+     "input": [
+      {
+       "userId": "u01",
+       "points": 70,
+       "lastPointAt": "2026-10-01T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 69,
+       "lastPointAt": "2026-10-02T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 68,
+       "lastPointAt": "2026-10-03T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 67,
+       "lastPointAt": "2026-10-04T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 66,
+       "lastPointAt": "2026-10-05T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 65,
+       "lastPointAt": "2026-10-06T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u07",
+       "points": 64,
+       "lastPointAt": "2026-10-07T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u01",
+       "groupId": "silver-1",
+       "position": 1,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u02",
+       "groupId": "silver-1",
+       "position": 2,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u03",
+       "groupId": "silver-1",
+       "position": 3,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u04",
+       "groupId": "silver-1",
+       "position": 4,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u05",
+       "groupId": "silver-1",
+       "position": 5,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u06",
+       "groupId": "silver-1",
+       "position": 6,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u07",
+       "groupId": "silver-1",
+       "position": 7,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      }
+     ]
+    },
+    {
+     "name": "scrambled input order",
+     "input": [
+      {
+       "userId": "u18",
+       "points": 29,
+       "lastPointAt": "2026-10-18T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u17",
+       "points": 192,
+       "lastPointAt": "2026-10-17T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u16",
+       "points": 155,
+       "lastPointAt": "2026-10-16T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u15",
+       "points": 118,
+       "lastPointAt": "2026-10-15T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u14",
+       "points": 81,
+       "lastPointAt": "2026-10-14T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u13",
+       "points": 44,
+       "lastPointAt": "2026-10-13T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u12",
+       "points": 7,
+       "lastPointAt": "2026-10-12T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u11",
+       "points": 170,
+       "lastPointAt": "2026-10-11T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u10",
+       "points": 133,
+       "lastPointAt": "2026-10-10T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u09",
+       "points": 96,
+       "lastPointAt": "2026-10-09T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u08",
+       "points": 59,
+       "lastPointAt": "2026-10-08T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u07",
+       "points": 22,
+       "lastPointAt": "2026-10-07T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u06",
+       "points": 185,
+       "lastPointAt": "2026-10-06T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u05",
+       "points": 148,
+       "lastPointAt": "2026-10-05T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u04",
+       "points": 111,
+       "lastPointAt": "2026-10-04T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u03",
+       "points": 74,
+       "lastPointAt": "2026-10-03T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u02",
+       "points": 37,
+       "lastPointAt": "2026-10-02T10:00:00Z",
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      },
+      {
+       "userId": "u01",
+       "points": 0,
+       "lastPointAt": null,
+       "league": "silver",
+       "groupId": "silver-1",
+       "area": null
+      }
+     ],
+     "expected": [
+      {
+       "userId": "u17",
+       "groupId": "silver-1",
+       "position": 1,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u06",
+       "groupId": "silver-1",
+       "position": 2,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u11",
+       "groupId": "silver-1",
+       "position": 3,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": true
+      },
+      {
+       "userId": "u16",
+       "groupId": "silver-1",
+       "position": 4,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u05",
+       "groupId": "silver-1",
+       "position": 5,
+       "league": "silver",
+       "movement": "promote",
+       "nextLeague": "gold",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u10",
+       "groupId": "silver-1",
+       "position": 6,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u15",
+       "groupId": "silver-1",
+       "position": 7,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u04",
+       "groupId": "silver-1",
+       "position": 8,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u09",
+       "groupId": "silver-1",
+       "position": 9,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u14",
+       "groupId": "silver-1",
+       "position": 10,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u03",
+       "groupId": "silver-1",
+       "position": 11,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u08",
+       "groupId": "silver-1",
+       "position": 12,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u13",
+       "groupId": "silver-1",
+       "position": 13,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u02",
+       "groupId": "silver-1",
+       "position": 14,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u18",
+       "groupId": "silver-1",
+       "position": 15,
+       "league": "silver",
+       "movement": "stay",
+       "nextLeague": "silver",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u07",
+       "groupId": "silver-1",
+       "position": 16,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u12",
+       "groupId": "silver-1",
+       "position": 17,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      },
+      {
+       "userId": "u01",
+       "groupId": "silver-1",
+       "position": 18,
+       "league": "silver",
+       "movement": "relegate",
+       "nextLeague": "bronze",
+       "topThreeAward": false
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

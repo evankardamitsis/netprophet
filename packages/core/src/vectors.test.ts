@@ -6,6 +6,7 @@ import {
   applyOutcome,
   levelDirection,
   tierFor,
+  closeGroup,
   recomputeLevels,
   applyQuestEvent,
   buyFreeze,
@@ -42,6 +43,7 @@ import voteVectors from '../test-vectors/votes.json';
 import resolutionVectors from '../test-vectors/resolution.json';
 import levelVectors from '../test-vectors/levels.json';
 import badgeVectors from '../test-vectors/badges.json';
+import leaderboardVectors from '../test-vectors/leaderboard.json';
 
 interface Case {
   name: string;
@@ -206,4 +208,8 @@ run(levelVectors, {
 run(badgeVectors, {
   tierFor: (i: { thresholds: [number, number, number]; counter: number }) =>
     tierFor({ id: 'x', unit: 'x', thresholds: i.thresholds, hasCard: false }, i.counter),
+});
+
+run(leaderboardVectors, {
+  closeGroup: (i) => closeGroup(i),
 });

@@ -37,7 +37,7 @@ select tests.as_anon();
 select throws_ok($$select api.get_ladder('friends', 20)$$, '42501', null, 'anonymous callers cannot see the Κατάταξη');
 
 select tests.login(:'u'::uuid);
-select throws_ok($$select api.get_ladder('league', 20)$$, '22023', null, 'leagues are not a scope yet');
+select throws_ok($$select api.get_ladder('area', 20)$$, '22023', null, 'only league, friends and all');
 
 -- friends: a 50, u 30, b 0
 select is(jsonb_array_length(api.get_ladder('friends', 20) -> 'rows'), 3, 'friends: you and the people you follow');
