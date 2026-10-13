@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
+import { QuizStrip } from '../../src/components/QuizStrip';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useBadges, useConfirmations, useFeed, useQuests, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
+import { useBadges, useConfirmations, useFeed, useQuests, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
@@ -37,6 +39,14 @@ export default function VoteScreen() {
   const unlocksNow = useRef(unlocks);
   unlocksNow.current = unlocks;
   const quests = useQuests();
+  const quiz = useQuiz();
+  // «Οι 6 της ημέρας»: read again whenever the feed comes back into view (after playing, or a new day)
+  const quizRefresh = quiz.refresh;
+  useFocusEffect(
+    useCallback(() => {
+      void quizRefresh();
+    }, [quizRefresh]),
+  );
   const questsNow = useRef(quests.quests);
   questsNow.current = quests.quests;
   const badges = useBadges();
@@ -140,6 +150,7 @@ export default function VoteScreen() {
             <Text style={styles.title}>{t.feed.title}</Text>
             <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
           </Animated.View>
+          {unlocks.has('daily_quiz') && quiz.quiz && quiz.quiz.cards.length > 0 ? <QuizStrip quiz={quiz.quiz} onPress={() => router.push('/quiz')} /> : null}
           {current ? (
             <ResultCard
               key={current.id}

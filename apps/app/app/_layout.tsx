@@ -83,6 +83,7 @@ function Routes() {
             name="add-match"
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
+          <Stack.Screen name="quiz" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen
             name="pro"
             options={{ presentation: "modal", animation: "slide_from_bottom" }}

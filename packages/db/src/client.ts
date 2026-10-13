@@ -8,6 +8,8 @@ import type {
   GetFeedResult,
   GetBadgesResult,
   GetQuestsResult,
+  GetQuizResult,
+  AnswerCardResult,
   KudoOption,
   LinkKudo,
   LogMatchInput,
@@ -90,6 +92,10 @@ export function rpc(client: NetprophetClient) {
       call<CastVoteResult>(client, 'cast_vote', { p_match_id: matchId, p_side: side, p_client_event_id: clientEventId }),
     getFeed: (limit = 20) => call<GetFeedResult>(client, 'get_feed', { p_limit: limit }),
     getQuests: () => call<GetQuestsResult>(client, 'get_quests', {}),
+    getQuiz: () => call<GetQuizResult>(client, 'get_quiz', {}),
+    /** option is 1-based */
+    answerCard: (cardId: string, option: number, clientEventId?: string) =>
+      call<AnswerCardResult>(client, 'answer_card', { p_card: cardId, p_option: option, p_client_event_id: clientEventId }),
     getBadges: () => call<GetBadgesResult>(client, 'get_badges', {}),
     /** wear a badge on the card, or null to take it off */
     wearBadge: (key: string | null) => call<{ worn: string | null }>(client, 'wear_badge', { p_key: key }),

@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetQuestsResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
 import { mockQuests } from '../mock/quests';
+import { mockAnswer, mockQuiz } from '../mock/quiz';
+import { withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
@@ -219,6 +221,95 @@ export function useQuests(): { quests: GetQuestsResult | null; refresh: () => Pr
     void refresh();
   }, [refresh]);
   return { quests, refresh };
+}
+
+export type QuizErrorKind = 'failed' | 'expired';
+
+interface QuizStore {
+  quiz: GetQuizResult | null;
+  loading: boolean;
+  error: boolean;
+}
+
+/** one copy of today's cards for the feed strip and the game screen (the game is its own route) */
+let quizStore: QuizStore = { quiz: null, loading: false, error: false };
+let quizMode: 'live' | 'mock' | null = null;
+let quizFlight: Promise<GetQuizResult | null> | null = null;
+const quizListeners = new Set<() => void>();
+const quizSubscribe = (l: () => void) => {
+  quizListeners.add(l);
+  return () => quizListeners.delete(l);
+};
+function setQuizStore(patch: Partial<QuizStore>) {
+  quizStore = { ...quizStore, ...patch };
+  quizListeners.forEach((l) => l());
+}
+
+export interface QuizState {
+  quiz: GetQuizResult | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<GetQuizResult | null>;
+  /** optimistic: the pick shows at once; on an error it is taken back and `onError` says why. Null when it failed. */
+  answer: (cardId: string, option: number) => Promise<AnswerCardResult | null>;
+}
+
+/** «Οι 6 της ημέρας» (api.get_quiz / api.answer_card). Mock mode and the dev guest play the prototype's day-0 cards. */
+export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
+  const api = useApi();
+  const store = useSyncExternalStore(quizSubscribe, () => quizStore, () => quizStore);
+  const onErr = useRef(onError);
+  onErr.current = onError;
+
+  const refresh = useCallback(async (): Promise<GetQuizResult | null> => {
+    const mode = api ? 'live' : 'mock';
+    if (quizMode !== mode) {
+      quizMode = mode;
+      setQuizStore({ quiz: api ? null : mockQuiz(), loading: false, error: false });
+    }
+    if (!api) return mockQuiz();
+    // the strip and the game screen can both ask at once: one request
+    quizFlight ??= (async () => {
+      setQuizStore({ loading: true });
+      try {
+        const quiz = await api.getQuiz();
+        setQuizStore({ quiz, loading: false, error: false });
+        return quiz;
+      } catch {
+        setQuizStore({ loading: false, error: true });
+        return null;
+      } finally {
+        quizFlight = null;
+      }
+    })();
+    return quizFlight;
+  }, [api]);
+
+  useEffect(() => {
+    if (quizMode !== (api ? 'live' : 'mock')) void refresh();
+  }, [api, refresh]);
+
+  const answer = useCallback(
+    async (cardId: string, option: number): Promise<AnswerCardResult | null> => {
+      const before = quizStore.quiz;
+      if (!before) return null;
+      setQuizStore({ quiz: withAnswer(before, cardId, option) });
+      try {
+        const res = api ? await api.answerCard(cardId, option) : mockAnswer(cardId, option);
+        if (quizStore.quiz) setQuizStore({ quiz: withAnswer(quizStore.quiz, cardId, option, res) });
+        return res;
+      } catch (err) {
+        if (quizStore.quiz) setQuizStore({ quiz: withoutAnswer(quizStore.quiz, cardId) });
+        const code = err instanceof RpcError ? err.code : '';
+        if (code === 'already_answered' || code === 'card_expired') void refresh();
+        onErr.current?.(code === 'card_expired' ? 'expired' : 'failed');
+        return null;
+      }
+    },
+    [api, refresh],
+  );
+
+  return { quiz: store.quiz, loading: store.loading, error: store.error, refresh, answer };
 }
 
 /**

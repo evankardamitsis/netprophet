@@ -179,10 +179,10 @@
           ]
         },
         {
-          "name": "pro 12-card set pays the same +30",
+          "name": "pro: six of twelve are enough for the +30",
           "input": {
-            "answered": 12,
-            "required": 12,
+            "answered": 6,
+            "required": 6,
             "alreadyAwardedForDay": false
           },
           "expected": [

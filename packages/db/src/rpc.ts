@@ -136,6 +136,59 @@ export interface GetQuestsResult {
   weekly: QuestRow[];
 }
 
+/** «Οι 6 της ημέρας»: a player named on a card; the text tokens {p1}, {p1.o}, {p1.ton}... refer to players[0] */
+export interface QuizPlayer {
+  id: string;
+  first_name: string;
+  surname: string;
+  gender: 'm' | 'f' | null;
+}
+
+/** s Σενάριο, c Διάλεξε έναν, q Ποιος είναι;, o Άποψη */
+export type QuizFamily = 's' | 'c' | 'q' | 'o';
+
+export interface QuizCard {
+  id: string;
+  position: number;
+  family: QuizFamily;
+  content: {
+    tag: string;
+    q: string;
+    options: { label: string }[];
+    /** only on a 'q' card */
+    clues?: string[];
+    /** 0-based index of the right option; only on a 'q' card */
+    right?: number;
+    players: QuizPlayer[];
+  };
+  /** 1-based, null before the player answers */
+  my_option: number | null;
+  /** percent per option; null while fewer than 5 answered or before the player answers */
+  split: number[] | null;
+}
+
+/** api.get_quiz: today's set, built on first open after 09:00 Athens */
+export interface GetQuizResult {
+  quiz_day: string;
+  required: 6;
+  pro: boolean;
+  awarded: boolean;
+  next_at: string;
+  answered: number;
+  cards: QuizCard[];
+}
+
+/** api.answer_card; errors: already_answered (23505), invalid_option (22023), card_expired (55000) */
+export interface AnswerCardResult {
+  option: number;
+  /** 0-based, only for a 'q' card */
+  right: number | null;
+  split: number[] | null;
+  answered: number;
+  /** 30 on the sixth answer of the day, else 0 */
+  awarded: number;
+}
+
 /** one of the 16 badges: the counter, its tier (0 locked, 3 gold), the three thresholds, and whether it can be worn on the card */
 export interface BadgeRow {
   key: string;
