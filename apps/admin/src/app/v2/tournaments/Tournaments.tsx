@@ -472,7 +472,9 @@ function NeedsYou({ items, onChanged, notify }: { items: ReviewItem[]; onChanged
 function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged: () => Promise<void>; notify: (text: string) => void }) {
   const r = item.payload.row;
   const unclear = item.payload.unclear ?? [];
-  const [choice, setChoice] = useState<Record<string, string>>(() => Object.fromEntries(unclear.map((u) => [u.raw, u.candidates?.[0]?.id ?? NEW])));
+  // nothing chosen at first: Save waits until every name on the card has an answer (founder, 13 Oct)
+  const [choice, setChoice] = useState<Record<string, string>>({});
+  const allChosen = unclear.every((u) => !!choice[u.raw]);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [merging, setMerging] = useState<{ raw: string; keep: string; drop: string } | null>(null);
@@ -573,9 +575,10 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
             </fieldset>
           ))}
           <div style={row}>
-            <button style={ui.secondary} disabled={pending} onClick={savePeople}>
+            <button style={ui.secondary} disabled={pending || !allChosen} onClick={savePeople}>
               {pending ? 'Saving…' : 'Save'}
             </button>
+            {!allChosen ? <span style={ui.muted}>Choose an answer{unclear.length > 1 ? ' for each name' : ''} first.</span> : null}
             <Skip pending={pending} send={send} />
           </div>
         </>
