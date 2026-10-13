@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ skipped: true, athensHour: hour });
   }
 
-  const key = process.env.V2_SUPABASE_SERVICE_ROLE_KEY;
+  const key = process.env.V2_SUPABASE_SECRET_KEY;
   if (!V2_URL || !key) return NextResponse.json({ error: 'v2 service client is not configured' }, { status: 500 });
   const client = createClient(V2_URL, key, { db: { schema: 'api' }, auth: { persistSession: false, autoRefreshToken: false } });
   const rpc = client.rpc.bind(client) as unknown as Rpc;
