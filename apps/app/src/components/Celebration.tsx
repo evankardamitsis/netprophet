@@ -211,7 +211,8 @@ const styles = StyleSheet.create({
   title: { fontFamily: fonts.displayHeavy, fontSize: 54, lineHeight: 54, color: colors.paper, textAlign: 'center' },
   dots: { flexDirection: 'row', gap: 10, marginTop: 14 },
   dot: { width: 22, height: 22, borderRadius: 999, borderWidth: 3, borderColor: colors.lime },
-  dotFill: { flex: 1, borderRadius: 999, backgroundColor: colors.lime },
+  // covers the ring too, so no seam shows where fill and ring meet
+  dotFill: { position: 'absolute', top: -3, left: -3, right: -3, bottom: -3, borderRadius: 999, backgroundColor: colors.lime },
   bottom: { alignItems: 'center', gap: 12, marginTop: 44 },
   reward: { minHeight: 24, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime, textAlign: 'center' },
   cta: { marginTop: 18, minHeight: 52, paddingHorizontal: 44, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
