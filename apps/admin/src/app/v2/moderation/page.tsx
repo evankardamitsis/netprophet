@@ -27,7 +27,7 @@ export default async function ModerationPage() {
       </main>
     );
   }
-  const rpc = client.rpc as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
+  const rpc = client.rpc.bind(client) as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
   const [queue, tournaments] = await Promise.all([rpc('admin_moderation', {}), rpc('admin_tournaments', {})]);
   return (
     <>

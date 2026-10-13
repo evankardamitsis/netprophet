@@ -28,7 +28,7 @@ export default async function ImportDesk() {
       </main>
     );
   }
-  const rpc = client.rpc as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
+  const rpc = client.rpc.bind(client) as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
   const [{ data: tournaments }, { data: areas }] = await Promise.all([
     rpc('admin_tournaments', {}),
     client.from('areas').select('id, name_el').order('sort'),
