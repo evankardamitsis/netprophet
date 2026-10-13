@@ -472,6 +472,10 @@ export type Database = {
         Args: { p_token: string };
         Returns: Json;
       };
+      equip_item: {
+        Args: { p_category: string; p_key: string };
+        Returns: Json;
+      };
       find_matching_players: {
         Args: { p_name: string; p_surname: string };
         Returns: { id: string; first_name: string; surname: string; area_id: string; match_score: number }[];
@@ -512,6 +516,10 @@ export type Database = {
         Args: { p_scope?: string; p_limit?: number };
         Returns: Json;
       };
+      get_look: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       get_match_link: {
         Args: { p_token: string };
         Returns: Json;
@@ -525,6 +533,10 @@ export type Database = {
         Returns: Json;
       };
       get_my_kudos: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_my_level: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };

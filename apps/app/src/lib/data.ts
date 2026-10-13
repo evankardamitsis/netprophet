@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
+import { mockLook } from '../mock/look';
+import { withWorn } from './look';
 import { mockQuests } from '../mock/quests';
 import { mockAnswer, mockQuiz } from '../mock/quiz';
 import { withAnswer, withoutAnswer } from './quiz';
@@ -357,6 +359,89 @@ export function useBadges(): { badges: GetBadgesResult | null; refresh: () => Pr
     [api, badges, t],
   );
   return { badges, refresh, wear };
+}
+
+/* Εμφάνιση: what the guest owns and wears lives here for the session (mock mode and the dev guest) */
+let mockLookState: GetLookResult = mockLook();
+
+export interface LookState {
+  look: GetLookResult | null;
+  refresh: () => Promise<void>;
+  /** wear an item (null: take the frame or background off); on screen at once, undone if the server refuses. True when it stuck. */
+  equip: (category: LookCategory, key: string | null) => Promise<boolean>;
+}
+
+export function useLook(): LookState {
+  const api = useApi();
+  const [look, setLook] = useState<GetLookResult | null>(api ? null : mockLookState);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setLook(mockLookState);
+      return;
+    }
+    try {
+      setLook(await api.getLook());
+    } catch {
+      // keep what is on screen
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  const equip = useCallback(
+    async (category: LookCategory, key: string | null) => {
+      const prev = look;
+      if (!prev) return false;
+      setLook(withWorn(prev, category, key));
+      if (!api) {
+        mockLookState = withWorn(mockLookState, category, key);
+        return true;
+      }
+      try {
+        setLook(await api.equipItem(category, key));
+        return true;
+      } catch {
+        setLook(prev);
+        return false;
+      }
+    },
+    [api, look],
+  );
+  return { look, refresh, equip };
+}
+
+/** the back of the Εγώ card (get_my_level); the guest gets a sample, with the Pro numbers only if the mock has Pro */
+export function useMyLevel(): { level: GetMyLevelResult | null; refresh: () => Promise<void> } {
+  const api = useApi();
+  const [level, setLevel] = useState<GetMyLevelResult | null>(null);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      const pro = mockPro.pro;
+      setLevel({
+        claimed: true,
+        pro,
+        status: 'active',
+        tier: 4,
+        direction: 'up',
+        matches: 7,
+        votes: 23,
+        value: pro ? 4.23 : null,
+        week_ago: pro ? 4.1 : null,
+        to_next: pro ? 0.27 : null,
+        next_tier: 4.5,
+      });
+      return;
+    }
+    try {
+      setLevel(await api.getMyLevel());
+    } catch {
+      setLevel(null);
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { level, refresh };
 }
 
 export interface MeSummary {
