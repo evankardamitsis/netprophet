@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 /** the v2 admin's desks */
-type Desk = 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names';
+type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names';
 
 export function Nav({ here }: { here: Desk }) {
   const item = (key: Desk, label: string) => (
@@ -12,9 +12,8 @@ export function Nav({ here }: { here: Desk }) {
   return (
     <span style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
       <strong>NetProphet v2</strong>
+      {item('tournaments', 'Tournaments')}
       {item('results', 'Results')}
-      {item('import', 'Import')}
-      {item('sources', 'Sources')}
       {item('moderation', 'Moderation')}
       {item('players', 'Players')}
       {item('names', 'Names')}
