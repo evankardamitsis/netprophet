@@ -98,8 +98,10 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   against Athens time). Sheets are read with the Google Sheets API as NetProphet's service account
   (`GOOGLE_SERVICE_ACCOUNT_JSON`; the organiser or the founder shares each sheet with its email, as with a person),
   or, for sheets shared with anyone who has the link, an API key (`GOOGLE_SHEETS_API_KEY`).
-- Needs in Vercel (admin project, `netprophet-admin`): `GOOGLE_SERVICE_ACCOUNT_JSON`, `V2_SUPABASE_SERVICE_ROLE_KEY`
-  (from the v2 Supabase project), `CRON_SECRET`.
+- Needs in Vercel (admin project, `netprophet-admin`): `GOOGLE_SERVICE_ACCOUNT_JSON`, `V2_SUPABASE_SECRET_KEY`
+  (the v2 Supabase project's secret key, `sb_secret_...`, not the legacy service_role JWT), `CRON_SECRET`.
+- Service account: `netprophet-sheets@netprophet-466714.iam.gserviceaccount.com` (Google Cloud project NetProphet,
+  Sheets API on, no roles). Organisers share their sheets with it as Viewer.
 - Not yet: moved and cancelled matches, dedupe against player-logged matches, the 08:30 email, the records sheet,
   other platforms.
 
