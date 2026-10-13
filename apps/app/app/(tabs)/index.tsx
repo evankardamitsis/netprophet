@@ -11,7 +11,7 @@ import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useConfirmations, useFeed, useQuests, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
+import { useBadges, useConfirmations, useFeed, useQuests, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
 import { nextGroup } from '../../src/lib/celebrate';
 import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
@@ -33,20 +33,25 @@ export default function VoteScreen() {
   const quests = useQuests();
   const questsNow = useRef(quests.quests);
   questsNow.current = quests.quests;
-  // after a vote: the slim bar for a quest that moved, or a toast for one that finished (never both)
+  const badges = useBadges();
+  const badgesNow = useRef(badges.badges);
+  badgesNow.current = badges.badges;
+  // after a vote: a toast for a quest that finished, else the slim bar for a quest that moved, else for a badge one
+  // vote short of its next tier (never more than one)
   const [questNote, setQuestNote] = useState<(NonNullable<QuestFeedback> & { n: number }) | null>(null);
   const onVote = useCallback(
     async (matchId: string, side: Side) => {
       const before = questsNow.current;
+      const badgesBefore = badgesNow.current;
       const pct = await vote(matchId, side);
-      void quests.refresh().then((after) => {
-        const f = after ? feedbackAfterVote(before, after, t) : null;
+      void Promise.all([quests.refresh(), badges.refresh()]).then(([after, badgesAfter]) => {
+        const f = after ? feedbackAfterVote(before, after, t, { before: badgesBefore, after: badgesAfter }) : null;
         if (f) setQuestNote({ ...f, n: Date.now() });
       });
       return pct;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [vote, quests.refresh, t],
+    [vote, quests.refresh, badges.refresh, t],
   );
   useEffect(() => {
     if (!questNote) return undefined;

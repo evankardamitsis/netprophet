@@ -23,6 +23,8 @@ export const colors = {
   slate: '#5C6E64',
   /** tab bar top border */
   navLine: '#DDE3D8',
+  /** a silver badge tile */
+  silver: '#E3E9DE',
   /** sponsored card surface */
   sand: '#E6EAE0',
   /** a loss in the form dots on paper */

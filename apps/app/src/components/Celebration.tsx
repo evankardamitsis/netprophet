@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import { groupView } from '../lib/celebrate';
-import { colors, ease, fonts } from '../theme';
+import { colors, ease, fonts, motion } from '../theme';
 
 /**
  * A full-screen celebration (prototype V2 celOn), waiting for «Συνέχεια»: ink with a lime glow, 30 pieces of
  * confetti bursting from the middle, «ΣΕΡΙ», the lime pill counting up to the σερί, the title, the reward line and,
- * at 3.5s, the blue «Συνέχεια». Quests use the same moment without the pill (all queued quests as one). There is no avatar yet, so the prototype's avatar stage is left out.
+ * at 3.5s, the blue «Συνέχεια». Quests use the same moment without the pill (all queued quests as one); a badge shows its name and three tier dots that fill one by one. There is no avatar yet, so the prototype's avatar stage is left out.
  */
 const DIM_MS = 600;
 const COUNT_MS = 1100;
@@ -60,6 +60,13 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
             </Animated.View>
           ) : null}
           <Animated.Text style={[styles.title, title]}>{v.title}</Animated.Text>
+          {v.tier !== null ? (
+            <View style={styles.dots} accessibilityLabel={v.reward}>
+              {[0, 1, 2].map((i) => (
+                <TierDot key={i} on={i < v.tier!} delay={1100 + 450 * i} />
+              ))}
+            </View>
+          ) : null}
         </View>
         <View style={styles.bottom}>
           <Animated.Text style={[styles.reward, reward]}>{v.reward}</Animated.Text>
@@ -71,6 +78,20 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
         </View>
       </Animated.View>
     </Modal>
+  );
+}
+
+/** a badge tier dot (prototype dotFill): the lime ring is there, the fill springs in from nothing */
+function TierDot({ on, delay }: { on: boolean; delay: number }) {
+  const fill = useSharedValue(0);
+  useEffect(() => {
+    if (on) fill.value = withDelay(delay, withSpring(1, motion.spring));
+  }, [fill, on, delay]);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: fill.value }] }));
+  return (
+    <View style={styles.dot}>
+      <Animated.View style={[styles.dotFill, style]} />
+    </View>
   );
 }
 
@@ -188,6 +209,9 @@ const styles = StyleSheet.create({
   pillNumBox: { height: 96, justifyContent: 'center', overflow: 'visible' },
   pillUnit: { fontFamily: fonts.bodyBold, fontSize: 28, lineHeight: 34, color: colors.ink, includeFontPadding: false },
   title: { fontFamily: fonts.displayHeavy, fontSize: 54, lineHeight: 54, color: colors.paper, textAlign: 'center' },
+  dots: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  dot: { width: 22, height: 22, borderRadius: 999, borderWidth: 3, borderColor: colors.lime },
+  dotFill: { flex: 1, borderRadius: 999, backgroundColor: colors.lime },
   bottom: { alignItems: 'center', gap: 12, marginTop: 44 },
   reward: { minHeight: 24, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime, textAlign: 'center' },
   cta: { marginTop: 18, minHeight: 52, paddingHorizontal: 44, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },

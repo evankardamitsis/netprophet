@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetQuestsResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetQuestsResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
+import { mockBadges } from '../mock/badges';
 import { mockQuests } from '../mock/quests';
 import { mockScout } from '../mock/scout';
 import { MOCK_MATCHES } from '../mock/matches';
@@ -123,6 +124,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     if (!api) {
       const m = MOCK_MATCHES.find((x) => x.id === matchId);
       mockQuestVote();
+      mockBadgeVote();
       return m ? mockVote(m, side) : { pctA: 50, pctB: 50 };
     }
     try {
@@ -169,6 +171,19 @@ function mockQuestVote() {
   mockQuestState = { daily: mockQuestState.daily.map(bump), weekly: mockQuestState.weekly };
 }
 
+/* badges in mock mode: a returning player's; a vote counts toward «Πολλά τα ψηφαλάκια» like the server */
+let mockBadgeState: GetBadgesResult = mockBadges();
+function mockBadgeVote() {
+  mockBadgeState = {
+    ...mockBadgeState,
+    badges: mockBadgeState.badges.map((b) => {
+      if (b.key !== 'many_votes') return b;
+      const counter = b.counter + 1;
+      return { ...b, counter, tier: (counter >= b.thresholds[2] ? 3 : counter >= b.thresholds[1] ? 2 : counter >= b.thresholds[0] ? 1 : 0) as 0 | 1 | 2 | 3 };
+    }),
+  };
+}
+
 /** «Αποστολές»: today's and this week's quests with progress; refresh after a vote or when a screen focuses */
 export function useQuests(): { quests: GetQuestsResult | null; refresh: () => Promise<GetQuestsResult | null> } {
   const api = useApi();
@@ -190,6 +205,52 @@ export function useQuests(): { quests: GetQuestsResult | null; refresh: () => Pr
     void refresh();
   }, [refresh]);
   return { quests, refresh };
+}
+
+/**
+ * «Badges»: all 16 with their tier and counter, and the one worn on the card. `wear` updates the card at once and
+ * gives back the toast text (null when it failed, and the old badge is back).
+ */
+export function useBadges(): { badges: GetBadgesResult | null; refresh: () => Promise<GetBadgesResult | null>; wear: (key: string | null) => Promise<string | null> } {
+  const api = useApi();
+  const t = useCopy();
+  const [badges, setBadges] = useState<GetBadgesResult | null>(api ? null : mockBadgeState);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setBadges(mockBadgeState);
+      return mockBadgeState;
+    }
+    try {
+      const b = await api.getBadges();
+      setBadges(b);
+      return b;
+    } catch {
+      return null;
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  const wear = useCallback(
+    async (key: string | null) => {
+      const prev = badges;
+      setBadges((b) => (b ? { ...b, worn: key } : b));
+      if (!api) {
+        if (prev) mockBadgeState = { ...mockBadgeState, worn: key };
+        return t.badges.wornToast;
+      }
+      try {
+        const r = await api.wearBadge(key);
+        setBadges((b) => (b ? { ...b, worn: r.worn } : b));
+        return t.badges.wornToast;
+      } catch {
+        setBadges(prev);
+        return null;
+      }
+    },
+    [api, badges, t],
+  );
+  return { badges, refresh, wear };
 }
 
 export interface MeSummary {

@@ -136,6 +136,21 @@ export interface GetQuestsResult {
   weekly: QuestRow[];
 }
 
+/** one of the 16 badges: the counter, its tier (0 locked, 3 gold), the three thresholds, and whether it can be worn on the card */
+export interface BadgeRow {
+  key: string;
+  counter: number;
+  tier: 0 | 1 | 2 | 3;
+  thresholds: [number, number, number];
+  on_card: boolean;
+}
+
+/** api.get_badges: every badge in order, and the one worn on the card (null when none) */
+export interface GetBadgesResult {
+  badges: BadgeRow[];
+  worn: string | null;
+}
+
 export interface StreakCelebrationPayload {
   type: 'streak_milestone';
   streak: number;
@@ -151,8 +166,16 @@ export interface QuestCelebrationPayload {
   reward: QuestReward;
 }
 
-/** a full-screen moment (prototype celOn): a σερί milestone or a finished quest */
-export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayload> {
+/** a badge reached a tier; `new` when it is the first tier */
+export interface BadgeCelebrationPayload {
+  type: 'badge';
+  badge: string;
+  tier: 1 | 2 | 3;
+  new: boolean;
+}
+
+/** a full-screen moment (prototype celOn): a σερί milestone, a finished quest or a badge tier */
+export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload> {
   id: string;
   created_at: string;
   payload: P;
@@ -160,6 +183,7 @@ export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayl
 
 export type StreakCelebration = Celebration<StreakCelebrationPayload>;
 export type QuestCelebration = Celebration<QuestCelebrationPayload>;
+export type BadgeCelebration = Celebration<BadgeCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
 export interface ResultRow {
