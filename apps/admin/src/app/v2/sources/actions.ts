@@ -34,11 +34,32 @@ export async function loadReviews(): Promise<ReviewItem[]> {
 }
 
 export interface SourcePatch {
+  name?: string;
+  surface?: string;
   source_kind?: string;
   source_url?: string;
   draw_url?: string;
   ongoing?: boolean;
   season_start_year?: number | null;
+}
+
+/** Add a tournament from the three things that matter: name, surface and the links. Dates fill themselves from the sheet. */
+export async function createTournament(input: { name: string; surface: string; source_url: string; draw_url: string }): Promise<ActionResult<{ id: string }>> {
+  try {
+    const id = (await call(await staffRpc(), 'admin_save_tournament', {
+      p: {
+        name: input.name.trim(),
+        surface: input.surface,
+        source_url: input.source_url.trim(),
+        draw_url: input.draw_url.trim(),
+        source_kind: 'sheet',
+        ongoing: true,
+      },
+    })) as string;
+    return { ok: true, message: 'Saved', data: { id } };
+  } catch (e) {
+    return fail(e);
+  }
 }
 
 /**
