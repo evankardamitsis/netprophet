@@ -130,3 +130,16 @@ export async function resolveReview(id: string, decision: ReviewDecision): Promi
     return fail(e);
   }
 }
+
+/** two roster entries that are the same person (a typo): keep one, the other's matches, follows and claim move to it */
+export async function mergePlayers(dropId: string, keepId: string): Promise<ActionResult> {
+  try {
+    await call(await staffRpc(), 'admin_decide_player', { p_player_id: dropId, p_action: 'merge', p_target: keepId });
+    return { ok: true, message: 'Merged' };
+  } catch (e) {
+    const m = e instanceof Error ? e.message : 'failed';
+    if (m.includes('both_claimed')) return { ok: false, message: 'Both have their own account, so they cannot be merged here.' };
+    if (m.includes('same_match')) return { ok: false, message: 'They played each other, so they are two different people.' };
+    return { ok: false, message: m };
+  }
+}
