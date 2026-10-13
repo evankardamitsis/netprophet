@@ -7,6 +7,7 @@ import { mockScout } from '../mock/scout';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
+import { withMockAds } from '../mock/sponsored';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
 import type { Area } from './onboarding';
@@ -73,7 +74,7 @@ interface FeedState {
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
   const api = useApi();
-  const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
+  const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : withMockAds(MOCK_MATCHES.map((m) => fromMock(m, t)))));
   const [results, setResults] = useState<CardResult[]>([]);
   const [celebrations, setCelebrations] = useState<Celebration[]>(() => (api ? [] : mockCelebrations()));
   const [loading, setLoading] = useState(api !== null);
