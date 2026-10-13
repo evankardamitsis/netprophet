@@ -1,7 +1,7 @@
 -- M4 part 3a: draws. A sheet's brackets are stored per category; a sure name links, an unknown one becomes a new
 -- player (founder, 13 Oct); a dry read writes nothing but its log; a tab gone from the sheet is removed.
 begin;
-select plan(10);
+select plan(11);
 
 select tests.create_user('dr-adm@test.local', 'admin') as adm \gset
 select tests.mk_player('Γιάννης', 'Πρωτονοτάριος') as p1 \gset
@@ -39,6 +39,16 @@ set local role service_role;
 select ok(jsonb_path_exists(api.ingest_due(), '$[*] ? (@.draw_url != null)'), 'a tournament with only a draw sheet is due');
 select is(api.ingest_cron_draws(:'t'::uuid, '[]', 'not shared') ->> 'health', 'error', 'a failed read is logged red');
 reset role;
+
+-- a round robin keeps its groups
+select tests.login(:'adm'::uuid);
+select api.admin_ingest_draws(:'t'::uuid, '[{"tab": "MIXED", "title": "MIXED ROUND ROBIN", "discipline": "XD", "level": "", "format": "round_robin", "size": 2,
+  "entrants": [], "rounds": [], "flags": [],
+  "groups": [{"name": "Όμιλος 1", "teams": [{"pos": 1, "raw": "Α / Β"}, {"pos": 2, "raw": "Γ / Δ"}], "matches": [{"a": 1, "b": 2, "scoreRaw": "63 64", "winner": 1}],
+              "standings": [{"pos": 1, "won": 1, "played": 1}]}]}]'::jsonb, false);
+select tests.logout();
+select is((select draw -> 'groups' -> 0 ->> 'name' from core.tournament_draws where tournament_id = :'t'::uuid and tab = 'MIXED'), 'Όμιλος 1',
+          'a round robin keeps its groups');
 
 select * from finish();
 rollback;

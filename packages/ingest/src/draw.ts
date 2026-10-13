@@ -45,6 +45,35 @@ export interface DrawMatch {
   flags: string[];
 }
 
+export interface GroupTeam {
+  /** place in the group grid, 1-based */
+  pos: number;
+  raw: string;
+  people: SheetPerson[];
+}
+
+export interface GroupMatch {
+  /** positions of the two teams in the group */
+  a: number;
+  b: number;
+  scoreRaw: string;
+  /** team a first */
+  sets: SheetSet[];
+  /** 1 = team a, 2 = team b */
+  winner: 1 | 2 | null;
+  walkover: boolean;
+  flags: string[];
+}
+
+export interface DrawGroup {
+  /** «Όμιλος 1», by order (sheets often label every group «GROUP 1») */
+  name: string;
+  teams: GroupTeam[];
+  matches: GroupMatch[];
+  /** wins and played per team position, from the matches read */
+  standings: { pos: number; won: number; played: number }[];
+}
+
 export interface Draw {
   tab: string;
   title: string;
@@ -54,6 +83,8 @@ export interface Draw {
   size: number;
   entrants: DrawEntrant[];
   rounds: DrawMatch[][];
+  /** round robin only */
+  groups?: DrawGroup[];
   flags: string[];
 }
 
@@ -90,7 +121,11 @@ export function parseDraw(tab: { name: string; rows: string[][] }, seasonStartYe
   const head = rows.findIndex((r) => r.some((c) => /MAIN DRAW|ROUND ROBIN/i.test(c)));
   const title = head >= 0 ? (rows[head]!.find((c) => /MAIN DRAW|ROUND ROBIN/i.test(c)) ?? '').replace(/\s+/g, ' ').trim() : '';
   const base = { tab: tab.name, title, discipline: cat.discipline, level: cat.level, entrants: [] as DrawEntrant[], rounds: [] as DrawMatch[][] };
-  if (/ROUND ROBIN/i.test(title)) return { ...base, format: 'round_robin', size: 0, flags: ['round_robin_not_read'] };
+  if (/ROUND ROBIN/i.test(title) || rows.some((r) => /^GROUP\b/i.test((r[2] ?? '').trim()))) {
+    const groups = parseGroups(rows);
+    const entrants: DrawEntrant[] = groups.flatMap((g) => g.teams.map((t) => ({ pos: t.pos, raw: t.raw, people: t.people, seed: null, bye: false })));
+    return { ...base, title: title || `${tab.name} ROUND ROBIN`, format: 'round_robin', size: entrants.length, entrants, groups, flags: groups.length ? [] : ['round_robin_empty'] };
+  }
 
   // the deadlines over the round columns
   const deadline = new Map<number, string>();
@@ -175,6 +210,57 @@ export function parseDraw(tab: { name: string; rows: string[][] }, seasonStartYe
     slots = next;
   }
   return { ...base, format: 'knockout', size, entrants, rounds, flags };
+}
+
+/**
+ * Round robin groups: a «GROUP n» header row with the team numbers across, then one row per team (number in column
+ * B, name in C, a pair split over two lines), and in the grid the score of the row team against the column team
+ * (the row team's games first). Each pair is read once, from the upper half of the grid, or the lower half mirrored.
+ */
+function parseGroups(rows: string[][]): DrawGroup[] {
+  const groups: DrawGroup[] = [];
+  const raw = (r: number, c: number) => (rows[r]?.[c] ?? '').trim();
+  for (let r = 0; r < rows.length; r += 1) {
+    if (!/^GROUP\b/i.test(raw(r, 2))) continue;
+    const cols: number[] = [];
+    for (let c = 3; c < (rows[r]?.length ?? 0); c += 1) if (/^\d{1,2}$/.test(raw(r, c))) cols.push(c);
+    const teams: GroupTeam[] = [];
+    const teamRow = new Map<number, number>();
+    for (let k = r + 1; k < rows.length && !/^GROUP\b/i.test(raw(k, 2)); k += 1) {
+      const n = raw(k, 1);
+      if (!/^\d{1,2}$/.test(n)) continue;
+      const name = raw(k, 2).split(/\r?\n/).map((x) => x.trim()).filter(Boolean).join(' / ');
+      teamRow.set(Number(n), k);
+      if (name) teams.push({ pos: Number(n), raw: name, people: parseSheetSide(name).people });
+    }
+    const colOf = (pos: number) => cols[pos - 1];
+    const matches: GroupMatch[] = [];
+    for (const ta of teams)
+      for (const tb of teams) {
+        if (tb.pos <= ta.pos) continue;
+        const upper = colOf(tb.pos) !== undefined ? raw(teamRow.get(ta.pos)!, colOf(tb.pos)!) : '';
+        const lower = colOf(ta.pos) !== undefined ? raw(teamRow.get(tb.pos)!, colOf(ta.pos)!) : '';
+        const own = upper || lower;
+        if (!own || !isScore(own)) continue;
+        const flip = !upper;
+        const wo = /^\s*w\.?o/i.test(own);
+        const sc = wo ? null : parseScore(own);
+        let sets = sc ? sc.sets : [];
+        let winner: 1 | 2 | null = sc ? sc.winner : null;
+        if (flip) {
+          sets = sets.map((x) => ({ ...x, g: [x.g[1], x.g[0]] as [number, number] }));
+          winner = winner === 1 ? 2 : winner === 2 ? 1 : null;
+        }
+        matches.push({ a: ta.pos, b: tb.pos, scoreRaw: own, sets, winner, walkover: wo, flags: sc ? sc.flags : wo ? ['walkover_winner_unknown'] : [] });
+      }
+    const standings = teams.map((t) => ({
+      pos: t.pos,
+      won: matches.filter((m) => (m.a === t.pos && m.winner === 1) || (m.b === t.pos && m.winner === 2)).length,
+      played: matches.filter((m) => (m.a === t.pos || m.b === t.pos) && m.winner !== null).length,
+    }));
+    groups.push({ name: `Όμιλος ${groups.length + 1}`, teams, matches, standings });
+  }
+  return groups;
 }
 
 /** every draw tab of a sheet; tabs that are not draws (no MAIN DRAW / ROUND ROBIN title) are skipped */

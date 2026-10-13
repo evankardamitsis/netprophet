@@ -106,6 +106,16 @@ const SIXTEEN = [
   'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓΓΕΛΗΣ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ', 'ΑΝΑΓΝΩΣΤΟΥ ΜΑΝΩΛΗΣ', 'ΚΟΝΤΟΣ ΘΑΝΟΣ', 'ΜΙΧΑΛΟΠΟΥΛΟΣ ΧΡΗΣΤΟΣ', 'ΒΛΑΧΟΣ ΣΩΤΗΡΗΣ', 'ΞΕΝΟΣ ΑΛΕΞΗΣ', 'ΖΑΧΑΡΙΟΥ ΛΕΩΝΙΔΑΣ',
 ];
 
+const MD_TEAMS = [
+  'ΡΟΔΙΤΗΣ ΝΙΚΟΣ / ΠΡΑΤΣΑΣ ΓΙΑΝΝΗΣ', 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓΓΕΛΗΣ / ΜΕΜΜΟΣ ΗΛΙΑΣ', 'ΔΕΣΥΠΡΗΣ ΓΙΩΡΓΟΣ / ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ / ΚΟΝΤΟΣ ΘΑΝΟΣ',
+  'ΛΑΜΠΡΙΝΟΣ ΣΤΑΘΗΣ / ΒΑΣΙΛΕΙΟΥ ΠΕΤΡΟΣ', 'ΞΕΝΟΣ ΑΛΕΞΗΣ / ΒΛΑΧΟΣ ΣΩΤΗΡΗΣ', 'ΑΝΑΓΝΩΣΤΟΥ ΜΑΝΩΛΗΣ / ΖΑΧΑΡΙΟΥ ΛΕΩΝΙΔΑΣ',
+];
+
+/** a group match: team a first, `winner` 1 = a */
+const gm = (a: number, b: number, winner: 1 | 2, games: [number, number][]) => ({
+  a, b, scoreRaw: games.map((g) => `${g[0]}${g[1]}`).join(' '), sets: games.map((g) => ({ g, tb: false })), winner, walkover: false,
+});
+
 export function mockTournament(id: string, now: Date = new Date()): GetTournamentResult | null {
   const item = mockTournaments(false, now).items.find((i) => i.id === id);
   if (!item) return null;
@@ -160,7 +170,27 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
           knockout('Μ 50+', SIXTEEN, [8, 3, 0, 0], today, ['ΠΑΠΑΔΟΠΟΥΛΟΣ ΑΝΤΩΝΗΣ', 'ΛΑΜΠΡΙΝΟΣ ΣΤΑΘΗΣ', 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', 'ΒΑΣΙΛΕΙΟΥ ΠΕΤΡΟΣ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ'], { 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ': 1, 'ΜΕΜΜΟΣ ΗΛΙΑΣ': 2 }),
           {
             tab: 'MD MASTER', title: 'MD MASTER ROUND ROBIN', discipline: 'MD', level: 'MASTER', format: 'round_robin', size: 4, updated_at: now.toISOString(),
-            entrants: [], rounds: [],
+            entrants: MD_TEAMS.map((raw, k) => ({ pos: k + 1, raw, seed: null, bye: false, players: raw.split(' / ').map((p) => ({ raw: p, player_id: p.startsWith('ΚΑΡΔΑΜΙΤΣΗΣ') ? 'me' : null })) })),
+            rounds: [],
+            groups: [
+              {
+                name: 'Όμιλος 1',
+                teams: MD_TEAMS.slice(0, 4).map((raw, k) => ({ pos: k + 1, raw, people: [] })),
+                matches: [
+                  gm(1, 2, 1, [[6, 3], [6, 4]]),
+                  gm(3, 1, 2, [[4, 6], [6, 7]]),
+                  gm(2, 4, 1, [[6, 2], [6, 1]]),
+                  gm(3, 4, 1, [[7, 5], [6, 4]]),
+                ],
+                standings: [{ pos: 1, won: 2, played: 2 }, { pos: 2, won: 1, played: 2 }, { pos: 3, won: 1, played: 2 }, { pos: 4, won: 0, played: 2 }],
+              },
+              {
+                name: 'Όμιλος 2',
+                teams: MD_TEAMS.slice(4, 7).map((raw, k) => ({ pos: k + 1, raw, people: [] })),
+                matches: [gm(1, 2, 1, [[6, 4], [3, 6], [10, 7]]), gm(1, 3, 1, [[6, 1], [6, 2]]), gm(2, 3, 2, [[2, 6], [4, 6]])],
+                standings: [{ pos: 1, won: 2, played: 2 }, { pos: 2, won: 0, played: 2 }, { pos: 3, won: 1, played: 2 }],
+              },
+            ],
           },
         ]
       : id === 'tour-vari'

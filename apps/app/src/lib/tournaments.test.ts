@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { DrawMatchRow, GetTournamentResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
-import { boldLine, bracketRounds, chipOf, dayChips, defaultDay, defaultSegment, mineHeadline, mineRows, openCount, roundName, scheduleRows, sectionsOf, subLine } from './tournaments';
+import { allPairs, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, mineHeadline, mineRows, openCount, roundName, scheduleRows, sectionsOf, subLine } from './tournaments';
 
 const t = getCopy('el');
 
@@ -146,5 +146,64 @@ describe('draws', () => {
   it('masked names show as a dash and do not link', () => {
     const r = bracketRounds(draw, ['ΠΡΑΤΣΑΣ ΓΙΑΝΝΗΣ'], t);
     expect(r[0]!.matches[1]!.sides[0].parts).toEqual([{ text: '–', playerId: null }]);
+  });
+});
+
+describe('round robin groups', () => {
+  it('orders by wins, then fewer played, then place', () => {
+    expect(orderStandings([{ pos: 1, won: 1, played: 2 }, { pos: 2, won: 2, played: 2 }, { pos: 3, won: 1, played: 1 }, { pos: 4, won: 1, played: 1 }]).map((x) => x.pos)).toEqual([2, 3, 4, 1]);
+  });
+  it('derives every pair', () => {
+    expect(allPairs([3, 1, 2])).toEqual([[1, 2], [1, 3], [2, 3]]);
+    expect(allPairs([1])).toEqual([]);
+  });
+  it('is finished only when every pair has a winner', () => {
+    const teams = [{ pos: 1 }, { pos: 2 }, { pos: 3 }];
+    const ms = [{ a: 1, b: 2, winner: 1 as const }, { a: 3, b: 1, winner: 2 as const }];
+    expect(groupFinished(teams, ms)).toBe(false);
+    expect(groupFinished(teams, [...ms, { a: 2, b: 3, winner: null }])).toBe(false);
+    expect(groupFinished(teams, [...ms, { a: 3, b: 2, winner: 1 }])).toBe(true);
+    expect(groupFinished([], [])).toBe(false);
+  });
+  const person = (surname: string) => ({ surname, first: '', key: surname });
+  const draw = {
+    entrants: [
+      { pos: 1, raw: 'ΑΑΑ ΝΙΚΟΣ / ΒΒΒ ΓΙΩΡΓΟΣ', seed: null, bye: false, players: [{ raw: 'ΑΑΑ ΝΙΚΟΣ', player_id: 'me' }, { raw: 'ΒΒΒ ΓΙΩΡΓΟΣ', player_id: null }] },
+    ],
+    groups: [
+      {
+        name: 'Όμιλος 1',
+        teams: [
+          { pos: 1, raw: 'ΑΑΑ ΝΙΚΟΣ / ΒΒΒ ΓΙΩΡΓΟΣ', people: [person('ΑΑΑ'), person('ΒΒΒ')] },
+          { pos: 2, raw: 'ΓΓΓ ΠΕΤΡΟΣ / ΔΔΔ ΚΩΣΤΑΣ', people: [person('ΓΓΓ'), person('ΔΔΔ')] },
+          { pos: 3, raw: 'ΕΕΕ ΑΛΕΞΗΣ / ΖΖΖ ΗΛΙΑΣ', people: [person('ΕΕΕ'), person('ΖΖΖ')] },
+        ],
+        matches: [
+          { a: 1, b: 2, scoreRaw: '64 63', sets: [{ g: [6, 4] as [number, number], tb: false }, { g: [6, 3] as [number, number], tb: false }], winner: 1 as const, walkover: false },
+          { a: 3, b: 1, scoreRaw: '', sets: [], winner: null, walkover: false },
+        ],
+        standings: [{ pos: 1, won: 1, played: 1 }, { pos: 2, won: 0, played: 1 }, { pos: 3, won: 0, played: 0 }],
+      },
+    ],
+  };
+  it('builds the table and every pair, mine marked, names masked', () => {
+    const [g] = groupViews(draw, ['ΖΖΖ ΗΛΙΑΣ'], 'me', t);
+    expect(g!.finished).toBe(false);
+    expect(g!.rows.map((r) => [r.place, r.team.pos, r.record, r.champion])).toEqual([[1, 1, '1/1', false], [2, 3, '0/0', false], [3, 2, '0/1', false]]);
+    expect(g!.rows[0]!.team.mine).toBe(true);
+    expect(g!.rows[0]!.team.parts).toEqual([{ text: 'ΑΑΑ ΝΙΚΟΣ', playerId: 'me' }, { text: 'ΒΒΒ ΓΙΩΡΓΟΣ', playerId: null }]);
+    expect(g!.rows[1]!.team.parts[1]).toEqual({ text: '–', playerId: null });
+    expect(g!.matches.map((m) => [m.key, m.played, m.mine])).toEqual([['1-2', true, true], ['1-3', false, true], ['2-3', false, false]]);
+    expect(g!.matches[0]!.sets).toEqual([[6, 4], [6, 3]]);
+    // a match written the other way round keeps its own order, team a first
+    expect(g!.matches[1]!.a.pos).toBe(3);
+  });
+  it('puts a lime check on the winner once every pair has played', () => {
+    const done = { ...draw, groups: [{ ...draw.groups[0]!, matches: [...draw.groups[0]!.matches.map((m) => ({ ...m, winner: 1 as const })), { a: 2, b: 3, scoreRaw: '', sets: [], winner: 2 as const, walkover: true }] }] };
+    const [g] = groupViews(done, [], null, t);
+    expect(g!.finished).toBe(true);
+    expect(g!.rows.filter((r) => r.champion).map((r) => r.team.pos)).toEqual([1]);
+    expect(g!.matches[2]!.walkover).toBe(true);
+    expect(g!.matches[2]!.played).toBe(true);
   });
 });

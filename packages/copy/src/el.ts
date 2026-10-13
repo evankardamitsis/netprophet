@@ -918,7 +918,8 @@ export const el = {
       advances: 'προκρίνεται',
       until: 'έως {date}',
       tbd: 'θα φανεί',
-      roundRobin: 'Ο όμιλος έρχεται σύντομα.',
+      wins: 'Νίκες',
+      notPlayed: 'Δεν έχει παίξει',
       masked: '–',
       /** «(3)», the seed */
       seed: '({n})',

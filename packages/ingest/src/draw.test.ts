@@ -10,10 +10,27 @@ describe('ΑΟΚ Κηφισιάς 2026 draws', () => {
   const draws = parseDraws(parseSheetExport(readFileSync(FILE, 'utf8')), 2026);
   const all = draws.flatMap((d) => d.rounds.flat());
 
-  it('every tab: 24 knockout draws, 2 round robins left for later', () => {
+  it('every tab: 24 knockout draws and 2 round robins', () => {
     expect(draws).toHaveLength(26);
     expect(draws.filter((d) => d.format === 'knockout')).toHaveLength(24);
     expect(draws.filter((d) => d.format === 'round_robin').map((d) => d.tab)).toEqual(['MIXED MASTER', 'WD MEDIUM']);
+  });
+
+  it('round robin: two groups of three pairs, each played match once, scores team a first', () => {
+    const d = draws.find((x) => x.tab === 'MIXED MASTER')!;
+    expect(d.groups!.map((g) => [g.name, g.teams.length])).toEqual([['Όμιλος 1', 3], ['Όμιλος 2', 3]]);
+    const g1 = d.groups![0]!;
+    expect(g1.teams[0]!.people).toHaveLength(2);
+    expect(g1.matches).toHaveLength(1);
+    expect(g1.matches[0]).toMatchObject({ a: 1, b: 3, winner: 2 });
+    expect(g1.matches[0]!.sets.map((s) => s.g)).toEqual([[6, 3], [4, 6], [6, 10]]);
+    expect(g1.standings.find((s) => s.pos === 3)).toEqual({ pos: 3, won: 1, played: 1 });
+    expect(d.entrants).toHaveLength(6);
+  });
+
+  it('round robin read from the lower half when the upper is empty', () => {
+    const g2 = draws.find((x) => x.tab === 'WD MEDIUM')!.groups![1]!;
+    expect(g2.matches.map((m) => [m.a, m.b, m.winner])).toEqual([[1, 2, 1]]);
   });
 
   it('every draw has as many entrants as its size, and log2(size) rounds', () => {
