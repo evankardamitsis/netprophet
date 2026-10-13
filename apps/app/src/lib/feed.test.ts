@@ -123,8 +123,8 @@ describe('fromFeedCard', () => {
 
   it('maps a sponsored card', () => {
     expect(
-      fromSponsored({ kind: 'sponsored', id: 's1', label: 'Χορηγούμενο', sponsor: 'X', title: 'Πλέξιμο ρακέτας από 12€', subtitle: null, cta_url: null }),
-    ).toEqual({ kind: 'sponsored', id: 's1', label: 'Χορηγούμενο', title: 'Πλέξιμο ρακέτας από 12€', subtitle: null });
+      fromSponsored({ kind: 'sponsored', id: 's1', label: 'Χορηγούμενο', sponsor: 'X', title: 'Πλέξιμο ρακέτας από 12€', subtitle: null, cta_url: null, image_url: null, art: 'strings' }),
+    ).toEqual({ kind: 'sponsored', id: 's1', label: 'Χορηγούμενο', sponsor: 'X', title: 'Πλέξιμο ρακέτας από 12€', subtitle: null, ctaUrl: null, imageUrl: null, art: 'strings' });
   });
 });
 

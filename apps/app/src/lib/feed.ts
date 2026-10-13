@@ -42,8 +42,13 @@ export interface CardSponsored {
   kind: 'sponsored';
   id: string;
   label: string;
+  sponsor: string;
   title: string;
   subtitle: string | null;
+  ctaUrl: string | null;
+  imageUrl: string | null;
+  /** a drawn banner: strings, racket, court, coffee, lights */
+  art: string | null;
 }
 
 /** A result coming back to the top of the feed (prototype «rq» card). */
@@ -199,7 +204,17 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
 }
 
 export function fromSponsored(card: FeedSponsoredCard): CardSponsored {
-  return { kind: 'sponsored', id: card.id, label: card.label, title: card.title, subtitle: card.subtitle };
+  return {
+    kind: 'sponsored',
+    id: card.id,
+    label: card.label,
+    sponsor: card.sponsor,
+    title: card.title,
+    subtitle: card.subtitle,
+    ctaUrl: card.cta_url,
+    imageUrl: card.image_url,
+    art: card.art,
+  };
 }
 
 function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {

@@ -2,9 +2,9 @@ import type { CardSponsored, FeedCard } from '../lib/feed';
 
 /** Sample ads for mock mode and the dev guest, the same made-up businesses as the hosted demo (demo_sponsored.sql). */
 export const MOCK_SPONSORED: readonly CardSponsored[] = [
-  { kind: 'sponsored', id: 'mock-ad-1', label: 'Χορηγούμενο', title: 'Νέες χορδές σε 24 ώρες', subtitle: 'Φέρε τη ρακέτα το πρωί, πάρ’ τη το απόγευμα.' },
-  { kind: 'sponsored', id: 'mock-ad-2', label: 'Χορηγούμενο', title: 'Δωρεάν πρώτο μάθημα', subtitle: 'Για όλα τα levels, κάθε Σάββατο.' },
-  { kind: 'sponsored', id: 'mock-ad-3', label: 'Χορηγούμενο', title: 'Ο καφές μετά το ματς κερνάει', subtitle: 'Δείξε το σκορ σου στο ταμείο.' },
+  { kind: 'sponsored', id: 'mock-ad-1', label: 'Χορηγούμενο', sponsor: 'Ρακέτες Ποσειδών', title: 'Νέες χορδές σε 24 ώρες', subtitle: 'Φέρε τη ρακέτα το πρωί, πάρ’ τη το απόγευμα.', ctaUrl: null, imageUrl: null, art: 'strings' },
+  { kind: 'sponsored', id: 'mock-ad-2', label: 'Χορηγούμενο', sponsor: 'Ακαδημία Άσπρη Γραμμή', title: 'Δωρεάν πρώτο μάθημα', subtitle: 'Για όλα τα levels, κάθε Σάββατο.', ctaUrl: null, imageUrl: null, art: 'court' },
+  { kind: 'sponsored', id: 'mock-ad-3', label: 'Χορηγούμενο', sponsor: 'Καφέ Φιλέ', title: 'Ο καφές μετά το ματς κερνάει', subtitle: 'Δείξε το σκορ σου στο ταμείο.', ctaUrl: null, imageUrl: null, art: 'coffee' },
 ];
 
 /** One ad after every fourth card, like api.get_feed. */
