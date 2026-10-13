@@ -102,3 +102,15 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   (from the v2 Supabase project), `CRON_SECRET`.
 - Not yet: moved and cancelled matches, dedupe against player-logged matches, the 08:30 email, the records sheet,
   other platforms.
+
+## Built (M4 part 2, name matching)
+- First names compare by family (`core.first_name_families`: formal, everyday and nicknames, e.g. Φιλοθέη = Φαίη,
+  Ευάγγελος = Βαγγέλης); staff can add rows. An initial («ΟΡ») matches the names it starts; the swapped reading is
+  tried too.
+- A surname alone links to the one player with it already in this tournament, else to the only one in the roster;
+  several go to staff. A certain score with no clear lead (the same name twice in the roster) goes to staff, never a
+  third copy.
+- One staff decision writes the sheet spelling as an alias and releases every other row held only for that name.
+- The desk's candidate list uses the same scoring.
+- TAF sheet on the real roster (dry run): 41 matches straight in, 7 held on 5 names, 29 new players (from 51); the
+  new ones are people not in the roster yet.
