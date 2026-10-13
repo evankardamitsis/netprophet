@@ -396,6 +396,14 @@ export type Database = {
         Args: { p_tournament_id: string; p_rows: Json };
         Returns: Json;
       };
+      admin_ingest_reviews: {
+        Args: { p_tournament_id?: string };
+        Returns: Json;
+      };
+      admin_ingest_run: {
+        Args: { p_tournament_id: string; p_rows: Json; p_dry?: boolean };
+        Returns: Json;
+      };
       admin_league_close: {
         Args: { p_month?: string };
         Returns: Json;
@@ -434,6 +442,10 @@ export type Database = {
       };
       admin_resolve_dispute: {
         Args: { p_match_id: string; p_decision: string };
+        Returns: Json;
+      };
+      admin_resolve_ingest_review: {
+        Args: { p_id: string; p: Json };
         Returns: Json;
       };
       admin_save_quiz_template: {
@@ -618,6 +630,14 @@ export type Database = {
       };
       hide_via_link: {
         Args: { p_token: string; p_hidden: boolean };
+        Returns: Json;
+      };
+      ingest_cron_run: {
+        Args: { p_tournament_id: string; p_rows: Json; p_error?: string };
+        Returns: Json;
+      };
+      ingest_due: {
+        Args: Record<PropertyKey, never>;
         Returns: Json;
       };
       join_pro_waitlist: {
