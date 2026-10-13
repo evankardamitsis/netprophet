@@ -6,6 +6,7 @@ import type {
   ClaimCandidate,
   ConfirmationAnswer,
   GetFeedResult,
+  GetQuestsResult,
   KudoOption,
   LinkKudo,
   LogMatchInput,
@@ -87,6 +88,7 @@ export function rpc(client: NetprophetClient) {
     castVote: (matchId: string, side: Side, clientEventId?: string) =>
       call<CastVoteResult>(client, 'cast_vote', { p_match_id: matchId, p_side: side, p_client_event_id: clientEventId }),
     getFeed: (limit = 20) => call<GetFeedResult>(client, 'get_feed', { p_limit: limit }),
+    getQuests: () => call<GetQuestsResult>(client, 'get_quests', {}),
     getMe: () => call<MeResult>(client, 'get_me', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),

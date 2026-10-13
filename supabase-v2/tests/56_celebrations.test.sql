@@ -47,7 +47,8 @@ select is((select count(*)::int from core.user_cosmetics uc join core.cosmetic_i
             where uc.user_id = :'v'::uuid and ci.key in ('frame_seven', 'frame_ten')), 2, 'both frames are owned');
 
 select tests.login(:'v'::uuid);
-select is(jsonb_array_length(api.get_feed(20) -> 'celebrations'), 4, 'the feed hands them over');
+select is((select count(*)::int from jsonb_array_elements(api.get_feed(20) -> 'celebrations') c where c -> 'payload' ->> 'type' = 'streak_milestone'),
+          4, 'the feed hands them over');
 select api.mark_inbox_seen(array(select (c ->> 'id')::uuid from jsonb_array_elements(api.get_feed(20) -> 'celebrations') c)) is not null as x \gset
 select is(jsonb_array_length(api.get_feed(20) -> 'celebrations'), 0, 'and they are gone once seen');
 

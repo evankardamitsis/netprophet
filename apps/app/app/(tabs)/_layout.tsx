@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { FlightLayer } from '../../src/components/FlightLayer';
+import { QuestBarLayer } from '../../src/components/QuestBar';
 import { Header } from '../../src/components/Header';
 import { TabBar } from '../../src/components/TabBar';
 import { useCopy } from '../../src/i18n';
@@ -33,6 +34,7 @@ export default function TabsLayout() {
         </Tabs>
         {/* above everything, so «+10» can fly out of the feed into the header */}
         <FlightLayer />
+        <QuestBarLayer />
       </View>
     </HudProvider>
   );

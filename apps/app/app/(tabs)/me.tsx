@@ -1,13 +1,14 @@
-import { useState, type ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { QuestsSheet } from '../../src/components/QuestsSheet';
 import { FitText } from '../../src/components/FitText';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useBlocks, useMePage, useMyKudos, usePro, useWinLoss } from '../../src/lib/data';
+import { useBlocks, useMePage, useMyKudos, usePro, useQuests, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
@@ -18,7 +19,7 @@ import { colors, fonts } from '../../src/theme';
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
  * name), the σερί with its freezes, «Το σκορ σου», «Οι ψήφοι σου», «Τα ματς σου», «Οι φίλοι σου» and Ρυθμίσεις
- * with Αποσύνδεση, plus «Τι λένε για σένα» (M2). Avatar, stats flip, Εμφάνιση, freeze purchase, Αποστολές, badges, «Πώς σε βλέπουν»,
+ * with Αποσύνδεση, plus «Τι λένε για σένα» (M2) and the «Αποστολές» row (M3). Avatar, stats flip, Εμφάνιση, freeze purchase, badges, «Πώς σε βλέπουν»,
  * «Πού κερδίζεις», Απολογισμός and Τουρνουά come with their milestones (M2 to M5).
  */
 const STG_MS = 450;
@@ -30,6 +31,14 @@ export default function MeScreen() {
   const t = useCopy();
   const { view, loading, error, refresh } = useMePage();
   const kudos = useMyKudos();
+  const quests = useQuests();
+  const [questsOpen, setQuestsOpen] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      void quests.refresh();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [quests.refresh]),
+  );
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
   let n = 0;
@@ -48,6 +57,9 @@ export default function MeScreen() {
         {view ? (
           <>
             <Section i={next()}>{view.isNew ? <NewHero v={view} /> : <Hero v={view} />}</Section>
+            <Section i={next()}>
+              <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
+            </Section>
             <Section i={next()}>
               <StreakBox v={view} />
             </Section>
@@ -82,7 +94,22 @@ export default function MeScreen() {
         ) : null}
         {!loading && error && !view ? <Text style={styles.empty}>{t.me.error}</Text> : null}
       </ScrollView>
+      <QuestsSheet open={questsOpen} quests={quests.quests} onClose={() => setQuestsOpen(false)} />
     </View>
+  );
+}
+
+/** «Αποστολές  1/3 ›»: today's quests done, opens the sheet */
+function QuestsRow({ done, onPress }: { done: number; onPress: () => void }) {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.questsRow, press.style]}>
+        <Text style={styles.questsTitle}>{t.quests.meRow}</Text>
+        <Text style={styles.questsCount}>{t.quests.meCount.replace('{n}', String(done))}</Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -426,6 +453,9 @@ const styles = StyleSheet.create({
   first: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, color: colors.paper },
   surname: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   heroSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
+  questsRow: { minHeight: 56, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  questsTitle: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.ink },
+  questsCount: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
   card: { padding: 16, borderRadius: 22, backgroundColor: colors.white, gap: 10 },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },

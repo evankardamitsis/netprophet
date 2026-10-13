@@ -35,6 +35,18 @@ interface Hud {
   /** «+10» to πόντοι, and «+1» to σερί when `withStreak` */
   fly(from: RefObject<View | null>, points: number, withStreak: boolean): void;
   targets: { points: RefObject<View | null>; streak: RefObject<View | null> };
+  /** the slim quest bar after a vote; drawn by the tabs layout over the tab bar (prototype) */
+  questBar: QuestBarNote | null;
+  showQuestBar(note: Omit<QuestBarNote, 'n'> | null): void;
+}
+
+export interface QuestBarNote {
+  title: string;
+  from: number;
+  to: number;
+  progress: number;
+  target: number;
+  n: number;
 }
 
 const HudContext = createContext<Hud | null>(null);
@@ -58,6 +70,8 @@ export function HudProvider({ children }: { children: ReactNode }) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const points = useRef<View | null>(null);
   const streak = useRef<View | null>(null);
+  const [questBar, setQuestBar] = useState<QuestBarNote | null>(null);
+  const showQuestBar = useCallback((note: Omit<QuestBarNote, 'n'> | null) => setQuestBar(note && { ...note, n: Date.now() }), []);
 
   const setPending = useCallback((results: CardResult[]) => {
     setPendingState(results);
@@ -105,8 +119,10 @@ export function HudProvider({ children }: { children: ReactNode }) {
       apply,
       fly,
       targets: { points, streak },
+      questBar,
+      showQuestBar,
     };
-  }, [pending, applied, streakFx, flights, setPending, apply, fly]);
+  }, [pending, applied, streakFx, flights, setPending, apply, fly, questBar, showQuestBar]);
 
   return <HudContext.Provider value={value}>{children}</HudContext.Provider>;
 }

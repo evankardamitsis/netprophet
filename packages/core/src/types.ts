@@ -132,8 +132,8 @@ export interface StreakState {
 export type QuestWindow = 'daily' | 'weekly' | 'lifetime';
 
 export type QuestReward = {
-  /** Frame or background. Granted if not owned yet. */
-  cosmeticId: string | null;
+  /** Frames or backgrounds, in order: the first one not owned yet is granted. */
+  cosmeticIds: readonly string[];
   /** Fallback when the cosmetic is already owned (or null): a badge counter bonus. Never points. */
   badgeId: string;
   badgeAmount: number;

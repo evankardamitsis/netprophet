@@ -120,7 +120,7 @@ run(questTimeVectors, {
 
 run(questVectors, {
   applyQuestEvent: (i: { defs: Array<Omit<QuestDef, 'reward'>>; stored: QuestProgress[]; event: { type: any; at: string } }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-    const defs = i.defs.map((d) => ({ ...d, reward: { cosmeticId: null, badgeId: 'x', badgeAmount: 1 } }) as QuestDef);
+    const defs = i.defs.map((d) => ({ ...d, reward: { cosmeticIds: [], badgeId: 'x', badgeAmount: 1 } }) as QuestDef);
     return applyQuestEvent(defs, i.stored, i.event);
   },
 });

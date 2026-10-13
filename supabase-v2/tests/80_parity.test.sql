@@ -6,7 +6,7 @@
 --   streak.json      streakSequence  (cast, outcome, buy_freeze)
 --   votes.json       validateVote    (also run end to end through api.cast_vote)
 --   resolution.json  resolveBatch
--- quests*.json and unlocks.json cover rules the database does not implement yet and are not loaded here.
+-- quests*.json run in 58_quests.test.sql; unlocks.json covers rules the database does not implement yet.
 --
 -- Directory: $VECTORS_DIR (scripts/v2-db-test.sh exports it), default packages/core/test-vectors.
 -- A vector group whose fn has no SQL mapping below FAILS (it never silently passes).

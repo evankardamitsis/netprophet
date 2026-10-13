@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { Celebration } from '../../src/components/Celebration';
+import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
@@ -10,8 +11,11 @@ import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useConfirmations, useFeed, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
+import { useConfirmations, useFeed, useQuests, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
+import { nextGroup } from '../../src/lib/celebrate';
+import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
+import type { Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
 import { colors, ease, fonts } from '../../src/theme';
 
@@ -26,6 +30,29 @@ export default function VoteScreen() {
   const onVoteError = useCallback((kind: VoteErrorKind) => setNotice((p) => ({ kind, n: (p?.n ?? 0) + 1 })), []);
   const { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote } = useFeed(onVoteError);
   const confirmations = useConfirmations();
+  const quests = useQuests();
+  const questsNow = useRef(quests.quests);
+  questsNow.current = quests.quests;
+  // after a vote: the slim bar for a quest that moved, or a toast for one that finished (never both)
+  const [questNote, setQuestNote] = useState<(NonNullable<QuestFeedback> & { n: number }) | null>(null);
+  const onVote = useCallback(
+    async (matchId: string, side: Side) => {
+      const before = questsNow.current;
+      const pct = await vote(matchId, side);
+      void quests.refresh().then((after) => {
+        const f = after ? feedbackAfterVote(before, after, t) : null;
+        if (f) setQuestNote({ ...f, n: Date.now() });
+      });
+      return pct;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [vote, quests.refresh, t],
+  );
+  useEffect(() => {
+    if (!questNote) return undefined;
+    const id = setTimeout(() => setQuestNote(null), questNote.kind === 'toast' ? TOAST_MS : QUEST_BAR_MS);
+    return () => clearTimeout(id);
+  }, [questNote]);
   const [answered, setAnswered] = useState<string | null>(null);
   // «Αναφορά» from a long press on a card
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
@@ -36,6 +63,11 @@ export default function VoteScreen() {
     return () => clearTimeout(id);
   }, [answered]);
   const hud = useHud();
+  // the bar slides over the tab bar, so the tabs layout draws it (prototype mp)
+  const { showQuestBar } = hud;
+  useEffect(() => {
+    showQuestBar(questNote?.kind === 'bar' ? { title: questNote.title, from: questNote.from, to: questNote.to, progress: questNote.progress, target: questNote.target } : null);
+  }, [questNote, showQuestBar]);
   const [between, setBetween] = useState(false);
   const [played, setPlayed] = useState(0);
 
@@ -55,7 +87,9 @@ export default function VoteScreen() {
   );
   const current = !between ? results[0] : undefined;
   // celebrations wait until every result card has played
-  const celebrating = results.length === 0 && !between ? celebrations[0] : undefined;
+  // σερί ones first, one by one; every queued quest together as one
+  const group = results.length === 0 && !between ? nextGroup(celebrations) : [];
+  const celebrating = group.length > 0 ? group : undefined;
 
   useEffect(() => {
     if (!notice) return undefined;
@@ -98,7 +132,7 @@ export default function VoteScreen() {
           ))}
           {cards.map((c) =>
             c.kind === 'match' ? (
-              <VoteCard key={c.id} match={c} onVote={vote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+              <VoteCard key={c.id} match={c} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
             ) : c.kind === 'sponsored' ? (
               <SponsoredCard key={c.id} card={c} />
             ) : null,
@@ -110,10 +144,11 @@ export default function VoteScreen() {
       </ScrollView>
       {notice ? <Toast key={notice.n} text={t.feed[notice.kind]} /> : null}
       {answered ? <Toast key={answered} text={answered} /> : null}
+      {questNote?.kind === 'toast' ? <Toast key={questNote.n} text={questNote.text} /> : null}
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
       <AddMatchButton />
-      {celebrating ? <Celebration key={celebrating.id} item={celebrating} onDone={() => dismissCelebration(celebrating.id)} /> : null}
+      {celebrating ? <Celebration key={celebrating.map((c) => c.id).join()} items={celebrating} onDone={() => dismissCelebration(celebrating.map((c) => c.id))} /> : null}
     </View>
   );
 }
