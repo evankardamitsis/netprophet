@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RpcError, type BlockedUser, type Celebration, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
@@ -7,6 +8,7 @@ import { mockScout } from '../mock/scout';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
+import { withMockAds } from '../mock/sponsored';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
 import type { Area } from './onboarding';
@@ -73,9 +75,17 @@ interface FeedState {
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
   const api = useApi();
-  const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : MOCK_MATCHES.map((m) => fromMock(m, t))));
+  const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : withMockAds(MOCK_MATCHES.map((m) => fromMock(m, t)))));
   const [results, setResults] = useState<CardResult[]>([]);
-  const [celebrations, setCelebrations] = useState<Celebration[]>(() => (api ? [] : mockCelebrations()));
+  const [celebrations, setCelebrations] = useState<Celebration[]>([]);
+  useEffect(() => {
+    if (api) return;
+    let live = true;
+    mockCelebrations().then((c) => live && setCelebrations(c));
+    return () => {
+      live = false;
+    };
+  }, [api]);
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
   const onError = useRef(onVoteError);
@@ -134,17 +144,17 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
 
   const dismissCelebration = useCallback((id: string) => {
     setCelebrations((c) => c.filter((x) => x.id !== id));
-    mockCelebrationSeen = true;
-    api?.markInboxSeen([id]).catch(() => undefined);
+    if (api) api.markInboxSeen([id]).catch(() => undefined);
+    else AsyncStorage.setItem(MOCK_CELEBRATION_KEY, '1').catch(() => undefined);
   }, [api]);
 
   return { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote };
 }
 
-/* mock mode and the dev guest: the σερί 5 moment, once per app session */
-let mockCelebrationSeen = false;
-function mockCelebrations(): Celebration[] {
-  if (mockCelebrationSeen) return [];
+/* mock mode and the dev guest: the σερί 5 moment, once per device (founder, 13 Oct) */
+const MOCK_CELEBRATION_KEY = 'np.mock.celebrationSeen';
+async function mockCelebrations(): Promise<Celebration[]> {
+  if ((await AsyncStorage.getItem(MOCK_CELEBRATION_KEY).catch(() => null)) === '1') return [];
   return [{ id: 'mock-cel', created_at: new Date().toISOString(), payload: { type: 'streak_milestone', streak: 5, match_id: 'mock', reward: { freeze: false, frame: null } } }];
 }
 
