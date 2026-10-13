@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { colors, cssVars, motion } from './index';
+import { colors, cosmetics, cssVars, motion } from './index';
 
 describe('tokens', () => {
   it('exposes the motion contract', () => {
@@ -15,5 +15,9 @@ describe('tokens', () => {
   });
   it('keeps every colour a 6-digit hex', () => {
     for (const v of Object.values(colors)) expect(v).toMatch(/^#[0-9A-F]{6}$/);
+  });
+  it('keeps every cosmetic colour a 6-digit hex', () => {
+    const hexes = [...Object.values(cosmetics.bg), ...Object.values(cosmetics.frame), ...Object.values(cosmetics.kit).flatMap((k) => [k.shirt, k.racket])];
+    for (const v of hexes) expect(v).toMatch(/^#[0-9A-F]{6}$/);
   });
 });

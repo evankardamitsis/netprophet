@@ -204,6 +204,45 @@ export interface GetBadgesResult {
   worn: string | null;
 }
 
+export type LookCategory = 'frame' | 'background' | 'kit';
+export type LookKind = 'free' | 'earned' | 'buy' | 'pack';
+
+/** one cosmetic item as it is to me (api.get_look) */
+export interface LookItem {
+  key: string;
+  category: LookCategory;
+  name_el: string;
+  name_en: string;
+  kind: LookKind;
+  price_eur: number | null;
+  /** «Το κερδίζεις με 7 σωστές στη σειρά», for earned items */
+  earn_rule: string | null;
+  owned: boolean;
+  source: string | null;
+  equipped: boolean;
+}
+
+/** api.get_look / api.equip_item: the catalogue and what I wear (no frame or background = null; the kit is always set) */
+export interface GetLookResult {
+  items: LookItem[];
+  equipped: { frame: string | null; background: string | null; kit: string };
+}
+
+/** api.get_my_level: the back of the Εγώ card. The exact value and the gap to the next half are Pro only (null otherwise). */
+export interface GetMyLevelResult {
+  claimed: boolean;
+  pro: boolean;
+  status?: 'pending' | 'active';
+  tier?: number | null;
+  direction?: 'up' | 'same' | 'down';
+  matches?: number;
+  votes?: number;
+  value?: number | null;
+  week_ago?: number | null;
+  to_next?: number | null;
+  next_tier?: number | null;
+}
+
 export interface StreakCelebrationPayload {
   type: 'streak_milestone';
   streak: number;

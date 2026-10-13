@@ -7,6 +7,9 @@ import type {
   ConfirmationAnswer,
   GetFeedResult,
   GetBadgesResult,
+  GetLookResult,
+  GetMyLevelResult,
+  LookCategory,
   GetQuestsResult,
   GetQuizResult,
   AnswerCardResult,
@@ -101,6 +104,11 @@ export function rpc(client: NetprophetClient) {
     getBadges: () => call<GetBadgesResult>(client, 'get_badges', {}),
     /** wear a badge on the card, or null to take it off */
     wearBadge: (key: string | null) => call<{ worn: string | null }>(client, 'wear_badge', { p_key: key }),
+    getLook: () => call<GetLookResult>(client, 'get_look', {}),
+    /** wear an item you own; a null key takes the frame or background off */
+    equipItem: (category: LookCategory, key: string | null) =>
+      call<GetLookResult>(client, 'equip_item', { p_category: category, p_key: key }),
+    getMyLevel: () => call<GetMyLevelResult>(client, 'get_my_level', {}),
     getMe: () => call<MeResult>(client, 'get_me', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),

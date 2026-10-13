@@ -5,11 +5,15 @@ import { router, useFocusEffect } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
 import { FitText } from '../../src/components/FitText';
+import { namePlate } from '../../src/components/CardFrame';
+import { FlipCard } from '../../src/components/FlipCard';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useApi, useBadges, useBlocks, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
+import { useLookSeen } from '../../src/lib/lookSeen';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
@@ -20,7 +24,7 @@ import { MyTraits } from '../../src/components/MyTraits';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
-import { colors, ease, fonts } from '../../src/theme';
+import { alpha, colors, ease, fonts } from '../../src/theme';
 
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
@@ -40,6 +44,9 @@ export default function MeScreen() {
   const quests = useQuests();
   const badges = useBadges();
   const myTraits = useMyTraits();
+  const look = useLook();
+  const myLevel = useMyLevel();
+  const { seen } = useLookSeen();
   const [questsOpen, setQuestsOpen] = useState(false);
   const unlocks = useUnlocks();
   const { has } = unlocks;
@@ -47,10 +54,12 @@ export default function MeScreen() {
     useCallback(() => {
       void quests.refresh();
       void badges.refresh();
+      void look.refresh();
+      void myLevel.refresh();
       // a vote or a moment may have opened something since last time
       void unlocks.refresh({ afterMoment: true });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh, badges.refresh, unlocks.refresh]),
+    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh]),
   );
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -69,7 +78,9 @@ export default function MeScreen() {
         </Pressable>
         {view ? (
           <>
-            <Section i={next()}>{view.isNew ? <NewHero v={view} badges={badges.badges} /> : <Hero v={view} badges={badges.badges} />}</Section>
+            <Section i={next()}>
+              <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} />
+            </Section>
             {has('daily_quests') ? (
               <Section i={next()}>
                 <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
@@ -78,6 +89,11 @@ export default function MeScreen() {
             {has('badges_shelf') && badges.badges && earned(badges.badges.badges).length > 0 ? (
               <Section i={next()}>
                 <BadgesCard data={badges.badges} />
+              </Section>
+            ) : null}
+            {has('frames') || has('backgrounds') ? (
+              <Section i={next()}>
+                <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((i) => i.key) ?? []))} />
               </Section>
             ) : null}
             <Section i={next()}>
@@ -225,60 +241,172 @@ function Section({ i, children }: { i: number; children: ReactNode }) {
   return <Animated.View style={enter}>{children}</Animated.View>;
 }
 
-/** the ink hero: level, σερί, πόντοι μήνα, then the name */
-function Hero({ v, badges }: { v: MeView; badges: GetBadgesResult | null }) {
+/** «Εμφάνιση  Κορνίζες, φόντα, ρούχα και ρακέτα  [Νέο] ›» */
+function LookRow({ isNew }: { isNew: boolean }) {
+  const t = useCopy();
+  const press = usePress();
+  const pop = usePopIn(450, 0);
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/look')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.lookRow, press.style]}>
+        <View style={styles.lookText}>
+          <Text style={styles.lookTitle}>{t.look.title}</Text>
+          <Text style={styles.lookSub}>{t.look.sub}</Text>
+        </View>
+        <View style={styles.lookEnd}>
+          {isNew ? (
+            <Animated.View style={[styles.newPill, pop]}>
+              <Text style={styles.newPillText}>{t.look.isNew}</Text>
+            </Animated.View>
+          ) : null}
+          <Text style={styles.lookMark}>›</Text>
+        </View>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/**
+ * The hero card: the ink card with your background and frame, level, σερί, πόντοι μήνα and the name on the front.
+ * «Δες τα στατιστικά ›» (once the stats are open) turns it over to the level in detail.
+ */
+function HeroCard({ v, badges, bg, frame, level }: { v: MeView; badges: GetBadgesResult | null; bg: string | null; frame: string | null; level: LevelBack | null }) {
+  const t = useCopy();
+  const { has } = useUnlocks();
+  const [flipped, setFlipped] = useState(false);
+  const flip = usePress();
+  const canFlip = has('stats') && level !== null;
+  return (
+    <FlipCard
+      bg={bg}
+      frame={frame}
+      flipped={flipped}
+      front={
+        <>
+          {v.isNew ? <NewTop /> : <Chips v={v} />}
+          <Name v={v} frame={frame} />
+          {canFlip ? (
+            <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
+              <Animated.View style={[styles.flipPill, flip.style]}>
+                <Text style={styles.flipPillText}>{t.look.stats.open}</Text>
+              </Animated.View>
+            </Pressable>
+          ) : null}
+          <WornPill data={badges} />
+        </>
+      }
+      back={<StatsBack level={level} onBack={() => setFlipped(false)} />}
+    />
+  );
+}
+
+function Chips({ v }: { v: MeView }) {
   const t = useCopy();
   const { has } = useUnlocks();
   return (
-    <View style={styles.hero}>
-      <View style={styles.chips}>
-        {has('level_bar') ? (
-          <View style={styles.chip}>
-            <Text style={styles.chipBig}>{v.level}</Text>
-            <View>
-              <Text style={styles.chipSmall}>{t.level.label}</Text>
-              <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
-            </View>
-          </View>
-        ) : null}
+    <View style={styles.chips}>
+      {has('level_bar') ? (
         <View style={styles.chip}>
-          <Text style={[styles.chipBig, styles.lime]}>{v.streak}</Text>
+          <Text style={styles.chipBig}>{v.level}</Text>
           <View>
-            <Text style={styles.chipSmall}>{t.me.streak}</Text>
-            <Text style={styles.chipSmallBold}>{v.best}</Text>
+            <Text style={styles.chipSmall}>{t.level.label}</Text>
+            <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
           </View>
         </View>
-        <View style={styles.chip}>
-          <Text style={[styles.chipBig, styles.lime]}>{v.monthPoints}</Text>
-          <Text style={styles.chipSmall}>{t.me.monthPoints}</Text>
+      ) : null}
+      <View style={styles.chip}>
+        <Text style={[styles.chipBig, styles.lime]}>{v.streak}</Text>
+        <View>
+          <Text style={styles.chipSmall}>{t.me.streak}</Text>
+          <Text style={styles.chipSmallBold}>{v.best}</Text>
         </View>
       </View>
-      <Name v={v} />
-      <WornPill data={badges} />
+      <View style={styles.chip}>
+        <Text style={[styles.chipBig, styles.lime]}>{v.monthPoints}</Text>
+        <Text style={styles.chipSmall}>{t.me.monthPoints}</Text>
+      </View>
     </View>
   );
 }
 
-/** no level yet: what it takes, then the name */
-function NewHero({ v, badges }: { v: MeView; badges: GetBadgesResult | null }) {
+/** no level yet: what it takes */
+function NewTop() {
   const t = useCopy();
   return (
-    <View style={styles.hero}>
-      <View style={styles.newTop}>
-        <Text style={styles.newTitle}>{t.me.noLevel}</Text>
-        <Text style={styles.heroSub}>{t.me.noLevelSub}</Text>
-      </View>
-      <Name v={v} />
-      <WornPill data={badges} />
+    <View style={styles.newTop}>
+      <Text style={styles.newTitle}>{t.me.noLevel}</Text>
+      <Text style={styles.heroSub}>{t.me.noLevelSub}</Text>
     </View>
   );
 }
 
-function Name({ v }: { v: MeView }) {
+/** the back of the card: your level in detail. The exact value and the gap to the next half are Pro. */
+function StatsBack({ level, onBack }: { level: LevelBack | null; onBack: () => void }) {
+  const t = useCopy();
+  const s = t.look.stats;
+  const { has } = useUnlocks();
+  const back = usePress();
+  const pro = usePress();
+  return (
+    <>
+      <View style={styles.backTop}>
+        <View style={styles.backPill}>
+          <Text style={styles.backPillText}>{s.pill}</Text>
+        </View>
+        {level?.pro ? (
+          <View style={styles.proTag}>
+            <Text style={styles.proTagText}>{s.pro}</Text>
+          </View>
+        ) : null}
+      </View>
+      {level?.state === 'active' ? (
+        <View style={styles.backLevel}>
+          <Text style={styles.backNum}>{level.level}</Text>
+          <View>
+            <Text style={styles.backWord}>{t.level.label}</Text>
+            <Text style={styles.backDir}>{`${level.arrow} ${level.word}`}</Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.backPending}>{s.pending}</Text>
+      )}
+      {level ? <Text style={styles.backCounts}>{level.counts}</Text> : null}
+      {level?.state === 'active' && level.pro && level.value ? (
+        <View style={styles.backValueBox}>
+          <Text style={styles.backValue}>{level.value}</Text>
+          {level.toNext ? <Text style={styles.backToNext}>{level.toNext}</Text> : null}
+        </View>
+      ) : null}
+      {level?.state === 'active' && !level.pro ? (
+        <View style={styles.lockedBox}>
+          <View style={styles.lockBar} />
+          <View style={[styles.lockBar, styles.lockBarShort]} />
+        </View>
+      ) : null}
+      <View style={styles.backActions}>
+        {level?.state === 'active' && !level.pro && has('pro_sheet') ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=level_stats')} onPressIn={pro.onPressIn} onPressOut={pro.onPressOut}>
+            <Animated.View style={[styles.primary, pro.style]}>
+              <Text style={styles.primaryText}>{s.pro}</Text>
+            </Animated.View>
+          </Pressable>
+        ) : null}
+        <Pressable accessibilityRole="button" onPress={onBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backLinkHit}>
+          <Animated.Text style={[styles.backLink, back.style]}>{s.back}</Animated.Text>
+        </Pressable>
+      </View>
+    </>
+  );
+}
+
+function Name({ v, frame }: { v: MeView; frame: string | null }) {
+  const plate = namePlate(frame);
   return (
     <View style={styles.nameBox}>
-      <Text style={styles.first}>{v.first}</Text>
-      <FitText text={v.surname} style={styles.surname} />
+      <View style={plate?.box}>
+        <Text style={[styles.first, plate ? { color: plate.color } : null]}>{v.first}</Text>
+        <FitText text={v.surname} style={[styles.surname, plate ? { color: plate.color } : null]} />
+      </View>
       {v.sub ? <Text style={styles.heroSub}>{v.sub}</Text> : null}
     </View>
   );
@@ -564,7 +692,6 @@ const styles = StyleSheet.create({
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   empty: { paddingTop: 4, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   lime: { color: colors.lime },
-  hero: { padding: 18, borderRadius: 28, backgroundColor: colors.ink, gap: 22 },
   chips: { flexDirection: 'row', gap: 8 },
   chip: { flex: 1, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: colors.inkRaised, gap: 2 },
   chipBig: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 34, color: colors.paper },
@@ -576,6 +703,37 @@ const styles = StyleSheet.create({
   first: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, color: colors.paper },
   surname: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   heroSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
+  flipHit: { alignSelf: 'flex-start' },
+  flipPill: { minHeight: 40, paddingHorizontal: 16, borderRadius: 999, borderWidth: 2, borderColor: colors.mist, backgroundColor: alpha(colors.ink, 0.68), alignItems: 'center', justifyContent: 'center' },
+  flipPillText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper },
+  backTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
+  backPill: { minHeight: 28, paddingHorizontal: 12, borderRadius: 999, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
+  backPillText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
+  proTag: { minHeight: 26, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
+  proTagText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
+  backLevel: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  backNum: { fontFamily: fonts.displayHeavy, fontSize: 84, lineHeight: 84, color: colors.lime, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  backWord: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, color: colors.paper },
+  backDir: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.lime },
+  backPending: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 34, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  backCounts: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.paper },
+  backValueBox: { gap: 4 },
+  backValue: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, color: colors.lime, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  backToNext: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.mist },
+  lockedBox: { gap: 8 },
+  lockBar: { height: 38, borderRadius: 12, backgroundColor: colors.inkRaised },
+  lockBarShort: { width: '62%' },
+  backActions: { gap: 6 },
+  backLinkHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  backLink: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper, textDecorationLine: 'underline' },
+  lookRow: { minHeight: 60, paddingHorizontal: 16, borderRadius: 18, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  lookText: { flexShrink: 1, gap: 1 },
+  lookTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  lookSub: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft },
+  lookEnd: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  lookMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.blue },
+  newPill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
+  newPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.ink },
   questsRow: { minHeight: 56, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   questsTitle: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.ink },
   questsCount: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
