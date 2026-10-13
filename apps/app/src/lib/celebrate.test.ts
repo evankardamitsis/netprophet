@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { BadgeCelebration, Celebration, StreakCelebration, QuestReward, UnlockCelebration } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, LeagueCelebration, StreakCelebration, QuestReward, UnlockCelebration } from '@netprophet/db';
 import { copy } from '../i18n';
 import { celebrationTitleSize, celebrationView, groupView, nextGroup } from './celebrate';
 
@@ -74,6 +74,25 @@ describe('badge celebrations', () => {
 });
 
 const u = (id: string, key: string): UnlockCelebration => ({ id, created_at: '2026-10-12T10:00:00Z', payload: { type: 'unlock', key } });
+
+const lg = (id: string, position: number, award: boolean, movement: 'promote' | 'relegate' | 'stay' = 'promote'): LeagueCelebration => ({
+  id,
+  created_at: '2026-11-01T00:00:00Z',
+  payload: { type: 'league', month: '2026-10', tier: 'bronze', position, movement, next_tier: 'silver', award },
+});
+
+describe('league celebrations', () => {
+  it('top 3 get the Frame and badge line, no pill, no dots', () => {
+    expect(groupView([lg('l', 2, true)], copy)).toEqual({ label: 'ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ', streak: null, tier: null, title: '2ος', reward: 'Frame Κορυφαίος του μήνα και badge' });
+  });
+  it('others hear next month\'s league', () => {
+    expect(groupView([lg('l', 7, false)], copy).reward).toBe('Κατηγορία τον άλλο μήνα: Ασημένια');
+  });
+  it('plays after unlocks', () => {
+    expect(nextGroup([lg('l', 1, true), u('u', 'level_bar')]).map((x) => x.id)).toEqual(['u']);
+    expect(nextGroup([lg('l', 1, true)]).map((x) => x.id)).toEqual(['l']);
+  });
+});
 
 describe('unlock celebrations', () => {
   it('says «Νέο», the title and the line by step', () => {

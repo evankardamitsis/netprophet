@@ -180,8 +180,24 @@ export interface UnlockCelebrationPayload {
   key: string;
 }
 
-/** a full-screen moment (prototype celOn): a σερί milestone, a finished quest, a badge tier or an unlock */
-export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload> {
+export type LeagueTier = 'bronze' | 'silver' | 'gold';
+
+/** the month closed (api.admin_league_close): where the viewer finished and where they play next month */
+export interface LeagueCelebrationPayload {
+  type: 'league';
+  month: string;
+  tier: LeagueTier;
+  position: number;
+  movement: 'promote' | 'relegate' | 'stay';
+  next_tier: LeagueTier;
+  /** top 3 with points: the Κορυφαίος του μήνα frame and badge */
+  award: boolean;
+}
+
+/** a full-screen moment (prototype celOn): a σερί milestone, a finished quest, a badge tier, an unlock or the month's league result */
+export interface Celebration<
+  P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload,
+> {
   id: string;
   created_at: string;
   payload: P;
@@ -191,6 +207,7 @@ export type StreakCelebration = Celebration<StreakCelebrationPayload>;
 export type QuestCelebration = Celebration<QuestCelebrationPayload>;
 export type BadgeCelebration = Celebration<BadgeCelebrationPayload>;
 export type UnlockCelebration = Celebration<UnlockCelebrationPayload>;
+export type LeagueCelebration = Celebration<LeagueCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
 export interface ResultRow {
@@ -309,8 +326,18 @@ export interface PlayerProfile extends PlayerCard {
   next_match: PlayerMatchLine | null;
 }
 
-/** Κατάταξη scopes in M1; leagues («Κατηγορία») come with M3. */
-export type LadderScope = 'friends' | 'all';
+/** Κατάταξη scopes: «Κατηγορία» (my league group), «Όσοι ξέρεις», «Όλη η Αττική». */
+export type LadderScope = 'league' | 'friends' | 'all';
+
+/** my league group this month (null when I have none yet) */
+export interface LadderLeague {
+  tier: LeagueTier;
+  group_no: number;
+  size: number;
+  promote_top: 5;
+  relegate_from: 16;
+  award_top: 3;
+}
 
 export interface LadderRow {
   position: number;
@@ -326,6 +353,9 @@ export interface LadderRow {
 /** This month's Κατάταξη (api.get_ladder). */
 export interface Ladder {
   scope: LadderScope;
+  /** true when I am in a league group this month */
+  has_league: boolean;
+  league: LadderLeague | null;
   month_key: string;
   /** days until the month ends, Athens time; 1 on the last day */
   days_left: number;

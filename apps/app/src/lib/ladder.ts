@@ -1,6 +1,6 @@
 import type { Copy } from '@netprophet/copy';
 import { POINTS } from '@netprophet/core';
-import type { Ladder, LadderRow } from '@netprophet/db';
+import type { Ladder, LadderRow, LadderScope, LeagueCelebration } from '@netprophet/db';
 import { fmt } from './votes';
 
 /**
@@ -78,4 +78,56 @@ export function pointRules(t: Copy): { label: string; value: string }[] {
     { label: r.upset, value: `+${POINTS.UPSET_CALL}` },
     { label: r.chain, value: fmt(r.chainValue, { n: POINTS.CHAIN_BONUS }) },
   ];
+}
+
+/** the scope tabs in prototype order; «Κατηγορία» only with a league, «Όλη η Αττική» only once the stats area is open */
+export function scopeTabs(hasLeague: boolean, areaOpen: boolean): LadderScope[] {
+  const tabs: LadderScope[] = [];
+  if (hasLeague) tabs.push('league');
+  tabs.push('friends');
+  if (areaOpen) tabs.push('all');
+  return tabs;
+}
+
+/** the scope to show: the picked one if it is still a tab, else the league when there is one, else the people you know */
+export function pickScope(picked: LadderScope | null, hasLeague: boolean, areaOpen: boolean): LadderScope {
+  const tabs = scopeTabs(hasLeague, areaOpen);
+  if (picked && tabs.includes(picked)) return picked;
+  return hasLeague ? 'league' : 'friends';
+}
+
+/** the pill on the ink card */
+export function scopeLabel(ladder: Ladder, t: Copy): string {
+  if (ladder.scope === 'league' && ladder.league) {
+    return fmt(t.ladder.scopeName.league, { tier: t.ladder.tiers[ladder.league.tier], n: ladder.league.size });
+  }
+  return t.ladder.scopeName[ladder.scope === 'all' ? 'all' : 'friends'];
+}
+
+export type BoardItem = { kind: 'band'; label: string } | { kind: 'row'; row: LadderRow };
+
+/**
+ * The «Κατηγορία» board: «↑ Ανεβαίνουν κατηγορία» above row 1 (not in gold) and «↓ Αλλάζουν κατηγορία» before
+ * row 16 (not in bronze). Other scopes are plain rows.
+ */
+export function boardItems(ladder: Ladder, t: Copy): BoardItem[] {
+  const items: BoardItem[] = [];
+  const lg = ladder.scope === 'league' ? ladder.league : null;
+  ladder.rows.forEach((row, i) => {
+    if (lg && i === 0 && lg.tier !== 'gold') items.push({ kind: 'band', label: t.ladder.league.up });
+    if (lg && row.position === lg.relegate_from && lg.tier !== 'bronze') items.push({ kind: 'band', label: t.ladder.league.down });
+    items.push({ kind: 'row', row });
+  });
+  return items;
+}
+
+/** the month-close moment: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the Frame and badge or next month's league */
+export function leagueCelebrationView(c: LeagueCelebration, t: Copy): { label: string; title: string; reward: string } {
+  const l = t.ladder;
+  const p = c.payload;
+  return {
+    label: fmt(l.league.label, { tier: l.tiers[p.tier] }),
+    title: fmt(l.position, { n: p.position }),
+    reward: p.award ? l.league.award : fmt(l.league.next, { tier: l.tiers[p.next_tier] }),
+  };
 }

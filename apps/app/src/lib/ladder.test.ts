@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { Ladder } from '@netprophet/db';
-import { motivation, nextLine, pointRules, rowName, votesToPass } from './ladder';
+import { boardItems, motivation, nextLine, pickScope, pointRules, rowName, scopeLabel, scopeTabs, votesToPass } from './ladder';
 
 const t = getCopy('el');
 
 const base: Ladder = {
   scope: 'friends',
+  has_league: false,
+  league: null,
   month_key: '2026-10',
   days_left: 12,
   total: 3,
@@ -64,5 +66,47 @@ describe('votesToPass', () => {
 describe('pointRules', () => {
   it('reads the numbers from core', () => {
     expect(pointRules(t).map((r) => r.value)).toEqual(['+10', '+30', '+5 ακόμα']);
+  });
+});
+
+describe('scopes', () => {
+  it('«Κατηγορία» only with a league, «Όλη η Αττική» only once open, in prototype order', () => {
+    expect(scopeTabs(true, true)).toEqual(['league', 'friends', 'all']);
+    expect(scopeTabs(false, false)).toEqual(['friends']);
+    expect(scopeTabs(true, false)).toEqual(['league', 'friends']);
+  });
+  it('defaults to the league when there is one, else the people you know', () => {
+    expect(pickScope(null, true, false)).toBe('league');
+    expect(pickScope(null, false, true)).toBe('friends');
+    expect(pickScope('all', true, false)).toBe('league');
+    expect(pickScope('all', true, true)).toBe('all');
+    expect(pickScope('league', false, true)).toBe('friends');
+  });
+});
+
+const row = (position: number) => ({ position, user_id: `u${position}`, first_name: 'Α', surname: 'Β', display_name: null, points: 100 - position, last_point_at: null, is_me: false });
+const lgLadder = (tier: 'bronze' | 'silver' | 'gold'): Ladder => ({
+  ...base,
+  scope: 'league',
+  has_league: true,
+  league: { tier, group_no: 1, size: 20, promote_top: 5, relegate_from: 16, award_top: 3 },
+  rows: Array.from({ length: 20 }, (_, i) => row(i + 1)),
+});
+
+describe('league board', () => {
+  const bands = (l: Ladder) => boardItems(l, t).flatMap((x, i) => (x.kind === 'band' ? [[i, x.label] as const] : []));
+  it('silver has both lines: above row 1 and before row 16', () => {
+    expect(bands(lgLadder('silver'))).toEqual([[0, '↑ Ανεβαίνουν κατηγορία'], [16, '↓ Αλλάζουν κατηγορία']]);
+  });
+  it('gold has no up line, bronze no down line', () => {
+    expect(bands(lgLadder('gold')).map((b) => b[1])).toEqual(['↓ Αλλάζουν κατηγορία']);
+    expect(bands(lgLadder('bronze')).map((b) => b[1])).toEqual(['↑ Ανεβαίνουν κατηγορία']);
+  });
+  it('other scopes are plain rows', () => {
+    expect(bands({ ...lgLadder('silver'), scope: 'friends' })).toEqual([]);
+  });
+  it('the pill says the tier and the player count', () => {
+    expect(scopeLabel(lgLadder('bronze'), t)).toBe('Χάλκινη · 20 παίκτες');
+    expect(scopeLabel(base, t)).toBe('Όσοι ξέρεις · αυτόν τον μήνα');
   });
 });

@@ -1,7 +1,8 @@
 import { greekCaps, type Copy } from '@netprophet/copy';
-import type { BadgeCelebration, Celebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, LeagueCelebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
 import { badgeName } from './badges';
 import { questCelebrationView } from './quests';
+import { leagueCelebrationView } from './ladder';
 import { hasMoment } from './unlockLadder';
 import { fmt } from './votes';
 
@@ -20,7 +21,7 @@ export interface CelebrationView {
   reward: string;
 }
 
-/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE, then badges, then unlocks, one by one */
+/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE, then badges, then unlocks, then the month's league result, one by one */
 export function nextGroup(list: Celebration[]): Celebration[] {
   const streak = list.find((c) => c.payload.type === 'streak_milestone');
   if (streak) return [streak];
@@ -29,17 +30,26 @@ export function nextGroup(list: Celebration[]): Celebration[] {
   const badge = list.find((c) => c.payload.type === 'badge');
   if (badge) return [badge];
   const unlock = list.find((c) => isUnlock(c) && hasMoment(c.payload.key));
-  return unlock ? [unlock] : [];
+  if (unlock) return [unlock];
+  const league = list.find(isLeague);
+  return league ? [league] : [];
 }
 
 const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
 const isBadge = (c: Celebration): c is BadgeCelebration => c.payload.type === 'badge';
+export const isLeague = (c: Celebration): c is LeagueCelebration => c.payload.type === 'league';
 export const isUnlock = (c: Celebration): c is UnlockCelebration => c.payload.type === 'unlock';
 
 /** an unlock step opening: «Νέο», the title by step and its line (empty for most) */
 export function unlockCelebrationView(c: UnlockCelebration, t: Copy): CelebrationView {
   const m = t.unlocks.moments[c.payload.key];
   return { label: greekCaps(t.unlocks.label), streak: null, tier: null, title: m?.title ?? '', reward: m?.line ?? '' };
+}
+
+/** the month closed: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the Frame and badge or next month's league */
+export function leagueView(c: LeagueCelebration, t: Copy): CelebrationView {
+  const v = leagueCelebrationView(c, t);
+  return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
 }
 
 /** the big title shrinks for the long ones so it fits in a few lines (54 → 40 past ~22 characters) */
@@ -69,6 +79,7 @@ export function groupView(group: Celebration[], t: Copy): CelebrationView {
   }
   if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
   if (isUnlock(group[0]!)) return unlockCelebrationView(group[0], t);
+  if (isLeague(group[0]!)) return leagueView(group[0], t);
   return celebrationView(group[0] as StreakCelebration, t);
 }
 
