@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
 import { colors, ui } from '../ui';
-import { approvePlayer, closeReport, linkSuggestion, mergePlayer, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
+import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
   match_id: string;
@@ -42,11 +42,24 @@ export interface Report {
   reports: number;
 }
 
+export interface PendingTrait {
+  id: string;
+  label_el: { m: string; f: string };
+  label_en: string;
+  created_at: string;
+  /** who added it */
+  by: string | null;
+  /** the player it was first said about */
+  player: string | null;
+  votes: number;
+}
+
 export interface Moderation {
   reports: Report[];
   disputes: Dispute[];
   players: PendingPlayer[];
   tournaments: { text: string; matches: number; last: string }[];
+  traits: PendingTrait[];
 }
 
 export interface TournamentOption {
@@ -96,6 +109,11 @@ export function Queue({ data, tournaments }: { data: Moderation; tournaments: To
       <Section title="New players" hint="Names typed in «+ Ματς». They already show by name; approve them or merge a typo into the roster player." n={data.players.length}>
         {data.players.map((p) => (
           <PlayerRow key={p.player_id} p={p} onNotice={setNotice} />
+        ))}
+      </Section>
+      <Section title="Traits" hint="Phrases for «Πώς παίζει» added by players. Fix the wording (masculine, feminine, English), then approve to show it to everyone, or drop it." n={(data.traits ?? []).length}>
+        {(data.traits ?? []).map((t) => (
+          <TraitRow key={t.id} t={t} onNotice={setNotice} />
         ))}
       </Section>
       <Section title="Tournament names" hint="Typed under «Άλλο». Link them to a tournament, or keep the matches as friendlies." n={data.tournaments.length}>
@@ -283,6 +301,35 @@ function SuggestionRow({ s, tournaments, onNotice }: { s: Moderation['tournament
         </button>
       </div>
       <p style={{ ...ui.muted, margin: 0 }}>Not in the list? Add it on the Import page first.</p>
+    </div>
+  );
+}
+
+function TraitRow({ t, onNotice }: { t: PendingTrait; onNotice: Notice }) {
+  const [m, setM] = useState(t.label_el.m);
+  const [f, setF] = useState(t.label_el.f);
+  const [en, setEn] = useState(t.label_en);
+  const [pending, start] = useTransition();
+  const what = `«${t.label_el.m}»:`;
+  return (
+    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <span style={ui.muted}>
+        Added {when(t.created_at)} by {t.by ?? 'someone'}
+        {t.player ? ` about ${t.player}` : ''} · {t.votes} vote{t.votes === 1 ? '' : 's'}
+      </span>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <input style={{ ...ui.input, width: 240 }} value={m} onChange={(e) => setM(e.target.value)} aria-label="Masculine" placeholder="Masculine" />
+        <input style={{ ...ui.input, width: 240 }} value={f} onChange={(e) => setF(e.target.value)} aria-label="Feminine" placeholder="Feminine" />
+        <input style={{ ...ui.input, width: 240 }} value={en} onChange={(e) => setEn(e.target.value)} aria-label="English" placeholder="English" />
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button style={ui.primary} disabled={pending || !m.trim()} onClick={() => start(async () => onNotice({ ...(await decideTrait(t.id, true, { m, f, en })), what }))}>
+          Approve
+        </button>
+        <button style={ui.secondary} disabled={pending} onClick={() => start(async () => onNotice({ ...(await decideTrait(t.id, false)), what }))}>
+          Drop
+        </button>
+      </div>
     </div>
   );
 }
