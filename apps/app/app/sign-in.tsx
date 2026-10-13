@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BouncingLogo } from '../src/components/BouncingLogo';
+import { Intro } from '../src/components/Intro';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
 import { AuthFailure, EMAIL_RE, guestAllowed, useAuth, type AuthErrorKind } from '../src/lib/auth';
@@ -21,7 +22,7 @@ import { cardSurface, colors, ease, fonts } from '../src/theme';
 /** the lockup's height on the welcome card */
 const HERO_LOGO_H = 30;
 
-type Step = 'welcome' | 'email' | 'code';
+type Step = 'intro' | 'welcome' | 'email' | 'code';
 /** «Άλλη φορά»: after the email code, go straight to the feed and skip claim, area and Ποιους ξέρεις */
 export { SKIP_ONBOARDING_KEY };
 const CODE_LEN = 6;
@@ -39,13 +40,15 @@ const LATER_SLACK = 14;
 const ACCENT_PAD = 10;
 
 /**
- * Signed-out flow. Welcome is prototype V2's first screen, copied as is.
+ * Signed-out flow. First the intro (founder, 12 Oct: the big logo with the balls bouncing around and «Πάμε»), then
+ * the welcome card, prototype V2's first screen, copied as is.
  * Email and code are not in the prototype; they use its claim screen («Είσαι ήδη εδώ;») styles.
  */
 export default function SignInScreen() {
   const { enterAsGuest } = useAuth();
   const insets = useSafeAreaInsets();
-  const [step, setStep] = useState<Step>('welcome');
+  const [step, setStep] = useState<Step>('intro');
+  if (step === 'intro') return <Intro onStart={() => setStep('welcome')} />;
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
@@ -67,7 +70,7 @@ export default function SignInScreen() {
             }}
           />
         ) : (
-          <Auth step={step} setStep={setStep} />
+          <Auth step={step as 'email' | 'code'} setStep={setStep} />
         )}
       </ScrollView>
     </KeyboardAvoidingView>

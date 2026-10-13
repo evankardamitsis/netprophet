@@ -87,6 +87,9 @@ export default function OnboardingScreen() {
   const [roster, setRoster] = useState('');
   const [candidates, setCandidates] = useState<ClaimRow[] | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
+  const [own, setOwn] = useState<ClaimRow | null>(null);
+  // the claim search starts with the name from the first step and can be changed (founder, 12 Oct)
+  const [claimQuery, setClaimQuery] = useState('');
   // play
   const [hand, setHand] = useState<'R' | 'L' | null>(null);
   const [tour, setTour] = useState<string | null>(null);
@@ -114,6 +117,8 @@ export default function OnboardingScreen() {
         setFirst(split.first);
         setSurname(split.surname);
         if (p.primary_sport === 'padel') setSport('padel');
+        // an account that already has its player (v1, a link, a replay) sees that player on the claim step
+        if (me.player) setOwn({ id: me.player.id, name: `${me.player.first_name} ${me.player.surname}`, sub: '' });
       })
       .catch(() => undefined);
     ob.rosterSize().then(setRoster).catch(() => undefined);
@@ -167,7 +172,13 @@ export default function OnboardingScreen() {
       await ob.saveProfile({ first_name: f, surname: s, display_name: `${f} ${s}`.trim(), primary_sport: primarySport(sport ?? 'tennis') });
       setCandidates(null);
       setPicked(null);
+      setClaimQuery(`${f} ${s}`.trim());
       go(i + 1);
+      if (own) {
+        setCandidates([own]);
+        setPicked(own.id);
+        return;
+      }
       const rows = await ob.candidates(f, s).catch(() => []);
       setCandidates(rows);
       setPicked(rows.length === 1 ? rows[0]!.id : null);
@@ -176,6 +187,8 @@ export default function OnboardingScreen() {
   const claimMe = () =>
     run(async () => {
       if (!picked) return;
+      // already theirs: nothing to claim
+      if (own && picked === own.id) return go(i + 1);
       const r = await ob.claim(picked);
       track('claim_completed', { result: r });
       if (r === 'ok') return go(i + 1);
@@ -215,9 +228,30 @@ export default function OnboardingScreen() {
     go(0);
   };
 
+  // typing in the claim search looks again (from two letters), keeping the account's own player on top
+  const searchedFor = useRef('');
+  useEffect(() => {
+    if (step !== 'claim' || link) return undefined;
+    const q = claimQuery.trim();
+    if (q === searchedFor.current || q.length < 2) return undefined;
+    const id = setTimeout(() => {
+      searchedFor.current = q;
+      const n = splitName(q);
+      ob.candidates(n.first || q, n.surname)
+        .then((rows) => {
+          const list = own ? [own, ...rows.filter((r) => r.id !== own.id)] : rows;
+          setCandidates(list);
+          setPicked((p) => (p && list.some((r) => r.id === p) ? p : list.length === 1 ? list[0]!.id : null));
+        })
+        .catch(() => setCandidates([]));
+    }, 300);
+    return () => clearTimeout(id);
+  }, [claimQuery, step, link, ob, own]);
+
   const claimNew = () =>
     run(async () => {
-      await ob.setClaimStatus('creation_requested');
+      // an account with a player already cannot ask for a new one; in a replay it just walks on
+      if (!own) await ob.setClaimStatus('creation_requested');
       setIsNew(true);
       go(i + 1);
     });
@@ -335,11 +369,15 @@ export default function OnboardingScreen() {
             <>
               <Title text={o.claim.title} />
               <Text style={styles.sub}>{fmt(o.claim.subtitle, { n: roster || '1.500' })}</Text>
-              <View style={styles.query}>
-                <Text style={styles.queryText} numberOfLines={1}>
-                  {`${first} ${surname}`.trim()}
-                </Text>
-              </View>
+              <TextInput
+                value={claimQuery}
+                onChangeText={setClaimQuery}
+                placeholder={o.claim.search}
+                placeholderTextColor={colors.inkSoft}
+                autoCorrect={false}
+                autoCapitalize="words"
+                style={[styles.query, styles.queryText]}
+              />
               {candidates === null ? null : candidates.length === 0 ? (
                 <Text style={styles.note}>{o.claim.none}</Text>
               ) : (

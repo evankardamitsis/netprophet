@@ -268,6 +268,7 @@ export const en: Copy = {
     },
     claim: {
       title: 'Are you already here?',
+      search: 'Type your name',
       subtitle: 'We have {n} players from all over Attica. These match your name.',
       none: 'Nobody matches that name.',
       me: 'That is me',
