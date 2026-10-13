@@ -843,6 +843,7 @@ export const en: Copy = {
       quarter: 'Quarter-finals',
       semi: 'Semi-finals',
       final: 'Final',
+      champion: 'Champion',
       bye: 'BYE',
       advances: 'goes through',
       until: 'by {date}',

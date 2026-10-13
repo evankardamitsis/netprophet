@@ -248,6 +248,25 @@ export interface BracketMatch {
   advances: 1 | 2 | null;
   /** the score as written, or when it is played, or the round's deadline */
   line: string;
+  /** games per set, side 1 first (parsed from the score as written); empty when there is no score */
+  sets: [number, number][];
+  /** the card footer: when it is played, «έως 14/10», or «Χωρίς αγώνα»; empty once it has a score or a bye */
+  note: string;
+}
+
+/** «64 63», «67(4) 62 10-8», «6-4, 3-6»: games per set, winner first as the sheet writes them, turned to side 1 first */
+export function parseSets(scoreRaw: string, winner: 1 | 2 | null): [number, number][] {
+  const out: [number, number][] = [];
+  for (const tok of scoreRaw.replace(/\(\d+\)/g, '').split(/[\s,;]+/)) {
+    const dash = /^(\d+)-(\d+)$/.exec(tok);
+    const pair = /^(\d)(\d)$/.exec(tok);
+    const m = dash ?? pair;
+    if (!m) continue;
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    out.push(winner === 2 ? [b, a] : [a, b]);
+  }
+  return out;
 }
 
 /** the matches of every round of one draw, with names as written on the sheet */
@@ -281,7 +300,9 @@ export function bracketRounds(draw: TournamentDraw, masked: string[], t: Copy): 
       const a = side(m.side1);
       const b = side(m.side2);
       const advances = a.bye && !b.bye && !b.empty ? 2 : b.bye && !a.bye && !a.empty ? 1 : null;
-      return { key: `${m.round}-${m.slot}`, sides: [a, b], winner: m.winner, advances, line: advances ? '' : line(m) };
+      const sets = m.winner ? parseSets(m.scoreRaw, m.winner) : [];
+      const note = m.winner ? (m.walkover && sets.length === 0 ? t.results.walkover : '') : advances ? '' : line(m);
+      return { key: `${m.round}-${m.slot}`, sides: [a, b], winner: m.winner, advances, line: advances ? '' : line(m), sets, note };
     }),
   }));
 }

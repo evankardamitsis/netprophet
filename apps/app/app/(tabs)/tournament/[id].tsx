@@ -5,7 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
 import { useCopy } from '../../../src/i18n';
 import { useTournament } from '../../../src/lib/data';
-import { fmt } from '../../../src/lib/votes';
+import { BracketTree } from '../../../src/components/BracketTree';
 import { usePress, useStgIn } from '../../../src/lib/motion';
 import {
   bracketRounds,
@@ -16,10 +16,8 @@ import {
   segmentsOf,
   subLine,
   todayKey,
-  type BracketMatch,
   type ScheduleRow,
   type Segment,
-  type SideView,
 } from '../../../src/lib/tournaments';
 import { colors, fonts } from '../../../src/theme';
 
@@ -168,11 +166,6 @@ function Bracket({ d }: { d: GetTournamentResult }) {
   const [pickedTab, setPickedTab] = useState<string | null>(null);
   const draw = d.draws.find((x) => x.tab === pickedTab) ?? d.draws[0]!;
   const rounds = draw.format === 'round_robin' ? [] : bracketRounds(draw, d.masked, t);
-  // the first round with something still to play, else the last
-  const firstOpen = rounds.findIndex((r) => r.matches.some((m) => !m.winner && !m.advances));
-  const [pickedRound, setPickedRound] = useState<{ tab: string; index: number } | null>(null);
-  const roundIndex = pickedRound && pickedRound.tab === draw.tab && pickedRound.index < rounds.length ? pickedRound.index : firstOpen >= 0 ? firstOpen : Math.max(0, rounds.length - 1);
-  const round = rounds[roundIndex];
   return (
     <View style={styles.block}>
       {d.draws.length > 1 ? (
@@ -184,61 +177,11 @@ function Bracket({ d }: { d: GetTournamentResult }) {
       ) : null}
       {draw.format === 'round_robin' ? (
         <Text style={styles.empty}>{t.tournaments.detail.roundRobin}</Text>
+      ) : rounds.length === 0 ? (
+        <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text>
       ) : (
-        <>
-          {rounds.length > 1 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
-              {rounds.map((r, i) => (
-                <Pill key={r.name} label={r.name} on={i === roundIndex} onPress={() => setPickedRound({ tab: draw.tab, index: i })} />
-              ))}
-            </ScrollView>
-          ) : null}
-          <View key={`${draw.tab}-${roundIndex}`} style={styles.list}>
-            {round?.matches.map((m, i) => (
-              <DrawCard key={m.key} m={m} i={i} />
-            ))}
-            {!round ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : null}
-          </View>
-        </>
+        <BracketTree key={draw.tab} rounds={rounds} me={d.me} />
       )}
-    </View>
-  );
-}
-
-function DrawCard({ m, i }: { m: BracketMatch; i: number }) {
-  const enter = useStgIn(STG_MS - 100, Math.min(i, 8) * STAGGER);
-  return (
-    <Animated.View style={[styles.drawCard, enter]}>
-      <SideLine side={m.sides[0]} won={m.winner === 1} advances={m.advances === 1} />
-      <SideLine side={m.sides[1]} won={m.winner === 2} advances={m.advances === 2} />
-      {m.line ? <Text style={styles.drawLine}>{m.line}</Text> : null}
-    </Animated.View>
-  );
-}
-
-function SideLine({ side, won, advances }: { side: SideView; won: boolean; advances: boolean }) {
-  const t = useCopy();
-  const d = t.tournaments.detail;
-  if (side.bye) {
-    return (
-      <View style={styles.sideRow}>
-        <Text style={styles.bye}>{d.bye}</Text>
-      </View>
-    );
-  }
-  return (
-    <View style={styles.sideRow}>
-      <Text style={[won ? styles.nameWin : styles.name, styles.sideName]} numberOfLines={1}>
-        {side.parts.map((p, j) => (
-          <Text key={`${p.text}-${j}`} onPress={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined} suppressHighlighting>
-            {j > 0 ? ' / ' : ''}
-            {p.text}
-          </Text>
-        ))}
-        {side.seed !== null ? <Text style={styles.seed}> {fmt(d.seed, { n: side.seed })}</Text> : null}
-      </Text>
-      {won ? <Text style={styles.check}>✓</Text> : null}
-      {advances ? <Text style={styles.advances}>{d.advances}</Text> : null}
     </View>
   );
 }
@@ -271,12 +214,4 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.display, fontSize: 26, lineHeight: 30, color: colors.ink },
   nameWin: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 30, color: colors.ink },
   score: { marginTop: 2, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
-  drawCard: { paddingVertical: 12, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 2 },
-  sideRow: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sideName: { flexShrink: 1 },
-  seed: { fontFamily: fonts.bodySemi, fontSize: 12, color: colors.inkSoft },
-  check: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
-  advances: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft },
-  bye: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.52, color: colors.muted },
-  drawLine: { marginTop: 2, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
 });

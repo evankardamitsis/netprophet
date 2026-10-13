@@ -903,6 +903,7 @@ export const el = {
       quarter: 'Προημιτελικά',
       semi: 'Ημιτελικά',
       final: 'Τελικός',
+      champion: 'Πρωταθλητής',
       bye: 'BYE',
       advances: 'προκρίνεται',
       until: 'έως {date}',
