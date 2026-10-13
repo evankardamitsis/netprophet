@@ -17,8 +17,8 @@ insert into core.name_spellings (kind, caps_key, spelling, confidence) values
   ('surname', 'ΒΑΙΟΥ', 'Βαΐου', 'high'), ('surname', 'ΚΑΡΑΓΙΑΝΝΗΣ', 'Καραγιάννης', 'review');
 
 select is(core.name_caps_key('Βαΐος'), core.name_caps_key('ΒΑΪΟΣ'), 'dialytika and accents file under one key');
-select is((select (proposed_first, proposed_surname, confidence) from core.name_proposals() where player_id = :'p2'::uuid)::text,
-          '(Μαρία,"Παπαδοπούλου-Βαΐου",high)', 'word by word, the hyphen kept');
+select is((select proposed_first || ' ' || proposed_surname || ' ' || confidence from core.name_proposals() where player_id = :'p2'::uuid),
+          'Μαρία Παπαδοπούλου-Βαΐου high', 'word by word, the hyphen kept');
 select is((select confidence from core.name_proposals() where player_id = :'p3'::uuid), 'review', 'one unsure word: review');
 select is((select confidence from core.name_proposals() where player_id = :'p4'::uuid), 'missing', 'an unknown word: missing');
 select ok(not exists (select 1 from core.name_proposals() where player_id = :'p5'::uuid), 'a written name is left alone');
