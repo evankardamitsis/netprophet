@@ -70,3 +70,26 @@ export async function askForPushOnce(api: Api): Promise<void> {
     // the vote already counted; push is a bonus
   }
 }
+
+/** where a tapped push opens: a schedule alert its tournament, results the Αποτελέσματα tab */
+export function pushRoute(data: Record<string, unknown> | undefined): string | null {
+  if (!data) return null;
+  if (data.type === 'schedule' && typeof data.tournament_id === 'string') return `/tournament/${data.tournament_id}`;
+  if (data.type === 'results') return '/results';
+  return null;
+}
+
+/** open the right screen when a push is tapped (also the one that launched the app); returns the unsubscribe */
+export function listenForPushTaps(open: (route: string) => void): () => void {
+  const Notifications = notifications();
+  if (!Notifications) return () => undefined;
+  const go = (data: Record<string, unknown> | undefined) => {
+    const route = pushRoute(data);
+    if (route) open(route);
+  };
+  void Notifications.getLastNotificationResponseAsync()
+    .then((r) => go(r?.notification.request.content.data as Record<string, unknown> | undefined))
+    .catch(() => undefined);
+  const sub = Notifications.addNotificationResponseReceivedListener((r) => go(r.notification.request.content.data as Record<string, unknown> | undefined));
+  return () => sub.remove();
+}
