@@ -2,7 +2,7 @@
 -- players or anyone twice; the same set all day; an answer is a 'card' vote; the sixth pays +30 once, Pro too;
 -- σερί never moves.
 begin;
-select plan(16);
+select plan(17);
 
 select tests.create_user('qz-u@test.local') as u \gset
 select tests.create_user('qz-v@test.local') as v \gset
@@ -70,9 +70,13 @@ select is((select done_at is not null from core.user_quest_progress where user_i
           true, 'cards count on «Ψήφισε 3 κάρτες»');
 select tests.logout();
 
--- a player who follows nobody still gets a full set
+-- a player who follows nobody still gets a full set, with «Ποιος είναι;» even when nobody has an area (the roster today)
+update core.players set area_id = null where id in (select id from pp);
 select tests.login(:'v'::uuid);
-select is(jsonb_array_length(api.get_quiz() -> 'cards'), 6, 'no follows: still six');
+create temp table q3 as select api.get_quiz() as doc;
+select is(jsonb_array_length((select doc -> 'cards' from q3)), 6, 'no follows: still six');
+select ok(exists (select 1 from q3, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' = 'q'),
+          '«Ποιος είναι;» from the level alone');
 select tests.logout();
 
 -- Pro: twelve cards, still +30 at the sixth
