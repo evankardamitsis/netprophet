@@ -1,6 +1,6 @@
 -- Demo data: real roster names in upcoming matches and recent results, all removable again.
 begin;
-select plan(6);
+select plan(7);
 
 select tests.create_user('dm-adm@test.local', 'admin') as adm \gset
 select tests.create_user('dm-u@test.local') as u \gset
@@ -17,6 +17,7 @@ select is((select count(*)::int from core.matches m join core.match_results r on
 select ok((select bool_and(starts_at > now()) from core.matches m where provenance ? 'demo' and not exists (select 1 from core.match_results r where r.match_id = m.id)),
           'the upcoming ones are all still ahead');
 select is(core.seed_demo_sponsored(true), 5, 'five demo sponsored cards');
+select ok((select bool_and(art is not null) from core.sponsored_cards where category = 'demo'), 'every demo ad has art');
 select core.seed_demo(false) is not null as x \gset
 select is((select count(*)::int from core.matches where provenance ? 'demo'), 0, 'and it all goes away');
 

@@ -187,6 +187,7 @@ export const en: Copy = {
     error: 'Could not load. Pull down to try again.',
     voteFailed: 'Your vote did not go through. Try again.',
     votingClosed: 'Voting has closed.',
+    sponsoredMore: 'See more ›',
   },
   result: {
     correct: 'You called it!',
