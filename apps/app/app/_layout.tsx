@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Stack, useSegments } from "expo-router";
+import { Stack, router, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,7 +11,7 @@ import {
   useOnboardingGate,
 } from "../src/lib/onboardingGate";
 import { identify, screen } from "../src/lib/analytics";
-import { refreshPushToken } from "../src/lib/push";
+import { listenForPushTaps, refreshPushToken } from "../src/lib/push";
 import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
 
@@ -56,6 +56,11 @@ function Routes() {
   useEffect(() => {
     if (userId && api) void refreshPushToken(api);
     if (userId) identify(userId, "el");
+  }, [userId]);
+  // a tapped push opens its screen (a schedule alert its tournament, results the Αποτελέσματα tab)
+  useEffect(() => {
+    if (!userId) return undefined;
+    return listenForPushTaps((r) => router.push(r as never));
   }, [userId]);
   // screens by route («/player/[id]»), never with ids in them
   const segments = useSegments();
