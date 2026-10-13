@@ -5,25 +5,25 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
-import { celebrationView } from '../lib/celebrate';
+import { groupView } from '../lib/celebrate';
 import { colors, ease, fonts } from '../theme';
 
 /**
  * A full-screen celebration (prototype V2 celOn), waiting for «Συνέχεια»: ink with a lime glow, 30 pieces of
  * confetti bursting from the middle, «ΣΕΡΙ», the lime pill counting up to the σερί, the title, the reward line and,
- * at 3.5s, the blue «Συνέχεια». There is no avatar yet, so the prototype's avatar stage is left out.
+ * at 3.5s, the blue «Συνέχεια». Quests use the same moment without the pill (all queued quests as one). There is no avatar yet, so the prototype's avatar stage is left out.
  */
 const DIM_MS = 600;
 const COUNT_MS = 1100;
 const BURST_MS = 1000;
 const CONFETTI = [colors.lime, colors.paper, colors.lime, colors.leaf];
 
-export function Celebration({ item, onDone }: { item: CelebrationItem; onDone: () => void }) {
+export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
-  const v = celebrationView(item, t);
+  const v = groupView(items, t);
   const { width, height } = useWindowDimensions();
   const dim = useSharedValue(0);
-  const count = useCountTo(v.streak, COUNT_MS);
+  const count = useCountTo(v.streak ?? 0, COUNT_MS);
   useEffect(() => {
     dim.value = withTiming(1, { duration: DIM_MS, easing: Easing.linear });
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
@@ -51,12 +51,14 @@ export function Celebration({ item, onDone }: { item: CelebrationItem; onDone: (
         <Burst x={width / 2} y={height * 0.46} />
         <View style={styles.middle}>
           <Animated.Text style={[styles.label, label]}>{v.label}</Animated.Text>
-          <Animated.View style={[styles.pill, pill]}>
-            <View style={styles.pillNumBox}>
-              <Text style={styles.pillNum}>{count}</Text>
-            </View>
-            <Text style={styles.pillUnit}>{t.celebrate.unit}</Text>
-          </Animated.View>
+          {v.streak !== null ? (
+            <Animated.View style={[styles.pill, pill]}>
+              <View style={styles.pillNumBox}>
+                <Text style={styles.pillNum}>{count}</Text>
+              </View>
+              <Text style={styles.pillUnit}>{t.celebrate.unit}</Text>
+            </Animated.View>
+          ) : null}
           <Animated.Text style={[styles.title, title]}>{v.title}</Animated.Text>
         </View>
         <View style={styles.bottom}>

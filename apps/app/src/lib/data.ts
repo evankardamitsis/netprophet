@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetQuestsResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
+import { mockQuests } from '../mock/quests';
 import { mockScout } from '../mock/scout';
 import { MOCK_MATCHES } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
@@ -65,7 +66,8 @@ interface FeedState {
   dismissResult: (id: string) => void;
   /** σερί milestones waiting to play after the result cards */
   celebrations: Celebration[];
-  dismissCelebration: (id: string) => void;
+  /** the viewer pressed «Συνέχεια» on a (grouped) celebration: mark all of them seen */
+  dismissCelebration: (ids: string[]) => void;
   loading: boolean;
   error: boolean;
   refresh: () => Promise<void>;
@@ -120,6 +122,7 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
   const vote = useCallback(async (matchId: string, side: Side): Promise<CardPct> => {
     if (!api) {
       const m = MOCK_MATCHES.find((x) => x.id === matchId);
+      mockQuestVote();
       return m ? mockVote(m, side) : { pctA: 50, pctB: 50 };
     }
     try {
@@ -142,9 +145,9 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     api?.markInboxSeen([id]).catch(() => undefined);
   }, [api]);
 
-  const dismissCelebration = useCallback((id: string) => {
-    setCelebrations((c) => c.filter((x) => x.id !== id));
-    if (api) api.markInboxSeen([id]).catch(() => undefined);
+  const dismissCelebration = useCallback((ids: string[]) => {
+    setCelebrations((c) => c.filter((x) => !ids.includes(x.id)));
+    if (api) api.markInboxSeen(ids).catch(() => undefined);
     else AsyncStorage.setItem(MOCK_CELEBRATION_KEY, '1').catch(() => undefined);
   }, [api]);
 
@@ -156,6 +159,37 @@ const MOCK_CELEBRATION_KEY = 'np.mock.celebrationSeen';
 async function mockCelebrations(): Promise<Celebration[]> {
   if ((await AsyncStorage.getItem(MOCK_CELEBRATION_KEY).catch(() => null)) === '1') return [];
   return [{ id: 'mock-cel', created_at: new Date().toISOString(), payload: { type: 'streak_milestone', streak: 5, match_id: 'mock', reward: { freeze: false, frame: null } } }];
+}
+
+/* quests in mock mode: a new player's list, moving one step per vote so the bar can be seen */
+let mockQuestState: GetQuestsResult = mockQuests();
+function mockQuestVote() {
+  const bump = (q: GetQuestsResult['daily'][number]) =>
+    q.key === 'daily_vote_3_cards' && !q.done ? { ...q, progress: q.progress + 1, done: q.progress + 1 >= q.target } : q;
+  mockQuestState = { daily: mockQuestState.daily.map(bump), weekly: mockQuestState.weekly };
+}
+
+/** «Αποστολές»: today's and this week's quests with progress; refresh after a vote or when a screen focuses */
+export function useQuests(): { quests: GetQuestsResult | null; refresh: () => Promise<GetQuestsResult | null> } {
+  const api = useApi();
+  const [quests, setQuests] = useState<GetQuestsResult | null>(api ? null : mockQuestState);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setQuests(mockQuestState);
+      return mockQuestState;
+    }
+    try {
+      const q = await api.getQuests();
+      setQuests(q);
+      return q;
+    } catch {
+      return null;
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { quests, refresh };
 }
 
 export interface MeSummary {

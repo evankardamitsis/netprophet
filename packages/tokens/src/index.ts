@@ -13,6 +13,8 @@ export const colors = {
   inkSoft: '#3F4E46',
   /** raised surface on ink (header avatar) */
   inkRaised: '#33463D',
+  /** a row sitting on ink, a notch lighter than the sheet (quests toggle) */
+  inkDeep: '#1A2F26',
   /** dividers on ink */
   inkLine: '#3A4C43',
   /** labels on ink; card borders on paper */

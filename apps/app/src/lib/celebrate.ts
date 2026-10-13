@@ -1,5 +1,6 @@
 import { greekCaps, type Copy } from '@netprophet/copy';
-import type { Celebration } from '@netprophet/db';
+import type { Celebration, QuestCelebration, StreakCelebration } from '@netprophet/db';
+import { questCelebrationView } from './quests';
 import { fmt } from './votes';
 
 /**
@@ -9,12 +10,31 @@ import { fmt } from './votes';
  */
 export interface CelebrationView {
   label: string;
-  streak: number;
+  /** the σερί pill's number; null for quests, which have no pill */
+  streak: number | null;
   title: string;
   reward: string;
 }
 
-export function celebrationView(c: Celebration, t: Copy): CelebrationView {
+/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE */
+export function nextGroup(list: Celebration[]): Celebration[] {
+  const streak = list.find((c) => c.payload.type === 'streak_milestone');
+  return streak ? [streak] : list.filter((c) => c.payload.type === 'quest');
+}
+
+const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
+
+/** the same full-screen moment for a group: quests without the pill (prototype), a σερί milestone with it */
+export function groupView(group: Celebration[], t: Copy): CelebrationView {
+  const quests = group.filter(isQuest);
+  if (quests.length > 0) {
+    const v = questCelebrationView(quests.map((q) => ({ quest: q.payload.quest, reward: q.payload.reward })), t);
+    return { label: greekCaps(v.label), streak: null, title: v.title, reward: v.reward };
+  }
+  return celebrationView(group[0] as StreakCelebration, t);
+}
+
+export function celebrationView(c: StreakCelebration, t: Copy): CelebrationView {
   const n = c.payload.streak;
   const r = c.payload.reward ?? { freeze: false, frame: null };
   const frame = r.frame ? t.celebrate.frames[r.frame] ?? r.frame : null;

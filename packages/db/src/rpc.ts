@@ -114,18 +114,49 @@ export interface GetFeedResult {
   celebrations?: Celebration[];
 }
 
-/** a full-screen moment (prototype celOn); σερί milestones for now */
-export interface Celebration {
+/** what a finished quest gives: a cosmetic the player does not own yet, else a badge bonus (never points) */
+export type QuestReward =
+  | { kind: 'cosmetic'; key: string; category: 'frame' | 'background' }
+  | { kind: 'badge'; key: string; amount: number };
+
+export interface QuestRow {
+  key: string;
+  target: number;
+  progress: number;
+  done: boolean;
+  reward: QuestReward;
+}
+
+/** api.get_quests: today's quests and this week's */
+export interface GetQuestsResult {
+  daily: QuestRow[];
+  weekly: QuestRow[];
+}
+
+export interface StreakCelebrationPayload {
+  type: 'streak_milestone';
+  streak: number;
+  match_id: string;
+  /** what this milestone actually gave */
+  reward?: { freeze: boolean; frame: string | null };
+}
+
+export interface QuestCelebrationPayload {
+  type: 'quest';
+  quest: string;
+  period: string;
+  reward: QuestReward;
+}
+
+/** a full-screen moment (prototype celOn): a σερί milestone or a finished quest */
+export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayload> {
   id: string;
   created_at: string;
-  payload: {
-    type: 'streak_milestone';
-    streak: number;
-    match_id: string;
-    /** what this milestone actually gave */
-    reward?: { freeze: boolean; frame: string | null };
-  };
+  payload: P;
 }
+
+export type StreakCelebration = Celebration<StreakCelebrationPayload>;
+export type QuestCelebration = Celebration<QuestCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
 export interface ResultRow {
