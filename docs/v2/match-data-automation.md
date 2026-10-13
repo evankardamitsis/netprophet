@@ -105,7 +105,7 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   (the v2 Supabase project's secret key, `sb_secret_...`, not the legacy service_role JWT), `CRON_SECRET`.
 - Service account: `netprophet-sheets@netprophet-466714.iam.gserviceaccount.com` (Google Cloud project NetProphet,
   Sheets API on, no roles). Organisers share their sheets with it as Viewer.
-- Not yet: the 08:30 email, the records sheet, other platforms.
+- Not yet: the records sheet, other platforms, round robin draws.
 
 ## Built (M4 part 2, name matching)
 - First names compare by family (`core.first_name_families`: formal, everyday and nicknames, e.g. Φιλοθέη = Φαίη,
@@ -138,3 +138,13 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   while unsettled; a different score on a settled match goes to staff (review kind score_conflict).
 - Cancelled: an unplayed match the sheet stops listing is counted missing on each healthy run (not on drop, empty
   or error) and voided on the second in a row, votes cancelled as staff voiding does.
+
+## Built (M4: rain, the morning email)
+- Rain: a match the sheet stops listing is postponed after two runs (`matches.postponed_at`), keeps its votes, takes
+  no new votes, shows as «Αναβλήθηκε» in the feed of its voters and followers and in the tournament schedule; back on
+  another day within three weeks it moves there («Νέα μέρα»); cancelled only after three weeks. «ΑΝΑΒΟΛΗ» / «ΒΡΟΧΗ» in
+  the score column postpones at once.
+- 08:30 email to every admin and editor (`api.admin_morning_digest`, admin cron `/api/cron/v2-morning`, Resend from
+  noreply@netprophetapp.com): what needs a decision, results only staff can enter, sheets that could not be read or
+  looked shorter, tournament matches without a result after three nights, postponed matches, today's matches, and a
+  warning when no run happened in the last day.
