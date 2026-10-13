@@ -3,7 +3,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { Celebration } from '../../src/components/Celebration';
-import { QuestBar, QUEST_BAR_MS } from '../../src/components/QuestBar';
+import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
@@ -63,6 +63,11 @@ export default function VoteScreen() {
     return () => clearTimeout(id);
   }, [answered]);
   const hud = useHud();
+  // the bar slides over the tab bar, so the tabs layout draws it (prototype mp)
+  const { showQuestBar } = hud;
+  useEffect(() => {
+    showQuestBar(questNote?.kind === 'bar' ? { title: questNote.title, from: questNote.from, to: questNote.to, progress: questNote.progress, target: questNote.target } : null);
+  }, [questNote, showQuestBar]);
   const [between, setBetween] = useState(false);
   const [played, setPlayed] = useState(0);
 
@@ -140,7 +145,6 @@ export default function VoteScreen() {
       {notice ? <Toast key={notice.n} text={t.feed[notice.kind]} /> : null}
       {answered ? <Toast key={answered} text={answered} /> : null}
       {questNote?.kind === 'toast' ? <Toast key={questNote.n} text={questNote.text} /> : null}
-      {questNote?.kind === 'bar' ? <QuestBar key={questNote.n} title={questNote.title} from={questNote.from} to={questNote.to} progress={questNote.progress} target={questNote.target} /> : null}
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
       <AddMatchButton />

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
+import { useHud } from '../lib/hud';
 import { alpha, colors, ease, fonts, motion, springEase } from '../theme';
 
 /** prototype: slides in over 500ms, stays, slides out at 1.8s over 400ms */
@@ -11,10 +13,17 @@ const OUT_MS = 400;
 const BAR_DELAY = 300;
 
 /**
- * The slim progress bar after a vote (prototype): an ink pill above the tab bar with the quest and «x/y», its bar
+ * The slim progress bar after a vote (prototype): an ink pill over the tab bar with the quest and «x/y», its bar
  * growing from where it was. Give it a new `key` to show it again.
  */
-export function QuestBar({ title, from, to, progress, target }: { title: string; from: number; to: number; progress: number; target: number }) {
+export function QuestBarLayer() {
+  const { questBar } = useHud();
+  const insets = useSafeAreaInsets();
+  if (!questBar) return null;
+  return <QuestBar key={questBar.n} {...questBar} bottom={insets.bottom + 10} />;
+}
+
+export function QuestBar({ title, from, to, progress, target, bottom = 10 }: { title: string; from: number; to: number; progress: number; target: number; bottom?: number }) {
   const [h, setH] = useState(64);
   const slide = useSharedValue(0);
   const fill = useSharedValue(from);
@@ -25,10 +34,10 @@ export function QuestBar({ title, from, to, progress, target }: { title: string;
     );
     fill.value = withDelay(BAR_DELAY, withTiming(to, { duration: motion.revealDur, easing: ease }));
   }, [slide, fill, to]);
-  const pill = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - slide.value) * (h * 1.2 + 10) }] }));
+  const pill = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - slide.value) * (h * 1.2 + bottom) }] }));
   const bar = useAnimatedStyle(() => ({ width: `${fill.value * 100}%` }));
   return (
-    <View style={styles.wrap} pointerEvents="none">
+    <View style={[styles.wrap, { bottom }]} pointerEvents="none">
       <Animated.View style={[styles.pill, pill]} onLayout={(e) => setH(e.nativeEvent.layout.height)} accessibilityLiveRegion="polite">
         <View style={styles.top}>
           <Text style={styles.title}>{title}</Text>
