@@ -7,17 +7,17 @@ import type { Ladder, LadderRow, LadderScope } from '@netprophet/db';
 import { Segmented } from '../../src/components/OnboardingControls';
 import { useCopy } from '../../src/i18n';
 import { useLadder } from '../../src/lib/data';
-import { motivation, nextLine, pointRules, rowName } from '../../src/lib/ladder';
+import { boardItems, motivation, nextLine, pickScope, pointRules, rowName, scopeLabel, scopeTabs } from '../../src/lib/ladder';
 import { usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { fmt } from '../../src/lib/votes';
-import { colors, ease, fonts } from '../../src/theme';
+import { alpha, colors, ease, fonts } from '../../src/theme';
 
 /**
  * Κατάταξη (prototype V2, isRank): this month's points among the people you know or all of Attica.
  * The ink card has your position, points, σερί and what the next place costs; the lime card says
- * what is in the air or who to pass; then the board. Leagues («Κατηγορία»), their bands and the
- * month close come with M3. No blue button here: the lime card's button is ink, as in the prototype.
+ * what is in the air or who to pass; then the board. «Κατηγορία» is your league group: the top 5 move up,
+ * 16 and below change league, and the top 3 get a frame and a badge. No month-end countdown (founder). No blue button here: the lime card's button is ink, as in the prototype.
  */
 const IN_MS = 400;
 const STG_MS = 450;
@@ -28,12 +28,17 @@ const ACCENT_PAD = 10;
 export default function LadderScreen() {
   const t = useCopy();
   const l = t.ladder;
-  // «Όλη η Αττική» opens with the stats area; until then there is only «Όσοι ξέρεις», so no switch
+  // «Όλη η Αττική» opens with the stats area; «Κατηγορία» is there once you are in a group (every response says so)
   const areaOpen = useUnlocks().has('ladder_area');
-  const [picked, setScope] = useState<LadderScope>('friends');
-  const scope: LadderScope = areaOpen ? picked : 'friends';
+  const [picked, setScope] = useState<LadderScope | null>(null);
+  const [hasLeague, setHasLeague] = useState(true);
+  const scope = pickScope(picked, hasLeague, areaOpen);
   const { ladder, loading, error, refresh } = useLadder(scope);
   const titleIn = useInA(IN_MS);
+  useEffect(() => {
+    if (ladder) setHasLeague(ladder.has_league);
+  }, [ladder]);
+  const tabs = scopeTabs(hasLeague, areaOpen);
 
   return (
     <View style={styles.screen}>
@@ -46,21 +51,14 @@ export default function LadderScreen() {
           <Text style={styles.title}>{l.title}</Text>
           <Text style={styles.subtitle}>{l.subtitle}</Text>
         </Animated.View>
-        {areaOpen ? (
-          <Segmented
-            options={[
-              { id: 'friends', label: l.scopes.friends },
-              { id: 'all', label: l.scopes.all },
-            ]}
-            value={scope}
-            onChange={setScope}
-          />
+        {ladder && tabs.length > 1 ? (
+          <Segmented options={tabs.map((id) => ({ id, label: l.scopes[id] }))} value={scope} onChange={setScope} />
         ) : null}
         {ladder && ladder.scope === scope ? (
           <View key={scope} style={styles.cards}>
             <MeCard ladder={ladder} />
             <Motivate ladder={ladder} />
-            <Board rows={ladder.rows} />
+            <Board ladder={ladder} />
             <HowPoints />
           </View>
         ) : null}
@@ -82,7 +80,7 @@ function MeCard({ ladder }: { ladder: Ladder }) {
   return (
     <Animated.View style={[styles.me, enter]}>
       <View style={styles.scopePill}>
-        <Text style={styles.scopePillText}>{l.scopeName[ladder.scope]}</Text>
+        <Text style={styles.scopePillText}>{scopeLabel(ladder, t)}</Text>
       </View>
       <View style={styles.meTop}>
         <Animated.Text style={[styles.position, slam]}>{fmt(l.position, { n: position })}</Animated.Text>
@@ -126,25 +124,33 @@ function Motivate({ ladder }: { ladder: Ladder }) {
 }
 
 /** the board: top rows, then your own row (after a ⋯) when it is further down */
-function Board({ rows }: { rows: LadderRow[] }) {
+function Board({ ladder }: { ladder: Ladder }) {
   const t = useCopy();
+  const rows = ladder.rows;
+  const league = ladder.scope === 'league' ? ladder.league : null;
+  let n = 0;
   return (
     <View style={styles.board}>
-      {rows.map((r, i) => (
-        <BoardRow key={r.user_id} row={r} index={i} gap={i > 0 && r.position - rows[i - 1]!.position > 1} />
-      ))}
+      {boardItems(ladder, t).map((item) => {
+        if (item.kind === 'band') return <Text key={item.label} style={styles.band}>{greekCaps(item.label)}</Text>;
+        const r = item.row;
+        const i = n++;
+        const zone = !league ? null : r.position <= league.promote_top && league.tier !== 'gold' ? 'up' : r.position >= league.relegate_from && league.tier !== 'bronze' ? 'down' : null;
+        return <BoardRow key={r.user_id} row={r} index={i} zone={zone} gap={i > 0 && r.position - rows[i - 1]!.position > 1} />;
+      })}
+      {league ? <Text style={styles.leagueFoot}>{t.ladder.league.foot}</Text> : null}
       <Text style={styles.renews}>{t.ladder.renews}</Text>
     </View>
   );
 }
 
-function BoardRow({ row, index, gap }: { row: LadderRow; index: number; gap: boolean }) {
+function BoardRow({ row, index, gap, zone }: { row: LadderRow; index: number; gap: boolean; zone: 'up' | 'down' | null }) {
   const t = useCopy();
   const enter = useStgIn(ROW_MS, 500 + Math.min(index, 8) * 70);
   return (
     <>
       {gap ? <Text style={styles.gap}>⋯</Text> : null}
-      <Animated.View style={[styles.row, row.is_me && styles.rowMe, enter]}>
+      <Animated.View style={[styles.row, zone === 'up' && styles.rowUp, zone === 'down' && styles.rowDown, row.is_me && styles.rowMe, enter]}>
         <View style={styles.rowLeft}>
           <Text style={styles.rowPos}>{row.position}</Text>
           <Text style={[styles.rowName, row.is_me && styles.rowNameMe]} numberOfLines={1}>
@@ -242,12 +248,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 10,
   },
+  band: { paddingTop: 10, paddingBottom: 4, paddingHorizontal: 8, fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.48, color: colors.inkSoft },
+  rowUp: { backgroundColor: alpha(colors.lime, 0.2) },
+  rowDown: { backgroundColor: colors.paper },
   rowMe: { backgroundColor: colors.lime },
   rowLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   rowPos: { minWidth: 30, fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, color: colors.ink },
   rowName: { flexShrink: 1, fontFamily: fonts.bodyMedium, fontSize: 16, color: colors.ink },
   rowNameMe: { fontFamily: fonts.bodyBold },
   rowPts: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, color: colors.ink },
+  leagueFoot: { paddingTop: 10, paddingHorizontal: 8, fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
   renews: { paddingVertical: 10, paddingHorizontal: 8, fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
   info: { paddingVertical: 4, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white },
   infoHead: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

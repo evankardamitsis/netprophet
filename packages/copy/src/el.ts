@@ -13,8 +13,20 @@ export const el = {
   ladder: {
     title: 'Κατάταξη',
     subtitle: 'Ποιος πέφτει μέσα πιο συχνά αυτόν τον μήνα.',
-    scopes: { friends: 'Όσοι ξέρεις', all: 'Όλη η Αττική' },
-    scopeName: { friends: 'Όσοι ξέρεις · αυτόν τον μήνα', all: 'Όλη η Αττική · αυτόν τον μήνα' },
+    scopes: { league: 'Κατηγορία', friends: 'Όσοι ξέρεις', all: 'Όλη η Αττική' },
+    /** the pill on the ink card; the league one is «Χάλκινη · 20 παίκτες» */
+    scopeName: { league: '{tier} · {n} παίκτες', friends: 'Όσοι ξέρεις · αυτόν τον μήνα', all: 'Όλη η Αττική · αυτόν τον μήνα' },
+    tiers: { bronze: 'Χάλκινη', silver: 'Ασημένια', gold: 'Χρυσή' },
+    /** the lines on the «Κατηγορία» board, and what the month close says */
+    league: {
+      up: '↑ Ανεβαίνουν κατηγορία',
+      down: '↓ Αλλάζουν κατηγορία',
+      foot: 'Οι 3 πρώτοι παίρνουν κορνίζα και badge.',
+      /** full-screen moment: «ΚΑΤΑΤΑΞΗ · ΧΑΛΚΙΝΗ», «3ος», then the reward line */
+      label: 'Κατάταξη · {tier}',
+      award: 'Frame Κορυφαίος του μήνα και badge',
+      next: 'Κατηγορία τον άλλο μήνα: {tier}',
+    },
     /** the big position on the card, «4ος» */
     position: '{n}ος',
     points: 'πόντοι',

@@ -56,3 +56,15 @@ export async function recomputeLevels(): Promise<ActionResult> {
     return { ok: false, message: e instanceof Error ? e.message : 'failed' };
   }
 }
+
+/** close this month's leagues now (api.admin_league_close): promotions, relegations, awards and the celebrations. Irreversible for the month. */
+export async function closeMonth(): Promise<ActionResult> {
+  try {
+    const { data, error } = await (await staffRpc())('admin_league_close', { p_month: null });
+    if (error) return { ok: false, message: error.message };
+    revalidatePath('/v2/players');
+    return { ok: true, message: `Closed: ${(data as { closed_players: number }).closed_players} players` };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'failed' };
+  }
+}

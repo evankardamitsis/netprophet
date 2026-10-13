@@ -30,6 +30,32 @@ const OTHERS: [string, string, number][] = [
   ['Μαρίνα', 'Ζαχαρίου', 60],
 ];
 
+/**
+ * The guest's Χάλκινη group of 20: the prototype's 19 roster names (LGP) with points around the guest's 340,
+ * so the guest is 4th: inside the «Ανεβαίνουν» top 5, as the prototype opens it.
+ */
+const LEAGUE: [string, number][] = [
+  ['Μαρία Καρρά', 410],
+  ['Γιώργος Δεσύπρης', 385],
+  ['Δημήτρης Γκότσης', 352],
+  ['Ιωάννα Τσάκου', 330],
+  ['Νίκος Ροδίτης', 312],
+  ['Αντρέι Ντίρζου', 298],
+  ['Μιχάλης Ορφανίδης', 276],
+  ['Άννα Μάνου', 255],
+  ['Κατερίνα Λαζάρου', 240],
+  ['Γιώργος Μέμμος', 222],
+  ['Ηλίας Μέμμος', 205],
+  ['Μάνος Γκίκας', 188],
+  ['Θοδωρής Νάκος', 170],
+  ['Σοφία Νικολάου', 152],
+  ['Ελένη Πέτρου', 135],
+  ['Γιάννης Πράτσας', 118],
+  ['Γιώργος Χαμάμης', 96],
+  ['Στέλιος Αρβανίτης', 74],
+  ['Κώστας Λέκκας', 52],
+].map(([name, points]) => [name as string, points as number]);
+
 function daysLeft(now: Date): number {
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -37,7 +63,11 @@ function daysLeft(now: Date): number {
 }
 
 export function mockLadder(scope: LadderScope, now: Date = new Date()): Ladder {
-  const pool = scope === 'friends' ? FRIENDS : FRIENDS.concat(OTHERS).filter(([, , p]) => p > 0);
+  const leaguePool: [string, string, number][] = LEAGUE.map(([name, p]) => {
+    const [first = '', ...rest] = name.split(' ');
+    return [first, rest.join(' '), p];
+  });
+  const pool = scope === 'league' ? leaguePool : scope === 'friends' ? FRIENDS : FRIENDS.concat(OTHERS).filter(([, , p]) => p > 0);
   const people = pool
     .map(([first, surname, points], i) => ({ id: `${scope}-${i}`, first, surname, points }))
     .concat([{ id: ME, first: 'Βαγγέλης', surname: 'Καρδαμίτσης', points: MY_POINTS }])
@@ -57,6 +87,8 @@ export function mockLadder(scope: LadderScope, now: Date = new Date()): Ladder {
   const above = rows[meIdx - 1];
   return {
     scope,
+    has_league: true,
+    league: { tier: 'bronze', group_no: 1, size: LEAGUE.length + 1, promote_top: 5, relegate_from: 16, award_top: 3 },
     month_key: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
     days_left: daysLeft(now),
     total: rows.length,

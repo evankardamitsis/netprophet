@@ -384,6 +384,10 @@ export type Database = {
         Args: { p_tournament_id: string; p_rows: Json };
         Returns: Json;
       };
+      admin_league_close: {
+        Args: { p_month?: string };
+        Returns: Json;
+      };
       admin_match_people: {
         Args: { p_people: Json };
         Returns: Json;
