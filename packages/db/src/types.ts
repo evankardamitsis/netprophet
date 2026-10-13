@@ -360,6 +360,10 @@ export type Database = {
       };
     };
     Functions: {
+      admin_apply_names: {
+        Args: { p_player_ids?: string[]; p_confidence?: string };
+        Returns: Json;
+      };
       admin_close_report: {
         Args: { p_report_id: string; p_hide: boolean };
         Returns: Json;
@@ -408,6 +412,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_name_pass: {
+        Args: { p_confidence?: string; p_limit?: number; p_offset?: number };
+        Returns: Json;
+      };
       admin_players: {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
@@ -430,6 +438,10 @@ export type Database = {
       };
       admin_save_quiz_template: {
         Args: { p_id: string; p: Json };
+        Returns: Json;
+      };
+      admin_save_spelling: {
+        Args: { p_kind: string; p_word: string; p_spelling: string };
         Returns: Json;
       };
       admin_save_tournament: {
