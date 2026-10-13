@@ -1,5 +1,5 @@
--- M4 part 3c: a moved match keeps its votes under the new day; a match the sheet stops listing is cancelled after
--- two healthy runs; a match a player logged gets the sheet as its official source instead of a twin; a different
+-- M4 part 3c: a moved match keeps its votes under the new day; a match the sheet stops listing is postponed after
+-- two healthy runs (cancelled only after three weeks, see 76); a match a player logged gets the sheet as its official source instead of a twin; a different
 -- organiser score on a settled player match goes to staff.
 begin;
 select plan(12);
@@ -36,9 +36,10 @@ select is((select count(*)::int from core.votes where subject_id = :'m_ab'::uuid
 select is((:'r2'::jsonb ->> 'missing')::int, 1, 'Γ v Δ missing once');
 select is((select status from core.matches where source_ref = 'cd-1'), 'scheduled', 'once is not enough');
 
--- run 3: still gone → cancelled
+-- run 3: still gone → postponed
 select core.ingest_run(:'t'::uuid, jsonb_build_array(pg_temp.row_('ab-2', current_date + 4, :'a', :'b')), 'cron', null) as r3 \gset
-select is((select status from core.matches where source_ref = 'cd-1'), 'void', 'missing twice in a row: cancelled');
+select is((select postponed_at is not null and status = 'scheduled' from core.matches where source_ref = 'cd-1'), true,
+          'missing twice in a row: postponed, not cancelled (rain, founder 13 Oct)');
 
 -- a match Ε logged with Ζ; the sheet lists it the next day with the score
 insert into core.matches (sport_id, format, status, starts_at, source, logged_by)

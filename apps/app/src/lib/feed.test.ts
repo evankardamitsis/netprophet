@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedResultCard } from '@netprophet/db';
+import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromPostponedCard, postponedLast, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -186,5 +186,41 @@ describe('fromResultCard', () => {
     const c = fromResultCard(result({ sides: sides(true) }), t);
     expect(c.winnerSurname).toBe('Πράτσας & Μέμμος');
     expect(c.line).toBe('κέρδισαν τους Γιώργο Δεσύπρη & ΑΝΝΑ ΜΑΝΟΥ');
+  });
+});
+
+describe('put-off matches', () => {
+  it('moved_from adds the «Νέα μέρα» chip and the old day after the time', () => {
+    const c = fromFeedCard(card({ moved_from: '2026-10-06T15:30:00Z' }), { glyfada: 'Γλυφάδα' }, t, NOW);
+    expect(c.moved).toEqual({ chip: 'Νέα μέρα', was: '(ήταν Τρι 6/10)', head: 'Σήμερα 18:00', tail: 'Open Γλυφάδας · Ημιτελικός' });
+    expect(fromFeedCard(card(), {}, t, NOW).moved).toBeUndefined();
+  });
+  const postponed = (over: Partial<FeedPostponedCard> = {}): FeedPostponedCard => ({
+    kind: 'postponed',
+    match_id: 'p1',
+    format: 'singles',
+    starts_at: '2026-10-13T15:30:00Z',
+    tournament: { id: 't', name: 'Open Γλυφάδας' },
+    sides: card().sides,
+    my_vote: null,
+    ...over,
+  });
+  it('a postponed card names the tournament and the original time', () => {
+    const c = fromPostponedCard(postponed(), {}, t);
+    expect(c.chip).toBe('Αναβλήθηκε');
+    expect(c.meta).toBe('Open Γλυφάδας · ήταν Τρι 13/10 18:30');
+    expect(c.note).toBe('Θα δεις τη νέα μέρα εδώ.');
+    expect(c.a.people[0]!.surname).toBe('Πράτσας');
+  });
+  it('says the vote stays when the user voted', () => {
+    expect(fromPostponedCard(postponed({ my_vote: 1 }), {}, t).note).toBe('Η ψήφος σου μένει. Θα δεις τη νέα μέρα εδώ.');
+  });
+  it('copes with no tournament and no time', () => {
+    expect(fromPostponedCard(postponed({ tournament: null, starts_at: null }), {}, t).meta).toBe('');
+    expect(fromPostponedCard(postponed({ tournament: null }), {}, t).meta).toBe('ήταν Τρι 13/10 18:30');
+  });
+  it('postponed cards go last, order kept', () => {
+    const k = (kind: string, id: string) => ({ kind, id });
+    expect(postponedLast([k('postponed', 'a'), k('match', 'b'), k('sponsored', 'c'), k('postponed', 'd'), k('match', 'e')]).map((x) => x.id)).toEqual(['b', 'c', 'e', 'a', 'd']);
   });
 });

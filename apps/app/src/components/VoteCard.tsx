@@ -121,7 +121,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
   return (
     <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
       <Animated.View style={[styles.card, enter]}>
-        <Text style={styles.meta}>{match.meta}</Text>
+        <Meta match={match} />
         <View style={styles.grid}>
           <VoteButton
             side="a"
@@ -146,6 +146,21 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
     </Pressable>
   );
 });
+
+/** the meta line; a match that moved to a new day gets the «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
+function Meta({ match, style }: { match: CardMatch; style?: object }) {
+  const m = match.moved;
+  if (!m) return <Text style={[styles.meta, style]}>{match.meta}</Text>;
+  return (
+    <View style={[styles.metaRow, style]}>
+      <Text style={styles.meta}>{m.head}</Text>
+      <View style={styles.chip}>
+        <Text style={styles.chipText}>{m.chip}</Text>
+      </View>
+      <Text style={styles.meta}>{m.tail ? `${m.was} · ${m.tail}` : m.was}</Text>
+    </View>
+  );
+}
 
 interface VoteButtonProps {
   side: Side;
@@ -250,7 +265,7 @@ function FoldedCard({
   const myPct = pick === 'a' ? split.pctA : split.pctB;
   return (
     <Animated.View style={[styles.done, enter, fold]}>
-      <Text style={[styles.meta, styles.doneMeta]}>{match.meta}</Text>
+      <Meta match={match} style={styles.doneMeta} />
       <View style={styles.row}>
         <View style={[styles.rowFill, pick === 'a' ? styles.rowFillLeft : styles.rowFillRight, { width: `${myPct}%` }]} />
         <Half data={match.a} pct={split.pctA} on={pick === 'a'} />
@@ -290,6 +305,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   meta: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  chip: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand },
+  chipText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   grid: { flexDirection: 'row', gap: 10 },
   col: { flex: 1, minWidth: 0, paddingTop: 22 },
   vb: {

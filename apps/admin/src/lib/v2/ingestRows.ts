@@ -53,6 +53,8 @@ export function sheetMatchToRow(m: SheetMatch, opts: RowOptions) {
     row: opts.row,
     flags: m.flags,
     score_raw: m.scoreRaw,
+    // the organiser wrote that the match is off for now (rain, a moved day): postponed until it comes back
+    postponed: /αναβολ|βροχ|ακυρ|postpon|rain/.test(m.scoreRaw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()),
     side1: m.players.side1.map(opts.person),
     side2: m.players.side2.map(opts.person),
     result: resultOf(m, opts.walkover),

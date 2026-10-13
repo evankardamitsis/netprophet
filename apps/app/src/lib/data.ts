@@ -12,7 +12,7 @@ import { mockAnswer, mockQuiz } from '../mock/quiz';
 import { withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
 import { mockTournament, mockTournaments } from '../mock/tournaments';
-import { MOCK_MATCHES } from '../mock/matches';
+import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { mockResults } from '../mock/results';
 import { withMockAds } from '../mock/sponsored';
@@ -34,6 +34,8 @@ import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
 import {
   fromFeedCard,
+  fromPostponedCard,
+  postponedLast,
   fromMock,
   fromResultCard,
   fromSponsored,
@@ -86,7 +88,9 @@ interface FeedState {
 export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState {
   const t = useCopy();
   const api = useApi();
-  const [cards, setCards] = useState<FeedCard[]>(() => (api ? [] : withMockAds(MOCK_MATCHES.map((m) => fromMock(m, t)))));
+  const [cards, setCards] = useState<FeedCard[]>(() =>
+    api ? [] : postponedLast([...withMockAds(MOCK_MATCHES.map((m) => fromMock(m, t))), fromPostponedCard(mockPostponed(), {}, t)]),
+  );
   const [results, setResults] = useState<CardResult[]>([]);
   const [celebrations, setCelebrations] = useState<Celebration[]>([]);
   useEffect(() => {
@@ -112,8 +116,16 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
       setResults(feed.items.flatMap((it) => (it.kind === 'result' ? [fromResultCard(it, t)] : [])));
       setCelebrations(feed.celebrations ?? []);
       setCards(
-        feed.items.flatMap((it): FeedCard[] =>
-          it.kind === 'match' ? [fromFeedCard(it, areas, t, now)] : it.kind === 'sponsored' ? [fromSponsored(it)] : [],
+        postponedLast(
+          feed.items.flatMap((it): FeedCard[] =>
+            it.kind === 'match'
+              ? [fromFeedCard(it, areas, t, now)]
+              : it.kind === 'postponed'
+                ? [fromPostponedCard(it, areas, t)]
+                : it.kind === 'sponsored'
+                  ? [fromSponsored(it)]
+                  : [],
+          ),
         ),
       );
       setError(false);

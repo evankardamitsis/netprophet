@@ -123,7 +123,13 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
             match('tm-1', today, 18, 30, ME, NIK, null, []),
           ],
         },
-        { date: addDays(today, 2), matches: [match('tm-2', addDays(today, 2), 10, 0, ME, GIO, null, [])] },
+        {
+          date: addDays(today, 2),
+          matches: [
+            { ...match('tm-2', addDays(today, 2), 10, 0, ME, GIO, null, []), moved_from: at(addDays(today, -1), 18, 30) },
+            { ...match('tm-3', addDays(today, 2), 12, 0, ALE, PAV, null, []), starts_at: null, postponed: true },
+          ],
+        },
       ]
     : [];
   return {

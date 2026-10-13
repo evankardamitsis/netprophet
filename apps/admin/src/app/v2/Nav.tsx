@@ -16,9 +16,10 @@ async function waiting(): Promise<Counts> {
     const client = await createV2ServerClient();
     const rpc = client.rpc.bind(client) as unknown as Rpc;
     const [reviews, desk, queue] = await Promise.all([
-      rpc('admin_ingest_reviews', { p_tournament_id: null }).catch(() => null),
-      rpc('admin_desk', { p_days: 7 }).catch(() => null),
-      rpc('admin_moderation', {}).catch(() => null),
+      // the client's requests are thenables without .catch: wrap them so one failure only drops its badge
+      Promise.resolve(rpc('admin_ingest_reviews', { p_tournament_id: null })).catch(() => null),
+      Promise.resolve(rpc('admin_desk', { p_days: 7 })).catch(() => null),
+      Promise.resolve(rpc('admin_moderation', {})).catch(() => null),
     ]);
     const out: Counts = {};
     if (reviews && !reviews.error) out.tournaments = len(reviews.data);

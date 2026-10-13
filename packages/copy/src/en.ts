@@ -80,6 +80,13 @@ export const en: Copy = {
     formats: { doubles: 'Doubles', mixed: 'Mixed' },
     friendly: 'Friendly',
     learnAfter: 'You find out after the match',
+    postponed: {
+      chip: 'Postponed',
+      newDay: 'New day',
+      was: 'was {when}',
+      keptVote: 'Your vote stays. You will see the new day here.',
+      seeNewDay: 'You will see the new day here.',
+    },
     rounds: {
       round64: 'Round of 64',
       round32: 'Round of 32',
@@ -835,6 +842,9 @@ export const en: Copy = {
       back: '‹ Tournaments',
       schedule: 'Schedule',
       bracket: 'Draw',
+      postponed: 'Postponed',
+      postponedTime: 'Off',
+      movedFrom: 'from {when}',
       noMatchesDay: 'No matches this day.',
       noDraws: 'The draw is not out yet.',
       notFound: 'We could not find this tournament.',

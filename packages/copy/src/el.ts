@@ -85,6 +85,13 @@ export const el = {
     weekdays: ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'],
     formats: { doubles: 'Διπλό', mixed: 'Μικτό' },
     friendly: 'Φιλικό',
+    postponed: {
+      chip: 'Αναβλήθηκε',
+      newDay: 'Νέα μέρα',
+      was: 'ήταν {when}',
+      keptVote: 'Η ψήφος σου μένει. Θα δεις τη νέα μέρα εδώ.',
+      seeNewDay: 'Θα δεις τη νέα μέρα εδώ.',
+    },
     rounds: {
       round64: 'Φάση των 64',
       round32: 'Φάση των 32',
@@ -895,6 +902,9 @@ export const el = {
       back: '‹ Τουρνουά',
       schedule: 'Πρόγραμμα',
       bracket: 'Ταμπλό',
+      postponed: 'Αναβλήθηκε',
+      postponedTime: 'Αναβολή',
+      movedFrom: 'από {when}',
       noMatchesDay: 'Δεν έχει ματς αυτή τη μέρα.',
       noDraws: 'Το ταμπλό δεν βγήκε ακόμα.',
       notFound: 'Δεν βρήκαμε αυτό το τουρνουά.',

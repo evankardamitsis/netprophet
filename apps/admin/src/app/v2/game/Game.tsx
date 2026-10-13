@@ -82,7 +82,11 @@ function pointsLines(p: Record<string, unknown>): string[] {
   if ("daily_quiz" in p) out.push(`Finishing the daily questions: ${n("daily_quiz")} points`);
   if ("upset_share_max" in p) out.push(`A pick counts as an upset when ${Math.round(n("upset_share_max") * 100)}% or fewer of the votes chose it`);
   if ("upset_min_votes" in p) out.push(`An upset needs at least ${plural(n("upset_min_votes"), "vote")} on the match`);
-  for (const [k, v] of Object.entries(p)) if (!known.has(k)) out.push(`${humanize(k)}: ${words(v)}`);
+  if (p.level && typeof p.level === "object") {
+    const l = p.level as Record<string, unknown>;
+    out.push(`Levels go from ${Number(l.min ?? 1)} to ${Number(l.max ?? 7)}, shown in halves; match results move them, the crowd only a little (see docs/v2/level-algorithm.md)`);
+  }
+  for (const [k, v] of Object.entries(p)) if (!known.has(k) && k !== "level") out.push(`${humanize(k)}: ${words(v)}`);
   return out;
 }
 
