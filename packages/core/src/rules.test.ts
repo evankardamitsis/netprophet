@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import questDefs from '../test-vectors/quest-defs.json';
+import badgeDefs from '../test-vectors/badge-defs.json';
 import {
   ALL_QUESTS,
   BADGES,
@@ -140,12 +141,21 @@ describe('badges and the progress-bar rule', () => {
     expect(BADGES).toHaveLength(16);
     for (const b of BADGES) expect(b.thresholds[0] < b.thresholds[1] && b.thresholds[1] < b.thresholds[2]).toBe(true);
   });
+  it('the badge table equals the shared list the database is checked against', () => {
+    expect(JSON.parse(JSON.stringify(BADGES))).toEqual(badgeDefs.badges);
+  });
+  it('every quest badge bonus names a real badge', () => {
+    for (const q of ALL_QUESTS) expect(BADGES.some((b) => b.id === q.reward.badgeId)).toBe(true);
+  });
+  it('the four card badges', () => {
+    expect(BADGES.filter((b) => b.hasCard).map((b) => b.id)).toEqual(['first_serve', 'gentleman', 'in_a_row', 'variety']);
+  });
   it('tiers', () => {
-    const miste = BADGES.find((b) => b.id === 'manths-tou-klab')!;
+    const miste = BADGES.find((b) => b.id === 'club_oracle')!;
     expect([0, 4, 5, 24, 25, 99, 100].map((n) => tierFor(miste, n))).toEqual([0, 0, 1, 1, 2, 2, 3]);
   });
   it('shows the bar only when exactly one step from the next tier', () => {
-    const b = BADGES.find((x) => x.id === 'manths-tou-klab')!; // 5 / 25 / 100
+    const b = BADGES.find((x) => x.id === 'club_oracle')!; // 5 / 25 / 100
     expect(applyBadgeCounter(b, 2, 3).showProgressBar).toBe(false);
     expect(applyBadgeCounter(b, 3, 4).showProgressBar).toBe(true);
     expect(applyBadgeCounter(b, 4, 5)).toMatchObject({ tierUp: true, showProgressBar: false, remaining: 20 });

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyOutcome,
   levelDirection,
+  tierFor,
   recomputeLevels,
   applyQuestEvent,
   buyFreeze,
@@ -40,6 +41,7 @@ import unlockVectors from '../test-vectors/unlocks.json';
 import voteVectors from '../test-vectors/votes.json';
 import resolutionVectors from '../test-vectors/resolution.json';
 import levelVectors from '../test-vectors/levels.json';
+import badgeVectors from '../test-vectors/badges.json';
 
 interface Case {
   name: string;
@@ -199,4 +201,9 @@ run(resolutionVectors, {
 run(levelVectors, {
   recomputeLevels: (i) => recomputeLevels(i),
   levelDirection: (i) => levelDirection(i.now, i.weekAgo),
+});
+
+run(badgeVectors, {
+  tierFor: (i: { thresholds: [number, number, number]; counter: number }) =>
+    tierFor({ id: 'x', unit: 'x', thresholds: i.thresholds, hasCard: false }, i.counter),
 });

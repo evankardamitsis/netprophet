@@ -1,0 +1,167 @@
+{
+ "suite": "badge-defs",
+ "version": 1,
+ "notes": "The badge table: packages/core BADGES and core.badge_defs must both equal this list (rules.test.ts, 59_badges.test.sql).",
+ "badges": [
+  {
+   "id": "first_serve",
+   "unit": "matches_logged",
+   "thresholds": [
+    1,
+    5,
+    25
+   ],
+   "hasCard": true
+  },
+  {
+   "id": "nice_player",
+   "unit": "confirmations",
+   "thresholds": [
+    1,
+    5,
+    20
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "gentleman",
+   "unit": "kudos_given",
+   "thresholds": [
+    3,
+    15,
+    50
+   ],
+   "hasCard": true
+  },
+  {
+   "id": "beloved",
+   "unit": "kudos_received",
+   "thresholds": [
+    3,
+    15,
+    50
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "club_oracle",
+   "unit": "votes_correct",
+   "thresholds": [
+    5,
+    25,
+    100
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "upset",
+   "unit": "upset_calls",
+   "thresholds": [
+    1,
+    5,
+    15
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "in_a_row",
+   "unit": "streak_best",
+   "thresholds": [
+    5,
+    7,
+    10
+   ],
+   "hasCard": true
+  },
+  {
+   "id": "influencer",
+   "unit": "friends_joined",
+   "thresholds": [
+    1,
+    3,
+    10
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "whole_week",
+   "unit": "full_weeks",
+   "thresholds": [
+    1,
+    4,
+    12
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "doubles_player",
+   "unit": "doubles_logged",
+   "thresholds": [
+    1,
+    5,
+    15
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "variety",
+   "unit": "opponents",
+   "thresholds": [
+    5,
+    15,
+    40
+   ],
+   "hasCard": true
+  },
+  {
+   "id": "steady",
+   "unit": "active_weeks",
+   "thresholds": [
+    4,
+    12,
+    26
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "many_votes",
+   "unit": "votes_cast",
+   "thresholds": [
+    25,
+    100,
+    500
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "generous",
+   "unit": "treats",
+   "thresholds": [
+    1,
+    5,
+    15
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "season_veteran",
+   "unit": "seasons",
+   "thresholds": [
+    1,
+    2,
+    4
+   ],
+   "hasCard": false
+  },
+  {
+   "id": "month_top",
+   "unit": "months_top3",
+   "thresholds": [
+    1,
+    3,
+    10
+   ],
+   "hasCard": false
+  }
+ ]
+}
