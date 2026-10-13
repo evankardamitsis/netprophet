@@ -81,3 +81,22 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
 - Admin `/v2/import`: tournament (with surface), the sheet export or one CSV tab, people matched to the roster
   (aliases, trigram scores), a review table, then import. Same fingerprint = update; the organiser's score is the
   result. Not yet: moved-match detection, the 08:00/22:00 runs, the review email, the records sheet.
+
+## Built (M4 part 1, 13 Oct 2026)
+- Tournaments carry their source (`source_kind`, `source_url`, `season_start_year`) and an `ongoing` switch; only
+  ongoing tournaments with a source are read by the runs.
+- One write path (`core.ingest_apply`) for the import desk and the runs. People the desk did not decide are resolved
+  in the database: an alias or one roster player at 0.92+ with a clear lead links; an unclear name whose likely
+  player is in an active user's circle (claimed or followed by someone who voted in the last 30 days) holds the row
+  for review; anyone else becomes a new provisional player and the match publishes. This follows this brief over the
+  plan's older "no new player without review".
+- Runs: `core.ingest_runs` logs every run (cron, staff, dry) with its counts and health (`drop` when a run sees under
+  half the rows of the last one, `empty`, `error` when the sheet could not be read). «Δοκιμή τώρα» applies and rolls
+  back. Walkovers publish and wait for staff to pick the winner (`core.ingest_reviews`, kind walkover).
+- Admin `/v2/sources`: tournaments with their source and last run, «Δοκιμή τώρα», «Τρέξε τώρα», and the review list.
+- The schedule: `apps/admin` cron `/api/cron/v2-ingest` at 08:00 and 22:00 Athens (Vercel cron, UTC hours checked
+  against Athens time). Sheets are read with the Google Sheets API (an API key; the sheet shared with anyone who has
+  the link).
+- Needs in Vercel (admin project): `GOOGLE_SHEETS_API_KEY`, `V2_SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET`.
+- Not yet: moved and cancelled matches, dedupe against player-logged matches, the 08:30 email, the records sheet,
+  other platforms.

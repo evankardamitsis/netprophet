@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
-import { everydayFirst, parseCsv, parseSheet, parseSheetExport, toDbSets, type SheetMatch, type SheetPerson } from '@netprophet/ingest';
+import { everydayFirst, parseCsv, parseSheet, parseSheetExport, type SheetMatch, type SheetPerson } from '@netprophet/ingest';
+import { personName, sheetMatchToRow, skippedByDefault } from '@/lib/v2/ingestRows';
 import { colors, ui } from '../ui';
 import { importRows, listTournaments, matchPeople, saveTournament, type Candidate, type ImportSummary, type Tournament } from './actions';
 
@@ -23,7 +24,6 @@ const CHUNK = 40;
 const NEW = 'new';
 
 const personKey = (p: SheetPerson) => p.key;
-const personName = (p: SheetPerson) => `${p.surname} ${p.first}`.trim();
 
 interface PersonChoice {
   person: SheetPerson;
@@ -67,7 +67,7 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
       return;
     }
     setMatches(parsed);
-    setInclude(parsed.map((m) => !m.flags.includes('possible_duplicate') && !m.flags.includes('other_tournament')));
+    setInclude(parsed.map((m) => !skippedByDefault(m)));
     setWalkover({});
     // each sheet person once, then the roster candidates for all of them in one call
     const unique = new Map<string, SheetPerson>();
@@ -109,37 +109,13 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
     start(async () => {
       if (!tournamentId) return;
       setMessage(null);
-      const side = (ps: SheetPerson[]) =>
-        ps.map((p) => {
-          const c = people[personKey(p)]?.choice ?? NEW;
-          return c === NEW ? { new: { surname: p.surname, first: p.first }, raw: personName(p) } : { player_id: c, raw: personName(p) };
-        });
-      const rows = matches.flatMap((m, i) => {
-        if (!include[i]) return [];
-        const wo = walkover[i];
-        const result =
-          m.status === 'completed' && m.winner
-            ? { winner_side: m.winner, sets: toDbSets(m.sets, m.winner), walkover: false }
-            : m.status === 'walkover' && wo
-              ? { winner_side: Number(wo), sets: [], walkover: true }
-              : null;
-        return [
-          {
-            fingerprint: m.fingerprint,
-            date: m.date,
-            time: m.time,
-            discipline: m.discipline,
-            level: m.level,
-            category_raw: m.categoryRaw,
-            tab: m.tab,
-            row: i + 1,
-            flags: m.flags,
-            side1: side(m.players.side1),
-            side2: side(m.players.side2),
-            result,
-          },
-        ];
-      });
+      const decided = (p: SheetPerson) => {
+        const c = people[personKey(p)]?.choice ?? NEW;
+        return c === NEW ? { new: { surname: p.surname, first: p.first }, raw: personName(p) } : { player_id: c, raw: personName(p) };
+      };
+      const rows = matches.flatMap((m, i) =>
+        include[i] ? [sheetMatchToRow(m, { row: i + 1, person: decided, walkover: walkover[i] ? (Number(walkover[i]) as 1 | 2) : null })] : [],
+      );
       try {
         const total: ImportSummary = { created: 0, updated: 0, results: 0, results_skipped: 0, new_players: 0 };
         for (let i = 0; i < rows.length; i += CHUNK) {
