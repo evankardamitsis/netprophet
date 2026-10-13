@@ -246,7 +246,7 @@ begin
           insert into core.ingest_reviews (tournament_id, run_id, kind, fingerprint, match_id, payload)
           values (p_tournament_id, p_run, 'walkover', r ->> 'fingerprint', v_m.id, jsonb_build_object('row', r))
           on conflict (tournament_id, kind, fingerprint) where status = 'open' do nothing;
-          v_wo := v_wo + 1;
+          if found then v_wo := v_wo + 1; end if;
         end if;
       elsif exists (select 1 from core.match_results x
                      where x.match_id = v_m.id and x.winner_side = (r -> 'result' ->> 'winner_side')::int
