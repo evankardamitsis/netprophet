@@ -58,12 +58,12 @@ export const QUIZ_CARDS_PRO = 12;
 
 export interface QuizCompletionInput {
   answered: number;
-  /** Cards in today's set: 6, or 12 for Pro. */
+  /** Cards that must be answered: 6 for everyone, Pro too (founder, 13 Oct 2026: Pro adds cards, not points). */
   required: number;
   alreadyAwardedForDay: boolean;
 }
 
-/** +30 once per quiz day when the whole set is answered. Pro's 12-card set pays the same +30. */
+/** +30 once per quiz day at the sixth answer. Pro's extra six cards pay nothing more. */
 export function quizCompletionPoints(input: QuizCompletionInput): PointsPart[] {
   if (input.alreadyAwardedForDay) return [];
   if (input.required <= 0 || input.answered < input.required) return [];
