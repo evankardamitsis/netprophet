@@ -38,9 +38,8 @@ describe('feedbackAfterVote', () => {
     return { daily: m.daily.map((q) => (q.key === key ? { ...q, progress, done } : q)), weekly: m.weekly };
   };
   it('shows the bar for the first quest that moved but is not done', () => {
-    const f = feedbackAfterVote(before, bump('daily_vote_2_matches', 1), copy);
-    expect(f).toBeNull();
-    const g = feedbackAfterVote({ ...before, daily: before.daily.map((q) => (q.key === 'daily_vote_3_cards' ? { ...q, progress: 1 } : q)) }, before, copy);
+    expect(feedbackAfterVote(before, mockQuests(), copy)).toBeNull();
+    const g = feedbackAfterVote(bump('daily_vote_3_cards', 1), bump('daily_vote_3_cards', 2), copy);
     expect(g).toMatchObject({ kind: 'bar', title: 'Ψήφισε 3 κάρτες', progress: 2, target: 3 });
   });
   it('a finished quest gives a toast, never the bar too', () => {
