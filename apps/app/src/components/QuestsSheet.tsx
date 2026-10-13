@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { greekCaps } from '@netprophet/copy';
 import type { GetQuestsResult, QuestRow } from '@netprophet/db';
 import { useCopy } from '../i18n';
+import { useUnlocks } from '../lib/unlocks';
 import { chipText, doneLine, fraction, questTitle } from '../lib/quests';
 import { fmt } from '../lib/votes';
 import { alpha, colors, ease, fonts, motion } from '../theme';
@@ -21,6 +22,7 @@ const BAR_DELAY = 150;
 export function QuestsSheet({ open, quests, onClose }: { open: boolean; quests: GetQuestsResult | null; onClose: () => void }) {
   const t = useCopy();
   const q = t.quests;
+  const weeklyOpen = useUnlocks().has('weekly_quests');
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const [week, setWeek] = useState(false);
@@ -57,16 +59,18 @@ export function QuestsSheet({ open, quests, onClose }: { open: boolean; quests: 
           <Text style={styles.title}>{q.title}</Text>
           <ScrollView style={{ maxHeight: height * 0.66 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
             <Group header={q.today} reset={q.todayReset} rows={daily} open={open} />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ expanded: week }}
-              onPress={() => setWeek((w) => !w)}
-              style={styles.toggle}
-            >
-              <Text style={styles.toggleText}>{fmt(q.weekToggle, { n: weeklyDone, total: weekly.length })}</Text>
-              <Animated.Text style={[styles.toggleMark, arrowStyle]}>›</Animated.Text>
-            </Pressable>
-            {week ? <Group header={q.week} reset={q.weekReset} rows={weekly} open={open} /> : null}
+            {weeklyOpen ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: week }}
+                onPress={() => setWeek((w) => !w)}
+                style={styles.toggle}
+              >
+                <Text style={styles.toggleText}>{fmt(q.weekToggle, { n: weeklyDone, total: weekly.length })}</Text>
+                <Animated.Text style={[styles.toggleMark, arrowStyle]}>›</Animated.Text>
+              </Pressable>
+            ) : null}
+            {weeklyOpen && week ? <Group header={q.week} reset={q.weekReset} rows={weekly} open={open} /> : null}
           </ScrollView>
           <Pressable accessibilityRole="button" onPress={close} style={styles.close}>
             <Text style={styles.closeText}>{q.close}</Text>

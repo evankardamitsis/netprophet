@@ -5,7 +5,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
-import { groupView } from '../lib/celebrate';
+import { celebrationTitleSize, groupView } from '../lib/celebrate';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
@@ -21,6 +21,7 @@ const CONFETTI = [colors.lime, colors.paper, colors.lime, colors.leaf];
 export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
   const v = groupView(items, t);
+  const titleSize = celebrationTitleSize(v.title);
   const { width, height } = useWindowDimensions();
   const dim = useSharedValue(0);
   const count = useCountTo(v.streak ?? 0, COUNT_MS);
@@ -59,7 +60,7 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
               <Text style={styles.pillUnit}>{t.celebrate.unit}</Text>
             </Animated.View>
           ) : null}
-          <Animated.Text style={[styles.title, title]}>{v.title}</Animated.Text>
+          <Animated.Text style={[styles.title, title, titleSize < 54 && { fontSize: titleSize, lineHeight: titleSize + 2 }]}>{v.title}</Animated.Text>
           {v.tier !== null ? (
             <View style={styles.dots} accessibilityLabel={v.reward}>
               {[0, 1, 2].map((i) => (

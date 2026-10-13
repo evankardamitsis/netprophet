@@ -380,6 +380,9 @@ export const el = {
   me: {
     /** development builds only: run onboarding again */
     replayOnboarding: 'Δες ξανά το onboarding',
+    /** dev builds only: the guest plays as a brand new player */
+    newPlayer: 'Νέος παίκτης',
+    newPlayerOn: 'Νέος παίκτης ✓',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
     streak: 'σερί',
     /** «ΠΡ: 9», your best σερί */
@@ -626,6 +629,19 @@ export const el = {
     /** «σερί» in the pill */
     unit: 'σερί',
     aria: 'Γιορτή',
+  },
+  /** the unlock ladder's full-screen moments: the title and the line by step key (other steps get none) */
+  unlocks: {
+    label: 'Νέο',
+    moments: {
+      level_bar: { title: 'Ανέβηκες level!', line: '' },
+      daily_quests: { title: 'Νέο: Αποστολές', line: 'Τρεις μικρές για σήμερα' },
+      ladder_friends: { title: 'Μπήκες στην Κατάταξη!', line: 'Φέρε έναν φίλο να σε κυνηγάει' },
+      kudos_reactions: { title: 'Το επιβεβαίωσε!', line: 'Πες μια καλή κουβέντα' },
+      badges_shelf: { title: 'Πρώτο badge στο χέρι!', line: '' },
+      pro_first_view: { title: 'Τριάντα ψήφοι!', line: '' },
+      stats_area: { title: 'Τώρα βλέπεις τα στατιστικά σου και όλη την Αττική', line: '' },
+    } as Record<string, { title: string; line: string }>,
   },
   quests: {
     title: 'Αποστολές',

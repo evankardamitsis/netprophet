@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { BadgeCelebration, Celebration, StreakCelebration, QuestReward } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, StreakCelebration, QuestReward, UnlockCelebration } from '@netprophet/db';
 import { copy } from '../i18n';
-import { celebrationView, groupView, nextGroup } from './celebrate';
+import { celebrationTitleSize, celebrationView, groupView, nextGroup } from './celebrate';
 
 const c = (streak: number, freeze: boolean, frame: string | null): StreakCelebration => ({
   id: 'c',
@@ -70,5 +70,26 @@ describe('badge celebrations', () => {
     expect(nextGroup(list.filter((x) => x.id !== 'c')).map((x) => x.id)).toEqual(['a']);
     expect(nextGroup(list.filter((x) => x.id.startsWith('b'))).map((x) => x.id)).toEqual(['b1']);
     expect(nextGroup([])).toEqual([]);
+  });
+});
+
+const u = (id: string, key: string): UnlockCelebration => ({ id, created_at: '2026-10-12T10:00:00Z', payload: { type: 'unlock', key } });
+
+describe('unlock celebrations', () => {
+  it('says «Νέο», the title and the line by step', () => {
+    expect(groupView([u('u', 'level_bar')], copy)).toEqual({ label: 'ΝΕΟ', streak: null, tier: null, title: 'Ανέβηκες level!', reward: '' });
+    expect(groupView([u('u', 'daily_quests')], copy)).toMatchObject({ title: 'Νέο: Αποστολές', reward: 'Τρεις μικρές για σήμερα' });
+    expect(groupView([u('u', 'ladder_friends')], copy)).toMatchObject({ title: 'Μπήκες στην Κατάταξη!', reward: 'Φέρε έναν φίλο να σε κυνηγάει' });
+    expect(groupView([u('u', 'stats_area')], copy).title).toBe('Τώρα βλέπεις τα στατιστικά σου και όλη την Αττική');
+  });
+  it('plays after σερί, quests and badges, one at a time; quiet steps never play', () => {
+    const list = [u('u1', 'level_bar'), u('u2', 'first_freeze'), b('b1', 'gentleman', 1, true), u('u3', 'daily_quests')];
+    expect(nextGroup(list).map((x) => x.id)).toEqual(['b1']);
+    expect(nextGroup(list.filter((x) => x.id !== 'b1')).map((x) => x.id)).toEqual(['u1']);
+    expect(nextGroup([u('u2', 'first_freeze'), u('u4', 'gifts')])).toEqual([]);
+  });
+  it('shrinks long titles', () => {
+    expect(celebrationTitleSize('Ανέβηκες level!')).toBe(54);
+    expect(celebrationTitleSize('Τώρα βλέπεις τα στατιστικά σου και όλη την Αττική')).toBe(40);
   });
 });

@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import Animated from 'react-native-reanimated';
 import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
+import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts } from '../theme';
 import { FitText } from './FitText';
 import { ReactionChips } from './ReactionChips';
@@ -26,6 +27,9 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
   // prototype ms(min(i, 4), 100): 50, 100 ... 250ms
   const enter = useStgIn(STG_MS, 50 + Math.min(index, 4) * 50);
   const hot = item.upset;
+  const { has } = useUnlocks();
+  const reactionsOpen = has('reactions');
+  const kudosOpen = has('kudos');
   const fg = hot ? colors.paper : colors.ink;
   return (
     <Pressable onLongPress={onLongPress ? () => onLongPress(item.id) : undefined} delayLongPress={450}>
@@ -48,8 +52,8 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
           <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
         </View>
         <Text style={[styles.sets, { color: hot ? colors.mist : colors.inkSoft }]}>{item.score}</Text>
-        {item.reactions ? <ReactionChips matchId={item.id} initial={item.reactions} dark={hot} /> : null}
-        {item.thank ? (
+        {item.reactions && reactionsOpen ? <ReactionChips matchId={item.id} initial={item.reactions} dark={hot} /> : null}
+        {item.thank && kudosOpen ? (
           <Pressable
             accessibilityRole="button"
             style={styles.thankHit}

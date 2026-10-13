@@ -9,6 +9,7 @@ import { useCopy } from '../../src/i18n';
 import { useLadder } from '../../src/lib/data';
 import { motivation, nextLine, pointRules, rowName } from '../../src/lib/ladder';
 import { usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
+import { useUnlocks } from '../../src/lib/unlocks';
 import { fmt } from '../../src/lib/votes';
 import { colors, ease, fonts } from '../../src/theme';
 
@@ -27,7 +28,10 @@ const ACCENT_PAD = 10;
 export default function LadderScreen() {
   const t = useCopy();
   const l = t.ladder;
-  const [scope, setScope] = useState<LadderScope>('friends');
+  // «Όλη η Αττική» opens with the stats area; until then there is only «Όσοι ξέρεις», so no switch
+  const areaOpen = useUnlocks().has('ladder_area');
+  const [picked, setScope] = useState<LadderScope>('friends');
+  const scope: LadderScope = areaOpen ? picked : 'friends';
   const { ladder, loading, error, refresh } = useLadder(scope);
   const titleIn = useInA(IN_MS);
 
@@ -42,14 +46,16 @@ export default function LadderScreen() {
           <Text style={styles.title}>{l.title}</Text>
           <Text style={styles.subtitle}>{l.subtitle}</Text>
         </Animated.View>
-        <Segmented
-          options={[
-            { id: 'friends', label: l.scopes.friends },
-            { id: 'all', label: l.scopes.all },
-          ]}
-          value={scope}
-          onChange={setScope}
-        />
+        {areaOpen ? (
+          <Segmented
+            options={[
+              { id: 'friends', label: l.scopes.friends },
+              { id: 'all', label: l.scopes.all },
+            ]}
+            value={scope}
+            onChange={setScope}
+          />
+        ) : null}
         {ladder && ladder.scope === scope ? (
           <View key={scope} style={styles.cards}>
             <MeCard ladder={ladder} />

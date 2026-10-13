@@ -174,8 +174,14 @@ export interface BadgeCelebrationPayload {
   new: boolean;
 }
 
-/** a full-screen moment (prototype celOn): a σερί milestone, a finished quest or a badge tier */
-export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload> {
+/** an unlock-ladder step opened; `key` is the step id (packages/core UNLOCK_STEPS) */
+export interface UnlockCelebrationPayload {
+  type: 'unlock';
+  key: string;
+}
+
+/** a full-screen moment (prototype celOn): a σερί milestone, a finished quest, a badge tier or an unlock */
+export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload> {
   id: string;
   created_at: string;
   payload: P;
@@ -184,6 +190,7 @@ export interface Celebration<P = StreakCelebrationPayload | QuestCelebrationPayl
 export type StreakCelebration = Celebration<StreakCelebrationPayload>;
 export type QuestCelebration = Celebration<QuestCelebrationPayload>;
 export type BadgeCelebration = Celebration<BadgeCelebrationPayload>;
+export type UnlockCelebration = Celebration<UnlockCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
 export interface ResultRow {
