@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -24,6 +24,7 @@ import { hasMoment } from './unlockLadder';
 import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
+import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
 import { groupResults, type ResultGroup } from './results';
@@ -1121,6 +1122,107 @@ export function usePlayer(id: string): PlayerState {
 
   const profile = useMemo(() => (raw ? toProfile(raw, areas, t, new Date()) : null), [raw, areas, t]);
   return { profile, loading, error, notFound, refresh, toggleFollow };
+}
+
+export interface TraitsState {
+  /** null while loading, or when the player is hidden or the call failed (the block stays away) */
+  traits: PlayerTraits | null;
+  /** tap a phrase on or off; optimistic, reverts and resolves to the error kind when it fails */
+  vote: (traitId: string) => Promise<TraitErrorKind | null>;
+  /** add my own phrase; resolves to the error kind, or null when it went to review */
+  suggest: (label: string) => Promise<TraitErrorKind | null>;
+}
+
+/** «Πώς παίζει» for one player; the guest taps on sample chips. */
+export function useTraits(playerId: string, gender: 'm' | 'f' | null): TraitsState {
+  const api = useApi();
+  const [traits, setTraits] = useState<PlayerTraits | null>(null);
+  const ref = useRef<PlayerTraits | null>(null);
+  const inflight = useRef(0);
+  const set = useCallback((p: PlayerTraits | null) => {
+    ref.current = p;
+    setTraits(p);
+  }, []);
+
+  useEffect(() => {
+    let live = true;
+    set(null);
+    if (!api) {
+      set(mockPlayerTraits(playerId, gender));
+      return undefined;
+    }
+    api.getTraits(playerId).then((p) => live && set(p)).catch(() => live && set(null));
+    return () => {
+      live = false;
+    };
+    // the gender only matters for the guest's sample
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, playerId, set]);
+
+  const vote = useCallback(
+    async (traitId: string): Promise<TraitErrorKind | null> => {
+      const before = ref.current;
+      const row = before?.traits.find((x) => x.id === traitId);
+      if (!before || !row || row.pending || !before.can_vote) return null;
+      const on = !row.mine;
+      set(applyTraitVote(before, traitId, on));
+      if (!api) return null;
+      inflight.current += 1;
+      try {
+        const fresh = await api.voteTrait(playerId, traitId, on);
+        inflight.current -= 1;
+        // a later tap is still on its way: its answer will carry the truth
+        if (inflight.current === 0) set(fresh);
+        return null;
+      } catch (err) {
+        inflight.current -= 1;
+        set(ref.current ? applyTraitVote(ref.current, traitId, !on) : before);
+        return traitErrorKind(err instanceof RpcError ? err.code : 'failed');
+      }
+    },
+    [api, playerId, set],
+  );
+
+  const suggest = useCallback(
+    async (label: string): Promise<TraitErrorKind | null> => {
+      const clean = cleanLabel(label);
+      if (!clean) return 'bad_label';
+      const before = ref.current;
+      if (!before) return 'failed';
+      if (!api) {
+        const mine = before.traits.filter((x) => x.pending).length;
+        if (mine >= 3) return 'too_many_pending';
+        set({
+          ...before,
+          traits: [...before.traits, { id: `mock-new-${before.traits.length}`, label_el: { m: clean, f: clean }, label_en: clean, count: null, mine: true, pending: true }],
+        });
+        return null;
+      }
+      try {
+        set(await api.suggestTrait(playerId, clean));
+        return null;
+      } catch (err) {
+        return traitErrorKind(err instanceof RpcError ? err.code : 'failed');
+      }
+    },
+    [api, playerId, set],
+  );
+
+  return { traits, vote, suggest };
+}
+
+/** «Πώς σε βλέπουν» on Εγώ: my top three; the counts are Pro. Sample for the guest. */
+export function useMyTraits(): MyTraits | null {
+  const api = useApi();
+  const [data, setData] = useState<MyTraits | null>(null);
+  useEffect(() => {
+    if (!api) {
+      setData(mockMyTraits());
+      return;
+    }
+    api.getMyTraits().then(setData).catch(() => setData(null));
+  }, [api]);
+  return data;
 }
 
 /* ---------- onboarding ---------- */

@@ -72,3 +72,15 @@ export async function searchPlayers(q: string): Promise<FoundPlayer[]> {
     sub: p.area_id ?? '',
   }));
 }
+
+export async function decideTrait(
+  traitId: string,
+  approve: boolean,
+  labels: { m: string; f: string; en: string } = { m: '', f: '', en: '' },
+): Promise<ActionResult> {
+  return act(
+    'admin_decide_trait',
+    approve ? { p_trait: traitId, p_approve: true, p_label_m: labels.m, p_label_f: labels.f, p_label_en: labels.en } : { p_trait: traitId, p_approve: false },
+    () => (approve ? 'Approved. It shows to everyone now.' : 'Dropped. Its votes went with it.'),
+  );
+}

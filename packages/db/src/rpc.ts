@@ -311,6 +311,35 @@ export interface ReceivedKudo extends KudoOption {
   n: number;
 }
 
+/** «Πώς παίζει» on a profile (api.get_traits, vote_trait, suggest_trait) */
+export interface TraitRow {
+  id: string;
+  /** the Greek phrase in both forms; pick by the player's gender */
+  label_el: { m: string; f: string };
+  label_en: string;
+  /** null on my own pending phrases */
+  count: number | null;
+  mine: boolean;
+  pending: boolean;
+}
+
+export interface PlayerTraits {
+  player_id: string;
+  gender: 'm' | 'f' | null;
+  is_me: boolean;
+  can_vote: boolean;
+  voters: number;
+  traits: TraitRow[];
+}
+
+/** «Πώς σε βλέπουν» on Εγώ (api.get_my_traits): the top three, counts for Pro only */
+export interface MyTraits {
+  pro: boolean;
+  gender: 'm' | 'f' | null;
+  voters: number;
+  traits: { id: string; label_el: { m: string; f: string }; label_en: string; count: number | null; share: number }[];
+}
+
 /** «Αναφορά» */
 export type ReportReason = 'wrong_result' | 'never_played' | 'offensive' | 'fake' | 'other';
 

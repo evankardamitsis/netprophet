@@ -21,8 +21,10 @@ import type {
   LadderScope,
   MePage,
   MeResult,
+  MyTraits,
   PlayerCard,
   PlayerProfile,
+  PlayerTraits,
   PendingConfirmation,
   Reactions,
   ReceivedKudo,
@@ -127,6 +129,11 @@ export function rpc(client: NetprophetClient) {
     giveKudo: (matchId: string, key: string, toPlayer?: string) =>
       call<{ match_id: string; given: number }>(client, 'give_kudo', { p_match_id: matchId, p_option_key: key, ...(toPlayer ? { p_to_player: toPlayer } : {}) }),
     react: (matchId: string, key: string | null) => call<Reactions>(client, 'react', { p_match_id: matchId, p_key: key as string }),
+    getTraits: (playerId: string) => call<PlayerTraits>(client, 'get_traits', { p_player: playerId }),
+    voteTrait: (playerId: string, traitId: string, on: boolean) =>
+      call<PlayerTraits>(client, 'vote_trait', { p_player: playerId, p_trait: traitId, p_on: on }),
+    suggestTrait: (playerId: string, label: string) => call<PlayerTraits>(client, 'suggest_trait', { p_player: playerId, p_label: label }),
+    getMyTraits: () => call<MyTraits>(client, 'get_my_traits', {}),
     getMyKudos: () => call<ReceivedKudo[]>(client, 'get_my_kudos', {}),
     report: (type: 'match' | 'player', id: string, reason: ReportReason, note?: string) =>
       call<{ reported: boolean }>(client, 'report', { p_entity_type: type, p_entity_id: id, p_reason: reason, ...(note ? { p_note: note } : {}) }),

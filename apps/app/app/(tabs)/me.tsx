@@ -9,13 +9,14 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useApi, useBadges, useBlocks, useMePage, useMyKudos, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { useApi, useBadges, useBlocks, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss } from '../../src/lib/data';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
 import { activeLine, priceLine } from '../../src/lib/pro';
 import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
+import { MyTraits } from '../../src/components/MyTraits';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
@@ -24,7 +25,7 @@ import { colors, ease, fonts } from '../../src/theme';
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
  * name), the σερί with its freezes, «Το σκορ σου», «Οι ψήφοι σου», «Τα ματς σου», «Οι φίλοι σου» and Ρυθμίσεις
- * with Αποσύνδεση, plus «Τι λένε για σένα» (M2) and the «Αποστολές» row (M3). Avatar, stats flip, Εμφάνιση, freeze purchase, badges, «Πώς σε βλέπουν»,
+ * with Αποσύνδεση, plus «Τι λένε για σένα» (M2) and the «Αποστολές» row (M3). Avatar, stats flip, Εμφάνιση, freeze purchase and badges, then «Πώς σε βλέπουν» (M3).
  * «Πού κερδίζεις», Απολογισμός and Τουρνουά come with their milestones (M2 to M5).
  */
 const STG_MS = 450;
@@ -38,6 +39,7 @@ export default function MeScreen() {
   const kudos = useMyKudos();
   const quests = useQuests();
   const badges = useBadges();
+  const myTraits = useMyTraits();
   const [questsOpen, setQuestsOpen] = useState(false);
   const unlocks = useUnlocks();
   const { has } = unlocks;
@@ -92,6 +94,11 @@ export default function MeScreen() {
             {kudos && has('kudos') ? (
               <Section i={next()}>
                 <KudosCloud list={kudos} gender={nameGender(view.first)} />
+              </Section>
+            ) : null}
+            {myTraits ? (
+              <Section i={next()}>
+                <MyTraits data={myTraits} first={view.first} proOpen={has('pro_sheet')} />
               </Section>
             ) : null}
             {!view.isNew && has('pro_sheet') ? (
