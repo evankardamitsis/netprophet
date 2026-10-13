@@ -2,7 +2,6 @@
 import { useEffect, useState, useTransition } from "react";
 import { colors, ui } from "../ui";
 import {
-  closeMonth,
   mergeInto,
   recomputeLevels,
   searchRoster,
@@ -50,7 +49,6 @@ export function Roster() {
   const [tick, setTick] = useState(0);
   // levels also recompute every night (docs/v2/level-algorithm.md)
   const [recomputing, recompute] = useTransition();
-  const [closing, close] = useTransition();
 
   useEffect(() => {
     if (filter === "all" && q.trim().length < 2) {
@@ -96,23 +94,6 @@ export function Roster() {
             }
           >
             Recompute levels
-          </button>
-          <button
-            style={ui.secondary}
-            disabled={closing}
-            onClick={() => {
-              if (
-                !window.confirm(
-                  "Close this month now? Promotions, relegations and awards are final for the month.",
-                )
-              )
-                return;
-              close(async () =>
-                onNotice({ ...(await closeMonth()), what: "League:" }),
-              );
-            }}
-          >
-            Close this month now
           </button>
         </div>
       </div>

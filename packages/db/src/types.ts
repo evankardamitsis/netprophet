@@ -380,6 +380,10 @@ export type Database = {
         Args: { p_days?: number };
         Returns: Json;
       };
+      admin_game_config: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_grant_pro: {
         Args: { p_user_id: string; p_days?: number };
         Returns: Json;
@@ -389,6 +393,10 @@ export type Database = {
         Returns: Json;
       };
       admin_league_close: {
+        Args: { p_month?: string };
+        Returns: Json;
+      };
+      admin_league_preview: {
         Args: { p_month?: string };
         Returns: Json;
       };
@@ -404,12 +412,24 @@ export type Database = {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
       };
+      admin_quiz_preview: {
+        Args: { p_email: string; p_day?: string; p_pro?: boolean };
+        Returns: Json;
+      };
+      admin_quiz_templates: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_recompute_levels: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
       admin_resolve_dispute: {
         Args: { p_match_id: string; p_decision: string };
+        Returns: Json;
+      };
+      admin_save_quiz_template: {
+        Args: { p_id: string; p: Json };
         Returns: Json;
       };
       admin_save_tournament: {

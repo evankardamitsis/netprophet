@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@netprophet/copy": "workspace:^",
     "@netprophet/core": "workspace:^",
     "@netprophet/db": "workspace:^",
     "@netprophet/ingest": "workspace:^",
