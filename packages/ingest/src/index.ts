@@ -5,3 +5,4 @@ export * from './oop';
 export * from './score';
 export * from './sheetExport';
 export * from './text';
+export * from './draw';

@@ -11,6 +11,7 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
 - Reference parser: `parse_oop.py` (stdlib Python, tested on the TAF RACE 2026-2027 sheet: 54 matches). Port its logic to TypeScript.
 
 ## Schedule (Europe/Athens)
+- Three runs a day, 08:00, 15:00 and 22:00 (founder, 13 Oct: organisers change the daily schedule during the day).
 - 08:00 schedules run: new matches, moved times/days, removed rows.
 - 08:30 admin email (Resend): review items, overdue results, source health.
 - 09:00 "who plays today" notification, only after the 08:00 run has completed.
@@ -116,3 +117,14 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
 - The desk's candidate list uses the same scoring.
 - TAF sheet on the real roster (dry run): 41 matches straight in, 7 held on 5 names, 29 new players (from 51); the
   new ones are people not in the roster yet.
+
+## Built (M4 part 3a, draws)
+- A tournament can have a draw sheet (`draw_url`) next to its schedule. `packages/ingest` `parseDraws` reads one
+  knockout bracket per tab (entrants by draw number with seeds and byes, each round two columns right: the winner
+  between the pair, the score under it, or «ΔΕΥ 18.30» while still to play; the header's «ΕΩΣ dd/mm» per round).
+  Round robin tabs are recognised and left for later. Fixture: `tools/match-data/fixtures/aok-kifisia-2026`
+  (26 tabs: 448 matches, 86 decided, 43 with a time; the schedule sheet of the same tournament reads with the
+  order-of-play parser, 126 matches).
+- `core.tournament_draws` keeps each category's bracket for the app; names link to roster players only where the
+  matcher is sure; a draw never creates players or matches. Runs log draw reads apart (`ingest_runs.kind`).
+- ΑΟΚ on the real roster: 26 draws, 245 of 597 names linked.

@@ -1,5 +1,5 @@
 import { createSign } from 'node:crypto';
-import { parseSheet } from '@netprophet/ingest';
+import { parseDraws, parseSheet } from '@netprophet/ingest';
 import { runRows } from './ingestRows';
 
 /**
@@ -113,4 +113,10 @@ export async function rowsForTournament(t: { source_url: string | null; season_s
   if (!t.source_url) throw new Error('this tournament has no source URL');
   const tabs = await fetchSheetTabs(t.source_url);
   return runRows(parseSheet(tabs, season(t)));
+}
+
+/** fetch and parse one tournament's draw sheet (one bracket per category tab) */
+export async function drawsForTournament(t: { draw_url: string | null; season_start_year: number | null }) {
+  if (!t.draw_url) throw new Error('this tournament has no draw sheet');
+  return parseDraws(await fetchSheetTabs(t.draw_url), season(t));
 }

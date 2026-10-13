@@ -13,6 +13,14 @@ export interface IngestCounts {
   walkovers_to_decide?: number;
 }
 
+export interface DrawCounts {
+  draws?: number;
+  people?: number;
+  linked?: number;
+  rows_seen?: number;
+  dry?: boolean;
+}
+
 export type Health = 'ok' | 'drop' | 'empty' | 'error';
 
 export interface SourceTournament {
@@ -26,12 +34,15 @@ export interface SourceTournament {
   active: boolean;
   source_kind: 'sheet' | 'csv' | 'site' | null;
   source_url: string | null;
+  draw_url: string | null;
+  draws: number;
   ongoing: boolean;
   season_start_year: number | null;
   last_run_at: string | null;
   matches: number;
   open_reviews: number;
   last_run: { at: string; trigger: 'cron' | 'staff' | 'dry'; health: Health; rows_seen: number; counts: IngestCounts; error: string | null } | null;
+  last_draw_run: { at: string; trigger: 'cron' | 'staff' | 'dry'; health: Health; rows_seen: number; counts: DrawCounts; error: string | null } | null;
 }
 
 export interface ReviewPerson {
