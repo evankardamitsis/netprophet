@@ -1,14 +1,8 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
-import { colors, ui } from "../ui";
-import {
-  mergeInto,
-  recomputeLevels,
-  searchRoster,
-  unclaimPlayer,
-  updatePlayer,
-  type ActionResult,
-} from "./actions";
+import { useEffect, useState, useTransition, type CSSProperties } from "react";
+import { ui } from "../ui";
+import { Banner, Toast, useToast, type Tone } from "../feedback";
+import { mergeInto, recomputeLevels, searchRoster, unclaimPlayer, updatePlayer, type ActionResult } from "./actions";
 
 export interface RosterPlayer {
   player_id: string;
@@ -24,139 +18,159 @@ export interface RosterPlayer {
   merged_into: string | null;
   claimed_by: string | null;
   matches: number;
+  /** the player's level, when the list carries one */
+  level?: number | null;
 }
 
+// «Added recently» is the players users added by typing a name (waiting status); the list has no dates to sort by
 const FILTERS = [
   { id: "all", label: "All" },
-  { id: "pending", label: "New (pending)" },
-  { id: "minors", label: "Minors" },
+  { id: "pending", label: "Added recently" },
+  { id: "claimed", label: "Have an account" },
   { id: "hidden", label: "Hidden" },
-  { id: "claimed", label: "With an account" },
+  { id: "minors", label: "Under 18" },
 ];
 
+type Notice = { tone: Tone; title: string; detail?: string };
+const stack = (gap: number): CSSProperties => ({ display: "flex", flexDirection: "column", gap });
+const wrapRow: CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" };
+const tag: CSSProperties = { fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 999, border: "1px solid currentColor" };
+const fieldLabel: CSSProperties = { ...ui.muted, fontWeight: 700, ...stack(4) };
+
 /**
- * Roster tools. Search by name (or pick a filter), then per player: fix the name, gender and birth year (under 18
- * makes a minor: never voted on, never on cards), hide, merge a duplicate into another player, release a claim.
+ * Players. Opens on the first page of a filter; search by name for anyone else. Edit fixes the details,
+ * hides a player or joins a duplicate into another player.
  */
 export function Roster() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
   const [rows, setRows] = useState<RosterPlayer[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<
-    (ActionResult & { what: string }) | null
-  >(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const { toast, notify } = useToast();
   const [tick, setTick] = useState(0);
-  // levels also recompute every night (docs/v2/level-algorithm.md)
   const [recomputing, recompute] = useTransition();
 
   useEffect(() => {
-    if (filter === "all" && q.trim().length < 2) {
-      setRows(null);
-      return undefined;
-    }
+    setRows(null);
     const id = setTimeout(() => {
-      searchRoster(q, filter)
+      searchRoster(q.trim().length >= 2 ? q : "", filter)
         .then((r) => {
           setRows(r);
           setError(null);
         })
         .catch((e: Error) => setError(e.message));
-    }, 250);
+    }, q ? 250 : 0);
     return () => clearTimeout(id);
   }, [q, filter, tick]);
 
-  const onNotice = (n: ActionResult & { what: string }) => {
-    setNotice(n);
-    if (n.ok) setTick((t) => t + 1);
+  const done = (what: string, r: ActionResult, toastText: string) => {
+    if (r.ok) {
+      setNotice({ tone: "done", title: what, detail: r.message });
+      notify(toastText);
+      setTick((t) => t + 1);
+    } else {
+      setNotice({ tone: "problem", title: `${what}: it didn’t work`, detail: r.message });
+    }
   };
 
+  const pendingCount = rows && filter === "pending" ? rows.length : null;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+    <div style={stack(16)}>
+      <div>
         <h1 style={ui.h1}>Players</h1>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <p style={ui.muted}>
+          Everyone who can appear in a match. Fix a name, hide someone, or join two entries for the same person.
+          {pendingCount !== null && pendingCount > 0 ? ` ${pendingCount} added by users, worth a look.` : ""}
+        </p>
+      </div>
+      {notice ? <Banner {...notice} /> : null}
+      <div style={wrapRow}>
+        {FILTERS.map((f) => (
           <button
-            style={ui.secondary}
-            disabled={recomputing}
-            onClick={() =>
-              recompute(async () =>
-                onNotice({ ...(await recomputeLevels()), what: "Levels:" }),
-              )
-            }
+            key={f.id}
+            style={{ ...ui.secondary, minHeight: 36, background: filter === f.id ? "#0F2019" : "transparent", color: filter === f.id ? "#F3F5EE" : undefined }}
+            aria-pressed={filter === f.id}
+            onClick={() => setFilter(f.id)}
           >
-            Recompute levels
+            {f.label}
           </button>
-        </div>
+        ))}
       </div>
-      {notice ? (
-        <div
-          role="status"
-          style={{
-            ...ui.card,
-            background: notice.ok ? colors.ink : colors.white,
-            color: notice.ok ? colors.paper : colors.ink,
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-          }}
-        >
-          <span>
-            <strong>{notice.what}</strong> {notice.message}
-          </span>
-          <button style={ui.link} onClick={() => setNotice(null)}>
-            Close
-          </button>
-        </div>
-      ) : null}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <input
-          style={{ ...ui.input, flex: 1, minWidth: 220 }}
-          placeholder="Search by name (2 letters or more)"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <select
-          style={{ ...ui.input, width: 200 }}
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          aria-label="Filter"
-        >
-          {FILTERS.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      {error ? <p style={ui.error}>{error}</p> : null}
-      {rows === null ? (
-        <p style={ui.muted}>Type a name or choose a filter.</p>
-      ) : rows.length === 0 ? (
-        <p style={ui.muted}>Nobody found.</p>
+      <input style={ui.input} placeholder="Search by name (2 letters or more)" value={q} onChange={(e) => setQ(e.target.value)} />
+      {error ? <Banner tone="problem" title="Couldn’t load the players" detail={error} /> : null}
+      {rows === null && !error ? <p style={ui.muted}>Loading…</p> : null}
+      {rows && rows.length === 0 ? (
+        <p style={ui.muted}>{q.trim() ? "Nobody has that name." : "All clear. Nobody in this list."}</p>
       ) : null}
       {(rows ?? []).map((p) => (
-        <Row key={`${p.player_id}-${tick}`} p={p} onNotice={onNotice} />
+        <Row key={`${p.player_id}-${tick}`} p={p} done={done} />
       ))}
+      {rows && rows.length >= 50 ? <p style={ui.muted}>Showing the first 50. Search by name to find anyone else.</p> : null}
+
+      <details style={{ marginTop: 16 }}>
+        <summary style={{ ...ui.muted, cursor: "pointer", fontWeight: 700 }}>Advanced</summary>
+        <div style={{ ...stack(10), paddingTop: 10 }}>
+          <p style={{ ...ui.muted, margin: 0 }}>Levels update by themselves every night. Use this only after you fixed many results by hand.</p>
+          <div>
+            <button
+              style={ui.secondary}
+              disabled={recomputing}
+              onClick={() => {
+                setNotice({ tone: "working", title: "Updating levels…" });
+                recompute(async () => done("Levels", await recomputeLevels(), "Levels updated"));
+              }}
+            >
+              {recomputing ? "Updating…" : "Update levels now"}
+            </button>
+          </div>
+        </div>
+      </details>
+      <Toast text={toast} />
     </div>
   );
 }
 
-function Row({
-  p,
-  onNotice,
-}: {
-  p: RosterPlayer;
-  onNotice: (n: ActionResult & { what: string }) => void;
-}) {
+function Row({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionResult, toast: string) => void }) {
+  const [editing, setEditing] = useState(false);
+  const merged = p.status === "merged";
+  const tags = [
+    p.status === "pending" ? "new" : null,
+    merged ? "joined into another player" : null,
+    p.claimed_by ? "has an account" : null,
+    p.hidden ? "hidden" : null,
+    p.is_minor ? "under 18" : null,
+  ].filter(Boolean) as string[];
+  return (
+    <div style={{ ...ui.card, ...stack(10), opacity: merged ? 0.6 : 1 }}>
+      <div style={{ ...wrapRow, justifyContent: "space-between" }}>
+        <div style={wrapRow}>
+          <strong style={{ fontSize: 17 }}>
+            {p.first_name} {p.surname}
+          </strong>
+          {p.level != null ? <span style={ui.muted}>Level {p.level}</span> : null}
+          {tags.map((t) => (
+            <span key={t} style={tag}>
+              {t}
+            </span>
+          ))}
+        </div>
+        <span style={wrapRow}>
+          <span style={ui.muted}>{p.matches} {p.matches === 1 ? "match" : "matches"}</span>
+          {merged ? null : (
+            <button style={ui.link} onClick={() => setEditing((e) => !e)}>
+              {editing ? "Close" : "Edit"}
+            </button>
+          )}
+        </span>
+      </div>
+      {editing && !merged ? <Editor p={p} done={done} /> : null}
+    </div>
+  );
+}
+
+function Editor({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionResult, toast: string) => void }) {
   const [first, setFirst] = useState(p.first_name);
   const [surname, setSurname] = useState(p.surname);
   const [gender, setGender] = useState(p.gender ?? "");
@@ -165,9 +179,10 @@ function Row({
   const [hidden, setHidden] = useState(p.hidden);
   const [mergeQ, setMergeQ] = useState("");
   const [targets, setTargets] = useState<RosterPlayer[]>([]);
+  const [joinTo, setJoinTo] = useState<string | null>(null);
+  const [confirmUnlink, setConfirmUnlink] = useState(false);
   const [pending, start] = useTransition();
-  const what = `${p.first_name} ${p.surname}:`;
-  const merged = p.status === "merged";
+  const what = `${p.first_name} ${p.surname}`;
 
   useEffect(() => {
     if (mergeQ.trim().length < 2) {
@@ -176,15 +191,7 @@ function Row({
     }
     const id = setTimeout(() => {
       searchRoster(mergeQ, "all")
-        .then((r) =>
-          setTargets(
-            r
-              .filter(
-                (x) => x.player_id !== p.player_id && x.status !== "merged",
-              )
-              .slice(0, 5),
-          ),
-        )
+        .then((r) => setTargets(r.filter((x) => x.player_id !== p.player_id && x.status !== "merged").slice(0, 5)))
         .catch(() => setTargets([]));
     }, 250);
     return () => clearTimeout(id);
@@ -192,198 +199,128 @@ function Row({
 
   const save = () =>
     start(async () => {
-      const patch: Record<string, unknown> = {
-        first_name: first,
-        surname,
-        gender,
-        hidden,
-      };
-      // a birth year decides «minor» by itself; the box is for players without one
+      const patch: Record<string, unknown> = { first_name: first, surname, gender, hidden };
+      // a birth year decides «under 18» by itself; the box is for players without one
       if (birth.trim()) patch.birth_year = Number(birth);
       else {
         patch.birth_year = null;
         patch.is_minor = minor;
       }
       if (p.status === "pending") patch.status = "active";
-      onNotice({ ...(await updatePlayer(p.player_id, patch)), what });
+      done(what, await updatePlayer(p.player_id, patch), "Saved");
     });
 
-  const tags = [
-    p.status === "pending" ? "new" : null,
-    merged ? "merged" : null,
-    p.is_minor ? "minor" : null,
-    p.hidden ? "hidden" : null,
-    p.claimed_by ? `account: ${p.claimed_by}` : null,
-    `${p.matches} match${p.matches === 1 ? "" : "es"}`,
-    p.source,
-  ].filter(Boolean);
-
   return (
-    <div
-      style={{
-        ...ui.card,
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-        opacity: merged ? 0.6 : 1,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 8,
-          flexWrap: "wrap",
-        }}
-      >
-        <strong style={{ fontSize: 17 }}>
-          {p.first_name} {p.surname}
-        </strong>
-        <span style={ui.muted}>{tags.join(" · ")}</span>
+    <div style={stack(12)}>
+      <div style={wrapRow}>
+        <label style={fieldLabel}>
+          First name
+          <input style={{ ...ui.input, width: 170 }} value={first} onChange={(e) => setFirst(e.target.value)} />
+        </label>
+        <label style={fieldLabel}>
+          Surname
+          <input style={{ ...ui.input, width: 210 }} value={surname} onChange={(e) => setSurname(e.target.value)} />
+        </label>
+        <label style={fieldLabel}>
+          Gender
+          <select style={{ ...ui.input, width: 120 }} value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="">Not set</option>
+            <option value="m">Man</option>
+            <option value="f">Woman</option>
+          </select>
+        </label>
+        <label style={fieldLabel}>
+          Birth year
+          <input
+            style={{ ...ui.input, width: 110 }}
+            value={birth}
+            onChange={(e) => setBirth(e.target.value.replace(/\D/g, "").slice(0, 4))}
+            inputMode="numeric"
+          />
+        </label>
       </div>
-      {merged ? null : (
-        <>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <input
-              style={{ ...ui.input, width: 160 }}
-              value={first}
-              onChange={(e) => setFirst(e.target.value)}
-              aria-label="First name"
-            />
-            <input
-              style={{ ...ui.input, width: 200 }}
-              value={surname}
-              onChange={(e) => setSurname(e.target.value)}
-              aria-label="Surname"
-            />
-            <select
-              style={{ ...ui.input, width: 110 }}
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              aria-label="Gender"
-            >
-              <option value="">Gender</option>
-              <option value="m">Man</option>
-              <option value="f">Woman</option>
-            </select>
-            <input
-              style={{ ...ui.input, width: 120 }}
-              value={birth}
-              onChange={(e) =>
-                setBirth(e.target.value.replace(/\D/g, "").slice(0, 4))
-              }
-              placeholder="Birth year"
-              aria-label="Birth year"
-              inputMode="numeric"
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 16,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <label
-              style={{
-                display: "flex",
-                gap: 6,
-                alignItems: "center",
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={minor}
-                disabled={birth.trim().length > 0}
-                onChange={(e) => setMinor(e.target.checked)}
-              />
-              Minor
-            </label>
-            <label
-              style={{
-                display: "flex",
-                gap: 6,
-                alignItems: "center",
-                fontSize: 14,
-                fontWeight: 600,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={hidden}
-                onChange={(e) => setHidden(e.target.checked)}
-              />
-              Hidden
-            </label>
-            <button style={ui.primary} disabled={pending} onClick={save}>
-              {p.status === "pending" ? "Save and approve" : "Save"}
-            </button>
-            {p.claimed_by ? (
-              <button
-                style={ui.secondary}
-                disabled={pending}
-                onClick={() =>
-                  start(async () =>
-                    onNotice({ ...(await unclaimPlayer(p.player_id)), what }),
-                  )
-                }
-              >
-                Release claim
-              </button>
-            ) : null}
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <input
-              style={ui.input}
-              placeholder="Duplicate? Find the player to merge into"
-              value={mergeQ}
-              onChange={(e) => setMergeQ(e.target.value)}
-            />
-            {targets.map((t) => (
-              <div
-                key={t.player_id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <span>
-                  {t.first_name} {t.surname}{" "}
-                  <span style={ui.muted}>
-                    {t.matches} matches{t.claimed_by ? " · has an account" : ""}
-                  </span>
-                </span>
+      <div style={{ ...wrapRow, gap: 16 }}>
+        <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+          <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} />
+          Hide from the app
+        </label>
+        <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+          <input type="checkbox" checked={minor} disabled={birth.trim().length > 0} onChange={(e) => setMinor(e.target.checked)} />
+          Under 18
+        </label>
+        {birth.trim() ? <span style={ui.muted}>With a birth year, “Under 18” follows by itself.</span> : null}
+      </div>
+      <div>
+        <button style={ui.primary} disabled={pending} onClick={save}>
+          {pending ? "Saving…" : p.status === "pending" ? "Save and approve" : "Save"}
+        </button>
+      </div>
+
+      <div style={stack(6)}>
+        <strong style={{ fontSize: 14 }}>Merge with another player</strong>
+        <span style={ui.muted}>Use this when the same person is in the list twice. Their matches move to the player you pick.</span>
+        <input style={ui.input} placeholder="Search for the other player" value={mergeQ} onChange={(e) => setMergeQ(e.target.value)} />
+        {targets.map((t) => (
+          <div key={t.player_id} style={{ ...wrapRow, justifyContent: "space-between" }}>
+            <span>
+              {t.first_name} {t.surname}{" "}
+              <span style={ui.muted}>
+                {t.matches} {t.matches === 1 ? "match" : "matches"}
+                {t.claimed_by ? " · has an account" : ""}
+              </span>
+            </span>
+            {joinTo === t.player_id ? (
+              <span style={wrapRow}>
+                <strong style={{ fontSize: 14 }}>Merge {what} into {t.first_name} {t.surname}?</strong>
                 <button
                   style={ui.secondary}
                   disabled={pending}
-                  onClick={() =>
-                    start(async () =>
-                      onNotice({
-                        ...(await mergeInto(p.player_id, t.player_id)),
-                        what,
-                      }),
-                    )
-                  }
+                  onClick={() => {
+                    setJoinTo(null);
+                    start(async () => done(what, await mergeInto(p.player_id, t.player_id), "Players merged"));
+                  }}
                 >
-                  Merge into
+                  Yes, merge
                 </button>
-              </div>
-            ))}
+                <button style={ui.link} onClick={() => setJoinTo(null)}>
+                  Cancel
+                </button>
+              </span>
+            ) : (
+              <button style={ui.secondary} onClick={() => setJoinTo(t.player_id)}>
+                Merge into this one
+              </button>
+            )}
           </div>
-        </>
-      )}
+        ))}
+      </div>
+
+      {p.claimed_by ? (
+        <div style={wrapRow}>
+          {confirmUnlink ? (
+            <>
+              <strong style={{ fontSize: 14 }}>Unlink the account of {p.claimed_by} from this player?</strong>
+              <button
+                style={ui.secondary}
+                disabled={pending}
+                onClick={() => {
+                  setConfirmUnlink(false);
+                  start(async () => done(what, await unclaimPlayer(p.player_id), "Account unlinked"));
+                }}
+              >
+                Yes, unlink
+              </button>
+              <button style={ui.link} onClick={() => setConfirmUnlink(false)}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button style={ui.link} onClick={() => setConfirmUnlink(true)}>
+              Unlink the account ({p.claimed_by})
+            </button>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

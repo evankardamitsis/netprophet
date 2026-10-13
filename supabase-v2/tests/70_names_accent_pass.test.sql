@@ -1,7 +1,7 @@
 -- The v1 names accent pass: capital names get a proposal from the spelling dictionary, word by word; staff apply
 -- the sure ones in bulk and the rest one by one; only case and accents change; approved words spell new imports.
 begin;
-select plan(14);
+select plan(15);
 
 select tests.create_user('nm-adm@test.local', 'admin') as adm \gset
 select tests.create_user('nm-u@test.local') as u \gset
@@ -44,6 +44,12 @@ select tests.logout();
 select tests.mk_player('ΓΙΩΡΓΟΣ', 'ΑΓΝΩΣΤΟΠΟΥΛΟΣ') as p6 \gset
 select is((select first_name || ' ' || surname from core.players where id = :'p6'::uuid), 'Γιώργος Αγνωστόπουλος',
           'new capitals spelled on arrival');
+
+-- a word the dictionary cannot spell (Latin capitals) keeps the name out of «ready»
+insert into core.name_spellings (kind, caps_key, spelling, confidence) values ('first', 'ΕΡΡΙΚΟΣ', 'Έρρικος', 'high');
+-- «ΒAΣΙΛΕΙΟΥ» with a Latin A: not a Greek capital word the dictionary can spell, so it stays as written
+select tests.mk_player('ΕΡΡΙΚΟΣ', 'ΒAΣΙΛΕΙΟΥ') as p7 \gset
+select is((select confidence from core.name_proposals() where player_id = :'p7'::uuid), 'review', 'a word left in capitals: check, not ready');
 
 select * from finish();
 rollback;

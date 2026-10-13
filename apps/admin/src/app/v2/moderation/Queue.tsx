@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, type CSSProperties, type ReactNode } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
-import { colors, ui } from '../ui';
+import { ui } from '../ui';
+import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
@@ -68,92 +69,140 @@ export interface TournamentOption {
 }
 
 const when = (iso: string) =>
-  new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', weekday: 'short', day: '2-digit', month: '2-digit' }).format(new Date(iso));
+  new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso)).replace(',', '');
+
+const stack = (gap: number): CSSProperties => ({ display: 'flex', flexDirection: 'column', gap });
+const wrapRow: CSSProperties = { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' };
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const FORMATS = { singles: 'Singles', doubles: 'Doubles', mixed: 'Mixed doubles' } as const;
 
 const sideName = (d: Dispute, side: Side) =>
-  (d.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || `Side ${side}`;
+  (d.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || 'Unknown';
+
+type Notice = { tone: Tone; title: string; detail?: string };
+/** run an action with the working / done / problem banner and a toast */
+type Run = (what: string, fn: () => Promise<ActionResult>, toast: string) => void;
 
 /**
- * The moderation queue. Player-logged matches and names are live at once; this is where staff review them,
- * along with reports from users (hide the match or player, or dismiss):
- * disputes (keep, turn round, void), new players (approve, fix the spelling, merge into the roster player),
- * tournament names typed under «Άλλο» (link to a tournament or keep as friendlies).
+ * The moderation queue: things only a person can decide. Each item is a question with plain buttons.
+ * Player-logged matches and names are live at once; this is where staff review them.
  */
 export function Queue({ data, tournaments }: { data: Moderation; tournaments: TournamentOption[] }) {
-  const [notice, setNotice] = useState<(ActionResult & { what: string }) | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const { toast, notify } = useToast();
+  const [, start] = useTransition();
+  const run: Run = (what, fn, toastText) => {
+    setNotice({ tone: 'working', title: `${what}…` });
+    start(async () => {
+      const r = await fn();
+      if (r.ok) {
+        setNotice({ tone: 'done', title: what, detail: r.message });
+        notify(toastText);
+      } else {
+        setNotice({ tone: 'problem', title: `${what}: it didn’t work`, detail: r.message });
+      }
+    });
+  };
+  const traits = data.traits ?? [];
+  const total = data.reports.length + data.disputes.length + data.players.length + traits.length + data.tournaments.length;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      {notice ? (
-        <div
-          role="status"
-          style={{ ...ui.card, background: notice.ok ? colors.ink : colors.white, color: notice.ok ? colors.paper : colors.ink, display: 'flex', justifyContent: 'space-between', gap: 12 }}
-        >
-          <span>
-            <strong>{notice.what}</strong> {notice.message}
-          </span>
-          <button style={ui.link} onClick={() => setNotice(null)}>
-            Close
-          </button>
-        </div>
-      ) : null}
-      <Section title="Reports" hint="Someone flagged a match or a player. Hiding takes it out of every feed and list." n={data.reports.length}>
+    <div style={stack(28)}>
+      <div>
+        <h1 style={ui.h1}>Moderation</h1>
+        <p style={ui.muted}>
+          {total === 0
+            ? 'All clear. Nothing waiting for you.'
+            : `${plural(total, 'thing')} ${total === 1 ? 'is' : 'are'} waiting for your decision. Nothing here blocks the app; it all keeps working until you decide.`}
+        </p>
+      </div>
+      {notice ? <Banner {...notice} /> : null}
+      <Section title="Reports from users" hint="Someone flagged a match or a player. Hiding takes it out of the app for everyone." n={data.reports.length}>
         {data.reports.map((r) => (
-          <ReportRow key={r.id} r={r} onNotice={setNotice} />
+          <ReportRow key={r.id} r={r} run={run} />
         ))}
       </Section>
-      <Section title="Disputed matches" hint="The other side said it went differently. Votes were paid, then taken back." n={data.disputes.length}>
+      <Section title="Results people disagree on" hint="The two players disagree about the result. Decide which one stands." n={data.disputes.length}>
         {data.disputes.map((d) => (
-          <DisputeRow key={d.match_id} d={d} onNotice={setNotice} />
+          <DisputeRow key={d.match_id} d={d} run={run} />
         ))}
       </Section>
-      <Section title="New players" hint="Names typed in «+ Ματς». They already show by name; approve them or merge a typo into the roster player." n={data.players.length}>
+      <Section title="New players" hint="Players that users added by typing a name. They already show in the app; check the spelling, or join them to a player we already have." n={data.players.length}>
         {data.players.map((p) => (
-          <PlayerRow key={p.player_id} p={p} onNotice={setNotice} />
+          <PlayerRow key={p.player_id} p={p} run={run} />
         ))}
       </Section>
-      <Section title="Traits" hint="Phrases for «Πώς παίζει» added by players. Fix the wording (masculine, feminine, English), then approve to show it to everyone, or drop it." n={(data.traits ?? []).length}>
-        {(data.traits ?? []).map((t) => (
-          <TraitRow key={t.id} t={t} onNotice={setNotice} />
+      <Section title="Phrases for «Πώς παίζει»" hint="Phrases users suggested to describe how someone plays. Fix the wording, then approve it to show it to everyone." n={traits.length}>
+        {traits.map((t) => (
+          <TraitRow key={t.id} t={t} run={run} />
         ))}
       </Section>
-      <Section title="Tournament names" hint="Typed under «Άλλο». Link them to a tournament, or keep the matches as friendlies." n={data.tournaments.length}>
+      <Section title="Tournament names users typed" hint="Typed under «Άλλο». Say which tournament it is, or keep those matches as friendlies." n={data.tournaments.length}>
         {data.tournaments.map((t) => (
-          <SuggestionRow key={t.text} s={t} tournaments={tournaments} onNotice={setNotice} />
+          <SuggestionRow key={t.text} s={t} tournaments={tournaments} run={run} />
         ))}
       </Section>
+      <Toast text={toast} />
     </div>
   );
 }
 
-function Section({ title, hint, n, children }: { title: string; hint: string; n: number; children: React.ReactNode }) {
+function Section({ title, hint, n, children }: { title: string; hint: string; n: number; children: ReactNode }) {
   return (
-    <section style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <section style={stack(10)}>
       <div>
-        <h2 style={{ ...ui.h1, fontSize: 22 }}>
+        <strong style={{ fontSize: 20 }}>
           {title} <span style={{ ...ui.muted, fontSize: 16 }}>{n}</span>
-        </h2>
+        </strong>
         <p style={{ ...ui.muted, margin: 0 }}>{hint}</p>
       </div>
-      {n === 0 ? <p style={ui.muted}>Nothing here.</p> : children}
+      {n === 0 ? <p style={ui.muted}>All clear. Nothing waiting.</p> : children}
     </section>
   );
 }
 
-type Notice = (n: ActionResult & { what: string }) => void;
-
-function DisputeRow({ d, onNotice }: { d: Dispute; onNotice: Notice }) {
-  const [pending, start] = useTransition();
-  const logger = [d.logged_by?.first_name, d.logged_by?.surname].filter(Boolean).join(' ') || 'Someone';
-  const run = (decision: 'keep' | 'flip' | 'void') =>
-    start(async () => onNotice({ ...(await resolveDispute(d.match_id, decision)), what: `${sideName(d, 1)} vs ${sideName(d, 2)}:` }));
-  const other: Side = d.winner_side === 1 ? 2 : 1;
+/** a destructive button that asks first, in the page */
+function Confirm({ label, question, yes, disabled, onYes }: { label: string; question: string; yes: string; disabled?: boolean; onYes: () => void }) {
+  const [asking, setAsking] = useState(false);
+  if (!asking)
+    return (
+      <button style={ui.secondary} disabled={disabled} onClick={() => setAsking(true)}>
+        {label}
+      </button>
+    );
   return (
-    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <span style={wrapRow}>
+      <strong style={{ fontSize: 14 }}>{question}</strong>
+      <button
+        style={ui.secondary}
+        disabled={disabled}
+        onClick={() => {
+          setAsking(false);
+          onYes();
+        }}
+      >
+        {yes}
+      </button>
+      <button style={ui.link} onClick={() => setAsking(false)}>
+        Cancel
+      </button>
+    </span>
+  );
+}
+
+function DisputeRow({ d, run }: { d: Dispute; run: Run }) {
+  const logger = [d.logged_by?.first_name, d.logged_by?.surname].filter(Boolean).join(' ') || 'Someone';
+  const other: Side = d.winner_side === 1 ? 2 : 1;
+  const names = `${sideName(d, 1)} vs ${sideName(d, 2)}`;
+  const go = (decision: 'keep' | 'flip' | 'void', toast: string) => run(`${names}`, () => resolveDispute(d.match_id, decision), toast);
+  return (
+    <div style={{ ...ui.card, ...stack(10) }}>
       <span style={ui.muted}>
-        {when(d.starts_at)} · {d.tournament ?? 'Friendly'} · {d.format} · {d.votes} votes
+        {when(d.starts_at)} · {d.tournament ?? 'Friendly'} · {FORMATS[d.format]} · {plural(d.votes, 'vote')}
       </span>
       <div style={{ fontSize: 16 }}>
-        <strong>{logger}</strong> logged: <strong>{sideName(d, d.winner_side)}</strong> beat {sideName(d, other)} {d.score ?? ''}
+        <strong>{logger}</strong> logged that <strong>{sideName(d, d.winner_side)}</strong> beat {sideName(d, other)}
+        {d.score ? ` ${d.score}` : ''}. Which result is right?
       </div>
       {d.answers
         .filter((a) => a.state !== 'pending')
@@ -164,108 +213,128 @@ function DisputeRow({ d, onNotice }: { d: Dispute; onNotice: Notice }) {
               ? ' says they did not play this.'
               : a.fix
                 ? ` says ${a.fix.winner === 'me' ? 'they' : 'the other side'} won ${a.fix.sets}.`
-                : ` answered: ${a.state}.`}
-            {a.via ? <span style={ui.muted}> ({a.via})</span> : null}
+                : ' disagrees.'}
           </div>
         ))}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button style={ui.secondary} disabled={pending} onClick={() => run('keep')}>
-          Keep as logged
+      <div style={wrapRow}>
+        <button style={ui.primary} onClick={() => go('keep', 'Kept as logged')}>
+          Keep the logged result
         </button>
-        <button style={ui.secondary} disabled={pending} onClick={() => run('flip')}>
+        <button style={ui.secondary} onClick={() => go('flip', 'Result turned round')}>
           {sideName(d, other)} won
         </button>
-        <button style={ui.secondary} disabled={pending} onClick={() => run('void')}>
-          Void
-        </button>
+        <Confirm label="It didn’t happen" question="Remove this match? Votes on it are cancelled." yes="Yes, remove it" onYes={() => go('void', 'Match removed')} />
       </div>
     </div>
   );
 }
 
 const REASONS: Record<Report['reason'], string> = {
-  wrong_result: 'Wrong result',
-  never_played: 'Never happened',
-  offensive: 'Offensive',
-  fake: 'Fake profile',
-  other: 'Something else',
+  wrong_result: 'Says the result is wrong',
+  never_played: 'Says it never happened',
+  offensive: 'Says it is offensive',
+  fake: 'Says it is a fake profile',
+  other: 'Reported for another reason',
 };
 
-function ReportRow({ r, onNotice }: { r: Report; onNotice: Notice }) {
-  const [pending, start] = useTransition();
+function ReportRow({ r, run }: { r: Report; run: Run }) {
   const subject =
     r.entity_type === 'player'
-      ? `Player: ${r.what?.name ?? 'removed'}`
-      : `Match: ${(r.what?.sides ?? []).map((s) => s.players.map((p) => `${p.first_name} ${p.surname}`).join(' / ')).join(' vs ')}${
-          r.what?.starts_at ? ` (${when(r.what.starts_at)}${r.what.source === 'user' ? ', player-logged' : ''})` : ''
+      ? r.what?.name ?? 'A removed player'
+      : `${(r.what?.sides ?? []).map((s) => s.players.map((p) => `${p.first_name} ${p.surname}`).join(' / ')).join(' vs ')}${
+          r.what?.starts_at ? ` (${when(r.what.starts_at)})` : ''
         }`;
-  const run = (hide: boolean) => start(async () => onNotice({ ...(await closeReport(r.id, hide)), what: `${subject}:` }));
+  const kind = r.entity_type === 'player' ? 'player' : 'match';
   return (
-    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ ...ui.card, ...stack(8) }}>
       <span style={ui.muted}>
-        {when(r.created_at)} · by {r.reporter ?? 'someone'}
-        {r.reports > 1 ? ` · ${r.reports} open reports` : ''}
+        {when(r.created_at)} · from {r.reporter ?? 'someone'}
+        {r.reports > 1 ? ` · ${r.reports} people reported this` : ''}
         {r.what?.hidden ? ' · already hidden' : ''}
       </span>
-      <div style={{ fontSize: 16, fontWeight: 700 }}>{subject}</div>
+      <div style={{ fontSize: 16, fontWeight: 700 }}>
+        {kind === 'player' ? 'Player' : 'Match'}: {subject}
+      </div>
       <div>
-        <strong>{REASONS[r.reason]}</strong>
+        {REASONS[r.reason]}
         {r.note ? <span>: «{r.note}»</span> : null}
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button style={ui.secondary} disabled={pending} onClick={() => run(true)}>
-          Hide it
+      <strong style={{ fontSize: 14 }}>Should this {kind} be hidden from the app?</strong>
+      <div style={wrapRow}>
+        <button style={ui.primary} onClick={() => run(`${subject}`, () => closeReport(r.id, false), 'Left as it is')}>
+          No, leave it
         </button>
-        <button style={ui.secondary} disabled={pending} onClick={() => run(false)}>
-          Dismiss
-        </button>
+        <Confirm
+          label={`Hide this ${kind}`}
+          question={`Hide this ${kind} from everyone?`}
+          yes="Yes, hide it"
+          onYes={() => run(`${subject}`, () => closeReport(r.id, true), 'Hidden')}
+        />
       </div>
     </div>
   );
 }
 
-function PlayerRow({ p, onNotice }: { p: PendingPlayer; onNotice: Notice }) {
+function PlayerRow({ p, run }: { p: PendingPlayer; run: Run }) {
   const [first, setFirst] = useState(p.first_name);
   const [surname, setSurname] = useState(p.surname);
   const [q, setQ] = useState('');
   const [found, setFound] = useState<FoundPlayer[]>([]);
-  const [pending, start] = useTransition();
+  const [joinTo, setJoinTo] = useState<string | null>(null);
   useEffect(() => {
     const id = setTimeout(() => {
       void searchPlayers(q).then(setFound).catch(() => setFound([]));
     }, 250);
     return () => clearTimeout(id);
   }, [q]);
-  const what = `${p.first_name} ${p.surname}:`;
-  const merge = (target: string) => start(async () => onNotice({ ...(await mergePlayer(p.player_id, target)), what }));
+  const what = `${p.first_name} ${p.surname}`;
   const targets: { id: string; name: string; note: string }[] = [
-    ...p.similar.map((s) => ({ id: s.player_id, name: s.name, note: s.claimed ? 'has an account' : 'looks similar' })),
-    ...found.filter((f) => !p.similar.some((s) => s.player_id === f.id)).map((f) => ({ id: f.id, name: f.name, note: f.sub })),
+    ...p.similar.map((s) => ({ id: s.player_id, name: s.name, note: s.claimed ? 'has an account' : 'looks like the same person' })),
+    ...found.filter((f) => !p.similar.some((s) => s.player_id === f.id)).map((f) => ({ id: f.id, name: f.name, note: '' })),
   ];
   return (
-    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ ...ui.card, ...stack(10) }}>
       <span style={ui.muted}>
-        Added {when(p.created_at)} · {p.matches} match{p.matches === 1 ? '' : 'es'}
+        Added {when(p.created_at)} · {plural(p.matches, 'match', 'matches')}
         {p.claimed ? ' · has an account' : ''}
       </span>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+      <strong style={{ fontSize: 16 }}>Is “{what}” spelled right?</strong>
+      <div style={wrapRow}>
         <input style={{ ...ui.input, width: 180 }} value={first} onChange={(e) => setFirst(e.target.value)} aria-label="First name" />
         <input style={{ ...ui.input, width: 220 }} value={surname} onChange={(e) => setSurname(e.target.value)} aria-label="Surname" />
-        <button style={ui.primary} disabled={pending} onClick={() => start(async () => onNotice({ ...(await approvePlayer(p.player_id, first, surname)), what }))}>
-          Approve
+        <button style={ui.primary} onClick={() => run(what, () => approvePlayer(p.player_id, first, surname), 'Player approved')}>
+          Yes, approve
         </button>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontWeight: 700, fontSize: 14 }}>Or merge into a roster player</span>
-        <input style={ui.input} placeholder="Search the roster" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div style={stack(6)}>
+        <span style={{ fontWeight: 700, fontSize: 14 }}>Or is this someone we already have? Find them to join the two.</span>
+        <input style={ui.input} placeholder="Search players" value={q} onChange={(e) => setQ(e.target.value)} />
         {targets.map((t) => (
-          <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <div key={t.id} style={{ ...wrapRow, justifyContent: 'space-between' }}>
             <span>
-              {t.name} <span style={ui.muted}>{t.note}</span>
+              {t.name} {t.note ? <span style={ui.muted}>{t.note}</span> : null}
             </span>
-            <button style={ui.secondary} disabled={pending} onClick={() => merge(t.id)}>
-              Merge into
-            </button>
+            {joinTo === t.id ? (
+              <span style={wrapRow}>
+                <strong style={{ fontSize: 14 }}>Join “{what}” into {t.name}?</strong>
+                <button
+                  style={ui.secondary}
+                  onClick={() => {
+                    setJoinTo(null);
+                    run(what, () => mergePlayer(p.player_id, t.id), 'Players joined');
+                  }}
+                >
+                  Yes, join them
+                </button>
+                <button style={ui.link} onClick={() => setJoinTo(null)}>
+                  Cancel
+                </button>
+              </span>
+            ) : (
+              <button style={ui.secondary} onClick={() => setJoinTo(t.id)}>
+                Same person
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -273,18 +342,17 @@ function PlayerRow({ p, onNotice }: { p: PendingPlayer; onNotice: Notice }) {
   );
 }
 
-function SuggestionRow({ s, tournaments, onNotice }: { s: Moderation['tournaments'][number]; tournaments: TournamentOption[]; onNotice: Notice }) {
+function SuggestionRow({ s, tournaments, run }: { s: Moderation['tournaments'][number]; tournaments: TournamentOption[]; run: Run }) {
   const [pick, setPick] = useState('');
-  const [pending, start] = useTransition();
-  const run = (id: string | null) => start(async () => onNotice({ ...(await linkSuggestion(s.text, id)), what: `«${s.text}»:` }));
   return (
-    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ ...ui.card, ...stack(10) }}>
       <div style={{ fontSize: 17, fontWeight: 700 }}>
-        «{s.text}» <span style={ui.muted}>
-          {s.matches} match{s.matches === 1 ? '' : 'es'} · last {when(s.last)}
+        Which tournament is «{s.text}»?{' '}
+        <span style={ui.muted}>
+          {plural(s.matches, 'match', 'matches')} · last {when(s.last)}
         </span>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={wrapRow}>
         <select style={{ ...ui.input, width: 320 }} value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Tournament">
           <option value="">Choose a tournament</option>
           {tournaments.map((t) => (
@@ -293,42 +361,54 @@ function SuggestionRow({ s, tournaments, onNotice }: { s: Moderation['tournament
             </option>
           ))}
         </select>
-        <button style={ui.primary} disabled={pending || !pick} onClick={() => run(pick)}>
-          Link
+        <button style={ui.primary} disabled={!pick} onClick={() => run(`«${s.text}»`, () => linkSuggestion(s.text, pick), 'Matches linked')}>
+          Link them
         </button>
-        <button style={ui.secondary} disabled={pending} onClick={() => run(null)}>
-          Keep as friendlies
+        <button style={ui.secondary} onClick={() => run(`«${s.text}»`, () => linkSuggestion(s.text, null), 'Kept as friendlies')}>
+          They are friendlies
         </button>
       </div>
-      <p style={{ ...ui.muted, margin: 0 }}>Not in the list? Add it on the Import page first.</p>
+      <p style={{ ...ui.muted, margin: 0 }}>Not in the list? Add the tournament on the Tournaments page first.</p>
     </div>
   );
 }
 
-function TraitRow({ t, onNotice }: { t: PendingTrait; onNotice: Notice }) {
+function TraitRow({ t, run }: { t: PendingTrait; run: Run }) {
   const [m, setM] = useState(t.label_el.m);
   const [f, setF] = useState(t.label_el.f);
   const [en, setEn] = useState(t.label_en);
-  const [pending, start] = useTransition();
-  const what = `«${t.label_el.m}»:`;
+  const what = `«${t.label_el.m}»`;
   return (
-    <div style={{ ...ui.card, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ ...ui.card, ...stack(10) }}>
       <span style={ui.muted}>
-        Added {when(t.created_at)} by {t.by ?? 'someone'}
-        {t.player ? ` about ${t.player}` : ''} · {t.votes} vote{t.votes === 1 ? '' : 's'}
+        Suggested {when(t.created_at)} by {t.by ?? 'someone'}
+        {t.player ? ` about ${t.player}` : ''} · {plural(t.votes, 'vote')}
       </span>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input style={{ ...ui.input, width: 240 }} value={m} onChange={(e) => setM(e.target.value)} aria-label="Masculine" placeholder="Masculine" />
-        <input style={{ ...ui.input, width: 240 }} value={f} onChange={(e) => setF(e.target.value)} aria-label="Feminine" placeholder="Feminine" />
-        <input style={{ ...ui.input, width: 240 }} value={en} onChange={(e) => setEn(e.target.value)} aria-label="English" placeholder="English" />
+      <strong style={{ fontSize: 16 }}>Show this phrase to everyone?</strong>
+      <div style={wrapRow}>
+        <label style={{ ...ui.muted, fontWeight: 700, ...stack(4) }}>
+          For a man
+          <input style={{ ...ui.input, width: 240 }} value={m} onChange={(e) => setM(e.target.value)} />
+        </label>
+        <label style={{ ...ui.muted, fontWeight: 700, ...stack(4) }}>
+          For a woman
+          <input style={{ ...ui.input, width: 240 }} value={f} onChange={(e) => setF(e.target.value)} />
+        </label>
+        <label style={{ ...ui.muted, fontWeight: 700, ...stack(4) }}>
+          In English
+          <input style={{ ...ui.input, width: 240 }} value={en} onChange={(e) => setEn(e.target.value)} />
+        </label>
       </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button style={ui.primary} disabled={pending || !m.trim()} onClick={() => start(async () => onNotice({ ...(await decideTrait(t.id, true, { m, f, en })), what }))}>
-          Approve
+      <div style={wrapRow}>
+        <button style={ui.primary} disabled={!m.trim()} onClick={() => run(what, () => decideTrait(t.id, true, { m, f, en }), 'Phrase approved')}>
+          Yes, approve
         </button>
-        <button style={ui.secondary} disabled={pending} onClick={() => start(async () => onNotice({ ...(await decideTrait(t.id, false)), what }))}>
-          Drop
-        </button>
+        <Confirm
+          label="No, throw it away"
+          question="Throw this phrase away? The votes on it go too."
+          yes="Yes, throw it away"
+          onYes={() => run(what, () => decideTrait(t.id, false), 'Phrase dropped')}
+        />
       </div>
     </div>
   );

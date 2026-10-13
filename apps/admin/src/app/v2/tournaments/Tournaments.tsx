@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition, type CSSProperties } from 'react';
 import { colors, ui } from '../ui';
+import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { createTournament, loadReviews, loadTournaments, mergePlayers, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
 
@@ -57,50 +58,6 @@ function statusLine(t: SourceTournament): { text: string; bad: boolean } {
   if (last.health === 'drop') return { text: `The sheet looked much shorter than last time ${whenWords(last.at)}, worth a look`, bad: true };
   if (last.health === 'empty') return { text: `The sheet had no matches in it ${whenWords(last.at)}`, bad: true };
   return { text: `Updated ${whenWords(last.at)} · ${plural(t.matches, 'match', 'matches')} · ${plural(t.draws, 'draw')}`, bad: false };
-}
-
-
-/* ---------- visual cues: working, done, problem, and a toast after a decision ---------- */
-
-const CUE_CSS = `
-@keyframes npSlide { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
-@keyframes npIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-`;
-
-type Tone = 'working' | 'done' | 'problem';
-
-function Banner({ tone, title, detail }: { tone: Tone; title: string; detail?: string }) {
-  const base: CSSProperties = { borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, animation: 'npIn .25s ease-out', position: 'relative', overflow: 'hidden' };
-  const look: Record<Tone, CSSProperties> = {
-    working: { background: colors.ink, color: colors.paper },
-    done: { background: colors.lime, color: colors.ink },
-    problem: { background: colors.white, color: colors.ink, border: `2px solid ${colors.ink}`, borderLeft: `8px solid ${colors.ink}` },
-  };
-  return (
-    <div role={tone === 'problem' ? 'alert' : 'status'} style={{ ...base, ...look[tone] }}>
-      <style>{CUE_CSS}</style>
-      <span style={{ fontWeight: 800, fontSize: 15 }}>
-        {tone === 'done' ? '✓ ' : tone === 'problem' ? '! ' : ''}
-        {title}
-      </span>
-      {detail ? <span style={{ fontSize: 14, fontWeight: 600 }}>{detail}</span> : null}
-      {tone === 'working' ? (
-        <span style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 3, background: colors.inkRaised }}>
-          <span style={{ position: 'absolute', top: 0, bottom: 0, width: '40%', background: colors.lime, animation: 'npSlide 1.1s ease-in-out infinite' }} />
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
-function Toast({ text }: { text: string | null }) {
-  if (!text) return null;
-  return (
-    <div role="status" style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', background: colors.ink, color: colors.paper, padding: '12px 18px', borderRadius: 999, fontWeight: 700, fontSize: 15, boxShadow: '0 6px 24px rgba(0,0,0,.18)', zIndex: 50, animation: 'npIn .2s ease-out' }}>
-      <style>{CUE_CSS}</style>
-      {text}
-    </div>
-  );
 }
 
 
