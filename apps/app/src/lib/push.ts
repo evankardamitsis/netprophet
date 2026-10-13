@@ -75,6 +75,8 @@ export async function askForPushOnce(api: Api): Promise<void> {
 export function pushRoute(data: Record<string, unknown> | undefined): string | null {
   if (!data) return null;
   if (data.type === 'schedule' && typeof data.tournament_id === 'string') return `/tournament/${data.tournament_id}`;
+  if (data.type === 'draw' && typeof data.tournament_id === 'string')
+    return `/tournament/${data.tournament_id}${typeof data.tab === 'string' ? `?draw=${encodeURIComponent(data.tab)}` : ''}`;
   if (data.type === 'results') return '/results';
   return null;
 }
