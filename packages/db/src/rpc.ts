@@ -92,6 +92,20 @@ export interface FeedMatchCard {
   my_vote: Side | null;
   /** only present after the user voted */
   split: VoteSplit | null;
+  /** the old starts_at, when the match moved to a new day in the last 3 days */
+  moved_from?: string | null;
+}
+
+/** A match put off in the last 2 days that the user voted on or whose players they follow. Not votable. */
+export interface FeedPostponedCard {
+  kind: 'postponed';
+  match_id: string;
+  format: 'singles' | 'doubles' | 'mixed';
+  /** the original time */
+  starts_at: string | null;
+  tournament: { id: string; name: string } | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
+  my_vote: Side | null;
 }
 
 export interface FeedSponsoredCard {
@@ -108,7 +122,7 @@ export interface FeedSponsoredCard {
   art: string | null;
 }
 
-export type FeedItem = FeedResultCard | FeedMatchCard | FeedSponsoredCard;
+export type FeedItem = FeedResultCard | FeedMatchCard | FeedPostponedCard | FeedSponsoredCard;
 
 export interface GetFeedResult {
   items: FeedItem[];
@@ -730,6 +744,10 @@ export interface TournamentMatch {
   sets: SetScore[] | null;
   retired: boolean | null;
   walkover: boolean | null;
+  /** put off, no new time yet */
+  postponed?: boolean;
+  /** the old starts_at, when the match moved to another time or day */
+  moved_from?: string | null;
 }
 
 export interface TournamentItem {

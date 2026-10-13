@@ -1,7 +1,8 @@
 import { dayKey, localParts } from '@netprophet/core';
 import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy, levelNumber } from '@netprophet/copy';
-import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
+import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
+import { dayShort, dayTimeShort } from './tournaments';
 import { fmt, voteSplit, type Side } from './votes';
 
 /** One player on a card. */
@@ -35,6 +36,22 @@ export interface CardMatch {
   /** set when the viewer already voted: the card starts folded */
   myVote?: Side;
   split?: CardPct;
+  /** the match moved to this day in the last 3 days: «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
+  moved?: { chip: string; was: string; head: string; tail: string };
+}
+
+/** A match put off: compact, not votable, muted. */
+export interface CardPostponed {
+  kind: 'postponed';
+  id: string;
+  /** «Αναβλήθηκε» */
+  chip: string;
+  /** «Open Γλυφάδας · ήταν Τρι 13/10 18:30» */
+  meta: string;
+  a: CardSide;
+  b: CardSide;
+  /** «Η ψήφος σου μένει. Θα δεις τη νέα μέρα εδώ.» or just the second sentence */
+  note: string;
 }
 
 /** The labelled ad card (prototype: every 4th card). */
@@ -74,7 +91,12 @@ export interface CardResult {
   pill: string | null;
 }
 
-export type FeedCard = CardMatch | CardSponsored | CardResult;
+export type FeedCard = CardMatch | CardSponsored | CardPostponed | CardResult;
+
+/** Put-off cards go after the votable ones; the order inside each group stays. */
+export function postponedLast<T extends { kind: string }>(cards: T[]): T[] {
+  return [...cards.filter((c) => c.kind !== 'postponed'), ...cards.filter((c) => c.kind === 'postponed')];
+}
 
 export function fromResultCard(card: FeedResultCard, t: Copy): CardResult {
   const p = card.payload;
@@ -190,8 +212,10 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     .filter(Boolean)
     .join(' · ');
   const players = (s: DbSide) => card.sides.find((x) => x.side === s)?.players ?? [];
+  const rest = meta.slice(w.label ? w.label.length : 0).replace(/^ · /, '');
   return {
     kind: 'match',
+    moved: card.moved_from && w.label ? movedOf(w.label, rest, dayShort(card.moved_from, t), t) : undefined,
     id: card.match_id,
     meta,
     learn: w.learn,
@@ -200,6 +224,24 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     b: side(players(2), areas, t),
     myVote: card.my_vote ? toUiSide(card.my_vote) : undefined,
     split: card.split ? toPct(card.split) : undefined,
+  };
+}
+
+function movedOf(head: string, tail: string, wasDay: string, t: Copy): NonNullable<CardMatch['moved']> {
+  return { chip: t.match.postponed.newDay, was: `(${fmt(t.match.postponed.was, { when: wasDay })})`, head, tail };
+}
+
+export function fromPostponedCard(card: FeedPostponedCard, areas: Record<string, string>, t: Copy): CardPostponed {
+  const players = (s: DbSide) => card.sides.find((x) => x.side === s)?.players ?? [];
+  const was = card.starts_at ? fmt(t.match.postponed.was, { when: dayTimeShort(card.starts_at, t) }) : null;
+  return {
+    kind: 'postponed',
+    id: card.match_id,
+    chip: t.match.postponed.chip,
+    meta: [card.tournament?.name, was].filter(Boolean).join(' · '),
+    a: side(players(1), areas, t),
+    b: side(players(2), areas, t),
+    note: card.my_vote ? t.match.postponed.keptVote : t.match.postponed.seeNewDay,
   };
 }
 
@@ -230,12 +272,13 @@ function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {
   };
 }
 
-export function fromMock(m: MockMatch, t: Copy): CardMatch {
+export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
   const parts = [`${m.day === 'today' ? t.match.today : t.match.tomorrow} ${m.time}`, m.event];
   if (m.round) parts.push(t.match.rounds[m.round]);
   return {
     kind: 'match',
     id: m.id,
+    moved: m.movedBack ? movedOf(parts[0]!, parts.slice(1).join(' · '), dayShort(new Date(now.getTime() - 3 * 86_400_000).toISOString(), t), t) : undefined,
     doubles: Boolean(m.a2 && m.b2),
     meta: parts.join(' · '),
     learn: m.day === 'today' ? t.match.learnTonight : t.match.learnTomorrow,

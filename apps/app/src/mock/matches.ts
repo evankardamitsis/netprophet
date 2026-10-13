@@ -1,4 +1,5 @@
 // TODO(core): replace with the domain types from @netprophet/core once they land.
+import type { FeedPlayer, FeedPostponedCard } from '@netprophet/db';
 import type { Side } from '../lib/votes';
 
 export interface MockPlayer {
@@ -19,6 +20,8 @@ export interface MockMatch {
   /** doubles partners */
   a2?: MockPlayer;
   b2?: MockPlayer;
+  /** moved to this day from three days ago: shows «Νέα μέρα» */
+  movedBack?: boolean;
   /** Votes already cast, before the viewer's. */
   votes: Record<Side, number>;
 }
@@ -47,6 +50,7 @@ export const MOCK_MATCHES: MockMatch[] = [
   {
     id: 'm3',
     day: 'tomorrow',
+    movedBack: true,
     time: '10:30',
     event: 'Κύπελλο Βορείων',
     round: 'quarter',
@@ -85,3 +89,22 @@ export const MOCK_MATCHES: MockMatch[] = [
     votes: { a: 140, b: 97 },
   },
 ];
+
+/** One put-off match for the guest feed: it was on yesterday at 18:30 and has no new day yet. */
+export function mockPostponed(now: Date = new Date()): FeedPostponedCard {
+  const p = (id: string, first_name: string, surname: string): FeedPlayer => ({
+    id, first_name, surname, photo_path: null, area_id: null, level_tier: 4, level_direction: null,
+  });
+  return {
+    kind: 'postponed',
+    match_id: 'mock-postponed',
+    format: 'singles',
+    starts_at: new Date(now.getTime() - 86_400_000).toISOString(),
+    tournament: { id: 'tour-open', name: 'Open Γλυφάδας' },
+    sides: [
+      { side: 1, players: [p('mp1', 'Νίκος', 'Ροδίτης')] },
+      { side: 2, players: [p('mp2', 'Γιώργος', 'Δεσύπρης')] },
+    ],
+    my_vote: 1,
+  };
+}

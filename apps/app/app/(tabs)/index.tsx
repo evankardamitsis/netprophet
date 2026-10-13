@@ -6,6 +6,7 @@ import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
+import { PostponedCard } from '../../src/components/PostponedCard';
 import { QuizStrip } from '../../src/components/QuizStrip';
 import { ResultCard } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
@@ -179,6 +180,8 @@ export default function VoteScreen() {
             <Fragment key={c.id}>
               {c.kind === 'match' ? (
                 <VoteCard match={c} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+              ) : c.kind === 'postponed' ? (
+                <PostponedCard card={c} />
               ) : c.kind === 'sponsored' ? (
                 <SponsoredCard card={c} />
               ) : null}

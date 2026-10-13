@@ -140,6 +140,17 @@ export function defaultSegment(d: Pick<GetTournamentResult, 'days' | 'draws'>, t
   return have.includes('bracket') ? 'bracket' : 'schedule';
 }
 
+/** «Τρι 13/10», the Athens day of an instant */
+export function dayShort(iso: string, t: Copy): string {
+  const day = dayKey(iso);
+  return `${t.tournaments.weekdaysShort[weekdayOf(day)]} ${ddmm(day)}`;
+}
+
+/** «Τρι 13/10 18:30» */
+export function dayTimeShort(iso: string, t: Copy): string {
+  return `${dayShort(iso, t)} ${timeOf(iso)}`;
+}
+
 export interface DayChip {
   key: string;
   /** «Σήμερα», «Αύριο», «Τετ 14/10» */
@@ -183,6 +194,10 @@ export interface ScheduleRow {
   score: string | null;
   /** I play in it */
   mine: boolean;
+  /** put off with no new time: the time column says «Αναβολή» */
+  postponed: boolean;
+  /** «από Τρι 13/10», under the time, when the match moved */
+  movedFrom: string | null;
 }
 
 export function disciplineLabel(discipline: string | null, t: Copy): string | null {
@@ -191,8 +206,9 @@ export function disciplineLabel(discipline: string | null, t: Copy): string | nu
 
 /** one day's matches, by time */
 export function scheduleRows(matches: TournamentMatch[], me: string | null, t: Copy): ScheduleRow[] {
+  // a put-off match has no time: it goes after the ones that do
   return [...matches]
-    .sort((a, b) => (a.starts_at ?? '').localeCompare(b.starts_at ?? ''))
+    .sort((a, b) => Number(a.postponed === true) - Number(b.postponed === true) || (a.starts_at ?? '').localeCompare(b.starts_at ?? ''))
     .map((m) => {
       const sides: ScheduleSide[] = [1, 2].map((n) => ({
         people: (m.sides.find((s) => s.side === n)?.players ?? []).map((p) => ({ id: p.id, first: p.first_name, surname: p.surname })),
@@ -201,11 +217,13 @@ export function scheduleRows(matches: TournamentMatch[], me: string | null, t: C
       const hasResult = m.winner_side !== null && ((m.sets?.length ?? 0) > 0 || m.walkover === true);
       return {
         id: m.match_id,
-        time: m.starts_at ? timeOf(m.starts_at) : '',
+        time: m.postponed === true ? t.tournaments.detail.postponedTime : m.starts_at ? timeOf(m.starts_at) : '',
         meta: [m.level, disciplineLabel(m.discipline, t)].filter(Boolean).join(' · '),
         sides,
         score: hasResult ? formatWinnerSets(m.sets ?? [], { retired: m.retired === true, walkover: m.walkover === true }, t.results) : null,
         mine: me !== null && sides.some((s) => s.people.some((p) => p.id === me)),
+        postponed: m.postponed === true,
+        movedFrom: m.moved_from ? fmt(t.tournaments.detail.movedFrom, { when: dayShort(m.moved_from, t) }) : null,
       };
     });
 }

@@ -134,15 +134,29 @@ function Schedule({ d, today }: { d: GetTournamentResult; today: string }) {
 }
 
 function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
-  const dash = useCopy().tournaments.detail.masked;
+  const detail = useCopy().tournaments.detail;
+  const dash = detail.masked;
+  const postponedChip = detail.postponed;
   const enter = useStgIn(STG_MS - 100, Math.min(i, 8) * STAGGER);
   const fg = row.mine ? colors.paper : colors.ink;
   const soft = row.mine ? colors.mist : colors.inkSoft;
   return (
     <Animated.View style={[styles.matchCard, row.mine && styles.matchMine, enter]}>
-      <Text style={[styles.time, { color: fg }]}>{row.time}</Text>
+      <View style={styles.timeCol}>
+        <Text style={[row.postponed ? styles.timeOff : styles.time, { color: row.postponed ? soft : fg }]}>{row.time}</Text>
+        {row.movedFrom ? <Text style={[styles.movedFrom, { color: soft }]}>{row.movedFrom}</Text> : null}
+      </View>
       <View style={styles.matchBody}>
-        {row.meta ? <Text style={[styles.meta, { color: soft }]}>{row.meta}</Text> : null}
+        {row.meta || row.postponed ? (
+          <View style={styles.metaRow}>
+            {row.meta ? <Text style={[styles.meta, { color: soft }]}>{row.meta}</Text> : null}
+            {row.postponed ? (
+              <View style={styles.chip}>
+                <Text style={styles.chipText}>{postponedChip}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
         {row.sides.map((s, k) => (
           <Text key={k} style={[s.winner ? styles.nameWin : styles.name, { color: fg }]} numberOfLines={1}>
             {s.people.length === 0 ? dash : null}
@@ -208,7 +222,13 @@ const styles = StyleSheet.create({
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   matchCard: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, flexDirection: 'row', gap: 14 },
   matchMine: { backgroundColor: colors.ink },
-  time: { width: 62, fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32 },
+  timeCol: { width: 62 },
+  time: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32 },
+  timeOff: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 32 },
+  movedFrom: { fontFamily: fonts.bodySemi, fontSize: 11, lineHeight: 14 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  chip: { paddingVertical: 1, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.sand },
+  chipText: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 15, color: colors.inkSoft },
   matchBody: { flex: 1, minWidth: 0, gap: 2 },
   meta: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16 },
   name: { fontFamily: fonts.display, fontSize: 26, lineHeight: 30, color: colors.ink },

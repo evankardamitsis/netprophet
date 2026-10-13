@@ -87,6 +87,20 @@ describe('schedule', () => {
     expect(rows[0]).toMatchObject({ time: '10:00', meta: 'Μ 40+ · Απλό', score: '6-4, 7-6(5)', mine: true });
     expect(rows[0]!.sides.map((s) => s.winner)).toEqual([true, false]);
     expect(rows[1]!.score).toBeNull();
+    expect(rows[0]).toMatchObject({ postponed: false, movedFrom: null });
+  });
+  it('a put-off match says «Αναβολή» and goes last; a moved one says where from', () => {
+    const rows = scheduleRows(
+      [
+        match({ match_id: 'off', starts_at: null, postponed: true }),
+        match({ match_id: 'moved', starts_at: '2026-10-17T15:00:00Z', moved_from: '2026-10-13T15:30:00Z' }),
+      ],
+      null,
+      t,
+    );
+    expect(rows.map((r) => r.id)).toEqual(['moved', 'off']);
+    expect(rows[0]).toMatchObject({ time: '18:00', postponed: false, movedFrom: 'από Τρι 13/10' });
+    expect(rows[1]).toMatchObject({ time: 'Αναβολή', postponed: true, movedFrom: null });
   });
 });
 
