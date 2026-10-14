@@ -1,5 +1,5 @@
 import { createSign } from 'node:crypto';
-import { parseDraws, parseSheet } from '@netprophet/ingest';
+import { parseAthensTennis, parseDraws, parseSheet } from '@netprophet/ingest';
 import { runRows } from './ingestRows';
 
 /**
@@ -111,6 +111,7 @@ export function season(t: { season_start_year: number | null }, now: Date = new 
 /** fetch, parse and build the rows of one tournament's run (people unresolved, walkovers queued for staff) */
 export async function rowsForTournament(t: { source_url: string | null; season_start_year: number | null }) {
   if (!t.source_url) throw new Error('this tournament has no source URL');
+  if (isAthensTennis(t.source_url)) return runRows(parseAthensTennis(await fetchSite(t.source_url)));
   const tabs = await fetchSheetTabs(t.source_url);
   return runRows(parseSheet(tabs, season(t)));
 }
@@ -119,4 +120,20 @@ export async function rowsForTournament(t: { source_url: string | null; season_s
 export async function drawsForTournament(t: { draw_url: string | null; season_start_year: number | null }) {
   if (!t.draw_url) throw new Error('this tournament has no draw sheet');
   return parseDraws(await fetchSheetTabs(t.draw_url), season(t));
+}
+
+/** athenstennis.gr's schedule page (the league's next days and the season's results), founder 14 Oct */
+export function isAthensTennis(url: string): boolean {
+  return /^https?:\/\/(www\.)?athenstennis\.gr\//i.test(url.trim());
+}
+
+/** the source kind a link means: an organiser's site page, else a Google Sheet */
+export function sourceKind(url: string): 'site' | 'sheet' {
+  return isAthensTennis(url) ? 'site' : 'sheet';
+}
+
+async function fetchSite(url: string): Promise<string> {
+  const res = await fetch(url.trim(), { headers: { 'user-agent': 'NetProphet/2 (+https://netprophetapp.com)', accept: 'text/html' }, cache: 'no-store' });
+  if (!res.ok) throw new Error(`the page answered ${res.status}`);
+  return res.text();
 }
