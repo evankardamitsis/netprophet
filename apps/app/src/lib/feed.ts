@@ -5,6 +5,7 @@ import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
 import { dayShort, dayTimeShort } from './tournaments';
 import { fmt, voteSplit, type Side } from './votes';
+import { PLAYER_LEVEL_SHOWN } from './levelShown';
 
 /** One player on a card. */
 export interface CardPerson {
@@ -191,6 +192,7 @@ function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): Ca
   if (players.length === 1) {
     const p = players[0]!;
     const area = p.area_id ? areas[p.area_id] ?? null : null;
+    if (!PLAYER_LEVEL_SHOWN) return { people, sub: area, level: null, area };
     const sub =
       p.level_tier != null && area
         ? fmt(t.match.levelArea, { level: levelNumber(p.level_tier), area })
@@ -200,6 +202,7 @@ function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): Ca
     return { people, sub, level: p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null, area };
   }
   // doubles: «level 5 & 4», only when both levels are known
+  if (!PLAYER_LEVEL_SHOWN) return { people, sub: null, level: null, area: null };
   const levels = players.map((p) => p.level_tier);
   const sub = levels.every((l) => l != null) ? `${t.level.label} ${levels.map((l) => levelNumber(l as number)).join(' & ')}` : null;
   return { people, sub, level: sub, area: null };
@@ -269,17 +272,18 @@ export function fromSponsored(card: FeedSponsoredCard): CardSponsored {
 
 function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {
   if (p2) {
+    const lv = PLAYER_LEVEL_SHOWN ? `${t.level.label} ${p.level} & ${p2.level}` : null;
     return {
       people: [p, p2].map((x) => ({ surname: x.surname, first: x.firstName, initials: initials(x.firstName, x.surname) })),
-      sub: `${t.level.label} ${p.level} & ${p2.level}`,
-      level: `${t.level.label} ${p.level} & ${p2.level}`,
+      sub: lv,
+      level: lv,
       area: null,
     };
   }
   return {
     people: [{ surname: p.surname, first: p.firstName, initials: initials(p.firstName, p.surname) }],
-    sub: fmt(t.match.levelArea, { level: p.level, area: p.area }),
-    level: `${t.level.label} ${p.level}`,
+    sub: PLAYER_LEVEL_SHOWN ? fmt(t.match.levelArea, { level: p.level, area: p.area }) : p.area,
+    level: PLAYER_LEVEL_SHOWN ? `${t.level.label} ${p.level}` : null,
     area: p.area,
   };
 }

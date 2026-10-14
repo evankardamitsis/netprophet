@@ -37,6 +37,7 @@ import { usePress, useStgIn } from '../src/lib/motion';
 import { useUnlocks } from '../src/lib/unlocks';
 import { fmt } from '../src/lib/votes';
 import { colors, fonts } from '../src/theme';
+import { PLAYER_LEVEL_SHOWN } from '../src/lib/levelShown';
 
 /**
  * «+ Ματς» (prototype V2, isForm and isDone). «Παίχτηκε»: when, tournament, singles / doubles / mixed, the
@@ -349,7 +350,7 @@ function People({ label, data, exclude, onPick }: { label: string; data: ReturnT
       <TextInput value={q} onChangeText={setQ} placeholder={searchLabel(data.total || '1.500', t)} placeholderTextColor={colors.inkSoft} autoCorrect={false} style={styles.input} />
       <View style={styles.grid}>
         {list.map((p, i) => (
-          <PersonChip key={p.id} p={p} sub={[p.level_tier != null ? `${t.level.label} ${p.level_tier}` : null, p.area_id ? data.areas[p.area_id] : null].filter(Boolean).join(' · ')} index={i} onPress={() => pick(p)} />
+          <PersonChip key={p.id} p={p} sub={[PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${p.level_tier}` : null, p.area_id ? data.areas[p.area_id] : null].filter(Boolean).join(' · ')} index={i} onPress={() => pick(p)} />
         ))}
       </View>
       {found !== null && list.length === 0 ? (
