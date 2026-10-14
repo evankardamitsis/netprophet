@@ -1,7 +1,7 @@
 {
  "suite": "unlock-defs",
  "version": 1,
- "notes": "The unlock ladder: packages/core UNLOCK_STEPS and core.unlock_defs must both equal this list (rules.test.ts, 61_unlocks.test.sql).",
+ "notes": "The unlock ladder: packages/core UNLOCK_STEPS and core.unlock_defs must both equal this list (rules.test.ts, 61_unlocks.test.sql). Day 1 opens the Pro door (founder, 14 Oct: the ladder never hides Pro or your own match).",
  "steps": [
   {
    "id": "day1",
@@ -14,7 +14,8 @@
     "streak",
     "points",
     "daily_quiz",
-    "log_match_quiet"
+    "log_match_quiet",
+    "pro_sheet"
    ]
   },
   {
@@ -161,7 +162,6 @@
    ],
    "backupVotes": 30,
    "features": [
-    "pro_sheet",
     "win_effect"
    ]
   },

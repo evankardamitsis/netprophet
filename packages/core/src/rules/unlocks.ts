@@ -24,7 +24,7 @@ export interface UnlockStep {
 const c = (counter: CounterName, min: number): Condition => ({ counter, min });
 
 export const UNLOCK_STEPS: readonly UnlockStep[] = [
-  { id: 'day1', step: 1, primary: [], backupVotes: 0, features: ['vote_cards', 'results', 'streak', 'points', 'daily_quiz', 'log_match_quiet'] },
+  { id: 'day1', step: 1, primary: [], backupVotes: 0, features: ['vote_cards', 'results', 'streak', 'points', 'daily_quiz', 'log_match_quiet', 'pro_sheet'] },
   { id: 'level_bar', step: 2, primary: [c('correctVotes', 3), c('activeDays', 2)], backupVotes: 5, features: ['level_bar'] },
   { id: 'first_freeze', step: 3, primary: [c('bestStreak', 3)], backupVotes: 8, features: ['streak_moment', 'free_freeze'] },
   { id: 'daily_quests', step: 4, primary: [c('votesCast', 10), c('activeDays', 2)], backupVotes: 12, features: ['daily_quests'] },
@@ -33,7 +33,7 @@ export const UNLOCK_STEPS: readonly UnlockStep[] = [
   { id: 'kudos_reactions', step: 7, primary: [c('matchesConfirmed', 1)], backupVotes: 20, features: ['kudos', 'reactions'] },
   { id: 'avatar_profile', step: 8, primary: [c('fullQuestDays', 3)], backupVotes: 35, features: ['avatar_3d', 'backgrounds', 'frames'] },
   { id: 'badges_shelf', step: 9, primary: [c('correctVotes', 10)], backupVotes: 28, features: ['badges_shelf'] },
-  { id: 'pro_first_view', step: 10, primary: [c('bestStreak', 5)], backupVotes: 30, features: ['pro_sheet', 'win_effect'] },
+  { id: 'pro_first_view', step: 10, primary: [c('bestStreak', 5)], backupVotes: 30, features: ['win_effect'] },
   { id: 'weekly_quests', step: 11, primary: [c('activeDays', 6)], backupVotes: 40, features: ['weekly_quests'] },
   { id: 'gifts', step: 12, primary: [c('kudosGiven', 3)], backupVotes: 50, features: ['gifts'] },
   { id: 'stats_area', step: 13, primary: [c('votesCast', 45)], backupVotes: 45, features: ['stats', 'ladder_area'] },
