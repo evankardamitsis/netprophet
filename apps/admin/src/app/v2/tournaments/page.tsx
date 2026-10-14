@@ -30,7 +30,7 @@ export default async function TournamentsPage() {
   return (
     <div className="v2-shell">
       <Nav here="tournaments" staff={staff} />
-      <main className="v2-page narrow">
+      <main className="v2-page">
         <Tournaments />
       </main>
     </div>
