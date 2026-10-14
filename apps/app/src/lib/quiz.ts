@@ -21,7 +21,7 @@ export interface QuizCardView {
   clues: string[];
   /** a dynamic card about this week */
   week: boolean;
-  /** 0-based right option, only for a 'q' card */
+  /** 0-based right option: a «Ποιος είναι;» card, or a dynamic card that has one («Θυμάσαι;») */
   right: number | null;
   mine: number | null;
   /** percent per option, only once answered and only when the server has enough answers */
@@ -38,7 +38,7 @@ export function cardView(card: QuizCard): QuizCardView {
     options: card.content.options.map((o) => noBreak(renderQuizText(o.label, players))),
     clues: card.content.clues ?? [],
     week: card.content.week === true,
-    right: card.family === 'q' ? card.content.right ?? null : null,
+    right: card.family === 'q' || card.family === 'd' ? card.content.right ?? null : null,
     mine: card.my_option === null ? null : card.my_option - 1,
     split: card.my_option !== null && card.split && card.split.length === card.content.options.length ? card.split : null,
   };
@@ -48,8 +48,13 @@ export function cardView(card: QuizCard): QuizCardView {
 export function verdict(card: QuizCard, t: Copy): string {
   const q = t.quiz;
   if (card.my_option === null) return card.family === 'q' ? q.pickWho : card.family === 'o' ? q.pickOpinion : q.pick;
-  // opinions and dynamic cards have no right answer and no level line (prototype: dyn cards are not scenarios)
-  if (card.family === 'o' || card.family === 'd') return '';
+  // opinions and dynamic votes have no right answer and no level line (prototype: dyn cards are not scenarios); a
+  // dynamic card about a result («Θυμάσαι;», 14 Oct) has one and is judged like «Ποιος είναι;»
+  if (card.family === 'o' || (card.family === 'd' && (card.content.right === undefined || card.content.right === null))) return '';
+  if (card.family === 'd') {
+    const r = card.content.right!;
+    return (card.my_option - 1 === r ? t.quiz.right : t.quiz.wrong) + capitalizeFirst(renderQuizText(`{p${r + 1}.o}.`, card.content.players));
+  }
   if (card.family !== 'q') return q.counted;
   const right = card.content.right;
   if (right === undefined || right === null) return '';
