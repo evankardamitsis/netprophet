@@ -17,7 +17,7 @@ import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo'
 
 /** the lockup's height; its ball hops over the net every few seconds (as on sign-in) */
 /** the account ball */
-const AVATAR = 38;
+const AVATAR = 32;
 const LOGO_H = 22;
 
 /**
@@ -140,7 +140,7 @@ function useStreakFx(fx: StreakFx) {
   return { box, ring: ringStyle };
 }
 
-/** the account button is the player's sport's ball (founder, 14 Oct), lit like the logo's, with the initials on it */
+/** the account button is the player's sport's ball (founder, 14 Oct), clean like the logo's; the initials name it for screen readers */
 function Avatar({ initials, sport }: { initials: string; sport: string }) {
   const kind: BallKind = (BALLS as string[]).includes(sport) ? (sport as BallKind) : 'tennis';
   const press = usePress();
@@ -154,11 +154,9 @@ function Avatar({ initials, sport }: { initials: string; sport: string }) {
       style={styles.avatarHit}
     >
       <Animated.View style={[styles.avatar, press.style]}>
-        <View style={StyleSheet.absoluteFill}>
-          <Ball kind={kind} size={AVATAR} />
-        </View>
-        <Shade size={AVATAR} />
-        <Text style={styles.avatarText}>{initials}</Text>
+        {/* the ball alone, crisp like the logo's (founder, 14 Oct): flat colour, sharp seams, a light touch of shade */}
+        <Ball kind={kind} size={AVATAR} />
+        <Shade size={AVATAR} strength={0.55} />
       </Animated.View>
     </Pressable>
   );
@@ -192,6 +190,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // ink on every ball's colour (lime, padel yellow, basketball orange, football white), with a soft paper halo
-  avatarText: { color: colors.ink, fontFamily: fonts.displayHeavy, fontSize: 16, lineHeight: 18, textShadowColor: colors.paper, textShadowRadius: 3, textShadowOffset: { width: 0, height: 0 } },
 });
