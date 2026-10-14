@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Stack, router, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -14,6 +14,10 @@ import { identify, screen } from "../src/lib/analytics";
 import { listenForPushTaps, refreshPushToken } from "../src/lib/push";
 import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
+import { Loading } from "../src/components/Loading";
+
+/** the animated logo stays at least this long on a cold start, so its hop is seen and the screen never flickers */
+const LOADING_MIN_MS = 900;
 
 export default function RootLayout() {
   // Only the faces the prototype uses are loaded, so the bundle stays small.
@@ -27,8 +31,13 @@ export default function RootLayout() {
     SofiaSansExtraCondensed_800ExtraBold: require("@expo-google-fonts/sofia-sans-extra-condensed/800ExtraBold/SofiaSansExtraCondensed_800ExtraBold.ttf"),
     /* eslint-enable @typescript-eslint/no-var-requires */
   });
+  const [minDone, setMinDone] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setMinDone(true), LOADING_MIN_MS);
+    return () => clearTimeout(id);
+  }, []);
   // A font failure falls back to the system font instead of blocking the app.
-  if (!loaded && !error) return null;
+  if ((!loaded && !error) || !minDone) return <Loading />;
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -66,13 +75,13 @@ function Routes() {
   const segments = useSegments();
   const route = "/" + segments.filter((s) => !s.startsWith("(")).join("/");
   useEffect(() => screen(route), [route]);
-  if (!ready) return null;
+  if (!ready) return <Loading />;
   // without a backend (mock mode) the app is open; live, everything but sign-in needs a session
   // (or, in development builds, the «Άλλη φορά» guest)
   const signedIn = !isLive || session !== null || guest;
   // a new account goes through onboarding first; the dev guest can open it by hand at /onboarding
   const onboarding = session !== null && gate.status === "needed";
-  if (session !== null && gate.status === "unknown") return null;
+  if (session !== null && gate.status === "unknown") return <Loading />;
   return (
     <>
       <StatusBar style={signedIn ? "light" : "dark"} />
