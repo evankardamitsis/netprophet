@@ -910,8 +910,16 @@ export const el = {
     playingTomorrow: 'αύριο',
     /** «Open Γλυφάδας · Μ 40+» */
     mineWhat: '{tournament} · {level}',
-    proButton: 'Ειδοποίηση κλήρωσης και το πρόγραμμά σου',
-    proMark: 'Pro ›',
+    /** the Pro card on top of Τουρνουά (founder, 14 Oct: Pro high up, notifications first) */
+    alerts: {
+      title: 'Ειδοποιήσεις για τα ματς σου',
+      lines: ['Μόλις βγει η κλήρωση', 'Η μέρα και η ώρα σου, και κάθε αλλαγή', 'Υπενθύμιση το βράδυ πριν και 2 ώρες πριν'],
+      cta: 'Άνοιξέ τες με Pro ›',
+      /** with Pro, at the bottom of «Το πρόγραμμά σου» */
+      on: '✓ Οι ειδοποιήσεις σου είναι ανοιχτές',
+      /** with Pro and no match yet */
+      onEmpty: 'Σου λέμε μόλις μπεις σε κλήρωση.',
+    },
     sections: { ongoing: 'Τώρα', upcoming: 'Έρχονται', done: 'Τελείωσαν' },
     chipOngoing: 'σε εξέλιξη',
     chipTomorrow: 'αύριο',

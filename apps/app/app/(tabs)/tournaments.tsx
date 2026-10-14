@@ -48,9 +48,11 @@ export default function TournamentsScreen() {
             {data.pro ? (
               data.mine && data.mine.length > 0 ? (
                 <ProCard mine={data.mine} today={today} i={next()} />
-              ) : null
+              ) : (
+                <AlertsOn i={next()} />
+              )
             ) : (
-              <ProButton i={next()} />
+              <AlertsCard i={next()} />
             )}
             <SearchEntry i={next()} />
             {sections.map((s) => (
@@ -118,6 +120,7 @@ function ProCard({ mine, today, i }: { mine: NonNullable<GetTournamentsResult['m
         {rows.map((r, k) => (
           <MineLine key={r.key} when={r.when} what={r.what} i={k} />
         ))}
+        <Text style={styles.alertsOn}>{t.tournaments.alerts.on}</Text>
       </View>
     </Reveal>
   );
@@ -133,18 +136,43 @@ function MineLine({ when, what, i }: { when: string; what: string; i: number }) 
   );
 }
 
-/** without Pro: one outlined line; «Pro ›» is the blue */
-function ProButton({ i }: { i: number }) {
+/**
+ * without Pro: what Pro sends you, on top of the screen (founder, 14 Oct: "push Pro features high very high up,
+ * especially my tournaments and matches notifications reminders"); the blue button is the screen's one blue
+ */
+function AlertsCard({ i }: { i: number }) {
   const t = useCopy();
+  const a = t.tournaments.alerts;
   const press = usePress();
   return (
     <Reveal i={i}>
-      <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-        <Animated.View style={[styles.proButton, press.style]}>
-          <Text style={styles.proButtonText}>{t.tournaments.proButton}</Text>
-          <Text style={styles.proMark}>{t.tournaments.proMark}</Text>
-        </Animated.View>
-      </Pressable>
+      <View style={styles.proCard}>
+        <Text style={styles.alertsTitle}>{a.title}</Text>
+        {a.lines.map((line) => (
+          <View key={line} style={styles.alertRow}>
+            <Text style={styles.alertMark}>+</Text>
+            <Text style={styles.alertLine}>{line}</Text>
+          </View>
+        ))}
+        <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+          <Animated.View style={[styles.alertsCta, press.style]}>
+            <Text style={styles.alertsCtaText}>{a.cta}</Text>
+          </Animated.View>
+        </Pressable>
+      </View>
+    </Reveal>
+  );
+}
+
+/** with Pro and nothing scheduled yet: the alerts are on */
+function AlertsOn({ i }: { i: number }) {
+  const t = useCopy();
+  return (
+    <Reveal i={i}>
+      <View style={styles.proCard}>
+        <Text style={styles.alertsOnBig}>{t.tournaments.alerts.on}</Text>
+        <Text style={styles.alertLine}>{t.tournaments.alerts.onEmpty}</Text>
+      </View>
     </Reveal>
   );
 }
@@ -189,9 +217,14 @@ const styles = StyleSheet.create({
   mineRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   mineWhen: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
   mineWhat: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20, color: colors.mist, textAlign: 'right' },
-  proButton: { minHeight: 56, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 18, borderWidth: 2, borderColor: colors.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  proButtonText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
-  proMark: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  alertsTitle: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 33, paddingBottom: 6, marginBottom: -6, color: colors.paper },
+  alertRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  alertMark: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.mist },
+  alertLine: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.mist },
+  alertsCta: { minHeight: 48, marginTop: 6, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  alertsCtaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
+  alertsOn: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.mist },
+  alertsOnBig: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.paper },
   group: { gap: 10 },
   groupTitle: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.52, color: colors.inkSoft },
   card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 6 },
