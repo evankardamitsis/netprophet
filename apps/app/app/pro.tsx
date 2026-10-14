@@ -51,7 +51,6 @@ export default function ProScreen() {
             <Feature key={f} text={f} index={i} />
           ))}
         </View>
-        <Text style={styles.note}>{p.neverSells}</Text>
       </ScrollView>
       <View style={styles.actions}>
         {listed && !active ? (

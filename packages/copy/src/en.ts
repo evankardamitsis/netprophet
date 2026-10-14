@@ -444,7 +444,7 @@ export const en: Copy = {
   pro: {
     title: 'Pro',
     price: '{price} a month',
-    features: ['Your tournaments', 'Your opponent before the match', 'Where you win, where you lose', 'Your stats'],
+    features: ['Your tournaments, with alerts', 'The draw, the moment it is out', 'Your matches: day, time, changes', 'Your opponent before the match', 'Your stats'],
     join: 'Become a member',
     notNow: 'Not now',
     close: 'Close',
@@ -452,9 +452,8 @@ export const en: Copy = {
     listedNote: 'We tell you as soon as it opens.',
     active: 'Active',
     activeUntil: 'Active until {date}',
-    neverSells: 'It never buys points, places or level.',
     failed: 'That did not work. Try again.',
-    settingsLine: 'Your opponent before the match, where you win, your stats',
+    settingsLine: 'Alerts for your tournaments, draws and matches',
   },
   scout: {
     title: 'Your opponent before the match',

@@ -92,7 +92,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 
 ## Pro: real, not a fake door (decided 12 Oct 2026)
 - The founder dropped the fake door: Pro is built for real and sold on the web first (Apple/Google billing comes with the store release). Pro belongs to the account, so a web purchase unlocks the phone apps.
-- Pro at launch: «Τα τουρνουά σου», «Ο αντίπαλος πριν το ματς», «Πού κερδίζεις, πού χάνεις», «Τα στατιστικά σου» (was «Τα νούμερα του level σου»; renamed 14 Oct when players' levels were hidden). 8,99€ a month.
+- Pro at launch, notifications first (founder, 14 Oct): «Τα τουρνουά σου, με ειδοποίηση», «Η κλήρωση, μόλις βγει», «Τα ματς σου: μέρα, ώρα, αλλαγές», «Ο αντίπαλος πριν το ματς», «Τα στατιστικά σου» (with «Πού κερδίζεις, πού χάνεις» inside). 8,99€ a month. The sheet no longer says «Δεν αγοράζει πόντους, θέση ή level» (founder, 14 Oct); the rule itself stands.
 - Order: foundations (is_pro, get_pro, waitlist, staff grant, Pro screen) → scouting → πού κερδίζεις → τα στατιστικά σου → web checkout + webhook → tournaments.
 - Blocked on the founder: a payment provider account (merchant of record or Stripe, an accountant's call for Greek receipts), the web app's domain for checkout, and `parse_oop.py` + the TAF sheet for tournaments.
 - Until checkout is live «Γίνε μέλος» puts you on the list (`entitlements.source = 'waitlist'`), which grants nothing.

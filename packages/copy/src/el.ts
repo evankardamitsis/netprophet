@@ -473,7 +473,8 @@ export const el = {
     title: 'Pro',
     /** {price} is «8,99€» */
     price: '{price} τον μήνα',
-    features: ['Τα τουρνουά σου', 'Ο αντίπαλος πριν το ματς', 'Πού κερδίζεις, πού χάνεις', 'Τα στατιστικά σου'],
+    /** notifications first (founder, 14 Oct: "include notifications about your tournaments, your draws, your matches") */
+    features: ['Τα τουρνουά σου, με ειδοποίηση', 'Η κλήρωση, μόλις βγει', 'Τα ματς σου: μέρα, ώρα, αλλαγές', 'Ο αντίπαλος πριν το ματς', 'Τα στατιστικά σου'],
     join: 'Γίνε μέλος',
     notNow: 'Όχι τώρα',
     close: 'Κλείσιμο',
@@ -482,10 +483,9 @@ export const el = {
     active: 'Ενεργό',
     /** {date} is «12 Νοε» */
     activeUntil: 'Ενεργό μέχρι {date}',
-    neverSells: 'Δεν αγοράζει πόντους, θέση ή level.',
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     /** the row in Εγώ › Ρυθμίσεις */
-    settingsLine: 'Ο αντίπαλος πριν το ματς, πού κερδίζεις, τα στατιστικά σου',
+    settingsLine: 'Ειδοποιήσεις για τουρνουά, κληρώσεις και τα ματς σου',
   },
   scout: {
     title: 'Ο αντίπαλος πριν το ματς',
