@@ -85,6 +85,8 @@ export const el = {
     weekdays: ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'],
     formats: { doubles: 'Διπλό', mixed: 'Μικτό' },
     friendly: 'Φιλικό',
+    /** where it is played: «PRC (Μαρούσι) · Σκληρό» (founder, 14 Oct) */
+    surfaces: { clay: 'Χώμα', hard: 'Σκληρό', grass: 'Γρασίδι', carpet: 'Συνθετικό' } as Record<string, string>,
     postponed: {
       chip: 'Αναβλήθηκε',
       newDay: 'Νέα μέρα',

@@ -94,6 +94,10 @@ export interface FeedMatchCard {
   split: VoteSplit | null;
   /** the old starts_at, when the match moved to a new day in the last 3 days */
   moved_from?: string | null;
+  /** the club it is played at, when the source names it */
+  club?: string | null;
+  /** the club's surface, else the tournament's */
+  surface?: string | null;
 }
 
 /** A match put off in the last 2 days that the user voted on or whose players they follow. Not votable. */
@@ -748,6 +752,11 @@ export interface TournamentMatch {
   postponed?: boolean;
   /** the old starts_at, when the match moved to another time or day */
   moved_from?: string | null;
+  /** the club and court it is played at, when the source names them */
+  club?: string | null;
+  court?: string | null;
+  /** the club's surface, else the tournament's */
+  surface?: string | null;
 }
 
 export interface TournamentItem {

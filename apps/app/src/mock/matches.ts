@@ -24,11 +24,16 @@ export interface MockMatch {
   movedBack?: boolean;
   /** Votes already cast, before the viewer's. */
   votes: Record<Side, number>;
+  /** where it is played */
+  club?: string;
+  surface?: string;
 }
 
 export const MOCK_MATCHES: MockMatch[] = [
   {
     id: 'm1',
+    club: 'Γήπεδα Γλυφάδας',
+    surface: 'clay',
     day: 'today',
     time: '18:00',
     event: 'Open Γλυφάδας',
