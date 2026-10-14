@@ -2,6 +2,8 @@ import { v2Configured } from '@/lib/v2/env';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
 import { Nav } from '../Nav';
 import { SignOut } from '../SignOut';
+import { Banner } from '../feedback';
+import { PageHeader } from '../kit';
 import { ui } from '../ui';
 import { Queue, type Moderation, type TournamentOption } from './Queue';
 
@@ -34,7 +36,10 @@ export default async function ModerationPage() {
       <Nav here="moderation" staff={staff} />
       <main className="v2-page">
         {queue.error ? (
-          <p style={ui.error}>{queue.error.message}</p>
+          <>
+            <PageHeader title="Moderation" />
+            <Banner tone="problem" title="Could not load the queue" detail={queue.error.message} />
+          </>
         ) : (
           <Queue data={queue.data as Moderation} tournaments={((tournaments.data ?? []) as TournamentOption[]).map((t) => ({ id: t.id, name: t.name }))} />
         )}
