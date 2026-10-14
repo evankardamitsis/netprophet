@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function ModerationPage() {
   if (!v2Configured) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>v2 admin is not configured</h1>
       </main>
     );
@@ -20,7 +20,7 @@ export default async function ModerationPage() {
   const staff = await getStaff(client);
   if (!staff) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>No access</h1>
         <p style={ui.muted}>This account is not an admin or editor on v2.</p>
         <SignOut />
@@ -32,7 +32,7 @@ export default async function ModerationPage() {
   return (
     <div className="v2-shell">
       <Nav here="moderation" staff={staff} />
-      <main style={ui.main}>
+      <main className="v2-page">
         {queue.error ? (
           <p style={ui.error}>{queue.error.message}</p>
         ) : (

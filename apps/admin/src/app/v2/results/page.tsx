@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function ResultsDesk() {
   if (!v2Configured) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>v2 admin is not configured</h1>
         <p style={ui.muted}>Set NEXT_PUBLIC_V2_SUPABASE_URL and NEXT_PUBLIC_V2_SUPABASE_PUBLISHABLE_KEY.</p>
       </main>
@@ -21,7 +21,7 @@ export default async function ResultsDesk() {
   const staff = await getStaff(client);
   if (!staff) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>No access</h1>
         <p style={ui.muted}>This account is not an admin or editor on v2.</p>
         <SignOut />
@@ -36,7 +36,7 @@ export default async function ResultsDesk() {
   return (
     <div className="v2-shell">
       <Nav here="results" staff={staff} />
-      <main style={ui.main}>
+      <main className="v2-page">
         {error ? <p style={ui.error}>{error.message}</p> : <Desk items={items} admin={staff.role === 'admin'} />}
       </main>
     </div>

@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function PlayersPage() {
   if (!v2Configured) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>v2 admin is not configured</h1>
       </main>
     );
@@ -20,7 +20,7 @@ export default async function PlayersPage() {
   const staff = await getStaff(client);
   if (!staff) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>No access</h1>
         <p style={ui.muted}>This account is not an admin or editor on v2.</p>
         <SignOut />
@@ -30,7 +30,7 @@ export default async function PlayersPage() {
   return (
     <div className="v2-shell">
       <Nav here="players" staff={staff} />
-      <main style={ui.main}>
+      <main className="v2-page">
         <Roster />
       </main>
     </div>

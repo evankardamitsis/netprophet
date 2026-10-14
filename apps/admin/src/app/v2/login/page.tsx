@@ -16,7 +16,7 @@ export default function V2Login() {
 
   if (!v2Configured) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>v2 admin is not configured</h1>
         <p style={ui.muted}>Set NEXT_PUBLIC_V2_SUPABASE_URL and NEXT_PUBLIC_V2_SUPABASE_PUBLISHABLE_KEY.</p>
       </main>
@@ -58,7 +58,7 @@ export default function V2Login() {
     });
 
   return (
-    <main style={{ ...ui.main, maxWidth: 420 }}>
+    <main className="v2-page narrow">
       <h1 style={ui.h1}>NetProphet v2 admin</h1>
       <p style={ui.muted}>
         {step === 'email' ? 'Sign in with your staff email. You get a 6-digit code.' : `Code sent to ${email}.`}
