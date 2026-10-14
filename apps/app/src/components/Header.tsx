@@ -13,10 +13,11 @@ import type { MeSummary } from '../lib/data';
 import { useHud, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
-import { BouncingLogo } from './BouncingLogo';
-import { Lit } from './Lit';
+import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
 
 /** the lockup's height; its ball hops over the net every few seconds (as on sign-in) */
+/** the account ball */
+const AVATAR = 38;
 const LOGO_H = 22;
 
 /**
@@ -37,7 +38,7 @@ export function Header({ me }: { me: MeSummary | null }) {
       <View style={styles.right}>
         <Stat value={streak} label={t.streak.label} onPress={goMe} target={hud.targets.streak} fx={hud.streakFx} pill />
         <Stat value={points} label={t.header.points} target={hud.targets.points} countUp />
-        <Avatar initials={me?.initials ?? ''} />
+        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} />
       </View>
     </View>
   );
@@ -139,7 +140,9 @@ function useStreakFx(fx: StreakFx) {
   return { box, ring: ringStyle };
 }
 
-function Avatar({ initials }: { initials: string }) {
+/** the account button is the player's sport's ball (founder, 14 Oct), lit like the logo's, with the initials on it */
+function Avatar({ initials, sport }: { initials: string; sport: string }) {
+  const kind: BallKind = (BALLS as string[]).includes(sport) ? (sport as BallKind) : 'tennis';
   const press = usePress();
   return (
     <Pressable
@@ -151,7 +154,10 @@ function Avatar({ initials }: { initials: string }) {
       style={styles.avatarHit}
     >
       <Animated.View style={[styles.avatar, press.style]}>
-        <Lit />
+        <View style={StyleSheet.absoluteFill}>
+          <Ball kind={kind} size={AVATAR} />
+        </View>
+        <Shade size={AVATAR} />
         <Text style={styles.avatarText}>{initials}</Text>
       </Animated.View>
     </Pressable>
@@ -180,12 +186,12 @@ const styles = StyleSheet.create({
   label: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.33, color: colors.mist },
   avatarHit: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   avatar: {
-    width: 36,
-    height: 36,
+    width: AVATAR,
+    height: AVATAR,
     borderRadius: 999,
-    backgroundColor: colors.inkRaised,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { color: colors.paper, fontFamily: fonts.bodyBold, fontSize: 13 },
+  // ink on every ball's colour (lime, padel yellow, basketball orange, football white), with a soft paper halo
+  avatarText: { color: colors.ink, fontFamily: fonts.displayHeavy, fontSize: 16, lineHeight: 18, textShadowColor: colors.paper, textShadowRadius: 3, textShadowOffset: { width: 0, height: 0 } },
 });

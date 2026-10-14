@@ -236,7 +236,22 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
                 </Text>
               </View>
             ))}
-            {data.sub ? <Text style={styles.sub}>{data.sub}</Text> : null}
+            {data.level || data.area ? (
+              <View style={styles.facts}>
+                {data.level ? (
+                  <View style={styles.levelPill}>
+                    <Text style={styles.levelText}>{data.level}</Text>
+                  </View>
+                ) : null}
+                {data.area ? (
+                  <Text numberOfLines={1} style={styles.area}>
+                    {data.area}
+                  </Text>
+                ) : null}
+              </View>
+            ) : data.sub ? (
+              <Text style={styles.sub}>{data.sub}</Text>
+            ) : null}
           </Animated.View>
         </Animated.View>
       </Pressable>
@@ -353,7 +368,12 @@ const styles = StyleSheet.create({
   pctDbl: { top: 'auto', bottom: 12, fontSize: 24, lineHeight: 24 },
   sn: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   snDbl: { fontSize: 25, lineHeight: 25 },
-  fn: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18.75, color: colors.inkSoft },
+  // the first name belongs to the name: dark and bold, right under the surname; the facts sit apart, smaller
+  fn: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 20, color: colors.ink },
+  facts: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  levelPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.sand },
+  levelText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
+  area: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
   av: {
     position: 'absolute',
