@@ -167,7 +167,7 @@ export function BouncingLogo({ height }: { height: number }) {
 }
 
 /** light from the top left and a darker rim at the bottom right, drawn over the ball and never turning */
-function Shade({ size }: { size: number }) {
+export function Shade({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 30 30" style={StyleSheet.absoluteFill}>
       <Defs>
