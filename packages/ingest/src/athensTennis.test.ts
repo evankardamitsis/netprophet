@@ -57,6 +57,13 @@ describe('parseAthensTennis', () => {
     expect(m).toMatchObject({ discipline: 'MS', level: 'AT 250 @ PRC ATRP 2.5', flags: ['discipline_from_sides'] });
   });
 
+  it('a singles match filed under doubles goes by the people', () => {
+    const m = all.find((x) => x.date === '2026-09-28' && x.players.side1[0]?.surname === 'Μεμμος')!;
+    expect(m).toMatchObject({ discipline: 'MS', categoryRaw: "Men's Doubles | Regular Season | 2026–27" });
+    expect(m.flags).toContain('discipline_from_sides');
+    expect(all.every((x) => x.players.side1.length === x.players.side2.length && x.discipline.endsWith('D') === (x.players.side1.length === 2))).toBe(true);
+  });
+
   it('upcoming matches: club, court and time, no score', () => {
     const m = find('2026-10-14', 'Κυριάκος')!;
     expect(m).toMatchObject({ time: '18:30', venue: 'Court 1 PRC · PRC (Μαρούσι)', club: 'PRC (Μαρούσι)', court: 'Court 1 PRC', status: 'scheduled', winner: null, scoreRaw: '' });

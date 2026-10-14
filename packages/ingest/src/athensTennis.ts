@@ -227,8 +227,19 @@ function readRow(row: Node, lines: Map<string, Node>): RowParts | null {
 }
 
 function toMatch(date: string, club: string, r: RowParts, known: Map<string, { first: string; last: string }>): SheetMatch | null {
-  const cat = category(r.categoryRaw, Math.max(r.sides[0].length, r.sides[1].length));
+  const n = r.sides[0].length;
+  // uneven sides: not a match we can record
+  if (n !== r.sides[1].length || n > 2) return null;
+  const cat = category(r.categoryRaw, n);
   if (!cat) return null;
+  // the site sometimes files a singles match under a doubles category (28 Sep, «Men's Doubles», one player a side):
+  // the people decide
+  const doublesBySides = n === 2;
+  if ((cat.discipline === 'MS' || cat.discipline === 'WS') !== !doublesBySides) {
+    const swap: Record<Discipline, Discipline> = { MS: 'MD', WS: 'WD', MD: 'MS', WD: 'WS', XD: 'MS' };
+    cat.discipline = swap[cat.discipline];
+    if (!cat.flags.includes('discipline_from_sides')) cat.flags = [...cat.flags, 'discipline_from_sides'];
+  }
   const side1 = r.sides[0].map((p) => person(p, known));
   const side2 = r.sides[1].map((p) => person(p, known));
   const k1 = side1.map((p) => p.key).join(' / ');
