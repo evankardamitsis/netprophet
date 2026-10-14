@@ -30,8 +30,11 @@ select ok((select bool_and(x::uuid in (select id from tp where g in (1, 3, 5, 7)
 
 select core.quiz_tournament(:'u'::uuid, 'tennis', 'recall', core.quiz_day_key(now()), 'seed', '{}', '{}') as rec \gset
 select is(:'rec'::jsonb -> 'content' ->> 'tag', 'Θυμάσαι;', 'a recall card');
-select ok((select p.id in (select id from tp where g in (1, 3, 5, 7))
-             from core.players p where p.id = ((:'rec'::jsonb -> 'ids') ->> ((:'rec'::jsonb -> 'content' ->> 'right')::int))::uuid),
+-- whichever match it picked (the seed data has others too), the right option is that match's winner
+select is(((:'rec'::jsonb -> 'ids') ->> ((:'rec'::jsonb -> 'content' ->> 'right')::int))::uuid,
+          (select mp.player_id from core.match_results r
+             join core.match_participants mp on mp.match_id = r.match_id and mp.side = r.winner_side
+            where r.match_id = (:'rec'::jsonb -> 'content' ->> 'match_id')::uuid limit 1),
           'the right answer is the winner');
 
 -- a user who follows nobody: positions 2, 4 and 6 come from the tournament
