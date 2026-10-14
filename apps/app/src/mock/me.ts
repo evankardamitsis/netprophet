@@ -50,11 +50,13 @@ export function mockMe(now: Date = new Date(), fresh = false): { me: MeResult; p
       votes_correct: fresh ? 3 : 21,
       votes_to_next_free_freeze: 11,
       freezes: { free: fresh ? 0 : 1, paid: 0, max: 2 },
+      level: { level: 3, into: 40, span: 300, next: 260 },
     },
     pro: false,
     unlocks: [],
     inbox_unseen: 0,
     circle_count: 3,
+    results_at: new Date().toISOString(),
   };
   const page: MePage = {
     record_year: fresh ? null : { singles: { w: 12, l: 7 }, doubles: { w: 4, l: 2 } },

@@ -21,7 +21,7 @@ export default function TabsLayout() {
           {/* back (the profile's «‹ Πίσω», Android's back) returns to the screen you came from, not the first tab */}
           <Tabs
             backBehavior="history"
-            tabBar={(props) => <TabBar {...props} />}
+            tabBar={(props) => <TabBar {...props} resultsAt={raw?.results_at ?? null} />}
             screenOptions={{ header: () => <Header me={me} /> }}
           >
             <Tabs.Screen name="index" options={{ title: t.tabs.vote }} />

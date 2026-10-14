@@ -1,3 +1,4 @@
+import { gameLevel } from '@netprophet/core';
 import { levelNumber } from '@netprophet/copy';
 import type { Copy } from '@netprophet/copy';
 import type { MePage, MeResult, PlayerProfile } from '@netprophet/db';
@@ -34,6 +35,8 @@ export interface MeView {
   /** your next match, for «Ο αντίπαλος πριν το ματς» */
   nextMatchId: string | null;
   friends: { count: number; initials: string[] };
+  /** your game level from points: «Level 3», how far into it (0 to 1), «Ακόμα 260 πόντοι για το level 4» */
+  game: { level: number; fill: number; title: string; line: string };
 }
 
 const plural = (n: number, forms: { one: string; many: string }) => (n === 1 ? forms.one : fmt(forms.many, { n }));
@@ -67,6 +70,7 @@ export function toMeView(
   const wl = (r: { w: number; l: number }) => `${r.w}-${r.l}`;
 
   const profile = player ? toProfile(player, areas, t, now) : null;
+  const gl = me.game.level ?? gameLevel(me.game.total_points);
 
   return {
     first,
@@ -75,6 +79,12 @@ export function toMeView(
     isNew,
     level: level === null ? null : levelNumber(level),
     direction: dir === 'up' ? { arrow: '↑', word: m.direction.up } : dir === 'down' ? { arrow: '↓', word: m.direction.down } : { arrow: '=', word: m.direction.same },
+    game: {
+      level: gl.level,
+      fill: gl.span > 0 ? gl.into / gl.span : 0,
+      title: fmt(m.gameLevel.title, { n: gl.level }),
+      line: fmt(gl.next === 1 ? m.gameLevel.toNextOne : m.gameLevel.toNext, { n: gl.next, next: gl.level + 1 }),
+    },
     streak: me.game.streak,
     best: fmt(m.best, { n: me.game.streak_best }),
     monthPoints: me.game.month_points,

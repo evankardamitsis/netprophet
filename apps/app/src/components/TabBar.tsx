@@ -11,7 +11,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { usePress } from '../lib/motion';
+import { usePopIn, usePress } from '../lib/motion';
+import { hasNewResults, useResultsSeen } from '../lib/resultsSeen';
 import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts, motion } from '../theme';
 
@@ -21,16 +22,18 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
  * The bottom bar (founder, 14 Oct: "make it as good as possible"). Text tabs only (glyphs, no icons). Each tab is as wide
  * as its label plus an equal share of what is left, so the labels sit evenly whatever their length. The open tab is a
  * paper pill that slides from tab to tab with the spring; a light tick on every change. Εγώ opens from the header.
- * Until the Ladder unlocks it is left out (the route stays).
+ * Until the Ladder unlocks it is left out (the route stays). A lime dot on «Αποτελέσματα» while a result newer than your
+ * last visit is waiting (lime: something happened); opening the tab clears it.
  */
 const IN_BAR = ['index', 'results', 'players', 'ladder'];
 const COLOR_MS = 250;
 
 type Box = { x: number; width: number };
 
-export function TabBar({ state, descriptors, navigation }: TabBarProps) {
+export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProps & { resultsAt: string | null }) {
   const insets = useSafeAreaInsets();
   const { has } = useUnlocks();
+  const results = useResultsSeen();
   const [boxes, setBoxes] = useState<Record<string, Box>>({});
   const pillX = useSharedValue(0);
   const pillW = useSharedValue(0);
@@ -38,6 +41,12 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
 
   const focusedName = state.routes[state.index]?.name ?? '';
   const focusedBox = boxes[focusedName];
+  const onResults = focusedName === 'results';
+  const { markSeen } = results;
+  useEffect(() => {
+    if (onResults) markSeen();
+  }, [onResults, resultsAt, markSeen]);
+  const resultsNew = !onResults && hasNewResults(resultsAt, results.seenAt);
   useEffect(() => {
     if (!focusedBox) {
       // a screen outside the bar (a player's profile, Εγώ): the pill fades where it was
@@ -70,6 +79,7 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
               key={route.key}
               label={label}
               focused={focused}
+              dot={route.name === 'results' && resultsNew}
               onLayout={(e) => {
                 const { x, width } = e.nativeEvent.layout;
                 setBoxes((b) => (b[route.name]?.x === x && b[route.name]?.width === width ? b : { ...b, [route.name]: { x, width } }));
@@ -92,11 +102,13 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
 function TabItem({
   label,
   focused,
+  dot,
   onPress,
   onLayout,
 }: {
   label: string;
   focused: boolean;
+  dot: boolean;
   onPress: () => void;
   onLayout: (e: LayoutChangeEvent) => void;
 }) {
@@ -121,9 +133,15 @@ function TabItem({
         <Animated.Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85} style={[styles.label, fg]}>
           {label}
         </Animated.Text>
+        {dot ? <Dot /> : null}
       </Animated.View>
     </Pressable>
   );
+}
+
+function Dot() {
+  const pop = usePopIn(450);
+  return <Animated.View style={[styles.dot, pop]} />;
 }
 
 const styles = StyleSheet.create({
@@ -132,6 +150,7 @@ const styles = StyleSheet.create({
   // grows from the label's own width, so the space between labels is even
   tab: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto' },
   pill: { position: 'absolute', top: 0, bottom: 0, left: 0, borderRadius: 999, backgroundColor: colors.paper },
-  item: { minHeight: 44, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' },
+  item: { minHeight: 44, paddingHorizontal: 10, flexDirection: 'row', gap: 5, alignItems: 'center', justifyContent: 'center' },
+  dot: { width: 7, height: 7, borderRadius: 999, backgroundColor: colors.lime },
   label: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18 },
 });

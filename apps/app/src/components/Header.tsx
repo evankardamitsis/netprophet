@@ -146,12 +146,13 @@ function useStreakFx(fx: StreakFx) {
  * disc, with your sport's ball as a small crisp badge at its corner, so it reads as you and as your game.
  */
 function Avatar({ initials, sport }: { initials: string; sport: string }) {
+  const t = useCopy();
   const kind: BallKind = (BALLS as string[]).includes(sport) ? (sport as BallKind) : 'tennis';
   const press = usePress();
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={initials || 'Εγώ'}
+      accessibilityLabel={t.tabs.me}
       onPress={goMe}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}

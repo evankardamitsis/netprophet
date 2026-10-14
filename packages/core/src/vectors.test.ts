@@ -12,6 +12,8 @@ import {
   buyFreeze,
   daysLeftInMonth,
   evaluateUnlocks,
+  gameLevel,
+  gameLevelStart,
   initialStreak,
   isUpset,
   monthKey,
@@ -44,6 +46,7 @@ import resolutionVectors from '../test-vectors/resolution.json';
 import levelVectors from '../test-vectors/levels.json';
 import badgeVectors from '../test-vectors/badges.json';
 import leaderboardVectors from '../test-vectors/leaderboard.json';
+import gameLevelVectors from '../test-vectors/game-level.json';
 
 interface Case {
   name: string;
@@ -212,4 +215,9 @@ run(badgeVectors, {
 
 run(leaderboardVectors, {
   closeGroup: (i) => closeGroup(i),
+});
+
+run(gameLevelVectors, {
+  gameLevel: (i: { points: number; step?: number }) => gameLevel(i.points, i.step),
+  gameLevelStart: (i: { level: number }) => gameLevelStart(i.level),
 });

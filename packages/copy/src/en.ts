@@ -389,6 +389,11 @@ export const en: Copy = {
     newPlayer: 'New player',
     newPlayerOn: 'New player ✓',
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
+    gameLevel: {
+      title: 'Level {n}',
+      toNext: '{n} more points to level {next}',
+      toNextOne: '1 more point to level {next}',
+    },
     streak: 'streak',
     best: 'Best: {n}',
     monthPoints: 'points this month',
@@ -634,11 +639,12 @@ export const en: Copy = {
     frames: { frame_seven: 'Seven', frame_ten: 'Ten' } as Record<string, string>,
     unit: 'streak',
     aria: 'Celebration',
+    level: { label: 'Level', title: 'You levelled up!', line: 'Keep calling them right' },
   },
   unlocks: {
     label: 'New',
     moments: {
-      level_bar: { title: 'You levelled up!', line: '' },
+      level_bar: { title: 'Your level', line: 'Every right call moves you up. See it on Me.' },
       daily_quests: { title: 'New: Quests', line: 'Three small ones for today' },
       ladder_friends: { title: 'You are on the Ladder!', line: 'Bring a friend to chase you' },
       kudos_reactions: { title: 'It is confirmed!', line: 'Say something kind' },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { BadgeCelebration, Celebration, LeagueCelebration, StreakCelebration, QuestReward, UnlockCelebration } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, LeagueCelebration, LevelCelebration, StreakCelebration, QuestReward, UnlockCelebration } from '@netprophet/db';
 import { copy } from '../i18n';
 import { celebrationTitleSize, celebrationView, groupView, nextGroup } from './celebrate';
 
@@ -96,7 +96,7 @@ describe('league celebrations', () => {
 
 describe('unlock celebrations', () => {
   it('says «Νέο», the title and the line by step', () => {
-    expect(groupView([u('u', 'level_bar')], copy)).toEqual({ label: 'ΝΕΟ', streak: null, tier: null, title: 'Ανέβηκες level!', reward: '' });
+    expect(groupView([u('u', 'level_bar')], copy)).toEqual({ label: 'ΝΕΟ', streak: null, tier: null, title: 'Το level σου', reward: 'Κάθε σωστή ψήφος σε ανεβάζει. Δες το στο Εγώ.' });
     expect(groupView([u('u', 'daily_quests')], copy)).toMatchObject({ title: 'Νέο: Αποστολές', reward: 'Τρεις μικρές για σήμερα' });
     expect(groupView([u('u', 'ladder_friends')], copy)).toMatchObject({ title: 'Μπήκες στην Κατάταξη!', reward: 'Φέρε έναν φίλο να σε κυνηγάει' });
     expect(groupView([u('u', 'stats_area')], copy).title).toBe('Τώρα βλέπεις τα στατιστικά σου και όλη την Αττική');
@@ -110,5 +110,17 @@ describe('unlock celebrations', () => {
   it('shrinks long titles', () => {
     expect(celebrationTitleSize('Ανέβηκες level!')).toBe(54);
     expect(celebrationTitleSize('Τώρα βλέπεις τα στατιστικά σου και όλη την Αττική')).toBe(40);
+  });
+});
+
+describe('level celebrations', () => {
+  const lv = (id: string, level: number): LevelCelebration => ({ id, created_at: '2026-10-14T10:00:00Z', payload: { type: 'level', level } });
+  it('says the new level in the pill, with no «σερί» beside it', () => {
+    expect(groupView([lv('l', 4)], copy)).toEqual({ label: 'LEVEL', streak: 4, unit: '', tier: null, title: 'Ανέβηκες level!', reward: 'Συνέχισε να το λες σωστά' });
+  });
+  it('plays after the σερί moment and before quests and badges', () => {
+    const list = [b('b1', 'gentleman', 1, true), q('a', 'daily_kudos_1', badge), lv('l', 3), c(5, false, null)];
+    expect(nextGroup(list).map((x) => x.id)).toEqual(['c']);
+    expect(nextGroup(list.filter((x) => x.id !== 'c')).map((x) => x.id)).toEqual(['l']);
   });
 });
