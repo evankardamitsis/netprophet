@@ -1,7 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useState } from 'react';
 
-/** when «Αποτελέσματα» was last opened, so its dot shows only for results newer than that. This device only. */
+/**
+ * The newest result you have seen on «Αποτελέσματα» (the server's results_at when you opened it), so its dot shows only
+ * for results newer than that. The server's time, never the phone's clock: a phone running behind would keep the dot
+ * lit. This device only.
+ */
 const KEY = 'np.results.seen';
 
 /** the dot: a result newer than the last visit (any recent result when the tab was never opened); dark while loading */
@@ -12,17 +16,16 @@ export function hasNewResults(resultsAt: string | null | undefined, seenAt: stri
 }
 
 /** `seenAt` is undefined while loading, null when the tab was never opened on this device */
-export function useResultsSeen(): { seenAt: string | null | undefined; markSeen: () => void } {
+export function useResultsSeen(): { seenAt: string | null | undefined; markSeen: (resultsAt: string) => void } {
   const [seenAt, setSeenAt] = useState<string | null | undefined>(undefined);
   useEffect(() => {
     AsyncStorage.getItem(KEY)
       .then((v) => setSeenAt(v))
       .catch(() => setSeenAt(null));
   }, []);
-  const markSeen = useCallback(() => {
-    const now = new Date().toISOString();
-    setSeenAt(now);
-    AsyncStorage.setItem(KEY, now).catch(() => undefined);
+  const markSeen = useCallback((resultsAt: string) => {
+    setSeenAt(resultsAt);
+    AsyncStorage.setItem(KEY, resultsAt).catch(() => undefined);
   }, []);
   return { seenAt, markSeen };
 }
