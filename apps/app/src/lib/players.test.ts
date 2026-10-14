@@ -37,11 +37,11 @@ const profile = (over: Partial<PlayerProfile> = {}): PlayerProfile => ({
 });
 
 describe('toPlayerRow', () => {
-  it('«level 4 · Γλυφάδα · φίλη» for a followed woman', () => {
+  it('«Γλυφάδα · φίλη» for a followed woman (levels hidden)', () => {
     const row = toPlayerRow(card(), AREAS, t);
     expect(row.name).toBe('Κατερίνα Λαζάρου');
     expect(row.initials).toBe('ΚΛ');
-    expect(row.sub).toBe('level 4 · Γλυφάδα · φίλη');
+    expect(row.sub).toBe('Γλυφάδα · φίλη');
     expect(row.form).toEqual(['W', 'L', 'W']);
   });
   it('leaves out what is not known', () => {
@@ -50,11 +50,11 @@ describe('toPlayerRow', () => {
 });
 
 describe('toProfile', () => {
-  it('direction follows gender, record uses singulars', () => {
+  it('no level or direction while levels are hidden; record uses singulars', () => {
     const p = toProfile(profile(), AREAS, t, NOW);
-    expect(p.sub).toBe('Γλυφάδα · = Σταθερή');
+    expect(p.sub).toBe('Γλυφάδα');
     expect(p.record).toBe('1 νίκη · 6 ήττες');
-    expect(p.level).toBe('level 4');
+    expect(p.level).toBeNull(); // players' levels are hidden (14 Oct)
   });
   it('next match: «με» and the accusative for singles', () => {
     const p = toProfile(

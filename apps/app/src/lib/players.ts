@@ -3,6 +3,7 @@ import type { PlayerCard, PlayerMatchLine, PlayerProfile, PlayerRef } from '@net
 import { initials, when } from './feed';
 import { dayLabel } from './results';
 import { fmt } from './votes';
+import { PLAYER_LEVEL_SHOWN } from './levelShown';
 
 /**
  * Παίκτες (prototype V2, isPlayers and the profile overlay): pure mapping from api rows to what the
@@ -59,7 +60,7 @@ const fullName = (p: Pick<PlayerRef, 'first_name' | 'surname'>) => `${p.first_na
 export function toPlayerRow(card: PlayerCard, areas: Record<string, string>, t: Copy): PlayerRow {
   const g = nameGender(card.first_name, card.gender);
   const parts = [
-    card.level_tier != null ? `${t.level.label} ${levelNumber(card.level_tier)}` : null,
+    PLAYER_LEVEL_SHOWN && card.level_tier != null ? `${t.level.label} ${levelNumber(card.level_tier)}` : null,
     card.area_id ? areas[card.area_id] ?? null : null,
     card.is_followed ? t.players.friend[g] : null,
   ].filter(Boolean);
@@ -100,8 +101,8 @@ export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Co
     id: p.id,
     first: p.first_name,
     surname: p.surname,
-    level: p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
-    sub: [area, p.level_tier != null ? dir : null].filter(Boolean).join(' · '),
+    level: PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
+    sub: [area, PLAYER_LEVEL_SHOWN && p.level_tier != null ? dir : null].filter(Boolean).join(' · '),
     record: fmt(t.players.record, { w, wins: plural(w, t.players.wins), l, losses: plural(l, t.players.losses) }),
     form: p.form,
     isFollowed: p.is_followed,

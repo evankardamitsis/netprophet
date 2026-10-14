@@ -28,6 +28,7 @@ import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { alpha, colors, ease, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
+import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
 
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
@@ -299,7 +300,7 @@ function HeroCard({ v, badges, bg, frame, level }: { v: MeView; badges: GetBadge
   const { has } = useUnlocks();
   const [flipped, setFlipped] = useState(false);
   const flip = usePress();
-  const canFlip = has('stats') && level !== null;
+  const canFlip = PLAYER_LEVEL_SHOWN && has('stats') && level !== null;
   return (
     <FlipCard
       bg={bg}
@@ -307,7 +308,7 @@ function HeroCard({ v, badges, bg, frame, level }: { v: MeView; badges: GetBadge
       flipped={flipped}
       front={
         <>
-          {v.isNew ? <NewTop /> : <Chips v={v} />}
+          {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           <Name v={v} frame={frame} />
           {canFlip ? (
             <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
@@ -329,7 +330,7 @@ function Chips({ v }: { v: MeView }) {
   const { has } = useUnlocks();
   return (
     <View style={styles.chips}>
-      {has('level_bar') ? (
+      {PLAYER_LEVEL_SHOWN && has('level_bar') && v.level ? (
         <View style={styles.chip}>
           <Text style={styles.chipBig}>{v.level}</Text>
           <View>

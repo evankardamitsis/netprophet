@@ -3,6 +3,7 @@ import type { Copy } from '@netprophet/copy';
 import type { PlayerRef, ScoutPlayer, WinLoss } from '@netprophet/db';
 import type { FormDot } from './players';
 import { fmt } from './votes';
+import { PLAYER_LEVEL_SHOWN } from './levelShown';
 
 /**
  * «Ο αντίπαλος πριν το ματς» (Pro): the other side of your own next match, turned into lines.
@@ -38,7 +39,7 @@ export function toScoutView(p: ScoutPlayer, areas: Record<string, string>, t: Co
     first: p.first_name,
     surname: p.surname,
     sub: [
-      p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
+      PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null,
       p.area_id ? areas[p.area_id] ?? null : null,
       p.hand ? s.hands[p.hand] : null,
     ]
