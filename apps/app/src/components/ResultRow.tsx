@@ -1,19 +1,19 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-native';
 import { router } from 'expo-router';
-import Animated from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
 import { useUnlocks } from '../lib/unlocks';
-import { colors, fonts } from '../theme';
+import { colors, fonts, motion } from '../theme';
 import { FitText } from './FitText';
 import { ReactionChips } from './ReactionChips';
 
 /**
- * One finished match on Αποτελέσματα (prototype V2, result card): white, or ink for an upset.
- * Top row: «Ανατροπή» tag, «Το 69% έλεγε …», «Το ’πες · +10». Then the winner (big) and the loser
- * (smaller, faded) with sets won, and the set scores winner first. Under them the two reactions and
- * «Πες κάτι στον …» (blue, lime on the dark card).
+ * One finished match on Αποτελέσματα: white, or ink for an upset. Cleared out (founder, 14 Oct: "result cards look a
+ * bit cluttered"): the card is the winner and the score. The «Ανατροπή» tag and the lime «Το ’πες · +10» sit on top
+ * only when there is one. Under the names one quiet line: the set scores and «Το 69% έλεγε …». The reactions and
+ * «Πες κάτι στον …» wait behind the «+» at the end of that line (or a tap on the card).
  */
 const STG_MS = 450;
 const TAG_MS = 450;
@@ -31,14 +31,26 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
   const reactionsOpen = has('reactions');
   const kudosOpen = has('kudos');
   const fg = hot ? colors.paper : colors.ink;
+  const soft = hot ? colors.mist : colors.inkSoft;
+  const showReactions = !!item.reactions && reactionsOpen;
+  const showThank = !!item.thank && kudosOpen;
+  const more = showReactions || showThank;
+  const [open, setOpen] = useState(false);
+  const meta = [item.score, item.line].filter(Boolean).join(' · ');
   return (
-    <Pressable onLongPress={onLongPress ? () => onLongPress(item.id) : undefined} delayLongPress={450}>
+    <Pressable
+      accessibilityState={more ? { expanded: open } : undefined}
+      onPress={more ? () => setOpen((o) => !o) : undefined}
+      onLongPress={onLongPress ? () => onLongPress(item.id) : undefined}
+      delayLongPress={450}
+    >
       <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
-        <View style={styles.top}>
-          {item.tag ? <Tag text={item.tag} /> : null}
-          <Text style={[styles.line, { color: fg }]}>{item.line ?? ''}</Text>
-          {item.calledIt ? <Pill text={item.calledIt} /> : null}
-        </View>
+        {item.tag || item.calledIt ? (
+          <View style={styles.top}>
+            {item.tag ? <Tag text={item.tag} /> : <View />}
+            {item.calledIt ? <Pill text={item.calledIt} /> : null}
+          </View>
+        ) : null}
         <View style={styles.winner}>
           <View style={styles.nameBox}>
             <Names people={item.winner} style={[styles.winName, { color: fg }]} />
@@ -51,9 +63,14 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
           </View>
           <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
         </View>
-        <Text style={[styles.sets, { color: hot ? colors.mist : colors.inkSoft }]}>{item.score}</Text>
-        {item.reactions && reactionsOpen ? <ReactionChips matchId={item.id} initial={item.reactions} dark={hot} /> : null}
-        {item.thank && kudosOpen ? (
+        <View style={styles.metaRow}>
+          <Text style={[styles.sets, { color: soft }]} numberOfLines={2}>
+            {meta}
+          </Text>
+          {more ? <More open={open} color={soft} /> : null}
+        </View>
+        {open && showReactions ? <ReactionChips matchId={item.id} initial={item.reactions!} dark={hot} /> : null}
+        {open && showThank ? (
           <Pressable
             accessibilityRole="button"
             style={styles.thankHit}
@@ -64,11 +81,25 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
               })
           }
           >
-            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank.label}</Text>
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank!.label}</Text>
           </Pressable>
         ) : null}
       </Animated.View>
     </Pressable>
+  );
+}
+
+/** «+» marks that the card opens (the whole card is the button); it turns to × while open */
+function More({ open, color }: { open: boolean; color: string }) {
+  const turn = useSharedValue(0);
+  useEffect(() => {
+    turn.value = withSpring(open ? 1 : 0, motion.spring);
+  }, [open, turn]);
+  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 45}deg` }] }));
+  return (
+    <View style={styles.moreHit}>
+      <Animated.Text style={[styles.more, { color }, style]}>+</Animated.Text>
+    </View>
   );
 }
 
@@ -127,9 +158,11 @@ function Name({ person }: { person: ResultName }) {
 }
 
 const styles = StyleSheet.create({
-  card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, gap: 6 },
-  top: { minHeight: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  line: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 17 },
+  card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, gap: 4 },
+  top: { minHeight: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 },
+  moreHit: { width: 28, height: 28, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  more: { fontFamily: fonts.bodyBold, fontSize: 22, lineHeight: 26 },
   tag: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 14, letterSpacing: 0.48, color: colors.ink },
   pill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
@@ -145,7 +178,7 @@ const styles = StyleSheet.create({
   loseScore: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30, paddingBottom: 6, marginBottom: -6 },
   // the revealed first name is smaller and lighter (prototype .ns)
   firstName: { fontSize: 21, fontFamily: fonts.bodySemi },
-  sets: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
+  sets: { flex: 1, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
   thankHit: { minHeight: 32, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
   thank: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });
