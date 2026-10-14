@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { Banner, Toast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table } from '../kit';
@@ -128,6 +129,7 @@ export function Tournaments() {
     window.setTimeout(() => setToast((t) => (t === text ? null : t)), 2800);
   }, []);
 
+  const router = useRouter();
   const reload = useCallback(async () => {
     try {
       const [t, r, c] = await Promise.all([loadTournaments(), loadReviews(), loadClubs().catch(() => [] as Club[])]);
@@ -135,10 +137,12 @@ export function Tournaments() {
       setReviews(r);
       setClubs(c);
       setLoadError(null);
+      // the side menu's counts are drawn on the server: ask for them again so a decision you just made leaves the badge
+      router.refresh();
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : 'Could not load');
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     void reload();
