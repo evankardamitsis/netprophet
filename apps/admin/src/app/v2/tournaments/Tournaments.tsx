@@ -258,8 +258,8 @@ function AddTournament({ onChanged }: { onChanged: () => Promise<void> }) {
         <SurfaceSelect value={surface} onChange={setSurface} disabled={locked} />
       </label>
       <label style={label}>
-        Schedule and results sheet link
-        <input style={ui.input} value={url} disabled={locked} placeholder="https://docs.google.com/spreadsheets/d/..." onChange={(e) => setUrl(e.target.value)} />
+        Schedule and results link
+        <input style={ui.input} value={url} disabled={locked} placeholder="Google Sheet link, or https://www.athenstennis.gr/el/schedule" onChange={(e) => setUrl(e.target.value)} />
       </label>
       <label style={label}>
         Draws sheet link (optional)
@@ -404,7 +404,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             <SurfaceSelect value={surface} onChange={setSurface} />
           </label>
           <label style={label}>
-            Schedule and results sheet link
+            Schedule and results link
             <input style={ui.input} value={url} onChange={(e) => setUrl(e.target.value)} />
           </label>
           <label style={label}>

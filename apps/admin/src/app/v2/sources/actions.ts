@@ -1,6 +1,6 @@
 'use server';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
-import { drawsForTournament, rowsForTournament } from '@/lib/v2/sheets';
+import { drawsForTournament, rowsForTournament, sourceKind } from '@/lib/v2/sheets';
 import type { DrawCounts, IngestCounts, ReviewItem, SourceTournament } from './types';
 
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
@@ -52,7 +52,7 @@ export async function createTournament(input: { name: string; surface: string; s
         surface: input.surface,
         source_url: input.source_url.trim(),
         draw_url: input.draw_url.trim(),
-        source_kind: 'sheet',
+        source_kind: sourceKind(input.source_url),
         ongoing: true,
       },
     })) as string;
