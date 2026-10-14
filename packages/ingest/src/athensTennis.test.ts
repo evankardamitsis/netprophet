@@ -31,6 +31,7 @@ describe('parseAthensTennis', () => {
       status: 'completed',
     });
     expect(m.players.side1[0]).toMatchObject({ surname: 'Τσερος', first: 'Αλεξανδρος' });
+    expect(m).toMatchObject({ club: 'ACE Tennis Club', court: 'ACE Στεγασμένο 1' });
   });
 
   it('doubles keep both people a side; an initial stays an initial', () => {
@@ -58,7 +59,7 @@ describe('parseAthensTennis', () => {
 
   it('upcoming matches: club, court and time, no score', () => {
     const m = find('2026-10-14', 'Κυριάκος')!;
-    expect(m).toMatchObject({ time: '18:30', venue: 'Court 1 PRC · PRC (Μαρούσι)', status: 'scheduled', winner: null, scoreRaw: '' });
+    expect(m).toMatchObject({ time: '18:30', venue: 'Court 1 PRC · PRC (Μαρούσι)', club: 'PRC (Μαρούσι)', court: 'Court 1 PRC', status: 'scheduled', winner: null, scoreRaw: '' });
   });
 
   it('the same match gets the same fingerprint, whatever the time', () => {

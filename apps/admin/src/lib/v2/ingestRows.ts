@@ -53,6 +53,9 @@ export function sheetMatchToRow(m: SheetMatch, opts: RowOptions) {
     row: opts.row,
     flags: m.flags,
     score_raw: m.scoreRaw,
+    // the club decides the surface when the source names it; else the tournament's surface stands
+    club: m.club ?? null,
+    court: m.court ?? null,
     // the organiser wrote that the match is off for now (rain, a moved day): postponed until it comes back
     postponed: /αναβολ|βροχ|ακυρ|postpon|rain/.test(m.scoreRaw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()),
     side1: m.players.side1.map(opts.person),

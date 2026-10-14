@@ -262,6 +262,8 @@ function toMatch(date: string, club: string, r: RowParts, known: Map<string, { f
     status: done ? 'completed' : retired ? 'incomplete' : 'scheduled',
     fingerprint: ['at', date, cat.discipline, cat.level, ...[k1, k2].sort()].join('|'),
     flags: retired ? [...cat.flags, 'retired'] : cat.flags,
+    ...(club ? { club } : {}),
+    ...(r.court ? { court: r.court } : {}),
   };
 }
 
