@@ -30,13 +30,16 @@ export function morningEmail(d: Digest): { subject: string; html: string; text: 
     d.decisions.walkovers ? many(d.decisions.walkovers, 'walkover', 'walkovers') : '',
     d.decisions.score_conflicts ? many(d.decisions.score_conflicts, 'score that differs', 'scores that differ') : '',
   ].filter(Boolean).join(', ')}): ${ADMIN_URL}/tournaments`);
+  // sheet matches with no result two days on wait for a person (founder, 14 Oct)
+  for (const o of d.overdue)
+    todo.push(`${o.tournament}: ${many(o.matches, 'match has', 'matches have')} no result 2 days on. Enter it, mark it rained off, or say it didn’t happen: ${ADMIN_URL}/results`);
   if (d.results_for_you) todo.push(`${many(d.results_for_you, 'match needs', 'matches need')} a result from you: ${ADMIN_URL}/results`);
   for (const p of d.sheet_problems)
     todo.push(p.health === 'error'
       ? `${p.tournament}: we could not read the ${p.kind === 'draws' ? 'draws' : 'schedule'} sheet (${p.error ?? 'unknown error'}). Check it on ${ADMIN_URL}/tournaments`
       : `${p.tournament}: the ${p.kind === 'draws' ? 'draws' : 'schedule'} sheet looked much shorter than before. Worth a look: ${ADMIN_URL}/tournaments`);
   const news: string[] = [];
-  for (const o of d.overdue) news.push(`${o.tournament}: ${many(o.matches, 'match has', 'matches have')} no result after 3 nights (the organiser has not filled them in yet)`);
+
   if (d.postponed) news.push(`${many(d.postponed, 'match was', 'matches were')} postponed in the last day (rain or a moved day); they come back when the organiser puts them on a new day`);
   const today = d.today.length ? d.today.map((t) => `${t.tournament}: ${many(t.matches, 'match', 'matches')}`) : ['No matches today.'];
   const dayWords = (day: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${day}T00:00:00Z`));

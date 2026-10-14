@@ -416,6 +416,10 @@ export type Database = {
         Args: { p_tournament_id: string; p_rows: Json; p_dry?: boolean };
         Returns: Json;
       };
+      admin_keep_postponed: {
+        Args: { p_match: string };
+        Returns: undefined;
+      };
       admin_league_close: {
         Args: { p_month?: string };
         Returns: Json;

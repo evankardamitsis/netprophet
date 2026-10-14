@@ -75,3 +75,16 @@ export async function resolveNow(matchId: string): Promise<ActionResult> {
     return { ok: false, message: e instanceof Error ? e.message : 'failed' };
   }
 }
+
+/** «Rained off, keep it»: confirm a postponement; the match waits for the sheet to give it a new day */
+export async function keepPostponed(matchId: string): Promise<ActionResult> {
+  try {
+    const { rpc } = await staffClient();
+    const { error } = await rpc('admin_keep_postponed', { p_match: matchId });
+    if (error) return { ok: false, message: error.message };
+    revalidatePath('/v2/results');
+    return { ok: true, message: 'Kept as rained off. It comes back when the organiser gives it a new day.' };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : 'failed' };
+  }
+}
