@@ -1,9 +1,9 @@
 'use client';
-import { useState, useTransition, type CSSProperties } from 'react';
+import { useState, useTransition } from 'react';
 import { isValidMatchTiebreak, isValidTennisSet } from '@netprophet/core';
 import type { FeedPlayer, SetScore, Side } from '@netprophet/db';
-import { colors, ui } from '../ui';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
+import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
 import { resolveNow, saveResult, voidMatch, type ActionResult } from './actions';
 
 export interface DeskItem {
@@ -29,8 +29,6 @@ const ROUNDS: Record<string, string> = {
 };
 const FORMATS: Record<DeskItem['format'], string> = { singles: 'Singles', doubles: 'Doubles', mixed: 'Mixed doubles' };
 
-const stack = (gap: number): CSSProperties => ({ display: 'flex', flexDirection: 'column', gap });
-const wrapRow: CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' };
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** «Sat 10 Oct, 11:45» in Athens time */
@@ -46,74 +44,79 @@ const when = (iso: string) => {
 const sideName = (item: DeskItem, side: Side) =>
   (item.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || 'Unknown';
 
+type Tab = 'you' | 'sheets' | 'done';
+
 export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const { toast, notify } = useToast();
-  const [openSheets, setOpenSheets] = useState(false);
-  const [openDone, setOpenDone] = useState(false);
 
   const waiting = items.filter((i) => i.bucket_name === 'to_score');
   const fromSheets = waiting.filter((i) => i.tournament);
   const fromYou = waiting.filter((i) => !i.tournament);
   const done = items.filter((i) => i.bucket_name === 'done');
-
-  const sentence =
-    fromYou.length > 0
-      ? `${plural(fromYou.length, 'match', 'matches')} started and ${fromYou.length === 1 ? 'needs' : 'need'} a result from you.`
-      : 'All clear. Nothing needs a result from you right now.';
+  const [tab, setTab] = useState<Tab>(fromYou.length > 0 || fromSheets.length === 0 ? 'you' : 'sheets');
+  const list = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : done;
+  const p = usePages(list, 8);
 
   return (
-    <div style={stack(24)}>
-      <div>
-        <h1 style={ui.h1}>Results</h1>
-        <p style={ui.muted}>
-          Matches that have started and have no result yet. {sentence}
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title="Results"
+        intent={
+          fromYou.length > 0
+            ? `${plural(fromYou.length, 'match', 'matches')} started and ${fromYou.length === 1 ? 'needs' : 'need'} a result from you.`
+            : 'All clear. Nothing needs a result from you right now.'
+        }
+      />
+      <Stats
+        items={[
+          { label: 'need a result from you', value: fromYou.length, ink: true },
+          { label: 'waiting on tournament sheets', value: fromSheets.length },
+          { label: 'finished this week', value: done.length },
+        ]}
+      />
       {notice ? <Banner {...notice} /> : null}
-
-      <section style={stack(10)}>
-        <strong style={{ fontSize: 18 }}>
-          Need a result from you <span style={ui.muted}>{fromYou.length}</span>
-        </strong>
-        <p style={{ ...ui.muted, margin: 0 }}>Friendly matches and anything not on a tournament sheet. Pick who won, then the score.</p>
-        {fromYou.length === 0 ? <p style={ui.muted}>All clear. Nothing waiting.</p> : null}
-        {fromYou.map((item) => (
-          <Row key={item.match_id} item={item} admin={admin} onNotice={setNotice} notify={notify} />
-        ))}
-      </section>
-
-      <section style={stack(10)}>
-        <div style={{ ...wrapRow, justifyContent: 'space-between' }}>
-          <strong style={{ fontSize: 18 }}>
-            From tournament sheets <span style={ui.muted}>{fromSheets.length}</span>
-          </strong>
-          {fromSheets.length ? (
-            <button style={ui.link} onClick={() => setOpenSheets((o) => !o)}>
-              {openSheets ? 'Hide' : 'Show'}
-            </button>
-          ) : null}
-        </div>
-        <p style={{ ...ui.muted, margin: 0 }}>These fill in by themselves when the organiser’s sheet has the score. Enter one only if the sheet never will.</p>
-        {fromSheets.length === 0 ? <p style={ui.muted}>All clear. Nothing waiting.</p> : null}
-        {openSheets ? fromSheets.map((item) => <Row key={item.match_id} item={item} admin={admin} onNotice={setNotice} notify={notify} />) : null}
-      </section>
-
-      {done.length ? (
-        <section style={stack(10)}>
-          <div style={{ ...wrapRow, justifyContent: 'space-between' }}>
-            <strong style={{ fontSize: 18 }}>
-              Finished this week <span style={ui.muted}>{done.length}</span>
-            </strong>
-            <button style={ui.link} onClick={() => setOpenDone((o) => !o)}>
-              {openDone ? 'Hide' : 'Show'}
-            </button>
+      <Section
+        title={tab === 'you' ? 'Need a result from you' : tab === 'sheets' ? 'From tournament sheets' : 'Finished this week'}
+        aside={
+          <Tabs
+            value={tab}
+            onChange={(t) => {
+              setTab(t);
+              p.setPage(0);
+            }}
+            items={[
+              { value: 'you', label: 'Need you', count: fromYou.length },
+              { value: 'sheets', label: 'From sheets', count: fromSheets.length },
+              { value: 'done', label: 'Finished', count: done.length },
+            ]}
+          />
+        }
+      >
+        <span className="v2-muted">
+          {tab === 'you'
+            ? 'Friendly matches and anything not on a tournament sheet. Pick who won, then the score.'
+            : tab === 'sheets'
+              ? 'These fill in by themselves when the organiser’s sheet has the score. Enter one only if the sheet never will.'
+              : 'Results from the last 7 days. Count the votes now if a result came in and votes are still open.'}
+        </span>
+        {list.length === 0 ? (
+          <Card>
+            <Empty title="All clear">Nothing waiting here.</Empty>
+          </Card>
+        ) : (
+          <div className="v2-stack" style={{ gap: 12 }}>
+            {p.slice.map((item) => (
+              <Row key={item.match_id} item={item} admin={admin} onNotice={setNotice} notify={notify} />
+            ))}
+            <div className="v2-table-wrap">
+              <Pager p={p as ReturnType<typeof usePages<unknown>>} noun="matches" />
+            </div>
           </div>
-          {openDone ? done.map((item) => <Row key={item.match_id} item={item} admin={admin} onNotice={setNotice} notify={notify} />) : null}
-        </section>
-      ) : null}
+        )}
+      </Section>
       <Toast text={toast} />
-    </div>
+    </>
   );
 }
 
@@ -190,51 +193,52 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
 
   const header = (
     <>
-      <div style={{ ...wrapRow, justifyContent: 'space-between' }}>
-        <span style={ui.muted}>
+      <div className="v2-row between">
+        <span className="v2-muted">
           {when(item.starts_at)} · {place}
         </span>
-        <span style={ui.muted}>{plural(item.votes, 'vote')}</span>
+        <Badge>{plural(item.votes, 'vote')}</Badge>
       </div>
-      <div style={{ fontSize: 17, fontWeight: 700 }}>{names}</div>
+      <div style={{ fontSize: 18, fontWeight: 800 }}>{names}</div>
     </>
   );
 
   if (item.result || item.status === 'void') {
     return (
-      <div style={{ ...ui.card, ...stack(10) }}>
+      <div className={`v2-card tight v2-enter${pending ? ' busy' : ''}`}>
         {header}
         {item.result ? (
-          <div style={wrapRow}>
+          <div className="v2-row between">
             <span style={{ fontWeight: 700 }}>
               {sideName(item, item.result.winner_side)} won ·{' '}
               {item.result.walkover ? 'walkover' : item.result.sets.map((s) => `${s.w}–${s.l}`).join(', ')}
               {item.result.retired ? ' (retired)' : ''}
             </span>
             {admin && item.votes > item.votes_resolved ? (
-              <button style={ui.secondary} disabled={pending} onClick={() => run('Counting votes', () => resolveNow(item.match_id))}>
-                Count the votes now
-              </button>
+              <Secondary small busy={pending} onClick={() => run('Counting votes', () => resolveNow(item.match_id))}>
+                {pending ? 'Counting…' : 'Count the votes now'}
+              </Secondary>
             ) : null}
           </div>
         ) : (
-          <span style={ui.muted}>This match was removed.</span>
+          <span className="v2-muted">This match was removed.</span>
         )}
       </div>
     );
   }
 
   return (
-    <div style={{ ...ui.card, ...stack(12) }}>
+    <div className={`v2-card v2-enter${pending ? ' busy' : ''}`} aria-busy={pending || undefined}>
       {header}
-      <strong style={{ fontSize: 15 }}>Who won?</strong>
+      <b>Who won?</b>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
         {([1, 2] as Side[]).map((s) => (
           <button
             key={s}
             onClick={() => setWinner(s)}
             aria-pressed={winner === s}
-            style={{ ...ui.secondary, minHeight: 56, fontSize: 16, background: winner === s ? colors.ink : 'transparent', color: winner === s ? colors.paper : colors.ink }}
+            className="v2-btn secondary"
+            style={{ minHeight: 56, fontSize: 16, background: winner === s ? 'var(--np-ink)' : undefined, color: winner === s ? 'var(--np-paper)' : undefined }}
           >
             {winner === s ? '✓ ' : ''}
             {sideName(item, s)}
@@ -243,60 +247,56 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
       </div>
 
       {winner !== null && !walkover ? (
-        <div style={stack(8)}>
-          <span style={ui.muted}>
+        <div className="v2-stack">
+          <span className="v2-muted">
             Games in each set, {sideName(item, winner)} first.
           </span>
           {[0, 1, 2].map((r) => (
-            <div key={r} style={wrapRow}>
-              <span style={{ ...ui.muted, width: 92 }}>{r === 2 ? (tiebreak ? 'Tie-break' : 'Set 3 (if played)') : `Set ${r + 1}`}</span>
-              <input style={{ ...ui.input, width: 64, textAlign: 'center' }} inputMode="numeric" value={games[r]![0]} onChange={(e) => setGame(r, 0, e.target.value)} aria-label={`Set ${r + 1}, ${sideName(item, winner)}`} />
+            <div key={r} className="v2-row">
+              <span className="v2-muted" style={{ width: 120 }}>{r === 2 ? (tiebreak ? 'Tie-break' : 'Set 3 (if played)') : `Set ${r + 1}`}</span>
+              <input className="v2-input" style={{ width: 64, textAlign: 'center' }} inputMode="numeric" value={games[r]![0]} onChange={(e) => setGame(r, 0, e.target.value)} aria-label={`Set ${r + 1}, ${sideName(item, winner)}`} />
               <span>–</span>
-              <input style={{ ...ui.input, width: 64, textAlign: 'center' }} inputMode="numeric" value={games[r]![1]} onChange={(e) => setGame(r, 1, e.target.value)} aria-label={`Set ${r + 1}, other side`} />
+              <input className="v2-input" style={{ width: 64, textAlign: 'center' }} inputMode="numeric" value={games[r]![1]} onChange={(e) => setGame(r, 1, e.target.value)} aria-label={`Set ${r + 1}, other side`} />
             </div>
           ))}
-          <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+          <label className="v2-choice">
             <input type="checkbox" checked={tiebreak} onChange={(e) => setTiebreak(e.target.checked)} />
             The third set was a match tie-break (first to 10)
           </label>
         </div>
       ) : null}
 
-      <div style={wrapRow}>
-        <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+      <div className="v2-row">
+        <label className="v2-choice">
           <input type="checkbox" checked={retired} disabled={walkover} onChange={(e) => setRetired(e.target.checked)} />
           Retired
         </label>
-        <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+        <label className="v2-choice">
           <input type="checkbox" checked={walkover} onChange={(e) => { setWalkover(e.target.checked); if (e.target.checked) setRetired(false); }} />
           Walkover
         </label>
       </div>
 
-      {winner !== null && check.problem ? <p style={{ ...ui.muted, margin: 0 }}>{check.problem}</p> : null}
+      {winner !== null && check.problem ? <span className="v2-muted">{check.problem}</span> : null}
 
-      <div style={wrapRow}>
-        <button style={ui.primary} disabled={!canSave} onClick={save}>
+      <div className="v2-row">
+        <Secondary busy={pending} disabled={!canSave} onClick={save}>
           {pending ? 'Saving…' : 'Save result'}
-        </button>
+        </Secondary>
         {confirmGone ? (
-          <span style={wrapRow}>
-            <strong style={{ fontSize: 14 }}>Remove this match? Votes on it are cancelled.</strong>
-            <button
-              style={ui.secondary}
-              disabled={pending}
-              onClick={() => run('Removing', () => voidMatch(item.match_id), () => setConfirmGone(false))}
-            >
-              Yes, remove it
-            </button>
-            <button style={ui.link} onClick={() => setConfirmGone(false)}>
+          <span className="v2-confirm" style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+            <b style={{ fontSize: 14 }}>Remove this match? Votes on it are cancelled.</b>
+            <Secondary small busy={pending} onClick={() => run('Removing', () => voidMatch(item.match_id), () => setConfirmGone(false))}>
+              {pending ? 'Removing…' : 'Yes, remove it'}
+            </Secondary>
+            <Ghost disabled={pending} onClick={() => setConfirmGone(false)}>
               Keep it
-            </button>
+            </Ghost>
           </span>
         ) : (
-          <button style={ui.link} disabled={pending} onClick={() => setConfirmGone(true)}>
+          <Ghost disabled={pending} onClick={() => setConfirmGone(true)}>
             It didn’t happen
-          </button>
+          </Ghost>
         )}
       </div>
     </div>
