@@ -540,6 +540,10 @@ export type Database = {
         Args: { p_token: string };
         Returns: Json;
       };
+      cron_auto_rain: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       equip_item: {
         Args: { p_category: string; p_key: string };
         Returns: Json;

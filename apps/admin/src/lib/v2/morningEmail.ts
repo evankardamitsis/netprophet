@@ -9,6 +9,8 @@ export interface Digest {
   postponed: number;
   today: { tournament: string; matches: number }[];
   last_runs: number;
+  /** matches called off for rain in the last day, per tournament and day: by the 15:00 rule (auto) or by staff */
+  rained_off?: { tournament: string; day: string; auto: number; staff: number }[];
   /** players the imports added to the roster in the last day, per tournament (up to 15 names each) */
   new_players?: { tournament: string; count: number; names: string[] }[];
 }
@@ -37,6 +39,14 @@ export function morningEmail(d: Digest): { subject: string; html: string; text: 
   for (const o of d.overdue) news.push(`${o.tournament}: ${many(o.matches, 'match has', 'matches have')} no result after 3 nights (the organiser has not filled them in yet)`);
   if (d.postponed) news.push(`${many(d.postponed, 'match was', 'matches were')} postponed in the last day (rain or a moved day); they come back when the organiser puts them on a new day`);
   const today = d.today.length ? d.today.map((t) => `${t.tournament}: ${many(t.matches, 'match', 'matches')}`) : ['No matches today.'];
+  const dayWords = (day: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(`${day}T00:00:00Z`));
+  for (const r of d.rained_off ?? []) {
+    const parts = [
+      r.auto ? `${many(r.auto, 'match', 'matches')} had no result the next afternoon and ${r.auto === 1 ? 'was' : 'were'} called off as rained off automatically` : '',
+      r.staff ? `${many(r.staff, 'match was', 'matches were')} called off by you` : '',
+    ].filter(Boolean);
+    news.push(`${r.tournament}, ${dayWords(r.day)}: ${parts.join('; ')}. They come back when the organiser gives them a new day. Wrong? Check ${ADMIN_URL}/tournaments`);
+  }
   for (const n of d.new_players ?? []) {
     const more = n.count > n.names.length ? `, and ${n.count - n.names.length} more` : '';
     news.push(`${n.tournament}: ${many(n.count, 'new player', 'new players')} added to the roster (${n.names.join(', ')}${more}). Check the spelling on ${ADMIN_URL}/players`);
