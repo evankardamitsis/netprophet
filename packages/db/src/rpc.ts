@@ -308,9 +308,23 @@ export interface LeagueCelebrationPayload {
   award: boolean;
 }
 
+/** a user's game level (core gameLevel): the level, points inside it, its span and what is missing for the next */
+export interface GameLevelInfo {
+  level: number;
+  into: number;
+  span: number;
+  next: number;
+}
+
+/** total points crossed into a new game level («Ανέβηκες level!»), once per level */
+export interface LevelCelebrationPayload {
+  type: 'level';
+  level: number;
+}
+
 /** a full-screen moment (prototype celOn): a σερί milestone, a finished quest, a badge tier, an unlock or the month's league result */
 export interface Celebration<
-  P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload,
+  P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload | LevelCelebrationPayload,
 > {
   id: string;
   created_at: string;
@@ -322,6 +336,7 @@ export type QuestCelebration = Celebration<QuestCelebrationPayload>;
 export type BadgeCelebration = Celebration<BadgeCelebrationPayload>;
 export type UnlockCelebration = Celebration<UnlockCelebrationPayload>;
 export type LeagueCelebration = Celebration<LeagueCelebrationPayload>;
+export type LevelCelebration = Celebration<LevelCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
 export interface ResultRow {
@@ -721,11 +736,15 @@ export interface MeResult {
     votes_correct: number;
     votes_to_next_free_freeze: number;
     freezes: { free: number; paid: number; max: number };
+    /** the game level from total points (core gameLevel); missing on servers before 14 Oct 2026 */
+    level?: GameLevelInfo;
   };
   pro: boolean;
   unlocks: string[];
   inbox_unseen: number;
   circle_count: number;
+  /** the newest result of the user's sport in the last two weeks: the dot on «Αποτελέσματα» */
+  results_at?: string | null;
 }
 
 /* Tournaments page (api.get_tournaments, api.get_tournament): «Τα τουρνουά σου» */

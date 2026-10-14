@@ -1,5 +1,5 @@
 import { greekCaps, type Copy } from '@netprophet/copy';
-import type { BadgeCelebration, Celebration, LeagueCelebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
+import type { BadgeCelebration, Celebration, LeagueCelebration, LevelCelebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
 import { badgeName } from './badges';
 import { questCelebrationView } from './quests';
 import { leagueCelebrationView } from './ladder';
@@ -13,18 +13,22 @@ import { fmt } from './votes';
  */
 export interface CelebrationView {
   label: string;
-  /** the σερί pill's number; null for quests, which have no pill */
+  /** the pill's number (σερί, or the new level); null for quests, which have no pill */
   streak: number | null;
+  /** the word beside the pill's number: «σερί» when left out, nothing for a level */
+  unit?: string;
   /** a badge's tier (1 to 3): the three dots under the title fill up to it; null for σερί and quests */
   tier: number | null;
   title: string;
   reward: string;
 }
 
-/** which celebrations play together: the σερί ones one by one first, then every queued quest as ONE, then badges, then unlocks, then the month's league result, one by one */
+/** which celebrations play together: the σερί ones one by one first, then a new level, then every queued quest as ONE, then badges, then unlocks, then the month's league result, one by one */
 export function nextGroup(list: Celebration[]): Celebration[] {
   const streak = list.find((c) => c.payload.type === 'streak_milestone');
   if (streak) return [streak];
+  const level = list.find(isLevel);
+  if (level) return [level];
   const quests = list.filter((c) => c.payload.type === 'quest');
   if (quests.length > 0) return quests;
   const badge = list.find((c) => c.payload.type === 'badge');
@@ -36,6 +40,13 @@ export function nextGroup(list: Celebration[]): Celebration[] {
 }
 
 const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
+export const isLevel = (c: Celebration): c is LevelCelebration => c.payload.type === 'level';
+
+/** a new game level: «LEVEL», the number in the pill, «Ανέβηκες level!» */
+export function levelCelebrationView(c: LevelCelebration, t: Copy): CelebrationView {
+  const l = t.celebrate.level;
+  return { label: greekCaps(l.label), streak: c.payload.level, unit: '', tier: null, title: l.title, reward: l.line };
+}
 const isBadge = (c: Celebration): c is BadgeCelebration => c.payload.type === 'badge';
 export const isLeague = (c: Celebration): c is LeagueCelebration => c.payload.type === 'league';
 export const isUnlock = (c: Celebration): c is UnlockCelebration => c.payload.type === 'unlock';
@@ -77,6 +88,7 @@ export function groupView(group: Celebration[], t: Copy): CelebrationView {
     const v = questCelebrationView(quests.map((q) => ({ quest: q.payload.quest, reward: q.payload.reward })), t);
     return { label: greekCaps(v.label), streak: null, tier: null, title: v.title, reward: v.reward };
   }
+  if (isLevel(group[0]!)) return levelCelebrationView(group[0], t);
   if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
   if (isUnlock(group[0]!)) return unlockCelebrationView(group[0], t);
   if (isLeague(group[0]!)) return leagueView(group[0], t);

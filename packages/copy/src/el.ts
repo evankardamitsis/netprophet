@@ -413,6 +413,12 @@ export const el = {
     newPlayer: 'Νέος παίκτης',
     newPlayerOn: 'Νέος παίκτης ✓',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
+    /** your game level from points (Εγώ, under the hero) */
+    gameLevel: {
+      title: 'Level {n}',
+      toNext: 'Ακόμα {n} πόντοι για το level {next}',
+      toNextOne: 'Ακόμα 1 πόντος για το level {next}',
+    },
     streak: 'σερί',
     /** «ΠΡ: 9», your best σερί */
     best: 'ΠΡ: {n}',
@@ -684,12 +690,14 @@ export const el = {
     /** «σερί» in the pill */
     unit: 'σερί',
     aria: 'Γιορτή',
+    /** a new game level: «LEVEL» over «Ανέβηκες level!», the number in the pill, then the line */
+    level: { label: 'Level', title: 'Ανέβηκες level!', line: 'Συνέχισε να το λες σωστά' },
   },
   /** the unlock ladder's full-screen moments: the title and the line by step key (other steps get none) */
   unlocks: {
     label: 'Νέο',
     moments: {
-      level_bar: { title: 'Ανέβηκες level!', line: '' },
+      level_bar: { title: 'Το level σου', line: 'Κάθε σωστή ψήφος σε ανεβάζει. Δες το στο Εγώ.' },
       daily_quests: { title: 'Νέο: Αποστολές', line: 'Τρεις μικρές για σήμερα' },
       ladder_friends: { title: 'Μπήκες στην Κατάταξη!', line: 'Φέρε έναν φίλο να σε κυνηγάει' },
       kudos_reactions: { title: 'Το επιβεβαίωσε!', line: 'Πες μια καλή κουβέντα' },

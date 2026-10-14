@@ -57,7 +57,7 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
               <View style={styles.pillNumBox}>
                 <Text style={styles.pillNum}>{count}</Text>
               </View>
-              <Text style={styles.pillUnit}>{t.celebrate.unit}</Text>
+              {(v.unit ?? t.celebrate.unit) ? <Text style={styles.pillUnit}>{v.unit ?? t.celebrate.unit}</Text> : null}
             </Animated.View>
           ) : null}
           <Animated.Text style={[styles.title, title, titleSize < 54 && { fontSize: titleSize, lineHeight: titleSize + 2 }]}>{v.title}</Animated.Text>

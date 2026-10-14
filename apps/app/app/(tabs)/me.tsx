@@ -87,6 +87,11 @@ export default function MeScreen() {
             <Section i={next()}>
               <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} />
             </Section>
+            {has('level_bar') ? (
+              <Section i={next()}>
+                <GameLevelTile v={view} />
+              </Section>
+            ) : null}
             {has('daily_quests') ? (
               <Section i={next()}>
                 <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
@@ -438,6 +443,17 @@ function Name({ v, frame }: { v: MeView; frame: string | null }) {
 }
 
 /** σερί with ΠΡ, and the freeze slots (= ready, dashed empty) */
+/** your game level from points (founder, 14 Oct): «Level 3», a lime bar for how far into it, what is missing for the next */
+function GameLevelTile({ v }: { v: MeView }) {
+  return (
+    <View style={styles.card} accessible accessibilityLabel={`${v.game.title}. ${v.game.line}`}>
+      <Text style={styles.levelTitle}>{v.game.title}</Text>
+      <GrowBar value={v.game.fill} height={12} track={colors.silver} fill={colors.lime} fillBorder={colors.ink} fillBorderWidth={2} delay={300} ms={700} />
+      <Text style={styles.muted}>{v.game.line}</Text>
+    </View>
+  );
+}
+
 function StreakBox({ v }: { v: MeView }) {
   const t = useCopy();
   return (
@@ -781,6 +797,7 @@ const styles = StyleSheet.create({
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -10, color: colors.ink },
+  levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   streakWord: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   muted: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   freezes: { flexDirection: 'row', gap: 8 },

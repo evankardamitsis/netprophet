@@ -41,3 +41,17 @@ describe('toMeView', () => {
     expect(v.votes).toEqual({ title: '34 ψήφοι μέχρι τώρα', sub: '3 ματς περιμένουν την ψήφο σου. Πάμε;' });
   });
 });
+
+describe('the game level on Εγώ', () => {
+  it('reads the level from get_me: «Level 3», how far in, what is missing', () => {
+    const m = mockMe(now);
+    const v = toMeView(m.me, m.page, m.player, areas, t, now);
+    expect(v.game).toEqual({ level: 3, fill: 40 / 300, title: 'Level 3', line: 'Ακόμα 260 πόντοι για το level 4' });
+  });
+  it('works it out from the points when an older server leaves it out', () => {
+    const m = mockMe(now);
+    const v = toMeView({ ...m.me, game: { ...m.me.game, level: undefined, total_points: 599 } }, m.page, m.player, areas, t, now);
+    expect(v.game.title).toBe('Level 3');
+    expect(v.game.line).toBe('Ακόμα 1 πόντος για το level 4');
+  });
+});
