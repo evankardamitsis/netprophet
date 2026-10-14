@@ -3,7 +3,7 @@
   "outputDirectory": ".next",
   "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
   "framework": "nextjs",
-  "ignoreCommand": "cd ../.. && npx turbo-ignore @netprophet/admin --fallback=HEAD^",
+  "ignoreCommand": "if [ \"$VERCEL_ENV\" != \"production\" ]; then exit 0; fi; cd ../.. && npx turbo-ignore @netprophet/admin --fallback=HEAD^",
   "crons": [
     {
       "path": "/api/cron/v2-ingest",

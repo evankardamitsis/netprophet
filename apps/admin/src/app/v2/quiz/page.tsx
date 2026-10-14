@@ -28,16 +28,11 @@ export default async function QuizPage() {
     );
   }
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="quiz" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="quiz" staff={staff} />
       <main style={ui.main}>
         <Quiz />
       </main>
-    </>
+    </div>
   );
 }

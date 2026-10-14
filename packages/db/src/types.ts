@@ -380,6 +380,10 @@ export type Database = {
         Args: { p_trait: string; p_approve: boolean; p_label_m?: string; p_label_f?: string; p_label_en?: string };
         Returns: Json;
       };
+      admin_delete_tournament: {
+        Args: { p_id: string };
+        Returns: Json;
+      };
       admin_demo: {
         Args: { p_on: boolean };
         Returns: Json;

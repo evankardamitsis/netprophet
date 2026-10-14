@@ -28,16 +28,11 @@ export default async function SourcesPage() {
     );
   }
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="sources" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="sources" staff={staff} />
       <main style={{ ...ui.main, maxWidth: 1100 }}>
         <Sources />
       </main>
-    </>
+    </div>
   );
 }
