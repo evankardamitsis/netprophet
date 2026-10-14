@@ -709,6 +709,11 @@ function Settings() {
               <Text style={styles.signOut}>{t.me.replayOnboarding}</Text>
             </Pressable>
           ) : null}
+          {__DEV__ ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push('/avatars')} style={styles.linkHit}>
+              <Text style={styles.signOut}>{t.me.avatarsDev}</Text>
+            </Pressable>
+          ) : null}
           {__DEV__ && mockMode ? (
             <Pressable accessibilityRole="button" onPress={() => setNewPlayer(!newPlayer.on)} style={styles.linkHit}>
               <Text style={styles.signOut}>{newPlayer.on ? t.me.newPlayerOn : t.me.newPlayer}</Text>

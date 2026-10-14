@@ -412,6 +412,8 @@ export const el = {
     /** dev builds only: the guest plays as a brand new player */
     newPlayer: 'Νέος παίκτης',
     newPlayerOn: 'Νέος παίκτης ✓',
+    /** dev builds only: the drawn avatars for review */
+    avatarsDev: 'Τα avatar (δοκιμή)',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
     /** your game level from points (Εγώ, under the hero) */
     gameLevel: {
@@ -483,7 +485,7 @@ export const el = {
     neverSells: 'Δεν αγοράζει πόντους, θέση ή level.',
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     /** the row in Εγώ › Ρυθμίσεις */
-    settingsLine: 'Ο αντίπαλος πριν το ματς, πού κερδίζεις, τα νούμερα του level',
+    settingsLine: 'Ο αντίπαλος πριν το ματς, πού κερδίζεις, τα στατιστικά σου',
   },
   scout: {
     title: 'Ο αντίπαλος πριν το ματς',

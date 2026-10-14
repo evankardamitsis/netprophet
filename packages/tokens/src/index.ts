@@ -85,6 +85,25 @@ export const cosmetics = {
     kit_clay: { shirt: '#B4532A', racket: '#F3F5EE' },
     kit_night: { shirt: '#1B2A6B', racket: '#9DB0FF' },
   },
+  /**
+   * The drawn avatars (founder, 14 Oct: drawn in code like the logo's balls): skin and hair are part of the person,
+   * never sold. The outline is ink; the kit colours above dress the shirt.
+   */
+  avatar: {
+    skin: ['#F6D7BF', '#EDC19C', '#D9A27A', '#B97E55', '#8E5A3A', '#5E3B26'],
+    hair: {
+      black: '#1E1B19',
+      brown: '#5A3A24',
+      chestnut: '#8A4B26',
+      blonde: '#E2B85C',
+      auburn: '#A8432A',
+      grey: '#B8BDB8',
+    },
+    /** the empty head of a roster player without an account */
+    silhouette: '#33463D',
+    /** the cheeks, a touch of warmth */
+    blush: '#E98A7A',
+  },
 } as const;
 
 export const radii = { sm: 12, md: 16, lg: 24, pill: 999 } as const;
