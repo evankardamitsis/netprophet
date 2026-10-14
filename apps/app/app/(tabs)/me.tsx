@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
 import { FitText } from '../../src/components/FitText';
@@ -11,11 +11,9 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useTournaments, useWinLoss } from '../../src/lib/data';
+import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
-import { openCount } from '../../src/lib/tournaments';
-import { fmt } from '../../src/lib/votes';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
 import { greekCaps, nameGender } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
@@ -49,7 +47,6 @@ export default function MeScreen() {
   const badges = useBadges();
   const myTraits = useMyTraits();
   const look = useLook();
-  const tournaments = useTournaments();
   const myLevel = useMyLevel();
   const { seen } = useLookSeen();
   const [questsOpen, setQuestsOpen] = useState(false);
@@ -61,14 +58,17 @@ export default function MeScreen() {
       void badges.refresh();
       void look.refresh();
       void myLevel.refresh();
-      void tournaments.refresh();
       // a vote or a moment may have opened something since last time
       void unlocks.refresh({ afterMoment: true });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, tournaments.refresh, unlocks.refresh]),
+    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh]),
   );
+  // «Τα στατιστικά σου» is the same screen with ?page=stats (founder, 14 Oct: Εγώ down to a few rows)
+  const { page } = useLocalSearchParams<{ page?: string }>();
+  const statsPage = page === 'stats';
+  const { state: proState } = usePro();
   const back = usePress();
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace(statsPage ? '/me' : '/'));
   let n = 0;
   const next = () => n++;
 
@@ -82,7 +82,7 @@ export default function MeScreen() {
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>‹ {t.common.back}</Animated.Text>
         </Pressable>
-        {view ? (
+        {view && !statsPage ? (
           <>
             <Section i={next()}>
               <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} />
@@ -92,24 +92,37 @@ export default function MeScreen() {
                 <GameLevelTile v={view} />
               </Section>
             ) : null}
+            {has('pro_sheet') && !proState?.pro ? (
+              <Section i={next()}>
+                <ProRow />
+              </Section>
+            ) : null}
             {has('daily_quests') ? (
               <Section i={next()}>
                 <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
               </Section>
             ) : null}
-            {has('badges_shelf') && badges.badges && earned(badges.badges.badges).length > 0 ? (
-              <Section i={next()}>
-                <BadgesCard data={badges.badges} />
-              </Section>
-            ) : null}
+            <Section i={next()}>
+              <StatsRow />
+            </Section>
             {has('frames') || has('backgrounds') ? (
               <Section i={next()}>
                 <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((i) => i.key) ?? []))} />
               </Section>
             ) : null}
-            {tournaments.data ? (
+            <Section i={next()}>
+              <Settings />
+            </Section>
+          </>
+        ) : null}
+        {view && statsPage ? (
+          <>
+            <Section i={next()}>
+              <Text style={styles.statsTitle}>{t.me.statsPage}</Text>
+            </Section>
+            {has('badges_shelf') && badges.badges && earned(badges.badges.badges).length > 0 ? (
               <Section i={next()}>
-                <TournamentsRow count={openCount(tournaments.data.items)} />
+                <BadgesCard data={badges.badges} />
               </Section>
             ) : null}
             <Section i={next()}>
@@ -122,6 +135,9 @@ export default function MeScreen() {
             ) : null}
             <Section i={next()}>
               <Score v={view} />
+            </Section>
+            <Section i={next()}>
+              <Matches v={view} />
             </Section>
             {kudos && has('kudos') ? (
               <Section i={next()}>
@@ -139,13 +155,7 @@ export default function MeScreen() {
               </Section>
             ) : null}
             <Section i={next()}>
-              <Matches v={view} />
-            </Section>
-            <Section i={next()}>
               <Friends v={view} />
-            </Section>
-            <Section i={next()}>
-              <Settings />
             </Section>
           </>
         ) : null}
@@ -153,6 +163,37 @@ export default function MeScreen() {
       </ScrollView>
       {has('daily_quests') ? <QuestsSheet open={questsOpen} quests={quests.quests} onClose={() => setQuestsOpen(false)} /> : null}
     </View>
+  );
+}
+
+/** «Τα στατιστικά σου ›»: the numbers, badges, matches and friends, one tap away */
+function StatsRow() {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/me?page=stats')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.questsRow, press.style]}>
+        <Text style={styles.questsTitle}>{t.me.statsPage}</Text>
+        <Text style={styles.questsCount}>›</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** without Pro: one ink row near the top, «Pro» and what it sends you (founder, 14 Oct: Pro high up) */
+function ProRow() {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=me')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.proCta, press.style]}>
+        <View style={styles.proRowText}>
+          <Text style={styles.proRowTitle}>{t.pro.title}</Text>
+          <Text style={styles.proRowLine}>{t.pro.settingsLine}</Text>
+        </View>
+        <Text style={styles.proRowMark}>›</Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -282,19 +323,6 @@ function LookRow({ isNew }: { isNew: boolean }) {
   );
 }
 
-/** «Τα τουρνουά σου  3 ›» (prototype: a white row, the count in blue) */
-function TournamentsRow({ count }: { count: number }) {
-  const t = useCopy();
-  const press = usePress();
-  return (
-    <Pressable accessibilityRole="button" onPress={() => router.navigate('/tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.questsRow, press.style]}>
-        <Text style={styles.questsTitle}>{t.tournaments.title}</Text>
-        <Text style={styles.questsCount}>{fmt(t.tournaments.meCount, { count })}</Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
 
 /**
  * The hero card: the ink card with your background and frame, level, σερί, πόντοι μήνα and the name on the front.
@@ -803,6 +831,12 @@ const styles = StyleSheet.create({
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -10, color: colors.ink },
   levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
+  statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
+  proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  proRowText: { flex: 1, gap: 2 },
+  proRowTitle: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 22, color: colors.paper },
+  proRowLine: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
+  proRowMark: { fontFamily: fonts.bodyBold, fontSize: 22, color: colors.paper },
   streakWord: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   muted: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   freezes: { flexDirection: 'row', gap: 8 },

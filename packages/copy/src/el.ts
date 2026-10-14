@@ -420,6 +420,8 @@ export const el = {
     /** dev builds only: the guest plays as a brand new player */
     newPlayer: 'Νέος παίκτης',
     newPlayerOn: 'Νέος παίκτης ✓',
+    /** the row on Εγώ and the title of the page it opens: the numbers, badges, matches and friends */
+    statsPage: 'Τα στατιστικά σου',
     /** dev builds only: the drawn avatars for review */
     avatarsDev: 'Τα avatar (δοκιμή)',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
