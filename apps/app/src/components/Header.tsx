@@ -15,9 +15,10 @@ import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
 
+/** the account disc and the sport ball at its corner */
+const AVATAR = 34;
+const BADGE = 14;
 /** the lockup's height; its ball hops over the net every few seconds (as on sign-in) */
-/** the account ball */
-const AVATAR = 32;
 const LOGO_H = 22;
 
 /**
@@ -140,7 +141,10 @@ function useStreakFx(fx: StreakFx) {
   return { box, ring: ringStyle };
 }
 
-/** the account button is the player's sport's ball (founder, 14 Oct), clean like the logo's; the initials name it for screen readers */
+/**
+ * The account button (founder, 14 Oct: "if no initials there noone knows its the account"): your initials on a paper
+ * disc, with your sport's ball as a small crisp badge at its corner, so it reads as you and as your game.
+ */
 function Avatar({ initials, sport }: { initials: string; sport: string }) {
   const kind: BallKind = (BALLS as string[]).includes(sport) ? (sport as BallKind) : 'tennis';
   const press = usePress();
@@ -154,9 +158,15 @@ function Avatar({ initials, sport }: { initials: string; sport: string }) {
       style={styles.avatarHit}
     >
       <Animated.View style={[styles.avatar, press.style]}>
-        {/* the ball alone, crisp like the logo's (founder, 14 Oct): flat colour, sharp seams, a light touch of shade */}
-        <Ball kind={kind} size={AVATAR} />
-        <Shade size={AVATAR} strength={0.55} />
+        <Text style={styles.initials} numberOfLines={1}>
+          {initials}
+        </Text>
+        <View style={styles.badge}>
+          <View style={styles.badgeBall}>
+            <Ball kind={kind} size={BADGE} />
+            <Shade size={BADGE} strength={0.55} />
+          </View>
+        </View>
       </Animated.View>
     </Pressable>
   );
@@ -187,7 +197,22 @@ const styles = StyleSheet.create({
     width: AVATAR,
     height: AVATAR,
     borderRadius: 999,
+    backgroundColor: colors.paper,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  initials: { fontFamily: fonts.displayHeavy, fontSize: 16, lineHeight: 19, letterSpacing: 0.2, color: colors.ink, marginRight: 2, marginBottom: 1 },
+  // an ink ring cuts the ball out of the disc, so both edges stay sharp
+  badge: {
+    position: 'absolute',
+    right: -7,
+    bottom: -6,
+    width: BADGE + 4,
+    height: BADGE + 4,
+    borderRadius: 999,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeBall: { width: BADGE, height: BADGE },
 });
