@@ -287,7 +287,7 @@ function TournamentsRow({ count }: { count: number }) {
   const t = useCopy();
   const press = usePress();
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+    <Pressable accessibilityRole="button" onPress={() => router.navigate('/tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
       <Animated.View style={[styles.questsRow, press.style]}>
         <Text style={styles.questsTitle}>{t.tournaments.title}</Text>
         <Text style={styles.questsCount}>{fmt(t.tournaments.meCount, { count })}</Text>

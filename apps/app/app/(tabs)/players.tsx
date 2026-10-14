@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import { PlayerListRow } from '../../src/components/PlayerListRow';
 import { useCopy } from '../../src/i18n';
@@ -21,6 +21,8 @@ const NO_WEB_RING = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object)
 
 export default function PlayersScreen() {
   const t = useCopy();
+  // opened from Τουρνουά's search entry: the keyboard comes up at once
+  const { focus } = useLocalSearchParams<{ focus?: string }>();
   const home = usePlayersHome();
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
@@ -49,6 +51,9 @@ export default function PlayersScreen() {
         refreshControl={<RefreshControl refreshing={home.loading && home.rows.length > 0} onRefresh={home.refresh} tintColor={colors.ink} />}
       >
         <View style={styles.list}>
+          <Pressable accessibilityRole="button" onPress={() => (router.canGoBack() ? router.back() : router.navigate('/tournaments'))} style={styles.backHit}>
+            <Text style={styles.back}>{t.tournaments.backTournaments}</Text>
+          </Pressable>
           <Animated.View style={[styles.head, titleIn]}>
             <Text style={styles.title}>{t.players.title}</Text>
             <Text style={styles.subtitle}>{t.players.subtitle}</Text>
@@ -62,6 +67,7 @@ export default function PlayersScreen() {
             placeholderTextColor={colors.inkSoft}
             autoCorrect={false}
             autoCapitalize="none"
+            autoFocus={focus === '1'}
             returnKeyType="search"
             clearButtonMode="while-editing"
             accessibilityLabel={t.players.title}
@@ -90,6 +96,8 @@ function useInA() {
 }
 
 const styles = StyleSheet.create({
+  backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   screen: { flex: 1, backgroundColor: colors.paper },
   // prototype: padding 18px 20px 14px (no «+ Ματς» on this tab)
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 14 },
