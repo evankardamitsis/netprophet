@@ -48,11 +48,13 @@ export function Stats({ items }: { items: { label: string; value: ReactNode; ink
   );
 }
 
-type ButtonProps = { children: ReactNode; onClick?: () => void; disabled?: boolean; small?: boolean; type?: 'button' | 'submit' };
+type ButtonProps = { children: ReactNode; onClick?: () => void; disabled?: boolean; small?: boolean; type?: 'button' | 'submit'; busy?: boolean };
 const button = (variant: string) =>
-  function KitButton({ children, onClick, disabled, small, type = 'button' }: ButtonProps) {
+  /** `busy`: the action is running; the button shows a spinner and cannot be pressed again */
+  function KitButton({ children, onClick, disabled, small, type = 'button', busy }: ButtonProps) {
     return (
-      <button type={type} className={`v2-btn ${variant}${small ? ' small' : ''}`} onClick={onClick} disabled={disabled}>
+      <button type={type} className={`v2-btn ${variant}${small ? ' small' : ''}`} onClick={onClick} disabled={disabled || busy} aria-busy={busy || undefined}>
+        {busy ? <span className="v2-spin" aria-hidden /> : null}
         {children}
       </button>
     );
@@ -75,6 +77,37 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
           {i.label}
           {i.count ? <span className="v2-badge neutral">{i.count}</span> : null}
         </button>
+      ))}
+    </div>
+  );
+}
+
+/** grey shimmering blocks where content is on its way: never a blank page */
+export function SkeletonCards({ count = 3 }: { count?: number }) {
+  return (
+    <div className="v2-grid" aria-busy="true" aria-label="Loading">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="v2-card skeleton">
+          <div className="v2-skel" style={{ height: 18, width: '60%' }} />
+          <div className="v2-skel" style={{ height: 12, width: '40%' }} />
+          <div className="v2-skel" style={{ height: 12, width: '80%' }} />
+          <div className="v2-row">
+            <div className="v2-skel" style={{ height: 34, width: 110 }} />
+            <div className="v2-skel" style={{ height: 34, width: 80 }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonRows({ rows = 6 }: { rows?: number }) {
+  return (
+    <div className="v2-table-wrap" aria-busy="true" aria-label="Loading">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} style={{ padding: '14px', borderBottom: '1px solid var(--np-navLine)' }}>
+          <div className="v2-skel" style={{ height: 14, width: `${50 + ((i * 17) % 40)}%` }} />
+        </div>
       ))}
     </div>
   );
