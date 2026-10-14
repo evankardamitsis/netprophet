@@ -37,7 +37,7 @@ create temp table q1 as select api.get_quiz() as doc;
 grant select on q1 to public;
 select is(jsonb_array_length((select doc -> 'cards' from q1)), 6, 'six cards');
 select matches((select string_agg(c ->> 'family', '' order by (c ->> 'position')::int) from q1, jsonb_array_elements(doc -> 'cards') c),
-               '^s[cd]qos[cd]$', 'Σενάριο, Διάλεξε έναν (or a dynamic card), Ποιος είναι;, Άποψη, Σενάριο, Διάλεξε έναν (or a dynamic card)');
+               '^s[cd]q[od]s[cd]$', 'Σενάριο, Διάλεξε έναν, Ποιος είναι;, Άποψη, Σενάριο, Διάλεξε έναν (2, 4 and 6 can be dynamic cards)');
 select ok((select bool_and(p.id in (select id from pp where g <= 4 or g between 13 and 16))
              from q1, jsonb_array_elements(doc -> 'cards') c, jsonb_array_elements(c -> 'content' -> 'players') x,
                   core.players p

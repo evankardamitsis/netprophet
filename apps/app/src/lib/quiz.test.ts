@@ -61,6 +61,13 @@ describe('verdict', () => {
     expect(verdict(who('w'), el)).toBe('Εδώ υπάρχει σωστή απάντηση.');
     expect(verdict(vote('o', { family: 'o' }), el)).toBe('Εδώ δεν υπάρχει σωστό και λάθος.');
   });
+  it('judges a «Θυμάσαι;» card (dynamic, with a right answer) like «Ποιος είναι;»; a dynamic vote has no verdict', () => {
+    const recall = vote('r', { family: 'd', my_option: 2, content: { ...vote('r').content, tag: 'Θυμάσαι;', right: 1 } });
+    expect(cardView(recall).right).toBe(1);
+    expect(verdict(recall, el)).toMatch(/Ιωάννα/);
+    expect(verdict(vote('d', { family: 'd', my_option: 1 }), el)).toBe('');
+  });
+
   it('judges «Ποιος είναι;» and names the right player', () => {
     expect(verdict(who('w', { my_option: 2 }), el)).toBe('Σωστά. Η Ιωάννα Τσάκου.');
     expect(verdict(who('w', { my_option: 1 }), el)).toBe('Όχι αυτή τη φορά. Η Ιωάννα Τσάκου.');
