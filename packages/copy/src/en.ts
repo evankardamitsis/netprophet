@@ -392,6 +392,7 @@ export const en: Copy = {
     replayOnboarding: 'Run onboarding again',
     newPlayer: 'New player',
     newPlayerOn: 'New player ✓',
+    statsPage: 'Your stats',
     avatarsDev: 'Avatars (test)',
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
     gameLevel: {
