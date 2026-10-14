@@ -24,8 +24,8 @@ async function waiting(): Promise<Counts> {
     const out: Counts = {};
     if (reviews && !reviews.error) out.tournaments = len(reviews.data);
     if (desk && !desk.error && Array.isArray(desk.data)) {
-      out.results = (desk.data as { bucket_name?: string; tournament?: string | null }[]).filter(
-        (i) => i.bucket_name === 'to_score' && !i.tournament,
+      out.results = (desk.data as { bucket_name?: string; tournament?: string | null; overdue?: boolean }[]).filter(
+        (i) => i.bucket_name === 'to_score' && (!i.tournament || i.overdue),
       ).length;
     }
     if (queue && !queue.error && queue.data && typeof queue.data === 'object') {

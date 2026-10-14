@@ -4,7 +4,7 @@ import { isValidMatchTiebreak, isValidTennisSet } from '@netprophet/core';
 import type { FeedPlayer, SetScore, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { resolveNow, saveResult, voidMatch, type ActionResult } from './actions';
+import { keepPostponed, resolveNow, saveResult, voidMatch, type ActionResult } from './actions';
 
 export interface DeskItem {
   match_id: string;
@@ -20,6 +20,11 @@ export interface DeskItem {
   votes: number;
   votes_resolved: number;
   bucket_name: 'to_score' | 'upcoming' | 'done';
+  /** put off (rain or a moved day), and by whom: the 15:00 rule ('auto') or staff */
+  postponed?: boolean;
+  postponed_by?: 'auto' | 'staff' | null;
+  /** a sheet match with no result two days on: a person decides (founder, 14 Oct) */
+  overdue?: boolean;
 }
 
 type Notice = { tone: Tone; title: string; detail?: string };
@@ -51,8 +56,9 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   const { toast, notify } = useToast();
 
   const waiting = items.filter((i) => i.bucket_name === 'to_score');
-  const fromSheets = waiting.filter((i) => i.tournament);
-  const fromYou = waiting.filter((i) => !i.tournament);
+  // sheet matches still empty two days on come to you; staff-postponed ones wait for the sheet's new day
+  const fromSheets = waiting.filter((i) => i.tournament && !i.overdue && i.postponed_by !== 'staff');
+  const fromYou = waiting.filter((i) => !i.tournament || i.overdue);
   const done = items.filter((i) => i.bucket_name === 'done');
   const [tab, setTab] = useState<Tab>(fromYou.length > 0 || fromSheets.length === 0 ? 'you' : 'sheets');
   const list = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : done;
@@ -95,7 +101,7 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
       >
         <span className="v2-muted">
           {tab === 'you'
-            ? 'Friendly matches and anything not on a tournament sheet. Pick who won, then the score.'
+            ? 'Friendly matches, and sheet matches that still have no result 2 days on. Pick who won, then the score, or say what happened.'
             : tab === 'sheets'
               ? 'These fill in by themselves when the organiser’s sheet has the score. Enter one only if the sheet never will.'
               : 'Results from the last 7 days. Count the votes now if a result came in and votes are still open.'}
@@ -177,8 +183,8 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
     start(async () => {
       const r = await fn();
       if (r.ok) {
-        onNotice({ tone: 'done', title: `${names}: ${what === 'Saving' ? 'saved' : what === 'Removing' ? 'removed' : 'done'}`, detail: r.message });
-        notify(what === 'Saving' ? 'Result saved' : what === 'Removing' ? 'Match removed' : 'Votes counted');
+        onNotice({ tone: 'done', title: `${names}: ${what === 'Saving' ? 'saved' : what === 'Removing' ? 'removed' : what === 'Keeping' ? 'kept as rained off' : 'done'}`, detail: r.message });
+        notify(what === 'Saving' ? 'Result saved' : what === 'Removing' ? 'Match removed' : what === 'Keeping' ? 'Kept as rained off' : 'Votes counted');
         after?.();
       } else {
         onNotice({ tone: 'problem', title: `${names}: it didn’t work`, detail: r.message });
@@ -197,7 +203,11 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
         <span className="v2-muted">
           {when(item.starts_at)} · {place}
         </span>
-        <Badge>{plural(item.votes, 'vote')}</Badge>
+        <span className="v2-row" style={{ gap: 6 }}>
+          {item.overdue ? <Badge tone="attention">No result for 2 days</Badge> : null}
+          {item.postponed_by === 'auto' ? <Badge tone="ink">Rained off by the 15:00 rule</Badge> : null}
+          <Badge>{plural(item.votes, 'vote')}</Badge>
+        </span>
       </div>
       <div style={{ fontSize: 18, fontWeight: 800 }}>{names}</div>
     </>
@@ -298,6 +308,11 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
             It didn’t happen
           </Ghost>
         )}
+        {item.tournament ? (
+          <Ghost disabled={pending} onClick={() => run('Keeping', () => keepPostponed(item.match_id))}>
+            Rained off, keep it
+          </Ghost>
+        ) : null}
       </div>
     </div>
   );
