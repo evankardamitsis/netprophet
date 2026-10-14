@@ -27,6 +27,7 @@ import { useUnlocks } from '../../src/lib/unlocks';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { alpha, colors, ease, fonts } from '../../src/theme';
+import { Lit } from '../../src/components/Lit';
 
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
@@ -626,6 +627,7 @@ function Friends({ v }: { v: MeView }) {
             <View style={styles.fan}>
               {v.friends.initials.map((ini, i) => (
                 <View key={i} style={[styles.avatar, { marginLeft: i === 0 ? 0 : -10 }]}>
+                  <Lit />
                   <Text style={styles.avatarText}>{ini}</Text>
                 </View>
               ))}

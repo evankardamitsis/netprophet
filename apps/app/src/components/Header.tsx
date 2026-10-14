@@ -14,6 +14,7 @@ import { useHud, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BouncingLogo } from './BouncingLogo';
+import { Lit } from './Lit';
 
 /** the lockup's height; its ball hops over the net every few seconds (as on sign-in) */
 const LOGO_H = 22;
@@ -150,6 +151,7 @@ function Avatar({ initials }: { initials: string }) {
       style={styles.avatarHit}
     >
       <Animated.View style={[styles.avatar, press.style]}>
+        <Lit />
         <Text style={styles.avatarText}>{initials}</Text>
       </Animated.View>
     </Pressable>

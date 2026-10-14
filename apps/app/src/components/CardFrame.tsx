@@ -42,6 +42,16 @@ export function CardFrame({ frame, k = 1, radius = 28, animated = false }: { fra
         <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
           <Svg width={w} height={h}>
             <Layers frame={frame} w={w} h={h} k={k} r={radius} />
+            {/* the rendered look (14 Oct): a bevel on the frame's edge, lit top left and shaded bottom right */}
+            <Defs>
+              <LinearGradient id="np-frame-bevel" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor={colors.white} stopOpacity={0.6} />
+                <Stop offset="0.45" stopColor={colors.white} stopOpacity={0} />
+                <Stop offset="0.55" stopColor={colors.ink} stopOpacity={0} />
+                <Stop offset="1" stopColor={colors.ink} stopOpacity={0.55} />
+              </LinearGradient>
+            </Defs>
+            <Ring w={w} h={h} off={0} width={Math.max(2, 4 * k)} stroke="url(#np-frame-bevel)" r={radius} />
           </Svg>
         </Animated.View>
       ) : null}
