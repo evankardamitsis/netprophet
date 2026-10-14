@@ -1,13 +1,30 @@
 import type { ReactNode } from 'react';
-import { Commissioner, Sofia_Sans_Extra_Condensed } from 'next/font/google';
+import localFont from 'next/font/local';
 import { cssVars } from '@netprophet/tokens';
 import './v2.css';
 
 export const metadata = { title: 'NetProphet v2 · Admin' };
 
-// the app's fonts: Commissioner for text, Sofia Sans Extra Condensed for titles and numbers
-const body = Commissioner({ subsets: ['latin', 'greek'], weight: ['400', '500', '600', '700', '800'], variable: '--font-body', display: 'swap' });
-const display = Sofia_Sans_Extra_Condensed({ subsets: ['latin', 'greek'], weight: ['700', '800'], variable: '--font-display', display: 'swap' });
+// the app's own font files (OFL, from @expo-google-fonts): Commissioner for text, Sofia Sans Extra Condensed for
+// titles and numbers; bundled so the build never depends on fetching Google Fonts
+const body = localFont({
+  src: [
+    { path: './fonts/Commissioner_400Regular.ttf', weight: '400' },
+    { path: './fonts/Commissioner_600SemiBold.ttf', weight: '600' },
+    { path: './fonts/Commissioner_700Bold.ttf', weight: '700' },
+    { path: './fonts/Commissioner_800ExtraBold.ttf', weight: '800' },
+  ],
+  variable: '--font-body',
+  display: 'swap',
+});
+const display = localFont({
+  src: [
+    { path: './fonts/SofiaSansExtraCondensed_700Bold.ttf', weight: '700' },
+    { path: './fonts/SofiaSansExtraCondensed_800ExtraBold.ttf', weight: '800' },
+  ],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export default function V2Layout({ children }: { children: ReactNode }) {
   return (
