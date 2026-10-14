@@ -46,6 +46,8 @@ export interface CardMatch {
   /** the match moved to this day in the last 3 days: «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
   moved?: { chip: string; was: string; head: string; tail: string };  /** «PRC (Μαρούσι) · Σκληρό»: the club and surface, when known */
   place?: string;
+  /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
+  later?: boolean;
 }
 
 /** A match put off: compact, not votable, muted. */
@@ -235,7 +237,16 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     myVote: card.my_vote ? toUiSide(card.my_vote) : undefined,
     split: card.split ? toPct(card.split) : undefined,
     place: placeLine(card, t) ?? undefined,
+    later: card.starts_at ? dayKey(card.starts_at) > dayKey(now.toISOString()) : false,
   };
+}
+
+/**
+ * Σήμερα shows today (founder, 14 Oct: «Τι παίζει σήμερα» first, the rest out of the way): matches on a later day go
+ * into the folded «Αύριο και μετά»; everything else stays in order.
+ */
+export function splitToday<C extends { kind: string; later?: boolean }>(cards: C[]): { today: C[]; later: C[] } {
+  return { today: cards.filter((c) => !c.later), later: cards.filter((c) => c.later) };
 }
 
 function movedOf(head: string, tail: string, wasDay: string, t: Copy): NonNullable<CardMatch['moved']> {
@@ -298,6 +309,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     doubles: Boolean(m.a2 && m.b2),
     meta: parts.join(' · '),
     learn: m.day === 'today' ? t.match.learnTonight : t.match.learnTomorrow,
+    later: m.day !== 'today',
     a: mockSide(m.a, t, m.a2),
     b: mockSide(m.b, t, m.b2),
     place: placeLine(m, t) ?? undefined,

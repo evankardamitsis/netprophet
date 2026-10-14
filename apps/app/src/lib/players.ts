@@ -84,7 +84,7 @@ function nameAcc(p: PlayerRef): string {
     : accusativeName(p.first_name, p.surname, p.gender);
 }
 
-function nextLine(m: PlayerMatchLine, t: Copy, now: Date): string {
+export function nextLine(m: PlayerMatchLine, t: Copy, now: Date): string {
   const label = when(m.starts_at, now, t).label ?? '';
   if (m.partner.length > 0 || m.opponents.length > 1) {
     return fmt(t.players.nextAgainst, { when: label, names: m.opponents.map(fullName).join(' & ') });

@@ -27,6 +27,7 @@ import { hasMoment } from './unlockLadder';
 import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
+import { myMatchOf, type MyMatchView } from './myMatch';
 import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
@@ -1505,4 +1506,29 @@ export function useTournament(id: string): TournamentState {
     void refresh();
   }, [refresh]);
   return { data, loading, error, notFound, refresh };
+}
+
+/** «Το ματς σου» on Σήμερα: your player's match today or tomorrow, with the opponent. Null without one. */
+export function useMyMatch(): { match: MyMatchView | null; refresh: () => Promise<void> } {
+  const t = useCopy();
+  const api = useApi();
+  const [match, setMatch] = useState<MyMatchView | null>(null);
+  const refresh = useCallback(async () => {
+    const now = new Date();
+    try {
+      if (!api) {
+        setMatch(myMatchOf(mockMe(now).player, t, now));
+        return;
+      }
+      const me = await api.getMe();
+      const player = me.player ? await api.getPlayer(me.player.id).catch(() => null) : null;
+      setMatch(myMatchOf(player, t, now));
+    } catch {
+      // the card stays as it was; the feed shows its own error
+    }
+  }, [api, t]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { match, refresh };
 }

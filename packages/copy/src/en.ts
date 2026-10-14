@@ -200,6 +200,8 @@ export const en: Copy = {
   feed: {
     title: 'What is on today?',
     subtitle: 'Pick the winners and collect points.',
+    myMatch: 'Your match',
+    later: 'Tomorrow and after · {count}',
     end: 'The further down you go, the more matches from players you may not know.',
     empty: 'No matches this day yet.',
     error: 'Could not load. Pull down to try again.',
@@ -212,6 +214,7 @@ export const en: Copy = {
       confirmMany: '{count} matches to confirm',
       open: 'Open',
       close: 'Close',
+      later: 'Later',
     },
   },
   result: {
