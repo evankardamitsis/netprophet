@@ -712,6 +712,8 @@ export interface MeResult {
     role: 'user' | 'editor' | 'admin';
     onboarding_state: Record<string, unknown>;
     claim_status: 'none' | 'claimed' | 'skipped' | 'creation_requested';
+    /** the drawn avatar picked (m1 to m6, f1 to f6); null or missing: the default for the account */
+    avatar?: string | null;
   };
   player: {
     id: string;

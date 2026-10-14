@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { LookCategory } from '@netprophet/db';
 import { CardBackground } from '../../src/components/CardBackground';
 import { CardFrame, namePlate } from '../../src/components/CardFrame';
@@ -9,7 +9,9 @@ import { LookBuySheet } from '../../src/components/LookBuySheet';
 import { KitSwatch, LookThumb } from '../../src/components/LookParts';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
-import { useLook, useMePage } from '../../src/lib/data';
+import { useLook, useMePage, useMyAvatar } from '../../src/lib/data';
+import { Avatar } from '../../src/components/Avatar';
+import { DEFAULT_AVATARS } from '../../src/lib/avatar';
 import { buySheetOf, ctaOf, findTile, LOOK_TABS, ownedKeys, previewOf, tagOf, tileName, tilesFor, type BuySheet, type Tile, type Tone } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { usePress, useStgIn } from '../../src/lib/motion';
@@ -31,7 +33,10 @@ export default function LookScreen() {
   const { look, refresh, equip } = useLook();
   const { view } = useMePage();
   const { markSeen } = useLookSeen();
-  const [tab, setTab] = useState<LookCategory>('frame');
+  // «Παίκτης» (your drawn avatar) comes first; the Εγώ card's picture opens it directly
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const [tab, setTab] = useState<LookCategory | 'avatar'>(params.tab === 'avatar' ? 'avatar' : 'frame');
+  const myAvatar = useMyAvatar();
   /** per tab: the tile picked (undefined: the one you wear) */
   const [picks, setPicks] = useState<Partial<Record<LookCategory, string | null>>>({});
   const [sheet, setSheet] = useState<BuySheet | null>(null);
@@ -58,8 +63,9 @@ export default function LookScreen() {
   }, [toast]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/me'));
-  const sel = look ? findTile(look, tab, picks[tab]) : null;
-  const preview = look && sel ? previewOf(look, tab, sel.key) : null;
+  const lookTab: LookCategory = tab === 'avatar' ? 'frame' : tab;
+  const sel = look ? findTile(look, lookTab, picks[lookTab]) : null;
+  const preview = look && sel ? previewOf(look, lookTab, sel.key) : null;
   const cta = look && sel ? ctaOf(sel, look, t) : null;
   const tag = sel ? tagOf(sel, t) : null;
   const onCta = () => {
@@ -82,15 +88,30 @@ export default function LookScreen() {
         <Text style={styles.title}>{t.look.title}</Text>
         {look && sel && preview && cta ? (
           <>
-            <PreviewCard frame={preview.frame} bg={preview.background} kit={preview.kit} level={view?.level ?? null} name={name} />
-            <SelectedCard sel={sel} tag={tag} cta={cta} onCta={onCta} />
+            {tab === 'avatar' ? null : (
+              <>
+                <PreviewCard frame={preview.frame} bg={preview.background} kit={preview.kit} level={view?.level ?? null} name={name} />
+                <SelectedCard sel={sel} tag={tag} cta={cta} onCta={onCta} />
+              </>
+            )}
             <View style={styles.seg}>
+              <Pressable accessibilityRole="tab" accessibilityState={{ selected: tab === 'avatar' }} onPress={() => setTab('avatar')} style={[styles.segBtn, tab === 'avatar' && styles.segOn]}>
+                <Text style={[styles.segText, tab === 'avatar' && styles.segTextOn]}>{t.look.avatarTab}</Text>
+              </Pressable>
               {LOOK_TABS.map((c) => (
                 <Pressable key={c} accessibilityRole="tab" accessibilityState={{ selected: tab === c }} onPress={() => setTab(c)} style={[styles.segBtn, tab === c && styles.segOn]}>
                   <Text style={[styles.segText, tab === c && styles.segTextOn]}>{t.look.tabs[c]}</Text>
                 </Pressable>
               ))}
             </View>
+            {tab === 'avatar' ? (
+              <AvatarPicker
+                width={width - PAD * 2}
+                current={myAvatar.avatar?.key ?? null}
+                kit={look.equipped.kit}
+                onPick={(key) => void myAvatar.pick(key).then((ok) => setToast({ text: ok ? t.look.toast : t.look.error, n: Date.now() }))}
+              />
+            ) : (
             <View key={tab} style={styles.grid}>
               {tilesFor(look, tab).map((tile, i) => (
                 <GridCell
@@ -104,6 +125,7 @@ export default function LookScreen() {
                 />
               ))}
             </View>
+            )}
             <Text style={styles.footnote}>{t.look.footnote}</Text>
           </>
         ) : null}
@@ -111,6 +133,36 @@ export default function LookScreen() {
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
       <LookBuySheet sheet={sheet} onClose={() => setSheet(null)} />
     </View>
+  );
+}
+
+/** «Παίκτης»: the 12 drawn players, yours ringed; a tap puts it on your card at once */
+function AvatarPicker({ width, current, kit, onPick }: { width: number; current: string | null; kit: string; onPick: (key: string) => void }) {
+  const t = useCopy();
+  const size = Math.floor((width - GAP * 3) / 4);
+  return (
+    <View style={styles.avatarWrap}>
+      <Text style={styles.footnote}>{t.look.avatarLine}</Text>
+      <View style={styles.grid}>
+        {DEFAULT_AVATARS.map((a, i) => (
+          <AvatarCell key={a.key} i={i} size={size} on={a.key === current} onPress={() => onPick(a.key)}>
+            <Avatar look={a.look} size={size} kit={kit} />
+          </AvatarCell>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function AvatarCell({ i, size, on, onPress, children }: { i: number; size: number; on: boolean; onPress: () => void; children: ReactNode }) {
+  const press = usePress();
+  const enter = useStgIn(STG_MS, 60 + Math.min(i, 8) * 40);
+  return (
+    <Animated.View style={enter}>
+      <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+        <Animated.View style={[styles.avatarCell, { width: size, height: size }, on && styles.avatarOn, press.style]}>{children}</Animated.View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -236,6 +288,9 @@ const styles = StyleSheet.create({
   segText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 15, textAlign: 'center', color: colors.ink },
   segTextOn: { color: colors.paper },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
+  avatarWrap: { gap: 12 },
+  avatarCell: { borderRadius: 999, overflow: 'hidden', borderWidth: 2, borderColor: colors.mist },
+  avatarOn: { borderWidth: 4, borderColor: colors.ink },
   tile: { paddingVertical: 12, paddingHorizontal: 10, borderRadius: 22, backgroundColor: colors.white, borderWidth: 3, alignItems: 'center', gap: 8 },
   tileName: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 17, textAlign: 'center', color: colors.ink },
   wornPill: { position: 'absolute', top: 8, right: 8, minHeight: 22, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },

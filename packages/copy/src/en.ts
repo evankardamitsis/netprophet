@@ -790,6 +790,8 @@ export const en: Copy = {
     isNew: 'New',
     back: '‹ Me',
     tabs: { frame: 'Frames', background: 'Backgrounds', kit: 'Clothes & racket' },
+    avatarTab: 'Player',
+    avatarLine: 'Pick your player. Faces are never for sale.',
     tagFree: 'Free',
     tagEarned: 'You earned it',
     tagBought: 'Bought',

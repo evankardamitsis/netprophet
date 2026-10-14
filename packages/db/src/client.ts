@@ -110,6 +110,8 @@ export function rpc(client: NetprophetClient) {
     /** wear an item you own; a null key takes the frame or background off */
     equipItem: (category: LookCategory, key: string | null) =>
       call<GetLookResult>(client, 'equip_item', { p_category: category, p_key: key }),
+    /** the drawn avatar you picked (one of the 12 defaults), or null for the default */
+    setAvatar: (key: string | null) => call<{ avatar: string | null }>(client, 'set_avatar', { p_key: key }),
     getMyLevel: () => call<GetMyLevelResult>(client, 'get_my_level', {}),
     getMe: () => call<MeResult>(client, 'get_me', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),

@@ -736,6 +736,10 @@ export type Database = {
         Args: { p_query: string; p_limit?: number };
         Returns: { id: string; first_name: string; surname: string; area_id: string; photo_path: string; level_tier: number; level_direction: string; is_claimed: boolean; is_followed: boolean }[];
       };
+      set_avatar: {
+        Args: { p_key: string };
+        Returns: Json;
+      };
       set_claim_status: {
         Args: { p_status: string };
         Returns: string;

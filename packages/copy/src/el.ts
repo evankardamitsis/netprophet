@@ -852,6 +852,9 @@ export const el = {
     isNew: 'Νέο',
     back: '‹ Εγώ',
     tabs: { frame: 'Κορνίζες', background: 'Φόντα', kit: 'Ρούχα & ρακέτα' },
+    /** the first tab: your drawn player (founder, 14 Oct); never sold */
+    avatarTab: 'Παίκτης',
+    avatarLine: 'Διάλεξε τον παίκτη σου. Τα πρόσωπα δεν πουλιούνται ποτέ.',
     tagFree: 'Δωρεάν',
     tagEarned: 'Το κέρδισες',
     tagBought: 'Αγορά',

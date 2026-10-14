@@ -11,7 +11,7 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss } from '../../src/lib/data';
+import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss, useMyAvatar } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
@@ -26,6 +26,8 @@ import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { alpha, colors, ease, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
+import { Avatar } from '../../src/components/Avatar';
+import type { AvatarLook } from '../../src/lib/avatar';
 import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
 
 /**
@@ -38,6 +40,8 @@ const STG_MS = 450;
 const STAGGER = 70;
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
+/** the drawn player on the Εγώ card */
+const HERO_AVATAR = 76;
 
 export default function MeScreen() {
   const t = useCopy();
@@ -67,6 +71,13 @@ export default function MeScreen() {
   const { page } = useLocalSearchParams<{ page?: string }>();
   const statsPage = page === 'stats';
   const { state: proState } = usePro();
+  const myAvatar = useMyAvatar();
+  const avatarRefresh = myAvatar.refresh;
+  useFocusEffect(
+    useCallback(() => {
+      void avatarRefresh();
+    }, [avatarRefresh]),
+  );
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(statsPage ? '/me' : '/'));
   let n = 0;
@@ -85,7 +96,7 @@ export default function MeScreen() {
         {view && !statsPage ? (
           <>
             <Section i={next()}>
-              <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} />
+              <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} />
             </Section>
             {has('level_bar') ? (
               <Section i={next()}>
@@ -328,7 +339,23 @@ function LookRow({ isNew }: { isNew: boolean }) {
  * The hero card: the ink card with your background and frame, level, σερί, πόντοι μήνα and the name on the front.
  * «Δες τα στατιστικά ›» (once the stats are open) turns it over to the level in detail.
  */
-function HeroCard({ v, badges, bg, frame, level }: { v: MeView; badges: GetBadgesResult | null; bg: string | null; frame: string | null; level: LevelBack | null }) {
+function HeroCard({
+  v,
+  badges,
+  bg,
+  frame,
+  level,
+  avatar,
+  kit,
+}: {
+  v: MeView;
+  badges: GetBadgesResult | null;
+  bg: string | null;
+  frame: string | null;
+  level: LevelBack | null;
+  avatar: AvatarLook | null;
+  kit: string;
+}) {
   const t = useCopy();
   const { has } = useUnlocks();
   const [flipped, setFlipped] = useState(false);
@@ -343,6 +370,7 @@ function HeroCard({ v, badges, bg, frame, level }: { v: MeView; badges: GetBadge
         <>
           {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           <Name v={v} frame={frame} />
+          {avatar ? <HeroAvatar look={avatar} kit={kit} /> : null}
           {canFlip ? (
             <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
               <Animated.View style={[styles.flipPill, flip.style]}>
@@ -355,6 +383,19 @@ function HeroCard({ v, badges, bg, frame, level }: { v: MeView; badges: GetBadge
       }
       back={<StatsBack level={level} onBack={() => setFlipped(false)} />}
     />
+  );
+}
+
+/** your drawn player on the card, by the name; a tap opens Εμφάνιση on «Παίκτης» to change it */
+function HeroAvatar({ look, kit }: { look: AvatarLook; kit: string }) {
+  const press = usePress();
+  const pop = usePopIn(500, 350);
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/look?tab=avatar')} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
+      <Animated.View style={[styles.heroAvatar, pop, press.style]}>
+        <Avatar look={look} size={HERO_AVATAR} kit={kit} />
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -831,6 +872,8 @@ const styles = StyleSheet.create({
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -10, color: colors.ink },
   levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
+  heroAvatarHit: { position: 'absolute', right: 16, bottom: 18 },
+  heroAvatar: { width: HERO_AVATAR, height: HERO_AVATAR, borderRadius: 999, overflow: 'hidden', borderWidth: 3, borderColor: colors.paper },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
   proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
   proRowText: { flex: 1, gap: 2 },
