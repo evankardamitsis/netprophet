@@ -368,6 +368,10 @@ export type Database = {
         Args: { p_report_id: string; p_hide: boolean };
         Returns: Json;
       };
+      admin_clubs: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_decide_player: {
         Args: { p_player_id: string; p_action: string; p_target?: string; p_first?: string; p_surname?: string };
         Returns: Json;
@@ -459,6 +463,10 @@ export type Database = {
       admin_resolve_ingest_review: {
         Args: { p_id: string; p: Json };
         Returns: Json;
+      };
+      admin_save_club: {
+        Args: { p_id: string; p_surface: string };
+        Returns: undefined;
       };
       admin_save_quiz_template: {
         Args: { p_id: string; p: Json };

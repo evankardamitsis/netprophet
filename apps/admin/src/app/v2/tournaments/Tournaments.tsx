@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition, type CSSProperties } from 'react';
 import { colors, ui } from '../ui';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
-import { createTournament, loadReviews, loadTournaments, mergePlayers, rainDay, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
+import { createTournament, loadClubs, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
 
 const NEW = 'new';
@@ -140,6 +140,7 @@ export function Tournaments() {
         {sorted?.map((t) => <TournamentCard key={t.id} t={t} onChanged={reload} notify={notify} />)}
         {sorted && sorted.length === 0 ? <span style={ui.muted}>No tournaments yet. Add the first one above.</span> : null}
       </section>
+      <Clubs notify={notify} />
       <p style={{ margin: 0 }}>
         <Link href="/v2/import" style={{ ...ui.muted, textDecoration: 'underline' }}>
           Manual CSV import
@@ -635,4 +636,63 @@ function Skip({ pending, send }: { pending: boolean; send: (d: ReviewDecision) =
 function athensDay(offset: number): string {
   const d = new Date(Date.now() + offset * 86_400_000);
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Athens', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+
+/**
+ * Clubs (founder, 14 Oct): a league like Athens Tennis plays at several clubs, each its own surface. A source that
+ * names the club adds it here the first time; give it a surface once and every match there takes it.
+ */
+function Clubs({ notify }: { notify: (text: string) => void }) {
+  const [clubs, setClubs] = useState<Club[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+  const load = useCallback(async () => {
+    try {
+      setClubs(await loadClubs());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load the clubs');
+    }
+  }, []);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  if (clubs === null || clubs.length === 0) return error ? <p style={ui.error}>{error}</p> : null;
+  const missing = clubs.filter((c) => !c.surface).length;
+  const set = (c: Club, surface: string) =>
+    start(async () => {
+      const r = await saveClub(c.id, surface);
+      if (!r.ok) {
+        setError(r.message);
+        return;
+      }
+      notify(`${c.name}: ${surfaceWord(surface) || 'no surface'}`);
+      await load();
+    });
+  return (
+    <section style={stack(12)}>
+      <div style={stack(4)}>
+        <strong style={{ fontSize: 18 }}>Clubs</strong>
+        <span style={missing ? ui.error : ui.muted}>
+          {missing
+            ? `${missing} ${missing === 1 ? 'club needs' : 'clubs need'} a surface. Every match played there takes it.`
+            : 'Every match takes its club’s surface (else its tournament’s).'}
+        </span>
+      </div>
+      {error ? <p style={ui.error}>{error}</p> : null}
+      {clubs.map((c) => (
+        <div key={c.id} style={{ ...ui.card, ...row, justifyContent: 'space-between', gap: 12, borderColor: c.surface ? undefined : colors.ink, borderWidth: c.surface ? undefined : 2 }}>
+          <div style={stack(2)}>
+            <strong>{c.name}</strong>
+            <span style={ui.muted}>
+              {c.matches} {c.matches === 1 ? 'match' : 'matches'}
+              {c.courts.length ? ` · ${c.courts.join(', ')}` : ''}
+            </span>
+          </div>
+          <div style={{ minWidth: 160 }}>
+            <SurfaceSelect value={c.surface ?? ''} disabled={pending} onChange={(v) => set(c, v)} />
+          </div>
+        </div>
+      ))}
+    </section>
+  );
 }

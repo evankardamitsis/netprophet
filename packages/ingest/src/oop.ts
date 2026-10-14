@@ -59,6 +59,10 @@ export interface SheetMatch {
   flags: string[];
   /** set with possible_duplicate: the tab that has the same match and score */
   duplicateOf?: string;
+  /** the club the match is played at, when the source names it (athenstennis.gr): its surface is the club's */
+  club?: string;
+  /** the court within the club («Court 1 PRC») */
+  court?: string;
 }
 
 interface TabInput {

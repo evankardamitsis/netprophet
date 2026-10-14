@@ -81,6 +81,8 @@ export async function saveSource(id: string, patch: SourcePatch): Promise<Action
         starts_on: t.starts_on ?? '',
         ends_on: t.ends_on ?? '',
         ...patch,
+        // a sheet link or an organiser's site page (athenstennis.gr)
+        ...(patch.source_url ? { source_kind: sourceKind(patch.source_url) } : {}),
       },
     });
     return { ok: true, message: 'Saved' };
@@ -149,6 +151,28 @@ export async function rainDay(id: string, day: string, dry: boolean): Promise<Ac
   try {
     const n = (await call(await staffRpc(), 'admin_rain_day', { p_tournament_id: id, p_day: day, p_dry: dry })) as number;
     return { ok: true, message: dry ? 'Counted' : 'Called off', data: { matches: n } };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export interface Club {
+  id: string;
+  name: string;
+  surface: string | null;
+  matches: number;
+  courts: string[];
+}
+
+/** the clubs matches are played at (a source names them); the ones without a surface first */
+export async function loadClubs(): Promise<Club[]> {
+  return (await call(await staffRpc(), 'admin_clubs', {})) as Club[];
+}
+
+export async function saveClub(id: string, surface: string): Promise<ActionResult> {
+  try {
+    await call(await staffRpc(), 'admin_save_club', { p_id: id, p_surface: surface });
+    return { ok: true, message: 'Saved' };
   } catch (e) {
     return fail(e);
   }
