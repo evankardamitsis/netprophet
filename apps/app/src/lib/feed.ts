@@ -2,6 +2,7 @@ import { dayKey, localParts } from '@netprophet/core';
 import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy, levelNumber } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
+import { placeLine } from './place';
 import { dayShort, dayTimeShort } from './tournaments';
 import { fmt, voteSplit, type Side } from './votes';
 
@@ -37,7 +38,8 @@ export interface CardMatch {
   myVote?: Side;
   split?: CardPct;
   /** the match moved to this day in the last 3 days: «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
-  moved?: { chip: string; was: string; head: string; tail: string };
+  moved?: { chip: string; was: string; head: string; tail: string };  /** «PRC (Μαρούσι) · Σκληρό»: the club and surface, when known */
+  place?: string;
 }
 
 /** A match put off: compact, not votable, muted. */
@@ -207,7 +209,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     doubles ? t.match.formats[card.format as 'doubles' | 'mixed'] : null,
     card.tournament?.name,
     roundLabel(card.round, t),
-    card.tournament ? null : card.venue,
+    card.tournament || card.club ? null : card.venue,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -224,6 +226,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     b: side(players(2), areas, t),
     myVote: card.my_vote ? toUiSide(card.my_vote) : undefined,
     split: card.split ? toPct(card.split) : undefined,
+    place: placeLine(card, t) ?? undefined,
   };
 }
 
@@ -284,6 +287,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     learn: m.day === 'today' ? t.match.learnTonight : t.match.learnTomorrow,
     a: mockSide(m.a, t, m.a2),
     b: mockSide(m.b, t, m.b2),
+    place: placeLine(m, t) ?? undefined,
   };
 }
 

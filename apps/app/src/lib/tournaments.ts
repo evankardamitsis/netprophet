@@ -2,6 +2,7 @@ import { dayKey, formatWinnerSets, localParts } from '@netprophet/core';
 import { stripAccents, type Copy } from '@netprophet/copy';
 import type { DrawGroupRow, DrawMatchRow, GetTournamentResult, GetTournamentsResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
 import { fmt } from './votes';
+import { placeLine } from './place';
 
 /**
  * «Τα τουρνουά σου» (prototype V2, isTour): the list of tournaments that are on, coming or just finished, and one
@@ -197,7 +198,8 @@ export interface ScheduleRow {
   /** put off with no new time: the time column says «Αναβολή» */
   postponed: boolean;
   /** «από Τρι 13/10», under the time, when the match moved */
-  movedFrom: string | null;
+  movedFrom: string | null;  /** «Court 1 PRC · PRC (Μαρούσι) · Σκληρό», when known */
+  place: string | null;
 }
 
 export function disciplineLabel(discipline: string | null, t: Copy): string | null {
@@ -224,6 +226,7 @@ export function scheduleRows(matches: TournamentMatch[], me: string | null, t: C
         mine: me !== null && sides.some((s) => s.people.some((p) => p.id === me)),
         postponed: m.postponed === true,
         movedFrom: m.moved_from ? fmt(t.tournaments.detail.movedFrom, { when: dayShort(m.moved_from, t) }) : null,
+        place: placeLine(m, t, true),
       };
     });
 }

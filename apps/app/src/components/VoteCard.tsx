@@ -149,6 +149,17 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
 
 /** the meta line; a match that moved to a new day gets the «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
 function Meta({ match, style }: { match: CardMatch; style?: object }) {
+  if (!match.place) return <MetaLine match={match} style={style} />;
+  // «PRC (Μαρούσι) · Σκληρό» under it: where it is played
+  return (
+    <View style={[styles.metaStack, style]}>
+      <MetaLine match={match} />
+      <Text style={styles.place}>{match.place}</Text>
+    </View>
+  );
+}
+
+function MetaLine({ match, style }: { match: CardMatch; style?: object }) {
   const m = match.moved;
   if (!m) return <Text style={[styles.meta, style]}>{match.meta}</Text>;
   return (
@@ -306,6 +317,8 @@ const styles = StyleSheet.create({
   },
   meta: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  metaStack: { gap: 2 },
+  place: { fontFamily: fonts.body, fontSize: 14, lineHeight: 18, color: colors.inkSoft },
   chip: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   grid: { flexDirection: 'row', gap: 10 },

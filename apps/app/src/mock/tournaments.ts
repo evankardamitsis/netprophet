@@ -31,6 +31,7 @@ function match(id: string, day: string, hour: number, minute: number, a: FeedPla
     level, discipline: 'MS', round: null,
     sides: [{ side: 1, players: [a] }, { side: 2, players: [b] }],
     winner_side: win, sets: win ? sets : null, retired: false, walkover: false,
+    club: 'Γήπεδα Γλυφάδας', court: hour < 15 ? 'Γήπεδο 1' : 'Γήπεδο 2', surface: 'clay',
   };
 }
 

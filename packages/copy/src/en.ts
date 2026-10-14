@@ -79,6 +79,7 @@ export const en: Copy = {
     weekdays: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     formats: { doubles: 'Doubles', mixed: 'Mixed' },
     friendly: 'Friendly',
+    surfaces: { clay: 'Clay', hard: 'Hard', grass: 'Grass', carpet: 'Carpet' } as Record<string, string>,
     learnAfter: 'You find out after the match',
     postponed: {
       chip: 'Postponed',
