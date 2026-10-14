@@ -4,6 +4,7 @@ import type { FormDot, PlayerRow } from '../lib/players';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
 import { FitText } from './FitText';
 import { colors, fonts } from '../theme';
+import { Lit } from './Lit';
 
 /**
  * One player in Παίκτες (prototype V2, plist row): initials, full name, «level 5 · Γλυφάδα · φίλος»
@@ -27,6 +28,7 @@ export function PlayerListRow({ row, index, onPress }: { row: PlayerRow; index: 
       >
         <Animated.View style={[styles.row, press.style]}>
           <View style={styles.avatar}>
+            <Lit />
             <Text style={styles.initials}>{row.initials}</Text>
           </View>
           <View style={styles.text}>

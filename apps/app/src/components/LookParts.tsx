@@ -3,6 +3,7 @@ import { CardBackground } from './CardBackground';
 import { CardFrame } from './CardFrame';
 import type { Tile } from '../lib/look';
 import { colors, cosmetics } from '../theme';
+import { Lit } from './Lit';
 
 /** the shirt and racket colours of a kit */
 export function kitColors(key: string): { shirt: string; racket: string } {
@@ -14,7 +15,9 @@ export function KitSwatch({ kit, size }: { kit: string; size: number }) {
   const c = kitColors(kit);
   return (
     <View style={{ width: size * 1.3, height: size * 1.3, alignItems: 'center', justifyContent: 'center' }}>
-      <View style={{ width: size, height: size, borderRadius: 999, backgroundColor: c.shirt, borderWidth: 2, borderColor: colors.ink }} />
+      <View style={{ width: size, height: size, borderRadius: 999, backgroundColor: c.shirt, borderWidth: 2, borderColor: colors.ink, overflow: 'hidden' }}>
+        <Lit />
+      </View>
       <View
         style={{
           position: 'absolute',
@@ -26,8 +29,11 @@ export function KitSwatch({ kit, size }: { kit: string; size: number }) {
           borderWidth: 1.5,
           borderColor: colors.ink,
           transform: [{ rotate: '28deg' }],
+          overflow: 'hidden',
         }}
-      />
+      >
+        <Lit strength={0.8} />
+      </View>
     </View>
   );
 }

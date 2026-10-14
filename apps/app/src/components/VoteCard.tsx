@@ -13,6 +13,7 @@ import { FitText } from './FitText';
 import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
 import type { Side } from '../lib/votes';
 import { cardSurface, colors, ease, fonts } from '../theme';
+import { Lit } from './Lit';
 
 /**
  * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
@@ -250,6 +251,7 @@ function Avatar({ initials, left }: { initials: string; left: number }) {
   const pop = usePopIn(AVATAR_POP_MS, AVATAR_POP_DELAY);
   return (
     <Animated.View style={[styles.av, { left }, pop]} pointerEvents="none">
+      <Lit />
       <Text style={styles.avText}>{initials}</Text>
     </Animated.View>
   );

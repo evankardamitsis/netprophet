@@ -31,6 +31,19 @@ export function CardBackground({ bg, k = 1, scrim = false }: { bg: string | null
       {bg && w > 0 ? (
         <Svg width={w} height={h}>
           <Layers bg={bg} w={w} h={h} k={k} />
+          {/* the rendered look (14 Oct): light falls from the top left, the corners sink, as on the balls */}
+          <Defs>
+            <RadialGradient id="np-bg-light" cx="22%" cy="12%" r="75%">
+              <Stop offset="0" stopColor={colors.white} stopOpacity={0.15} />
+              <Stop offset="1" stopColor={colors.white} stopOpacity={0} />
+            </RadialGradient>
+            <RadialGradient id="np-bg-vignette" cx="50%" cy="45%" r="75%">
+              <Stop offset="0.55" stopColor={colors.ink} stopOpacity={0} />
+              <Stop offset="1" stopColor={colors.ink} stopOpacity={0.38} />
+            </RadialGradient>
+          </Defs>
+          <Rect x={0} y={0} width={w} height={h} fill="url(#np-bg-vignette)" />
+          <Rect x={0} y={0} width={w} height={h} fill="url(#np-bg-light)" />
           {scrim ? (
             <>
               <Defs>
