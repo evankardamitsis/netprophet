@@ -7,7 +7,8 @@
     "build": "npx next build",
     "start": "npx next start",
     "lint": "npx next lint",
-    "type-check": "tsc --noEmit -p ."
+    "type-check": "tsc --noEmit -p .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
@@ -64,6 +65,7 @@
     "eslint-config-next": "15.4.3",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^1.6.0"
   }
 }

@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { Banner, Toast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table } from '../kit';
-import { createTournament, deleteTournament, loadClubs, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
+import { createTournament, deleteTournament, loadClubs, writeRecordsNow, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
+import type { RecordsResult } from '@/lib/v2/records';
 
 /**
  * Tournaments (founder, 13-14 Oct): add a tournament once (name, surface, links) and it updates itself 3 times a day;
@@ -129,6 +130,16 @@ export function Tournaments() {
     window.setTimeout(() => setToast((t) => (t === text ? null : t)), 2800);
   }, []);
 
+  const [records, setRecords] = useState<RecordsState>({ kind: 'idle' });
+  const writeRecords = async () => {
+    setRecords({ kind: 'writing' });
+    try {
+      setRecords({ kind: 'result', result: await writeRecordsNow() });
+    } catch (e) {
+      setRecords({ kind: 'result', result: { ok: false, configured: true, message: e instanceof Error ? e.message : 'failed' } });
+    }
+  };
+
   const router = useRouter();
   const reload = useCallback(async () => {
     try {
@@ -156,8 +167,16 @@ export function Tournaments() {
       <PageHeader
         title="Tournaments"
         intent="Add a tournament once. We read its links 3 times a day (08:00, 15:00, 22:00) and update matches, results and draws in the app."
-        actions={!adding ? <Primary onClick={() => setAdding(true)}>+ Add a tournament</Primary> : null}
+        actions={
+          <>
+            <Secondary onClick={() => void writeRecords()} busy={records.kind === 'writing'}>
+              {records.kind === 'writing' ? 'Writing…' : 'Write records now'}
+            </Secondary>
+            {!adding ? <Primary onClick={() => setAdding(true)}>+ Add a tournament</Primary> : null}
+          </>
+        }
       />
+      <RecordsBanner state={records} />
       {loadError ? <Banner tone="problem" title="Could not load the tournaments" detail={loadError} /> : null}
       <Stats
         items={[
@@ -194,6 +213,47 @@ export function Tournaments() {
       <Clubs clubs={clubs} onChanged={reload} notify={notify} />
       <Toast text={toast} />
     </>
+  );
+}
+
+/* ---------- the records sheet ---------- */
+
+type RecordsState = { kind: 'idle' } | { kind: 'writing' } | { kind: 'result'; result: RecordsResult };
+
+const sheetLink = (url?: string) =>
+  url ? (
+    <a href={url} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+      Open the sheet ›
+    </a>
+  ) : null;
+
+/** working, then done with what was written and a link, or the problem in plain words */
+function RecordsBanner({ state }: { state: RecordsState }) {
+  if (state.kind === 'idle') return null;
+  if (state.kind === 'writing') return <Banner tone="working" title="Writing the records sheet…" detail="Every tournament and its matches, plus what changed since the last write." />;
+  const r = state.result;
+  if (r.ok)
+    return (
+      <Banner
+        tone="done"
+        title="Records sheet written"
+        detail={
+          <>
+            {plural(r.tournaments ?? 0, 'tournament')}, {plural(r.matches ?? 0, 'match', 'matches')}, {plural(r.changes ?? 0, 'change')} added to Changes. {sheetLink(r.url)}
+          </>
+        }
+      />
+    );
+  return (
+    <Banner
+      tone="problem"
+      title={r.configured ? 'Could not write the records sheet' : 'The records sheet is not set up yet'}
+      detail={
+        <>
+          {r.message} {sheetLink(r.url)}
+        </>
+      }
+    />
   );
 }
 

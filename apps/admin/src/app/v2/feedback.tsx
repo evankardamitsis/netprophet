@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useState, type CSSProperties } from 'react';
+import { useCallback, useState, type CSSProperties, type ReactNode } from 'react';
 import { colors } from './ui';
 
 /**
@@ -15,7 +15,7 @@ const CUE_CSS = `
 
 export type Tone = 'working' | 'done' | 'problem';
 
-export function Banner({ tone, title, detail }: { tone: Tone; title: string; detail?: string }) {
+export function Banner({ tone, title, detail }: { tone: Tone; title: string; detail?: ReactNode }) {
   const base: CSSProperties = { borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, animation: 'npIn .25s ease-out', position: 'relative', overflow: 'hidden' };
   const look: Record<Tone, CSSProperties> = {
     working: { background: colors.ink, color: colors.paper },

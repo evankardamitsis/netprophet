@@ -148,3 +148,14 @@ Goal: as many real matches as possible in each user's peer feed, with minimal ad
   noreply@netprophetapp.com): what needs a decision, results only staff can enter, sheets that could not be read or
   looked shorter, tournament matches without a result after three nights, postponed matches, today's matches, and a
   warning when no run happened in the last day.
+
+## Built (records sheet)
+- `api.records_sheet(p_since)` (staff or the service key) gives every tournament with its totals, every tournament match
+  as a flat row, and the matches changed since `p_since`. The admin writer (`apps/admin/src/lib/v2/records.ts`) mirrors
+  them into the founder's «NetProphet Records» sheet at the end of every run and on «Write records now» (Tournaments):
+  Overview and one tab per tournament rewritten in full, Changes appended (column A is the database time of the write,
+  which is where the next write starts). About six Sheets API calls per write, values written RAW.
+- The founder owns the spreadsheet and shares it with the service account as Editor (a service account cannot own Drive
+  files); `RECORDS_SHEET_ID` (link or id) on `netprophet-admin-v2`. Unset: the runs skip it and say "not configured".
+- Raw sheet spellings and the raw score text are not stored on a match, so rows show the linked roster names and the
+  score from the stored sets. Changes say new or updated with the current status and score, not the before value.
