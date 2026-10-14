@@ -7,6 +7,9 @@ describe('hasNewResults', () => {
   it('lights for a result newer than the last visit', () => {
     expect(hasNewResults('2026-10-14T12:00:00Z', '2026-10-14T11:00:00Z')).toBe(true);
   });
+  it('stays dark once that same result was seen (the marker is the server time, not the phone clock)', () => {
+    expect(hasNewResults('2026-10-14T12:00:00Z', '2026-10-14T12:00:00Z')).toBe(false);
+  });
   it('lights on a first run when there are results', () => {
     expect(hasNewResults('2026-10-14T12:00:00Z', null)).toBe(true);
   });

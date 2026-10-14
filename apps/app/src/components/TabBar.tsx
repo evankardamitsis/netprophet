@@ -44,7 +44,7 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   const onResults = focusedName === 'results';
   const { markSeen } = results;
   useEffect(() => {
-    if (onResults) markSeen();
+    if (onResults && resultsAt) markSeen(resultsAt);
   }, [onResults, resultsAt, markSeen]);
   const resultsNew = !onResults && hasNewResults(resultsAt, results.seenAt);
   useEffect(() => {
