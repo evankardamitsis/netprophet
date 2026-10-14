@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState, useTransition, type CSSProperties } from "react";
-import { ui } from "../ui";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Banner, Toast, useToast, type Tone } from "../feedback";
+import { Badge, Card, Empty, Ghost, PageHeader, SearchInput, Secondary, Section, SkeletonRows, Table, Tabs } from "../kit";
 import { mergeInto, recomputeLevels, searchRoster, unclaimPlayer, updatePlayer, type ActionResult } from "./actions";
 
 export interface RosterPlayer {
@@ -32,14 +32,20 @@ const FILTERS = [
 ];
 
 type Notice = { tone: Tone; title: string; detail?: string };
-const stack = (gap: number): CSSProperties => ({ display: "flex", flexDirection: "column", gap });
-const wrapRow: CSSProperties = { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" };
-const tag: CSSProperties = { fontSize: 12, fontWeight: 700, padding: "2px 8px", borderRadius: 999, border: "1px solid currentColor" };
-const fieldLabel: CSSProperties = { ...ui.muted, fontWeight: 700, ...stack(4) };
+type Done = (what: string, r: ActionResult, toast: string) => void;
+
+const tagsOf = (p: RosterPlayer) =>
+  [
+    p.status === "pending" ? { t: "New", tone: "ink" as const } : null,
+    p.status === "merged" ? { t: "Merged", tone: "neutral" as const } : null,
+    p.claimed_by ? { t: "Has an account", tone: "neutral" as const } : null,
+    p.hidden ? { t: "Hidden", tone: "attention" as const } : null,
+    p.is_minor ? { t: "Under 18", tone: "attention" as const } : null,
+  ].filter(Boolean) as { t: string; tone: "ink" | "neutral" | "attention" }[];
 
 /**
- * Players. Opens on the first page of a filter; search by name for anyone else. Edit fixes the details,
- * hides a player or joins a duplicate into another player.
+ * Players. Opens on the first page of a filter; search by name for anyone else. Edit opens the player above the
+ * list: fix the details, hide a player or merge a duplicate into another player.
  */
 export function Roster() {
   const [q, setQ] = useState("");
@@ -47,6 +53,7 @@ export function Roster() {
   const [rows, setRows] = useState<RosterPlayer[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [editing, setEditing] = useState<RosterPlayer | null>(null);
   const { toast, notify } = useToast();
   const [tick, setTick] = useState(0);
   const [recomputing, recompute] = useTransition();
@@ -64,113 +71,93 @@ export function Roster() {
     return () => clearTimeout(id);
   }, [q, filter, tick]);
 
-  const done = (what: string, r: ActionResult, toastText: string) => {
+  const done: Done = (what, r, toastText) => {
     if (r.ok) {
       setNotice({ tone: "done", title: what, detail: r.message });
       notify(toastText);
+      setEditing(null);
       setTick((t) => t + 1);
     } else {
       setNotice({ tone: "problem", title: `${what}: it didn’t work`, detail: r.message });
     }
   };
 
-  const pendingCount = rows && filter === "pending" ? rows.length : null;
-
   return (
-    <div style={stack(16)}>
-      <div>
-        <h1 style={ui.h1}>Players</h1>
-        <p style={ui.muted}>
-          Everyone who can appear in a match. Fix a name, hide someone, or join two entries for the same person.
-          {pendingCount !== null && pendingCount > 0 ? ` ${pendingCount} added by users, worth a look.` : ""}
-        </p>
-      </div>
+    <>
+      <PageHeader title="Players" intent="Everyone who can appear in a match. Fix a name, hide someone, or merge two entries for the same person." />
       {notice ? <Banner {...notice} /> : null}
-      <div style={wrapRow}>
-        {FILTERS.map((f) => (
-          <button
-            key={f.id}
-            style={{ ...ui.secondary, minHeight: 36, background: filter === f.id ? "#0F2019" : "transparent", color: filter === f.id ? "#F3F5EE" : undefined }}
-            aria-pressed={filter === f.id}
-            onClick={() => setFilter(f.id)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-      <input style={ui.input} placeholder="Search by name (2 letters or more)" value={q} onChange={(e) => setQ(e.target.value)} />
-      {error ? <Banner tone="problem" title="Couldn’t load the players" detail={error} /> : null}
-      {rows === null && !error ? <p style={ui.muted}>Loading…</p> : null}
-      {rows && rows.length === 0 ? (
-        <p style={ui.muted}>{q.trim() ? "Nobody has that name." : "All clear. Nobody in this list."}</p>
-      ) : null}
-      {(rows ?? []).map((p) => (
-        <Row key={`${p.player_id}-${tick}`} p={p} done={done} />
-      ))}
-      {rows && rows.length >= 50 ? <p style={ui.muted}>Showing the first 50. Search by name to find anyone else.</p> : null}
-
-      <details style={{ marginTop: 16 }}>
-        <summary style={{ ...ui.muted, cursor: "pointer", fontWeight: 700 }}>Advanced</summary>
-        <div style={{ ...stack(10), paddingTop: 10 }}>
-          <p style={{ ...ui.muted, margin: 0 }}>Levels update by themselves every night. Use this only after you fixed many results by hand.</p>
+      {editing ? <Editor key={editing.player_id} p={editing} done={done} onClose={() => setEditing(null)} onWorking={setNotice} /> : null}
+      <Section
+        title="Roster"
+        aside={
+          <div className="v2-row">
+            <Tabs value={filter} onChange={setFilter} items={FILTERS.map((f) => ({ value: f.id, label: f.label }))} />
+          </div>
+        }
+      >
+        <SearchInput value={q} onChange={setQ} placeholder="Search by name (2 letters or more)" />
+        {error ? <Banner tone="problem" title="Couldn’t load the players" detail={error} /> : null}
+        {rows === null && !error ? (
+          <SkeletonRows rows={8} />
+        ) : rows ? (
+          <Table
+            rows={rows}
+            rowKey={(p) => p.player_id}
+            noun="players"
+            pageSize={25}
+            empty={<Empty title={q.trim() ? "Nobody has that name" : "All clear"}>{q.trim() ? "Try another spelling." : "Nobody in this list."}</Empty>}
+            columns={[
+              {
+                key: "name",
+                label: "Player",
+                render: (p) => (
+                  <div className="v2-row" style={{ gap: 6 }}>
+                    <b style={{ opacity: p.status === "merged" ? 0.5 : 1 }}>
+                      {p.first_name} {p.surname}
+                    </b>
+                    {tagsOf(p).map((t) => (
+                      <Badge key={t.t} tone={t.tone}>
+                        {t.t}
+                      </Badge>
+                    ))}
+                  </div>
+                ),
+              },
+              { key: "level", label: "Level", width: 90, render: (p) => (p.level != null ? `level ${p.level}` : <span className="v2-muted">·</span>) },
+              { key: "matches", label: "Matches", width: 100, num: true, render: (p) => p.matches },
+              {
+                key: "edit",
+                label: "",
+                width: 90,
+                render: (p) => (p.status === "merged" ? null : <Ghost onClick={() => setEditing(p)}>{editing?.player_id === p.player_id ? "Open" : "Edit"}</Ghost>),
+              },
+            ]}
+          />
+        ) : null}
+        {rows && rows.length >= 50 ? <span className="v2-muted">Showing the first 50. Search by name to find anyone else.</span> : null}
+      </Section>
+      <Section title="Levels">
+        <Card>
+          <span className="v2-muted">Levels update by themselves every night. Use this only after you fixed many results by hand.</span>
           <div>
-            <button
-              style={ui.secondary}
-              disabled={recomputing}
+            <Secondary
+              busy={recomputing}
               onClick={() => {
-                setNotice({ tone: "working", title: "Updating levels…" });
+                setNotice({ tone: "working", title: "Updating levels…", detail: "Working out every player’s level from their results." });
                 recompute(async () => done("Levels", await recomputeLevels(), "Levels updated"));
               }}
             >
               {recomputing ? "Updating…" : "Update levels now"}
-            </button>
+            </Secondary>
           </div>
-        </div>
-      </details>
+        </Card>
+      </Section>
       <Toast text={toast} />
-    </div>
+    </>
   );
 }
 
-function Row({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionResult, toast: string) => void }) {
-  const [editing, setEditing] = useState(false);
-  const merged = p.status === "merged";
-  const tags = [
-    p.status === "pending" ? "new" : null,
-    merged ? "joined into another player" : null,
-    p.claimed_by ? "has an account" : null,
-    p.hidden ? "hidden" : null,
-    p.is_minor ? "under 18" : null,
-  ].filter(Boolean) as string[];
-  return (
-    <div style={{ ...ui.card, ...stack(10), opacity: merged ? 0.6 : 1 }}>
-      <div style={{ ...wrapRow, justifyContent: "space-between" }}>
-        <div style={wrapRow}>
-          <strong style={{ fontSize: 17 }}>
-            {p.first_name} {p.surname}
-          </strong>
-          {p.level != null ? <span style={ui.muted}>Level {p.level}</span> : null}
-          {tags.map((t) => (
-            <span key={t} style={tag}>
-              {t}
-            </span>
-          ))}
-        </div>
-        <span style={wrapRow}>
-          <span style={ui.muted}>{p.matches} {p.matches === 1 ? "match" : "matches"}</span>
-          {merged ? null : (
-            <button style={ui.link} onClick={() => setEditing((e) => !e)}>
-              {editing ? "Close" : "Edit"}
-            </button>
-          )}
-        </span>
-      </div>
-      {editing && !merged ? <Editor p={p} done={done} /> : null}
-    </div>
-  );
-}
-
-function Editor({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionResult, toast: string) => void }) {
+function Editor({ p, done, onClose, onWorking }: { p: RosterPlayer; done: Done; onClose: () => void; onWorking: (n: Notice) => void }) {
   const [first, setFirst] = useState(p.first_name);
   const [surname, setSurname] = useState(p.surname);
   const [gender, setGender] = useState(p.gender ?? "");
@@ -183,6 +170,23 @@ function Editor({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionRe
   const [confirmUnlink, setConfirmUnlink] = useState(false);
   const [pending, start] = useTransition();
   const what = `${p.first_name} ${p.surname}`;
+  // opened from far down the list: bring it into view
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    box.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+  const [busy, setBusy] = useState<null | "save" | "merge" | "unlink">(null);
+  const act = (kind: "save" | "merge" | "unlink", title: string, f: () => Promise<void>) => {
+    setBusy(kind);
+    onWorking({ tone: "working", title });
+    start(async () => {
+      try {
+        await f();
+      } finally {
+        setBusy(null);
+      }
+    });
+  };
 
   useEffect(() => {
     if (mergeQ.trim().length < 2) {
@@ -198,7 +202,7 @@ function Editor({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionRe
   }, [mergeQ, p.player_id]);
 
   const save = () =>
-    start(async () => {
+    act("save", `Saving ${what}…`, async () => {
       const patch: Record<string, unknown> = { first_name: first, surname, gender, hidden };
       // a birth year decides «under 18» by itself; the box is for players without one
       if (birth.trim()) patch.birth_year = Number(birth);
@@ -211,113 +215,125 @@ function Editor({ p, done }: { p: RosterPlayer; done: (what: string, r: ActionRe
     });
 
   return (
-    <div style={stack(12)}>
-      <div style={wrapRow}>
-        <label style={fieldLabel}>
+    <div ref={box} className={`v2-card attention v2-enter${busy ? " busy" : ""}`} aria-busy={busy !== null || undefined} style={{ scrollMarginTop: 16 }}>
+      <div className="v2-row between">
+        <div className="v2-row">
+          <h2 className="v2-h2">
+            {p.first_name} {p.surname}
+          </h2>
+          {tagsOf(p).map((t) => (
+            <Badge key={t.t} tone={t.tone}>
+              {t.t}
+            </Badge>
+          ))}
+        </div>
+        <Ghost onClick={onClose} disabled={busy !== null}>
+          Close
+        </Ghost>
+      </div>
+      <span className="v2-muted">
+        {p.matches} {p.matches === 1 ? "match" : "matches"}
+        {p.level != null ? ` · level ${p.level}` : ""}
+      </span>
+      <div className="v2-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}>
+        <label className="v2-field">
           First name
-          <input style={{ ...ui.input, width: 170 }} value={first} onChange={(e) => setFirst(e.target.value)} />
+          <input className="v2-input" value={first} onChange={(e) => setFirst(e.target.value)} />
         </label>
-        <label style={fieldLabel}>
+        <label className="v2-field">
           Surname
-          <input style={{ ...ui.input, width: 210 }} value={surname} onChange={(e) => setSurname(e.target.value)} />
+          <input className="v2-input" value={surname} onChange={(e) => setSurname(e.target.value)} />
         </label>
-        <label style={fieldLabel}>
+        <label className="v2-field">
           Gender
-          <select style={{ ...ui.input, width: 120 }} value={gender} onChange={(e) => setGender(e.target.value)}>
+          <select className="v2-select" value={gender} onChange={(e) => setGender(e.target.value)}>
             <option value="">Not set</option>
             <option value="m">Man</option>
             <option value="f">Woman</option>
           </select>
         </label>
-        <label style={fieldLabel}>
+        <label className="v2-field">
           Birth year
           <input
-            style={{ ...ui.input, width: 110 }}
+            className="v2-input"
             value={birth}
             onChange={(e) => setBirth(e.target.value.replace(/\D/g, "").slice(0, 4))}
             inputMode="numeric"
           />
         </label>
       </div>
-      <div style={{ ...wrapRow, gap: 16 }}>
-        <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+      <div className="v2-row" style={{ gap: 16 }}>
+        <label className="v2-choice">
           <input type="checkbox" checked={hidden} onChange={(e) => setHidden(e.target.checked)} />
           Hide from the app
         </label>
-        <label style={{ ...wrapRow, fontSize: 14, fontWeight: 600 }}>
+        <label className="v2-choice">
           <input type="checkbox" checked={minor} disabled={birth.trim().length > 0} onChange={(e) => setMinor(e.target.checked)} />
           Under 18
         </label>
-        {birth.trim() ? <span style={ui.muted}>With a birth year, “Under 18” follows by itself.</span> : null}
+        {birth.trim() ? <span className="v2-muted">With a birth year, “Under 18” follows by itself.</span> : null}
       </div>
       <div>
-        <button style={ui.primary} disabled={pending} onClick={save}>
-          {pending ? "Saving…" : p.status === "pending" ? "Save and approve" : "Save"}
-        </button>
+        <Secondary busy={busy === "save"} disabled={pending} onClick={save}>
+          {busy === "save" ? "Saving…" : p.status === "pending" ? "Save and approve" : "Save"}
+        </Secondary>
       </div>
 
-      <div style={stack(6)}>
-        <strong style={{ fontSize: 14 }}>Merge with another player</strong>
-        <span style={ui.muted}>Use this when the same person is in the list twice. Their matches move to the player you pick.</span>
-        <input style={ui.input} placeholder="Search for the other player" value={mergeQ} onChange={(e) => setMergeQ(e.target.value)} />
+      <div className="v2-confirm">
+        <b>Merge with another player</b>
+        <span className="v2-muted">Use this when the same person is in the list twice. Their matches move to the player you pick.</span>
+        <input className="v2-input" placeholder="Search for the other player" value={mergeQ} onChange={(e) => setMergeQ(e.target.value)} />
         {targets.map((t) => (
-          <div key={t.player_id} style={{ ...wrapRow, justifyContent: "space-between" }}>
+          <div key={t.player_id} className="v2-row between">
             <span>
               {t.first_name} {t.surname}{" "}
-              <span style={ui.muted}>
+              <span className="v2-muted">
                 {t.matches} {t.matches === 1 ? "match" : "matches"}
                 {t.claimed_by ? " · has an account" : ""}
               </span>
             </span>
             {joinTo === t.player_id ? (
-              <span style={wrapRow}>
-                <strong style={{ fontSize: 14 }}>Merge {what} into {t.first_name} {t.surname}?</strong>
-                <button
-                  style={ui.secondary}
+              <span className="v2-row">
+                <b style={{ fontSize: 14 }}>
+                  Merge {what} into {t.first_name} {t.surname}?
+                </b>
+                <Secondary
+                  small
+                  busy={busy === "merge"}
                   disabled={pending}
-                  onClick={() => {
-                    setJoinTo(null);
-                    start(async () => done(what, await mergeInto(p.player_id, t.player_id), "Players merged"));
-                  }}
+                  onClick={() => act("merge", `Merging ${what} into ${t.first_name} ${t.surname}…`, async () => done(what, await mergeInto(p.player_id, t.player_id), "Players merged"))}
                 >
-                  Yes, merge
-                </button>
-                <button style={ui.link} onClick={() => setJoinTo(null)}>
+                  {busy === "merge" ? "Merging…" : "Yes, merge"}
+                </Secondary>
+                <Ghost disabled={pending} onClick={() => setJoinTo(null)}>
                   Cancel
-                </button>
+                </Ghost>
               </span>
             ) : (
-              <button style={ui.secondary} onClick={() => setJoinTo(t.player_id)}>
+              <Secondary small disabled={pending} onClick={() => setJoinTo(t.player_id)}>
                 Merge into this one
-              </button>
+              </Secondary>
             )}
           </div>
         ))}
       </div>
 
       {p.claimed_by ? (
-        <div style={wrapRow}>
+        <div className="v2-row">
           {confirmUnlink ? (
             <>
-              <strong style={{ fontSize: 14 }}>Unlink the account of {p.claimed_by} from this player?</strong>
-              <button
-                style={ui.secondary}
-                disabled={pending}
-                onClick={() => {
-                  setConfirmUnlink(false);
-                  start(async () => done(what, await unclaimPlayer(p.player_id), "Account unlinked"));
-                }}
-              >
-                Yes, unlink
-              </button>
-              <button style={ui.link} onClick={() => setConfirmUnlink(false)}>
+              <b style={{ fontSize: 14 }}>Unlink the account of {p.claimed_by} from this player?</b>
+              <Secondary small busy={busy === "unlink"} disabled={pending} onClick={() => act("unlink", "Unlinking the account…", async () => done(what, await unclaimPlayer(p.player_id), "Account unlinked"))}>
+                {busy === "unlink" ? "Unlinking…" : "Yes, unlink"}
+              </Secondary>
+              <Ghost disabled={pending} onClick={() => setConfirmUnlink(false)}>
                 Cancel
-              </button>
+              </Ghost>
             </>
           ) : (
-            <button style={ui.link} onClick={() => setConfirmUnlink(true)}>
+            <Ghost disabled={pending} onClick={() => setConfirmUnlink(true)}>
               Unlink the account ({p.claimed_by})
-            </button>
+            </Ghost>
           )}
         </div>
       ) : null}
