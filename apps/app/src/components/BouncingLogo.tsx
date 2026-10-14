@@ -8,13 +8,13 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 import { Image } from 'expo-image';
 import { colors } from '../theme';
 
 /**
- * The «net» lockup with its ball in play: every few seconds the ball hops over the net and lands as
- * another sport's ball in its own colours (tennis, padel, basketball, football), a hint that more sports are coming.
+ * The «net» lockup with its ball in play: each sport's ball plays its own way (see PLAYS), then hops and lands as
+ * the next sport's ball in its own colours (tennis, padel, basketball, football), a hint that more sports are coming.
  * The lockup without its ball is brand/logo/lockup-on-ink-tight-noball.svg; the ball is drawn here.
  */
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -26,75 +26,163 @@ const VB_Y = 11;
 const VB_W = 426.4;
 const VB_H = 80;
 const BALL_R = 15;
+const REST_X = 66;
 const REST_Y = 26;
-/** the two sides of the net (it spans x 8..92) */
-const SIDE_X = [66, 34] as const;
-/** how high the hop goes above the resting height */
-const HOP_UP = 22;
 
-const REST_MS = 1800;
-const HOP_MS = 700;
-const SQUASH_MS = 140;
+const REST_MS = 1600;
 
 export type BallKind = 'tennis' | 'padel' | 'basketball' | 'football';
 export const BALLS: BallKind[] = ['tennis', 'padel', 'basketball', 'football'];
+
+/**
+ * One move of a play: go to (x, up) in `ms`, `up` in logo units above the resting height, turning the ball by `spin`
+ * degrees; `arc` lifts the path in the middle (a throw), `hit` squashes the ball on arrival ('floor' flattens it,
+ * 'wall' narrows it), `ease` is the vertical feel ('throw' slows at the top, 'fall' speeds up into the ground).
+ */
+interface Move {
+  x: number;
+  up: number;
+  ms: number;
+  spin?: number;
+  arc?: number;
+  hit?: 'floor' | 'wall';
+}
+
+/**
+ * Each sport plays the way its ball moves (founder, 14 Oct): tennis rallies back and forth over the net with topspin,
+ * padel comes off an invisible side wall, basketball arcs into an invisible hoop high on the left, drops through and
+ * dribbles back, football is kept up twice. Every play starts and ends at rest on the «net».
+ */
+const PLAYS: Record<BallKind, Move[]> = {
+  tennis: [
+    { x: 34, up: 0, ms: 520, arc: 20, spin: 540, hit: 'floor' },
+    { x: 66, up: 0, ms: 520, arc: 20, spin: 540, hit: 'floor' },
+    { x: 34, up: 0, ms: 480, arc: 16, spin: 540, hit: 'floor' },
+    { x: 66, up: 0, ms: 480, arc: 16, spin: 540, hit: 'floor' },
+  ],
+  padel: [
+    { x: 16, up: 18, ms: 420, arc: 10, spin: 360, hit: 'wall' },
+    { x: 46, up: 0, ms: 380, arc: 6, spin: 300, hit: 'floor' },
+    { x: 66, up: 0, ms: 420, arc: 16, spin: 240, hit: 'floor' },
+  ],
+  basketball: [
+    { x: 30, up: 52, ms: 760, arc: 26, spin: -320 },
+    { x: 28, up: 0, ms: 380, spin: -60, hit: 'floor' },
+    { x: 34, up: 0, ms: 420, arc: 18, spin: -120, hit: 'floor' },
+    { x: 46, up: 0, ms: 300, arc: 9, spin: -120, hit: 'floor' },
+    { x: 56, up: 0, ms: 260, arc: 7, spin: -120, hit: 'floor' },
+    { x: 66, up: 0, ms: 240, arc: 6, spin: -120, hit: 'floor' },
+  ],
+  football: [
+    { x: 64, up: 0, ms: 620, arc: 30, spin: 360, hit: 'floor' },
+    { x: 68, up: 0, ms: 560, arc: 24, spin: 360, hit: 'floor' },
+    { x: 66, up: 0, ms: 360, arc: 8, spin: 120, hit: 'floor' },
+  ],
+};
+/** the hop in place that turns one ball into the next (the change happens at the top) */
+const SWAP: Move = { x: REST_X, up: 0, ms: 600, arc: 22, spin: 180, hit: 'floor' };
+const SQUASH_MS = 140;
 
 export function BouncingLogo({ height }: { height: number }) {
   const unit = height / VB_H;
   const reduced = useReducedMotion();
   const [kind, setKind] = useState(0);
-  const side = useSharedValue(0); // 0 right, 1 left, animated between
-  const lift = useSharedValue(0); // 0 resting, 1 at the top of the hop
-  const squash = useSharedValue(0);
+  const x = useSharedValue(REST_X);
+  const y = useSharedValue(0); // height above rest, logo units
+  const arcUp = useSharedValue(0); // the throw's extra height, 0 → 1 → 0 across a move
+  const arcH = useSharedValue(0);
+  const rot = useSharedValue(0);
+  const squashY = useSharedValue(0);
+  const squashX = useSharedValue(0);
 
   useEffect(() => {
     if (reduced) return undefined;
-    let hop = 0;
     let timer: ReturnType<typeof setTimeout>;
+    let k = 0;
+    const move = (m: Move) => {
+      x.value = withTiming(m.x, { duration: m.ms, easing: Easing.inOut(Easing.quad) });
+      y.value = withTiming(m.up, { duration: m.ms, easing: m.up > y.value ? Easing.out(Easing.quad) : Easing.in(Easing.quad) });
+      arcH.value = m.arc ?? 0;
+      arcUp.value = 0;
+      arcUp.value = withTiming(1, { duration: m.ms, easing: Easing.linear });
+      rot.value = withTiming(rot.value + (m.spin ?? 0), { duration: m.ms, easing: Easing.linear });
+      const hit = m.hit === 'wall' ? squashX : m.hit === 'floor' ? squashY : null;
+      if (hit) {
+        hit.value = withSequence(
+          withTiming(0, { duration: m.ms }),
+          withTiming(1, { duration: SQUASH_MS / 2, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: SQUASH_MS / 2, easing: Easing.in(Easing.quad) }),
+        );
+      }
+      return m.ms + (hit ? SQUASH_MS / 2 : 0);
+    };
+    const run = (moves: Move[], i: number, done: () => void) => {
+      if (i >= moves.length) return done();
+      timer = setTimeout(() => run(moves, i + 1, done), move(moves[i]!));
+    };
     const play = () => {
-      hop += 1;
-      const to = hop % 2;
-      side.value = withTiming(to, { duration: HOP_MS, easing: Easing.inOut(Easing.quad) });
-      lift.value = withSequence(
-        withTiming(1, { duration: HOP_MS / 2, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: HOP_MS / 2, easing: Easing.in(Easing.quad) }),
-      );
-      squash.value = withSequence(
-        withTiming(0, { duration: HOP_MS }),
-        withTiming(1, { duration: SQUASH_MS / 2, easing: Easing.out(Easing.quad) }),
-        withTiming(0, { duration: SQUASH_MS / 2, easing: Easing.in(Easing.quad) }),
-      );
-      // the ball changes sport at the top of the hop, where the eye least expects a cut
-      timer = setTimeout(() => {
-        setKind((k) => (k + 1) % BALLS.length);
-        timer = setTimeout(play, HOP_MS / 2 + REST_MS);
-      }, HOP_MS / 2);
+      run(PLAYS[BALLS[k]!], 0, () => {
+        timer = setTimeout(() => {
+          // the swap hop: the ball turns into the next sport at the top, where the eye least expects a cut
+          const ms = move(SWAP);
+          timer = setTimeout(() => {
+            k = (k + 1) % BALLS.length;
+            setKind(k);
+            timer = setTimeout(play, ms - SWAP.ms / 2 + REST_MS);
+          }, SWAP.ms / 2);
+        }, REST_MS);
+      });
     };
     timer = setTimeout(play, REST_MS);
     return () => clearTimeout(timer);
-  }, [reduced, side, lift, squash]);
+  }, [reduced, x, y, arcUp, arcH, rot, squashY, squashX]);
 
   const ballStyle = useAnimatedStyle(() => {
-    const x = SIDE_X[0] + (SIDE_X[1] - SIDE_X[0]) * side.value;
-    const y = REST_Y - HOP_UP * lift.value;
+    // a parabola across the move: 4p(1-p) is 0 at both ends and 1 in the middle
+    const lift = y.value + arcH.value * 4 * arcUp.value * (1 - arcUp.value);
     return {
       transform: [
-        { translateX: (x - BALL_R - VB_X) * unit },
-        { translateY: (y - BALL_R - VB_Y) * unit + squash.value * 2 * unit },
-        { scaleX: 1 + 0.14 * squash.value },
-        { scaleY: 1 - 0.18 * squash.value },
+        { translateX: (x.value - BALL_R - VB_X) * unit },
+        { translateY: (REST_Y - lift - BALL_R - VB_Y) * unit + squashY.value * 2 * unit },
+        { scaleX: 1 + 0.16 * squashY.value - 0.22 * squashX.value },
+        { scaleY: 1 - 0.2 * squashY.value + 0.12 * squashX.value },
       ],
     };
   });
+  const spinStyle = useAnimatedStyle(() => ({ transform: [{ rotate: `${rot.value}deg` }] }));
 
   const size = BALL_R * 2 * unit;
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel="NetProphet" style={{ height, width: VB_W * unit }}>
+    <View accessible accessibilityRole="image" accessibilityLabel="NetProphet" style={{ height, width: VB_W * unit, overflow: 'visible' }}>
       <Image source={LOCKUP} style={StyleSheet.absoluteFill} contentFit="contain" />
       <Animated.View style={[styles.ball, { width: size, height: size }, ballStyle]} pointerEvents="none">
-        <Ball kind={BALLS[kind]!} size={size} />
+        {/* the seams turn, the light stays: that is what makes it read as a round ball */}
+        <Animated.View style={[StyleSheet.absoluteFill, spinStyle]}>
+          <Ball kind={BALLS[kind]!} size={size} />
+        </Animated.View>
+        <Shade size={size} />
       </Animated.View>
     </View>
+  );
+}
+
+/** light from the top left and a darker rim at the bottom right, drawn over the ball and never turning */
+function Shade({ size }: { size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 30 30" style={StyleSheet.absoluteFill}>
+      <Defs>
+        <RadialGradient id="np-ball-light" cx="35%" cy="30%" r="55%">
+          <Stop offset="0" stopColor={colors.white} stopOpacity={0.55} />
+          <Stop offset="1" stopColor={colors.white} stopOpacity={0} />
+        </RadialGradient>
+        <RadialGradient id="np-ball-dark" cx="38%" cy="34%" r="70%">
+          <Stop offset="0.6" stopColor={colors.ink} stopOpacity={0} />
+          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.45} />
+        </RadialGradient>
+      </Defs>
+      <Circle cx={15} cy={15} r={15} fill="url(#np-ball-dark)" />
+      <Circle cx={15} cy={15} r={15} fill="url(#np-ball-light)" />
+    </Svg>
   );
 }
 
