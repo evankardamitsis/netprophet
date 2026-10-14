@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { createV2ServerClient } from '@/lib/v2/server';
 import { SignOut } from './SignOut';
-import { colors } from './ui';
 
 /** the v2 admin's desks */
 type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names';
@@ -42,20 +41,17 @@ async function waiting(): Promise<Counts> {
 /**
  * The menu (founder, 14 Oct: a vertical bar, more room for the pages): a dark column on the left with each desk on
  * its own line and what is waiting on it, the staff member and «Sign out» at the bottom. On a phone it becomes a
- * row of desks above the page.
+ * row of desks above the page. Styles in v2.css.
  */
 export async function Nav({ here, staff }: { here: Desk; staff: { name: string; role: string } }) {
   const counts = await waiting();
   const item = (key: Desk, label: string) => {
     const n = counts[key];
-    const on = here === key;
     return (
-      <Link key={key} href={`/v2/${key}`} className="v2-nav-item" aria-current={on ? 'page' : undefined}
-        style={{ color: colors.paper, background: on ? colors.inkRaised : 'transparent', fontWeight: on ? 800 : 600 }}>
+      <Link key={key} href={`/v2/${key}`} className="v2-nav-item" aria-current={here === key ? 'page' : undefined}>
         <span>{label}</span>
         {n ? (
-          <span aria-label={`${n} waiting`}
-            style={{ background: colors.paper, color: colors.ink, borderRadius: 999, padding: '0 8px', fontSize: 12, fontWeight: 800, lineHeight: '20px' }}>
+          <span className="v2-nav-count" aria-label={`${n} waiting`}>
             {n}
           </span>
         ) : null}
@@ -63,9 +59,11 @@ export async function Nav({ here, staff }: { here: Desk; staff: { name: string; 
     );
   };
   return (
-    <aside className="v2-nav" style={{ background: colors.ink, color: colors.paper }}>
-      <style>{SHELL_CSS}</style>
-      <strong style={{ fontSize: 17, padding: '4px 12px 12px' }}>NetProphet v2</strong>
+    <aside className="v2-nav">
+      <div className="v2-brand">
+        netprophet
+        <small>Admin</small>
+      </div>
       <nav className="v2-nav-items">
         {item('tournaments', 'Tournaments')}
         {item('results', 'Results')}
@@ -75,8 +73,8 @@ export async function Nav({ here, staff }: { here: Desk; staff: { name: string; 
         {item('quiz', 'Quiz')}
         {item('game', 'Game')}
       </nav>
-      <div className="v2-nav-foot" style={{ color: colors.mist }}>
-        <span style={{ fontSize: 13 }}>
+      <div className="v2-nav-foot">
+        <span>
           {staff.name}
           <br />
           {staff.role}
@@ -86,21 +84,3 @@ export async function Nav({ here, staff }: { here: Desk; staff: { name: string; 
     </aside>
   );
 }
-
-const SHELL_CSS = `
-.v2-shell { display: flex; min-height: 100vh; }
-.v2-shell > main { flex: 1; min-width: 0; }
-.v2-nav { width: 216px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; box-sizing: border-box;
-  display: flex; flex-direction: column; gap: 4px; padding: 20px 12px; }
-.v2-nav-items { display: flex; flex-direction: column; gap: 2px; }
-.v2-nav-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px;
-  padding: 0 12px; border-radius: 10px; text-decoration: none; font-size: 15px; }
-.v2-nav-item:hover { background: ${colors.inkDeep}; }
-.v2-nav-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding: 12px; }
-@media (max-width: 760px) {
-  .v2-shell { flex-direction: column; }
-  .v2-nav { width: auto; height: auto; position: static; padding: 12px; }
-  .v2-nav-items { flex-direction: row; flex-wrap: wrap; }
-  .v2-nav-foot { margin-top: 4px; flex-direction: row; align-items: center; justify-content: space-between; }
-}
-`;

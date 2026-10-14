@@ -8,6 +8,8 @@ import { V2_PUBLISHABLE_KEY, V2_URL, v2Configured } from './lib/v2/env';
  */
 export async function middleware(request: NextRequest) {
   if (!v2Configured) return NextResponse.next();
+  // the kit page (sample data only) is open in development, to check the look without signing in
+  if (process.env.NODE_ENV === 'development' && request.nextUrl.pathname.startsWith('/v2/kit')) return NextResponse.next();
   let response = NextResponse.next({ request });
   const supabase = createServerClient(V2_URL, V2_PUBLISHABLE_KEY, {
     cookies: {

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function ImportDesk() {
   if (!v2Configured) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>v2 admin is not configured</h1>
       </main>
     );
@@ -21,7 +21,7 @@ export default async function ImportDesk() {
   const staff = await getStaff(client);
   if (!staff) {
     return (
-      <main style={ui.main}>
+      <main className="v2-page">
         <h1 style={ui.h1}>No access</h1>
         <p style={ui.muted}>This account is not an admin or editor on v2.</p>
         <SignOut />
@@ -36,7 +36,7 @@ export default async function ImportDesk() {
   return (
     <div className="v2-shell">
       <Nav here="import" staff={staff} />
-      <main style={{ ...ui.main, maxWidth: 1100 }}>
+      <main className="v2-page">
         <Importer tournaments={(tournaments ?? []) as Tournament[]} areas={(areas ?? []) as { id: string; name_el: string }[]} />
       </main>
     </div>
