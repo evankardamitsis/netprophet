@@ -25,7 +25,7 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
  * Until the Ladder unlocks it is left out (the route stays). A lime dot on «Αποτελέσματα» while a result newer than your
  * last visit is waiting (lime: something happened); opening the tab clears it.
  */
-const IN_BAR = ['index', 'results', 'players', 'ladder'];
+const IN_BAR = ['index', 'results', 'tournaments', 'ladder'];
 const COLOR_MS = 250;
 
 type Box = { x: number; width: number };

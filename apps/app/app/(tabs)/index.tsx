@@ -1,8 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
@@ -15,15 +14,13 @@ import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useBadges, useConfirmations, useFeed, useQuests, useQuiz, useTournaments, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
+import { useBadges, useConfirmations, useFeed, useQuests, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import type { CardResult } from '../../src/lib/feed';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
 import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
-import { openCount } from '../../src/lib/tournaments';
 import { dailyFold } from '../../src/lib/dailyFold';
-import { fmt } from '../../src/lib/votes';
 import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
 import type { Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
@@ -31,7 +28,6 @@ import { colors, ease, fonts } from '../../src/theme';
 
 const TITLE_IN_MS = 400;
 /** the tournaments link sits after this many cards */
-const TOURNAMENTS_AFTER = 5;
 /** prototype rqStart / rqNext: the first result waits 450ms, the next one comes 140ms after the last closes */
 const FIRST_RESULT_DELAY = 450;
 const NEXT_RESULT_GAP = 140;
@@ -47,8 +43,6 @@ export default function VoteScreen() {
   unlocksNow.current = unlocks;
   const quests = useQuests();
   const quiz = useQuiz();
-  const tournaments = useTournaments();
-  const tourCount = openCount(tournaments.data?.items);
   // «Οι 6 της ημέρας»: read again whenever the feed comes back into view (after playing, or a new day)
   const quizRefresh = quiz.refresh;
   useFocusEffect(
@@ -182,7 +176,7 @@ export default function VoteScreen() {
               onDone={onResultDone}
             />
           ) : null}
-          {cards.map((c, i) => (
+          {cards.map((c) => (
             <Fragment key={c.id}>
               {c.kind === 'match' ? (
                 <VoteCard match={c} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
@@ -190,12 +184,6 @@ export default function VoteScreen() {
                 <PostponedCard card={c} />
               ) : c.kind === 'sponsored' ? (
                 <SponsoredCard card={c} />
-              ) : null}
-              {/* prototype: «Τα τουρνουά σου · 3 ›» after the fifth card (at the end when there are fewer) */}
-              {tourCount > 0 && i === Math.min(cards.length, TOURNAMENTS_AFTER) - 1 ? (
-                <Pressable accessibilityRole="button" onPress={() => router.push('/tournaments?from=feed')} style={styles.tourLink}>
-                  <Text style={styles.tourLinkText}>{fmt(t.tournaments.feedLink, { count: tourCount })}</Text>
-                </Pressable>
               ) : null}
             </Fragment>
           ))}
@@ -209,7 +197,6 @@ export default function VoteScreen() {
       {questNote?.kind === 'toast' ? <Toast key={questNote.n} text={questNote.text} /> : null}
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
-      <AddMatchButton />
       {celebrating ? <Celebration key={celebrating.map((c) => c.id).join()} items={celebrating} onDone={() => onCelebrated(celebrating)} /> : null}
     </View>
   );
@@ -233,8 +220,6 @@ const styles = StyleSheet.create({
   head: { gap: 6 },
   title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
   subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
-  tourLink: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: 2 },
-  tourLinkText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
   end: {
     paddingTop: 4,
     paddingHorizontal: 12,

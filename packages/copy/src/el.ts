@@ -66,8 +66,10 @@ export const el = {
     error: 'Δεν φόρτωσε η Κατάταξη. Τράβα προς τα κάτω για να ξαναδοκιμάσεις.',
   },
   tabs: {
-    vote: 'Ψήφισε',
+    /** the home tab (founder, 14 Oct: four tabs, one job each) */
+    vote: 'Σήμερα',
     results: 'Αποτελέσματα',
+    tournaments: 'Τουρνουά',
     players: 'Παίκτες',
     ladder: 'Κατάταξη',
     me: 'Εγώ',
@@ -891,6 +893,10 @@ export const el = {
     feedLink: 'Τα τουρνουά σου · {count} ›',
     backMe: '‹ Εγώ',
     backFeed: '‹ Πίσω',
+    /** the search entry on the Τουρνουά tab (Παίκτες is no longer a tab) */
+    search: 'Ψάξε παίκτη',
+    /** Παίκτες opened from it */
+    backTournaments: '‹ Τουρνουά',
     /** the Pro card: «Παίζεις Σάββατο 10:00» */
     program: 'Το πρόγραμμά σου',
     playing: 'Παίζεις {when}',

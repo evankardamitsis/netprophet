@@ -26,13 +26,14 @@ export default function TabsLayout() {
           >
             <Tabs.Screen name="index" options={{ title: t.tabs.vote }} />
             <Tabs.Screen name="results" options={{ title: t.tabs.results }} />
-            <Tabs.Screen name="players" options={{ title: t.tabs.players }} />
+            <Tabs.Screen name="tournaments" options={{ title: t.tabs.tournaments }} />
             <Tabs.Screen name="ladder" options={{ title: t.tabs.ladder }} />
+            {/* player search opens from Τουρνουά (founder, 14 Oct: four tabs, one job each) */}
+            <Tabs.Screen name="players" options={{ title: t.tabs.players, href: null }} />
             {/* Εγώ opens from the header avatar, not from the tab bar */}
             <Tabs.Screen name="me" options={{ title: t.tabs.me, href: null }} />
             <Tabs.Screen name="badges" options={{ title: t.badges.title, href: null }} />
             <Tabs.Screen name="look" options={{ title: t.look.title, href: null }} />
-            <Tabs.Screen name="tournaments" options={{ title: t.tournaments.title, href: null }} />
             <Tabs.Screen name="tournament/[id]" options={{ title: t.tournaments.title, href: null }} />
             {/* a player's profile keeps the header and tab bar, with no tab highlighted (prototype) */}
             <Tabs.Screen name="player/[id]" options={{ title: t.players.title, href: null }} />

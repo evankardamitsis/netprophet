@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import type { GetTournamentsResult, TournamentItem } from '@netprophet/db';
 import { useCopy } from '../../src/i18n';
@@ -11,9 +11,10 @@ import { boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey
 import { colors, fonts } from '../../src/theme';
 
 /**
- * «Τα τουρνουά σου» (prototype V2, isTour): the tournaments that are on, coming or just finished. With Pro, the ink
- * card «Το πρόγραμμά σου» lists my next matches; without it, one outlined line opens Pro (the screen's one blue
- * element). Opens from Εγώ (back: «‹ Εγώ») or from the feed link (back: «‹ Πίσω»).
+ * The Τουρνουά tab, «Τα τουρνουά σου» (founder, 14 Oct: a tab in the bottom bar that also holds «+ Ματς»): your
+ * tournaments that are on, coming or just finished. With Pro, the ink card «Το πρόγραμμά σου» lists your next
+ * matches; without it, one outlined line opens Pro (the screen's one blue element). «+ Ματς» sits by the title as an
+ * ink pill, and player search opens from here (Παίκτες is no longer a tab).
  */
 const STG_MS = 600;
 const STAGGER = 70;
@@ -23,10 +24,7 @@ const ACCENT_PAD = 10;
 export default function TournamentsScreen() {
   const t = useCopy();
   const c = t.tournaments;
-  const { from } = useLocalSearchParams<{ from?: string }>();
   const { data, loading, error, refresh } = useTournaments();
-  const back = usePress();
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/me'));
   const today = todayKey();
   const sections = data ? sectionsOf(data.items, t) : [];
   let n = 0;
@@ -39,11 +37,11 @@ export default function TournamentsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && data !== null} onRefresh={refresh} tintColor={colors.ink} />}
       >
-        <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
-          <Animated.Text style={[styles.back, back.style]}>{from === 'feed' ? c.backFeed : c.backMe}</Animated.Text>
-        </Pressable>
         <Reveal i={next()}>
-          <Text style={styles.title}>{c.title}</Text>
+          <View style={styles.head}>
+            <Text style={styles.title}>{c.title}</Text>
+            <AddMatch />
+          </View>
         </Reveal>
         {data ? (
           <>
@@ -54,6 +52,7 @@ export default function TournamentsScreen() {
             ) : (
               <ProButton i={next()} />
             )}
+            <SearchEntry i={next()} />
             {sections.map((s) => (
               <View key={s.key} style={styles.group}>
                 <Reveal i={next()}>
@@ -76,6 +75,34 @@ export default function TournamentsScreen() {
 function Reveal({ i, children }: { i: number; children: ReactNode }) {
   const enter = useStgIn(STG_MS, Math.min(i, 8) * STAGGER);
   return <Animated.View style={enter}>{children}</Animated.View>;
+}
+
+/** «+ Ματς»: log a match you played; an ink pill, so Pro stays the screen's one blue */
+function AddMatch() {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/add-match')} onPressIn={press.onPressIn} onPressOut={press.onPressOut} hitSlop={6}>
+      <Animated.View style={[styles.add, press.style]}>
+        <Text style={styles.addText}>{t.addMatch.cta}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** looks like the search field; opens Παίκτες with the keyboard up */
+function SearchEntry({ i }: { i: number }) {
+  const t = useCopy();
+  const press = usePress(0.98);
+  return (
+    <Reveal i={i}>
+      <Pressable accessibilityRole="search" onPress={() => router.push('/players?focus=1')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+        <Animated.View style={[styles.search, press.style]}>
+          <Text style={styles.searchText}>{t.tournaments.search}</Text>
+        </Animated.View>
+      </Pressable>
+    </Reveal>
+  );
 }
 
 /** the ink card: «Παίζεις Σάββατο 10:00», then each of my next matches as when / what */
@@ -150,9 +177,12 @@ function TournamentRow({ item, today, i }: { item: TournamentItem; today: string
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
-  backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
-  back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  head: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, paddingTop: 8 },
+  add: { minHeight: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
+  search: { minHeight: 52, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.fog, backgroundColor: colors.white, justifyContent: 'center' },
+  searchText: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.inkSoft },
+  title: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 50, paddingBottom: 10, marginBottom: -12, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   proCard: { padding: 18, borderRadius: 24, backgroundColor: colors.ink, gap: 10 },
   proHead: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.lime },
   proLabel: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.mist },

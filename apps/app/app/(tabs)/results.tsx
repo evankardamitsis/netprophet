@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { AddMatchButton } from '../../src/components/AddMatchButton';
 import { ResultRow } from '../../src/components/ResultRow';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { Toast } from '../../src/components/Toast';
@@ -51,7 +50,6 @@ export default function ResultsScreen() {
           {!loading && groups.length === 0 ? <Text style={styles.empty}>{error ? t.results.error : t.results.empty}</Text> : null}
         </View>
       </ScrollView>
-      <AddMatchButton />
       {said ? <Toast key={said.n} text={said.text} /> : null}
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
     </View>
