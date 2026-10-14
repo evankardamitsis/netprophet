@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState, useTransition, type CSSProperties, type ReactNode } from "react";
-import { colors, ui } from "../ui";
-import { Banner, Toast, useToast } from "../feedback";
+import { useEffect, useState, useTransition } from "react";
+import { Banner, Toast, useToast, type Tone } from "../feedback";
+import { Badge, Card, Empty, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table, Tabs } from "../kit";
 import { closeMonth, leaguePreview, loadConfig, type ActionResult } from "./actions";
 
 interface Condition {
@@ -40,8 +40,11 @@ export interface LeaguePreview {
   }[];
 }
 
-const th: CSSProperties = { textAlign: "left", padding: "6px 10px", fontSize: 13, borderBottom: `2px solid ${colors.ink}` };
-const td: CSSProperties = { padding: "6px 10px", fontSize: 14, borderBottom: `1px solid ${colors.mist}`, verticalAlign: "top" };
+type Quest = NonNullable<GameConfig["quests"]>[number];
+type GameBadge = NonNullable<GameConfig["badges"]>[number];
+type Unlock = NonNullable<GameConfig["unlocks"]>[number];
+type LeagueRow = NonNullable<LeaguePreview["groups"][number]["rows"]>[number];
+type Notice = { tone: Tone; title: string; detail?: string };
 
 const humanize = (k: string) => k.replace(/_/g, " ");
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -65,8 +68,8 @@ function words(v: unknown): string {
 function Details({ value }: { value: unknown }) {
   if (value === null || value === undefined || (typeof value === "object" && Object.keys(value as object).length === 0)) return null;
   return (
-    <details style={{ fontSize: 13 }}>
-      <summary style={{ cursor: "pointer", color: colors.inkSoft }}>Details</summary>
+    <details className="v2-muted">
+      <summary style={{ cursor: "pointer" }}>Details</summary>
       <pre style={{ margin: "6px 0 0", whiteSpace: "pre-wrap", fontSize: 12 }}>{JSON.stringify(value, null, 2)}</pre>
     </details>
   );
@@ -111,20 +114,10 @@ function rewardWords(r: unknown): string {
   return parts.length ? parts.join(" and ") : words(r);
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
-  return (
-    <section style={{ ...ui.card, display: "flex", flexDirection: "column", gap: 8 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{title}</h2>
-      {hint ? <p style={ui.muted}>{hint}</p> : null}
-      {children}
-    </section>
-  );
-}
-
 function Lines({ items }: { items: string[] }) {
-  if (items.length === 0) return <p style={ui.muted}>Nothing is set here.</p>;
+  if (items.length === 0) return <span className="v2-muted">Nothing is set here.</span>;
   return (
-    <ul style={{ margin: 0, paddingLeft: 20, display: "flex", flexDirection: "column", gap: 4, fontSize: 15 }}>
+    <ul className="v2-stack" style={{ margin: 0, paddingLeft: 20, gap: 4 }}>
       {items.map((l, i) => (
         <li key={i}>{l}</li>
       ))}
@@ -132,32 +125,13 @@ function Lines({ items }: { items: string[] }) {
   );
 }
 
-function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
+/** one block of rules: a small card with its sentences */
+function RuleCard({ title, items }: { title: string; items: string[] }) {
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ borderCollapse: "collapse", width: "100%" }}>
-        <thead>
-          <tr>
-            {head.map((h) => (
-              <th key={h} style={th}>
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r, i) => (
-            <tr key={i}>
-              {r.map((c, j) => (
-                <td key={j} style={td}>
-                  {c}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Card>
+      <h3 className="v2-h3">{title}</h3>
+      <Lines items={items} />
+    </Card>
   );
 }
 
@@ -186,10 +160,13 @@ function quizLines(q: Record<string, unknown>): string[] {
   return out;
 }
 
+type Tab = "quests" | "badges" | "unlocks";
+
 /** The game's rules in sentences, read-only, plus the month close at the bottom. */
 export function Game() {
   const [cfg, setCfg] = useState<GameConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("quests");
 
   useEffect(() => {
     loadConfig()
@@ -198,168 +175,247 @@ export function Game() {
   }, []);
 
   const points = cfg?.points ?? {};
+  const quests = cfg?.quests ?? [];
+  const badges = cfg?.badges ?? [];
+  const unlocks = cfg?.unlocks ?? [];
+  const loading = cfg === null && !error;
+  const dot = (n: number) => (cfg ? n : "·");
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div>
-        <h1 style={ui.h1}>Game</h1>
-        <p style={ui.muted}>These are the game’s rules. They change in code, so this page only shows them. Nothing here needs you.</p>
-      </div>
+    <>
+      <PageHeader title="Game" intent="The game’s rules in plain words. They change in code, so this page only shows them. Nothing here needs you." />
       {error ? <Banner tone="problem" title="Couldn’t load the rules" detail={error} /> : null}
-      {cfg === null && !error ? <p style={ui.muted}>Loading…</p> : null}
-      {cfg ? (
-        <>
-          <Section title="Points">
-            <Lines items={pointsLines(points)} />
-          </Section>
-          <Section title="σερί and freezes">
-            <Lines items={streakLines(points)} />
-          </Section>
-          <Section title="Quests">
-            {(cfg.quests ?? []).length === 0 ? <p style={ui.muted}>There are no quests.</p> : null}
-            {(cfg.quests ?? []).map((q) => (
-              <div key={q.key} style={{ display: "flex", flexDirection: "column", gap: 2, paddingBottom: 8, borderBottom: `1px solid ${colors.mist}` }}>
-                <strong>
-                  {q.title_el}
-                  {q.active ? "" : " (switched off)"}
-                </strong>
-                <span style={{ fontSize: 15 }}>
-                  What to do: {humanize(q.key).includes("invite") ? "bring friends who join" : "do it"} {q.target} {q.target === 1 ? "time" : "times"}, {PERIOD[q.period] ?? q.period}.
-                </span>
-                <span style={{ fontSize: 15 }}>Reward: {rewardWords(q.reward)}.</span>
-                <Details value={{ triggers: q.triggers, reward: q.reward }} />
-              </div>
-            ))}
-          </Section>
-          <Section title="Badges">
-            {(cfg.badges ?? []).length === 0 ? <p style={ui.muted}>There are no badges.</p> : null}
-            {(cfg.badges ?? []).map((b) => (
-              <div key={b.key} style={{ display: "flex", flexDirection: "column", gap: 2, paddingBottom: 8, borderBottom: `1px solid ${colors.mist}` }}>
-                <strong>{b.name_el}</strong>
-                <span style={{ fontSize: 15 }}>
-                  Counts {humanize(b.counter)}. Tiers at {(b.thresholds ?? []).join(", ") || "none"}.
-                  {b.on_card ? " Shown on the player card." : ""}
-                </span>
-                {b.tier3_reward ? <Details value={{ top_tier_reward: b.tier3_reward }} /> : null}
-              </div>
-            ))}
-          </Section>
-          <Section title="Unlock ladder" hint="What opens as a player does more.">
-            {(cfg.unlocks ?? []).length === 0 ? <p style={ui.muted}>There are no unlock steps.</p> : null}
-            {(cfg.unlocks ?? []).map((u) => {
-              const need = (u.primary ?? []).map((c) => `${humanize(c.counter)} at least ${c.min}`).join(" and ");
-              return (
-                <div key={u.key} style={{ display: "flex", flexDirection: "column", gap: 2, paddingBottom: 8, borderBottom: `1px solid ${colors.mist}` }}>
-                  <strong>
-                    Step {u.step}: {u.title_el}
-                  </strong>
-                  <span style={{ fontSize: 15 }}>
-                    {need ? `Opens when: ${need}` : "Opens right away"}
-                    {u.backup_votes ? `, or after ${plural(u.backup_votes, "vote")}` : ""}.
+      <Stats
+        items={[
+          { label: "quests switched on", value: dot(quests.filter((q) => q.active).length), ink: true },
+          { label: "quests in all", value: dot(quests.length) },
+          { label: "badges", value: dot(badges.length) },
+          { label: "unlock steps", value: dot(unlocks.length) },
+        ]}
+      />
+      <Section title="Rules">
+        {loading ? (
+          <SkeletonCards count={4} />
+        ) : cfg ? (
+          <div className="v2-grid">
+            <RuleCard title="Points" items={pointsLines(points)} />
+            <RuleCard title="σερί and freezes" items={streakLines(points)} />
+            <RuleCard title="Leagues" items={leagueLines(cfg.league)} />
+            <RuleCard title="Daily questions" items={quizLines(cfg.quiz)} />
+          </div>
+        ) : (
+          <Card>
+            <Empty title="No rules to show">They could not be loaded. Reload the page to try again.</Empty>
+          </Card>
+        )}
+      </Section>
+      <Section
+        title={tab === "quests" ? "Quests" : tab === "badges" ? "Badges" : "Unlock ladder"}
+        aside={
+          <Tabs
+            value={tab}
+            onChange={setTab}
+            items={[
+              { value: "quests", label: "Quests", count: quests.length },
+              { value: "badges", label: "Badges", count: badges.length },
+              { value: "unlocks", label: "Unlock ladder", count: unlocks.length },
+            ]}
+          />
+        }
+      >
+        <span className="v2-muted">
+          {tab === "quests"
+            ? "Small goals a player can finish for a reward."
+            : tab === "badges"
+              ? "Badges grow in tiers as a player keeps doing something."
+              : "What opens as a player does more."}
+        </span>
+        {loading ? (
+          <SkeletonRows rows={6} />
+        ) : tab === "quests" ? (
+          <Table<Quest>
+            key="quests"
+            rows={quests}
+            rowKey={(q) => q.key}
+            pageSize={20}
+            noun="quests"
+            empty={<Empty title="There are no quests" />}
+            columns={[
+              {
+                key: "title",
+                label: "Quest",
+                render: (q) => (
+                  <span className="v2-row">
+                    <b>{q.title_el}</b>
+                    {q.active ? null : <Badge>Switched off</Badge>}
                   </span>
-                  <span style={{ fontSize: 15 }}>What opens: {(u.features ?? []).map(humanize).join(", ") || "nothing new"}.</span>
-                </div>
-              );
-            })}
-          </Section>
-          <Section title="Leagues">
-            <Lines items={leagueLines(cfg.league)} />
-          </Section>
-          <Section title="Daily questions">
-            <Lines items={quizLines(cfg.quiz)} />
-          </Section>
-        </>
-      ) : null}
+                ),
+              },
+              {
+                key: "do",
+                label: "What to do",
+                render: (q) =>
+                  `${humanize(q.key).includes("invite") ? "Bring friends who join" : "Do it"} ${q.target} ${q.target === 1 ? "time" : "times"}, ${PERIOD[q.period] ?? q.period}.`,
+              },
+              { key: "reward", label: "Reward", render: (q) => `${rewardWords(q.reward)}.` },
+              { key: "details", label: "", render: (q) => <Details value={{ triggers: q.triggers, reward: q.reward }} /> },
+            ]}
+          />
+        ) : tab === "badges" ? (
+          <Table<GameBadge>
+            key="badges"
+            rows={badges}
+            rowKey={(b) => b.key}
+            pageSize={20}
+            noun="badges"
+            empty={<Empty title="There are no badges" />}
+            columns={[
+              { key: "name", label: "Badge", render: (b) => <b>{b.name_el}</b> },
+              { key: "counts", label: "Counts", render: (b) => humanize(b.counter) },
+              { key: "tiers", label: "Tiers at", render: (b) => (b.thresholds ?? []).join(", ") || "none" },
+              { key: "card", label: "On the player card", render: (b) => (b.on_card ? "✓" : "") },
+              { key: "details", label: "", render: (b) => (b.tier3_reward ? <Details value={{ top_tier_reward: b.tier3_reward }} /> : null) },
+            ]}
+          />
+        ) : (
+          <Table<Unlock>
+            key="unlocks"
+            rows={unlocks}
+            rowKey={(u) => u.key}
+            pageSize={20}
+            noun="steps"
+            empty={<Empty title="There are no unlock steps" />}
+            columns={[
+              { key: "step", label: "Step", num: true, width: 60, render: (u) => u.step },
+              { key: "title", label: "Name", render: (u) => <b>{u.title_el}</b> },
+              {
+                key: "when",
+                label: "Opens when",
+                render: (u) => {
+                  const need = (u.primary ?? []).map((c) => `${humanize(c.counter)} at least ${c.min}`).join(" and ");
+                  return `${need || "Right away"}${u.backup_votes ? `, or after ${plural(u.backup_votes, "vote")}` : ""}`;
+                },
+              },
+              { key: "opens", label: "What opens", render: (u) => (u.features ?? []).map(humanize).join(", ") || "nothing new" },
+            ]}
+          />
+        )}
+      </Section>
       <MonthClose />
-    </div>
+    </>
   );
 }
 
 function MonthClose() {
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [result, setResult] = useState<LeaguePreview | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [pending, start] = useTransition();
   const [closing, close] = useTransition();
   const { toast, notify } = useToast();
 
-  const run = () =>
+  const run = () => {
+    setNotice({ tone: "working", title: `Looking at ${month}…`, detail: "Working out who moves up and down. Nothing is written." });
     start(async () => {
       try {
-        setResult(await leaguePreview(month));
-        setError(null);
+        const r = await leaguePreview(month);
+        setResult(r);
+        setNotice(null);
       } catch (e) {
         setResult(null);
-        setError(e instanceof Error ? e.message : "failed");
+        setNotice({ tone: "problem", title: "Couldn’t look at that month", detail: e instanceof Error ? e.message : "failed" });
       }
     });
+  };
 
-  const doClose = () =>
+  const doClose = () => {
+    setNotice({ tone: "working", title: "Closing the month…", detail: "Moving players up and down and giving the month’s rewards." });
     close(async () => {
       const r: ActionResult = await closeMonth();
       setConfirm(false);
-      if (r.ok) notify(r.message.replace("Closed:", "Month closed for"));
-      else setError(r.message);
+      if (r.ok) {
+        const text = r.message.replace("Closed:", "Month closed for");
+        setNotice({ tone: "done", title: text });
+        notify(text);
+      } else {
+        setNotice({ tone: "problem", title: "The month was not closed", detail: r.message });
+      }
     });
+  };
+
+  const valid = /^\d{4}-\d{2}$/.test(month);
+  const working = pending || closing;
 
   return (
     <Section title="Close this month now">
-      <p style={ui.muted}>
-        Ends this month’s leagues now: moves players up and down and gives the month’s rewards. Normally it happens by itself on the 1st. Use it only for a demo.
-      </p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          style={{ ...ui.input, width: 140 }}
-          value={month}
-          placeholder="YYYY-MM"
-          aria-label="Month to look at"
-          maxLength={7}
-          onChange={(e) => setMonth(e.target.value)}
-        />
-        <button style={confirm ? ui.secondary : ui.primary} disabled={pending || !/^\d{4}-\d{2}$/.test(month)} onClick={run}>
-          See what closing would do
-        </button>
-        {!confirm ? (
-          <button style={ui.secondary} disabled={closing} onClick={() => setConfirm(true)}>
-            Close this month now
-          </button>
-        ) : null}
-      </div>
-      <span style={ui.muted}>Looking first writes nothing.</span>
-      {confirm ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <Banner tone="problem" title="Close this month now?" detail="Moves and rewards are final for the month. This can’t be undone." />
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button style={ui.primary} disabled={closing} onClick={doClose}>
-              Yes, close this month
-            </button>
-            <button style={ui.secondary} disabled={closing} onClick={() => setConfirm(false)}>
-              Cancel
-            </button>
+      <div className={`v2-card v2-enter${working ? " busy" : ""}`} aria-busy={working || undefined}>
+        <span className="v2-muted">
+          Ends this month’s leagues now: moves players up and down and gives the month’s rewards. Normally it happens by itself on the 1st. Use it only for a demo.
+        </span>
+        <div className="v2-row" style={{ alignItems: "flex-end" }}>
+          <label className="v2-field" style={{ width: 160 }}>
+            Month to look at
+            <input className="v2-input" value={month} placeholder="YYYY-MM" maxLength={7} onChange={(e) => setMonth(e.target.value)} />
+          </label>
+          <Primary busy={pending} disabled={!valid || closing} onClick={run}>
+            {pending ? "Looking…" : "See what closing would do"}
+          </Primary>
+          {!confirm ? (
+            <Secondary disabled={working} onClick={() => setConfirm(true)}>
+              Close this month now
+            </Secondary>
+          ) : null}
+        </div>
+        <span className="v2-muted">Looking first writes nothing.</span>
+        {confirm ? (
+          <div className="v2-confirm">
+            <b>Close this month now?</b>
+            <span className="v2-muted">Moves and rewards are final for the month. This can’t be undone.</span>
+            <div className="v2-row">
+              <Secondary small busy={closing} disabled={pending} onClick={doClose}>
+                {closing ? "Closing…" : "Yes, close this month"}
+              </Secondary>
+              <Secondary small disabled={closing} onClick={() => setConfirm(false)}>
+                Cancel
+              </Secondary>
+            </div>
           </div>
-        </div>
-      ) : null}
-      {closing ? <Banner tone="working" title="Closing the month…" /> : null}
-      {error ? <Banner tone="problem" title="Something went wrong" detail={error} /> : null}
-      {result && result.groups.length === 0 ? <p style={ui.muted}>There are no leagues for {result.month}.</p> : null}
-      {result?.groups.map((g) => (
-        <div key={`${g.tier}-${g.group_no}`} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <strong>
-            {g.tier} {g.group_no}
-            {g.closed ? " (already closed)" : ""}
-          </strong>
-          <Table
-            head={["Place", "Name", "Points", "Moves", "Award"]}
-            rows={(g.rows ?? []).map((r) => [
-              r.position,
-              r.name ?? r.userId,
-              r.points,
-              `${MOVE[r.movement] ?? "="}${r.movement === "stay" ? "" : ` ${r.nextLeague}`}`,
-              r.topThreeAward ? "✓" : "",
-            ])}
-          />
-        </div>
-      ))}
+        ) : null}
+        {notice ? <Banner {...notice} /> : null}
+      </div>
+      {pending ? (
+        <SkeletonRows rows={8} />
+      ) : result && result.groups.length === 0 ? (
+        <Card>
+          <Empty title={`There are no leagues for ${result.month}`}>Nothing would change if this month closed.</Empty>
+        </Card>
+      ) : (
+        result?.groups.map((g) => (
+          <div key={`${g.tier}-${g.group_no}`} className="v2-stack v2-enter">
+            <div className="v2-row">
+              <h3 className="v2-h3">
+                {g.tier} {g.group_no}
+              </h3>
+              {g.closed ? <Badge tone="done">✓ Already closed</Badge> : null}
+            </div>
+            <Table<LeagueRow>
+              rows={g.rows ?? []}
+              rowKey={(r) => r.userId}
+              pageSize={20}
+              noun="players"
+              empty={<Empty title="No players in this group" />}
+              columns={[
+                { key: "place", label: "Place", num: true, width: 70, render: (r) => r.position },
+                { key: "name", label: "Name", render: (r) => r.name ?? r.userId },
+                { key: "points", label: "Points", num: true, render: (r) => r.points },
+                { key: "moves", label: "Moves", render: (r) => `${MOVE[r.movement] ?? "="}${r.movement === "stay" ? "" : ` ${r.nextLeague}`}` },
+                { key: "award", label: "Award", render: (r) => (r.topThreeAward ? "✓" : "") },
+              ]}
+            />
+          </div>
+        ))
+      )}
       <Toast text={toast} />
     </Section>
   );

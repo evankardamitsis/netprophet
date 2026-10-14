@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState, useTransition, type CSSProperties } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { renderQuizQuestion, renderQuizText } from "@netprophet/copy";
-import { colors, ui } from "../ui";
-import { Banner, Toast, useToast } from "../feedback";
+import { Banner, Toast, useToast, type Tone } from "../feedback";
+import { Badge, Card, Empty, Ghost, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table, Tabs } from "../kit";
 import { listTemplates, previewDay, saveTemplate, type ActionResult } from "./actions";
 
 type Family = "s" | "c" | "q" | "o";
@@ -66,10 +66,8 @@ const WOMEN: PreviewPlayer[] = [
   { first_name: "Σοφία", surname: "Νικολάου", gender: "f" },
 ];
 
-const label: CSSProperties = { display: "flex", flexDirection: "column", gap: 4, fontSize: 13, fontWeight: 700 };
-const check: CSSProperties = { display: "flex", gap: 6, alignItems: "center", fontSize: 14, fontWeight: 600 };
-
 type Notice = ActionResult & { what: string };
+type Cue = { tone: Tone; title: string; detail?: string };
 
 const examplePlayers = (t: Pick<QuizTemplate, "players" | "gender">): PreviewPlayer[] =>
   (t.gender === "f" ? WOMEN : MEN).slice(0, t.players);
@@ -90,12 +88,14 @@ function tokenButtons(players: number): { label: string; token: string }[] {
   return out;
 }
 
-/** Quiz questions: the list first, an editor for one question, and a way to see a day's questions. */
+/** Quiz questions: the list first (a tab per kind), an editor for one question, and a way to see a day's questions. */
 export function Quiz() {
   const [rows, setRows] = useState<QuizTemplate[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<QuizTemplate | "new" | null>(null);
   const [tick, setTick] = useState(0);
+  const [cue, setCue] = useState<Cue | null>(null);
+  const [tab, setTab] = useState<Family>("s");
   const { toast, notify } = useToast();
 
   useEffect(() => {
@@ -107,75 +107,108 @@ export function Quiz() {
       .catch((e: Error) => setError(e.message));
   }, [tick]);
 
+  /** a save started: the banner says so while it runs */
+  const onWorking = (title: string) => setCue({ tone: "working", title });
+
   const onNotice = (n: Notice) => {
     if (n.ok) {
+      setCue({ tone: "done", title: `${n.what} saved` });
       notify(`${n.what} saved`);
       setEditing(null);
       setTick((t) => t + 1);
     } else {
-      setError(`${n.what} not saved: ${n.message}`);
+      setCue({ tone: "problem", title: `${n.what} not saved`, detail: n.message });
     }
   };
 
-  const active = (rows ?? []).filter((t) => t.active).length;
+  const all = rows ?? [];
+  const active = all.filter((t) => t.active).length;
+  const list = all.filter((t) => t.family === tab);
+  const fam = FAMILIES.find((f) => f.id === tab) ?? FAMILIES[0]!;
+  const dot = (n: number) => (rows ? n : "·");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <h1 style={ui.h1}>Quiz questions</h1>
-          <p style={ui.muted}>
-            These are the questions «Οι 6 της ημέρας» is built from.{" "}
-            {rows ? `${active} of ${rows.length} are switched on. Nothing needs you unless you want to change a question.` : ""}
-          </p>
-        </div>
-        {editing === null ? (
-          <button style={ui.primary} onClick={() => setEditing("new")}>
-            New question
-          </button>
-        ) : null}
-      </div>
-      {error ? <Banner tone="problem" title="Something went wrong" detail={error} /> : null}
+    <>
+      <PageHeader
+        title="Quiz questions"
+        intent="The questions «Οι 6 της ημέρας» is built from. Nothing needs you unless you want to change a question."
+        actions={editing === null ? <Primary onClick={() => setEditing("new")}>+ New question</Primary> : null}
+      />
+      {error ? <Banner tone="problem" title="Couldn’t load the questions" detail={error} /> : null}
+      {cue ? <Banner {...cue} /> : null}
+      <Stats
+        items={[
+          { label: "switched on", value: dot(active), ink: true },
+          { label: "questions in all", value: dot(all.length) },
+          { label: "times asked", value: dot(all.reduce((n, t) => n + t.used, 0)) },
+          { label: "answers", value: dot(all.reduce((n, t) => n + t.answers, 0)) },
+        ]}
+      />
       {editing !== null ? (
         <Editor
           key={editing === "new" ? "new" : editing.id}
           t={editing === "new" ? null : editing}
+          onWorking={onWorking}
           onNotice={onNotice}
           onCancel={() => setEditing(null)}
         />
       ) : null}
-      {rows === null && !error ? <p style={ui.muted}>Loading…</p> : null}
-      {rows && rows.length === 0 ? <p style={ui.muted}>There are no questions yet. Press New question to add the first one.</p> : null}
-      {FAMILIES.map((f) => {
-        const list = (rows ?? []).filter((t) => t.family === f.id);
-        if (list.length === 0) return null;
-        return (
-          <section key={f.id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div>
-              <h2 style={{ fontSize: 20, fontWeight: 800, margin: "8px 0 0" }}>
-                {f.name} <span style={ui.muted}>({list.length})</span>
-              </h2>
-              <span style={ui.muted}>{f.hint}</span>
-            </div>
-            {list.map((t) => (
-              <Row key={t.id} t={t} onEdit={() => setEditing(t)} onNotice={onNotice} />
-            ))}
-          </section>
-        );
-      })}
+      <Section
+        title={fam.name}
+        aside={<Tabs value={tab} onChange={setTab} items={FAMILIES.map((f) => ({ value: f.id, label: f.name, count: all.filter((t) => t.family === f.id).length }))} />}
+      >
+        <span className="v2-muted">{fam.hint}</span>
+        {rows === null && !error ? (
+          <SkeletonRows rows={8} />
+        ) : all.length === 0 ? (
+          <Card>
+            <Empty title="There are no questions yet">Press «+ New question» to add the first one.</Empty>
+          </Card>
+        ) : (
+          <Table<QuizTemplate>
+            key={tab}
+            rows={list}
+            rowKey={(t) => t.id}
+            pageSize={20}
+            noun="questions"
+            empty={<Empty title={`No ${fam.name.toLowerCase()} questions yet`} />}
+            columns={[
+              { key: "tag", label: "Tag", render: (t) => <b>{t.tag}</b> },
+              {
+                key: "example",
+                label: "Example",
+                render: (t) => (t.family === "q" ? <span className="v2-muted">Built from facts about players</span> : renderQuizQuestion(t.q, examplePlayers(t))),
+              },
+              { key: "asked", label: "Asked", num: true, render: (t) => (t.used === 0 ? <span className="v2-muted">Not yet</span> : t.used) },
+              { key: "answers", label: "Answers", num: true, render: (t) => t.answers },
+              { key: "on", label: "On or off", width: 210, render: (t) => <OnOff t={t} onWorking={onWorking} onNotice={onNotice} /> },
+              {
+                key: "edit",
+                label: "",
+                width: 80,
+                render: (t) => (
+                  <Secondary small onClick={() => setEditing(t)}>
+                    Edit
+                  </Secondary>
+                ),
+              },
+            ]}
+          />
+        )}
+      </Section>
       <DayPreviewPanel />
       <Toast text={toast} />
-    </div>
+    </>
   );
 }
 
-/** one line of the list: tag, an example, on/off, Edit */
-function Row({ t, onEdit, onNotice }: { t: QuizTemplate; onEdit: () => void; onNotice: (n: Notice) => void }) {
+/** switch one question on or off, right in its row */
+function OnOff({ t, onWorking, onNotice }: { t: QuizTemplate; onWorking: (title: string) => void; onNotice: (n: Notice) => void }) {
   const [pending, start] = useTransition();
   const fromFacts = t.family === "q";
-  const example = fromFacts ? "Built from facts about players" : renderQuizQuestion(t.q, examplePlayers(t));
 
-  const flip = () =>
+  const flip = () => {
+    onWorking(`${t.active ? "Switching off" : "Switching on"} ${t.tag}…`);
     start(async () => {
       const p: Record<string, unknown> = { family: t.family, tag: t.tag, active: !t.active };
       if (!fromFacts) {
@@ -186,28 +219,29 @@ function Row({ t, onEdit, onNotice }: { t: QuizTemplate; onEdit: () => void; onN
       }
       onNotice({ ...(await saveTemplate(t.id, p)), what: t.tag });
     });
+  };
 
   return (
-    <div style={{ ...ui.card, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", opacity: t.active ? 1 : 0.7 }}>
-      <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 2 }}>
-        <strong>{t.tag}</strong>
-        <span style={{ fontSize: 15 }}>{example}</span>
-        <span style={ui.muted}>
-          {t.used === 0 ? "Not asked yet" : `Asked ${t.used} ${t.used === 1 ? "time" : "times"}`} · {t.answers} {t.answers === 1 ? "answer" : "answers"}
-        </span>
-      </div>
-      <label style={check}>
-        <input type="checkbox" checked={t.active} disabled={pending} onChange={flip} />
-        {t.active ? "On" : "Off"}
-      </label>
-      <button style={ui.secondary} onClick={onEdit}>
-        Edit
-      </button>
-    </div>
+    <span className="v2-row" style={{ flexWrap: "nowrap" }}>
+      <Badge tone={t.active ? "ink" : "neutral"}>{t.active ? "On" : "Off"}</Badge>
+      <Secondary small busy={pending} onClick={flip}>
+        {pending ? "Saving…" : t.active ? "Switch off" : "Switch on"}
+      </Secondary>
+    </span>
   );
 }
 
-function Editor({ t, onNotice, onCancel }: { t: QuizTemplate | null; onNotice: (n: Notice) => void; onCancel: () => void }) {
+function Editor({
+  t,
+  onWorking,
+  onNotice,
+  onCancel,
+}: {
+  t: QuizTemplate | null;
+  onWorking: (title: string) => void;
+  onNotice: (n: Notice) => void;
+  onCancel: () => void;
+}) {
   const [family, setFamily] = useState<Family>(t?.family ?? "s");
   const [tag, setTag] = useState(t?.tag ?? "");
   const [q, setQ] = useState(t?.q ?? "");
@@ -221,7 +255,8 @@ function Editor({ t, onNotice, onCancel }: { t: QuizTemplate | null; onNotice: (
   const isOpinion = family === "o";
   const what = t ? t.tag : "New question";
 
-  const save = () =>
+  const save = () => {
+    onWorking(t ? `Saving ${t.tag}…` : "Adding the question…");
     start(async () => {
       const p: Record<string, unknown> = { family, tag, active };
       if (!fromFacts) {
@@ -232,6 +267,7 @@ function Editor({ t, onNotice, onCancel }: { t: QuizTemplate | null; onNotice: (
       }
       onNotice({ ...(await saveTemplate(t?.id ?? null, p)), what });
     });
+  };
 
   const insert = (token: string) => {
     const el = area.current;
@@ -249,34 +285,32 @@ function Editor({ t, onNotice, onCancel }: { t: QuizTemplate | null; onNotice: (
   const shown = fromFacts ? [] : pool.slice(0, isOpinion ? 0 : players);
 
   return (
-    <div style={{ ...ui.card, display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start", borderColor: colors.ink, borderWidth: 2 }}>
-      <div style={{ flex: 1, minWidth: 280, display: "flex", flexDirection: "column", gap: 10 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>{t ? `Edit: ${t.tag}` : "New question"}</h2>
-        {t ? null : (
-          <label style={label}>
-            Kind of question
-            <select style={ui.input} value={family} onChange={(e) => setFamily(e.target.value as Family)}>
-              {FAMILIES.filter((f) => f.id !== "q").map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label style={label}>
-          Tag (the small label on the card)
-          <input style={ui.input} value={tag} onChange={(e) => setTag(e.target.value)} />
-        </label>
-        {fromFacts ? (
-          <p style={ui.muted}>This one is built from facts about the players, so the question and options can’t be edited.</p>
-        ) : (
-          <>
-            {isOpinion ? null : (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <label style={{ ...label, width: 130 }}>
+    <div className={`v2-card attention v2-enter${pending ? " busy" : ""}`} aria-busy={pending || undefined}>
+      <h2 className="v2-h2">{t ? `Edit: ${t.tag}` : "New question"}</h2>
+      <div className="v2-row" style={{ alignItems: "flex-start", gap: 24 }}>
+        <div className="v2-stack" style={{ flex: 1, minWidth: 280, gap: 12 }}>
+          <div className="v2-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
+            {t ? null : (
+              <label className="v2-field">
+                Kind of question
+                <select className="v2-select" value={family} onChange={(e) => setFamily(e.target.value as Family)}>
+                  {FAMILIES.filter((f) => f.id !== "q").map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <label className="v2-field">
+              Tag (the small label on the card)
+              <input className="v2-input" value={tag} onChange={(e) => setTag(e.target.value)} />
+            </label>
+            {fromFacts || isOpinion ? null : (
+              <>
+                <label className="v2-field">
                   How many players
-                  <select style={ui.input} value={players} onChange={(e) => setPlayers(Number(e.target.value))}>
+                  <select className="v2-select" value={players} onChange={(e) => setPlayers(Number(e.target.value))}>
                     {[1, 2, 3, 4].map((n) => (
                       <option key={n} value={n}>
                         {n}
@@ -284,87 +318,83 @@ function Editor({ t, onNotice, onCancel }: { t: QuizTemplate | null; onNotice: (
                     ))}
                   </select>
                 </label>
-                <label style={{ ...label, width: 130 }}>
+                <label className="v2-field">
                   Players are
-                  <select style={ui.input} value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
+                  <select className="v2-select" value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
                     <option value="m">Men</option>
                     <option value="f">Women</option>
                   </select>
                 </label>
-              </div>
+              </>
             )}
-            <label style={label}>
-              Question
-              <textarea
-                ref={area}
-                style={{ ...ui.input, height: 90, padding: 12, fontFamily: "inherit" }}
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-            </label>
-            {isOpinion ? null : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Put a player’s name in the question (it goes where your cursor is)</span>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {tokenButtons(players).map((b) => (
-                    <button key={b.token} type="button" style={{ ...ui.secondary, minHeight: 36, fontSize: 13 }} onClick={() => insert(b.token)}>
-                      {b.label}
-                    </button>
-                  ))}
+          </div>
+          {fromFacts ? (
+            <span className="v2-muted">This one is built from facts about the players, so the question and options can’t be edited.</span>
+          ) : (
+            <>
+              <label className="v2-field">
+                Question
+                <textarea ref={area} className="v2-input" style={{ height: 90, padding: 12 }} value={q} onChange={(e) => setQ(e.target.value)} />
+              </label>
+              {isOpinion ? null : (
+                <div className="v2-stack">
+                  <span className="v2-field">Put a player’s name in the question (it goes where your cursor is)</span>
+                  <div className="v2-row" style={{ gap: 6 }}>
+                    {tokenButtons(players).map((b) => (
+                      <Secondary key={b.token} small onClick={() => insert(b.token)}>
+                        {b.label}
+                      </Secondary>
+                    ))}
+                  </div>
                 </div>
+              )}
+              <div className="v2-stack">
+                <span className="v2-field">Answers (2 to 4)</span>
+                {options.map((o, i) => (
+                  <div key={i} className="v2-row" style={{ flexWrap: "nowrap" }}>
+                    <input
+                      className="v2-input"
+                      value={o}
+                      aria-label={`Answer ${i + 1}`}
+                      onChange={(e) => setOptions(options.map((x, j) => (j === i ? e.target.value : x)))}
+                    />
+                    <Secondary small disabled={options.length <= 2} onClick={() => setOptions(options.filter((_, j) => j !== i))}>
+                      Remove
+                    </Secondary>
+                  </div>
+                ))}
+                {options.length < 4 ? (
+                  <span>
+                    <Ghost onClick={() => setOptions([...options, ""])}>+ Add an answer</Ghost>
+                  </span>
+                ) : null}
               </div>
-            )}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: 13, fontWeight: 700 }}>Answers (2 to 4)</span>
-              {options.map((o, i) => (
-                <div key={i} style={{ display: "flex", gap: 6 }}>
-                  <input
-                    style={ui.input}
-                    value={o}
-                    aria-label={`Answer ${i + 1}`}
-                    onChange={(e) => setOptions(options.map((x, j) => (j === i ? e.target.value : x)))}
-                  />
-                  <button
-                    style={ui.secondary}
-                    disabled={options.length <= 2}
-                    aria-label={`Remove answer ${i + 1}`}
-                    onClick={() => setOptions(options.filter((_, j) => j !== i))}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-              {options.length < 4 ? (
-                <button style={{ ...ui.link, alignSelf: "flex-start" }} onClick={() => setOptions([...options, ""])}>
-                  + Add an answer
-                </button>
-              ) : null}
-            </div>
-          </>
+            </>
+          )}
+          <label className="v2-choice">
+            <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            Switched on (players can get this question)
+          </label>
+          <div className="v2-row">
+            <Primary busy={pending} disabled={!tag.trim()} onClick={save}>
+              {pending ? (t ? "Saving…" : "Adding…") : t ? "Save" : "Add question"}
+            </Primary>
+            <Secondary disabled={pending} onClick={onCancel}>
+              Cancel
+            </Secondary>
+          </div>
+        </div>
+        {fromFacts ? null : (
+          <div className="v2-stack">
+            <span className="v2-field">How it looks on the phone</span>
+            <PhoneCard
+              tag={tag}
+              question={renderQuizQuestion(q, shown)}
+              options={options.map((o) => renderQuizText(o, shown)).filter((o) => o.trim())}
+            />
+          </div>
         )}
-        <label style={check}>
-          <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />
-          Switched on (players can get this question)
-        </label>
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button style={ui.primary} disabled={pending || !tag.trim()} onClick={save}>
-            {t ? "Save" : "Add question"}
-          </button>
-          <button style={ui.secondary} disabled={pending} onClick={onCancel}>
-            Cancel
-          </button>
-        </div>
       </div>
-      {fromFacts ? null : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 700 }}>How it looks on the phone</span>
-          <PhoneCard
-            tag={tag}
-            question={renderQuizQuestion(q, shown)}
-            options={options.map((o) => renderQuizText(o, shown)).filter((o) => o.trim())}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -372,20 +402,7 @@ function Editor({ t, onNotice, onCancel }: { t: QuizTemplate | null; onNotice: (
 /** a 360px wide ink card, as the app shows it */
 function PhoneCard({ tag, question, options, clues, right }: { tag: string; question: string; options: string[]; clues?: string[]; right?: number }) {
   return (
-    <div
-      style={{
-        width: 360,
-        maxWidth: "100%",
-        boxSizing: "border-box",
-        background: colors.ink,
-        color: colors.paper,
-        borderRadius: 24,
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        gap: 12,
-      }}
-    >
+    <div className="v2-card ink v2-enter" style={{ width: 360, maxWidth: "100%", borderRadius: 24, padding: 20 }}>
       <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: 1, opacity: 0.7 }}>{tag || "TAG"}</span>
       <strong style={{ fontSize: 20, lineHeight: 1.25 }}>{question || "..."}</strong>
       {clues?.length ? (
@@ -399,7 +416,7 @@ function PhoneCard({ tag, question, options, clues, right }: { tag: string; ques
         <div
           key={i}
           style={{
-            border: `2px solid ${colors.paper}`,
+            border: "2px solid var(--np-paper)",
             borderRadius: 14,
             padding: "12px 14px",
             fontWeight: 700,
@@ -440,35 +457,41 @@ function DayPreviewPanel() {
     });
 
   return (
-    <section style={{ ...ui.card, display: "flex", flexDirection: "column", gap: 10 }}>
-      <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>See someone’s daily questions</h2>
-      <p style={ui.muted}>Type a player’s email and a day to see the questions they get.</p>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          style={{ ...ui.input, flex: 1, minWidth: 220 }}
-          type="email"
-          placeholder="Their email"
-          aria-label="Their email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input style={{ ...ui.input, width: 170 }} type="date" aria-label="Day" value={day} onChange={(e) => setDay(e.target.value)} />
-        <label style={check}>
-          <input type="checkbox" checked={pro} onChange={(e) => setPro(e.target.checked)} />
-          Pro account (12 questions)
-        </label>
-        <button style={ui.primary} disabled={pending || !email.trim()} onClick={run}>
-          Show questions
-        </button>
+    <Section title="See someone’s daily questions">
+      <div className={`v2-card${pending ? " busy" : ""}`} aria-busy={pending || undefined}>
+        <span className="v2-muted">Type a player’s email and a day to see the questions they get. This only looks, it changes nothing.</span>
+        <div className="v2-row" style={{ alignItems: "flex-end" }}>
+          <label className="v2-field" style={{ flex: 1, minWidth: 220 }}>
+            Their email
+            <input className="v2-input" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
+          <label className="v2-field" style={{ width: 170 }}>
+            Day
+            <input className="v2-input" type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+          </label>
+          <label className="v2-choice">
+            <input type="checkbox" checked={pro} onChange={(e) => setPro(e.target.checked)} />
+            Pro account (12 questions)
+          </label>
+          <Secondary busy={pending} disabled={!email.trim()} onClick={run}>
+            {pending ? "Loading…" : "Show questions"}
+          </Secondary>
+        </div>
+        {pending ? <Banner tone="working" title="Building their questions…" detail="The same cards the app would show them that day." /> : null}
+        {!pending && error ? <Banner tone="problem" title="Couldn’t load that day" detail={error} /> : null}
+        {!pending && result === null ? <Empty title="Nothing for that email and day">Check the email, or try another day.</Empty> : null}
       </div>
-      {error ? <Banner tone="problem" title="Couldn’t load that day" detail={error} /> : null}
-      {result === null ? <p style={ui.muted}>Nothing for that email and day.</p> : null}
-      {result ? (
+      {pending ? (
+        <SkeletonCards count={6} />
+      ) : result ? (
         <>
-          <p style={ui.muted}>
-            {result.quiz_day} · {result.pro ? "Pro" : "Free"} account · {result.cards.length} questions
-          </p>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+          <div className="v2-row">
+            <Badge tone="ink">{result.pro ? "Pro" : "Free"} account</Badge>
+            <span className="v2-muted">
+              {result.quiz_day} · {result.cards.length} questions
+            </span>
+          </div>
+          <div className="v2-row" style={{ alignItems: "flex-start", gap: 14 }}>
             {result.cards.map((c) => {
               const pl = c.content.players ?? [];
               return (
@@ -485,6 +508,6 @@ function DayPreviewPanel() {
           </div>
         </>
       ) : null}
-    </section>
+    </Section>
   );
 }
