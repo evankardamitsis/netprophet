@@ -210,6 +210,10 @@ export const el = {
   feed: {
     title: 'Τι παίζει σήμερα;',
     subtitle: 'Ψήφισε τους νικητές και μάζεψε πόντους.',
+    /** «Το ματς σου» at the top of Σήμερα when you play today or tomorrow */
+    myMatch: 'Το ματς σου',
+    /** the fold for matches on later days: «Αύριο και μετά · 4» */
+    later: 'Αύριο και μετά · {count}',
     end: 'Όσο κατεβαίνεις, βλέπεις ματς από παίκτες που ίσως δεν ξέρεις.',
     empty: 'Κανένα ματς αυτή τη μέρα ακόμα.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
@@ -223,6 +227,8 @@ export const el = {
       confirmMany: '{count} ματς να επιβεβαιώσεις',
       open: 'Άνοιξε',
       close: 'Κλείσε',
+      /** the once-a-day full screen «Για σένα»: its close button */
+      later: 'Αργότερα',
     },
   },
   result: {

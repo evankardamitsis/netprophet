@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useCopy } from '../i18n';
 import type { DailyFold as Fold } from '../lib/dailyFold';
@@ -78,4 +80,37 @@ const styles = StyleSheet.create({
   preview: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20, color: colors.mist },
   glyph: { fontFamily: fonts.bodyBold, fontSize: 22, lineHeight: 26, color: colors.paper },
   inside: { gap: 14 },
+});
+
+/**
+ * «Για σένα» once a day, full screen (founder, 14 Oct: "visible when you open the app every day ... so it doesnt get
+ * buried in the feed, if the player closes it we leave it as is now"): the same cards as the fold, on paper, with
+ * «Αργότερα» to close. The fold stays on the feed either way.
+ */
+export function ForYouSheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: ReactNode }) {
+  const t = useCopy();
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="overFullScreen" transparent onRequestClose={onClose}>
+      <View style={[sheet.screen, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 16 }]}>
+        <StatusBar style="dark" />
+        <Text style={sheet.title}>{t.feed.daily.title}</Text>
+        <ScrollView contentContainerStyle={sheet.list} showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
+        <Pressable accessibilityRole="button" onPress={onClose} style={sheet.close}>
+          <Text style={sheet.closeText}>{t.feed.daily.later}</Text>
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
+
+const sheet = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.paper, paddingHorizontal: 20, gap: 16 },
+  // the tonos of «Για» needs the room iOS would otherwise clip
+  title: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 56, paddingTop: 8, color: colors.ink },
+  list: { gap: 14, paddingBottom: 12 },
+  close: { minHeight: 52, alignItems: 'center', justifyContent: 'center' },
+  closeText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
 });
