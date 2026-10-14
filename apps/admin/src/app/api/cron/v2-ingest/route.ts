@@ -71,5 +71,12 @@ export async function GET(request: NextRequest) {
       }
     }
   }
-  return NextResponse.json({ athensHour: hour, tournaments: results });
+  // rain (founder, 14 Oct): from the second run of the day, yesterday's sheet matches that still have no result are
+  // called off; never at 08:00, results of late matches may only come in with the morning run
+  let rainedOff: unknown = null;
+  if (hour >= 15) {
+    const rain = await rpc('cron_auto_rain', {});
+    rainedOff = rain.error ? { error: rain.error.message } : rain.data;
+  }
+  return NextResponse.json({ athensHour: hour, tournaments: results, rainedOff });
 }
