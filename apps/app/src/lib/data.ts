@@ -28,6 +28,7 @@ import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
 import { myMatchOf, type MyMatchView } from './myMatch';
+import { avatarByKey, defaultAvatarFor, type DefaultAvatar } from './avatar';
 import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
@@ -1531,4 +1532,62 @@ export function useMyMatch(): { match: MyMatchView | null; refresh: () => Promis
     void refresh();
   }, [refresh]);
   return { match, refresh };
+}
+
+/** the dev guest's pick, shared by every screen while the app runs */
+let MOCK_AVATAR: string | null = null;
+
+/**
+ * Your drawn avatar: the one you picked, else the default for your account (by gender, then a hash of your id).
+ * `pick` saves a choice; null goes back to the default.
+ */
+export function useMyAvatar(): {
+  avatar: DefaultAvatar | null;
+  picked: string | null;
+  pick: (key: string | null) => Promise<boolean>;
+  refresh: () => Promise<void>;
+} {
+  const api = useApi();
+  const [me, setMe] = useState<MeResult | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [mockPick, setMockPick] = useState<string | null>(null);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setMockPick(MOCK_AVATAR);
+      return;
+    }
+    try {
+      const m = await api.getMe();
+      setMe(m);
+      setPicked(m.profile.avatar ?? null);
+    } catch {
+      // keeps the last one
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  const pick = useCallback(
+    async (key: string | null) => {
+      if (!api) {
+        MOCK_AVATAR = key;
+        setMockPick(key);
+        return true;
+      }
+      const before = picked;
+      setPicked(key);
+      try {
+        await api.setAvatar(key);
+        return true;
+      } catch {
+        setPicked(before);
+        return false;
+      }
+    },
+    [api, picked],
+  );
+  if (!api) return { avatar: avatarByKey(mockPick) ?? defaultAvatarFor('mock-me', 'm'), picked: mockPick, pick, refresh };
+  if (!me) return { avatar: null, picked, pick, refresh };
+  const g = me.profile.gender === 'f' || me.profile.gender === 'm' ? me.profile.gender : null;
+  return { avatar: avatarByKey(picked) ?? defaultAvatarFor(me.user_id, g), picked, pick, refresh };
 }
