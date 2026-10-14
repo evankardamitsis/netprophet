@@ -31,8 +31,11 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 const GUEST_KEY = 'np.devGuest';
-/** dev builds only, see AuthState.guest */
-export const guestAllowed = __DEV__;
+/**
+ * Dev builds only, and only when asked for (EXPO_PUBLIC_DEV_GUEST=1): the founder wants real data everywhere (14 Oct),
+ * so «Άλλη φορά» and its sample data are off unless a developer turns them on. See AuthState.guest.
+ */
+export const guestAllowed = __DEV__ && process.env.EXPO_PUBLIC_DEV_GUEST === '1';
 
 function fail(err: { status?: number; code?: string; message: string }): never {
   throw new AuthFailure(authErrorKind(err), err.message);
