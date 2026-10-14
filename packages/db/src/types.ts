@@ -444,6 +444,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_rain_day: {
+        Args: { p_tournament_id: string; p_day: string; p_dry?: boolean };
+        Returns: number;
+      };
       admin_recompute_levels: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

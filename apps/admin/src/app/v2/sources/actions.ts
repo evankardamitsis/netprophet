@@ -143,3 +143,13 @@ export async function mergePlayers(dropId: string, keepId: string): Promise<Acti
     return { ok: false, message: m };
   }
 }
+
+/** «Βροχή»: call off a day's matches still without a result (dry: how many it would be) */
+export async function rainDay(id: string, day: string, dry: boolean): Promise<ActionResult<{ matches: number }>> {
+  try {
+    const n = (await call(await staffRpc(), 'admin_rain_day', { p_tournament_id: id, p_day: day, p_dry: dry })) as number;
+    return { ok: true, message: dry ? 'Counted' : 'Called off', data: { matches: n } };
+  } catch (e) {
+    return fail(e);
+  }
+}

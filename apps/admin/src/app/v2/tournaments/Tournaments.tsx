@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition, type CSSProperties } from 'react';
 import { colors, ui } from '../ui';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
-import { createTournament, loadReviews, loadTournaments, mergePlayers, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
+import { createTournament, loadReviews, loadTournaments, mergePlayers, rainDay, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
 
 const NEW = 'new';
@@ -348,6 +348,35 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
       }
     });
 
+  // «Βροχή»: today and yesterday with how many matches are still open on each, then one tap calls a day off
+  const [rain, setRain] = useState<{ day: string; label: string; n: number }[] | null>(null);
+  const openRain = () =>
+    start(async () => {
+      const days = [
+        { day: athensDay(0), label: 'Today' },
+        { day: athensDay(-1), label: 'Yesterday' },
+      ];
+      const counted = await Promise.all(days.map(async (d) => ({ ...d, n: (await rainDay(t.id, d.day, true)).data?.matches ?? 0 })));
+      setRain(counted);
+    });
+  const callOff = (day: string, label: string) =>
+    start(async () => {
+      const r = await rainDay(t.id, day, false);
+      setRain(null);
+      if (!r.ok) {
+        setNote({ tone: 'problem', title: 'Could not call them off', detail: r.message });
+        return;
+      }
+      const n = r.data?.matches ?? 0;
+      setNote({
+        tone: 'done',
+        title: `${label}: ${n} ${n === 1 ? 'match' : 'matches'} called off for rain`,
+        detail: 'Players see «Αναβλήθηκε» and keep their votes. When the sheet gives a match a new day, it comes back on its own.',
+      });
+      notify('Called off for rain');
+      await onChanged();
+    });
+
   const toggle = () =>
     start(async () => {
       const r = await saveSource(t.id, { ongoing: !t.ongoing });
@@ -399,11 +428,29 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
           <button style={ui.secondary} disabled={pending} onClick={() => setEditing(true)}>
             Edit
           </button>
+          <button style={ui.secondary} disabled={pending} onClick={openRain}>
+            Rained off…
+          </button>
           <button style={ui.link} disabled={pending} onClick={toggle}>
             {t.ongoing ? 'Pause updates' : 'Resume updates'}
           </button>
         </div>
       )}
+      {rain ? (
+        <div style={{ ...stack(8), padding: 12, borderRadius: 10, background: colors.paper }}>
+          <strong>Call off the matches that have no result yet</strong>
+          <div style={row}>
+            {rain.map((d) => (
+              <button key={d.day} style={ui.secondary} disabled={pending || d.n === 0} onClick={() => callOff(d.day, d.label)}>
+                {d.label}: {d.n === 0 ? 'nothing open' : `${d.n} ${d.n === 1 ? 'match' : 'matches'}`}
+              </button>
+            ))}
+            <button style={ui.link} disabled={pending} onClick={() => setRain(null)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
       {note ? <Banner tone={note.tone} title={note.title} detail={note.detail} /> : null}
     </div>
   );
@@ -582,4 +629,10 @@ function Skip({ pending, send }: { pending: boolean; send: (d: ReviewDecision) =
       Skip
     </button>
   );
+}
+
+/** an Athens calendar day as YYYY-MM-DD, offset by whole days */
+function athensDay(offset: number): string {
+  const d = new Date(Date.now() + offset * 86_400_000);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Athens', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
 }
