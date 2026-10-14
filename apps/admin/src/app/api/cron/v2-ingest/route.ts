@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { V2_URL } from '@/lib/v2/env';
+import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
 import { drawsForTournament, rowsForTournament } from '@/lib/v2/sheets';
 
 export const dynamic = 'force-dynamic';
@@ -78,5 +79,9 @@ export async function GET(request: NextRequest) {
     const rain = await rpc('cron_auto_rain', {});
     rainedOff = rain.error ? { error: rain.error.message } : rain.data;
   }
-  return NextResponse.json({ athensHour: hour, tournaments: results, rainedOff });
+  // the records sheet mirrors what the runs left in the database; it never fails the run (writeRecordsSheet does not
+  // throw), its problem is reported here and the next run tries again
+  const records = await writeRecordsSheet(rpc);
+  if (!records.ok) console.warn(`records sheet: ${records.message}`);
+  return NextResponse.json({ athensHour: hour, tournaments: results, rainedOff, records });
 }

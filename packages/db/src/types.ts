@@ -716,6 +716,10 @@ export type Database = {
         Args: { p_match_id: string; p_key: string };
         Returns: Json;
       };
+      records_sheet: {
+        Args: { p_since?: string };
+        Returns: Json;
+      };
       register_push_token: {
         Args: { p_token: string; p_platform: string };
         Returns: boolean;

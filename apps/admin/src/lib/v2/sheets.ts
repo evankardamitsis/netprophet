@@ -25,7 +25,11 @@ const b64url = (b: Buffer | string) => Buffer.from(b).toString('base64url');
 
 let cached: { token: string; until: number } | null = null;
 
-/** an OAuth access token for the service account (JWT bearer grant, read-only Sheets scope), reused for an hour */
+/**
+ * an OAuth access token for the service account (JWT bearer grant), reused for an hour. One scope for everything: the
+ * full Sheets scope, because the records sheet is written; organisers' sheets stay read-only through their sharing
+ * (Viewer), not through the scope.
+ */
 async function serviceToken(json: string): Promise<string> {
   if (cached && cached.until > Date.now() + 60_000) return cached.token;
   let sa: { client_email?: string; private_key?: string };
@@ -40,7 +44,7 @@ async function serviceToken(json: string): Promise<string> {
   const claim = b64url(
     JSON.stringify({
       iss: sa.client_email,
-      scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+      scope: 'https://www.googleapis.com/auth/spreadsheets',
       aud: 'https://oauth2.googleapis.com/token',
       iat: now,
       exp: now + 3600,
@@ -57,6 +61,19 @@ async function serviceToken(json: string): Promise<string> {
   const body = (await res.json()) as { access_token: string; expires_in: number };
   cached = { token: body.access_token, until: Date.now() + body.expires_in * 1000 };
   return body.access_token;
+}
+
+/** the service account as a bearer token, for writing (an API key cannot write); null when it is not set */
+export async function serviceAccess(): Promise<{ headers: Record<string, string>; email: string } | null> {
+  const json = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (!json) return null;
+  let email = 'the service account';
+  try {
+    email = (JSON.parse(json) as { client_email?: string }).client_email ?? email;
+  } catch {
+    // serviceToken says what is wrong with it
+  }
+  return { headers: { authorization: `Bearer ${await serviceToken(json)}` }, email };
 }
 
 /** how this server reads sheets: a bearer token (service account) or an API key query parameter */

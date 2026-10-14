@@ -1,5 +1,7 @@
 'use server';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
+import type { RecordsResult } from '@/lib/v2/records';
+import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
 import { drawsForTournament, rowsForTournament, sourceKind } from '@/lib/v2/sheets';
 import type { DrawCounts, IngestCounts, ReviewItem, SourceTournament } from './types';
 
@@ -186,4 +188,15 @@ export async function deleteTournament(id: string): Promise<ActionResult<{ match
   } catch (e) {
     return fail(e);
   }
+}
+
+/** «Write records now»: mirror every tournament's matches into the records sheet (the runs do it 3 times a day) */
+export async function writeRecordsNow(): Promise<RecordsResult> {
+  let rpc: Rpc;
+  try {
+    rpc = await staffRpc();
+  } catch (e) {
+    return { ok: false, configured: true, message: e instanceof Error ? e.message : 'failed' };
+  }
+  return writeRecordsSheet(rpc);
 }
