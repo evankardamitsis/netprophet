@@ -1,6 +1,6 @@
 -- M4: the morning email's data: staff who asked for it, decisions, results only staff can enter, sheet problems, service only.
 begin;
-select plan(7);
+select plan(8);
 
 select tests.create_user('mail-adm@test.local', 'admin') as adm \gset
 select tests.create_user('mail-u@test.local') as u \gset
@@ -12,6 +12,11 @@ select tests.mk_match(:'a'::uuid, :'b'::uuid, now() - interval '5 hours') as m \
 insert into core.tournaments (sport_id, name, source, source_url) values ('tennis', 'Mail Open', 'import', 'https://docs.google.com/spreadsheets/d/x') returning id as t \gset
 insert into core.ingest_runs (tournament_id, trigger, health, error) values (:'t'::uuid, 'cron', 'error', 'not shared');
 insert into core.ingest_reviews (tournament_id, kind, fingerprint, payload) values (:'t'::uuid, 'walkover', 'f1', '{}');
+
+select tests.mk_player('Νέος', 'Νεοφερμένος') as np \gset
+update core.players set source = 'import' where id = :'np'::uuid;
+select tests.mk_match(:'np'::uuid, :'a'::uuid, now() + interval '1 day') as m2 \gset
+update core.matches set tournament_id = :'t'::uuid where id = :'m2'::uuid;
 
 select tests.login(:'u'::uuid);
 select throws_ok($$select api.admin_morning_digest()$$, '42501', null, 'not for users');
@@ -30,5 +35,7 @@ select ok((:'d'::jsonb -> 'decisions' ->> 'walkovers')::int >= 1, 'the walkover 
 select ok((:'d'::jsonb ->> 'results_for_you')::int >= 1, 'a friendly with no result');
 select ok(jsonb_path_exists(:'d'::jsonb, '$.sheet_problems[*] ? (@.tournament == "Mail Open" && @.health == "error")'), 'the sheet that could not be read');
 
+select ok(jsonb_path_exists(:'d'::jsonb, '$.new_players[*] ? (@.tournament == "Mail Open" && @.count == 1 && @.names[0] == "Νεοφερμένος Νέος")'),
+          'a player the sheet added, under its tournament');
 select * from finish();
 rollback;

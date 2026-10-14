@@ -9,6 +9,8 @@ export interface Digest {
   postponed: number;
   today: { tournament: string; matches: number }[];
   last_runs: number;
+  /** players the imports added to the roster in the last day, per tournament (up to 15 names each) */
+  new_players?: { tournament: string; count: number; names: string[] }[];
 }
 
 const ADMIN_URL = 'https://netprophet-admin-v2.vercel.app/v2';
@@ -35,6 +37,10 @@ export function morningEmail(d: Digest): { subject: string; html: string; text: 
   for (const o of d.overdue) news.push(`${o.tournament}: ${many(o.matches, 'match has', 'matches have')} no result after 3 nights (the organiser has not filled them in yet)`);
   if (d.postponed) news.push(`${many(d.postponed, 'match was', 'matches were')} postponed in the last day (rain or a moved day); they come back when the organiser puts them on a new day`);
   const today = d.today.length ? d.today.map((t) => `${t.tournament}: ${many(t.matches, 'match', 'matches')}`) : ['No matches today.'];
+  for (const n of d.new_players ?? []) {
+    const more = n.count > n.names.length ? `, and ${n.count - n.names.length} more` : '';
+    news.push(`${n.tournament}: ${many(n.count, 'new player', 'new players')} added to the roster (${n.names.join(', ')}${more}). Check the spelling on ${ADMIN_URL}/players`);
+  }
   if (!d.last_runs) news.push('The sheets were not read in the last day. The automatic updates may be stuck.');
   const subject = todo.length ? `NetProphet: ${many(todo.length, 'thing needs', 'things need')} you today` : 'NetProphet: all quiet this morning';
   const block = (title: string, lines: string[]) =>
