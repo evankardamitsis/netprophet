@@ -167,17 +167,17 @@ export function BouncingLogo({ height }: { height: number }) {
 }
 
 /** light from the top left and a darker rim at the bottom right, drawn over the ball and never turning */
-export function Shade({ size }: { size: number }) {
+export function Shade({ size, strength = 1 }: { size: number; strength?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 30 30" style={StyleSheet.absoluteFill}>
       <Defs>
         <RadialGradient id="np-ball-light" cx="35%" cy="30%" r="55%">
-          <Stop offset="0" stopColor={colors.white} stopOpacity={0.55} />
+          <Stop offset="0" stopColor={colors.white} stopOpacity={0.55 * strength} />
           <Stop offset="1" stopColor={colors.white} stopOpacity={0} />
         </RadialGradient>
         <RadialGradient id="np-ball-dark" cx="38%" cy="34%" r="70%">
           <Stop offset="0.6" stopColor={colors.ink} stopOpacity={0} />
-          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.45} />
+          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.45 * strength} />
         </RadialGradient>
       </Defs>
       <Circle cx={15} cy={15} r={15} fill="url(#np-ball-dark)" />
