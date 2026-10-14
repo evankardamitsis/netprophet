@@ -28,16 +28,11 @@ export default async function PlayersPage() {
     );
   }
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="players" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="players" staff={staff} />
       <main style={ui.main}>
         <Roster />
       </main>
-    </>
+    </div>
   );
 }

@@ -28,16 +28,11 @@ export default async function TournamentsPage() {
     );
   }
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="tournaments" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="tournaments" staff={staff} />
       <main style={{ ...ui.main, maxWidth: 880 }}>
         <Tournaments />
       </main>
-    </>
+    </div>
   );
 }

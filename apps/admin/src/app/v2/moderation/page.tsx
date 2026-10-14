@@ -30,13 +30,8 @@ export default async function ModerationPage() {
   const rpc = client.rpc.bind(client) as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
   const [queue, tournaments] = await Promise.all([rpc('admin_moderation', {}), rpc('admin_tournaments', {})]);
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="moderation" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="moderation" staff={staff} />
       <main style={ui.main}>
         {queue.error ? (
           <p style={ui.error}>{queue.error.message}</p>
@@ -44,6 +39,6 @@ export default async function ModerationPage() {
           <Queue data={queue.data as Moderation} tournaments={((tournaments.data ?? []) as TournamentOption[]).map((t) => ({ id: t.id, name: t.name }))} />
         )}
       </main>
-    </>
+    </div>
   );
 }

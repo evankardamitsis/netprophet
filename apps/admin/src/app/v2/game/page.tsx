@@ -28,16 +28,11 @@ export default async function GamePage() {
     );
   }
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="game" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="game" staff={staff} />
       <main style={ui.main}>
         <Game />
       </main>
-    </>
+    </div>
   );
 }

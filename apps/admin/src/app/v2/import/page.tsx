@@ -34,16 +34,11 @@ export default async function ImportDesk() {
     client.from('areas').select('id, name_el').order('sort'),
   ]);
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="import" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="import" staff={staff} />
       <main style={{ ...ui.main, maxWidth: 1100 }}>
         <Importer tournaments={(tournaments ?? []) as Tournament[]} areas={(areas ?? []) as { id: string; name_el: string }[]} />
       </main>
-    </>
+    </div>
   );
 }

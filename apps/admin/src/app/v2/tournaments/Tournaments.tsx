@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition, type CSSProperties } from 'react';
 import { colors, ui } from '../ui';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
-import { createTournament, loadClubs, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
+import { createTournament, deleteTournament, loadClubs, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
 
 const NEW = 'new';
@@ -378,6 +378,23 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
       await onChanged();
     });
 
+  const [deleting, setDeleting] = useState(false);
+  const remove = () =>
+    start(async () => {
+      const r = await deleteTournament(t.id);
+      setDeleting(false);
+      if (!r.ok) {
+        setNote({
+          tone: 'problem',
+          title: 'Could not delete it',
+          detail: r.message.includes('has_votes') ? 'People already voted on its matches, so their points depend on it. Pause updates instead.' : r.message,
+        });
+        return;
+      }
+      notify(`${t.name} deleted`);
+      await onChanged();
+    });
+
   const toggle = () =>
     start(async () => {
       const r = await saveSource(t.id, { ongoing: !t.ongoing });
@@ -435,8 +452,28 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
           <button style={ui.link} disabled={pending} onClick={toggle}>
             {t.ongoing ? 'Pause updates' : 'Resume updates'}
           </button>
+          <button style={ui.link} disabled={pending} onClick={() => setDeleting(true)}>
+            Delete…
+          </button>
         </div>
       )}
+      {deleting ? (
+        <div style={{ ...stack(8), padding: 12, borderRadius: 10, background: colors.paper }}>
+          <strong>
+            Delete {t.name}
+            {t.matches ? ` and its ${t.matches} ${t.matches === 1 ? 'match' : 'matches'}` : ''}?
+          </strong>
+          <span style={ui.muted}>Results, draws and decisions go with it, and levels are worked out again. This cannot be undone.</span>
+          <div style={row}>
+            <button style={ui.secondary} disabled={pending} onClick={remove}>
+              Delete for good
+            </button>
+            <button style={ui.link} disabled={pending} onClick={() => setDeleting(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
       {rain ? (
         <div style={{ ...stack(8), padding: 12, borderRadius: 10, background: colors.paper }}>
           <strong>Call off the matches that have no result yet</strong>

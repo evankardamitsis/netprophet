@@ -177,3 +177,13 @@ export async function saveClub(id: string, surface: string): Promise<ActionResul
     return fail(e);
   }
 }
+
+/** delete a tournament with its matches and draws (admins; refused once people voted on it) */
+export async function deleteTournament(id: string): Promise<ActionResult<{ matches: number }>> {
+  try {
+    const data = (await call(await staffRpc(), 'admin_delete_tournament', { p_id: id })) as { matches: number };
+    return { ok: true, message: 'Deleted', data };
+  } catch (e) {
+    return fail(e);
+  }
+}

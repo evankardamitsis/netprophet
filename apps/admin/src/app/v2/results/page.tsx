@@ -34,16 +34,11 @@ export default async function ResultsDesk() {
   );
   const items = (data ?? []) as DeskItem[];
   return (
-    <>
-      <header style={ui.bar}>
-        <Nav here="results" />
-        <span style={{ display: 'flex', gap: 16, alignItems: 'center', fontSize: 14 }}>
-          {staff.name} ({staff.role}) <SignOut />
-        </span>
-      </header>
+    <div className="v2-shell">
+      <Nav here="results" staff={staff} />
       <main style={ui.main}>
         {error ? <p style={ui.error}>{error.message}</p> : <Desk items={items} admin={staff.role === 'admin'} />}
       </main>
-    </>
+    </div>
   );
 }
