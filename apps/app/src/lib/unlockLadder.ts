@@ -6,8 +6,11 @@ import { UNLOCK_STEPS, evaluateUnlocks, unlockedFeatures, type UnlockCounters } 
  */
 export const ALL_STEP_IDS: string[] = UNLOCK_STEPS.map((s) => s.id);
 
-/** the steps that get a full-screen moment; the others open quietly */
-export const MOMENT_KEYS: readonly string[] = ['level_bar', 'daily_quests', 'ladder_friends', 'kudos_reactions', 'badges_shelf', 'pro_first_view', 'stats_area'];
+/**
+ * the steps that get a full-screen moment; the others open quietly. Three, not seven (founder, 14 Oct: «it feels
+ * really overwhelming»): your level, Κατάταξη and the first badge. core.unlock_defs.celebrate says the same.
+ */
+export const MOMENT_KEYS: readonly string[] = ['level_bar', 'ladder_friends', 'badges_shelf'];
 
 export const hasMoment = (key: string): boolean => MOMENT_KEYS.includes(key);
 
