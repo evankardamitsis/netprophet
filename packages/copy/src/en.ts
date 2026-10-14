@@ -388,6 +388,7 @@ export const en: Copy = {
     replayOnboarding: 'Run onboarding again',
     newPlayer: 'New player',
     newPlayerOn: 'New player ✓',
+    avatarsDev: 'Avatars (test)',
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
     gameLevel: {
       title: 'Level {n}',
@@ -453,7 +454,7 @@ export const en: Copy = {
     activeUntil: 'Active until {date}',
     neverSells: 'It never buys points, places or level.',
     failed: 'That did not work. Try again.',
-    settingsLine: 'Your opponent before the match, where you win, your level numbers',
+    settingsLine: 'Your opponent before the match, where you win, your stats',
   },
   scout: {
     title: 'Your opponent before the match',
