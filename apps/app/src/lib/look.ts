@@ -6,7 +6,7 @@ import { fmt } from './votes';
  * Εμφάνιση (prototype V2, the look screen) and the back of the Εγώ card: the words and decisions, pure and tested.
  * Style only: nothing here touches level, votes or the Ladder. Buying waits for the payment provider.
  */
-export const LOOK_TABS: readonly LookCategory[] = ['frame', 'background', 'kit'];
+export const LOOK_TABS: readonly LookCategory[] = ['frame', 'background', 'kit', 'gear', 'win_effect'];
 
 /** a tile in the grid: an item, or the «Χωρίς frame» / «Χωρίς φόντο» tile (key null) */
 export interface Tile {
@@ -26,10 +26,17 @@ export const itemName = (i: LookItem): string => i.name_el;
 
 export function tileName(tile: Tile, t: Copy): string {
   if (tile.item) return itemName(tile.item);
-  return tile.category === 'frame' ? t.look.noFrame : t.look.noBackground;
+  const none: Record<LookCategory, string> = {
+    frame: t.look.noFrame,
+    background: t.look.noBackground,
+    kit: t.look.noFrame,
+    gear: t.look.noGear,
+    win_effect: t.look.noEffect,
+  };
+  return none[tile.category];
 }
 
-/** the tiles of a tab: frames and backgrounds start with «Χωρίς …» */
+/** the tiles of a tab: all but the kit start with «Χωρίς …» */
 export function tilesFor(look: GetLookResult, tab: LookCategory): Tile[] {
   const own = look.items.filter((i) => i.category === tab).map((item): Tile => ({ category: tab, key: item.key, item }));
   return tab === 'kit' ? own : [{ category: tab, key: null, item: null }, ...own];
@@ -37,7 +44,7 @@ export function tilesFor(look: GetLookResult, tab: LookCategory): Tile[] {
 
 /** the key worn in a category (null: nothing on) */
 export function wornKey(look: GetLookResult, category: LookCategory): string | null {
-  return look.equipped[category];
+  return look.equipped[category] ?? null;
 }
 
 export function findTile(look: GetLookResult, tab: LookCategory, key: string | null | undefined): Tile {
@@ -86,6 +93,8 @@ export function buySheetOf(item: LookItem, t: Copy): BuySheet | null {
   const price = fmt(t.look.priceSpaced, { price: eur(item.price_eur) });
   if (item.category === 'kit') return { title: s.kit, price, line: s.lineKit, note: s.noteKit };
   if (item.category === 'frame') return { title: fmt(s.frame, { name: itemName(item) }), price, line: s.lineFrame, note: s.noteFrame };
+  if (item.category === 'gear') return { title: fmt(s.gear, { name: itemName(item) }), price, line: s.lineGear, note: s.noteGear };
+  if (item.category === 'win_effect') return { title: fmt(s.effect, { name: itemName(item) }), price, line: s.lineEffect, note: s.noteEffect };
   return { title: fmt(s.background, { name: itemName(item) }), price, line: s.lineBackground, note: s.noteBackground };
 }
 
@@ -98,12 +107,22 @@ export function withWorn(look: GetLookResult, category: LookCategory, key: strin
 }
 
 /** what the preview card wears: the picked tile in its category, the rest as worn */
-export function previewOf(look: GetLookResult, tab: LookCategory, picked: string | null): { frame: string | null; background: string | null; kit: string } {
+export interface LookPreview {
+  frame: string | null;
+  background: string | null;
+  kit: string;
+  gear: string | null;
+  effect: string | null;
+}
+
+export function previewOf(look: GetLookResult, tab: LookCategory, picked: string | null): LookPreview {
   const eq = look.equipped;
   return {
     frame: tab === 'frame' ? picked : eq.frame,
     background: tab === 'background' ? picked : eq.background,
     kit: tab === 'kit' && picked ? picked : eq.kit,
+    gear: tab === 'gear' ? picked : eq.gear ?? null,
+    effect: tab === 'win_effect' ? picked : eq.win_effect ?? null,
   };
 }
 

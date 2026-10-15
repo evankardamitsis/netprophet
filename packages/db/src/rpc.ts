@@ -233,7 +233,7 @@ export interface GetBadgesResult {
   worn: string | null;
 }
 
-export type LookCategory = 'frame' | 'background' | 'kit';
+export type LookCategory = 'frame' | 'background' | 'kit' | 'gear' | 'win_effect';
 export type LookKind = 'free' | 'earned' | 'buy' | 'pack';
 
 /** one cosmetic item as it is to me (api.get_look) */
@@ -254,7 +254,7 @@ export interface LookItem {
 /** api.get_look / api.equip_item: the catalogue and what I wear (no frame or background = null; the kit is always set) */
 export interface GetLookResult {
   items: LookItem[];
-  equipped: { frame: string | null; background: string | null; kit: string };
+  equipped: { frame: string | null; background: string | null; kit: string; gear?: string | null; win_effect?: string | null };
 }
 
 /** api.get_my_level: the back of the Εγώ card. The exact value and the gap to the next half are Pro only (null otherwise). */
@@ -277,7 +277,7 @@ export interface StreakCelebrationPayload {
   streak: number;
   match_id: string;
   /** what this milestone actually gave */
-  reward?: { freeze: boolean; frame: string | null };
+  reward?: { freeze: boolean; frame: string | null; gear?: string | null };
 }
 
 export interface QuestCelebrationPayload {

@@ -15,6 +15,9 @@ describe('tiles', () => {
     expect(tileName(tilesFor(look, 'background')[0]!, t)).toBe('Χωρίς φόντο');
     expect(tilesFor(look, 'kit')[0]!.key).toBe('kit_black');
     expect(tilesFor(look, 'kit')).toHaveLength(6);
+    // gear and the win effect start with «Χωρίς …» too
+    expect(tileName(tilesFor(look, 'gear')[0]!, t)).toBe('Χωρίς αξεσουάρ');
+    expect(tileName(tilesFor(look, 'win_effect')[0]!, t)).toBe('Χωρίς πανηγυρισμό');
   });
   it('finds the worn tile by default', () => {
     expect(findTile(look, 'background', undefined).key).toBe('bg_night');
@@ -70,8 +73,9 @@ describe('wearing', () => {
     expect(off.items.some((i) => i.category === 'background' && i.equipped)).toBe(false);
   });
   it('the preview shows the picked tile and the rest as worn', () => {
-    expect(previewOf(look, 'frame', 'frame_gold')).toEqual({ frame: 'frame_gold', background: 'bg_night', kit: 'kit_green' });
-    expect(previewOf(look, 'background', null)).toEqual({ frame: null, background: null, kit: 'kit_green' });
+    expect(previewOf(look, 'frame', 'frame_gold')).toEqual({ frame: 'frame_gold', background: 'bg_night', kit: 'kit_green', gear: null, effect: null });
+    expect(previewOf(look, 'background', null)).toEqual({ frame: null, background: null, kit: 'kit_green', gear: null, effect: null });
+    expect(previewOf(look, 'gear', 'gear_cap')).toMatchObject({ gear: 'gear_cap', kit: 'kit_green' });
     expect(previewOf(look, 'kit', 'kit_clay').kit).toBe('kit_clay');
   });
   it('«Νέο» while something owned has not been seen', () => {

@@ -43,6 +43,12 @@ export default function AvatarsScreen() {
           </View>
         ))}
       </View>
+      <Text style={styles.label}>Gear</Text>
+      <View style={styles.row}>
+        {['gear_cap', 'gear_headband', 'gear_visor', 'gear_shades', 'gear_bandana', 'gear_bucket'].map((g, i) => (
+          <Avatar key={g} look={DEFAULT_AVATARS[i * 2]!.look} size={96} gear={g} />
+        ))}
+      </View>
       <Text style={styles.label}>Kits</Text>
       <View style={styles.row}>
         {Object.keys(cosmetics.kit).map((k) => (
