@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState, useTransition } from 'react';
 import { everydayFirst, parseCsv, parseSheet, parseSheetExport, type SheetMatch, type SheetPerson } from '@netprophet/ingest';
-import { personName, sheetMatchToRow, skippedByDefault } from '@/lib/v2/ingestRows';
+import { personName, sameTwice, sheetMatchToRow, skippedByDefault } from '@/lib/v2/ingestRows';
 import { colors, ui } from '../ui';
 import { importRows, listTournaments, matchPeople, saveTournament, type Candidate, type ImportSummary, type Tournament } from './actions';
 
@@ -105,6 +105,22 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
   const peopleList = useMemo(() => Object.values(people).sort((a, b) => a.person.surname.localeCompare(b.person.surname, 'el')), [people]);
   const toReview = peopleList.filter((p) => !p.alias && !(p.candidates[0] && p.candidates[0].score >= CERTAIN)).length;
 
+  /**
+   * The name that appears twice in a match, when two of its people resolve to the same player (a doubles row with two
+   * «ΣΥΜΠΑΙΚΤΗΣ», or a wrong pick in step 3). The database refuses such a match, and before 15 Oct it failed the whole
+   * import («duplicate key … match_participants_pkey»); now the match is left out and says why.
+   */
+  const twice = useMemo(
+    () =>
+      matches.map((m) =>
+        sameTwice(m, (p) => {
+          const c = people[personKey(p)]?.choice ?? NEW;
+          return c === NEW ? `new:${personKey(p)}` : c;
+        }),
+      ),
+    [matches, people],
+  );
+
   const run = () =>
     start(async () => {
       if (!tournamentId) return;
@@ -114,7 +130,7 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
         return c === NEW ? { new: { surname: p.surname, first: p.first }, raw: personName(p) } : { player_id: c, raw: personName(p) };
       };
       const rows = matches.flatMap((m, i) =>
-        include[i] ? [sheetMatchToRow(m, { row: i + 1, person: decided, walkover: walkover[i] ? (Number(walkover[i]) as 1 | 2) : null })] : [],
+        include[i] && !twice[i] ? [sheetMatchToRow(m, { row: i + 1, person: decided, walkover: walkover[i] ? (Number(walkover[i]) as 1 | 2) : null })] : [],
       );
       try {
         const total: ImportSummary = { created: 0, updated: 0, results: 0, results_skipped: 0, new_players: 0 };
@@ -125,11 +141,13 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
         setSummary(total);
         setTournaments(await listTournaments());
       } catch (e) {
-        setMessage(e instanceof Error ? e.message : 'import failed');
+        const m = e instanceof Error ? e.message : 'import failed';
+        setMessage(m.includes('match_participants') ? 'A match has the same player twice. Check the picks in step 3; that match was not saved.' : m);
       }
     });
 
-  const chosen = include.filter(Boolean).length;
+  const chosen = include.filter((v, i) => v && !twice[i]).length;
+  const doubled = twice.filter((n, i) => n && include[i]).length;
   const woMissing = matches.filter((m, i) => include[i] && m.status === 'walkover' && !walkover[i]).length;
 
   return (
@@ -263,7 +281,7 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
               </thead>
               <tbody>
                 {matches.map((m, i) => (
-                  <tr key={`${m.fingerprint}-${i}`} style={{ borderTop: `1px solid ${colors.mist}`, opacity: include[i] ? 1 : 0.45 }}>
+                  <tr key={`${m.fingerprint}-${i}`} style={{ borderTop: `1px solid ${colors.mist}`, opacity: include[i] && !twice[i] ? 1 : 0.45 }}>
                     <td>
                       <input type="checkbox" checked={!!include[i]} onChange={(e) => setInclude(include.map((v, k) => (k === i ? e.target.checked : v)))} />
                     </td>
@@ -288,12 +306,24 @@ export function Importer({ tournaments: initial, areas }: { tournaments: Tournam
                         </>
                       )}
                     </td>
-                    <td style={{ color: colors.inkSoft }}>{m.flags.join(', ')}</td>
+                    <td style={{ color: colors.inkSoft }}>
+                      {twice[i] ? (
+                        <strong style={{ color: colors.ink }}>
+                          {twice[i]} twice in this match: change a pick in step 3, or it is left out.{m.flags.length ? ' ' : ''}
+                        </strong>
+                      ) : null}
+                      {m.flags.join(', ')}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          {doubled ? (
+            <span style={ui.muted}>
+              {doubled} ticked {doubled === 1 ? 'match has' : 'matches have'} the same player twice and {doubled === 1 ? 'is' : 'are'} left out until a pick changes.
+            </span>
+          ) : null}
           {woMissing ? <span style={ui.muted}>{woMissing} walkover(s) without a winner go in as matches with no result.</span> : null}
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             <button style={ui.primary} disabled={pending || !tournamentId || chosen === 0 || peopleList.length === 0} onClick={run}>

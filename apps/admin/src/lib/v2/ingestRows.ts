@@ -68,3 +68,17 @@ export function sheetMatchToRow(m: SheetMatch, opts: RowOptions) {
 export function runRows(matches: SheetMatch[]) {
   return matches.flatMap((m, i) => (skippedByDefault(m) ? [] : [sheetMatchToRow(m, { row: i + 1, person: unresolvedPerson, walkover: 'queue' })]));
 }
+
+/**
+ * The name that appears twice in one match once each person is resolved (`pick` gives a player id, or a key of its
+ * own for a new player): two «ΣΥΜΠΑΙΚΤΗΣ» in a doubles row, or a wrong pick. The database refuses such a match.
+ */
+export function sameTwice(m: Pick<SheetMatch, 'players'>, pick: (p: SheetPerson) => string): string | null {
+  const seen = new Set<string>();
+  for (const p of [...m.players.side1, ...m.players.side2]) {
+    const k = pick(p);
+    if (seen.has(k)) return personName(p);
+    seen.add(k);
+  }
+  return null;
+}
