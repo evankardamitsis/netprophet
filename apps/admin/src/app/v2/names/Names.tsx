@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Banner, Toast, useToast, type Tone } from "../feedback";
 import { Badge, Empty, Ghost, PageHeader, Pager, Primary, Secondary, Section, SkeletonRows, Stats, Table, Tabs, usePages } from "../kit";
-import { applyNames, loadPass, saveSpelling } from "./actions";
+import { applyNames, dismissName, forgetSpelling, loadPass, renamePlayer, saveSpelling } from "./actions";
 
 export type Confidence = "high" | "review" | "missing";
 
@@ -118,7 +118,16 @@ export function Names() {
       setPicked(new Set());
       if (r.ok) {
         const text = r.message.replace("Applied", "Fixed");
-        setNotice({ tone: "done", title: text, detail: "The new spellings show in the app now." });
+        const skipped = r.skipped ?? [];
+        setNotice(
+          skipped.length > 0
+            ? {
+                tone: "problem",
+                title: `${text}. ${plural(skipped.length, "name")} could not be fixed`,
+                detail: `Renamed since the list was made: ${skipped.slice(0, 8).join(", ")}${skipped.length > 8 ? "…" : ""}. Use Edit on them.`,
+              }
+            : { tone: "done", title: text, detail: "The new spellings show in the app now." },
+        );
         notify(text);
       } else {
         setNotice({ tone: "problem", title: "The names were not fixed", detail: r.message });
@@ -241,26 +250,23 @@ export function Names() {
                       <th style={{ width: 24 }} aria-hidden />
                       <th>Suggested</th>
                       <th style={{ width: 150 }} />
+                      <th style={{ width: 210 }} />
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((r) => {
-                      const now = join(r.surname, r.first_name);
-                      const sug = join(r.proposed_first, r.proposed_surname);
-                      return (
-                        <tr key={r.player_id}>
-                          {ticks ? (
-                            <td>
-                              <input type="checkbox" aria-label={`Tick ${now}`} checked={picked.has(r.player_id)} disabled={busy} onChange={() => toggle(r.player_id)} />
-                            </td>
-                          ) : null}
-                          <td className="v2-muted">{now}</td>
-                          <td aria-hidden>›</td>
-                          <td style={{ fontWeight: 700 }}>{sug || <span className="v2-muted">no suggestion yet</span>}</td>
-                          <td>{r.claimed ? <Badge tone="ink">Has an account</Badge> : null}</td>
-                        </tr>
-                      );
-                    })}
+                    {rows.map((r) => (
+                      <NameRowView
+                        key={r.player_id}
+                        r={r}
+                        ticks={ticks}
+                        picked={picked.has(r.player_id)}
+                        busy={busy}
+                        onToggle={() => toggle(r.player_id)}
+                        onNotice={setNotice}
+                        notify={notify}
+                        onDone={() => setTick((t) => t + 1)}
+                      />
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -271,6 +277,111 @@ export function Names() {
       </Section>
       <Toast text={toast} />
     </>
+  );
+}
+
+/**
+ * One name: tick it for «Fix», or fix it here (founder, 15 Oct: "edit suggestions if wrong", "remove some that are
+ * wrong"). Edit renames the player to any spelling, typos included, and keeps the old name for imports; «Leave as
+ * is» takes it off the list (draw placeholders like «1 ΠΡΟΚΡΙΜΑΤΙΚΑ»).
+ */
+function NameRowView({
+  r,
+  ticks,
+  picked,
+  busy,
+  onToggle,
+  onNotice,
+  notify,
+  onDone,
+}: {
+  r: NameRow;
+  ticks: boolean;
+  picked: boolean;
+  busy: boolean;
+  onToggle: () => void;
+  onNotice: (n: Notice) => void;
+  notify: (t: string) => void;
+  onDone: () => void;
+}) {
+  const now = join(r.surname, r.first_name);
+  const sug = join(r.proposed_first, r.proposed_surname);
+  const [editing, setEditing] = useState(false);
+  const [first, setFirst] = useState(r.proposed_first ?? titleCase(r.first_name ?? ""));
+  const [surname, setSurname] = useState(r.proposed_surname ?? titleCase(r.surname ?? ""));
+  const [pending, start] = useTransition();
+  const [gone, setGone] = useState(false);
+
+  const done = (ok: boolean, message: string, working: string) => {
+    if (!ok) {
+      onNotice({ tone: "problem", title: `${now}: not saved`, detail: message });
+      return;
+    }
+    onNotice({ tone: "done", title: message, detail: working });
+    notify(message);
+    setGone(true);
+    onDone();
+  };
+
+  const save = () => {
+    onNotice({ tone: "working", title: `Renaming ${now}…` });
+    start(async () => {
+      const res = await renamePlayer(r.player_id, first.trim(), surname.trim());
+      done(res.ok, res.message, "The old spelling still finds this player in imports.");
+    });
+  };
+
+  const leave = () => {
+    onNotice({ tone: "working", title: `Leaving ${now} as it is…` });
+    start(async () => {
+      const res = await dismissName(r.player_id, now);
+      done(res.ok, res.message, "It will not be suggested again.");
+    });
+  };
+
+  if (gone) return null;
+  return (
+    <tr className={pending ? "busy" : undefined} aria-busy={pending || undefined}>
+      {ticks ? (
+        <td>
+          <input type="checkbox" aria-label={`Tick ${now}`} checked={picked} disabled={busy || pending || editing} onChange={onToggle} />
+        </td>
+      ) : null}
+      <td className="v2-muted">{now}</td>
+      <td aria-hidden>›</td>
+      <td style={{ fontWeight: 700 }}>
+        {editing ? (
+          <div className="v2-row" style={{ flexWrap: "nowrap" }}>
+            <input className="v2-input" style={{ height: 34, minWidth: 110 }} value={first} disabled={pending} aria-label="First name" placeholder="First name" onChange={(e) => setFirst(e.target.value)} />
+            <input className="v2-input" style={{ height: 34, minWidth: 140 }} value={surname} disabled={pending} aria-label="Surname" placeholder="Surname" onChange={(e) => setSurname(e.target.value)} />
+          </div>
+        ) : (
+          sug || <span className="v2-muted">no suggestion yet</span>
+        )}
+      </td>
+      <td>{r.claimed ? <Badge tone="ink">Has an account</Badge> : null}</td>
+      <td>
+        {editing ? (
+          <div className="v2-row" style={{ flexWrap: "nowrap" }}>
+            <Secondary small busy={pending} disabled={surname.trim() === ""} onClick={save}>
+              {pending ? "Saving…" : "Save"}
+            </Secondary>
+            <Ghost small disabled={pending} onClick={() => setEditing(false)}>
+              Cancel
+            </Ghost>
+          </div>
+        ) : (
+          <div className="v2-row" style={{ flexWrap: "nowrap" }}>
+            <Secondary small disabled={busy || pending} onClick={() => setEditing(true)}>
+              Edit
+            </Secondary>
+            <Ghost small busy={pending} disabled={busy || pending} onClick={leave}>
+              {pending ? "Saving…" : "Leave as is"}
+            </Ghost>
+          </div>
+        )}
+      </td>
+    </tr>
   );
 }
 
@@ -324,12 +435,32 @@ function WordSpelling({ w, onNotice, notify, onSaved, onBusy }: { w: NameWord; o
     });
   };
 
+  // a wrong spelling in the dictionary: take it out, and its names wait for a new one
+  const remove = () => {
+    onNotice({ tone: "working", title: `Removing ${w.word}…` });
+    start(async () => {
+      const r = await forgetSpelling(w.kind, w.word);
+      if (!r.ok) {
+        onNotice({ tone: "problem", title: `${w.word}: not removed`, detail: r.message });
+        return;
+      }
+      onNotice({ tone: "done", title: r.message, detail: `Names with ${w.word} wait for a new spelling.` });
+      notify(r.message);
+      onSaved();
+    });
+  };
+
   return (
     <div className="v2-row" style={{ flexWrap: "nowrap" }}>
       <input className="v2-input" style={{ height: 34, minWidth: 140 }} value={value} disabled={pending} aria-label={`Spelling for ${w.word}`} onChange={(e) => setValue(e.target.value)} />
       <Secondary small busy={pending} disabled={value.trim() === ""} onClick={save}>
         {pending ? "Saving…" : "Save"}
       </Secondary>
+      {w.spelling ? (
+        <Ghost small disabled={pending} onClick={remove}>
+          Remove
+        </Ghost>
+      ) : null}
     </div>
   );
 }
