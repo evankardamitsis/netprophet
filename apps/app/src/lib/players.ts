@@ -3,6 +3,7 @@ import type { PlayerCard, PlayerMatchLine, PlayerProfile, PlayerRef } from '@net
 import { initials, when } from './feed';
 import { dayLabel } from './results';
 import { fmt } from './votes';
+import { categoryLabel } from './category';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
 
 /**
@@ -86,10 +87,11 @@ function nameAcc(p: PlayerRef): string {
 
 export function nextLine(m: PlayerMatchLine, t: Copy, now: Date): string {
   const label = when(m.starts_at, now, t).label ?? '';
-  if (m.partner.length > 0 || m.opponents.length > 1) {
-    return fmt(t.players.nextAgainst, { when: label, names: m.opponents.map(fullName).join(' & ') });
-  }
-  return fmt(t.players.nextWith, { when: label, name: m.opponents[0] ? nameAcc(m.opponents[0]) : '' });
+  const line =
+    m.partner.length > 0 || m.opponents.length > 1
+      ? fmt(t.players.nextAgainst, { when: label, names: m.opponents.map(fullName).join(' & ') })
+      : fmt(t.players.nextWith, { when: label, name: m.opponents[0] ? nameAcc(m.opponents[0]) : '' });
+  return [line, categoryLabel(m.level, m.discipline, t)].filter(Boolean).join(' · ');
 }
 
 export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Copy, now: Date): ProfileView {
@@ -114,7 +116,7 @@ export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Co
         m.partner.length > 0
           ? fmt(t.players.againstPair, { partner: fullName(m.partner[0]!), names: m.opponents.map(fullName).join(' & ') })
           : fmt(t.players.against, { name: m.opponents[0] ? fullName(m.opponents[0]) : '' }),
-      when: dayLabel(m.starts_at, now, t),
+      when: [dayLabel(m.starts_at, now, t), categoryLabel(m.level, m.discipline, t)].filter(Boolean).join(' · '),
     })),
   };
 }

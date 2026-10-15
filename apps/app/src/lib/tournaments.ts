@@ -3,6 +3,7 @@ import { stripAccents, type Copy } from '@netprophet/copy';
 import type { DrawGroupRow, DrawMatchRow, GetTournamentResult, GetTournamentsResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
 import { fmt } from './votes';
 import { placeLine } from './place';
+import { categoryLabel, disciplineLabel } from './category';
 
 /**
  * «Τα τουρνουά σου» (prototype V2, isTour): the list of tournaments that are on, coming or just finished, and one
@@ -202,9 +203,7 @@ export interface ScheduleRow {
   place: string | null;
 }
 
-export function disciplineLabel(discipline: string | null, t: Copy): string | null {
-  return (discipline && t.tournaments.detail.disciplines[discipline]) || null;
-}
+export { disciplineLabel };
 
 /** one day's matches, by time */
 export function scheduleRows(matches: TournamentMatch[], me: string | null, t: Copy): ScheduleRow[] {
@@ -220,7 +219,7 @@ export function scheduleRows(matches: TournamentMatch[], me: string | null, t: C
       return {
         id: m.match_id,
         time: m.postponed === true ? t.tournaments.detail.postponedTime : m.starts_at ? timeOf(m.starts_at) : '',
-        meta: [m.level, disciplineLabel(m.discipline, t)].filter(Boolean).join(' · '),
+        meta: categoryLabel(m.level, m.discipline, t) ?? '',
         sides,
         score: hasResult ? formatWinnerSets(m.sets ?? [], { retired: m.retired === true, walkover: m.walkover === true }, t.results) : null,
         mine: me !== null && sides.some((s) => s.people.some((p) => p.id === me)),

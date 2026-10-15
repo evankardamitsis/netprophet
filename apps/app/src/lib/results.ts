@@ -2,6 +2,7 @@ import { dayKey, formatWinnerSets, localParts } from '@netprophet/core';
 import { greekCaps, withArticleAccusative, type Copy } from '@netprophet/copy';
 import type { FeedPlayer, Reactions, ResultRow, Side } from '@netprophet/db';
 import { fmt } from './votes';
+import { categoryLabel } from './category';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): finished matches grouped by day and event, newest first.
@@ -66,13 +67,13 @@ export function dayLabel(startsAt: string, now: Date, t: Copy): string {
   return `${p.day}/${p.month}`;
 }
 
-/** «Open Γλυφάδας · Προημιτελικά», or «Φιλικά» («Φιλικά · Διπλό» for doubles). */
-export function eventLabel(row: Pick<ResultRow, 'tournament' | 'round' | 'format'>, t: Copy): string {
+/** «Open Γλυφάδας · Μ 40+ · Απλό · Προημιτελικά», or «Φιλικά» («Φιλικά · Διπλό» for doubles). */
+export function eventLabel(row: Pick<ResultRow, 'tournament' | 'round' | 'format' | 'level' | 'discipline'>, t: Copy): string {
   if (!row.tournament) {
     return row.format === 'singles' ? t.results.friendlies : `${t.results.friendlies} · ${t.match.formats[row.format]}`;
   }
   const round = row.round ? (isRoundKey(row.round) ? t.results.rounds[row.round] : row.round) : null;
-  return [row.tournament, round].filter(Boolean).join(' · ');
+  return [row.tournament, categoryLabel(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
 }
 
 const names = (players: FeedPlayer[]): ResultName[] => players.map((p) => ({ first: p.first_name, surname: p.surname }));
