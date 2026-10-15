@@ -392,6 +392,14 @@ export type Database = {
         Args: { p_days?: number };
         Returns: Json;
       };
+      admin_dismiss_name: {
+        Args: { p_player_id: string };
+        Returns: Json;
+      };
+      admin_forget_spelling: {
+        Args: { p_kind: string; p_word: string };
+        Returns: Json;
+      };
       admin_game_config: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
@@ -462,6 +470,10 @@ export type Database = {
       };
       admin_recompute_levels: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_rename_player: {
+        Args: { p_player_id: string; p_first: string; p_surname: string };
         Returns: Json;
       };
       admin_resolve_dispute: {
