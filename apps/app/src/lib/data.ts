@@ -1589,5 +1589,6 @@ export function useMyAvatar(): {
   if (!api) return { avatar: avatarByKey(mockPick) ?? defaultAvatarFor('mock-me', 'm'), picked: mockPick, pick, refresh };
   if (!me) return { avatar: null, picked, pick, refresh };
   const g = me.profile.gender === 'f' || me.profile.gender === 'm' ? me.profile.gender : null;
-  return { avatar: avatarByKey(picked) ?? defaultAvatarFor(me.user_id, g), picked, pick, refresh };
+  // keyed on your player when you have one, so the default matches what everyone else sees in their lists
+  return { avatar: avatarByKey(picked) ?? defaultAvatarFor(me.player?.id ?? me.user_id, g), picked, pick, refresh };
 }

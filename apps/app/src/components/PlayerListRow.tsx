@@ -5,6 +5,7 @@ import { usePopIn, usePress, useStgIn } from '../lib/motion';
 import { FitText } from './FitText';
 import { colors, fonts } from '../theme';
 import { Lit } from './Lit';
+import { Avatar } from './Avatar';
 
 /**
  * One player in Παίκτες (prototype V2, plist row): initials, full name, «level 5 · Γλυφάδα · φίλος»
@@ -27,9 +28,15 @@ export function PlayerListRow({ row, index, onPress }: { row: PlayerRow; index: 
         onPressOut={press.onPressOut}
       >
         <Animated.View style={[styles.row, press.style]}>
-          <View style={styles.avatar}>
-            <Lit />
-            <Text style={styles.initials}>{row.initials}</Text>
+          <View style={[styles.avatar, row.look && styles.avatarDrawn]}>
+            {row.look ? (
+              <Avatar look={row.look} size={42} />
+            ) : (
+              <>
+                <Lit />
+                <Text style={styles.initials}>{row.initials}</Text>
+              </>
+            )}
           </View>
           <View style={styles.text}>
             <FitText text={row.name} style={styles.name} />
@@ -82,6 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   initials: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.lime },
+  avatarDrawn: { overflow: 'hidden', backgroundColor: colors.paper },
   text: { flex: 1, minWidth: 0, gap: 2 },
   // line height at least the font size: iOS clips the tonos above the line box
   name: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6, color: colors.ink },

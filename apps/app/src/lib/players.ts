@@ -1,6 +1,7 @@
 import { accusativeName, nameGender, type Copy, levelNumber } from '@netprophet/copy';
 import type { PlayerCard, PlayerMatchLine, PlayerProfile, PlayerRef } from '@netprophet/db';
 import { initials, when } from './feed';
+import { playerAvatar, type AvatarLook } from './avatar';
 import { dayLabel } from './results';
 import { fmt } from './votes';
 import { categoryLabel } from './category';
@@ -18,6 +19,8 @@ export interface PlayerRow {
   /** full name, «Νίκος Ροδίτης» */
   name: string;
   initials: string;
+  /** the drawn player when they have an account; else the initials show */
+  look: AvatarLook | null;
   /** «level 5 · Γλυφάδα · φίλος» */
   sub: string;
   /** oldest first */
@@ -69,6 +72,7 @@ export function toPlayerRow(card: PlayerCard, areas: Record<string, string>, t: 
     id: card.id,
     name: fullName(card),
     initials: initials(card.first_name, card.surname),
+    look: playerAvatar(card.id, card.gender, card.avatar),
     sub: parts.join(' · '),
     form: card.form,
   };

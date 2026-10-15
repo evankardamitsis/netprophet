@@ -5,6 +5,7 @@ import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
 import { disciplineLabel } from './category';
 import { dayShort, dayTimeShort } from './tournaments';
+import { playerAvatar, type AvatarLook } from './avatar';
 import { fmt, voteSplit, type Side } from './votes';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
 
@@ -14,6 +15,8 @@ export interface CardPerson {
   first: string;
   /** avatar letters, «ΝΡ» */
   initials: string;
+  /** the drawn player when they have an account; else the initials show */
+  look?: AvatarLook | null;
 }
 
 /** One side of a card: one player, or two in doubles, plus the «level · area» line. */
@@ -191,7 +194,12 @@ export function when(startsAt: string | null, now: Date, t: Copy): { label: stri
 }
 
 function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): CardSide {
-  const people = players.map((p) => ({ surname: p.surname, first: p.first_name, initials: initials(p.first_name, p.surname) }));
+  const people = players.map((p) => ({
+    surname: p.surname,
+    first: p.first_name,
+    initials: initials(p.first_name, p.surname),
+    look: playerAvatar(p.id, p.gender, p.avatar),
+  }));
   if (players.length === 1) {
     const p = players[0]!;
     const area = p.area_id ? areas[p.area_id] ?? null : null;
@@ -284,18 +292,21 @@ export function fromSponsored(card: FeedSponsoredCard): CardSponsored {
   };
 }
 
+/** sample data: about half the players have an account, so both the drawn players and the initials show */
+const mockLook = (p: MockPlayer): AvatarLook | null => (p.surname.length % 2 === 0 ? playerAvatar(p.surname, null, 'default') : null);
+
 function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {
   if (p2) {
     const lv = PLAYER_LEVEL_SHOWN ? `${t.level.label} ${p.level} & ${p2.level}` : null;
     return {
-      people: [p, p2].map((x) => ({ surname: x.surname, first: x.firstName, initials: initials(x.firstName, x.surname) })),
+      people: [p, p2].map((x) => ({ surname: x.surname, first: x.firstName, initials: initials(x.firstName, x.surname), look: mockLook(x) })),
       sub: lv,
       level: lv,
       area: null,
     };
   }
   return {
-    people: [{ surname: p.surname, first: p.firstName, initials: initials(p.firstName, p.surname) }],
+    people: [{ surname: p.surname, first: p.firstName, initials: initials(p.firstName, p.surname), look: mockLook(p) }],
     sub: PLAYER_LEVEL_SHOWN ? fmt(t.match.levelArea, { level: p.level, area: p.area }) : p.area,
     level: PLAYER_LEVEL_SHOWN ? `${t.level.label} ${p.level}` : null,
     area: p.area,

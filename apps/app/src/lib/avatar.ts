@@ -64,3 +64,12 @@ export function defaultAvatarFor(id: string, gender: 'm' | 'f' | null | undefine
 export function avatarByKey(key: string | null | undefined): DefaultAvatar | null {
   return DEFAULT_AVATARS.find((a) => a.key === key) ?? null;
 }
+
+/**
+ * Another player's drawn avatar from the server's `avatar` field: null keeps the initials (no account, or hidden),
+ * 'default' is the default for that player, a key is the one they picked.
+ */
+export function playerAvatar(id: string, gender: 'm' | 'f' | null | undefined, avatar: string | null | undefined): AvatarLook | null {
+  if (!avatar) return null;
+  return (avatarByKey(avatar) ?? defaultAvatarFor(id, gender)).look;
+}
