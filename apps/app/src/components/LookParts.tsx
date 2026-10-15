@@ -1,6 +1,5 @@
 import { StyleSheet, View } from 'react-native';
 import { CardBackground } from './CardBackground';
-import { CardFrame } from './CardFrame';
 import type { Tile } from '../lib/look';
 import { colors, cosmetics } from '../theme';
 import { Lit } from './Lit';
@@ -46,18 +45,23 @@ export function KitSwatch({ kit, size }: { kit: string; size: number }) {
  */
 export function LookThumb({ tile, who }: { tile: Tile; who: AvatarLook }) {
   const none = tile.key === null;
-  if (tile.category === 'kit' || tile.category === 'gear' || tile.category === 'win_effect') {
+  if (tile.category !== 'background') {
     return (
       <View style={[styles.thumb, styles.ballThumb, none && styles.none]}>
-        <Avatar look={who} size={64} kit={tile.category === 'kit' ? (tile.key ?? 'kit_green') : 'kit_green'} gear={tile.category === 'gear' ? tile.key : null} />
+        <Avatar
+          look={who}
+          size={tile.category === 'frame' ? 70 : 64}
+          kit={tile.category === 'kit' ? (tile.key ?? 'kit_green') : 'kit_green'}
+          gear={tile.category === 'gear' ? tile.key : null}
+          frame={tile.category === 'frame' ? tile.key : null}
+        />
         {tile.category === 'win_effect' && !none ? <ConfettiDots /> : null}
       </View>
     );
   }
   return (
     <View style={[styles.thumb, none && styles.none]}>
-      {tile.category === 'background' ? <CardBackground bg={tile.key} k={0.45} /> : null}
-      {tile.category === 'frame' ? <CardFrame frame={tile.key} k={0.45} radius={12} /> : null}
+      <CardBackground bg={tile.key} k={0.45} />
     </View>
   );
 }

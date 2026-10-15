@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { LookCategory } from '@netprophet/db';
 import { CardBackground } from '../../src/components/CardBackground';
-import { CardFrame, namePlate } from '../../src/components/CardFrame';
+import { namePlate } from '../../src/components/CardFrame';
 import { LookBuySheet } from '../../src/components/LookBuySheet';
 import { LookThumb } from '../../src/components/LookParts';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
@@ -222,7 +222,7 @@ function PreviewCard({
         </View>
       ) : null}
       <Pressable accessibilityRole="button" onPress={() => setJump((n) => n + 1)} style={styles.pvKit}>
-        <LiveAvatar look={who} size={PV_AVATAR} kit={kit} gear={gear} effect={effect} jump={jump} />
+        <LiveAvatar look={who} size={PV_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
       </Pressable>
       {name ? (
         <View style={styles.pvNameWrap}>
@@ -231,7 +231,6 @@ function PreviewCard({
           </View>
         </View>
       ) : null}
-      <CardFrame frame={frame} k={0.62} radius={26} animated />
     </Animated.View>
   );
 }

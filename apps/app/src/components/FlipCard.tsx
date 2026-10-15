@@ -2,18 +2,17 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { CardBackground } from './CardBackground';
-import { CardFrame } from './CardFrame';
 import { colors, ease } from '../theme';
 
 /**
  * The Εγώ hero card with two faces (prototype: «Δες τα στατιστικά ›» turns it over). Both faces wear the same
- * background and frame. The turn is a 600ms rotateY on the prototype ease; the card grows or shrinks to the height
+ * background (the frame is a ring around the player since 15 Oct). The turn is a 600ms rotateY on the prototype ease; the card grows or shrinks to the height
  * of the face that is showing. Only the face that is up takes touches.
  */
 export const FLIP_MS = 600;
 const RADIUS = 28;
 
-export function FlipCard({ bg, frame, flipped, front, back }: { bg: string | null; frame: string | null; flipped: boolean; front: ReactNode; back: ReactNode }) {
+export function FlipCard({ bg, flipped, front, back }: { bg: string | null; flipped: boolean; front: ReactNode; back: ReactNode }) {
   const p = useSharedValue(0);
   const [hf, setHf] = useState(0);
   const [hb, setHb] = useState(0);
@@ -34,7 +33,6 @@ export function FlipCard({ bg, frame, flipped, front, back }: { bg: string | nul
       >
         <CardBackground bg={bg} scrim />
         {front}
-        <CardFrame frame={frame} radius={RADIUS} animated />
       </Animated.View>
       <Animated.View
         style={[styles.face, backStyle]}
@@ -45,7 +43,6 @@ export function FlipCard({ bg, frame, flipped, front, back }: { bg: string | nul
       >
         <CardBackground bg={bg} scrim />
         {back}
-        <CardFrame frame={frame} radius={RADIUS} animated />
       </Animated.View>
     </Animated.View>
   );

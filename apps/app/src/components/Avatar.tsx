@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
-import { Circle, ClipPath, Defs, Ellipse, G, Path, RadialGradient, Rect, Stop, Svg, Text as SvgText } from 'react-native-svg';
+import { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, RadialGradient, Rect, Stop, Svg, Text as SvgText } from 'react-native-svg';
 import type { AvatarLook, HairStyle } from '../lib/avatar';
 import { colors, cosmetics, fonts } from '../theme';
 
@@ -43,6 +43,8 @@ interface ArtProps {
   eyes?: { open: SharedValue<number>; look: SharedValue<number> };
   /** the gear worn: gear_cap, gear_headband, gear_visor, gear_shades, gear_bandana, gear_bucket */
   gear?: string | null;
+  /** the frame worn: a ring around the ball (founder, 15 Oct) */
+  frame?: string | null;
 }
 
 /** the still avatar: lists, cards, the picker */
@@ -135,7 +137,7 @@ function Piece({ p, t, size }: { p: (typeof PIECES)[number]; t: SharedValue<numb
   return <Animated.View style={[{ position: 'absolute', left: size / 2 - piece / 2, top: size * 0.5, width: piece, height: piece, borderRadius: 1.5, backgroundColor: p.colour }, style]} />;
 }
 
-function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear = null }: ArtProps) {
+function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear = null, frame = null }: ArtProps) {
   const skin = cosmetics.avatar.skin[look.skin] ?? cosmetics.avatar.skin[1];
   const hair = cosmetics.avatar.hair[look.hairColour];
   const k = cosmetics.kit[kit as KitKey] ?? cosmetics.kit.kit_green;
@@ -157,6 +159,7 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear =
       </Defs>
       {bg ? <Rect x={0} y={0} width={100} height={100} fill={bg} /> : null}
       <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
+      {frame ? <FrameRing frame={frame} id={id} /> : null}
       {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} /> : null}
       <HairBack style={look.hair} fill={hair} hatOn={gear === 'gear_cap' || gear === 'gear_bandana' || gear === 'gear_bucket'} />
       <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={skin} />
@@ -192,6 +195,132 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear =
       )}
     </Svg>
   );
+}
+
+/**
+ * A frame as a ring around the ball, in the colours and style of the card frame it was (gold, stripes, the glow of
+ * «Επτά», «10»): behind the hair and the racket, so the player stands in it.
+ */
+const RING = { cx: BALL.cx, cy: BALL.cy, r: 40 };
+const AROUND = 2 * Math.PI * RING.r;
+
+function FrameRing({ frame, id }: { frame: string; id: string }) {
+  const f = cosmetics.frame;
+  const ring = (r: number, width: number, stroke: string, extra: object = {}) => (
+    <Circle cx={RING.cx} cy={RING.cy} r={r} fill="none" stroke={stroke} strokeWidth={width} {...extra} />
+  );
+  // two colours in stripes round the ring
+  const stripes = (width: number, a: string, b: string, n: number) => (
+    <>
+      {ring(RING.r, width, a)}
+      {ring(RING.r, width, b, { strokeDasharray: `${AROUND / (n * 2)} ${AROUND / (n * 2)}` })}
+    </>
+  );
+  const plate = (text: string, fill: string, ink: string, edge: string) => (
+    <G>
+      <Rect x={41} y={88} width={18} height={11} rx={5.5} fill={fill} stroke={edge} strokeWidth={1.4} />
+      <SvgText x={50} y={96.6} textAnchor="middle" fontSize={8.5} fontFamily={fonts.displayHeavy} fill={ink}>
+        {text}
+      </SvgText>
+    </G>
+  );
+  switch (frame) {
+    case 'frame_week':
+      return (
+        <G>
+          {ring(RING.r, 4, colors.lime)}
+          {ring(RING.r - 2.8, 1.4, colors.ink)}
+          {ring(RING.r + 3, 3, colors.lime, { strokeDasharray: `2 ${AROUND / 24 - 2}` })}
+        </G>
+      );
+    case 'frame_ten':
+      return (
+        <G>
+          {ring(RING.r, 4.5, colors.paper)}
+          {ring(RING.r - 3.6, 2.2, colors.lime)}
+          {plate('10', colors.paper, colors.ink, colors.lime)}
+        </G>
+      );
+    case 'frame_seven':
+      return (
+        <G>
+          {ring(RING.r, 11, colors.lime, { strokeOpacity: 0.18 })}
+          {ring(RING.r, 4, f.glow)}
+          {ring(RING.r - 2.8, 1.4, colors.ink)}
+          {plate('7', colors.ink, colors.lime, f.glow)}
+        </G>
+      );
+    case 'frame_month_top':
+      return (
+        <G>
+          {stripes(6, colors.ink, colors.lime, 18)}
+          {ring(RING.r - 3.8, 1.4, colors.paper)}
+          <Path d="M42 13 L44 6 L47 10 L50 4 L53 10 L56 6 L58 13 Z" fill={colors.lime} stroke={colors.ink} strokeWidth={1} strokeLinejoin="round" />
+        </G>
+      );
+    case 'frame_friends':
+      return (
+        <G>
+          {stripes(6, colors.paper, colors.lime, 14)}
+          {ring(RING.r - 3.8, 1.2, colors.ink)}
+        </G>
+      );
+    case 'frame_level':
+      return (
+        <G>
+          {ring(RING.r, 3.5, colors.ink)}
+          {ring(RING.r - 2.8, 2, colors.lime)}
+          {[
+            [37, f.bronze],
+            [50, f.silver],
+            [63, f.gold],
+          ].map(([x, c]) => (
+            <Circle key={x as number} cx={x as number} cy={x === 50 ? 96.5 : 94.5} r={3.6} fill={c as string} stroke={colors.ink} strokeWidth={1} />
+          ))}
+        </G>
+      );
+    case 'frame_gold':
+      return (
+        <G>
+          <Defs>
+            <LinearGradient id={`gold${id}`} x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={f.goldDeep} />
+              <Stop offset="0.2" stopColor={f.glow} />
+              <Stop offset="0.42" stopColor={f.goldShadow} />
+              <Stop offset="0.58" stopColor={f.goldLight} />
+              <Stop offset="0.8" stopColor={f.goldDark} />
+              <Stop offset="1" stopColor={f.gold} />
+            </LinearGradient>
+          </Defs>
+          {ring(RING.r, 7, `url(#gold${id})`)}
+          {ring(RING.r - 3.8, 1.2, f.goldDeep)}
+        </G>
+      );
+    case 'frame_retro':
+      return (
+        <G>
+          {stripes(7, f.retroCream, f.retroRed, 22)}
+          {ring(RING.r - 4.2, 1.4, colors.ink)}
+        </G>
+      );
+    case 'frame_grass':
+      return (
+        <G>
+          {stripes(8, f.grassDark, f.grassLight, 16)}
+          {ring(RING.r - 4.6, 1.4, colors.white, { strokeOpacity: 0.9 })}
+        </G>
+      );
+    case 'frame_founding':
+      return (
+        <G>
+          {ring(RING.r, 3, colors.lime)}
+          {ring(RING.r - 2.6, 2, colors.ink)}
+          {ring(RING.r - 4.6, 1.4, colors.paper)}
+        </G>
+      );
+    default:
+      return null;
+  }
 }
 
 /** what goes on the head: a cap, a headband, a visor, a bandana or a bucket hat (the shades go on the eyes) */

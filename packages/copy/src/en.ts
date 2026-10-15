@@ -816,7 +816,7 @@ export const en: Copy = {
       frame: '{name} frame',
       background: '{name} background',
       kit: 'Clothes & racket',
-      lineFrame: 'On your card in Me and in the feed.',
+      lineFrame: 'Around your player on Me.',
       lineBackground: 'On your card in Me.',
       lineKit: 'Grass set and Clay set for your player, with a racket colour.',
       noteFrame: 'Style only. It does not show how good you are.',
