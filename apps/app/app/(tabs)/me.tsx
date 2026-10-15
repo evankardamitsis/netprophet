@@ -368,13 +368,12 @@ function HeroCard({
   return (
     <FlipCard
       bg={bg}
-      frame={frame}
       flipped={flipped}
       front={
         <>
           {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           <Name v={v} frame={frame} />
-          {avatar ? <HeroAvatar look={avatar} kit={kit} gear={gear} effect={effect} /> : null}
+          {avatar ? <HeroAvatar look={avatar} kit={kit} gear={gear} effect={effect} frame={frame} /> : null}
           {canFlip ? (
             <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
               <Animated.View style={[styles.flipPill, flip.style]}>
@@ -391,7 +390,19 @@ function HeroCard({
 }
 
 /** your drawn player on the card, by the name; a tap opens Εμφάνιση on «Παίκτης» to change it */
-function HeroAvatar({ look, kit, gear, effect }: { look: AvatarLook; kit: string; gear: string | null; effect: string | null }) {
+function HeroAvatar({
+  look,
+  kit,
+  gear,
+  effect,
+  frame,
+}: {
+  look: AvatarLook;
+  kit: string;
+  gear: string | null;
+  effect: string | null;
+  frame: string | null;
+}) {
   const press = usePress();
   const pop = usePopIn(500, 350);
   // a tap makes the ball jump first, then Εμφάνιση opens
@@ -403,7 +414,7 @@ function HeroAvatar({ look, kit, gear, effect }: { look: AvatarLook; kit: string
   return (
     <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
       <Animated.View style={[styles.heroAvatar, pop, press.style]}>
-        <LiveAvatar look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} jump={jump} />
+        <LiveAvatar look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
       </Animated.View>
     </Pressable>
   );
