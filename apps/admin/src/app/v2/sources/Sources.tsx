@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { colors, ui } from '../ui';
 import { loadReviews, loadTournaments, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from './actions';
-import type { Health, IngestCounts, ReviewItem, ReviewPerson, SourceTournament } from './types';
+import { reviewAnswers, reviewQuestions } from '@/lib/v2/ingestRows';
+import type { Health, IngestCounts, ReviewItem, SourceTournament } from './types';
 
 const NEW = 'new';
 
@@ -243,8 +244,9 @@ const sideNames = (side: { raw?: string; surname?: string; first?: string }[]) =
 function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Promise<void> }) {
   const row = item.payload.row;
   const unclear = item.payload.unclear ?? [];
+  const questions = reviewQuestions(row, unclear);
   const [choice, setChoice] = useState<Record<string, string>>(() =>
-    Object.fromEntries(unclear.map((u) => [u.raw, u.candidates?.[0]?.id ?? NEW])),
+    Object.fromEntries(questions.map((q) => [q.key, q.u.candidates?.[0]?.id ?? NEW])),
   );
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -259,7 +261,7 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
 
   const save = () =>
     send({
-      decisions: unclear.map((u: ReviewPerson) => (choice[u.raw] === NEW ? { raw: u.raw, new: true as const } : { raw: u.raw, player_id: choice[u.raw] })),
+      decisions: reviewAnswers(questions, choice, NEW),
     });
 
   return (
@@ -271,10 +273,10 @@ function ReviewCard({ item, onChanged }: { item: ReviewItem; onChanged: () => Pr
         {sideNames(row.side1)} vs {sideNames(row.side2)}
       </div>
       {item.kind === 'people'
-        ? unclear.map((u) => (
-            <div key={u.raw} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ flex: '0 0 240px', fontWeight: 700 }}>{u.raw}</span>
-              <select style={{ ...ui.input, height: 36, fontSize: 14, width: 'auto', minWidth: 260 }} value={choice[u.raw]} onChange={(e) => setChoice({ ...choice, [u.raw]: e.target.value })}>
+        ? questions.map(({ key, u, label }) => (
+            <div key={key} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ flex: '0 0 240px', fontWeight: 700 }}>{label}</span>
+              <select style={{ ...ui.input, height: 36, fontSize: 14, width: 'auto', minWidth: 260 }} value={choice[key]} onChange={(e) => setChoice({ ...choice, [key]: e.target.value })}>
                 {(u.candidates ?? []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.first_name} {c.surname} · {c.score.toFixed(2)}
