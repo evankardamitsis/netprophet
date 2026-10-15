@@ -1,7 +1,9 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Avatar, AvatarSilhouette } from '../src/components/Avatar';
+import { useState } from 'react';
+import { Avatar, AvatarSilhouette, LiveAvatar } from '../src/components/Avatar';
+import type { AvatarLook } from '../src/lib/avatar';
 import { Back } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { DEFAULT_AVATARS } from '../src/lib/avatar';
@@ -22,9 +24,7 @@ export default function AvatarsScreen() {
       <View style={styles.grid}>
         {DEFAULT_AVATARS.map((a) => (
           <View key={a.key} style={styles.cell}>
-            <View style={[styles.disc, { width: 96, height: 96 }]}>
-              <Avatar look={a.look} size={96} />
-            </View>
+            <LiveCell look={a.look} />
             <Text style={styles.key}>{a.key}</Text>
           </View>
         ))}
@@ -52,6 +52,16 @@ export default function AvatarsScreen() {
         ))}
       </View>
     </ScrollView>
+  );
+}
+
+/** one of the 12, alive; a tap makes it jump */
+function LiveCell({ look }: { look: AvatarLook }) {
+  const [jump, setJump] = useState(0);
+  return (
+    <Pressable accessibilityRole="button" onPress={() => setJump((n) => n + 1)} style={{ width: 96, height: 96 }}>
+      <LiveAvatar look={look} size={96} jump={jump} />
+    </Pressable>
   );
 }
 
