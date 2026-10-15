@@ -82,3 +82,33 @@ export function sameTwice(m: Pick<SheetMatch, 'players'>, pick: (p: SheetPerson)
   }
   return null;
 }
+
+/**
+ * The questions on a held match: one per unclear name, or one per place on the card when one spelling is two people
+ * (a doubles with two «ΚΑΛΙΒΡΟΥΣΗΣ», founder 15 Oct). `key` keys the choice; `slot` («side:index») goes with the
+ * decision so each place gets its own answer.
+ */
+export interface ReviewQuestion<U> {
+  key: string;
+  u: U;
+  slot: string | null;
+  label: string;
+}
+
+export function reviewQuestions<U extends { raw: string }>(row: { side1: { raw?: string }[]; side2: { raw?: string }[] }, unclear: U[]): ReviewQuestion<U>[] {
+  return unclear.flatMap((u): ReviewQuestion<U>[] => {
+    const slots = ([1, 2] as const).flatMap((s) => (s === 1 ? row.side1 : row.side2).flatMap((p, i) => (p.raw === u.raw ? [`${s}:${i}`] : [])));
+    if (slots.length <= 1) return [{ key: u.raw, u, slot: null, label: u.raw }];
+    return slots.map((slot, n) => ({ key: slot, u, slot, label: `${u.raw} (${n === 0 ? 'first' : n === 1 ? 'second' : `no. ${n + 1}`}, side ${slot[0]})` }));
+  });
+}
+
+export type ReviewAnswer = { raw: string; slot?: string; player_id: string } | { raw: string; slot?: string; new: true };
+
+/** one decision per question; `choice` holds a player id or `newKey` */
+export function reviewAnswers<U extends { raw: string }>(qs: ReviewQuestion<U>[], choice: Record<string, string>, newKey: string): ReviewAnswer[] {
+  return qs.map((q) => {
+    const at = q.slot ? { slot: q.slot } : {};
+    return choice[q.key] === newKey ? { raw: q.u.raw, ...at, new: true as const } : { raw: q.u.raw, ...at, player_id: choice[q.key]! };
+  });
+}

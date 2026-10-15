@@ -3,6 +3,7 @@ import { createV2ServerClient, getStaff } from '@/lib/v2/server';
 import type { RecordsResult } from '@/lib/v2/records';
 import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
 import { drawsForTournament, rowsForTournament, sourceKind } from '@/lib/v2/sheets';
+import type { ReviewAnswer } from '@/lib/v2/ingestRows';
 import type { DrawCounts, IngestCounts, ReviewItem, SourceTournament } from './types';
 
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
@@ -122,7 +123,7 @@ export async function readDraws(id: string, dry: boolean): Promise<ActionResult<
 }
 
 export type ReviewDecision =
-  | { decisions: ({ raw: string; player_id: string } | { raw: string; new: true })[] }
+  | { decisions: ReviewAnswer[] }
   | { winner_side: 1 | 2 }
   | { dismiss: true };
 
@@ -131,6 +132,9 @@ export async function resolveReview(id: string, decision: ReviewDecision): Promi
     await call(await staffRpc(), 'admin_resolve_ingest_review', { p_id: id, p: decision });
     return { ok: true, message: 'Done' };
   } catch (e) {
+    if (e instanceof Error && e.message.includes('same_player_twice')) {
+      return { ok: false, message: 'The same player is picked twice on this match. Give each person their own answer.' };
+    }
     return fail(e);
   }
 }

@@ -6,6 +6,7 @@ import { Banner, Toast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table } from '../kit';
 import { createTournament, deleteTournament, loadClubs, writeRecordsNow, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
+import { reviewAnswers, reviewQuestions } from '@/lib/v2/ingestRows';
 import type { RecordsResult } from '@/lib/v2/records';
 
 /**
@@ -658,9 +659,11 @@ function NeedsYou({ items, onChanged, notify }: { items: ReviewItem[]; onChanged
 function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged: () => Promise<void>; notify: (text: string) => void }) {
   const r = item.payload.row;
   const unclear = item.payload.unclear ?? [];
+  // one question per place when one spelling is two people (two «ΚΑΛΙΒΡΟΥΣΗΣ» in a doubles, 15 Oct)
+  const questions = reviewQuestions(r, unclear);
   // nothing chosen at first: Save waits until every name on the card has an answer (founder, 13 Oct)
   const [choice, setChoice] = useState<Record<string, string>>({});
-  const allChosen = unclear.every((u) => !!choice[u.raw]);
+  const allChosen = questions.every((q) => !!choice[q.key]);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [merging, setMerging] = useState<{ raw: string; keep: string; drop: string } | null>(null);
@@ -696,16 +699,16 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
     });
 
   const savePeople = () =>
-    send({ decisions: unclear.map((u) => (choice[u.raw] === NEW ? { raw: u.raw, new: true as const } : { raw: u.raw, player_id: choice[u.raw] })) });
+    send({ decisions: reviewAnswers(questions, choice, NEW) });
 
   return (
     <div className={`v2-card attention v2-enter${pending ? ' busy' : ''}`} aria-busy={pending || undefined}>
       {item.kind === 'people' ? (
         <>
-          {unclear.map((u) => (
-            <fieldset key={u.raw} className="v2-stack" style={{ border: 0, padding: 0, margin: 0, gap: 2 }}>
+          {questions.map(({ key, u, label }) => (
+            <fieldset key={key} className="v2-stack" style={{ border: 0, padding: 0, margin: 0, gap: 2 }}>
               <legend style={{ padding: 0, marginBottom: 6, fontSize: 16, fontWeight: 700 }}>
-                In {where}: is “{u.raw}” one of these players?
+                In {where}: is “{label}” one of these players?
                 <span className="v2-muted" style={{ display: 'block', marginTop: 2, fontWeight: 400 }}>
                   The match: {a} vs {b}
                 </span>
@@ -714,7 +717,7 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
                 .filter((c) => !mergedIds.includes(c.id))
                 .map((c) => (
                   <label key={c.id} className="v2-choice">
-                    <input type="radio" name={`${item.id}-${u.raw}`} checked={choice[u.raw] === c.id} onChange={() => setChoice({ ...choice, [u.raw]: c.id })} />
+                    <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === c.id} onChange={() => setChoice({ ...choice, [key]: c.id })} />
                     <span>
                       <b>
                         {c.first_name} {c.surname}
@@ -727,10 +730,10 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
                 const pair = duplicatePair((u.candidates ?? []).filter((c) => !mergedIds.includes(c.id)));
                 if (!pair) return null;
                 const [p, q] = pair;
-                if (!merging || merging.raw !== u.raw)
+                if (!merging || merging.raw !== key)
                   return (
                     <span style={{ alignSelf: 'flex-start' }}>
-                      <Ghost disabled={pending} onClick={() => setMerging({ raw: u.raw, keep: p.id, drop: q.id })}>
+                      <Ghost disabled={pending} onClick={() => setMerging({ raw: key, keep: p.id, drop: q.id })}>
                         {p.first_name} {p.surname} and {q.first_name} {q.surname} look like the same person. Merge them
                       </Ghost>
                     </span>
@@ -740,7 +743,7 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
                     <b>Merge into one player. Which spelling is right?</b>
                     {[p, q].map((c) => (
                       <label key={c.id} className="v2-choice">
-                        <input type="radio" name={`${item.id}-${u.raw}-keep`} checked={merging.keep === c.id} onChange={() => setMerging({ raw: u.raw, keep: c.id, drop: c.id === p.id ? q.id : p.id })} />
+                        <input type="radio" name={`${item.id}-${key}-keep`} checked={merging.keep === c.id} onChange={() => setMerging({ raw: key, keep: c.id, drop: c.id === p.id ? q.id : p.id })} />
                         {c.first_name} {c.surname}
                       </label>
                     ))}
@@ -757,7 +760,7 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
                 );
               })()}
               <label className="v2-choice">
-                <input type="radio" name={`${item.id}-${u.raw}`} checked={choice[u.raw] === NEW} onChange={() => setChoice({ ...choice, [u.raw]: NEW })} />
+                <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === NEW} onChange={() => setChoice({ ...choice, [key]: NEW })} />
                 No, a new player
               </label>
             </fieldset>
