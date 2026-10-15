@@ -87,6 +87,10 @@ export interface FeedMatchCard {
   round: string | null;
   status: string;
   tournament: { id: string; name: string } | null;
+  /** the category, «Μ 40+», when the match belongs to an event */
+  level?: string | null;
+  /** MS, WS, MD, WD, XD */
+  discipline?: string | null;
   sides: { side: Side; players: FeedPlayer[] }[];
   in_circle: boolean;
   my_vote: Side | null;
@@ -349,6 +353,10 @@ export interface ResultRow {
   area_id: string | null;
   /** null for friendlies */
   tournament: string | null;
+  /** the category, «Μ 40+», when the match belongs to an event */
+  level?: string | null;
+  /** MS, WS, MD, WD, XD */
+  discipline?: string | null;
   sides: { side: Side; players: FeedPlayer[] }[];
   winner_side: Side;
   /** winner first; empty when only the sets are known (player-logged), see score_summary */
@@ -470,6 +478,10 @@ export interface PlayerMatchLine {
   match_id: string;
   starts_at: string;
   format: 'singles' | 'doubles' | 'mixed';
+  /** the category, «Μ 40+», when the match belongs to an event */
+  level?: string | null;
+  /** MS, WS, MD, WD, XD */
+  discipline?: string | null;
   partner: PlayerRef[];
   opponents: PlayerRef[];
 }

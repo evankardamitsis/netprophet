@@ -3,6 +3,7 @@ import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy
 import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
+import { disciplineLabel } from './category';
 import { dayShort, dayTimeShort } from './tournaments';
 import { fmt, voteSplit, type Side } from './votes';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
@@ -214,10 +215,12 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   const w = when(card.starts_at, now, t);
   const doubles = card.format !== 'singles';
   // prototype order: «Σήμερα 21:00 · Μικτό · Φιλικό · Γλυφάδα», «Σήμερα 18:00 · Open Γλυφάδας · Ημιτελικός»
+  // the category follows the tournament («Μ 40+»); in doubles its discipline («Διπλό γυναικών») names the format
   const meta = [
     w.label,
-    doubles ? t.match.formats[card.format as 'doubles' | 'mixed'] : null,
+    doubles ? disciplineLabel(card.discipline, t) ?? t.match.formats[card.format as 'doubles' | 'mixed'] : null,
     card.tournament?.name,
+    card.tournament ? card.level : null,
     roundLabel(card.round, t),
     card.tournament || card.club ? null : card.venue,
   ]
