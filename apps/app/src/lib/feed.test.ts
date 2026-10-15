@@ -81,9 +81,9 @@ describe('fromFeedCard', () => {
     const c = fromFeedCard(card(), areas, t, NOW);
     expect(c.meta).toBe('Σήμερα 18:00 · Open Γλυφάδας · Ημιτελικός');
     expect(c.doubles).toBe(false);
-    expect(c.a).toEqual({ people: [{ surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ' }], sub: 'Γλυφάδα', level: null, area: 'Γλυφάδα' }); // players' levels are hidden (14 Oct)
+    expect(c.a).toEqual({ people: [{ surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ', look: null }], sub: 'Γλυφάδα', level: null, area: 'Γλυφάδα' }); // players' levels are hidden (14 Oct)
     // unknown area and no level: no sub line
-    expect(c.b).toEqual({ people: [{ surname: 'Βλάχος', first: 'Γιώργος', initials: 'ΓΒ' }], sub: null, level: null, area: null });
+    expect(c.b).toEqual({ people: [{ surname: 'Βλάχος', first: 'Γιώργος', initials: 'ΓΒ', look: null }], sub: null, level: null, area: null });
     expect(c.myVote).toBeUndefined();
   });
 

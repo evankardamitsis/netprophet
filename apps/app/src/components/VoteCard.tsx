@@ -14,6 +14,8 @@ import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
 import type { Side } from '../lib/votes';
 import { cardSurface, colors, ease, fonts } from '../theme';
 import { Lit } from './Lit';
+import { Avatar as DrawnAvatar } from './Avatar';
+import type { AvatarLook } from '../lib/avatar';
 
 /**
  * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
@@ -256,18 +258,25 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
         </Animated.View>
       </Pressable>
       {data.people.map((p, i) => (
-        <Avatar key={i} initials={p.initials} left={i === 0 ? 8 : 44} />
+        <Avatar key={i} initials={p.initials} look={p.look ?? null} left={i === 0 ? 8 : 44} />
       ))}
     </View>
   );
 }
 
-function Avatar({ initials, left }: { initials: string; left: number }) {
+/** the player's drawn avatar when they have an account (founder, 14 Oct); otherwise their initials */
+function Avatar({ initials, look, left }: { initials: string; look: AvatarLook | null; left: number }) {
   const pop = usePopIn(AVATAR_POP_MS, AVATAR_POP_DELAY);
   return (
-    <Animated.View style={[styles.av, { left }, pop]} pointerEvents="none">
-      <Lit />
-      <Text style={styles.avText}>{initials}</Text>
+    <Animated.View style={[styles.av, look && styles.avDrawn, { left }, pop]} pointerEvents="none">
+      {look ? (
+        <DrawnAvatar look={look} size={AV_SIZE} />
+      ) : (
+        <>
+          <Lit />
+          <Text style={styles.avText}>{initials}</Text>
+        </>
+      )}
     </Animated.View>
   );
 }
@@ -322,6 +331,9 @@ function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
     </View>
   );
 }
+
+/** the avatar disc inside its 2px white ring */
+const AV_SIZE = 40;
 
 const styles = StyleSheet.create({
   card: {
@@ -388,6 +400,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
+  avDrawn: { overflow: 'hidden', backgroundColor: colors.paper },
   done: {
     overflow: 'hidden',
     paddingTop: 12,

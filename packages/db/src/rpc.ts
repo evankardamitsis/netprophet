@@ -54,6 +54,9 @@ export interface FeedPlayer {
   area_id: string | null;
   level_tier: number | null;
   level_direction: 'up' | 'same' | 'down' | null;
+  gender?: 'm' | 'f' | null;
+  /** the drawn avatar: a key (m1 to f6), 'default' (the app draws the default), or null for initials (no account) */
+  avatar?: string | null;
 }
 
 export interface FeedResultCard {
@@ -441,6 +444,8 @@ export interface PlayerRef {
   surname: string;
   gender: 'm' | 'f' | null;
   name_forms: { accusative?: string; genitive?: string; vocative?: string } & Record<string, unknown>;
+  /** the drawn avatar: a key, 'default', or null for initials (a roster player without an account) */
+  avatar?: string | null;
 }
 
 /** One row of the Παίκτες list (api.get_players_home / api.find_players). */

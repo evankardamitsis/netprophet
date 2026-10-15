@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_AVATARS, avatarByKey, defaultAvatarFor } from './avatar';
+import { DEFAULT_AVATARS, avatarByKey, defaultAvatarFor, playerAvatar } from './avatar';
 
 describe('the drawn avatars', () => {
   it('has 12 defaults, 6 men and 6 women, with unique keys', () => {
@@ -20,5 +20,13 @@ describe('the drawn avatars', () => {
   it('finds a default by key', () => {
     expect(avatarByKey('f5')?.look.hair).toBe('bun');
     expect(avatarByKey('nope')).toBeNull();
+  });
+});
+
+describe('other players', () => {
+  it('keeps initials without an account, draws the default or the pick with one', () => {
+    expect(playerAvatar('p1', 'f', null)).toBeNull();
+    expect(playerAvatar('p1', 'f', 'default')).toEqual(defaultAvatarFor('p1', 'f').look);
+    expect(playerAvatar('p1', 'f', 'm3')).toEqual(avatarByKey('m3')!.look);
   });
 });

@@ -215,7 +215,7 @@ export default function OnboardingScreen() {
       const lg = link.view.logged_by;
       const rest = await ob.suggestions().catch(() => []);
       setSuggested([
-        ...(lg ? [{ id: lg.player_id, name: `${lg.first_name} ${lg.surname}`, initials: '', sub: '', form: [], followers: 0 }] : []),
+        ...(lg ? [{ id: lg.player_id, name: `${lg.first_name} ${lg.surname}`, initials: '', look: null, sub: '', form: [], followers: 0 }] : []),
         ...rest.filter((r) => r.id !== lg?.player_id),
       ]);
       if (lg) setKnown([lg.player_id]);
