@@ -86,6 +86,24 @@ export const cosmetics = {
     kit_night: { shirt: '#1B2A6B', racket: '#9DB0FF' },
   },
   /**
+   * Gear the ball people wear (founder, 15 Oct): one at a time, on the head or the eyes. The headband is lime because
+   * it is earned (5 in a row); bought gear never uses lime.
+   */
+  gear: {
+    cap: '#F7F7F2',
+    capShade: '#D3D8CE',
+    visor: '#1B2A6B',
+    visorShade: '#101A45',
+    lens: '#17211D',
+    lensShine: '#5E7A70',
+    bandana: '#C8442E',
+    bandanaDot: '#F3F5EE',
+    bucket: '#C9B48A',
+    bucketShade: '#A38D63',
+  },
+  /** the confetti win effect */
+  confetti: ['#D9F03F', '#F3F5EE', '#9DB0FF', '#F2D36B'],
+  /**
    * The drawn avatars (founder, 14 Oct: drawn in code like the logo's balls): skin and hair are part of the person,
    * never sold. The outline is ink; the kit colours above dress the shirt.
    */

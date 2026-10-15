@@ -6,12 +6,13 @@ import type { LookCategory } from '@netprophet/db';
 import { CardBackground } from '../../src/components/CardBackground';
 import { CardFrame, namePlate } from '../../src/components/CardFrame';
 import { LookBuySheet } from '../../src/components/LookBuySheet';
-import { KitSwatch, LookThumb } from '../../src/components/LookParts';
+import { LookThumb } from '../../src/components/LookParts';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useLook, useMePage, useMyAvatar } from '../../src/lib/data';
-import { Avatar } from '../../src/components/Avatar';
-import { DEFAULT_AVATARS } from '../../src/lib/avatar';
+import { Avatar, LiveAvatar } from '../../src/components/Avatar';
+import { DEFAULT_AVATARS, type AvatarLook } from '../../src/lib/avatar';
+import { useUnlocks } from '../../src/lib/unlocks';
 import { buySheetOf, ctaOf, findTile, LOOK_TABS, ownedKeys, previewOf, tagOf, tileName, tilesFor, type BuySheet, type Tile, type Tone } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { usePress, useStgIn } from '../../src/lib/motion';
@@ -24,6 +25,8 @@ import { colors, fonts } from '../../src/theme';
  * provider). Style only: it never changes level, votes or the Ladder.
  */
 const STG_MS = 450;
+/** your ball person on the preview card */
+const PV_AVATAR = 104;
 const PAD = 20;
 const GAP = 10;
 const PREVIEW_H = 230;
@@ -37,6 +40,11 @@ export default function LookScreen() {
   const params = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<LookCategory | 'avatar'>(params.tab === 'avatar' ? 'avatar' : 'frame');
   const myAvatar = useMyAvatar();
+  /** your ball person: it wears what you look at here */
+  const who = myAvatar.avatar?.look ?? DEFAULT_AVATARS[0]!.look;
+  // the win effect tab arrives with its unlock (the reveal rule)
+  const { has } = useUnlocks();
+  const tabs = LOOK_TABS.filter((c) => c !== 'win_effect' || has('win_effect'));
   /** per tab: the tile picked (undefined: the one you wear) */
   const [picks, setPicks] = useState<Partial<Record<LookCategory, string | null>>>({});
   const [sheet, setSheet] = useState<BuySheet | null>(null);
@@ -90,20 +98,29 @@ export default function LookScreen() {
           <>
             {tab === 'avatar' ? null : (
               <>
-                <PreviewCard frame={preview.frame} bg={preview.background} kit={preview.kit} level={view?.level ?? null} name={name} />
+                <PreviewCard
+                  frame={preview.frame}
+                  bg={preview.background}
+                  kit={preview.kit}
+                  gear={preview.gear}
+                  effect={preview.effect}
+                  who={who}
+                  level={view?.level ?? null}
+                  name={name}
+                />
                 <SelectedCard sel={sel} tag={tag} cta={cta} onCta={onCta} />
               </>
             )}
-            <View style={styles.seg}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seg}>
               <Pressable accessibilityRole="tab" accessibilityState={{ selected: tab === 'avatar' }} onPress={() => setTab('avatar')} style={[styles.segBtn, tab === 'avatar' && styles.segOn]}>
                 <Text style={[styles.segText, tab === 'avatar' && styles.segTextOn]}>{t.look.avatarTab}</Text>
               </Pressable>
-              {LOOK_TABS.map((c) => (
+              {tabs.map((c) => (
                 <Pressable key={c} accessibilityRole="tab" accessibilityState={{ selected: tab === c }} onPress={() => setTab(c)} style={[styles.segBtn, tab === c && styles.segOn]}>
                   <Text style={[styles.segText, tab === c && styles.segTextOn]}>{t.look.tabs[c]}</Text>
                 </Pressable>
               ))}
-            </View>
+            </ScrollView>
             {tab === 'avatar' ? (
               <AvatarPicker
                 width={width - PAD * 2}
@@ -120,7 +137,8 @@ export default function LookScreen() {
                   i={i}
                   tile={tile}
                   selected={sel.key === tile.key}
-                  worn={look.equipped[tab] === tile.key}
+                  worn={(look.equipped[tab] ?? null) === tile.key}
+                  who={who}
                   onPress={() => setPicks((p) => ({ ...p, [tab]: tile.key }))}
                 />
               ))}
@@ -167,10 +185,33 @@ function AvatarCell({ i, size, on, onPress, children }: { i: number; size: numbe
 }
 
 /** the Εγώ card in miniature, wearing what is picked (the level and the name as on Εγώ) */
-function PreviewCard({ frame, bg, kit, level, name }: { frame: string | null; bg: string | null; kit: string; level: string | null; name: string }) {
+function PreviewCard({
+  frame,
+  bg,
+  kit,
+  gear,
+  effect,
+  who,
+  level,
+  name,
+}: {
+  frame: string | null;
+  bg: string | null;
+  kit: string;
+  gear: string | null;
+  effect: string | null;
+  who: AvatarLook;
+  level: string | null;
+  name: string;
+}) {
   const t = useCopy();
   const enter = useStgIn(STG_MS, 100);
   const plate = namePlate(frame);
+  // a tap on the player plays the celebration, with the effect you are looking at
+  const [jump, setJump] = useState(0);
+  useEffect(() => {
+    if (effect) setJump((n) => n + 1);
+  }, [effect]);
   return (
     <Animated.View style={[styles.preview, enter]}>
       <CardBackground bg={bg} k={0.62} scrim />
@@ -180,9 +221,9 @@ function PreviewCard({ frame, bg, kit, level, name }: { frame: string | null; bg
           <Text style={styles.pvWord}>{t.level.label}</Text>
         </View>
       ) : null}
-      <View style={styles.pvKit}>
-        <KitSwatch kit={kit} size={64} />
-      </View>
+      <Pressable accessibilityRole="button" onPress={() => setJump((n) => n + 1)} style={styles.pvKit}>
+        <LiveAvatar look={who} size={PV_AVATAR} kit={kit} gear={gear} effect={effect} jump={jump} />
+      </Pressable>
       {name ? (
         <View style={styles.pvNameWrap}>
           <View style={plate?.box}>
@@ -236,7 +277,23 @@ function SelectedCard({ sel, tag, cta, onCta }: { sel: Tile; tag: { text: string
   );
 }
 
-function GridCell({ width, i, tile, selected, worn, onPress }: { width: number; i: number; tile: Tile; selected: boolean; worn: boolean; onPress: () => void }) {
+function GridCell({
+  width,
+  i,
+  tile,
+  selected,
+  worn,
+  who,
+  onPress,
+}: {
+  width: number;
+  i: number;
+  tile: Tile;
+  selected: boolean;
+  worn: boolean;
+  who: AvatarLook;
+  onPress: () => void;
+}) {
   const t = useCopy();
   const enter = useStgIn(STG_MS - 50, 120 + Math.min(i, 10) * 40);
   const press = usePress(0.96);
@@ -245,7 +302,7 @@ function GridCell({ width, i, tile, selected, worn, onPress }: { width: number; 
     <Animated.View style={[{ width }, enter]}>
       <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
         <Animated.View style={[styles.tile, { borderColor: selected ? colors.ink : 'transparent' }, press.style]}>
-          <LookThumb tile={tile} />
+          <LookThumb tile={tile} who={who} />
           <Text style={styles.tileName}>{tileName(tile, t)}</Text>
           {tag && tag.text ? <Tag text={tag.text} tone={tag.tone} /> : null}
           {worn ? (
@@ -283,7 +340,7 @@ const styles = StyleSheet.create({
   ctaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
   ctaTextWorn: { color: colors.lime },
   seg: { flexDirection: 'row', gap: 6, padding: 5, borderRadius: 18, backgroundColor: colors.white },
-  segBtn: { flex: 1, minHeight: 48, paddingHorizontal: 4, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  segBtn: { minHeight: 48, paddingHorizontal: 14, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   segOn: { backgroundColor: colors.ink },
   segText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 15, textAlign: 'center', color: colors.ink },
   segTextOn: { color: colors.paper },

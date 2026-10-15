@@ -4,6 +4,8 @@ import { CardFrame } from './CardFrame';
 import type { Tile } from '../lib/look';
 import { colors, cosmetics } from '../theme';
 import { Lit } from './Lit';
+import { Avatar } from './Avatar';
+import type { AvatarLook } from '../lib/avatar';
 
 /** the shirt and racket colours of a kit */
 export function kitColors(key: string): { shirt: string; racket: string } {
@@ -38,16 +40,20 @@ export function KitSwatch({ kit, size }: { kit: string; size: number }) {
   );
 }
 
-/** prototype `.lkth`: 76×106 thumbnail of an item. Frames sit on ink, backgrounds fill it, kits are a swatch. */
-export function LookThumb({ tile }: { tile: Tile }) {
-  if (tile.category === 'kit') {
+/**
+ * prototype `.lkth`: 76×106 thumbnail of an item. Frames sit on ink, backgrounds fill it; kits, gear and the win
+ * effect show your own ball person wearing them (founder, 15 Oct: the ball people).
+ */
+export function LookThumb({ tile, who }: { tile: Tile; who: AvatarLook }) {
+  const none = tile.key === null;
+  if (tile.category === 'kit' || tile.category === 'gear' || tile.category === 'win_effect') {
     return (
-      <View style={[styles.thumb, styles.kitThumb]}>
-        <KitSwatch kit={tile.key ?? 'kit_green'} size={44} />
+      <View style={[styles.thumb, styles.ballThumb, none && styles.none]}>
+        <Avatar look={who} size={64} kit={tile.category === 'kit' ? (tile.key ?? 'kit_green') : 'kit_green'} gear={tile.category === 'gear' ? tile.key : null} />
+        {tile.category === 'win_effect' && !none ? <ConfettiDots /> : null}
       </View>
     );
   }
-  const none = tile.key === null;
   return (
     <View style={[styles.thumb, none && styles.none]}>
       {tile.category === 'background' ? <CardBackground bg={tile.key} k={0.45} /> : null}
@@ -56,8 +62,28 @@ export function LookThumb({ tile }: { tile: Tile }) {
   );
 }
 
+/** a still hint of the confetti around the ball */
+function ConfettiDots() {
+  const at = [
+    [10, 14, 0],
+    [58, 10, 1],
+    [8, 52, 2],
+    [62, 46, 3],
+    [34, 4, 1],
+  ] as const;
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {at.map(([x, y, c], i) => (
+        <View key={i} style={[styles.dot, { left: x, top: 20 + y, backgroundColor: cosmetics.confetti[c] }]} />
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   thumb: { width: 76, height: 106, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.ink },
   kitThumb: { backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
+  ballThumb: { backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
+  dot: { position: 'absolute', width: 6, height: 6, borderRadius: 1.5, transform: [{ rotate: '20deg' }] },
   none: { borderWidth: 2, borderStyle: 'dashed', borderColor: colors.slate },
 });

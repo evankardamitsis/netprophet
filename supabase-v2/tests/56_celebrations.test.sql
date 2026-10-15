@@ -1,5 +1,5 @@
--- Celebrations: each σερί milestone queues one, with the reward it actually gave (3: freeze, 7: Frame Επτά,
--- 10: Frame Δέκα); the feed hands them over until they are seen.
+-- Celebrations: each σερί milestone queues one, with the reward it actually gave (3: freeze, 5: the lime headband,
+-- 7: Frame Επτά, 10: Frame Δέκα); the feed hands them over until they are seen.
 begin;
 select plan(9);
 
@@ -36,13 +36,13 @@ select is((select streak from core.user_game_state where user_id = :'v'::uuid), 
 select is((select string_agg(payload ->> 'streak', ',' order by (payload ->> 'streak')::int) from core.feed_inbox
             where user_id = :'v'::uuid and kind = 'celebration'), '3,5,7,10', 'one celebration per milestone');
 select is((select payload -> 'reward' from core.feed_inbox where user_id = :'v'::uuid and kind = 'celebration' and payload ->> 'streak' = '3'),
-          '{"frame": null, "freeze": true}'::jsonb, 'σερί 3: the first free freeze');
+          '{"frame": null, "freeze": true, "gear": null}'::jsonb, 'σερί 3: the first free freeze');
 select is((select payload -> 'reward' from core.feed_inbox where user_id = :'v'::uuid and kind = 'celebration' and payload ->> 'streak' = '5'),
-          '{"frame": null, "freeze": false}'::jsonb, 'σερί 5: the moment, nothing to give');
+          '{"frame": null, "freeze": false, "gear": "gear_headband"}'::jsonb, 'σερί 5: the lime headband');
 select is((select payload -> 'reward' ->> 'frame' from core.feed_inbox where user_id = :'v'::uuid and kind = 'celebration' and payload ->> 'streak' = '7'),
           'frame_seven', 'σερί 7: Frame Επτά');
 select is((select payload -> 'reward' from core.feed_inbox where user_id = :'v'::uuid and kind = 'celebration' and payload ->> 'streak' = '10'),
-          '{"frame": "frame_ten", "freeze": false}'::jsonb, 'σερί 10: Frame Δέκα');
+          '{"frame": "frame_ten", "freeze": false, "gear": null}'::jsonb, 'σερί 10: Frame Δέκα');
 select is((select count(*)::int from core.user_cosmetics uc join core.cosmetic_items ci on ci.id = uc.item_id
             where uc.user_id = :'v'::uuid and ci.key in ('frame_seven', 'frame_ten')), 2, 'both frames are owned');
 

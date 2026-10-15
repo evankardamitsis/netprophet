@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedProps,
@@ -40,6 +41,8 @@ interface ArtProps {
   cheer?: boolean;
   /** 1 open, 0 shut (blink); -1..1 where the pupils look */
   eyes?: { open: SharedValue<number>; look: SharedValue<number> };
+  /** the gear worn: gear_cap, gear_headband, gear_visor, gear_shades, gear_bandana, gear_bucket */
+  gear?: string | null;
 }
 
 /** the still avatar: lists, cards, the picker */
@@ -51,7 +54,7 @@ export function Avatar(props: Omit<ArtProps, 'eyes' | 'cheer'>) {
  * The avatar that lives (Εγώ, the picker's big preview): it bobs, blinks and looks around; a new `jump` makes it
  * celebrate. Idle motion stays here, never on the 40px faces in lists.
  */
-export function LiveAvatar({ jump = 0, ...props }: Omit<ArtProps, 'eyes' | 'cheer'> & { jump?: number }) {
+export function LiveAvatar({ jump = 0, effect = null, ...props }: Omit<ArtProps, 'eyes' | 'cheer'> & { jump?: number; effect?: string | null }) {
   const reduced = useReducedMotion();
   const bob = useSharedValue(0);
   const hop = useSharedValue(0);
@@ -88,13 +91,51 @@ export function LiveAvatar({ jump = 0, ...props }: Omit<ArtProps, 'eyes' | 'chee
   });
 
   return (
-    <Animated.View style={style}>
-      <BallArt {...props} eyes={{ open, look }} cheer={jump > 0 && !reduced} />
-    </Animated.View>
+    <View>
+      <Animated.View style={style}>
+        <BallArt {...props} eyes={{ open, look }} cheer={jump > 0 && !reduced} />
+      </Animated.View>
+      {effect === 'fx_confetti' && jump > 0 && !reduced ? <Confetti key={jump} size={size} /> : null}
+    </View>
   );
 }
 
-function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes }: ArtProps) {
+/** the confetti win effect: a burst of little squares out of the ball, then gone */
+const PIECES = Array.from({ length: 14 }, (_, i) => ({
+  angle: (i / 14) * Math.PI * 2 + (i % 2) * 0.2,
+  dist: 0.42 + (i % 3) * 0.1,
+  colour: cosmetics.confetti[i % cosmetics.confetti.length]!,
+  spin: (i % 2 ? 1 : -1) * (180 + i * 20),
+}));
+
+function Confetti({ size }: { size: number }) {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) });
+  }, [t]);
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      {PIECES.map((p, i) => (
+        <Piece key={i} p={p} t={t} size={size} />
+      ))}
+    </View>
+  );
+}
+
+function Piece({ p, t, size }: { p: (typeof PIECES)[number]; t: SharedValue<number>; size: number }) {
+  const piece = Math.max(4, size * 0.07);
+  const style = useAnimatedStyle(() => ({
+    opacity: 1 - t.value,
+    transform: [
+      { translateX: Math.cos(p.angle) * p.dist * size * t.value },
+      { translateY: Math.sin(p.angle) * p.dist * size * t.value - size * 0.12 * t.value },
+      { rotate: `${p.spin * t.value}deg` },
+    ],
+  }));
+  return <Animated.View style={[{ position: 'absolute', left: size / 2 - piece / 2, top: size * 0.5, width: piece, height: piece, borderRadius: 1.5, backgroundColor: p.colour }, style]} />;
+}
+
+function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear = null }: ArtProps) {
   const skin = cosmetics.avatar.skin[look.skin] ?? cosmetics.avatar.skin[1];
   const hair = cosmetics.avatar.hair[look.hairColour];
   const k = cosmetics.kit[kit as KitKey] ?? cosmetics.kit.kit_green;
@@ -117,7 +158,7 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes }: ArtP
       {bg ? <Rect x={0} y={0} width={100} height={100} fill={bg} /> : null}
       <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
       {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} /> : null}
-      <HairBack style={look.hair} fill={hair} />
+      <HairBack style={look.hair} fill={hair} hatOn={gear === 'gear_cap' || gear === 'gear_bandana' || gear === 'gear_bucket'} />
       <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={skin} />
       <G clipPath={`url(#cl${id})`}>
         {/* the kit: the lower band of the ball, a V at the collar */}
@@ -132,6 +173,7 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes }: ArtP
       {look.beard ? (
         <Path d="M22 60 C25 79 37 88 50 88 C63 88 75 79 78 60 C72 70 62 74 50 74 C38 74 28 70 22 60 Z" fill={hair} clipPath={`url(#cl${id})`} />
       ) : null}
+      {gear ? <HeadGear gear={gear} /> : null}
       <Eyes eyes={eyes} />
       {look.glasses ? (
         <G>
@@ -140,6 +182,7 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes }: ArtP
           <Path d="M46 54 Q50 51.5 54 54" fill="none" stroke={colors.ink} strokeWidth={2.4} strokeLinecap="round" />
         </G>
       ) : null}
+      {gear === 'gear_shades' ? <Shades /> : null}
       <Ellipse cx={29} cy={67} rx={5} ry={3.4} fill={cosmetics.avatar.blush} opacity={0.4} />
       <Ellipse cx={71} cy={67} rx={5} ry={3.4} fill={cosmetics.avatar.blush} opacity={0.4} />
       {cheer ? (
@@ -148,6 +191,76 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes }: ArtP
         <Path d="M43.5 68 Q50 73.5 56.5 68" fill="none" stroke={colors.ink} strokeWidth={2.8} strokeLinecap="round" />
       )}
     </Svg>
+  );
+}
+
+/** what goes on the head: a cap, a headband, a visor, a bandana or a bucket hat (the shades go on the eyes) */
+function HeadGear({ gear }: { gear: string }) {
+  const g = cosmetics.gear;
+  switch (gear) {
+    case 'gear_cap':
+      return (
+        <G>
+          <Path d="M17 45 C18 25 32 15 50 15 C68 15 82 25 83 45 Z" fill={g.cap} stroke={colors.ink} strokeOpacity={0.28} strokeWidth={1.4} />
+          <Path d="M50 16 L50 44 M34 20 C38 28 40 36 40 44 M66 20 C62 28 60 36 60 44" stroke={g.capShade} strokeWidth={1} fill="none" />
+          <Path d="M13 45 Q50 60 87 45 Q50 50 13 45 Z" fill={g.capShade} stroke={colors.ink} strokeOpacity={0.28} strokeWidth={1.2} />
+          <Circle cx={50} cy={15.5} r={2.6} fill={g.capShade} />
+        </G>
+      );
+    case 'gear_headband':
+      return (
+        <G>
+          <Path d="M17 44 Q50 29 83 44 L83 52 Q50 37 17 52 Z" fill={colors.lime} />
+          <Path d="M82 45 L94 41 L91 49 Z M82 49 L93 55 L84 56 Z" fill={colors.lime} />
+        </G>
+      );
+    case 'gear_visor':
+      return (
+        <G>
+          <Path d="M17 43 Q50 31 83 43 L83 49 Q50 37 17 49 Z" fill={g.visor} />
+          <Path d="M20 48 Q50 64 80 48 Q50 54 20 48 Z" fill={g.visorShade} />
+        </G>
+      );
+    case 'gear_bandana':
+      return (
+        <G>
+          <Path d="M17 47 C18 26 33 16 50 16 C67 16 82 26 83 47 Q50 35 17 47 Z" fill={g.bandana} />
+          <Path d="M80 36 L95 31 L91 41 Z M81 41 L94 48 L85 50 Z" fill={g.bandana} />
+          {[
+            [32, 30],
+            [44, 23],
+            [57, 24],
+            [69, 31],
+            [40, 37],
+            [60, 37],
+          ].map(([x, y]) => (
+            <Circle key={`${x}${y}`} cx={x} cy={y} r={1.8} fill={g.bandanaDot} />
+          ))}
+        </G>
+      );
+    case 'gear_bucket':
+      return (
+        <G>
+          <Path d="M24 41 C25 22 37 14 50 14 C63 14 75 22 76 41 Z" fill={g.bucket} />
+          <Path d="M10 47 Q50 30 90 47 Q93 54 86 55 Q50 40 14 55 Q7 54 10 47 Z" fill={g.bucketShade} />
+          <Path d="M25 38 Q50 32 75 38" stroke={g.bucketShade} strokeWidth={2} fill="none" />
+        </G>
+      );
+    default:
+      return null;
+  }
+}
+
+/** sunglasses over the eyes */
+function Shades() {
+  const g = cosmetics.gear;
+  return (
+    <G>
+      <Rect x={27} y={47.5} width={20} height={14} rx={6} fill={g.lens} />
+      <Rect x={53} y={47.5} width={20} height={14} rx={6} fill={g.lens} />
+      <Path d="M47 52 Q50 50 53 52" stroke={g.lens} strokeWidth={2.6} fill="none" />
+      <Path d="M30 51 L36 51 M56 51 L62 51" stroke={g.lensShine} strokeWidth={2} strokeLinecap="round" />
+    </G>
   );
 }
 
@@ -194,11 +307,12 @@ function Racket({ frame, grip }: { frame: string; grip: string }) {
 }
 
 /** hair that falls behind the ball */
-function HairBack({ style, fill }: { style: HairStyle; fill: string }) {
+function HairBack({ style, fill, hatOn }: { style: HairStyle; fill: string; hatOn?: boolean }) {
   if (style === 'long') return <Path d="M14 74 C8 38 28 17 50 17 C72 17 92 38 86 74 C80 78 74 76 72 70 L28 70 C26 76 20 78 14 74 Z" fill={fill} />;
   if (style === 'bob') return <Path d="M15 62 C12 34 30 18 50 18 C70 18 88 34 85 62 C80 66 74 64 73 60 L27 60 C26 64 20 66 15 62 Z" fill={fill} />;
   if (style === 'ponytail') return <Path d="M76 32 C92 34 96 54 88 68 C86 56 82 46 72 40 Z" fill={fill} />;
-  if (style === 'bun') return <Circle cx={50} cy={17} r={10} fill={fill} />;
+  // a bun goes under a hat
+  if (style === 'bun') return hatOn ? null : <Circle cx={50} cy={17} r={10} fill={fill} />;
   return null;
 }
 

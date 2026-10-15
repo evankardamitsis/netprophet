@@ -96,7 +96,7 @@ export default function MeScreen() {
         {view && !statsPage ? (
           <>
             <Section i={next()}>
-              <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} />
+              <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} />
             </Section>
             {has('level_bar') ? (
               <Section i={next()}>
@@ -347,6 +347,8 @@ function HeroCard({
   level,
   avatar,
   kit,
+  gear,
+  effect,
 }: {
   v: MeView;
   badges: GetBadgesResult | null;
@@ -355,6 +357,8 @@ function HeroCard({
   level: LevelBack | null;
   avatar: AvatarLook | null;
   kit: string;
+  gear: string | null;
+  effect: string | null;
 }) {
   const t = useCopy();
   const { has } = useUnlocks();
@@ -370,7 +374,7 @@ function HeroCard({
         <>
           {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           <Name v={v} frame={frame} />
-          {avatar ? <HeroAvatar look={avatar} kit={kit} /> : null}
+          {avatar ? <HeroAvatar look={avatar} kit={kit} gear={gear} effect={effect} /> : null}
           {canFlip ? (
             <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
               <Animated.View style={[styles.flipPill, flip.style]}>
@@ -387,7 +391,7 @@ function HeroCard({
 }
 
 /** your drawn player on the card, by the name; a tap opens Εμφάνιση on «Παίκτης» to change it */
-function HeroAvatar({ look, kit }: { look: AvatarLook; kit: string }) {
+function HeroAvatar({ look, kit, gear, effect }: { look: AvatarLook; kit: string; gear: string | null; effect: string | null }) {
   const press = usePress();
   const pop = usePopIn(500, 350);
   // a tap makes the ball jump first, then Εμφάνιση opens
@@ -399,7 +403,7 @@ function HeroAvatar({ look, kit }: { look: AvatarLook; kit: string }) {
   return (
     <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
       <Animated.View style={[styles.heroAvatar, pop, press.style]}>
-        <LiveAvatar look={look} size={HERO_AVATAR} kit={kit} jump={jump} />
+        <LiveAvatar look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} jump={jump} />
       </Animated.View>
     </Pressable>
   );

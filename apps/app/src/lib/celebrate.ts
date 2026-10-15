@@ -99,6 +99,16 @@ export function celebrationView(c: StreakCelebration, t: Copy): CelebrationView 
   const n = c.payload.streak;
   const r = c.payload.reward ?? { freeze: false, frame: null };
   const frame = r.frame ? t.celebrate.frames[r.frame] ?? r.frame : null;
-  const reward = r.freeze && frame ? t.celebrate.rewards.both : r.freeze ? t.celebrate.rewards.freeze : frame ? fmt(t.celebrate.rewards.frame, { name: frame }) : t.celebrate.rewards.none;
+  const gear = r.gear ? t.celebrate.gear[r.gear] ?? r.gear : null;
+  const reward =
+    r.freeze && frame
+      ? t.celebrate.rewards.both
+      : r.freeze
+        ? t.celebrate.rewards.freeze
+        : frame
+          ? fmt(t.celebrate.rewards.frame, { name: frame })
+          : gear
+            ? fmt(t.celebrate.rewards.gear, { name: gear })
+            : t.celebrate.rewards.none;
   return { label: greekCaps(t.celebrate.label), streak: n, tier: null, title: t.celebrate.titles[n] ?? `${n}`, reward };
 }
