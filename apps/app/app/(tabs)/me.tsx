@@ -26,7 +26,7 @@ import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { alpha, colors, ease, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
-import { Avatar } from '../../src/components/Avatar';
+import { LiveAvatar } from '../../src/components/Avatar';
 import type { AvatarLook } from '../../src/lib/avatar';
 import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
 
@@ -41,7 +41,7 @@ const STAGGER = 70;
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
 /** the drawn player on the Εγώ card */
-const HERO_AVATAR = 76;
+const HERO_AVATAR = 92;
 
 export default function MeScreen() {
   const t = useCopy();
@@ -390,10 +390,16 @@ function HeroCard({
 function HeroAvatar({ look, kit }: { look: AvatarLook; kit: string }) {
   const press = usePress();
   const pop = usePopIn(500, 350);
+  // a tap makes the ball jump first, then Εμφάνιση opens
+  const [jump, setJump] = useState(0);
+  const open = () => {
+    setJump((n) => n + 1);
+    setTimeout(() => router.push('/look?tab=avatar'), 380);
+  };
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/look?tab=avatar')} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
+    <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
       <Animated.View style={[styles.heroAvatar, pop, press.style]}>
-        <Avatar look={look} size={HERO_AVATAR} kit={kit} />
+        <LiveAvatar look={look} size={HERO_AVATAR} kit={kit} jump={jump} />
       </Animated.View>
     </Pressable>
   );
@@ -872,8 +878,8 @@ const styles = StyleSheet.create({
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -10, color: colors.ink },
   levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
-  heroAvatarHit: { position: 'absolute', right: 16, bottom: 18 },
-  heroAvatar: { width: HERO_AVATAR, height: HERO_AVATAR, borderRadius: 999, overflow: 'hidden', borderWidth: 3, borderColor: colors.paper },
+  heroAvatarHit: { position: 'absolute', right: 10, bottom: 8 },
+  heroAvatar: { width: HERO_AVATAR, height: HERO_AVATAR },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
   proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
   proRowText: { flex: 1, gap: 2 },

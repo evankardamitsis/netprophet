@@ -1,151 +1,262 @@
-import { Circle, Defs, Ellipse, G, Path, RadialGradient, Rect, Stop, Svg, Text as SvgText } from 'react-native-svg';
+import { useEffect } from 'react';
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { Circle, ClipPath, Defs, Ellipse, G, Path, RadialGradient, Rect, Stop, Svg, Text as SvgText } from 'react-native-svg';
 import type { AvatarLook, HairStyle } from '../lib/avatar';
 import { colors, cosmetics, fonts } from '../theme';
 
 /**
- * A drawn player (founder, 14 Oct: "create avatars same way you created the ball animations"): a bust on a 100×100 box
- * in the sticker style (thick ink outline, flat colour), with the light from the top left that the balls and kits have.
- * The shirt takes the kit's colour. `bg` fills the disc behind; the caller clips it round.
- * A roster player without an account is the silhouette with initials, never a face (avatar.md).
+ * Ball people (founder, 15 Oct: "a cool round of 3d moving avatars", "love them"): every player is one shaded ball
+ * with a face, lit from the top left like the intro's balls. Skin and hair are the person's; the kit dresses the
+ * lower band and the racket. Drawn on 100×100; `bg` fills the box behind, the caller clips it round.
+ * A roster player without an account is a faceless ball with initials, never a face (avatar.md).
  */
-/** the bust drawn on 100×100, framed tighter so the face fills the disc */
-const FRAME = '11 9 78 78';
-const OUT = colors.ink;
-const W = 3.2;
+const BALL = { cx: 50, cy: 56, r: 34 };
+const EYE = { y: 55, dx: 11, rx: 7, ry: 8.5, pupil: 4 };
+/** below this size the racket is noise in a list row */
+const RACKET_MIN = 56;
 
 type KitKey = keyof typeof cosmetics.kit;
 
-export function Avatar({
-  look,
-  size,
-  kit = 'kit_green',
-  bg = colors.paper,
-}: {
+const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+interface ArtProps {
   look: AvatarLook;
   size: number;
   kit?: string;
   bg?: string | null;
-}) {
+  /** an open, cheering mouth (the win jump) */
+  cheer?: boolean;
+  /** 1 open, 0 shut (blink); -1..1 where the pupils look */
+  eyes?: { open: SharedValue<number>; look: SharedValue<number> };
+}
+
+/** the still avatar: lists, cards, the picker */
+export function Avatar(props: Omit<ArtProps, 'eyes' | 'cheer'>) {
+  return <BallArt {...props} />;
+}
+
+/**
+ * The avatar that lives (Εγώ, the picker's big preview): it bobs, blinks and looks around; a new `jump` makes it
+ * celebrate. Idle motion stays here, never on the 40px faces in lists.
+ */
+export function LiveAvatar({ jump = 0, ...props }: Omit<ArtProps, 'eyes' | 'cheer'> & { jump?: number }) {
+  const reduced = useReducedMotion();
+  const bob = useSharedValue(0);
+  const hop = useSharedValue(0);
+  const open = useSharedValue(1);
+  const look = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduced) return;
+    bob.value = withRepeat(withTiming(1, { duration: 800, easing: Easing.inOut(Easing.sin) }), -1, true);
+    open.value = withRepeat(withSequence(withDelay(3200, withTiming(0.08, { duration: 70 })), withTiming(1, { duration: 90 })), -1);
+    look.value = withRepeat(
+      withSequence(
+        withDelay(1400, withTiming(1, { duration: 260 })),
+        withDelay(900, withTiming(-1, { duration: 360 })),
+        withDelay(800, withTiming(0, { duration: 260 })),
+      ),
+      -1,
+    );
+  }, [reduced, bob, open, look]);
+
+  useEffect(() => {
+    if (!jump || reduced) return;
+    hop.value = withSequence(withTiming(1, { duration: 260, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 420, easing: Easing.bounce }));
+  }, [jump, reduced, hop]);
+
+  const size = props.size;
+  const style = useAnimatedStyle(() => {
+    const up = bob.value * 0.045 + hop.value * 0.32;
+    // a squash at the bottom of the bob, a stretch in the air
+    const stretch = hop.value > 0.05 ? 1 + hop.value * 0.1 : 1 - (1 - bob.value) * 0.03;
+    return {
+      transform: [{ translateY: -up * size }, { scaleY: stretch }, { scaleX: 2 - stretch }, { rotate: `${-hop.value * 8}deg` }],
+    };
+  });
+
+  return (
+    <Animated.View style={style}>
+      <BallArt {...props} eyes={{ open, look }} cheer={jump > 0 && !reduced} />
+    </Animated.View>
+  );
+}
+
+function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes }: ArtProps) {
   const skin = cosmetics.avatar.skin[look.skin] ?? cosmetics.avatar.skin[1];
   const hair = cosmetics.avatar.hair[look.hairColour];
-  const shirt = (cosmetics.kit[kit as KitKey] ?? cosmetics.kit.kit_green).shirt;
-  const lightShirt = kit === 'kit_white';
-  // grey hair, softer brows
-  const brow = look.hairColour === 'grey' ? colors.slate : OUT;
+  const k = cosmetics.kit[kit as KitKey] ?? cosmetics.kit.kit_green;
+  const collar = kit === 'kit_white' ? colors.slate : colors.paper;
+  // ids are per drawing so many avatars on one screen never share a gradient
+  const id = `${look.skin}${look.hair}${look.hairColour}${kit}`;
   return (
-    <Svg width={size} height={size} viewBox={FRAME}>
+    <Svg width={size} height={size} viewBox="0 0 100 100">
       <Defs>
-        <RadialGradient id="np-av-light" cx="32%" cy="22%" r="70%">
-          <Stop offset="0" stopColor={colors.white} stopOpacity={0.32} />
-          <Stop offset="0.55" stopColor={colors.white} stopOpacity={0} />
+        <RadialGradient id={`sh${id}`} cx="36%" cy="30%" r="72%">
+          <Stop offset="0" stopColor={colors.white} stopOpacity={0.55} />
+          <Stop offset="0.38" stopColor={colors.white} stopOpacity={0} />
+          <Stop offset="0.8" stopColor={colors.ink} stopOpacity={0.05} />
+          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.3} />
         </RadialGradient>
-        <RadialGradient id="np-av-rim" cx="42%" cy="38%" r="80%">
-          <Stop offset="0.78" stopColor={colors.ink} stopOpacity={0} />
-          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.16} />
-        </RadialGradient>
+        <ClipPath id={`cl${id}`}>
+          <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} />
+        </ClipPath>
       </Defs>
       {bg ? <Rect x={0} y={0} width={100} height={100} fill={bg} /> : null}
+      <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
+      {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} /> : null}
       <HairBack style={look.hair} fill={hair} />
-      {/* shoulders in the kit's shirt, a V collar */}
-      <Path d="M8 104 C10 84 26 75 42 73 L58 73 C74 75 90 84 92 104 Z" fill={shirt} stroke={OUT} strokeWidth={W} strokeLinejoin="round" />
-      <Path d="M42 73 L50 84 L58 73" fill="none" stroke={lightShirt ? colors.slate : colors.paper} strokeWidth={2.4} strokeLinejoin="round" strokeLinecap="round" />
-      {/* neck */}
-      <Path d="M43 60 L43 74 C46 77 54 77 57 74 L57 60 Z" fill={skin} stroke={OUT} strokeWidth={W} strokeLinejoin="round" />
-      {/* ears, then the head */}
-      <Ellipse cx={31} cy={48} rx={4.4} ry={5.8} fill={skin} stroke={OUT} strokeWidth={2.6} />
-      <Ellipse cx={69} cy={48} rx={4.4} ry={5.8} fill={skin} stroke={OUT} strokeWidth={2.6} />
-      <Ellipse cx={50} cy={44} rx={19.5} ry={22.5} fill={skin} stroke={OUT} strokeWidth={W} />
-      {look.beard ? (
-        <Path
-          d="M31 47 C32 63 40 70.5 50 70.5 C60 70.5 68 63 69 47 C66 56 61 60 56 60.5 C53 58.5 47 58.5 44 60.5 C39 60 34 56 31 47 Z"
-          fill={hair}
-          stroke={OUT}
-          strokeWidth={2.4}
-          strokeLinejoin="round"
-        />
-      ) : null}
-      {/* the face: brows, eyes with a catchlight, nose, a smile, a touch of blush */}
-      <Path d="M38.5 39.5 Q43 37 47 39.5" fill="none" stroke={brow} strokeWidth={2.4} strokeLinecap="round" />
-      <Path d="M53 39.5 Q57 37 61.5 39.5" fill="none" stroke={brow} strokeWidth={2.4} strokeLinecap="round" />
-      <Ellipse cx={43} cy={46} rx={2.6} ry={3} fill={OUT} />
-      <Ellipse cx={57} cy={46} rx={2.6} ry={3} fill={OUT} />
-      <Circle cx={43.9} cy={45} r={0.9} fill={colors.white} />
-      <Circle cx={57.9} cy={45} r={0.9} fill={colors.white} />
-      <Path d="M50.5 47 Q48 52.5 51 53.5" fill="none" stroke={OUT} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-      {look.beard ? null : (
-        <>
-          <Ellipse cx={38.5} cy={54} rx={3.4} ry={2} fill={cosmetics.avatar.blush} opacity={0.35} />
-          <Ellipse cx={61.5} cy={54} rx={3.4} ry={2} fill={cosmetics.avatar.blush} opacity={0.35} />
-        </>
-      )}
-      <Path d="M44.5 57.5 Q50 62 55.5 57.5" fill="none" stroke={OUT} strokeWidth={2.3} strokeLinecap="round" />
+      <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={skin} />
+      <G clipPath={`url(#cl${id})`}>
+        {/* the kit: the lower band of the ball, a V at the collar */}
+        <Rect x={0} y={74} width={100} height={30} fill={k.shirt} />
+        <Path d="M40 74 L50 81 L60 74" fill="none" stroke={collar} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+      </G>
+      <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={`url(#sh${id})`} />
+      {/* a faint rim of light, so a dark kit still reads on the ink card */}
+      <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r - 0.6} fill="none" stroke={colors.white} strokeOpacity={0.18} strokeWidth={1.2} />
       <HairFront style={look.hair} fill={hair} />
+      {/* a beard: a band round the chin, the mouth drawn over it */}
+      {look.beard ? (
+        <Path d="M22 60 C25 79 37 88 50 88 C63 88 75 79 78 60 C72 70 62 74 50 74 C38 74 28 70 22 60 Z" fill={hair} clipPath={`url(#cl${id})`} />
+      ) : null}
+      <Eyes eyes={eyes} />
       {look.glasses ? (
         <G>
-          <Rect x={36.5} y={41} width={12} height={9.5} rx={3.5} fill={colors.white} fillOpacity={0.18} stroke={OUT} strokeWidth={2.2} />
-          <Rect x={51.5} y={41} width={12} height={9.5} rx={3.5} fill={colors.white} fillOpacity={0.18} stroke={OUT} strokeWidth={2.2} />
-          <Path d="M48.5 45 L51.5 45" stroke={OUT} strokeWidth={2.2} strokeLinecap="round" />
+          <Circle cx={50 - EYE.dx} cy={EYE.y} r={10} fill={colors.white} fillOpacity={0.12} stroke={colors.ink} strokeWidth={2.4} />
+          <Circle cx={50 + EYE.dx} cy={EYE.y} r={10} fill={colors.white} fillOpacity={0.12} stroke={colors.ink} strokeWidth={2.4} />
+          <Path d="M46 54 Q50 51.5 54 54" fill="none" stroke={colors.ink} strokeWidth={2.4} strokeLinecap="round" />
         </G>
       ) : null}
-      {/* the same light as the balls: bright top left, a darker rim bottom right */}
-      <Rect x={0} y={0} width={100} height={100} fill="url(#np-av-rim)" />
-      <Rect x={0} y={0} width={100} height={100} fill="url(#np-av-light)" />
+      <Ellipse cx={29} cy={67} rx={5} ry={3.4} fill={cosmetics.avatar.blush} opacity={0.4} />
+      <Ellipse cx={71} cy={67} rx={5} ry={3.4} fill={cosmetics.avatar.blush} opacity={0.4} />
+      {cheer ? (
+        <Path d="M42 67 Q50 79 58 67 Z" fill={colors.ink} />
+      ) : (
+        <Path d="M43.5 68 Q50 73.5 56.5 68" fill="none" stroke={colors.ink} strokeWidth={2.8} strokeLinecap="round" />
+      )}
     </Svg>
   );
 }
 
-/** hair that falls behind the head and shoulders */
+/** big round eyes with a catchlight; with `eyes` they blink and look around */
+function Eyes({ eyes }: { eyes?: ArtProps['eyes'] }) {
+  return (
+    <G>
+      <Eye cx={50 - EYE.dx} eyes={eyes} />
+      <Eye cx={50 + EYE.dx} eyes={eyes} />
+    </G>
+  );
+}
+
+function Eye({ cx, eyes }: { cx: number; eyes?: ArtProps['eyes'] }) {
+  const white = useAnimatedProps(() => ({ ry: EYE.ry * (eyes ? eyes.open.value : 1) }));
+  const pupil = useAnimatedProps(() => ({
+    cx: cx + 1.5 + (eyes ? eyes.look.value * 2.6 : 0),
+    ry: EYE.pupil * (eyes ? eyes.open.value : 1),
+  }));
+  const shine = useAnimatedProps(() => ({
+    cx: cx + 3 + (eyes ? eyes.look.value * 2.6 : 0),
+    opacity: eyes ? (eyes.open.value > 0.5 ? 1 : 0) : 1,
+  }));
+  return (
+    <G>
+      <AnimatedEllipse cx={cx} cy={EYE.y} rx={EYE.rx} ry={EYE.ry} fill={colors.white} animatedProps={white} />
+      <AnimatedEllipse cx={cx + 1.5} cy={EYE.y + 1.5} rx={EYE.pupil} ry={EYE.pupil} fill={colors.ink} animatedProps={pupil} />
+      <AnimatedCircle cx={cx + 3} cy={EYE.y - 0.5} r={1.4} fill={colors.white} animatedProps={shine} />
+    </G>
+  );
+}
+
+/** a small racket behind the ball, in the kit's colours */
+function Racket({ frame, grip }: { frame: string; grip: string }) {
+  // held behind the ball: the handle disappears into it, the head stands up at the right
+  return (
+    <G transform="rotate(28 86 36)">
+      <Path d="M86 50 L86 70" stroke={grip} strokeWidth={5} strokeLinecap="round" />
+      <Path d="M83 48 L86 52 L89 48" fill="none" stroke={frame} strokeWidth={2.4} strokeLinejoin="round" />
+      <Ellipse cx={86} cy={34} rx={10} ry={13.5} fill={colors.white} fillOpacity={0.12} stroke={frame} strokeWidth={3} />
+      <Path d="M81 24 L81 44 M86 21 L86 47 M91 24 L91 44 M77 29 L95 29 M76 34 L96 34 M77 39 L95 39" stroke={frame} strokeWidth={0.9} opacity={0.55} />
+    </G>
+  );
+}
+
+/** hair that falls behind the ball */
 function HairBack({ style, fill }: { style: HairStyle; fill: string }) {
-  const p = { fill, stroke: OUT, strokeWidth: W, strokeLinejoin: 'round' as const };
-  if (style === 'long') return <Path d="M28 46 C25 24 38 15 50 15 C62 15 75 24 72 46 L75 78 C68 83 61 81 58 76 L42 76 C39 81 32 83 25 78 Z" {...p} />;
-  if (style === 'bob') return <Path d="M28.5 46 C26 24 38 16 50 16 C62 16 74 24 71.5 46 L72.5 63 C67 66 62 64 61 60 L39 60 C38 64 33 66 27.5 63 Z" {...p} />;
-  if (style === 'ponytail') return <Path d="M66 30 C82 30 86 50 78 64 C76 53 72 44 64 38 Z" {...p} />;
-  if (style === 'bun') return <Circle cx={50} cy={17} r={8.5} {...p} />;
+  if (style === 'long') return <Path d="M14 74 C8 38 28 17 50 17 C72 17 92 38 86 74 C80 78 74 76 72 70 L28 70 C26 76 20 78 14 74 Z" fill={fill} />;
+  if (style === 'bob') return <Path d="M15 62 C12 34 30 18 50 18 C70 18 88 34 85 62 C80 66 74 64 73 60 L27 60 C26 64 20 66 15 62 Z" fill={fill} />;
+  if (style === 'ponytail') return <Path d="M76 32 C92 34 96 54 88 68 C86 56 82 46 72 40 Z" fill={fill} />;
+  if (style === 'bun') return <Circle cx={50} cy={17} r={10} fill={fill} />;
   return null;
 }
 
-/** hair over the forehead */
+/** hair over the top of the ball */
 function HairFront({ style, fill }: { style: HairStyle; fill: string }) {
-  const p = { fill, stroke: OUT, strokeWidth: W, strokeLinejoin: 'round' as const };
   switch (style) {
     case 'short':
-      return <Path d="M30 44 C28 26 38 18 51 18 C63 18 72.5 26 70 44 C67.5 36 63 31.5 57 30.5 C51 33.5 41 33.5 35 35.5 C32.5 37.5 31 40.5 30 44 Z" {...p} />;
+      return <Path d="M17 50 C18 30 32 20 50 20 C68 20 82 30 83 50 C75 39 64 33 52 34 C46 30 36 31 30 36 C25 39 20 44 17 50 Z" fill={fill} />;
     case 'buzz':
-      return <Path d="M31.5 39 C32.5 27 40.5 21.5 50 21.5 C59.5 21.5 67.5 27 68.5 39 C64 32.5 57 29.5 50 29.5 C43 29.5 36 32.5 31.5 39 Z" {...p} />;
+      return <Path d="M19 44 C23 29 35 22 50 22 C65 22 77 29 81 44 C73 36 62 32 50 32 C38 32 27 36 19 44 Z" fill={fill} opacity={0.85} />;
     case 'curly':
       return (
-        <Path
-          d="M30 44 a6.5 6.5 0 0 1 2 -11 a6.5 6.5 0 0 1 7 -9 a6.5 6.5 0 0 1 11 -4 a6.5 6.5 0 0 1 11 4 a6.5 6.5 0 0 1 7 9 a6.5 6.5 0 0 1 2 11 C67 37 59 33 50 33 C41 33 33 37 30 44 Z"
-          {...p}
-        />
+        <G fill={fill}>
+          {[
+            [24, 38, 9],
+            [32, 28, 10],
+            [43, 23, 10],
+            [56, 23, 10],
+            [67, 28, 10],
+            [76, 38, 9],
+          ].map(([x, y, r]) => (
+            <Circle key={x} cx={x} cy={y} r={r} />
+          ))}
+        </G>
       );
     case 'long':
     case 'bob':
-      return <Path d="M30.5 45 C30 27 40 19.5 52 19.5 C64 19.5 70.5 28 69.5 43 C63.5 34.5 54 31 44 32 C38 34.5 33.5 39 30.5 45 Z" {...p} />;
+      return <Path d="M17 52 C17 31 32 20 52 20 C70 20 84 31 83 50 C74 38 62 33 48 34 C36 36 24 42 17 52 Z" fill={fill} />;
     case 'ponytail':
     case 'bun':
-      return <Path d="M30.5 43 C30.5 27 40 20 50.5 20 C61 20 69.5 27 69.5 42 C65 34 57.5 30.5 49 31 C41 31.5 34.5 36 30.5 43 Z" {...p} />;
+      return <Path d="M17 48 C19 30 33 21 50 21 C67 21 81 30 83 47 C75 38 63 33 50 33 C37 33 25 38 17 48 Z" fill={fill} />;
     case 'bald':
-      // grey at the sides only
+      // a little at the sides only
       return (
-        <>
-          <Path d="M30.6 49 C29.8 42 31 36.5 34 33.5 C34.5 38 34.5 44 33.6 49.5 Z" {...p} strokeWidth={2.4} />
-          <Path d="M69.4 49 C70.2 42 69 36.5 66 33.5 C65.5 38 65.5 44 66.4 49.5 Z" {...p} strokeWidth={2.4} />
-        </>
+        <G fill={fill}>
+          <Path d="M17 58 C15 50 16 44 19 39 C21 45 21 52 20 59 Z" />
+          <Path d="M83 58 C85 50 84 44 81 39 C79 45 79 52 80 59 Z" />
+        </G>
       );
   }
 }
 
-/** a roster player without an account: the empty bust and the initials, never a face */
-export function AvatarSilhouette({ initials, size, bg = colors.paper }: { initials: string; size: number; bg?: string | null }) {
-  const fill = cosmetics.avatar.silhouette;
+/** a roster player without an account: a faceless ball with the initials, never a face */
+export function AvatarSilhouette({ initials, size, bg = null }: { initials: string; size: number; bg?: string | null }) {
   return (
-    <Svg width={size} height={size} viewBox={FRAME}>
+    <Svg width={size} height={size} viewBox="0 0 100 100">
+      <Defs>
+        <RadialGradient id="np-sil" cx="36%" cy="30%" r="72%">
+          <Stop offset="0" stopColor={colors.white} stopOpacity={0.25} />
+          <Stop offset="0.4" stopColor={colors.white} stopOpacity={0} />
+          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.3} />
+        </RadialGradient>
+      </Defs>
       {bg ? <Rect x={0} y={0} width={100} height={100} fill={bg} /> : null}
-      <Path d="M8 104 C10 84 26 75 42 73 L58 73 C74 75 90 84 92 104 Z" fill={fill} />
-      <Path d="M43 60 L43 74 C46 77 54 77 57 74 L57 60 Z" fill={fill} />
-      <Ellipse cx={50} cy={44} rx={19.5} ry={22.5} fill={fill} />
-      <SvgText x={50} y={51} textAnchor="middle" fontSize={19} fontFamily={fonts.displayHeavy} fill={colors.paper}>
+      <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
+      <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={cosmetics.avatar.silhouette} />
+      <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill="url(#np-sil)" />
+      <SvgText x={50} y={63} textAnchor="middle" fontSize={22} fontFamily={fonts.displayHeavy} fill={colors.paper}>
         {initials}
       </SvgText>
     </Svg>
