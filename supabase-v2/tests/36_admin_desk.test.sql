@@ -44,7 +44,9 @@ select is((select e ->> 'bucket_name' from jsonb_array_elements(api.admin_desk(7
           'to_score', 'matches to score come first');
 
 -- void: no result possible, votes close with no points
-select throws_ok(format($$select api.admin_void_match(%L)$$, :'m_done'), 'P0001', null, 'a match with a result cannot be voided');
+select tests.login(:'ed'::uuid);
+select throws_ok(format($$select api.admin_void_match(%L)$$, :'m_done'), '42501', null, 'only an admin can remove a match with a result');
+select tests.login(:'adm'::uuid);
 select api.admin_void_match(:'m_play'::uuid) is not null as x \gset
 select api.resolve_match(:'m_play'::uuid) is not null as x \gset
 reset role;   -- votes are private to their owner; read them as the database

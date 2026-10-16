@@ -49,7 +49,7 @@ const when = (iso: string) => {
 const sideName = (item: DeskItem, side: Side) =>
   (item.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || 'Unknown';
 
-type Tab = 'you' | 'sheets' | 'done';
+type Tab = 'you' | 'sheets' | 'upcoming' | 'done';
 
 export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -59,9 +59,14 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   // sheet matches still empty two days on come to you; staff-postponed ones wait for the sheet's new day
   const fromSheets = waiting.filter((i) => i.tournament && !i.overdue && i.postponed_by !== 'staff');
   const fromYou = waiting.filter((i) => !i.tournament || i.overdue);
+  const upcoming = items.filter((i) => i.bucket_name === 'upcoming');
   const done = items.filter((i) => i.bucket_name === 'done');
   const [tab, setTab] = useState<Tab>(fromYou.length > 0 || fromSheets.length === 0 ? 'you' : 'sheets');
-  const list = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : done;
+  // find a match by a player's or tournament's name, in the tab you are on (founder, 16 Oct: remove any match)
+  const [q, setQ] = useState('');
+  const all = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : tab === 'upcoming' ? upcoming : done;
+  const needle = fold(q);
+  const list = needle ? all.filter((i) => fold(`${sideName(i, 1)} ${sideName(i, 2)} ${i.tournament ?? ''} ${i.venue ?? ''}`).includes(needle)) : all;
   const p = usePages(list, 8);
 
   return (
@@ -78,12 +83,13 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
         items={[
           { label: 'need a result from you', value: fromYou.length, ink: true },
           { label: 'waiting on tournament sheets', value: fromSheets.length },
-          { label: 'finished this week', value: done.length },
+          { label: 'coming up', value: upcoming.length },
+          { label: 'finished, last 30 days', value: done.length },
         ]}
       />
       {notice ? <Banner {...notice} /> : null}
       <Section
-        title={tab === 'you' ? 'Need a result from you' : tab === 'sheets' ? 'From tournament sheets' : 'Finished this week'}
+        title={tab === 'you' ? 'Need a result from you' : tab === 'sheets' ? 'From tournament sheets' : tab === 'upcoming' ? 'Coming up' : 'Finished'}
         aside={
           <Tabs
             value={tab}
@@ -94,6 +100,7 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
             items={[
               { value: 'you', label: 'Need you', count: fromYou.length },
               { value: 'sheets', label: 'From sheets', count: fromSheets.length },
+              { value: 'upcoming', label: 'Coming up', count: upcoming.length },
               { value: 'done', label: 'Finished', count: done.length },
             ]}
           />
@@ -104,11 +111,24 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
             ? 'Friendly matches, and sheet matches that still have no result 2 days on. Pick who won, then the score, or say what happened.'
             : tab === 'sheets'
               ? 'These fill in by themselves when the organiser’s sheet has the score. Enter one only if the sheet never will.'
-              : 'Results from the last 7 days. Count the votes now if a result came in and votes are still open.'}
+              : tab === 'upcoming'
+                ? 'Matches in the next 30 days. Remove one that will not happen or should not be in the app.'
+                : 'Results from the last 30 days. Count the votes now if a result came in and votes are still open. An admin can remove a match; its points come back off.'}
         </span>
+        <input
+          className="v2-input"
+          placeholder="Find a match: a player or a tournament"
+          value={q}
+          onChange={(e) => {
+            setQ(e.target.value);
+            p.setPage(0);
+          }}
+          aria-label="Find a match"
+          style={{ maxWidth: 420 }}
+        />
         {list.length === 0 ? (
           <Card>
-            <Empty title="All clear">Nothing waiting here.</Empty>
+            <Empty title={needle ? 'No match found' : 'All clear'}>{needle ? 'Try another name, or another tab.' : 'Nothing waiting here.'}</Empty>
           </Card>
         ) : (
           <div className="v2-stack" style={{ gap: 12 }}>
@@ -233,6 +253,28 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
         ) : (
           <span className="v2-muted">This match was removed.</span>
         )}
+        {item.result && admin ? (
+          <Remove
+            pending={pending}
+            label="Remove from the app"
+            question={`Remove this match? ${plural(item.votes, 'vote')} close with no points and the points they earned come back off. Σερί stay as they are.`}
+            onYes={() => run('Removing', () => voidMatch(item.match_id))}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
+  if (item.bucket_name === 'upcoming') {
+    return (
+      <div className={`v2-card tight v2-enter${pending ? ' busy' : ''}`} aria-busy={pending || undefined}>
+        {header}
+        <Remove
+          pending={pending}
+          label="Remove from the app"
+          question={`Remove this match? ${item.votes > 0 ? `${plural(item.votes, 'vote')} on it are cancelled. ` : ''}It leaves the app${item.tournament ? ' and the sheet will not bring it back' : ''}.`}
+          onYes={() => run('Removing', () => voidMatch(item.match_id))}
+        />
       </div>
     );
   }
@@ -316,4 +358,33 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
       </div>
     </div>
   );
+}
+
+/** «Remove from the app» with its question; nothing happens until «Yes, remove it» */
+function Remove({ pending, label, question, onYes }: { pending: boolean; label: string; question: string; onYes: () => void }) {
+  const [asking, setAsking] = useState(false);
+  if (!asking)
+    return (
+      <span style={{ alignSelf: 'flex-start' }}>
+        <Ghost disabled={pending} onClick={() => setAsking(true)}>
+          {label}
+        </Ghost>
+      </span>
+    );
+  return (
+    <span className="v2-confirm" style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
+      <b style={{ fontSize: 14 }}>{question}</b>
+      <Secondary small busy={pending} onClick={onYes}>
+        {pending ? 'Removing…' : 'Yes, remove it'}
+      </Secondary>
+      <Ghost disabled={pending} onClick={() => setAsking(false)}>
+        Keep it
+      </Ghost>
+    </span>
+  );
+}
+
+/** lower case without Greek accents, so «Παπας» finds «ΠΑΠΑΣ» and «Παπάς» */
+function fold(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/ς/g, 'σ').trim();
 }

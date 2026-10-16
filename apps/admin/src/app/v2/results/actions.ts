@@ -55,11 +55,15 @@ export async function saveResult(input: {
 export async function voidMatch(matchId: string): Promise<ActionResult> {
   try {
     const { rpc, staff } = await staffClient();
-    const { error } = await rpc('admin_void_match', { p_match_id: matchId });
-    if (error) return { ok: false, message: error.message };
+    const { data, error } = await rpc('admin_void_match', { p_match_id: matchId });
+    if (error) {
+      if (error.message.includes('admin_only')) return { ok: false, message: 'Only an admin can remove a match that has a result.' };
+      return { ok: false, message: error.message };
+    }
+    const back = (data as { points_taken_back?: number } | null)?.points_taken_back ?? 0;
     const message = await resolve(rpc, staff.role === 'admin', matchId);
     revalidatePath('/v2/results');
-    return { ok: true, message: `Voided. ${message}` };
+    return { ok: true, message: `Removed from the app.${back > 0 ? ` ${back} points taken back.` : ''} ${message}` };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : 'failed' };
   }
