@@ -7,7 +7,7 @@ import type { AvatarLook } from '../src/lib/avatar';
 import { Back } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { DEFAULT_AVATARS } from '../src/lib/avatar';
-import { colors, cosmetics, fonts } from '../src/theme';
+import { colors, cosmetics, fonts, text } from '../src/theme';
 
 /**
  * Development builds only: the drawn avatars for the founder's review before they go into the app. The 12 defaults
@@ -74,7 +74,7 @@ function LiveCell({ look }: { look: AvatarLook }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingHorizontal: 20, gap: 14 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, color: colors.ink },
+  title: { ...text.title },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   cell: { alignItems: 'center', gap: 4 },
   disc: { borderRadius: 999, overflow: 'hidden', borderWidth: 2, borderColor: colors.ink },

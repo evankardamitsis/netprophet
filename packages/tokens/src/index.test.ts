@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { colors, cosmetics, cssVars, motion } from './index';
+import { colors, cosmetics, cssVars, motion, type } from './index';
 
 describe('tokens', () => {
   it('exposes the motion contract', () => {
@@ -19,5 +19,9 @@ describe('tokens', () => {
   it('keeps every cosmetic colour a 6-digit hex', () => {
     const hexes = [...Object.values(cosmetics.bg), ...Object.values(cosmetics.frame), ...Object.values(cosmetics.kit).flatMap((k) => [k.shirt, k.racket]), ...Object.values(cosmetics.gear), ...cosmetics.confetti];
     for (const v of hexes) expect(v).toMatch(/^#[0-9A-F]{6}$/);
+  });
+  it('keeps the type scale in descending order', () => {
+    const sizes = [type.title.size, type.heading.size, type.body.size, type.meta.size, type.label.size];
+    expect([...sizes].sort((a, b) => b - a)).toEqual(sizes);
   });
 });

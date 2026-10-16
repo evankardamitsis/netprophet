@@ -11,7 +11,7 @@ import { boardItems, motivation, nextLine, pickScope, pointRules, rowName, scope
 import { usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { fmt } from '../../src/lib/votes';
-import { alpha, colors, ease, fonts } from '../../src/theme';
+import { alpha, colors, ease, fonts, text } from '../../src/theme';
 
 /**
  * Κατάταξη (prototype V2, isRank): this month's points among the people you know or all of Attica.
@@ -206,15 +206,8 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
   head: { gap: 6 },
-  title: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 60,
-    lineHeight: 57,
-    color: colors.ink,
-    paddingTop: ACCENT_PAD,
-    marginTop: -ACCENT_PAD,
-  },
-  subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
+  title: { ...text.title },
+  subtitle: text.subtitle,
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   cards: { gap: 12 },
   me: { padding: 22, borderRadius: 28, backgroundColor: colors.ink, gap: 10 },

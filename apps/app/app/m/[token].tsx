@@ -17,7 +17,7 @@ import { track } from '../../src/lib/analytics';
 import { usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { fmt } from '../../src/lib/votes';
-import { colors, fonts } from '../../src/theme';
+import { colors, fonts, text } from '../../src/theme';
 
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   footText: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft },
   footHit: { minHeight: 44, justifyContent: 'center' },
   footLink: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },
-  h1: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  h1: { ...text.title },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
   underHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   under: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },

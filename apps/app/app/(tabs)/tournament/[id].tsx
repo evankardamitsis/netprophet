@@ -21,7 +21,7 @@ import {
   type ScheduleRow,
   type Segment,
 } from '../../../src/lib/tournaments';
-import { colors, fonts } from '../../../src/theme';
+import { colors, fonts, text } from '../../../src/theme';
 
 /**
  * One tournament (prototype V2, «Τα τουρνουά σου» opened): «Πρόγραμμα» (the matches of a day, by time, mine marked)
@@ -30,7 +30,6 @@ import { colors, fonts } from '../../../src/theme';
  */
 const STG_MS = 600;
 const STAGGER = 70;
-const ACCENT_PAD = 10;
 
 export default function TournamentScreen() {
   const t = useCopy();
@@ -211,7 +210,7 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { ...text.title },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
   seg: { flexDirection: 'row', gap: 6, padding: 5, borderRadius: 18, backgroundColor: colors.white },
   segBtn: { flex: 1, minHeight: 48, paddingHorizontal: 4, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

@@ -16,7 +16,7 @@ import { useUnlocks } from '../../src/lib/unlocks';
 import { buySheetOf, ctaOf, findTile, LOOK_TABS, ownedKeys, previewOf, tagOf, tileName, tilesFor, type BuySheet, type Tile, type Tone } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { usePress, useStgIn } from '../../src/lib/motion';
-import { colors, fonts } from '../../src/theme';
+import { colors, fonts, text } from '../../src/theme';
 
 /**
  * Εμφάνιση (prototype V2, the look screen): a preview of your card, the selected item with its tag and button, three
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 8, paddingHorizontal: PAD, paddingBottom: 32, gap: 12 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
+  title: { ...text.title },
   preview: { height: PREVIEW_H, borderRadius: 26, backgroundColor: colors.ink, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   pvLevel: { position: 'absolute', top: 14, left: 18, flexDirection: 'row', alignItems: 'center', gap: 8 },
   pvNum: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, paddingBottom: 10, marginBottom: -10, color: colors.lime },

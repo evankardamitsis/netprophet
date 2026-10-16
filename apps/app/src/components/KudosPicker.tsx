@@ -3,13 +3,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useCopy } from '../i18n';
 import { useStgIn } from '../lib/motion';
-import { colors, fonts } from '../theme';
+import { colors, fonts, text } from '../theme';
 import { Chip } from './OnboardingControls';
 
 /** the chosen line lifts (prototype jfly, 560ms) before the screen moves on */
 const FLY_MS = 560;
-/** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
-const ACCENT_PAD = 10;
 
 /**
  * «Πες μια καλή κουβέντα» (prototype V2, isKudos): the question, five lines as chips that fill ink when picked,
@@ -62,7 +60,7 @@ function Line({ delay, dim, children }: { delay: number; dim: boolean; children:
 
 const styles = StyleSheet.create({
   wrap: { gap: 14 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { ...text.title },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   list: { gap: 8 },
   row: { flexDirection: 'row' },

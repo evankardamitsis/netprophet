@@ -8,7 +8,7 @@ import { useCopy } from '../../src/i18n';
 import { useTournaments } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
 import { boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey } from '../../src/lib/tournaments';
-import { colors, fonts } from '../../src/theme';
+import { colors, fonts, text } from '../../src/theme';
 
 /**
  * The Τουρνουά tab, «Τα τουρνουά σου» (founder, 14 Oct: a tab in the bottom bar that also holds «+ Ματς»): your
@@ -18,8 +18,6 @@ import { colors, fonts } from '../../src/theme';
  */
 const STG_MS = 600;
 const STAGGER = 70;
-/** the 60px title's tonos would be clipped by its tight line height on iOS */
-const ACCENT_PAD = 10;
 
 export default function TournamentsScreen() {
   const t = useCopy();
@@ -210,7 +208,7 @@ const styles = StyleSheet.create({
   addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
   search: { minHeight: 52, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.fog, backgroundColor: colors.white, justifyContent: 'center' },
   searchText: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.inkSoft },
-  title: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 50, paddingBottom: 10, marginBottom: -12, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { ...text.title, flexShrink: 1 },
   proCard: { padding: 18, borderRadius: 24, backgroundColor: colors.ink, gap: 10 },
   proHead: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.lime },
   proLabel: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.mist },
@@ -226,7 +224,7 @@ const styles = StyleSheet.create({
   alertsOn: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.mist },
   alertsOnBig: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.paper },
   group: { gap: 10 },
-  groupTitle: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.52, color: colors.inkSoft },
+  groupTitle: { ...text.label, marginTop: 4 },
   card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 6 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   name: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6, color: colors.ink },

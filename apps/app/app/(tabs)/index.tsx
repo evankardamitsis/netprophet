@@ -26,7 +26,7 @@ import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
-import { colors, ease, fonts } from '../../src/theme';
+import { colors, ease, fonts, text } from '../../src/theme';
 
 const TITLE_IN_MS = 400;
 /** the tournaments link sits after this many cards */
@@ -268,8 +268,8 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 84 },
   feed: { gap: 14 },
   head: { gap: 6 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
-  subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
+  title: { ...text.title },
+  subtitle: text.subtitle,
   end: {
     paddingTop: 4,
     paddingHorizontal: 12,
