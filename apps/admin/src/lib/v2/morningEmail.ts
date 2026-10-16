@@ -13,6 +13,8 @@ export interface Digest {
   rained_off?: { tournament: string; day: string; auto: number; staff: number }[];
   /** players the imports added to the roster in the last day, per tournament (up to 15 names each) */
   new_players?: { tournament: string; count: number; names: string[] }[];
+  /** clubs a sheet named that have matches but no surface yet (their matches use the tournament's meanwhile) */
+  clubs_no_surface?: { club: string; matches: number; tournaments: string[] }[];
 }
 
 const ADMIN_URL = 'https://netprophet-admin-v2.vercel.app/v2';
@@ -38,6 +40,11 @@ export function morningEmail(d: Digest): { subject: string; html: string; text: 
     todo.push(p.health === 'error'
       ? `${p.tournament}: we could not read the ${p.kind === 'draws' ? 'draws' : 'schedule'} sheet (${p.error ?? 'unknown error'}). Check it on ${ADMIN_URL}/tournaments`
       : `${p.tournament}: the ${p.kind === 'draws' ? 'draws' : 'schedule'} sheet looked much shorter than before. Worth a look: ${ADMIN_URL}/tournaments`);
+  // a new club from a sheet needs its surface (founder, 15 Oct)
+  for (const c of d.clubs_no_surface ?? []) {
+    const where = c.tournaments.length ? `, ${c.tournaments.join(', ')}` : '';
+    todo.push(`${c.club} has no surface yet (${many(c.matches, 'match', 'matches')}${where}). Until you set it, its matches use the tournament’s surface. Set it on ${ADMIN_URL}/tournaments`);
+  }
   const news: string[] = [];
 
   if (d.postponed) news.push(`${many(d.postponed, 'match was', 'matches were')} postponed in the last day (rain or a moved day); they come back when the organiser puts them on a new day`);
