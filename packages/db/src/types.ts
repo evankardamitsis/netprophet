@@ -560,6 +560,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      delete_my_account: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       equip_item: {
         Args: { p_category: string; p_key: string };
         Returns: Json;
