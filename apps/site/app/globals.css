@@ -47,6 +47,7 @@ a { color: inherit; }
 .court { position: absolute; left: 0; right: 0; bottom: 18px; height: 3px; background: var(--np-inkLine); border-radius: 3px; }
 .ball { position: absolute; bottom: 21px; border-radius: 50%; animation: hop 1.6s cubic-bezier(.3,0,.7,1) infinite alternate; }
 .ball::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 34% 30%, rgba(255,255,255,.55), rgba(255,255,255,0) 40%, rgba(15,32,25,.3) 100%); }
+@keyframes hop-low { from { transform: translateY(0) scale(1.08, .92); } 12% { transform: translateY(-6px) scale(1); } to { transform: translateY(-95px); } }
 @keyframes hop { from { transform: translateY(0) scale(1.08, .92); } 12% { transform: translateY(-8px) scale(1); } to { transform: translateY(-200px); } }
 .fan { position: absolute; left: 50%; top: 10px; width: 300px; height: 612px; transform: translateX(-50%) scale(.86); transform-origin: top center; }
 .fan > div { position: absolute; inset: 0; }
@@ -206,15 +207,23 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 @media (max-width: 900px) {
   .hero .wrap, .question, .player, .pro { grid-template-columns: 1fr; }
   .question.flip > div:first-child { order: 0; }
-  .stage { height: 600px; }
-  .fan-l, .fan-r { display: none; }
+  /* on phones the next section shows the same screen: the hero keeps only the court with its hopping balls */
+  .stage { height: 150px; }
+  .fan { display: none; }
+  .ball { animation-name: hop-low; }
   .steps, .grid3 { grid-template-columns: 1fr; }
   section { padding: 64px 0; }
 }
 @media (max-width: 560px) {
   .wide-only { display: none; }
   .top .logo { transform: scale(.85); transform-origin: left center; }
-  .phone { transform: scale(.92); transform-origin: top center; }
+  .badge-apple { height: 44px; }
+  .badge-google-el { height: 57px; }
+  .badge-google-en { height: 66px; }
+}
+/* the narrowest phones: the drawn phone shrinks with its layout box, so no gap is left under it */
+@media (max-width: 360px) {
+  .phone { zoom: .9; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ball, .fan-c, .cast > div, .logo-ball { animation: none; }
