@@ -122,10 +122,12 @@ describe('groupResults', () => {
       t,
       NOW,
     );
-    expect(groups.map((g) => [g.title, g.items.map((i) => i.id)])).toEqual([
-      ['ΧΘΕΣ · OPEN ΓΛΥΦΑΔΑΣ · ΠΡΟΗΜΙΤΕΛΙΚΑ', ['a', 'b']],
-      ['ΧΘΕΣ · ΦΙΛΙΚΑ', ['c']],
-      ['ΠΡΟΧΘΕΣ · OPEN ΓΛΥΦΑΔΑΣ · ΠΡΟΗΜΙΤΕΛΙΚΑ', ['d']],
+    expect(groups.map((g) => [g.day, g.firstOfDay, g.title, g.items.map((i) => i.id)])).toEqual([
+      ['ΧΘΕΣ', true, 'Open Γλυφάδας', ['a', 'b']],
+      ['ΧΘΕΣ', false, 'Φιλικά', ['c']],
+      ['ΠΡΟΧΘΕΣ', true, 'Open Γλυφάδας', ['d']],
     ]);
+    expect(groups[0]!.detail).toContain('Προημιτελικά');
+    expect(groups[1]!.detail).toBeNull();
   });
 });

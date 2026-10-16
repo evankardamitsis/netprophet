@@ -28,7 +28,8 @@ export type ParsedScore =
 export interface WinnerFirstSet {
   w: number;
   l: number;
-  tb?: [number, number];
+  /** tie-break points, winner first; `true` when a tie-break was played but the sheet gave no points (ingest) */
+  tb?: [number, number] | true;
   stb?: boolean;
 }
 
@@ -135,7 +136,7 @@ export function formatWinnerSets(
 ): string {
   if (opts.walkover) return words.walkover;
   const text = sets
-    .map((s) => `${s.w}-${s.l}${s.tb && !s.stb ? `(${Math.min(s.tb[0], s.tb[1])})` : ''}`)
+    .map((s) => `${s.w}-${s.l}${Array.isArray(s.tb) && !s.stb ? `(${Math.min(s.tb[0], s.tb[1])})` : ''}`)
     .join(', ');
   return opts.retired ? `${text} ${words.retired}` : text;
 }
