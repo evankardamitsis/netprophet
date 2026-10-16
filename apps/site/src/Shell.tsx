@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from './Logo';
 import { CONTACT, content, type Lang } from './content';
 
 /** the ink bar on top (logo, Απόρρητο, Βοήθεια, the other language) and the footer */
@@ -10,8 +11,7 @@ export function Shell({ lang, children }: { lang: Lang; children: React.ReactNod
       <header className="top">
         <div className="wrap">
           <Link href={base || '/'} aria-label="NetProphet">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-on-ink.svg" alt="NetProphet" width={160} height={30} />
+            <Logo height={30} />
           </Link>
           <nav className="links">
             <Link className="wide-only" href={`${base}/privacy`}>

@@ -1,15 +1,20 @@
+'use client';
+import { useState } from 'react';
 import { BallPerson } from './BallPerson';
 import type { Content } from './content';
 
 /**
- * The three questions as the app answers them, drawn as phone screens in the app's look (ink header with σερί and
- * πόντοι, paper body, the ball people). Not screenshots: they stay sharp and follow the brand tokens.
+ * The app's answers drawn as phone screens you can try (founder, 16 Oct: "make the mockups interactive"): tap a
+ * player to call the match, tap a reaction on a result, switch the opponent card's parts, answer the day's question.
+ * Every name is made up. Drawn in the app's look, not screenshots, so they stay sharp and follow the brand tokens.
  */
 type S = Content['screens'];
+type Hair = 'short' | 'curly' | 'long' | 'bun';
+type HairColour = 'black' | 'brown' | 'blonde' | 'auburn' | 'grey' | 'chestnut';
 
-function Phone({ s, children }: { s: S; children: React.ReactNode }) {
+function Phone({ s, children, label }: { s: S; children: React.ReactNode; label?: string }) {
   return (
-    <div className="phone" aria-hidden="true">
+    <div className="phone" role="group" aria-label={label}>
       <div className="phone-top">
         <span className="phone-logo">
           <i />
@@ -28,70 +33,92 @@ function Phone({ s, children }: { s: S; children: React.ReactNode }) {
   );
 }
 
-function Face({ id, skin, hair, colour, gear }: { id: string; skin: number; hair: 'short' | 'curly' | 'long' | 'bun'; colour: 'black' | 'brown' | 'blonde' | 'auburn' | 'grey' | 'chestnut'; gear?: 'cap' | 'headband' | 'shades' | 'bucket' | null }) {
-  return <BallPerson id={id} skin={skin} hair={hair} hairColour={colour} kit="kit_green" gear={gear ?? null} size={46} />;
+function Face({ id, skin, hair, colour, size = 46 }: { id: string; skin: number; hair: Hair; colour: HairColour; size?: number }) {
+  return <BallPerson id={id} skin={skin} hair={hair} hairColour={colour} kit="kit_green" size={size} />;
 }
 
-export function TodayScreen({ s }: { s: S }) {
+/** «Ποιος παίζει σήμερα»: your match on top, then a match to call; tap a player and the crowd's split shows */
+export function TodayScreen({ s, live = true }: { s: S; live?: boolean }) {
+  const [pick, setPick] = useState<0 | 1 | null>(null);
+  const sides = [
+    { id: 't1', name: s.lang === 'el' ? 'Ρακετάκης' : 'Raketakis', first: s.lang === 'el' ? 'Νίκος' : 'Nikos', skin: 1, hair: 'short' as Hair, colour: 'brown' as HairColour, pct: 62 },
+    { id: 't2', name: s.lang === 'el' ? 'Σερβίδης' : 'Servidis', first: s.lang === 'el' ? 'Γιώργος' : 'Giorgos', skin: 3, hair: 'curly' as Hair, colour: 'black' as HairColour, pct: 38 },
+  ];
   return (
-    <Phone s={s}>
+    <Phone s={s} label={s.today}>
       <p className="ph-title">{s.today}</p>
       <div className="ph-mine">
         <span className="ph-eyebrow">{s.yourMatch}</span>
         <p className="ph-mine-line">{s.yourMatchLine}</p>
-        <span className="ph-pro">{s.proButton}</span>
+        <a className="ph-pro" href="#opponent" tabIndex={live ? 0 : -1}>
+          {s.proButton}
+        </a>
       </div>
       <div className="ph-card">
         <p className="ph-meta">{s.matchMeta}</p>
         <div className="ph-sides">
-          <div className="ph-side picked">
-            <Face id="t1" skin={1} hair="short" colour="brown" />
-            <b>Πράτσας</b>
-            <small>Νίκος</small>
-            <span className="ph-pct">62%</span>
-          </div>
-          <div className="ph-side">
-            <Face id="t2" skin={3} hair="curly" colour="black" />
-            <b>Βλάχος</b>
-            <small>Γιώργος</small>
-            <span className="ph-pct">38%</span>
-          </div>
+          {sides.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              tabIndex={live ? 0 : -1}
+              className={`ph-side${pick === i ? ' picked' : ''}${pick !== null && pick !== i ? ' other' : ''}`}
+              onClick={() => setPick(i as 0 | 1)}
+              aria-pressed={pick === i}
+            >
+              <Face id={`${p.id}${live ? '' : 'h'}`} skin={p.skin} hair={p.hair} colour={p.colour} />
+              <b>{p.name}</b>
+              <small>{p.first}</small>
+              <span className={`ph-pct${pick === null ? ' hidden' : ''}`}>{p.pct}%</span>
+            </button>
+          ))}
         </div>
-        <p className="ph-learn">✓ {s.learn}</p>
+        <p className="ph-learn">{pick === null ? s.pick : `✓ ${s.learn}`}</p>
       </div>
     </Phone>
   );
 }
 
-export function ResultsScreen({ s }: { s: S }) {
+/** «Ποιος κέρδισε χθες»: results by day; the call you got right, an upset, and reactions you can tap */
+export function ResultsScreen({ s, live = true }: { s: S; live?: boolean }) {
+  const [reaction, setReaction] = useState<number | null>(null);
+  const counts = [24, 9];
+  const el = s.lang === 'el';
   return (
-    <Phone s={s}>
+    <Phone s={s} label={s.results}>
       <p className="ph-title">{s.results}</p>
       <p className="ph-day">{s.yesterday}</p>
       <div className="ph-card ph-result">
         <div className="ph-row win">
-          <Face id="r1" skin={1} hair="short" colour="brown" />
-          <b>Πράτσας</b>
+          <Face id={`r1${live ? '' : 'h'}`} skin={1} hair="short" colour="brown" size={34} />
+          <b>{el ? 'Ρακετάκης' : 'Raketakis'}</b>
           <span className="ph-sets">6 6</span>
         </div>
         <div className="ph-row">
-          <Face id="r2" skin={2} hair="short" colour="chestnut" />
-          <span>Κοψιάλης</span>
+          <Face id={`r2${live ? '' : 'h'}`} skin={2} hair="short" colour="chestnut" size={34} />
+          <span>{el ? 'Φορχάντης' : 'Forchantis'}</span>
           <span className="ph-sets">4 3</span>
         </div>
         <p className="ph-crowd">{s.crowd}</p>
-        <span className="ph-called">{s.called}</span>
+        <div className="ph-react">
+          <span className="ph-called">{s.called}</span>
+          {s.reactions.map((r, i) => (
+            <button key={r} type="button" tabIndex={live ? 0 : -1} className={reaction === i ? 'on' : ''} onClick={() => setReaction(reaction === i ? null : i)}>
+              {r} <b>{counts[i]! + (reaction === i ? 1 : 0)}</b>
+            </button>
+          ))}
+        </div>
       </div>
       <div className="ph-card ph-result dark">
         <span className="ph-upset">{s.upset}</span>
         <div className="ph-row win">
-          <Face id="r3" skin={0} hair="long" colour="blonde" />
-          <b>Ρήγου</b>
+          <Face id={`r3${live ? '' : 'h'}`} skin={0} hair="long" colour="blonde" size={34} />
+          <b>{el ? 'Σλάισου' : 'Slaisou'}</b>
           <span className="ph-sets">7 6</span>
         </div>
         <div className="ph-row">
-          <Face id="r4" skin={4} hair="bun" colour="black" />
-          <span>Λάγου</span>
+          <Face id={`r4${live ? '' : 'h'}`} skin={4} hair="bun" colour="black" size={34} />
+          <span>{el ? 'Βολεάκη' : 'Voleaki'}</span>
           <span className="ph-sets">5 4</span>
         </div>
       </div>
@@ -99,41 +126,106 @@ export function ResultsScreen({ s }: { s: S }) {
   );
 }
 
-export function OpponentScreen({ s }: { s: S }) {
+/** «Ποιος είναι ο αντίπαλός σου»: the opponent card, with its three parts one tap apart */
+export function OpponentScreen({ s, live = true }: { s: S; live?: boolean }) {
+  const [tab, setTab] = useState(0);
   const form = ['w', 'w', 'l', 'w', 'w'];
+  const el = s.lang === 'el';
+  const last = el
+    ? [
+        ['Ν', 'Σερβίδης', '6-3 6-4'],
+        ['Ν', 'Λοβάκης', '7-5 6-2'],
+        ['Η', 'Ρακετάκης', '4-6 6-7'],
+      ]
+    : [
+        ['W', 'Servidis', '6-3 6-4'],
+        ['W', 'Lovakis', '7-5 6-2'],
+        ['L', 'Raketakis', '4-6 6-7'],
+      ];
   return (
-    <Phone s={s}>
+    <Phone s={s} label={s.opponent}>
       <p className="ph-title">{s.opponent}</p>
       <div className="ph-card ph-opp">
         <div className="ph-opp-head">
-          <BallPerson id="o1" skin={2} hair="short" hairColour="chestnut" kit="kit_clay" gear="cap" size={78} />
+          <BallPerson id={`o1${live ? '' : 'h'}`} skin={2} hair="short" hairColour="chestnut" kit="kit_clay" gear="cap" size={78} />
           <div>
-            <small>Αλέξανδρος</small>
-            <b>Κοψιάλης</b>
+            <small>{el ? 'Άρης' : 'Aris'}</small>
+            <b>{el ? 'Φορχάντης' : 'Forchantis'}</b>
             <span className="ph-level">
               {s.level} · {s.rising}
             </span>
           </div>
         </div>
-        <p className="ph-label">{s.form}</p>
-        <div className="ph-form">
-          {form.map((f, i) => (
-            <span key={i} className={f}>
-              {f === 'w' ? s.won : s.lost}
-            </span>
-          ))}
-          <em>11-4</em>
-        </div>
-        <p className="ph-label">{s.h2h}</p>
-        <p className="ph-h2h">
-          <b>2</b> - <b>1</b>
-        </p>
-        <p className="ph-label">{s.plays}</p>
-        <div className="ph-traits">
-          {s.traits.map((t) => (
-            <span key={t}>{t}</span>
+        <div className="ph-tabs" role="tablist">
+          {s.tabs.map((t, i) => (
+            <button key={t} type="button" role="tab" tabIndex={live ? 0 : -1} aria-selected={tab === i} className={tab === i ? 'on' : ''} onClick={() => setTab(i)}>
+              {t}
+            </button>
           ))}
         </div>
+        {tab === 0 ? (
+          <div className="ph-pane">
+            <div className="ph-form">
+              {form.map((f, i) => (
+                <span key={i} className={f}>
+                  {f === 'w' ? s.won : s.lost}
+                </span>
+              ))}
+              <em>11-4</em>
+            </div>
+            <p className="ph-label">{s.last}</p>
+            {last.map(([r, who, sc]) => (
+              <p key={who} className="ph-last">
+                <span className={r === s.won ? 'w' : 'l'}>{r}</span> {who} <em>{sc}</em>
+              </p>
+            ))}
+          </div>
+        ) : null}
+        {tab === 1 ? (
+          <div className="ph-pane">
+            <p className="ph-h2h">
+              <b>2</b> - <b>1</b>
+            </p>
+            <p className="ph-crowd">{el ? 'Τελευταίο: Open Βούλας, 6-4 3-6 10-8' : 'Last: Voula Open, 6-4 3-6 10-8'}</p>
+          </div>
+        ) : null}
+        {tab === 2 ? (
+          <div className="ph-pane ph-traits">
+            {s.traits.map((t) => (
+              <span key={t}>{t}</span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </Phone>
+  );
+}
+
+/** the personalised feed: your friend's match, then the day's question to answer */
+export function FeedScreen({ s }: { s: S }) {
+  const [answer, setAnswer] = useState<number | null>(null);
+  const right = 0;
+  return (
+    <Phone s={s} label={s.forYou}>
+      <p className="ph-title">{s.today}</p>
+      <div className="ph-card ph-friend">
+        <Face id="f1" skin={3} hair="curly" colour="black" size={40} />
+        <p>{s.friendMatch}</p>
+      </div>
+      <div className="ph-mine ph-quiz">
+        <span className="ph-eyebrow">{s.forYou}</span>
+        <p className="ph-mine-line">{s.quizQ}</p>
+        {s.quizA.map((a, i) => (
+          <button
+            key={a}
+            type="button"
+            className={answer === null ? '' : i === right ? 'right' : answer === i ? 'wrong' : 'dim'}
+            onClick={() => setAnswer(answer === null ? i : answer)}
+          >
+            {a}
+          </button>
+        ))}
+        {answer !== null ? <p className="ph-quiz-out">{answer === right ? s.quizRight : s.quizWrong}</p> : null}
       </div>
     </Phone>
   );
