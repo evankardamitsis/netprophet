@@ -63,6 +63,12 @@ export interface Content {
     friendTag: string;
     friendMeta: string;
     tournamentMeta: string;
+    /** the day's 6-question quiz, under the matches */
+    quizLabel: string;
+    quizQ: string;
+    quizA: [string, string, string];
+    quizRight: string;
+    quizWrong: string;
     reactions: [string, string];
     tapHint: string;
     won: string;
@@ -214,6 +220,11 @@ export const el: Content = {
     friendTag: 'φίλος',
     friendMeta: '20:00 · Open Γλυφάδας · Μ 40+',
     tournamentMeta: '21:00 · Μ 50+ · Ημιτελικός',
+    quizLabel: 'ΟΙ 6 ΤΗΣ ΗΜΕΡΑΣ · 1 ΑΠΟ 6',
+    quizQ: 'Ποιος σήκωσε το Open Γλυφάδας πέρσι;',
+    quizA: ['Ρακετάκης', 'Φορχάντης', 'Σερβίδης'],
+    quizRight: '✓ Σωστά.',
+    quizWrong: 'Όχι αυτή τη φορά.',
     reactions: ['Τι ματς!', 'Το περίμενα'],
     tapHint: 'Πάτα για να δοκιμάσεις',
     won: 'Ν',
@@ -361,6 +372,11 @@ export const en: Content = {
     friendTag: 'friend',
     friendMeta: '20:00 · Glyfada Open · M 40+',
     tournamentMeta: '21:00 · M 50+ · Semi-final',
+    quizLabel: 'TODAY’S 6 · 1 OF 6',
+    quizQ: 'Who lifted the Glyfada Open last year?',
+    quizA: ['Raketakis', 'Forchantis', 'Servidis'],
+    quizRight: '✓ Right.',
+    quizWrong: 'Not this time.',
     reactions: ['What a match!', 'Saw it coming'],
     tapHint: 'Tap to try it',
     won: 'W',
