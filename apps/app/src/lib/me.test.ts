@@ -19,7 +19,7 @@ describe('toMeView', () => {
     expect(v.stats.map((s) => s.value)).toEqual(['12-7', '4-2', '21/30', '340']);
     expect(v.votes).toEqual({ title: '2 ψήφοι περιμένουν αποτέλεσμα', sub: 'Αν πέσεις μέσα παντού: +40 πόντοι' });
     expect(v.freezes.slots.map((s) => s.ready)).toEqual([true, false]);
-    expect(v.freezes.line).toBe('Δωρεάν πάγωμα σε 11 ψήφους');
+    expect(v.freezes.line).toBe('Δωρεάν Ασφάλεια σε 11 ψήφους');
     expect(v.friends.initials).toEqual(['ΝΡ', 'ΚΛ', 'ΔΓ']);
   });
 
