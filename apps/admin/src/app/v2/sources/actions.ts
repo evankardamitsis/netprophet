@@ -95,6 +95,8 @@ export async function saveSource(id: string, patch: SourcePatch): Promise<Action
 }
 
 /** «Δοκιμή τώρα» (dry) and «Τρέξε τώρα»: fetch the sheet here, parse, send the rows to the database */
+const SIDES_INCOMPLETE = 'A doubles match on the sheet has one name on a side. Fix the sheet (the next update picks it up) or skip this match.';
+
 export async function runNow(id: string, dry: boolean): Promise<ActionResult<IngestCounts>> {
   try {
     const rpc = await staffRpc();
@@ -104,6 +106,7 @@ export async function runNow(id: string, dry: boolean): Promise<ActionResult<Ing
     const data = (await call(rpc, 'admin_ingest_run', { p_tournament_id: id, p_rows: rows, p_dry: dry })) as IngestCounts;
     return { ok: true, message: dry ? 'Dry run, nothing saved' : 'Run saved', data };
   } catch (e) {
+    if (e instanceof Error && e.message.includes('match_sides_incomplete')) return { ok: false, message: SIDES_INCOMPLETE };
     return fail(e);
   }
 }
@@ -135,6 +138,7 @@ export async function resolveReview(id: string, decision: ReviewDecision): Promi
     if (e instanceof Error && e.message.includes('same_player_twice')) {
       return { ok: false, message: 'The same player is picked twice on this match. Give each person their own answer.' };
     }
+    if (e instanceof Error && e.message.includes('match_sides_incomplete')) return { ok: false, message: SIDES_INCOMPLETE };
     if (e instanceof Error && e.message.includes('person_unresolved')) {
       return { ok: false, message: 'A place on this match has no name on the sheet. Fix the sheet (the next update picks it up) or skip this match.' };
     }
