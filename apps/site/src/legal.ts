@@ -35,7 +35,7 @@ export const privacy: Record<Lang, Doc> = {
       {
         heading: 'Τα ματς και οι παίκτες των τουρνουά',
         paragraphs: [
-          'Τα προγράμματα και τα αποτελέσματα έρχονται από τα δημόσια φύλλα των διοργανωτών: ονόματα παικτών, ματς, σκορ. Οι ανήλικοι παίκτες δεν εμφανίζονται. Αν είσαι παίκτης και θέλεις να κρυφτείς ή να διορθώσουμε κάτι, γράψε μας.',
+          'Τα προγράμματα και τα αποτελέσματα έρχονται από τα δημόσια φύλλα των διοργανωτών: ονόματα παικτών, ματς, σκορ. Οι ανήλικοι παίκτες δεν εμφανίζονται. Αν είσαι παίκτης και θέλεις να μην εμφανίζεσαι ή να διορθώσουμε κάτι, γράψε μας.',
         ],
       },
       {
@@ -68,7 +68,7 @@ export const privacy: Record<Lang, Doc> = {
       },
       {
         heading: 'Παιδιά',
-        paragraphs: ['Το NetProphet είναι για άτομα 13 ετών και πάνω.'],
+        paragraphs: ['Το NetProphet είναι για άτομα 15 ετών και πάνω.'],
       },
       {
         heading: 'Επικοινωνία',
@@ -94,7 +94,7 @@ export const privacy: Record<Lang, Doc> = {
       {
         heading: 'Tournament matches and players',
         paragraphs: [
-          'Schedules and results come from the organisers’ public sheets: player names, matches, scores. Minors are never shown. If you are a player and want to be hidden or something corrected, write to us.',
+          'Schedules and results come from the organisers’ public sheets: player names, matches, scores. Minors are never shown. If you are a player and do not want to appear, or want something corrected, write to us.',
         ],
       },
       {
@@ -127,7 +127,7 @@ export const privacy: Record<Lang, Doc> = {
       },
       {
         heading: 'Children',
-        paragraphs: ['NetProphet is for people aged 13 and over.'],
+        paragraphs: ['NetProphet is for people aged 15 and over.'],
       },
       {
         heading: 'Contact',
