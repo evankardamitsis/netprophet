@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { Logo } from './Logo';
 import { CONTACT, content, type Lang } from './content';
 
-/** the ink bar on top (logo, Απόρρητο, Βοήθεια, the other language) and the footer */
+/**
+ * The ink bar on top holds only the animated logo (founder, 16 Oct: "we don't need this main nav"); Πολιτική
+ * Απορρήτου, Βοήθεια and the other language live in the footer.
+ */
 export function Shell({ lang, children }: { lang: Lang; children: React.ReactNode }) {
   const c = content(lang);
   const base = lang === 'el' ? '' : '/en';
@@ -13,27 +16,19 @@ export function Shell({ lang, children }: { lang: Lang; children: React.ReactNod
           <Link href={base || '/'} aria-label="NetProphet">
             <Logo height={30} />
           </Link>
-          <nav className="links">
-            <Link className="wide-only" href={`${base}/privacy`}>
-              {c.nav.privacy}
-            </Link>
-            <Link className="wide-only" href={`${base}/support`}>
-              {c.nav.support}
-            </Link>
-            <Link href={c.nav.otherHref} hrefLang={lang === 'el' ? 'en' : 'el'}>
-              {c.nav.other}
-            </Link>
-          </nav>
         </div>
       </header>
       <main>{children}</main>
       <footer>
         <div className="wrap">
           <span>{c.footer.by}</span>
-          <span className="foot-links">
+          <nav className="foot-links" aria-label={lang === 'el' ? 'Σελίδες' : 'Pages'}>
             <Link href={`${base}/privacy`}>{c.nav.privacy}</Link>
             <Link href={`${base}/support`}>{c.nav.support}</Link>
-          </span>
+            <Link href={c.nav.otherHref} hrefLang={lang === 'el' ? 'en' : 'el'}>
+              {c.nav.other}
+            </Link>
+          </nav>
           <span>
             {c.footer.contact}: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>
           </span>
