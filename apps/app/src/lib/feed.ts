@@ -48,8 +48,13 @@ export interface CardMatch {
   myVote?: Side;
   split?: CardPct;
   /** the match moved to this day in the last 3 days: «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
-  moved?: { chip: string; was: string; head: string; tail: string };  /** «PRC (Μαρούσι) · Σκληρό»: the club and surface, when known */
+  moved?: { chip: string; was: string; head: string; tail: string };  /** «PRC (Μαρούσι) · Σκληρό»: the club and surface, when known (only on a match outside a tournament) */
   place?: string;
+  /**
+   * The tournament and where it is played, said once above its run of matches (founder, 16 Oct: easy to read);
+   * the card's own line then keeps only the time, format, category and round.
+   */
+  group?: { key: string; title: string; sub: string | null };
   /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
   later?: boolean;
 }
@@ -224,10 +229,10 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   const doubles = card.format !== 'singles';
   // prototype order: «Σήμερα 21:00 · Μικτό · Φιλικό · Γλυφάδα», «Σήμερα 18:00 · Open Γλυφάδας · Ημιτελικός»
   // the category follows the tournament («Μ 40+»); in doubles its discipline («Διπλό γυναικών») names the format
+  const place = placeLine(card, t);
   const meta = [
     w.label,
     doubles ? disciplineLabel(card.discipline, t) ?? t.match.formats[card.format as 'doubles' | 'mixed'] : null,
-    card.tournament?.name,
     card.tournament ? card.level : null,
     roundLabel(card.round, t),
     card.tournament || card.club ? null : card.venue,
@@ -247,7 +252,8 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     b: side(players(2), areas, t),
     myVote: card.my_vote ? toUiSide(card.my_vote) : undefined,
     split: card.split ? toPct(card.split) : undefined,
-    place: placeLine(card, t) ?? undefined,
+    place: card.tournament ? undefined : place ?? undefined,
+    group: card.tournament ? { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: place } : undefined,
     later: card.starts_at ? dayKey(card.starts_at) > dayKey(now.toISOString()) : false,
   };
 }
@@ -258,6 +264,22 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
  */
 export function splitToday<C extends { kind: string; later?: boolean }>(cards: C[]): { today: C[]; later: C[] } {
   return { today: cards.filter((c) => !c.later), later: cards.filter((c) => c.later) };
+}
+
+/**
+ * Which cards open a new tournament run on Σήμερα: the header shows above a match whose group differs from the last
+ * match's. Ads and put-off matches in between do not break a run.
+ */
+export function groupHeads<C extends { kind: string; group?: { key: string } }>(cards: C[]): Set<number> {
+  const heads = new Set<number>();
+  let last: string | null = null;
+  cards.forEach((c, i) => {
+    if (c.kind !== 'match') return;
+    const key = c.group?.key ?? null;
+    if (key !== null && key !== last) heads.add(i);
+    last = key;
+  });
+  return heads;
 }
 
 function movedOf(head: string, tail: string, wasDay: string, t: Copy): NonNullable<CardMatch['moved']> {

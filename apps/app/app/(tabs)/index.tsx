@@ -16,7 +16,7 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
 import { useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
-import { splitToday, type CardResult } from '../../src/lib/feed';
+import { groupHeads, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
@@ -148,6 +148,8 @@ export default function VoteScreen() {
 
   const empty = !loading && cards.length === 0;
   const split = splitToday(cards);
+  const shown = [...split.today, ...(showLater ? split.later : [])];
+  const heads = groupHeads(shown);
   const daily = dailyFold(unlocks.has('daily_quiz') ? quiz.quiz : null, confirmations.items.length, t);
   const forYouDaily = useForYouDaily();
   const [forYouOpen, setForYouOpen] = useState(false);
@@ -210,9 +212,10 @@ export default function VoteScreen() {
               onDone={onResultDone}
             />
           ) : null}
-          {[...split.today, ...(showLater ? split.later : [])].map((c, i) => (
+          {shown.map((c, i) => (
             <Fragment key={c.id}>
               {showLater && i === split.today.length ? <LaterFold count={split.later.length} open onPress={() => setShowLater(false)} /> : null}
+              {heads.has(i) && c.kind === 'match' ? <GroupHead group={c.group!} /> : null}
               {c.kind === 'match' ? (
                 <VoteCard match={c} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
               ) : c.kind === 'postponed' ? (
@@ -249,6 +252,16 @@ function useInA() {
 }
 
 
+/** the tournament and where it is played, once above its run of matches */
+function GroupHead({ group }: { group: NonNullable<CardMatch['group']> }) {
+  return (
+    <View style={styles.group}>
+      <Text style={styles.groupTitle}>{group.title}</Text>
+      {group.sub ? <Text style={text.meta}>{group.sub}</Text> : null}
+    </View>
+  );
+}
+
 /** «Αύριο και μετά · 4 ↓»: the later days, folded until asked for */
 function LaterFold({ count, open, onPress }: { count: number; open: boolean; onPress: () => void }) {
   const t = useCopy();
@@ -261,6 +274,8 @@ function LaterFold({ count, open, onPress }: { count: number; open: boolean; onP
 }
 
 const styles = StyleSheet.create({
+  group: { marginTop: 8, marginBottom: -4, paddingHorizontal: 4, gap: 2 },
+  groupTitle: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   later: { minHeight: 52, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: colors.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   laterText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   screen: { flex: 1, backgroundColor: colors.paper },

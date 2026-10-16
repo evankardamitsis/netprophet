@@ -1,7 +1,7 @@
 import type { Copy } from '@netprophet/copy';
 import type { PlayerProfile } from '@netprophet/db';
 import { dayKey } from '@netprophet/core';
-import { nextLine } from './players';
+import { nextLine, nextParts } from './players';
 
 /**
  * «Το ματς σου» on Σήμερα (founder, 14 Oct: "who is my opponent" is one of the four jobs): your claimed player's next
@@ -11,6 +11,10 @@ import { nextLine } from './players';
 export interface MyMatchView {
   matchId: string;
   line: string;
+  /** the same in three lines: «Αύριο 19:30», «απέναντι …», «-40 · Διπλό» */
+  when: string;
+  who: string;
+  category: string | null;
   today: boolean;
 }
 
@@ -21,5 +25,5 @@ export function myMatchOf(player: PlayerProfile | null, t: Copy, now: Date): MyM
   const today = dayKey(now.toISOString());
   const tomorrow = dayKey(new Date(now.getTime() + 86_400_000).toISOString());
   if (day !== today && day !== tomorrow) return null;
-  return { matchId: m.match_id, line: nextLine(m, t, now), today: day === today };
+  return { matchId: m.match_id, line: nextLine(m, t, now), ...nextParts(m, t, now), today: day === today };
 }

@@ -18,6 +18,11 @@ describe('«Το ματς σου» on Σήμερα', () => {
     expect(v?.today).toBe(true);
     expect(v?.line.startsWith('Σήμερα 20:37 με')).toBe(true);
   });
+  it('splits the line into when and who for the card', () => {
+    const v = myMatchOf(player('2026-10-14T17:37:00Z'), t, now);
+    expect(v?.when).toBe('Σήμερα 20:37');
+    expect(v?.who.startsWith('με ')).toBe(true);
+  });
   it('shows tomorrow too, and nothing later or without a match', () => {
     expect(myMatchOf(player('2026-10-15T07:00:00Z'), t, now)?.today).toBe(false);
     expect(myMatchOf(player('2026-10-17T07:00:00Z'), t, now)).toBeNull();
