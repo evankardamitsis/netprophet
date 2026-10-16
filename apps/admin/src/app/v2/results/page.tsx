@@ -30,7 +30,7 @@ export default async function ResultsDesk() {
   }
   const { data, error } = await (client.rpc as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>)(
     'admin_desk',
-    { p_days: 7 },
+    { p_days: 30 },
   );
   const items = (data ?? []) as DeskItem[];
   return (
