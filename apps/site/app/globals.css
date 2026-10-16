@@ -152,14 +152,6 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 .ph-last span.w { background: var(--np-ink); color: var(--np-paper); }
 .ph-last span.l { background: var(--np-mist); color: var(--np-inkSoft); }
 .ph-last em { margin-left: auto; font-style: normal; color: var(--np-inkSoft); }
-.ph-friend { grid-template-columns: auto 1fr; align-items: center; }
-.ph-friend p { margin: 0; font-weight: 700; }
-.ph-quiz button { font: inherit; font-weight: 700; font-size: 14px; text-align: left; background: var(--np-inkRaised); color: var(--np-paper); border: 2px solid transparent; border-radius: 12px; padding: 10px 12px; cursor: pointer; transition: transform 160ms var(--np-spring); }
-.ph-quiz button:active { transform: scale(.97); }
-.ph-quiz button.right { background: var(--np-lime); color: var(--np-ink); }
-.ph-quiz button.wrong { border-color: var(--np-paper); opacity: .8; }
-.ph-quiz button.dim { opacity: .45; }
-.ph-quiz-out { margin: 0; font-weight: 800; }
 .ph-side b { font-family: var(--font-display); font-size: 20px; line-height: 1; }
 .ph-side small { color: var(--np-inkSoft); }
 .ph-pct { font-family: var(--font-display); font-weight: 800; font-size: 18px; margin-top: 4px; }

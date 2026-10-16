@@ -56,12 +56,13 @@ export interface Content {
     traits: string[];
     tabs: [string, string, string];
     pick: string;
-    forYou: string;
-    friendMatch: string;
-    quizQ: string;
-    quizA: [string, string, string];
-    quizRight: string;
-    quizWrong: string;
+    /** the personalised feed on the phone: your friends' match, then your tournament's */
+    feedTitle: string;
+    feedFriends: string;
+    feedTournament: string;
+    friendTag: string;
+    friendMeta: string;
+    tournamentMeta: string;
     reactions: [string, string];
     tapHint: string;
     won: string;
@@ -207,12 +208,12 @@ export const el: Content = {
     traits: ['Δυνατό σερβίς', 'Μένει στη baseline', 'Δεν τα παρατάει'],
     tabs: ['Φόρμα', 'Μεταξύ σας', 'Πώς παίζει'],
     pick: 'Πάτα έναν παίκτη',
-    forYou: 'Για σένα · 1/6',
-    friendMatch: 'Ο φίλος σου Γιώργος Σερβίδης παίζει στις 20:00',
-    quizQ: 'Ποιος θα σηκώσει το Open Γλυφάδας;',
-    quizA: ['Ρακετάκης', 'Φορχάντης', 'Σερβίδης'],
-    quizRight: '✓ Σωστό! +10',
-    quizWrong: 'Όχι αυτή τη φορά',
+    feedTitle: 'Για σένα',
+    feedFriends: 'ΟΙ ΦΙΛΟΙ ΣΟΥ',
+    feedTournament: 'ΤΟ ΤΟΥΡΝΟΥΑ ΣΟΥ · OPEN ΓΛΥΦΑΔΑΣ',
+    friendTag: 'φίλος',
+    friendMeta: '20:00 · Open Γλυφάδας · Μ 40+',
+    tournamentMeta: '21:00 · Μ 50+ · Ημιτελικός',
     reactions: ['Τι ματς!', 'Το περίμενα'],
     tapHint: 'Πάτα για να δοκιμάσεις',
     won: 'Ν',
@@ -354,12 +355,12 @@ export const en: Content = {
     traits: ['Big serve', 'Stays on the baseline', 'Never gives up'],
     tabs: ['Form', 'Head to head', 'How they play'],
     pick: 'Tap a player',
-    forYou: 'For you · 1/6',
-    friendMatch: 'Your friend Giorgos Servidis plays at 20:00',
-    quizQ: 'Who will lift the Glyfada Open?',
-    quizA: ['Raketakis', 'Forchantis', 'Servidis'],
-    quizRight: '✓ Right! +10',
-    quizWrong: 'Not this time',
+    feedTitle: 'For you',
+    feedFriends: 'YOUR FRIENDS',
+    feedTournament: 'YOUR TOURNAMENT · GLYFADA OPEN',
+    friendTag: 'friend',
+    friendMeta: '20:00 · Glyfada Open · M 40+',
+    tournamentMeta: '21:00 · M 50+ · Semi-final',
     reactions: ['What a match!', 'Saw it coming'],
     tapHint: 'Tap to try it',
     won: 'W',
