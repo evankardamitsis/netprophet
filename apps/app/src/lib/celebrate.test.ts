@@ -11,12 +11,12 @@ const c = (streak: number, freeze: boolean, frame: string | null): StreakCelebra
 
 describe('celebrationView', () => {
   it('says the prototype lines and only what was given', () => {
-    expect(celebrationView(c(3, true, null), copy)).toEqual({ label: 'ΣΕΡΙ', streak: 3, tier: null, title: 'Τρία στη σειρά!', reward: 'Πάρε κι ένα πάγωμα για τις δύσκολες μέρες' });
+    expect(celebrationView(c(3, true, null), copy)).toEqual({ label: 'ΣΕΡΙ', streak: 3, tier: null, title: 'Τρία στη σειρά!', reward: 'Πάρε και μια Ασφάλεια για τις δύσκολες μέρες' });
     expect(celebrationView(c(3, false, null), copy).reward).toBe('Συνέχισε έτσι');
     expect(celebrationView(c(5, false, null), copy).title).toBe('Πέντε στη σειρά!');
     expect(celebrationView(c(7, false, 'frame_seven'), copy).reward).toBe('Κορνίζα «Επτά»');
     expect(celebrationView(c(10, false, 'frame_ten'), copy)).toMatchObject({ title: 'Το δέκα το καλό', reward: 'Κορνίζα «Δέκα»' });
-    expect(celebrationView(c(10, true, 'frame_ten'), copy).reward).toBe('Πάγωμα και κορνίζα');
+    expect(celebrationView(c(10, true, 'frame_ten'), copy).reward).toBe('Ασφάλεια και κορνίζα');
   });
 });
 
