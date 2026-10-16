@@ -8,13 +8,19 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "ios": { "simulator": true },
-      "android": { "buildType": "apk" }
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "channel": "production",
@@ -22,6 +28,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   }
 }

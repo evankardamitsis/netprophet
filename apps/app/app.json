@@ -10,11 +10,12 @@
     "icon": "./assets/icon.png",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "gr.netprophet.app",
-      "supportsTablet": false
+      "bundleIdentifier": "gr.monadlabs.netprophet",
+      "supportsTablet": false,
+      "config": { "usesNonExemptEncryption": false }
     },
     "android": {
-      "package": "gr.netprophet.app"
+      "package": "gr.monadlabs.netprophet"
     },
     "web": {
       "bundler": "metro",
