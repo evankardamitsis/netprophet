@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
@@ -812,8 +812,56 @@ function Settings() {
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.auth.signOut}</Text>
           </Pressable>
+          <DeleteAccount />
         </>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * «Διαγραφή λογαριασμού» (App Store 5.1.1(v), 16 Oct): a confirm step that says exactly what goes, a busy state while
+ * it runs, then sign out. In sample mode there is no account to delete, so it only signs out.
+ */
+function DeleteAccount() {
+  const t = useCopy();
+  const api = useApi();
+  const { signOut } = useAuth();
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const confirm = async () => {
+    setBusy(true);
+    setFailed(false);
+    try {
+      if (api) await api.deleteMyAccount();
+      await signOut();
+    } catch {
+      setFailed(true);
+      setBusy(false);
+    }
+  };
+  if (!asking) {
+    return (
+      <Pressable accessibilityRole="button" onPress={() => setAsking(true)} style={styles.linkHit}>
+        <Text style={styles.deleteLink}>{t.auth.deleteAccount}</Text>
+      </Pressable>
+    );
+  }
+  return (
+    <View style={styles.deleteBox}>
+      <Text style={styles.deleteTitle}>{t.auth.deleteTitle}</Text>
+      <Text style={styles.muted}>{t.auth.deleteLine}</Text>
+      {failed ? <Text style={styles.deleteError}>{t.auth.deleteFailed}</Text> : null}
+      <View style={styles.deleteRow}>
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => void confirm()} style={[styles.deleteYes, busy && styles.busy]}>
+          {busy ? <ActivityIndicator color={colors.paper} /> : null}
+          <Text style={styles.deleteYesText}>{busy ? t.auth.deleting : t.auth.deleteYes}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => setAsking(false)} style={styles.linkHit}>
+          <Text style={styles.signOut}>{t.auth.deleteNo}</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -941,6 +989,14 @@ const styles = StyleSheet.create({
   nextBox: { gap: 4 },
   nextText: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
   linkHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  deleteLink: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.inkSoft },
+  deleteBox: { gap: 8, padding: 14, borderRadius: 18, borderWidth: 2, borderColor: colors.ink },
+  deleteTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  deleteError: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.ink },
+  deleteRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  deleteYes: { minHeight: 44, paddingHorizontal: 18, borderRadius: 999, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  deleteYesText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
+  busy: { opacity: 0.85 },
   link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
   friends: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   fan: { flexDirection: 'row' },

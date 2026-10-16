@@ -114,6 +114,8 @@ export function rpc(client: NetprophetClient) {
     setAvatar: (key: string | null) => call<{ avatar: string | null }>(client, 'set_avatar', { p_key: key }),
     getMyLevel: () => call<GetMyLevelResult>(client, 'get_my_level', {}),
     getMe: () => call<MeResult>(client, 'get_me', {}),
+    /** delete the signed-in account and everything that is theirs; cannot be undone */
+    deleteMyAccount: () => call<{ deleted: boolean }>(client, 'delete_my_account', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),
     getConfirmations: () => call<PendingConfirmation[]>(client, 'get_confirmations', {}),

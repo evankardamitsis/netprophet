@@ -190,6 +190,13 @@ export const en: Copy = {
     resend: 'Send it again',
     changeEmail: 'Different email',
     signOut: 'Sign out',
+    deleteAccount: 'Delete account',
+    deleteTitle: 'Delete your account?',
+    deleteLine: 'Your calls, points, streak, friends and everything your player earned are erased. This cannot be undone.',
+    deleteYes: 'Yes, delete',
+    deleteNo: 'Cancel',
+    deleting: 'Deleting…',
+    deleteFailed: 'It was not deleted. Try again or write to hello@monadlabs.gr.',
     errors: {
       invalidEmail: 'That does not look like an email.',
       badCode: 'Wrong or expired code. Try again.',

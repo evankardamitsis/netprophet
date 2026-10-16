@@ -200,6 +200,13 @@ export const el = {
     resend: 'Ξαναστείλε τον',
     changeEmail: 'Άλλο email',
     signOut: 'Αποσύνδεση',
+    deleteAccount: 'Διαγραφή λογαριασμού',
+    deleteTitle: 'Να διαγραφεί ο λογαριασμός σου;',
+    deleteLine: 'Σβήνουν οι ψήφοι, οι πόντοι, το σερί, οι φίλοι και ό,τι έχει κερδίσει ο παίκτης σου. Δεν γυρίζει πίσω.',
+    deleteYes: 'Ναι, διαγραφή',
+    deleteNo: 'Άκυρο',
+    deleting: 'Διαγράφεται…',
+    deleteFailed: 'Δεν έγινε η διαγραφή. Δοκίμασε ξανά ή γράψε στο hello@monadlabs.gr.',
     errors: {
       invalidEmail: 'Αυτό δεν μοιάζει με email.',
       badCode: 'Λάθος ή ληγμένος κωδικός. Ξαναδοκίμασε.',
