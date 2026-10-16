@@ -158,7 +158,7 @@ function Name({ person }: { person: ResultName }) {
 }
 
 const styles = StyleSheet.create({
-  card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, gap: 4 },
+  card: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, gap: 2 },
   top: { minHeight: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 },
   moreHit: { width: 28, height: 28, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
@@ -170,14 +170,15 @@ const styles = StyleSheet.create({
   names: {},
   nameBox: { flex: 1, minWidth: 0 },
   // line heights at least the font size: iOS clips the tonos that rises above the line box
-  winner: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  winName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, paddingBottom: 7, marginBottom: -7 },
-  winScore: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, paddingBottom: 7, marginBottom: -7 },
-  loser: { minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, opacity: 0.7 },
-  loseName: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30, paddingBottom: 6, marginBottom: -6 },
-  loseScore: { fontFamily: fonts.display, fontSize: 28, lineHeight: 30, paddingBottom: 6, marginBottom: -6 },
+  // compact (founder, 16 Oct): the winner bold, the loser lighter, both one size so the eye reads down the scores
+  winner: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  winName: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
+  winScore: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
+  loser: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, opacity: 0.65 },
+  loseName: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
+  loseScore: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   // the revealed first name is smaller and lighter (prototype .ns)
-  firstName: { fontSize: 21, fontFamily: fonts.bodySemi },
+  firstName: { fontSize: 16, fontFamily: fonts.bodySemi },
   sets: { flex: 1, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
   thankHit: { minHeight: 32, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
   thank: { fontFamily: fonts.bodyBold, fontSize: 13 },

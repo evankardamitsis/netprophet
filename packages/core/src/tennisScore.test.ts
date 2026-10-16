@@ -89,6 +89,9 @@ describe('formatWinnerSets', () => {
       '6-4, 6-7(5), 10-8',
     );
   });
+  it('writes a tie-break without points as the plain set (ingest marks it `tb: true`)', () => {
+    expect(formatWinnerSets([{ w: 6, l: 7, tb: true }, { w: 7, l: 6, tb: true }, { w: 10, l: 8, stb: true }], {}, words)).toBe('6-7, 7-6, 10-8');
+  });
   it('marks a retirement and a walkover', () => {
     expect(formatWinnerSets([{ w: 6, l: 3 }, { w: 2, l: 1 }], { retired: true }, words)).toBe('6-3, 2-1 ret.');
     expect(formatWinnerSets([], { walkover: true }, words)).toBe('w/o');

@@ -37,10 +37,20 @@ export interface ResultItem {
   thank: { label: string; playerId: string; first: string; gender: 'm' | 'f' | null } | null;
 }
 
+/**
+ * One event on one day (founder, 16 Oct: hierarchically clear): the day once as a small label over its first event,
+ * the tournament as the event's heading, the category and round under it.
+ */
 export interface ResultGroup {
   key: string;
-  /** «ΧΘΕΣ · OPEN ΓΛΥΦΑΔΑΣ · ΠΡΟΗΜΙΤΕΛΙΚΑ», already in capitals without accents */
+  /** «ΧΘΕΣ», already in capitals without accents */
+  day: string;
+  /** true on the first group of its day, so the day label shows once */
+  firstOfDay: boolean;
+  /** «Open Γλυφάδας», or «Φιλικά» */
   title: string;
+  /** «Μ 40+ · Απλό · Προημιτελικά»; null when there is nothing to add */
+  detail: string | null;
   items: ResultItem[];
 }
 
@@ -74,6 +84,14 @@ export function eventLabel(row: Pick<ResultRow, 'tournament' | 'round' | 'format
   }
   const round = row.round ? (isRoundKey(row.round) ? t.results.rounds[row.round] : row.round) : null;
   return [row.tournament, categoryLabel(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
+}
+
+/** «Open Γλυφάδας» and «Μ 40+ · Απλό · Προημιτελικά» apart, for the event heading and the line under it. */
+export function eventParts(row: Pick<ResultRow, 'tournament' | 'round' | 'format' | 'level' | 'discipline'>, t: Copy): { title: string; detail: string | null } {
+  if (!row.tournament) return { title: t.results.friendlies, detail: row.format === 'singles' ? null : t.match.formats[row.format] };
+  const round = row.round ? (isRoundKey(row.round) ? t.results.rounds[row.round] : row.round) : null;
+  const detail = [categoryLabel(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
+  return { title: row.tournament, detail: detail || null };
 }
 
 const names = (players: FeedPlayer[]): ResultName[] => players.map((p) => ({ first: p.first_name, surname: p.surname }));
@@ -124,13 +142,14 @@ export function toResultItem(row: ResultRow, t: Copy): ResultItem {
 export function groupResults(rows: ResultRow[], t: Copy, now: Date): ResultGroup[] {
   const groups: ResultGroup[] = [];
   const byKey = new Map<string, ResultGroup>();
+  const days = new Set<string>();
   for (const row of rows) {
-    const day = dayLabel(row.starts_at, now, t);
-    const event = eventLabel(row, t);
-    const key = `${dayKey(row.starts_at)}|${event}`;
+    const dk = dayKey(row.starts_at);
+    const key = `${dk}|${eventLabel(row, t)}`;
     let g = byKey.get(key);
     if (!g) {
-      g = { key, title: greekCaps(`${day} · ${event}`), items: [] };
+      g = { key, day: greekCaps(dayLabel(row.starts_at, now, t)), firstOfDay: !days.has(dk), ...eventParts(row, t), items: [] };
+      days.add(dk);
       byKey.set(key, g);
       groups.push(g);
     }

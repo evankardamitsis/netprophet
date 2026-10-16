@@ -36,7 +36,11 @@ export default function ResultsScreen() {
           </Animated.View>
           {groups.map((g) => (
             <View key={g.key} style={styles.group}>
-              <Text style={styles.groupTitle}>{g.title}</Text>
+              {g.firstOfDay ? <Text style={styles.day}>{g.day}</Text> : null}
+              <View style={styles.event}>
+                <Text style={styles.eventTitle}>{g.title}</Text>
+                {g.detail ? <Text style={text.meta}>{g.detail}</Text> : null}
+              </View>
               {g.items.map((item) => (
                 <ResultRow key={item.id} item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
               ))}
@@ -69,6 +73,9 @@ const styles = StyleSheet.create({
   title: { ...text.title },
   subtitle: text.subtitle,
   group: { gap: 8 },
-  groupTitle: { ...text.label, marginTop: 4 },
+  // the day is the small label; the tournament is the heading of its rows
+  day: { ...text.label, marginTop: 10 },
+  event: { gap: 2, paddingHorizontal: 4, marginBottom: 2 },
+  eventTitle: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });
