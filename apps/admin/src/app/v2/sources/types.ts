@@ -55,6 +55,8 @@ export interface ReviewPerson {
   surname: string;
   first: string;
   candidates: { id: string; first_name: string; surname: string; score: number }[] | null;
+  /** held because the sheet itself is short: a place with no name, or a side that does not fit the format */
+  reason?: 'no_name' | 'side_incomplete';
 }
 
 export interface ReviewRow {

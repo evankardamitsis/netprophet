@@ -703,7 +703,23 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
 
   return (
     <div className={`v2-card attention v2-enter${pending ? ' busy' : ''}`} aria-busy={pending || undefined}>
-      {item.kind === 'people' ? (
+      {item.kind === 'people' && unclear.some((u) => u.reason) ? (
+        <>
+          {/* the sheet itself is short (a place with no name, one name on a doubles side): no player to pick */}
+          <span>
+            In {where}: {a} vs {b}.{' '}
+            {unclear.some((u) => u.reason === 'side_incomplete')
+              ? 'A side has the wrong number of names for this category.'
+              : 'A place on this match has no name.'}
+            <span className="v2-muted" style={{ display: 'block', marginTop: 2 }}>
+              Fix the sheet and the next update picks it up, or skip this match.
+            </span>
+          </span>
+          <div className="v2-row">
+            <Skip pending={pending} send={send} />
+          </div>
+        </>
+      ) : item.kind === 'people' ? (
         <>
           {questions.map(({ key, u, label }) => (
             <fieldset key={key} className="v2-stack" style={{ border: 0, padding: 0, margin: 0, gap: 2 }}>
