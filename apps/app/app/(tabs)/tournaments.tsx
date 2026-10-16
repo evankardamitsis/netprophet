@@ -43,6 +43,7 @@ export default function TournamentsScreen() {
         </Reveal>
         {data ? (
           <>
+            <SearchEntry i={next()} />
             {data.pro ? (
               data.mine && data.mine.length > 0 ? (
                 <ProCard mine={data.mine} today={today} i={next()} />
@@ -52,7 +53,6 @@ export default function TournamentsScreen() {
             ) : (
               <AlertsCard i={next()} />
             )}
-            <SearchEntry i={next()} />
             {sections.map((s) => (
               <View key={s.key} style={styles.group}>
                 <Reveal i={next()}>
@@ -146,12 +146,7 @@ function AlertsCard({ i }: { i: number }) {
     <Reveal i={i}>
       <View style={styles.proCard}>
         <Text style={styles.alertsTitle}>{a.title}</Text>
-        {a.lines.map((line) => (
-          <View key={line} style={styles.alertRow}>
-            <Text style={styles.alertMark}>+</Text>
-            <Text style={styles.alertLine}>{line}</Text>
-          </View>
-        ))}
+        <Text style={styles.alertLine}>{a.short}</Text>
         <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
           <Animated.View style={[styles.alertsCta, press.style]}>
             <Text style={styles.alertsCtaText}>{a.cta}</Text>
@@ -215,11 +210,9 @@ const styles = StyleSheet.create({
   mineRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   mineWhen: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
   mineWhat: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20, color: colors.mist, textAlign: 'right' },
-  alertsTitle: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 33, paddingBottom: 6, marginBottom: -6, color: colors.paper },
-  alertRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  alertMark: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.mist },
+  alertsTitle: { ...text.heading, fontSize: 22, lineHeight: 24, color: colors.paper },
   alertLine: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.mist },
-  alertsCta: { minHeight: 48, marginTop: 6, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  alertsCta: { minHeight: 48, marginTop: 2, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   alertsCtaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
   alertsOn: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.mist },
   alertsOnBig: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.paper },
@@ -227,7 +220,7 @@ const styles = StyleSheet.create({
   groupTitle: { ...text.label, marginTop: 4 },
   card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 6 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
-  name: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6, color: colors.ink },
+  name: { ...text.heading, flexShrink: 1 },
   chip: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
   chipHot: { backgroundColor: colors.lime },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.ink },

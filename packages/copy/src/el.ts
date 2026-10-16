@@ -439,8 +439,8 @@ export const el = {
       toNextOne: 'Ακόμα 1 πόντος για το level {next}',
     },
     streak: 'σερί',
-    /** «ΠΡ: 9», your best σερί */
-    best: 'ΠΡ: {n}',
+    /** «ρεκόρ 9», your best σερί */
+    best: 'ρεκόρ {n}',
     monthPoints: 'πόντοι μήνα',
     hands: { R: 'δεξί χέρι', L: 'αριστερό χέρι' },
     sports: { tennis: 'τένις', padel: 'padel' },
@@ -935,6 +935,8 @@ export const el = {
     /** the Pro card on top of Τουρνουά (founder, 14 Oct: Pro high up, notifications first) */
     alerts: {
       title: 'Ειδοποιήσεις για τα ματς σου',
+      /** the one line on Τουρνουά (founder, 16 Oct: one line + button) */
+      short: 'Κλήρωση, ώρα και υπενθυμίσεις, στο κινητό σου.',
       lines: ['Μόλις βγει η κλήρωση', 'Η μέρα και η ώρα σου, και κάθε αλλαγή', 'Υπενθύμιση το βράδυ πριν και 2 ώρες πριν'],
       cta: 'Άνοιξέ τες με Pro ›',
       /** with Pro, at the bottom of «Το πρόγραμμά σου» */

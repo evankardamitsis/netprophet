@@ -15,9 +15,9 @@ import { alpha, colors, ease, fonts, text } from '../../src/theme';
 
 /**
  * Κατάταξη (prototype V2, isRank): this month's points among the people you know or all of Attica.
- * The ink card has your position, points, σερί and what the next place costs; the lime card says
- * what is in the air or who to pass; then the board. «Κατηγορία» is your league group: the top 5 move up,
- * 16 and below change league, and the top 3 get a frame and a badge. No month-end countdown (founder). No blue button here: the lime card's button is ink, as in the prototype.
+ * The ink card has your position, points and what the next place costs (the σερί is in the header); the white card
+ * says what is in the air or who to pass, with the screen's one blue; then the board. «Κατηγορία» is your league group: the top 5 move up,
+ * 16 and below change league, and the top 3 get a frame and a badge. No month-end countdown (founder).
  */
 const IN_MS = 400;
 const STG_MS = 450;
@@ -91,12 +91,6 @@ function MeCard({ ladder }: { ladder: Ladder }) {
       </View>
       <View style={styles.rule} />
       <View style={styles.meRow}>
-        <Text style={styles.meLabel}>{l.streak}</Text>
-        <View style={styles.streakPill}>
-          <Text style={styles.streakText}>{`${ladder.streak} ${l.streakPill}`}</Text>
-        </View>
-      </View>
-      <View style={styles.meRow}>
         <Text style={styles.meLabel}>{next.label}</Text>
         <Text style={styles.meValue}>{next.value}</Text>
       </View>
@@ -104,7 +98,10 @@ function MeCard({ ladder }: { ladder: Ladder }) {
   );
 }
 
-/** the lime card: what is in the air, or who to pass, and back to the votes */
+/**
+ * what is in the air, or who to pass, and back to the votes: white with the screen's one blue (founder, 16 Oct:
+ * lime is only for what happened or was earned)
+ */
 function Motivate({ ladder }: { ladder: Ladder }) {
   const t = useCopy();
   const m = motivation(ladder, t);
@@ -214,7 +211,7 @@ const styles = StyleSheet.create({
   scopePill: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: colors.lime },
   scopePillText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },
   meTop: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
-  position: { fontFamily: fonts.displayHeavy, fontSize: 84, lineHeight: 84, paddingBottom: 17, marginBottom: -17, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  position: { fontFamily: fonts.displayHeavy, fontSize: 64, lineHeight: 64, paddingBottom: 13, marginBottom: -13, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   pointsBox: { alignItems: 'flex-end', gap: 2 },
   points: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, paddingBottom: 9, marginBottom: -9, color: colors.lime },
   pointsLabel: { fontFamily: fonts.body, fontSize: 13, color: colors.mist },
@@ -222,13 +219,11 @@ const styles = StyleSheet.create({
   meRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   meLabel: { flexShrink: 1, fontFamily: fonts.body, fontSize: 15, color: colors.mist },
   meValue: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
-  streakPill: { minHeight: 28, paddingHorizontal: 12, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
-  streakText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
-  mot: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.lime, gap: 10 },
-  motHead: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 34, paddingBottom: 7, marginBottom: -7, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
-  motSub: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.ink },
-  motButton: { minHeight: 48, borderRadius: 14, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
-  motButtonText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper, textAlign: 'center' },
+  mot: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, gap: 8 },
+  motHead: text.heading,
+  motSub: { ...text.body, color: colors.inkSoft },
+  motButton: { minHeight: 48, marginTop: 4, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  motButtonText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white, textAlign: 'center' },
   board: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 24, backgroundColor: colors.white },
   gap: { paddingVertical: 2, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 15, color: colors.inkSoft },
   row: {
