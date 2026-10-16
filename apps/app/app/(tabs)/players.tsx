@@ -7,15 +7,13 @@ import { PlayerListRow } from '../../src/components/PlayerListRow';
 import { useCopy } from '../../src/i18n';
 import { usePlayerSearch, usePlayersHome } from '../../src/lib/data';
 import { fmt } from '../../src/lib/votes';
-import { colors, ease, fonts } from '../../src/theme';
+import { colors, ease, fonts, text } from '../../src/theme';
 
 /**
  * Παίκτες (prototype V2, isPlayers): search the roster, and before searching your friends and who plays
  * today. The prototype only fakes the search; here it is a real field (2+ letters, Greek or Greeklish).
  */
 const TITLE_IN_MS = 400;
-/** the 60px title's line height is below its size; this keeps the tonos drawn on iOS */
-const ACCENT_PAD = 10;
 /** web: the ink border is the focus state, not the browser's own ring (a web-only style RN does not type) */
 const NO_WEB_RING = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
 
@@ -103,15 +101,8 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 14 },
   list: { gap: 10 },
   head: { gap: 6 },
-  title: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 60,
-    lineHeight: 57,
-    color: colors.ink,
-    paddingTop: ACCENT_PAD,
-    marginTop: -ACCENT_PAD,
-  },
-  subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
+  title: { ...text.title },
+  subtitle: text.subtitle,
   search: {
     height: 48,
     paddingHorizontal: 16,
@@ -122,6 +113,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.ink,
   },
-  label: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.52, color: colors.inkSoft },
+  label: { ...text.label },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });

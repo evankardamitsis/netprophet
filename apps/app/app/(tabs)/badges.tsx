@@ -10,7 +10,7 @@ import { useCopy } from '../../src/i18n';
 import { badgeName, earned, leftLine, locked, moreLine, pct, pickSelected, ruleLine, tierOfLine, tierStyle, tileTierLine } from '../../src/lib/badges';
 import { useBadges } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
-import { alpha, colors, fonts } from '../../src/theme';
+import { alpha, colors, fonts, text } from '../../src/theme';
 
 /**
  * Badges (prototype V2): the selected badge in a big card (rule, tier, bar, «Βάλ' το στην κάρτα» for the four that
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 8, paddingHorizontal: PAD, paddingBottom: 32, gap: 12 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
+  title: { ...text.title },
   sel: { padding: 18, borderRadius: 26, gap: 10 },
   selName: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, paddingBottom: 9, marginBottom: -12, color: colors.ink },
   selTier: { flexDirection: 'row', alignItems: 'center', gap: 10 },

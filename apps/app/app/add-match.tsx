@@ -36,7 +36,7 @@ import {
 import { usePress, useStgIn } from '../src/lib/motion';
 import { useUnlocks } from '../src/lib/unlocks';
 import { fmt } from '../src/lib/votes';
-import { colors, fonts } from '../src/theme';
+import { colors, fonts, text } from '../src/theme';
 import { PLAYER_LEVEL_SHOWN } from '../src/lib/levelShown';
 
 /**
@@ -519,7 +519,7 @@ function Done({ form, matchId, kudo, onAgain }: { form: LogForm; matchId: string
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingHorizontal: 20, gap: 12 },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -12, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { ...text.title },
   sub: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   card: { borderRadius: 18, backgroundColor: colors.white, paddingHorizontal: 14 },
   row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },

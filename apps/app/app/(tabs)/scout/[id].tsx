@@ -8,7 +8,7 @@ import { useCopy } from '../../../src/i18n';
 import { useScout } from '../../../src/lib/data';
 import { usePress, useStgIn } from '../../../src/lib/motion';
 import type { ScoutView } from '../../../src/lib/scout';
-import { colors, fonts } from '../../../src/theme';
+import { colors, fonts, text } from '../../../src/theme';
 
 /**
  * «Ο αντίπαλος πριν το ματς» (Pro, no prototype screen; built from the profile's visual language): the other
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   head: { gap: 6 },
   proPill: { alignSelf: 'flex-start', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.ink },
   proPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
-  title: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, paddingBottom: 9, marginBottom: -11, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
+  title: { ...text.title },
   subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
   message: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
   hero: { padding: 18, borderRadius: 28, backgroundColor: colors.ink, gap: 4 },

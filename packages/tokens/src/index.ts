@@ -129,6 +129,19 @@ export const radii = { sm: 12, md: 16, lg: 24, pill: 999 } as const;
 /** 4pt scale. */
 export const spacing = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 24, 6: 32, 7: 48 } as const;
 
+/**
+ * The type scale (founder, 16 Oct: "super easy to read and hierarchically clear"). Five steps, used everywhere:
+ * title (one per screen), heading (a card's main line), body, meta (when, where, category) and label (small caps
+ * over a group). Big moments (celebrations, the intro) stay larger on purpose.
+ */
+export const type = {
+  title: { size: 40, line: 40 },
+  heading: { size: 26, line: 28 },
+  body: { size: 15, line: 21 },
+  meta: { size: 13, line: 18 },
+  label: { size: 12, line: 16, tracking: 0.6 },
+} as const;
+
 export const motion = {
   revealDur: 700,
   stagger: 70,
@@ -141,7 +154,7 @@ export const motion = {
   spring: { damping: 14, stiffness: 180, mass: 1 },
 } as const;
 
-export const tokens = { colors, cosmetics, radii, spacing, motion } as const;
+export const tokens = { colors, cosmetics, radii, spacing, type, motion } as const;
 
 /** CSS custom properties for web, as a `:root { ... }` block. */
 export function cssVars(): string {

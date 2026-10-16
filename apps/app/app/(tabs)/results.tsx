@@ -6,18 +6,13 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useResults, type SafetyTarget } from '../../src/lib/data';
-import { colors, ease, fonts } from '../../src/theme';
+import { colors, ease, fonts, text } from '../../src/theme';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): the scoreboard of the last two weeks, grouped by day and event.
  * Scoreboard, «Ανατροπή», «Το ’πες», reactions and «Πες κάτι στον …». The filter and the sponsored card come later.
  */
 const TITLE_IN_MS = 400;
-/**
- * The 60px title's line height is below its size; iOS clips the tonos (Αποτελέσματα). Extra top padding,
- * cancelled by a negative margin, keeps it drawn.
- */
-const ACCENT_PAD = 10;
 
 export default function ResultsScreen() {
   const t = useCopy();
@@ -71,23 +66,9 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 84 },
   list: { gap: 10 },
   head: { gap: 6 },
-  title: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 60,
-    lineHeight: 57,
-    color: colors.ink,
-    paddingTop: ACCENT_PAD,
-    marginTop: -ACCENT_PAD,
-  },
-  subtitle: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
+  title: { ...text.title },
+  subtitle: text.subtitle,
   group: { gap: 8 },
-  groupTitle: {
-    marginTop: 4,
-    fontFamily: fonts.bodyBold,
-    fontSize: 13,
-    lineHeight: 17,
-    letterSpacing: 0.52,
-    color: colors.inkSoft,
-  },
+  groupTitle: { ...text.label, marginTop: 4 },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });

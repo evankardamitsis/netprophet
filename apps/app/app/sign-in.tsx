@@ -17,7 +17,7 @@ import { AuthFailure, EMAIL_RE, guestAllowed, useAuth, type AuthErrorKind } from
 import { usePopIn, usePress } from '../src/lib/motion';
 import { SKIP_ONBOARDING_KEY } from '../src/lib/onboardingGate';
 import { fmt } from '../src/lib/votes';
-import { cardSurface, colors, ease, fonts } from '../src/theme';
+import { cardSurface, colors, ease, fonts, text } from '../src/theme';
 
 /** the lockup's height on the welcome card */
 const HERO_LOGO_H = 30;
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
 
   // email and code
   form: { gap: 12 },
-  h1: { fontFamily: fonts.displayHeavy, fontSize: 60, lineHeight: 60, paddingBottom: 12, marginBottom: -15, color: colors.ink },
+  h1: { ...text.title },
   lead: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
   input: {
     height: 52,
