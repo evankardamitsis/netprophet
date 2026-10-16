@@ -33,7 +33,16 @@ a { color: inherit; }
 .cta { display: inline-flex; align-items: center; min-height: 52px; padding: 0 26px; border-radius: 999px; background: var(--np-blue); color: var(--np-white); font-weight: 700; text-decoration: none; transition: transform 160ms var(--np-spring); }
 .cta:hover { transform: scale(1.04); }
 .cta:active { transform: scale(0.97); }
-.soon { display: block; margin-top: 14px; font-size: 14px; color: var(--np-fog); }
+.soon { display: block; margin-top: 8px; font-size: 14px; color: var(--np-fog); }
+.badges { margin-top: 22px; }
+.badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.badge img { display: block; }
+.badge-apple { height: 48px; width: auto; }
+/* Google's PNGs include clear space around the badge: taller so the badge itself matches Apple's height */
+.badge-google-el { height: 62px; width: auto; }
+.badge-google-en { height: 72px; width: auto; }
+.badge.off { opacity: .9; cursor: default; }
+.close .badge-row { justify-content: center; }
 .stage { position: relative; height: 640px; }
 .court { position: absolute; left: 0; right: 0; bottom: 18px; height: 3px; background: var(--np-inkLine); border-radius: 3px; }
 .ball { position: absolute; bottom: 21px; border-radius: 50%; animation: hop 1.6s cubic-bezier(.3,0,.7,1) infinite alternate; }

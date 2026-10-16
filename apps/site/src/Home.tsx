@@ -3,6 +3,7 @@ import { BallPerson } from './BallPerson';
 import { content, type Lang } from './content';
 import { FeedScreen, OpponentScreen, ResultsScreen, TodayScreen } from './Screens';
 import { Shell } from './Shell';
+import { StoreBadges } from './StoreBadges';
 
 /** the four sports' balls hopping on the hero's court, like the app's first screen */
 const BALLS = [
@@ -33,7 +34,7 @@ export function Home({ lang }: { lang: Lang }) {
             <a className="cta" href="#today">
               {c.hero.cta}
             </a>
-            <span className="soon">{c.hero.soon}</span>
+            <StoreBadges lang={lang} soon={c.hero.soon} />
           </div>
           <div className="stage" aria-hidden="true">
             <div className="court" />
@@ -189,7 +190,7 @@ export function Home({ lang }: { lang: Lang }) {
         <div className="wrap">
           <h2 className="display">{c.close.title}</h2>
           <p>{c.close.line}</p>
-          <p className="soon">{c.hero.soon}</p>
+          <StoreBadges lang={lang} soon={c.hero.soon} />
         </div>
       </section>
     </Shell>
