@@ -12,14 +12,15 @@ import type { CardMatch, CardPct, CardSide } from '../lib/feed';
 import { FitText } from './FitText';
 import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
 import type { Side } from '../lib/votes';
-import { cardSurface, colors, ease, fonts } from '../theme';
+import { cardSurface, colors, ease, fonts, text } from '../theme';
 import { Lit } from './Lit';
 import { Avatar as DrawnAvatar } from './Avatar';
 import type { AvatarLook } from '../lib/avatar';
 
 /**
  * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
- * idle      two vote buttons side by side, avatars on the top edge
+ * idle      two vote buttons side by side, each player a small avatar beside the name (founder, 16 Oct: compact,
+ *           easy to read; the tournament and where it is played sit once above the run of cards)
  * revealed  the pick gets an ink border and a jpop, lime fills grow to the split, percentages pop in
  * folded    1100ms after the tap (as in the prototype, whatever the network took), and never before the
  *           fills finish growing: one row, lime under the pick, ✓ and both percentages
@@ -226,16 +227,19 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
         onPressOut={press.onPressOut}
       >
         <Animated.View style={press.style}>
-          <Animated.View style={[styles.vb, doubles && styles.vbDbl, box]}>
+          <Animated.View style={[styles.vb, box]}>
             <Animated.View style={[styles.fill, fillStyle]} />
             {/* always mounted: Reanimated (web) does not animate a view that appears mid-flight */}
-            <Animated.Text style={[styles.pct, doubles && styles.pctDbl, pctStyle]}>{pct === null ? '' : `${pct}%`}</Animated.Text>
+            <Animated.Text style={[styles.pct, pctStyle]}>{pct === null ? '' : `${pct}%`}</Animated.Text>
             {data.people.map((p, i) => (
-              <View key={i}>
-                <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
-                <Text numberOfLines={1} style={styles.fn}>
-                  {p.first}
-                </Text>
+              <View key={i} style={styles.person}>
+                <Avatar initials={p.initials} look={p.look ?? null} />
+                <View style={styles.names}>
+                  <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
+                  <Text numberOfLines={1} style={styles.fn}>
+                    {p.first}
+                  </Text>
+                </View>
               </View>
             ))}
             {data.level || data.area ? (
@@ -257,18 +261,15 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
           </Animated.View>
         </Animated.View>
       </Pressable>
-      {data.people.map((p, i) => (
-        <Avatar key={i} initials={p.initials} look={p.look ?? null} left={i === 0 ? 8 : 44} />
-      ))}
     </View>
   );
 }
 
 /** the player's drawn avatar when they have an account (founder, 14 Oct); otherwise their initials */
-function Avatar({ initials, look, left }: { initials: string; look: AvatarLook | null; left: number }) {
+function Avatar({ initials, look }: { initials: string; look: AvatarLook | null }) {
   const pop = usePopIn(AVATAR_POP_MS, AVATAR_POP_DELAY);
   return (
-    <Animated.View style={[styles.av, look && styles.avDrawn, { left }, pop]} pointerEvents="none">
+    <Animated.View style={[styles.av, look && styles.avDrawn, pop]} pointerEvents="none">
       {look ? (
         <DrawnAvatar look={look} size={AV_SIZE} />
       ) : (
@@ -332,74 +333,66 @@ function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
   );
 }
 
-/** the avatar disc inside its 2px white ring */
-const AV_SIZE = 40;
+/** the avatar disc beside the name */
+const AV_SIZE = 32;
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
-    borderRadius: 24,
+    padding: 12,
+    borderRadius: 20,
     backgroundColor: cardSurface,
     borderWidth: 1,
     borderColor: colors.mist,
-    gap: 12,
+    gap: 10,
   },
-  meta: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
+  meta: { ...text.meta, fontFamily: fonts.bodyBold },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   metaStack: { gap: 2 },
-  place: { fontFamily: fonts.body, fontSize: 14, lineHeight: 18, color: colors.inkSoft },
+  place: text.meta,
   chip: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   grid: { flexDirection: 'row', gap: 10 },
-  col: { flex: 1, minWidth: 0, paddingTop: 22 },
+  col: { flex: 1, minWidth: 0 },
   vb: {
     overflow: 'hidden',
-    minHeight: 148,
-    paddingTop: 44,
+    paddingVertical: 10,
     paddingHorizontal: 10,
-    paddingBottom: 12,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 2,
     backgroundColor: colors.paper,
-    justifyContent: 'flex-end',
-    gap: 2,
+    gap: 8,
   },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  names: { flex: 1, minWidth: 0 },
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.lime },
+  // the split, in the bottom corner over the lime, while the card waits to fold
   pct: {
     position: 'absolute',
-    right: 12,
-    top: 28,
+    right: 10,
+    bottom: 8,
     fontFamily: fonts.displayHeavy,
-    fontSize: 30,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 22,
     color: colors.ink,
   },
-  // doubles: the two players spread over the whole button instead of piling up at the bottom;
-  // the % moves to the bottom corner so a long first surname never runs under it
-  vbDbl: { paddingTop: 32, justifyContent: 'space-between' },
-  pctDbl: { top: 'auto', bottom: 12, fontSize: 24, lineHeight: 24 },
-  sn: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.ink },
-  snDbl: { fontSize: 25, lineHeight: 25 },
-  // the first name belongs to the name: dark and bold, right under the surname; the facts sit apart, smaller
-  fn: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 20, color: colors.ink },
+  sn: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 24, paddingTop: 4, marginTop: -4, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  snDbl: { fontSize: 21, lineHeight: 21 },
+  // the first name belongs to the name: dark and bold, right under the surname
+  fn: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.ink },
   facts: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   levelPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.sand },
   levelText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
   area: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
   av: {
-    position: 'absolute',
-    top: 0,
-    width: 44,
-    height: 44,
+    width: AV_SIZE,
+    height: AV_SIZE,
     borderRadius: 999,
     backgroundColor: colors.ink,
-    borderWidth: 2,
-    borderColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
+  avText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   avDrawn: { overflow: 'hidden', backgroundColor: colors.paper },
   done: {
     overflow: 'hidden',

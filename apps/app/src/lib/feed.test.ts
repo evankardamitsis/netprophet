@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromPostponedCard, postponedLast, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -79,7 +79,10 @@ describe('fromFeedCard', () => {
 
   it('builds the meta line and both sides', () => {
     const c = fromFeedCard(card(), areas, t, NOW);
-    expect(c.meta).toBe('Σήμερα 18:00 · Open Γλυφάδας · Ημιτελικός');
+    // the tournament heads its run of cards, so the card keeps the time and round
+    expect(c.meta).toBe('Σήμερα 18:00 · Ημιτελικός');
+    expect(c.group?.title).toBe('Open Γλυφάδας');
+    expect(c.place).toBeUndefined();
     expect(c.doubles).toBe(false);
     expect(c.a).toEqual({ people: [{ surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ', look: null }], sub: 'Γλυφάδα', level: null, area: 'Γλυφάδα' }); // players' levels are hidden (14 Oct)
     // unknown area and no level: no sub line
@@ -90,6 +93,7 @@ describe('fromFeedCard', () => {
   it('puts a friendly the prototype way: round text, then the venue', () => {
     const c = fromFeedCard(card({ round: 'Φιλικό', tournament: null }), areas, t, NOW);
     expect(c.meta).toBe('Σήμερα 18:00 · Φιλικό · Γλυφάδα');
+    expect(c.group).toBeUndefined();
   });
 
   it('marks doubles and mixed, stacks partners and joins levels', () => {
@@ -192,7 +196,7 @@ describe('fromResultCard', () => {
 describe('put-off matches', () => {
   it('moved_from adds the «Νέα μέρα» chip and the old day after the time', () => {
     const c = fromFeedCard(card({ moved_from: '2026-10-06T15:30:00Z' }), { glyfada: 'Γλυφάδα' }, t, NOW);
-    expect(c.moved).toEqual({ chip: 'Νέα μέρα', was: '(ήταν Τρι 6/10)', head: 'Σήμερα 18:00', tail: 'Open Γλυφάδας · Ημιτελικός' });
+    expect(c.moved).toEqual({ chip: 'Νέα μέρα', was: '(ήταν Τρι 6/10)', head: 'Σήμερα 18:00', tail: 'Ημιτελικός' });
     expect(fromFeedCard(card(), {}, t, NOW).moved).toBeUndefined();
   });
   const postponed = (over: Partial<FeedPostponedCard> = {}): FeedPostponedCard => ({
@@ -222,5 +226,21 @@ describe('put-off matches', () => {
   it('postponed cards go last, order kept', () => {
     const k = (kind: string, id: string) => ({ kind, id });
     expect(postponedLast([k('postponed', 'a'), k('match', 'b'), k('sponsored', 'c'), k('postponed', 'd'), k('match', 'e')]).map((x) => x.id)).toEqual(['b', 'c', 'e', 'a', 'd']);
+  });
+});
+
+describe('groupHeads', () => {
+  it('heads each run of one tournament once, across ads, and not a friendly', () => {
+    const g = (key: string) => ({ key, title: key, sub: null });
+    const cards = [
+      { kind: 'match', group: g('a') },
+      { kind: 'match', group: g('a') },
+      { kind: 'sponsored' },
+      { kind: 'match', group: g('a') },
+      { kind: 'match', group: g('b') },
+      { kind: 'match' },
+      { kind: 'match', group: g('b') },
+    ];
+    expect([...groupHeads(cards)]).toEqual([0, 4, 6]);
   });
 });

@@ -5,11 +5,11 @@ import { router } from 'expo-router';
 import { useCopy } from '../i18n';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePress, useStgIn } from '../lib/motion';
-import { colors, fonts } from '../theme';
+import { colors, fonts, text } from '../theme';
 
 /**
  * «Το ματς σου» at the top of Σήμερα (founder, 14 Oct: "who is my opponent", and Pro high up): when you play today or
- * tomorrow, the time and the opponent, then «Ο αντίπαλος πριν το ματς ›», the screen's one blue. With Pro it opens
+ * tomorrow, three short lines (when, against whom, the category; founder, 16 Oct: easy to read), then «Ο αντίπαλος πριν το ματς ›», the screen's one blue. With Pro it opens
  * the scouting page; without, the Pro sheet, marked with a small «Pro».
  */
 export function MyMatchCard({ match, pro }: { match: MyMatchView; pro: boolean }) {
@@ -20,7 +20,11 @@ export function MyMatchCard({ match, pro }: { match: MyMatchView; pro: boolean }
   return (
     <Animated.View style={[styles.card, enter]}>
       <Text style={styles.label}>{greekCaps(t.feed.myMatch)}</Text>
-      <Text style={styles.line}>{match.line}</Text>
+      <View style={styles.lines}>
+        <Text style={styles.when}>{match.when}</Text>
+        <Text style={styles.who}>{match.who}</Text>
+        {match.category ? <Text style={styles.category}>{match.category}</Text> : null}
+      </View>
       <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
         <Animated.View style={[styles.cta, press.style]}>
           <Text style={styles.ctaText}>{t.scout.open}</Text>
@@ -37,9 +41,11 @@ export function MyMatchCard({ match, pro }: { match: MyMatchView; pro: boolean }
 
 const styles = StyleSheet.create({
   card: { padding: 18, borderRadius: 24, backgroundColor: colors.ink, gap: 10 },
-  label: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 15, letterSpacing: 0.72, color: colors.mist },
-  // the tonos of a capital needs the padding iOS would otherwise clip
-  line: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 33, paddingBottom: 6, marginBottom: -6, color: colors.paper },
+  label: { ...text.label, color: colors.mist },
+  lines: { gap: 4 },
+  when: { ...text.heading, color: colors.paper },
+  who: { fontFamily: fonts.bodySemi, fontSize: 17, lineHeight: 23, color: colors.paper },
+  category: { ...text.meta, color: colors.mist },
   cta: { minHeight: 48, marginTop: 4, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.blue, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   ctaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
   pro: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.white },

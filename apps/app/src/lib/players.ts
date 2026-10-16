@@ -89,13 +89,24 @@ function nameAcc(p: PlayerRef): string {
     : accusativeName(p.first_name, p.surname, p.gender);
 }
 
-export function nextLine(m: PlayerMatchLine, t: Copy, now: Date): string {
+/**
+ * Your next match in three parts, so «Το ματς σου» can give each its own line (founder, 16 Oct: easy to read):
+ * when («Αύριο 19:30»), who («απέναντι Ανδρέας Γιαννίτσης & Άλεξ Κλουδάς») and the category («-40 · Διπλό»).
+ */
+export function nextParts(m: PlayerMatchLine, t: Copy, now: Date): { when: string; who: string; category: string | null } {
   const label = when(m.starts_at, now, t).label ?? '';
-  const line =
+  const full =
     m.partner.length > 0 || m.opponents.length > 1
-      ? fmt(t.players.nextAgainst, { when: label, names: m.opponents.map(fullName).join(' & ') })
-      : fmt(t.players.nextWith, { when: label, name: m.opponents[0] ? nameAcc(m.opponents[0]) : '' });
-  return [line, categoryLabel(m.level, m.discipline, t)].filter(Boolean).join(' · ');
+      ? fmt(t.players.nextAgainst, { when: '', names: m.opponents.map(fullName).join(' & ') })
+      : fmt(t.players.nextWith, { when: '', name: m.opponents[0] ? nameAcc(m.opponents[0]) : '' });
+  return { when: label, who: full.replace(/^[\s·]+/, ''), category: categoryLabel(m.level, m.discipline, t) };
+}
+
+export function nextLine(m: PlayerMatchLine, t: Copy, now: Date): string {
+  const p = nextParts(m, t, now);
+  const line =
+    m.partner.length > 0 || m.opponents.length > 1 ? [p.when, p.who].filter(Boolean).join(' · ') : [p.when, p.who].filter(Boolean).join(' ');
+  return [line, p.category].filter(Boolean).join(' · ');
 }
 
 export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Copy, now: Date): ProfileView {
