@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BallPerson } from './BallPerson';
 import type { Content } from './content';
 
@@ -229,7 +229,39 @@ function MiniMatch({ meta, sides }: { meta: string; sides: [Side, Side] }) {
   );
 }
 
-/** the personalised feed: your friends' matches first, then your tournament's (founder, 16 Oct: show the feed) */
+/** the day's quiz card: tap an answer, the right one lights up */
+function MiniQuiz({ s }: { s: S }) {
+  const [answer, setAnswer] = useState<number | null>(null);
+  const right = 0;
+  const box = useRef<HTMLDivElement>(null);
+  // the phone's screen scrolls: after an answer, bring the result line into view inside it
+  useEffect(() => {
+    const body = box.current?.parentElement;
+    if (answer !== null && body) body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
+  }, [answer]);
+  return (
+    <div className="ph-mine ph-quiz" ref={box}>
+      <span className="ph-eyebrow">{s.quizLabel}</span>
+      <p className="ph-mine-line">{s.quizQ}</p>
+      {s.quizA.map((a, i) => (
+        <button
+          key={a}
+          type="button"
+          className={answer === null ? '' : i === right ? 'right' : answer === i ? 'wrong' : 'dim'}
+          onClick={() => setAnswer(answer === null ? i : answer)}
+        >
+          {a}
+        </button>
+      ))}
+      {answer !== null ? <p className="ph-quiz-out">{answer === right ? s.quizRight : s.quizWrong}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * the personalised feed: your friends' matches first, then your tournament's, then the day's quiz (founder, 16 Oct:
+ * show the feed, and the quiz under the matches)
+ */
 export function FeedScreen({ s }: { s: S }) {
   const el = s.lang === 'el';
   return (
@@ -251,6 +283,7 @@ export function FeedScreen({ s }: { s: S }) {
           { id: 'f4', name: el ? 'Βολεάδης' : 'Voleadis', first: el ? 'Μάνος' : 'Manos', skin: 0, hair: 'short', colour: 'blonde', pct: 65 },
         ]}
       />
+      <MiniQuiz s={s} />
     </Phone>
   );
 }
