@@ -201,32 +201,56 @@ export function OpponentScreen({ s, live = true }: { s: S; live?: boolean }) {
   );
 }
 
-/** the personalised feed: your friend's match, then the day's question to answer */
-export function FeedScreen({ s }: { s: S }) {
-  const [answer, setAnswer] = useState<number | null>(null);
-  const right = 0;
+type Side = { id: string; name: string; first: string; skin: number; hair: Hair; colour: HairColour; pct: number; tag?: string };
+
+/** one match to call, the feed's way: tap a player and the crowd's split shows */
+function MiniMatch({ meta, sides }: { meta: string; sides: [Side, Side] }) {
+  const [pick, setPick] = useState<0 | 1 | null>(null);
   return (
-    <Phone s={s} label={s.forYou}>
-      <p className="ph-title">{s.today}</p>
-      <div className="ph-card ph-friend">
-        <Face id="f1" skin={3} hair="curly" colour="black" size={40} />
-        <p>{s.friendMatch}</p>
-      </div>
-      <div className="ph-mine ph-quiz">
-        <span className="ph-eyebrow">{s.forYou}</span>
-        <p className="ph-mine-line">{s.quizQ}</p>
-        {s.quizA.map((a, i) => (
+    <div className="ph-card">
+      <p className="ph-meta">{meta}</p>
+      <div className="ph-sides">
+        {sides.map((p, i) => (
           <button
-            key={a}
+            key={p.id}
             type="button"
-            className={answer === null ? '' : i === right ? 'right' : answer === i ? 'wrong' : 'dim'}
-            onClick={() => setAnswer(answer === null ? i : answer)}
+            className={`ph-side${pick === i ? ' picked' : ''}${pick !== null && pick !== i ? ' other' : ''}`}
+            onClick={() => setPick(i as 0 | 1)}
+            aria-pressed={pick === i}
           >
-            {a}
+            <Face id={p.id} skin={p.skin} hair={p.hair} colour={p.colour} size={38} />
+            <b>{p.name}</b>
+            <small>{p.tag ? `${p.first} · ${p.tag}` : p.first}</small>
+            <span className={`ph-pct${pick === null ? ' hidden' : ''}`}>{p.pct}%</span>
           </button>
         ))}
-        {answer !== null ? <p className="ph-quiz-out">{answer === right ? s.quizRight : s.quizWrong}</p> : null}
       </div>
+    </div>
+  );
+}
+
+/** the personalised feed: your friends' matches first, then your tournament's (founder, 16 Oct: show the feed) */
+export function FeedScreen({ s }: { s: S }) {
+  const el = s.lang === 'el';
+  return (
+    <Phone s={s} label={s.feedTitle}>
+      <p className="ph-title">{s.feedTitle}</p>
+      <p className="ph-day">{s.feedFriends}</p>
+      <MiniMatch
+        meta={s.friendMeta}
+        sides={[
+          { id: 'f1', name: el ? 'Σερβίδης' : 'Servidis', first: el ? 'Γιώργος' : 'Giorgos', skin: 3, hair: 'curly', colour: 'black', pct: 57, tag: s.friendTag },
+          { id: 'f2', name: el ? 'Λοβάκης' : 'Lovakis', first: el ? 'Πέτρος' : 'Petros', skin: 1, hair: 'short', colour: 'grey', pct: 43 },
+        ]}
+      />
+      <p className="ph-day">{s.feedTournament}</p>
+      <MiniMatch
+        meta={s.tournamentMeta}
+        sides={[
+          { id: 'f3', name: el ? 'Ντροπσότης' : 'Dropsotis', first: el ? 'Κώστας' : 'Kostas', skin: 2, hair: 'short', colour: 'brown', pct: 35 },
+          { id: 'f4', name: el ? 'Βολεάδης' : 'Voleadis', first: el ? 'Μάνος' : 'Manos', skin: 0, hair: 'short', colour: 'blonde', pct: 65 },
+        ]}
+      />
     </Phone>
   );
 }
