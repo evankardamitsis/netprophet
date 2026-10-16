@@ -1,7 +1,7 @@
 import { colors } from '@netprophet/tokens';
 import { BallPerson } from './BallPerson';
 import { content, type Lang } from './content';
-import { OpponentScreen, ResultsScreen, TodayScreen } from './Screens';
+import { FeedScreen, OpponentScreen, ResultsScreen, TodayScreen } from './Screens';
 import { Shell } from './Shell';
 
 /** the four sports' balls hopping on the hero's court, like the app's first screen */
@@ -47,13 +47,13 @@ export function Home({ lang }: { lang: Lang }) {
             {/* the three answers, fanned out */}
             <div className="fan">
               <div className="fan-l">
-                <ResultsScreen s={c.screens} />
+                <ResultsScreen s={c.screens} live={false} />
               </div>
               <div className="fan-r">
-                <OpponentScreen s={c.screens} />
+                <OpponentScreen s={c.screens} live={false} />
               </div>
               <div className="fan-c">
-                <TodayScreen s={c.screens} />
+                <TodayScreen s={c.screens} live={false} />
               </div>
             </div>
           </div>
@@ -80,13 +80,33 @@ export function Home({ lang }: { lang: Lang }) {
               </div>
               <div className="shot">
                 <Screen s={c.screens} />
+                <span className="try">{c.screens.tapHint}</span>
               </div>
             </div>
           </section>
         );
       })}
 
-      <section className="dark game">
+      <section id={c.feed.id} className="dark">
+        <div className="wrap question flip">
+          <div>
+            <p className="eyebrow">{c.feed.eyebrow}</p>
+            <h2 className="display">{c.feed.title}</h2>
+            <p className="lead">{c.feed.line}</p>
+            <ul className="ticks">
+              {c.feed.points.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="shot">
+            <FeedScreen s={c.screens} />
+            <span className="try">{c.screens.tapHint}</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="game">
         <div className="wrap">
           <p className="eyebrow">{c.game.eyebrow}</p>
           <h2 className="display">{c.game.title}</h2>
@@ -102,7 +122,7 @@ export function Home({ lang }: { lang: Lang }) {
         </div>
       </section>
 
-      <section>
+      <section className="dark">
         <div className="wrap">
           <h2 className="display">{c.more.title}</h2>
           <div className="grid3">
@@ -116,7 +136,7 @@ export function Home({ lang }: { lang: Lang }) {
         </div>
       </section>
 
-      <section className="dark">
+      <section>
         <div className="wrap player">
           <div>
             <p className="eyebrow">{c.player.eyebrow}</p>
@@ -133,23 +153,27 @@ export function Home({ lang }: { lang: Lang }) {
         </div>
       </section>
 
-      <section>
+      <section className="dark">
         <div className="wrap pro">
           <div>
             <p className="eyebrow">{c.pro.eyebrow}</p>
             <h2 className="display">{c.pro.title}</h2>
+            <p className="lead">{c.pro.line}</p>
             <p className="price">{c.pro.price}</p>
             <p className="lead">{c.pro.note}</p>
           </div>
           <ul>
             {c.pro.items.map((i) => (
-              <li key={i}>{i}</li>
+              <li key={i.title}>
+                <b>{i.title}</b>
+                <span>{i.line}</span>
+              </li>
             ))}
           </ul>
         </div>
       </section>
 
-      <section className="dark">
+      <section>
         <div className="wrap faq">
           <h2 className="display">{c.faq.title}</h2>
           {c.faq.items.map((f) => (
@@ -161,7 +185,7 @@ export function Home({ lang }: { lang: Lang }) {
         </div>
       </section>
 
-      <section className="close">
+      <section className="close dark">
         <div className="wrap">
           <h2 className="display">{c.close.title}</h2>
           <p>{c.close.line}</p>

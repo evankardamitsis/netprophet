@@ -27,9 +27,10 @@ describe('the site copy', () => {
   it('has the same shape in both languages', () => {
     expect(en.questions.map((q) => q.points.length)).toEqual(el.questions.map((q) => q.points.length));
     expect(en.game.steps).toHaveLength(el.game.steps.length);
+    expect(en.feed.points).toHaveLength(el.feed.points.length);
+    expect(en.pro.items).toHaveLength(el.pro.items.length);
     expect(en.more.items).toHaveLength(el.more.items.length);
     expect(en.faq.items).toHaveLength(el.faq.items.length);
-    expect(en.pro.items).toHaveLength(el.pro.items.length);
     expect(privacy.en.sections).toHaveLength(privacy.el.sections.length);
     expect(support.en.sections).toHaveLength(support.el.sections.length);
   });
