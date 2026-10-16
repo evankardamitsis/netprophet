@@ -408,7 +408,7 @@ export const en: Copy = {
       toNextOne: '1 more point to level {next}',
     },
     streak: 'streak',
-    best: 'Best: {n}',
+    best: 'best {n}',
     monthPoints: 'points this month',
     hands: { R: 'right hand', L: 'left hand' },
     sports: { tennis: 'tennis', padel: 'padel' },
@@ -863,6 +863,7 @@ export const en: Copy = {
     mineWhat: '{tournament} · {level}',
     alerts: {
       title: 'Alerts for your matches',
+      short: 'Draw, time and reminders, on your phone.',
       lines: ['The moment the draw is out', 'Your day and time, and every change', 'A reminder the evening before and 2 hours before'],
       cta: 'Turn them on with Pro ›',
       on: '✓ Your alerts are on',
