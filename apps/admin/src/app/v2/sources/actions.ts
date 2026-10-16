@@ -135,6 +135,9 @@ export async function resolveReview(id: string, decision: ReviewDecision): Promi
     if (e instanceof Error && e.message.includes('same_player_twice')) {
       return { ok: false, message: 'The same player is picked twice on this match. Give each person their own answer.' };
     }
+    if (e instanceof Error && e.message.includes('person_unresolved')) {
+      return { ok: false, message: 'A place on this match has no name on the sheet. Fix the sheet (the next update picks it up) or skip this match.' };
+    }
     return fail(e);
   }
 }
