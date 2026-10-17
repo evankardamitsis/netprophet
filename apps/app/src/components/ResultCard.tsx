@@ -10,6 +10,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useCopy } from '../i18n';
+import { useMyBaller } from '../lib/data';
+import { Baller, type BallerHandle } from './Baller';
 import type { CardResult } from '../lib/feed';
 import { useHud } from '../lib/hud';
 import { runPop, usePopIn, usePress } from '../lib/motion';
@@ -19,6 +21,7 @@ import { colors, ease, fonts, motion } from '../theme';
  * A result back at the top of the feed (prototype «rq» card and rqApply):
  * right call  ink card pops in; «+10» and «+1» fly to the header at 350ms; the header applies at 1080ms
  * wrong call  lighter card shakes; the header applies at 250ms (σερί falls, or frosts when a freeze saved it)
+ * Your Baller is on the card (founder, 17 Oct): it jumps with your win effect when you called it, sighs when not.
  * `delay` holds the whole sequence back (the first card of a batch waits 450ms, the next ones 0).
  */
 const FLY_AT = 350;
@@ -30,6 +33,8 @@ const GLYPH_DELAY = 150;
 const WIN_DELAY = 200;
 const PILL_MS = 700;
 const PILL_DELAY = 450;
+/** your Baller in the card's corner */
+const BALLER = 92;
 
 interface Props {
   card: CardResult;
@@ -44,6 +49,8 @@ export function ResultCard({ card, more, delay, onDone }: Props) {
   const hud = useHud();
   const self = useRef<View>(null);
   const press = usePress();
+  const me = useMyBaller();
+  const baller = useRef<BallerHandle>(null);
 
   // entrance: pop (right) or rvshake (wrong)
   const scale = useSharedValue(card.ok ? 0.4 : 1);
@@ -64,6 +71,7 @@ export function ResultCard({ card, more, delay, onDone }: Props) {
   // the header's moment
   useEffect(() => {
     const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => baller.current?.play(card.ok ? 'jump' : 'sigh'), delay + (card.ok ? FLY_AT : APPLY_WRONG_AT)));
     if (card.ok) {
       timers.push(setTimeout(() => hud.fly(self, card.points, true), delay + FLY_AT));
       timers.push(setTimeout(() => apply(), delay + APPLY_OK_AT));
@@ -93,6 +101,11 @@ export function ResultCard({ card, more, delay, onDone }: Props) {
       collapsable={false}
       style={[styles.card, { backgroundColor: card.ok ? colors.ink : colors.inkRaised }, cardStyle]}
     >
+      {me.look ? (
+        <View style={styles.baller} pointerEvents="box-none">
+          <Baller ref={baller} look={me.look} size={BALLER} kit={me.kit} gear={me.gear} effect={card.ok ? me.effect : null} pokeable />
+        </View>
+      ) : null}
       <View style={styles.top}>
         <Animated.Text style={[styles.glyph, { color: card.ok ? colors.lime : colors.mist }, glyph]}>
           {card.ok ? '✓' : '↓'}
@@ -138,11 +151,12 @@ function useMeIn(delay: number) {
 
 const styles = StyleSheet.create({
   card: { padding: 18, borderRadius: 24, gap: 8 },
+  baller: { position: 'absolute', top: 10, right: 10, zIndex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   glyph: { fontFamily: fonts.displayHeavy, fontSize: 56, lineHeight: 56, paddingBottom: 11, marginBottom: -22, minWidth: 36 },
   chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999 },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  winner: { gap: 2 },
+  winner: { gap: 2, paddingRight: BALLER - 10 },
   winSurname: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 40, paddingBottom: 8, marginBottom: -10, color: colors.paper },
   winFirst: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 18, color: colors.mist },
   line: { fontFamily: fonts.bodySemi, fontSize: 15, color: colors.mist },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -6,17 +6,23 @@ import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import { celebrationTitleSize, groupView } from '../lib/celebrate';
+import { useMyBaller } from '../lib/data';
 import { colors, ease, fonts, motion } from '../theme';
+import { Baller, type BallerHandle } from './Baller';
 
 /**
  * A full-screen celebration (prototype V2 celOn), waiting for «Συνέχεια»: ink with a lime glow, 30 pieces of
  * confetti bursting from the middle, «ΣΕΡΙ», the lime pill counting up to the σερί, the title, the reward line and,
- * at 3.5s, the blue «Συνέχεια». Quests use the same moment without the pill (all queued quests as one); a badge shows its name and three tier dots that fill one by one. There is no avatar yet, so the prototype's avatar stage is left out.
+ * at 3.5s, the blue «Συνέχεια». Quests use the same moment without the pill (all queued quests as one); a badge shows its name and three tier dots that fill one by one. Your Baller stars in it
+ * (founder, 17 Oct): it drops in, waves and jumps with your win effect.
  */
 const DIM_MS = 600;
 const COUNT_MS = 1100;
 const BURST_MS = 1000;
 const CONFETTI = [colors.lime, colors.paper, colors.lime, colors.leaf];
+/** your Baller on the stage, and when it jumps */
+const BALLER = 150;
+const JUMPS_AT = [1100, 2300];
 
 export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
@@ -35,6 +41,12 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
   const title = useSlam(600, 1000);
   const reward = useMeIn(600, 2900);
   const cta = useMeIn(500, 3500);
+  const me = useMyBaller();
+  const baller = useRef<BallerHandle>(null);
+  useEffect(() => {
+    const ids = JUMPS_AT.map((at) => setTimeout(() => baller.current?.play('jump'), at));
+    return () => ids.forEach(clearTimeout);
+  }, []);
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onDone}>
@@ -51,6 +63,7 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
         </Svg>
         <Burst x={width / 2} y={height * 0.46} />
         <View style={styles.middle}>
+          {me.look ? <Baller ref={baller} look={me.look} size={BALLER} kit={me.kit} gear={me.gear} frame={me.frame} effect={me.effect} enter="drop" /> : null}
           <Animated.Text style={[styles.label, label]}>{v.label}</Animated.Text>
           {v.streak !== null ? (
             <Animated.View style={[styles.pill, pill]}>

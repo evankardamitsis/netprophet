@@ -451,6 +451,8 @@ export const en: Copy = {
       all: 'See all players ›',
     },
     settings: 'Settings',
+    sounds: 'Sounds',
+    soundsLine: 'Little sounds from your Baller. Quiet when your phone is on silent.',
     error: 'It did not load. Pull down to try again.',
   },
   pro: {

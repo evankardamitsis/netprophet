@@ -13,6 +13,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import type { AvatarLook } from '../lib/avatar';
 import { nextPoke } from '../lib/baller';
+import { playSound } from '../lib/sound';
 import { BallArt, Confetti, type Mouth } from './Avatar';
 
 /**
@@ -138,6 +139,7 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
         case 'jump':
           face('open', 950);
           buzz('medium');
+          playSound('cheer');
           squish([[0.84, 90], [1.12, 170], [0.88, 330], [1, 220]]);
           lift.value = withSequence(withTiming(size * 0.38, { duration: 260, easing: out }), withTiming(0, { duration: 330, easing: Easing.in(Easing.quad) }), withTiming(size * 0.06, { duration: 120, easing: out }), withTiming(0, { duration: 140 }));
           tilt.value = withSequence(withTiming(-8, { duration: 260 }), withTiming(0, { duration: 420 }));
@@ -147,6 +149,7 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
           break;
         case 'hop':
           buzz('light');
+          playSound('pop');
           lift.value = withSequence(withTiming(size * 0.12, { duration: 140, easing: out }), withTiming(0, { duration: 220, easing: Easing.bounce }));
           break;
         case 'spin':
@@ -157,11 +160,13 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
         case 'squash':
           face('open', 380);
           buzz('light');
+          playSound('squeak');
           squish([[0.74, 90], [1.08, 150], [0.97, 120], [1, 120]]);
           break;
         case 'sigh':
           face('sad', 1500);
           buzz('soft');
+          playSound('aw');
           lift.value = withSequence(withTiming(-size * 0.06, { duration: 380, easing: out }), withTiming(0, { duration: 620, easing: Easing.inOut(Easing.sin) }));
           squish([[0.9, 380], [1, 620]]);
           break;
@@ -173,6 +178,7 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
           setDizzy(true);
           face('open', 1500);
           buzz('rigid');
+          playSound('squeak');
           tilt.value = withSequence(withRepeat(withSequence(withTiming(12, { duration: 120 }), withTiming(-12, { duration: 120 })), 5), withTiming(0, { duration: 160 }));
           later(1500, () => setDizzy(false));
           break;
@@ -186,7 +192,10 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
           );
           sy.value = withSequence(withTiming(1.08, { duration: 420 }), withTiming(0.78, { duration: 80 }), withTiming(1.06, { duration: 160 }), withTiming(1, { duration: 180 }));
           sx.value = withSequence(withTiming(0.94, { duration: 420 }), withTiming(1.22, { duration: 80 }), withTiming(0.96, { duration: 160 }), withTiming(1, { duration: 180 }));
-          later(420, () => buzz('medium'));
+          later(420, () => {
+            buzz('medium');
+            playSound('pop');
+          });
           swing([[900, true], [1100, false], [1300, true], [1600, false]]);
           break;
       }
