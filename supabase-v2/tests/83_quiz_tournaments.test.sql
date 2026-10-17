@@ -41,7 +41,8 @@ select is(((:'rec'::jsonb -> 'ids') ->> ((:'rec'::jsonb -> 'content' ->> 'right'
 select tests.login(:'u'::uuid);
 create temp table q as select api.get_quiz() as doc;
 grant select on q to public;
-select ok((select c -> 'content' ->> 'q' like 'Quiz Open%' from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 4),
+-- any tournament that is on (the seed has one too), as «Τουρνουά» or «Θυμάσαι;»
+select ok((select c -> 'content' ->> 'tag' in ('Τουρνουά', 'Θυμάσαι;') from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 4),
           'position 4: a tournament card');
 select is((select string_agg(c ->> 'family', '' order by (c ->> 'position')::int) from q, jsonb_array_elements(doc -> 'cards') c
             where (c ->> 'position')::int in (2, 4, 6)), 'ddd', 'three of six come from real matches');
