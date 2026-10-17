@@ -494,7 +494,7 @@ export const en: Copy = {
     },
     title: 'Pro',
     price: '{price} a month',
-    features: ['Your tournaments, with alerts', 'The draw, the moment it is out', 'Your matches: day, time, changes', 'Your opponent before the match', 'Your next tournament', 'Your stats'],
+    features: ['Your tournaments, with alerts', 'The draw, the moment it is out', 'Your matches: day, time, changes', 'Your opponent before the match', 'Your stats'],
     join: 'Become a member',
     notNow: 'Not now',
     close: 'Close',
