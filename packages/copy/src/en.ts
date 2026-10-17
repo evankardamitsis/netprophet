@@ -814,6 +814,8 @@ export const en: Copy = {
       failed: 'Not saved. Try again.',
     },
     edit: 'Your Baller',
+    rename: 'Rename',
+    save: 'Save',
     share: {
       open: 'Share ›',
       title: 'Share your Baller',

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +14,8 @@ import { Baller, type BallerHandle } from './Baller';
  * «Γνώρισε τον Baller σου» (founder, 17 Oct: full-screen presentations, Baller as the trademark). Baller drops in and
  * waves; swipe it or use ‹ › to try the twelve styles, each change a spin; then «Πώς τον λένε;» with a name ready.
  * «Συνέχεια» (the screen's one blue) saves the style and the name, Baller jumps, and the screen hands back.
+ * Opened again for a Baller that has a name (founder, 17 Oct), there is nothing to confirm: a new style saves as you
+ * pick it, the name stays as it is with «Μετονομασία», and only renaming shows a blue «Αποθήκευση».
  * Used at the end of onboarding and from the profile.
  */
 const SIZE = 210;
@@ -51,8 +53,47 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
   const [value, setValue] = useState(name ?? suggestedName(userId, lang));
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // a Baller with a name: no «Συνέχεια», style saves on its own, the field opens only to rename
+  const [profile] = useState(name !== null);
+  const [saved, setSaved] = useState(name);
+  const [renaming, setRenaming] = useState(name === null);
   const press = usePress();
+  const rename = usePress();
   const style = DEFAULT_AVATARS[i]!;
+  const savedStyle = useRef(current?.key ?? null);
+
+  // on the profile a picked style is kept a moment after the last swipe
+  useEffect(() => {
+    if (!profile || style.key === savedStyle.current) return undefined;
+    const timer = setTimeout(() => {
+      void pickAvatar(style.key).then((ok) => {
+        if (ok) savedStyle.current = style.key;
+        else setProblem(b.problems.failed);
+      });
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [profile, style.key, pickAvatar, b.problems.failed]);
+
+  /** «Αποθήκευση»: the new name, then the field closes and Baller jumps */
+  const saveRename = async () => {
+    const p = nameProblem(value);
+    if (p) {
+      setProblem(b.problems[p]);
+      return;
+    }
+    const clean = cleanName(value);
+    setBusy(true);
+    setProblem(null);
+    const r = clean === saved ? 'ok' : await saveName(clean);
+    setBusy(false);
+    if (r !== 'ok') {
+      setProblem(r === 'notAllowed' ? b.problems.notAllowed : r === 'bad' ? b.problems.chars : b.problems.failed);
+      return;
+    }
+    setSaved(clean);
+    setRenaming(false);
+    baller.current?.play('jump');
+  };
 
   const step = (d: number) => {
     setI((n) => (n + d + DEFAULT_AVATARS.length) % DEFAULT_AVATARS.length);
@@ -104,7 +145,7 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
           </Pressable>
         ) : null}
         <View style={styles.head}>
-          <Text style={styles.title}>{b.meet}</Text>
+          <Text style={styles.title}>{profile ? b.edit : b.meet}</Text>
           <Text style={styles.sub}>{b.meetSub}</Text>
         </View>
 
@@ -119,6 +160,19 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
         <Text style={styles.swipe}>{b.swipe}</Text>
 
         <View style={styles.name}>
+          {!renaming && saved ? (
+            <View style={styles.named}>
+              <Text style={styles.namedText} numberOfLines={1}>
+                {saved}
+              </Text>
+              <Pressable accessibilityRole="button" onPress={() => setRenaming(true)} onPressIn={rename.onPressIn} onPressOut={rename.onPressOut} hitSlop={8}>
+                <Animated.View style={[styles.renamePill, rename.style]}>
+                  <Text style={styles.renameText}>{b.rename}</Text>
+                </Animated.View>
+              </Pressable>
+            </View>
+          ) : (
+            <>
           <Text style={styles.nameTitle}>{b.nameTitle}</Text>
           <TextInput
             value={value}
@@ -130,18 +184,24 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
             autoCapitalize="words"
             autoCorrect={false}
             returnKeyType="done"
-            onSubmitEditing={() => void go()}
+            onSubmitEditing={() => void (profile ? saveRename() : go())}
+            autoFocus={profile}
             style={styles.input}
             accessibilityLabel={b.nameTitle}
           />
           <Text style={problem ? styles.problem : styles.hint}>{problem ?? b.nameHint}</Text>
+            </>
+          )}
+          {!renaming && problem ? <Text style={styles.problem}>{problem}</Text> : null}
         </View>
 
-        <Pressable accessibilityRole="button" disabled={busy} onPress={() => void go()} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-          <Animated.View style={[styles.cta, busy && styles.ctaBusy, press.style]}>
-            <Text style={styles.ctaText}>{busy ? b.saving : b.go}</Text>
-          </Animated.View>
-        </Pressable>
+        {!profile || renaming ? (
+          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void (profile ? saveRename() : go())} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+            <Animated.View style={[styles.cta, busy && styles.ctaBusy, press.style]}>
+              <Text style={styles.ctaText}>{busy ? b.saving : profile ? b.save : b.go}</Text>
+            </Animated.View>
+          </Pressable>
+        ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -176,6 +236,10 @@ const styles = StyleSheet.create({
   swipe: { ...text.meta, color: colors.mist, textAlign: 'center', marginTop: -8 },
   name: { gap: 8 },
   nameTitle: { ...text.heading, color: colors.paper },
+  named: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  namedText: { ...text.heading, flex: 1, color: colors.paper },
+  renamePill: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1.5, borderColor: colors.inkLine },
+  renameText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper },
   input: {
     minHeight: 54,
     paddingHorizontal: 16,
