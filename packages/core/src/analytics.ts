@@ -24,6 +24,8 @@ export interface AnalyticsEvents {
   reaction_set: { key: string | null };
   report_sent: { kind: 'match' | 'player'; reason: string };
   user_blocked: { from: 'match' | 'player' };
+  /** the Baller share card: sent as a picture, or as text where pictures cannot go (the web) */
+  baller_shared: { via: 'image' | 'text' };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

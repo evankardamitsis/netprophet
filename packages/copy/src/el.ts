@@ -878,6 +878,20 @@ export const el = {
       failed: 'Δεν αποθηκεύτηκε. Ξαναδοκίμασε.',
     },
     edit: 'Ο Baller σου',
+    /** the share card (drafts for the founder) */
+    share: {
+      open: 'Μοιράσου ›',
+      title: 'Μοιράσου τον Baller σου',
+      sub: 'Στείλ’ τον στην παρέα ή βάλ’ τον στο story σου.',
+      send: 'Στείλ’ τον',
+      making: 'Ετοιμάζεται…',
+      failed: 'Δεν έφυγε. Ξαναδοκίμασε.',
+      level: 'level',
+      streak: 'σερί',
+      points: 'πόντοι μήνα',
+      message: 'Γνώρισε τον {name}, τον Baller μου στο NetProphet. Φτιάξε τον δικό σου: {url}',
+      messageNoName: 'Γνώρισε τον Baller μου στο NetProphet. Φτιάξε τον δικό σου: {url}',
+    },
   },
   look: {
     title: 'Εμφάνιση',
