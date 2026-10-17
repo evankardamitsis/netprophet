@@ -131,8 +131,10 @@ export function parseSheet(tabs: TabInput[], seasonStartYear: number): SheetMatc
       let discipline = cat.discipline;
       cat.flags.forEach((x) => f.add(x));
       if (!g('c')) f.add('category_missing');
-      const a = parseSheetSide(p1);
-      const b = parseSheetSide(p2);
+      // a doubles category, or the other side written with «/»: two words on a side are two players
+      const doubles = discipline === 'MD' || discipline === 'WD' || discipline === 'XD' || p1.includes('/') || p2.includes('/');
+      const a = parseSheetSide(p1, doubles);
+      const b = parseSheetSide(p2, doubles);
       [...a.flags, ...b.flags].forEach((x) => f.add(x));
       if (a.pair !== b.pair) f.add('side_type_mismatch');
       if (a.pair || b.pair) {

@@ -47,6 +47,16 @@ describe('tabs, times, people', () => {
     expect(parseSheetSide('ΓΕΡΟΥ ΑΝΤΩΝΗΣ').people).toEqual([{ surname: 'ΓΕΡΟΥ', first: 'ΑΝΤΩΝΗΣ', key: 'γερου αντωνησ' }]);
     expect(parseSheetSide('PAVEN FLORIAN').flags).toEqual(['latin_name']);
   });
+  it('a doubles side of two words with no «/» is two players (ΑΟΚ, 17 Oct)', () => {
+    const s = parseSheetSide('ΓΕΜΙΔΟΠΟΥΛΟΥ ΦΕΛΕΜΕΓΚΑΣ', true);
+    expect(s.pair).toBe(true);
+    expect(s.people.map((p) => p.surname)).toEqual(['ΓΕΜΙΔΟΠΟΥΛΟΥ', 'ΦΕΛΕΜΕΓΚΑΣ']);
+    expect(s.flags).toContain('pair_by_space');
+    // singles keeps surname and first name
+    expect(parseSheetSide('ΓΕΜΙΔΟΠΟΥΛΟΥ ΦΕΛΕΜΕΓΚΑΣ').people).toHaveLength(1);
+    // three words stay as written: it could be a double surname
+    expect(parseSheetSide('ΠΑΠΑ ΓΙΑΝΝΗΣ ΚΩΣΤΑΣ', true).people).toHaveLength(1);
+  });
   it('matching keys ignore order and formal first names', () => {
     expect(nameKey('ΚΑΡΔΑΜΙΤΣΗΣ ΕΥΑΓΓΕΛΟΣ')).toBe(nameKey('Βαγγέλης Καρδαμίτσης'));
     expect(nameKey('ΕΜΜΑΝΟΥΗΛ ΟΡΕΣΤΗΣ')).toBe(nameKey('ΟΡΕΣΤΗΣ ΕΜΜΑΝΟΥΗΛ'));
