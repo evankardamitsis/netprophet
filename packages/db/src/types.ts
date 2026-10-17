@@ -364,6 +364,10 @@ export type Database = {
         Args: { p_player_ids?: string[]; p_confidence?: string };
         Returns: Json;
       };
+      admin_baller_names: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
       admin_close_report: {
         Args: { p_report_id: string; p_hide: boolean };
         Returns: Json;
@@ -474,6 +478,10 @@ export type Database = {
       };
       admin_rename_player: {
         Args: { p_player_id: string; p_first: string; p_surname: string };
+        Returns: Json;
+      };
+      admin_reset_baller_name: {
+        Args: { p_user: string };
         Returns: Json;
       };
       admin_resolve_dispute: {
@@ -589,6 +597,10 @@ export type Database = {
         Returns: number;
       };
       get_badges: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      get_baller: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
@@ -754,6 +766,10 @@ export type Database = {
       };
       set_avatar: {
         Args: { p_key: string };
+        Returns: Json;
+      };
+      set_baller_name: {
+        Args: { p_name: string };
         Returns: Json;
       };
       set_claim_status: {

@@ -1592,3 +1592,53 @@ export function useMyAvatar(): {
   // keyed on your player when you have one, so the default matches what everyone else sees in their lists
   return { avatar: avatarByKey(picked) ?? defaultAvatarFor(me.player?.id ?? me.user_id, g), picked, pick, refresh };
 }
+
+/** the dev guest's Baller name while the app runs */
+let MOCK_BALLER: string | null = null;
+
+export type BallerSave = 'ok' | 'notAllowed' | 'bad' | 'failed';
+
+/**
+ * Your Baller's name and whether you have met it (founder, 17 Oct). `save` names it; the server refuses rude words
+ * ('notAllowed') and odd shapes ('bad').
+ */
+export function useBaller(): { name: string | null; met: boolean | null; save: (name: string) => Promise<BallerSave>; refresh: () => Promise<void> } {
+  const api = useApi();
+  const [name, setName] = useState<string | null>(api ? null : MOCK_BALLER);
+  const [met, setMet] = useState<boolean | null>(api ? null : MOCK_BALLER !== null);
+  const refresh = useCallback(async () => {
+    if (!api) return;
+    try {
+      const b = await api.getBaller();
+      setName(b.name);
+      setMet(b.met);
+    } catch {
+      // keeps the last one; never offer the meeting on a failed read, but let its screen open
+      setMet((m) => m ?? true);
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  const save = useCallback(
+    async (next: string): Promise<BallerSave> => {
+      if (!api) {
+        MOCK_BALLER = next;
+        setName(next);
+        setMet(true);
+        return 'ok';
+      }
+      try {
+        const r = await api.setBallerName(next);
+        setName(r.name);
+        setMet(true);
+        return 'ok';
+      } catch (e) {
+        const m = e instanceof Error ? e.message : '';
+        return m.includes('name_not_allowed') ? 'notAllowed' : m.includes('bad_name') ? 'bad' : 'failed';
+      }
+    },
+    [api],
+  );
+  return { name, met, save, refresh };
+}

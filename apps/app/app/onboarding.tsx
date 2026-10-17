@@ -15,6 +15,7 @@ import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/
 import { mockLinkView, who } from '../src/lib/link';
 import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
 import { usePress, useStgIn } from '../src/lib/motion';
+import { MeetBallerLive } from '../src/components/MeetBallerLive';
 import { areasOf, introNumber, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type IntroSlide, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
@@ -318,6 +319,16 @@ export default function OnboardingScreen() {
 
   if (!linkChecked) return <View style={styles.screen} />;
   const lp = link?.view.player;
+
+  // «Γνώρισε τον Baller σου» takes the whole screen
+  if (step === 'baller') {
+    return (
+      <>
+        <StatusBar style="light" />
+        <MeetBallerLive onDone={() => go(i + 1)} />
+      </>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

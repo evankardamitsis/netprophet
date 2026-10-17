@@ -99,6 +99,10 @@ function Routes() {
           />
           <Stack.Screen name="quiz" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen
+            name="baller"
+            options={{ presentation: "fullScreenModal", animation: "fade", contentStyle: { backgroundColor: colors.ink } }}
+          />
+          <Stack.Screen
             name="pro"
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />

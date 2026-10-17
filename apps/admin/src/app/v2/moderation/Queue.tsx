@@ -3,7 +3,7 @@ import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
+import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
   match_id: string;
@@ -63,6 +63,14 @@ export interface Moderation {
   traits: PendingTrait[];
 }
 
+/** a name a player gave their Baller (newest first) */
+export interface BallerName {
+  user_id: string;
+  person: string | null;
+  name: string;
+  at: string | null;
+}
+
 export interface TournamentOption {
   id: string;
   name: string;
@@ -110,7 +118,7 @@ function useItemAction({ onNotice, notify }: Cues) {
   return { pending, busy, run, cardClass };
 }
 
-type Tab = 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments';
+type Tab = 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
 
 const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: string }> = {
   reports: {
@@ -143,14 +151,22 @@ const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: 
     hint: 'Typed under «Άλλο». Say which tournament it is, or keep those matches as friendlies.',
     noun: 'names',
   },
+  names: {
+    label: 'Baller names',
+    title: 'Names players gave their Baller',
+    hint: 'Rude words are refused when a name is saved. If one still should not stand, remove it; the player can give a new one.',
+    noun: 'names',
+  },
 };
-const ORDER: Tab[] = ['reports', 'disputes', 'players', 'traits', 'tournaments'];
+const ORDER: Tab[] = ['reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
+/** tabs that wait for a decision; Baller names are only there to look over */
+const WAITING: Tab[] = ['reports', 'disputes', 'players', 'traits', 'tournaments'];
 
 /**
  * The moderation queue: things only a person can decide. Each item is a question with plain buttons.
  * Player-logged matches and names are live at once; this is where staff review them.
  */
-export function Queue({ data, tournaments }: { data: Moderation; tournaments: TournamentOption[] }) {
+export function Queue({ data, tournaments, names }: { data: Moderation; tournaments: TournamentOption[]; names: BallerName[] }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const { toast, notify } = useToast();
   const traits = data.traits ?? [];
@@ -160,9 +176,10 @@ export function Queue({ data, tournaments }: { data: Moderation; tournaments: To
     players: data.players.length,
     traits: traits.length,
     tournaments: data.tournaments.length,
+    names: names.length,
   };
-  const total = ORDER.reduce((n, t) => n + counts[t], 0);
-  const [tab, setTab] = useState<Tab>(() => ORDER.find((t) => counts[t] > 0) ?? 'reports');
+  const total = WAITING.reduce((n, t) => n + counts[t], 0);
+  const [tab, setTab] = useState<Tab>(() => WAITING.find((t) => counts[t] > 0) ?? 'reports');
   const cues: Cues = { onNotice: setNotice, notify };
   const s = SECTIONS[tab];
 
@@ -181,6 +198,8 @@ export function Queue({ data, tournaments }: { data: Moderation; tournaments: To
     body = <Paged key={tab} items={data.players} noun={s.noun} render={(p) => <PlayerRow key={p.player_id} p={p} cues={cues} />} />;
   } else if (tab === 'traits') {
     body = <Paged key={tab} items={traits} noun={s.noun} render={(t) => <TraitRow key={t.id} t={t} cues={cues} />} />;
+  } else if (tab === 'names') {
+    body = <Paged key={tab} items={names} noun={s.noun} render={(n) => <NameRow key={n.user_id} n={n} cues={cues} />} />;
   } else {
     body = <Paged key={tab} items={data.tournaments} noun={s.noun} render={(t) => <SuggestionRow key={t.text} s={t} tournaments={tournaments} cues={cues} />} />;
   }
@@ -196,6 +215,7 @@ export function Queue({ data, tournaments }: { data: Moderation; tournaments: To
           { label: 'new players', value: counts.players },
           { label: 'phrases', value: counts.traits },
           { label: 'tournament names', value: counts.tournaments },
+          { label: 'Baller names', value: counts.names },
         ]}
       />
       {notice ? <Banner {...notice} /> : null}
@@ -512,6 +532,28 @@ function TraitRow({ t, cues }: { t: PendingTrait; cues: Cues }) {
           busy={busy === 'drop'}
           disabled={pending}
           onYes={() => run('drop', what, 'Throwing away', () => decideTrait(t.id, false), 'Phrase dropped')}
+        />
+      </div>
+    </div>
+  );
+}
+
+function NameRow({ n, cues }: { n: BallerName; cues: Cues }) {
+  const { pending, busy, run, cardClass } = useItemAction(cues);
+  return (
+    <div className={cardClass('tight')} aria-busy={pending || undefined}>
+      <div className="v2-row between">
+        <span>
+          <b style={{ fontSize: 18 }}>{n.name}</b>
+          <span className="v2-muted"> · {n.person ?? 'a player'}{n.at ? ` · ${when(n.at)}` : ''}</span>
+        </span>
+        <Confirm
+          label="Remove name"
+          question={`Remove «${n.name}»? The player can give a new one.`}
+          yes="Yes, remove"
+          working="Removing…"
+          busy={busy === 'reset'}
+          onYes={() => run('reset', `«${n.name}»`, 'Removing', () => resetBallerName(n.user_id), 'Name removed')}
         />
       </div>
     </div>
