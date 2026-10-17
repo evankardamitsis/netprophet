@@ -115,7 +115,7 @@ export function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, mouth
       </Defs>
       {bg ? <Rect x={0} y={0} width={100} height={100} fill={bg} /> : null}
       <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
-      {frame ? <FrameRing frame={frame} id={id} /> : null}
+      {frame ? <Ring3D frame={frame} id={`${id}${frame}`} lit={size >= FRAME_LIT_MIN} /> : null}
       {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} raised={raised} /> : null}
       <HairBack style={look.hair} fill={hair} hatOn={gear === 'gear_cap' || gear === 'gear_bandana' || gear === 'gear_bucket' || gear === 'gear_beanie'} />
       <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={skin} />
@@ -161,6 +161,65 @@ export function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, mouth
  */
 const RING = { cx: BALL.cx, cy: BALL.cy, r: 40 };
 const AROUND = 2 * Math.PI * RING.r;
+
+/** below this size a frame is drawn flat: the light would be lost and the ring muddied */
+const FRAME_LIT_MIN = 56;
+/** how wide each ring is, so its light fits it */
+const RING_WIDTH: Record<string, number> = {
+  frame_week: 5,
+  frame_ten: 6,
+  frame_seven: 5,
+  frame_month_top: 6,
+  frame_friends: 6,
+  frame_level: 5,
+  frame_gold: 7,
+  frame_retro: 7,
+  frame_grass: 8,
+  frame_founding: 6,
+};
+
+/**
+ * A frame as a real ring (founder, 17 Oct: "much better 3D"): it casts a soft shadow down and to the right, its
+ * material is drawn as before, then the light from the top left rounds it: a bright face up-left fading to a dark one
+ * down-right, a lit outer rim, a shaded inner rim and a glint at ten o'clock.
+ */
+function Ring3D({ frame, id, lit }: { frame: string; id: string; lit: boolean }) {
+  if (!lit) return <FrameRing frame={frame} id={id} />;
+  const w = RING_WIDTH[frame] ?? 6;
+  const ring = (r: number, width: number, stroke: string, extra: object = {}) => (
+    <Circle cx={RING.cx} cy={RING.cy} r={r} fill="none" stroke={stroke} strokeWidth={width} {...extra} />
+  );
+  const glint = AROUND * 0.07;
+  return (
+    <G>
+      <Defs>
+        <LinearGradient id={`rl${id}`} x1="0.15" y1="0.1" x2="0.85" y2="0.9">
+          <Stop offset="0" stopColor={colors.white} stopOpacity={0.38} />
+          <Stop offset="0.45" stopColor={colors.white} stopOpacity={0.04} />
+          <Stop offset="0.6" stopColor={colors.ink} stopOpacity={0.05} />
+          <Stop offset="1" stopColor={colors.ink} stopOpacity={0.45} />
+        </LinearGradient>
+      </Defs>
+      <G opacity={0.32}>
+        {ring(RING.r, w + 2.5, colors.ink, { transform: [{ translateX: 1.2 }, { translateY: 2 }] })}
+      </G>
+      <FrameRing frame={frame} id={id} />
+      {ring(RING.r, w, `url(#rl${id})`)}
+      {/* round across its width: a lit crest just outside the middle, shade towards the hole */}
+      {ring(RING.r + w * 0.18, w * 0.22, colors.white, { strokeOpacity: 0.18 })}
+      {ring(RING.r - w * 0.3, w * 0.3, colors.ink, { strokeOpacity: 0.22 })}
+      {ring(RING.r + w / 2 - 0.4, 0.8, colors.white, { strokeOpacity: 0.35 })}
+      {ring(RING.r - w / 2 + 0.4, 0.9, colors.ink, { strokeOpacity: 0.4 })}
+      {ring(RING.r + w * 0.15, w * 0.32, colors.white, {
+        strokeOpacity: 0.85,
+        strokeLinecap: 'round',
+        strokeDasharray: `${glint} ${AROUND}`,
+        // the glint sits at ten o'clock: the dash starts at three o'clock and runs clockwise
+        strokeDashoffset: -AROUND * 0.6,
+      })}
+    </G>
+  );
+}
 
 function FrameRing({ frame, id }: { frame: string; id: string }) {
   const f = cosmetics.frame;
