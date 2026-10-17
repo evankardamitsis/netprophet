@@ -460,6 +460,10 @@ export type Database = {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
       };
+      admin_purchases: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
       admin_quiz_preview: {
         Args: { p_email: string; p_day?: string; p_pro?: boolean };
         Returns: Json;
@@ -542,6 +546,10 @@ export type Database = {
       };
       answer_link: {
         Args: { p_token: string; p_answer: string; p_fix?: Json };
+        Returns: Json;
+      };
+      apply_store_event: {
+        Args: { p_event: Json };
         Returns: Json;
       };
       block: {
@@ -744,6 +752,14 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      pro_offer: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      pro_offer_shown: {
+        Args: { p_moment: string };
+        Returns: undefined;
+      };
       react: {
         Args: { p_match_id: string; p_key: string };
         Returns: Json;
@@ -783,6 +799,14 @@ export type Database = {
       set_claim_status: {
         Args: { p_status: string };
         Returns: string;
+      };
+      start_pro_trial: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      store_products: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       suggest_players: {
         Args: { p_limit?: number };

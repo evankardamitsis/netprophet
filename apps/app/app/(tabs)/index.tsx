@@ -19,6 +19,7 @@ import { useCopy } from '../../src/i18n';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import { groupHeads, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
+import { ProNudge } from '../../src/components/ProNudge';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { isUnlock, nextGroup } from '../../src/lib/celebrate';
 import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
@@ -226,6 +227,7 @@ export default function VoteScreen() {
             <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
           </Animated.View>
           {myMatch.match ? <MyMatchCard match={myMatch.match} pro={proState?.pro ?? false} /> : null}
+          {myMatch.match && !proState?.pro ? <ProNudge moment="before_match" /> : null}
           {/* «Για σένα»: the game of the day and the matches to confirm, folded (founder, 13 Oct) */}
           <DailyFold fold={daily}>{forYouItems}</DailyFold>
           {current ? (

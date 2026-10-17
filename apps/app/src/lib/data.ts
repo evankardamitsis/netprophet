@@ -381,7 +381,7 @@ let mockLookState: GetLookResult = mockLook();
 
 export interface LookState {
   look: GetLookResult | null;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<GetLookResult | null>;
   /** wear an item (null: take the frame or background off); on screen at once, undone if the server refuses. True when it stuck. */
   equip: (category: LookCategory, key: string | null) => Promise<boolean>;
 }
@@ -389,15 +389,18 @@ export interface LookState {
 export function useLook(): LookState {
   const api = useApi();
   const [look, setLook] = useState<GetLookResult | null>(api ? null : mockLookState);
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<GetLookResult | null> => {
     if (!api) {
       setLook(mockLookState);
-      return;
+      return mockLookState;
     }
     try {
-      setLook(await api.getLook());
+      const fresh = await api.getLook();
+      setLook(fresh);
+      return fresh;
     } catch {
       // keep what is on screen
+      return null;
     }
   }, [api]);
   useEffect(() => {

@@ -23,3 +23,37 @@ export function activeLine(state: ProState, t: Copy): string | null {
   const d = new Date(end);
   return fmt(t.pro.activeUntil, { date: `${d.getDate()}/${d.getMonth() + 1}` });
 }
+
+/** «49,99€» from euros */
+export function euro(n: number): string {
+  const cents = Math.round(n * 100);
+  return proPrice(cents);
+}
+
+export interface PlanCard {
+  productId: string;
+  title: string;
+  /** «49,99€» */
+  price: string;
+  /** «ο πρώτος χρόνος · μέχρι 31/12» */
+  note: string;
+  /** «4,17€ τον μήνα» for a yearly plan */
+  perMonth: string | null;
+  /** the yearly or founding plan carries «Καλύτερη τιμή» */
+  best: boolean;
+}
+
+/** the plans as the Pro screen shows them: the yearly (or founding) first, then the monthly */
+export function planCards(plans: { product_id: string; price: number; period: 'month' | 'year' }[], t: Copy): PlanCard[] {
+  const p = t.pro.plans;
+  return [...plans]
+    .sort((a, b) => (a.period === b.period ? 0 : a.period === 'year' ? -1 : 1))
+    .map((x) => ({
+      productId: x.product_id,
+      title: p[x.product_id as 'pro_monthly' | 'pro_yearly' | 'pro_founding'] ?? x.product_id,
+      price: euro(x.price),
+      note: x.product_id === 'pro_founding' ? p.foundingNote : x.period === 'year' ? p.yearlyNote : p.monthlyNote,
+      perMonth: x.period === 'year' ? fmt(p.perMonth, { price: euro(Math.round((x.price / 12) * 100) / 100) }) : null,
+      best: x.period === 'year',
+    }));
+}
