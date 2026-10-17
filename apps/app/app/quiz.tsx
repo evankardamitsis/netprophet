@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { ProNudge } from '../src/components/ProNudge';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -206,6 +207,7 @@ function End({
           </View>
         </View>
       ) : null}
+      {!quiz.pro ? <ProNudge moment="quiz" /> : null}
       <Primary label={e.toVotes} onPress={onDone} tall />
       {showLadder ? (
         <Pressable accessibilityRole="button" onPress={() => router.replace('/ladder')} style={styles.linkHit}>

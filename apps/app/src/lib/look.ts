@@ -80,22 +80,24 @@ export function ctaOf(tile: Tile, look: GetLookResult, t: Copy): Cta {
 }
 
 export interface BuySheet {
+  /** the item's key; its store product is `cos_<key>` */
+  key: string;
   title: string;
   price: string;
   line: string;
   note: string;
 }
 
-/** the sheet behind «Αγόρασε · 1,99 €»: price and words only, there is no purchase yet */
+/** the sheet behind «Αγόρασε · 1,99 €»: the item, its price and words; the store product is `cos_<key>` */
 export function buySheetOf(item: LookItem, t: Copy): BuySheet | null {
   if (item.price_eur === null) return null;
   const s = t.look.sheet;
   const price = fmt(t.look.priceSpaced, { price: eur(item.price_eur) });
-  if (item.category === 'kit') return { title: s.kit, price, line: s.lineKit, note: s.noteKit };
-  if (item.category === 'frame') return { title: fmt(s.frame, { name: itemName(item) }), price, line: s.lineFrame, note: s.noteFrame };
-  if (item.category === 'gear') return { title: fmt(s.gear, { name: itemName(item) }), price, line: s.lineGear, note: s.noteGear };
-  if (item.category === 'win_effect') return { title: fmt(s.effect, { name: itemName(item) }), price, line: s.lineEffect, note: s.noteEffect };
-  return { title: fmt(s.background, { name: itemName(item) }), price, line: s.lineBackground, note: s.noteBackground };
+  if (item.category === 'kit') return { key: item.key, title: s.kit, price, line: s.lineKit, note: s.noteKit };
+  if (item.category === 'frame') return { key: item.key, title: fmt(s.frame, { name: itemName(item) }), price, line: s.lineFrame, note: s.noteFrame };
+  if (item.category === 'gear') return { key: item.key, title: fmt(s.gear, { name: itemName(item) }), price, line: s.lineGear, note: s.noteGear };
+  if (item.category === 'win_effect') return { key: item.key, title: fmt(s.effect, { name: itemName(item) }), price, line: s.lineEffect, note: s.noteEffect };
+  return { key: item.key, title: fmt(s.background, { name: itemName(item) }), price, line: s.lineBackground, note: s.noteBackground };
 }
 
 /** wear `key` (null: take it off) right away, before the server answers */

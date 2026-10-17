@@ -633,9 +633,22 @@ export interface Scout {
 /** The Pro screen (api.get_pro). Pro belongs to the account, whichever platform paid for it. */
 export interface ProState {
   pro: boolean;
-  current: { source: 'subscription' | 'gift' | 'promo' | 'migration'; starts_at: string; ends_at: string | null } | null;
+  current: { source: 'subscription' | 'gift' | 'promo' | 'migration' | 'trial'; starts_at: string; ends_at: string | null } | null;
   /** pressed «Γίνε μέλος» while checkout was not live */
   waitlisted: boolean;
+}
+
+export type ProOfferMoment = 'draw' | 'before_match' | 'after_loss' | 'quiz' | 'me';
+
+/** api.pro_offer: the plans to show, the free week, and whether an offer may show now (one a day, not in the first days) */
+export interface ProOffer {
+  pro: boolean;
+  trial_available: boolean;
+  on_trial: boolean;
+  /** «2026-12-31» while the founding price is on */
+  founding_until: string | null;
+  plans: { product_id: 'pro_monthly' | 'pro_yearly' | 'pro_founding'; price: number; period: 'month' | 'year' }[];
+  can_offer: boolean;
 }
 
 /** A tournament for the «+ Ματς» picker (api.list_tournaments: active, not long finished). */

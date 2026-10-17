@@ -7,7 +7,7 @@ import { Quiz } from './Quiz';
 
 export const dynamic = 'force-dynamic';
 
-/** Quiz bank (api.admin_quiz_templates, admin_save_quiz_template, admin_quiz_preview): the templates behind «Οι 6 της ημέρας». */
+/** Quiz bank (api.admin_quiz_templates, admin_save_quiz_template, admin_quiz_preview): the templates behind «Οι ερωτήσεις της ημέρας». */
 export default async function QuizPage() {
   if (!v2Configured) {
     return (

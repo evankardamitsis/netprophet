@@ -107,3 +107,10 @@ PRs add at most one new file after the baseline: `YYYYMMDDHHMMSS_short_name.sql`
 ## Deliberately not here yet
 
 Ingestion tables (`ingest_*`), `products`/`purchases`, `daily_sets`, `regions` (areas carry a `region` column instead), `blocks`/`reports`, `moderation_queue`, `audit_log`, `player_aliases`, `h2h`/`partnerships`, `push_tokens`, email tables, and the jobs (pg_cron: match status, month close, nightly levels). Quest, badge and unlock progress tables exist but their engine is a later milestone. See the notes in the final section of `migration-from-v1.md` and the PR description for decisions that need the founder.
+
+## Edge functions
+
+- `revenuecat-webhook`: every purchase event from RevenueCat (Stripe on the web, Google Play, later Apple) goes to
+  `api.apply_store_event`. Deploy: `supabase --workdir .supabase-v2 functions deploy revenuecat-webhook --no-verify-jwt`.
+  Secret (set in Supabase by the founder, never in the repo): `REVENUECAT_WEBHOOK_SECRET`, the same value as the
+  Authorization header in RevenueCat › Integrations › Webhooks.
