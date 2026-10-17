@@ -25,6 +25,9 @@ const tas = P('tas', 'Γιώργος', 'Μέμμος');
 const lef = P('lef', 'Γιώργος', 'Χαμάμης');
 const man = P('man', 'Μάνος', 'Γκίκας');
 const tho = P('tho', 'Θοδωρής', 'Νάκος');
+/** the guest's own player (as in mock/me), so a sample win can have its card */
+export const MOCK_ME_PLAYER = 'me';
+const me = P(MOCK_ME_PLAYER, 'Βαγγέλης', 'Καρδαμίτσης');
 
 const S = (w: number, l: number, extra: Partial<SetScore> = {}): SetScore => ({ w, l, ...extra });
 
@@ -70,6 +73,7 @@ const SEEDS: Seed[] = [
   { id: 'r5', daysAgo: 1, hour: 17, w: [gio, pav], l: [tas, lef], sets: [S(6, 3), S(4, 6), S(6, 2)], votes: [7, 5] },
   { id: 'r4', daysAgo: 2, hour: 19, w: [gio], l: [tas], sets: [S(6, 1), S(6, 3)], votes: [10, 6] },
   { id: 'r6', daysAgo: 2, hour: 18, w: [man], l: [tho], sets: [S(7, 5), S(6, 4)], votes: [8, 5] },
+  { id: 'mock-win', daysAgo: 3, hour: 19, tournament: 'Open Γλυφάδας', round: 'round16', w: [me], l: [ale], sets: [S(7, 6, { tb: [7, 4] }), S(6, 2)], votes: [6, 9] },
 ];
 
 export function mockResults(now: Date): ResultRow[] {

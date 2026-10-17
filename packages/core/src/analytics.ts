@@ -26,6 +26,12 @@ export interface AnalyticsEvents {
   user_blocked: { from: 'match' | 'player' };
   /** the Baller share card: sent as a picture, or as text where pictures cannot go (the web) */
   baller_shared: { via: 'image' | 'text' };
+  /** «Η σεζόν σου» (Pro, a teaser without): opened, and its recap card sent */
+  season_viewed: { pro: boolean; month: string; from: string };
+  season_shared: { via: 'image' | 'text' };
+  /** a share card of your own win: sent, or the Pro lock shown instead */
+  win_card_shared: { via: 'image' | 'text'; free: boolean };
+  win_card_locked: { from: string };
 }
 
 export type AnalyticsEvent = keyof AnalyticsEvents;

@@ -112,6 +112,14 @@ function Routes() {
             options={{ presentation: "fullScreenModal", animation: "slide_from_bottom", contentStyle: { backgroundColor: colors.ink } }}
           />
           <Stack.Screen
+            name="season"
+            options={{ presentation: "fullScreenModal", animation: "slide_from_bottom", contentStyle: { backgroundColor: colors.ink } }}
+          />
+          <Stack.Screen
+            name="win-card"
+            options={{ presentation: "fullScreenModal", animation: "slide_from_bottom", contentStyle: { backgroundColor: colors.ink } }}
+          />
+          <Stack.Screen
             name="baller"
             options={{ presentation: "fullScreenModal", animation: "fade", contentStyle: { backgroundColor: colors.ink } }}
           />

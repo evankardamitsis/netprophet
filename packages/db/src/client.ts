@@ -45,6 +45,8 @@ import type {
   Side,
   SuggestedPlayer,
   WinLossSplits,
+  MySeason,
+  WinCard,
 } from './rpc';
 
 export const API_SCHEMA = 'api' as const;
@@ -173,6 +175,10 @@ export function rpc(client: NetprophetClient) {
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),
     logMatch: (input: LogMatchInput) => call<{ match_id: string; mode: 'played' | 'soon' }>(client, 'log_match', { p: input }),
     getWinLoss: () => call<WinLossSplits>(client, 'get_win_loss', {}),
+    /** «Η σεζόν σου»: a month key like '2026-10', or the current month */
+    mySeason: (month: string | null = null) => call<MySeason>(client, 'my_season', month ? { p_month: month } : {}),
+    /** a share card of one of your own wins */
+    winCard: (matchId: string) => call<WinCard>(client, 'win_card', { p_match: matchId }),
     getScout: (matchId: string) => call<Scout>(client, 'get_scout', { p_match_id: matchId }),
     joinProWaitlist: () => call<boolean>(client, 'join_pro_waitlist', {}),
     adminGrantPro: (userId: string, days = 30) => call<{ id: string; ends_at: string }>(client, 'admin_grant_pro', { p_user_id: userId, p_days: days }),

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type MySeason, type WinCard } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -14,7 +14,8 @@ import { mockScout } from '../mock/scout';
 import { mockTournament, mockTournaments } from '../mock/tournaments';
 import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
-import { mockResults } from '../mock/results';
+import { MOCK_ME_PLAYER, mockResults } from '../mock/results';
+import { mockSeason, mockWinCard } from '../mock/season';
 import { withMockAds } from '../mock/sponsored';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
@@ -552,8 +553,101 @@ export function useResults(filter: ResultsFilter = { tournament: null, query: ''
     void refresh();
   }, [refresh]);
 
-  const groups = useMemo(() => groupResults(rows, t, new Date()), [rows, t]);
+  const myPlayer = useMyPlayerId();
+  const groups = useMemo(() => groupResults(rows, t, new Date(), myPlayer), [rows, t, myPlayer]);
   return { groups, loading, error, refresh };
+}
+
+/** your claimed player's id (null without one), asked once per account; the guest's sample player in mock mode */
+let myPlayerCache: { user: string; id: string | null } | null = null;
+export function useMyPlayerId(): string | null {
+  const api = useApi();
+  const user = useAuth().session?.user.id ?? '';
+  const cached = myPlayerCache && myPlayerCache.user === user ? myPlayerCache.id : null;
+  const [id, setId] = useState<string | null>(() => (api ? cached : MOCK_ME_PLAYER));
+  useEffect(() => {
+    if (!api) {
+      setId(MOCK_ME_PLAYER);
+      return;
+    }
+    if (myPlayerCache && myPlayerCache.user === user) {
+      setId(myPlayerCache.id);
+      return;
+    }
+    api
+      .getMe()
+      .then((me) => {
+        const found = me.player?.id ?? null;
+        // only a claimed player is kept: someone without one may claim later in the session
+        if (found) myPlayerCache = { user, id: found };
+        setId(found);
+      })
+      .catch(() => undefined);
+  }, [api, user]);
+  return id;
+}
+
+export interface SeasonState {
+  season: MySeason | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** «Η σεζόν σου» for a month ('2026-10', or the current one): the teaser without Pro, the whole recap with it */
+export function useSeason(month: string | null): SeasonState {
+  const api = useApi();
+  const [season, setSeason] = useState<MySeason | null>(() => (api ? null : mockSeason(new Date(), mockPro.pro, month)));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setSeason(mockSeason(new Date(), mockPro.pro, month));
+      return;
+    }
+    setLoading(true);
+    try {
+      setSeason(await api.mySeason(month));
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, month]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { season, loading, error, refresh };
+}
+
+export type WinCardError = 'pro_required' | 'not_your_win' | 'not_shareable' | 'failed';
+
+/** the facts for a share card of one of your own wins; Pro for every win, the month's first win free */
+export function useWinCard(matchId: string): { card: WinCard | null; loading: boolean; error: WinCardError | null } {
+  const api = useApi();
+  const [state, setState] = useState<{ card: WinCard | null; loading: boolean; error: WinCardError | null }>({ card: null, loading: true, error: null });
+  useEffect(() => {
+    let live = true;
+    if (!api) {
+      const card = mockWinCard(matchId, new Date(), mockPro.pro);
+      setState({ card, loading: false, error: card ? null : 'pro_required' });
+      return undefined;
+    }
+    setState((s) => ({ ...s, loading: true }));
+    api
+      .winCard(matchId)
+      .then((card) => live && setState({ card, loading: false, error: null }))
+      .catch((err: unknown) => {
+        const code = err instanceof RpcError ? err.code : '';
+        const error: WinCardError = code === 'pro_required' || code === 'not_your_win' || code === 'not_shareable' ? code : 'failed';
+        if (live) setState({ card: null, loading: false, error });
+      });
+    return () => {
+      live = false;
+    };
+  }, [api, matchId]);
+  return state;
 }
 
 /** the tournaments with results lately, for the chips on Αποτελέσματα; yours first */

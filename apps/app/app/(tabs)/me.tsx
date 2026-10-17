@@ -116,6 +116,9 @@ export default function MeScreen() {
             <Section i={next()}>
               <StatsRow />
             </Section>
+            <Section i={next()}>
+              <SeasonRow />
+            </Section>
             {has('frames') || has('backgrounds') ? (
               <Section i={next()}>
                 <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((i) => i.key) ?? []))} />
@@ -185,6 +188,20 @@ function StatsRow() {
     <Pressable accessibilityRole="button" onPress={() => router.push('/me?page=stats')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
       <Animated.View style={[styles.questsRow, press.style]}>
         <Text style={styles.questsTitle}>{t.me.statsPage}</Text>
+        <Text style={styles.questsCount}>›</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** «Η σεζόν σου ›» (Pro, a teaser without): the month in numbers, next to the stats */
+function SeasonRow() {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/season?from=me')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.questsRow, press.style]}>
+        <Text style={styles.questsTitle}>{t.season.title}</Text>
         <Text style={styles.questsCount}>›</Text>
       </Animated.View>
     </Pressable>
