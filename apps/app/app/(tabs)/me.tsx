@@ -411,7 +411,9 @@ function BallerStage({
   effect: string | null;
   frame: string | null;
 }) {
+  const t = useCopy();
   const press = usePress(0.98);
+  const share = usePress();
   const pop = usePopIn(500, 250);
   const baller = useBaller();
   const { width } = useWindowDimensions();
@@ -437,6 +439,18 @@ function BallerStage({
             </Text>
           </View>
         ) : null}
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/share-baller')}
+          onPressIn={share.onPressIn}
+          onPressOut={share.onPressOut}
+          hitSlop={8}
+          style={styles.shareHit}
+        >
+          <Animated.View style={[styles.sharePill, share.style]}>
+            <Text style={styles.sharePillText}>{t.baller.share.open}</Text>
+          </Animated.View>
+        </Pressable>
       </Animated.View>
     </Pressable>
   );
@@ -983,6 +997,10 @@ const styles = StyleSheet.create({
   // Baller stands on the court: at the bottom of the stage, its shadow in the pool of light
   stage: { borderRadius: 28, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'flex-end' },
   ballerTag: { position: 'absolute', bottom: 14, alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999, backgroundColor: alpha(colors.ink, 0.75) },
+  // «Μοιράσου ›»: quiet, so the screen's blue stays elsewhere
+  shareHit: { position: 'absolute', top: 14, right: 14 },
+  sharePill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1.5, borderColor: alpha(colors.paper, 0.5), backgroundColor: alpha(colors.ink, 0.55) },
+  sharePillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.paper },
   ballerTagText: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 26, color: colors.paper },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
   proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
