@@ -72,6 +72,7 @@ export const en: Copy = {
     points: 'points',
   },
   match: {
+    closed: 'Voting is closed',
     today: 'Today',
     tomorrow: 'Tomorrow',
     levelArea: 'level {level} · {area}',

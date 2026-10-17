@@ -124,6 +124,12 @@ describe('fromFeedCard', () => {
     expect(c.myVote).toBe('b');
     expect(c.split).toEqual({ pctA: 30, pctB: 70 });
   });
+  it('a closed match keeps its card, with the split and no voting', () => {
+    const c = fromFeedCard(card({ closed: true, split: { total: 4, side1: 1, side2: 3, pct1: 25, pct2: 75 } }), areas, t, NOW);
+    expect(c.closed).toBe(true);
+    expect(c.split).toEqual({ pctA: 25, pctB: 75 });
+    expect(fromFeedCard(card(), areas, t, NOW).closed).toBeUndefined();
+  });
 
   it('maps a sponsored card', () => {
     expect(

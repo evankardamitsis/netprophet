@@ -78,6 +78,8 @@ export const el = {
     points: 'πόντοι',
   },
   match: {
+    /** a match that started: no more votes (founder, 17 Oct) */
+    closed: 'Οι ψήφοι έκλεισαν',
     today: 'Σήμερα',
     tomorrow: 'Αύριο',
     levelArea: 'level {level} · {area}',

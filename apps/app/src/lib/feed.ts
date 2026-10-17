@@ -47,6 +47,8 @@ export interface CardMatch {
   /** set when the viewer already voted: the card starts folded */
   myVote?: Side;
   split?: CardPct;
+  /** voting has closed (the match started); the card shows the match and the crowd's split, no buttons */
+  closed?: boolean;
   /** the match moved to this day in the last 3 days: «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
   moved?: { chip: string; was: string; head: string; tail: string };  /** «PRC (Μαρούσι) · Σκληρό»: the club and surface, when known (only on a match outside a tournament) */
   place?: string;
@@ -252,6 +254,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     b: side(players(2), areas, t),
     myVote: card.my_vote ? toUiSide(card.my_vote) : undefined,
     split: card.split ? toPct(card.split) : undefined,
+    closed: card.closed === true ? true : undefined,
     place: card.tournament ? undefined : place ?? undefined,
     group: card.tournament ? { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: place } : undefined,
     later: card.starts_at ? dayKey(card.starts_at) > dayKey(now.toISOString()) : false,
