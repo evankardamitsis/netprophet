@@ -177,11 +177,13 @@ function Row({ item, admin, onNotice, notify }: { item: DeskItem; admin: boolean
       const w = Number(a);
       const l = Number(b);
       const isTb = r === 2 && tiebreak;
-      const last = retired && (r === 2 || (games[r + 1]?.[0] === '' && games[r + 1]?.[1] === ''));
-      if (isTb ? !isValidMatchTiebreak(w, l) : !isValidTennisSet(w, l) && !last) {
-        return { sets, problem: isTb ? 'A match tie-break goes to 10, won by two (for example 10 – 7).' : `Set ${r + 1} (${w} – ${l}) is not a possible score.` };
+      // a retirement can stop at any score (founder, 17 Oct): only the finished match is checked as tennis
+      if (!retired) {
+        if (isTb ? !isValidMatchTiebreak(w, l) : !isValidTennisSet(w, l)) {
+          return { sets, problem: isTb ? 'A match tie-break goes to 10, won by two (for example 10 – 7).' : `Set ${r + 1} (${w} – ${l}) is not a possible score.` };
+        }
+        if (w === l) return { sets, problem: `Set ${r + 1} can’t be a draw.` };
       }
-      if (w === l) return { sets, problem: `Set ${r + 1} can’t be a draw.` };
       if (w > l) wonByWinner += 1;
       else wonByOther += 1;
       sets.push(isTb ? { w, l, stb: true } : { w, l });
