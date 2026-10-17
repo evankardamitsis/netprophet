@@ -97,7 +97,9 @@ export interface FeedMatchCard {
   sides: { side: Side; players: FeedPlayer[] }[];
   in_circle: boolean;
   my_vote: Side | null;
-  /** only present after the user voted */
+  /** started (or locked) and waiting for its result: shown without voting */
+  closed?: boolean;
+  /** after the user voted, and on a closed match */
   split: VoteSplit | null;
   /** the old starts_at, when the match moved to a new day in the last 3 days */
   moved_from?: string | null;

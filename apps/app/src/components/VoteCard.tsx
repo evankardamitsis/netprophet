@@ -13,6 +13,7 @@ import { FitText } from './FitText';
 import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
 import type { Side } from '../lib/votes';
 import { cardSurface, colors, ease, fonts, text } from '../theme';
+import { useCopy } from '../i18n';
 import { Lit } from './Lit';
 import { Avatar as DrawnAvatar } from './Avatar';
 import type { AvatarLook } from '../lib/avatar';
@@ -113,6 +114,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
   }, [phase]);
 
   const hold = onLongPress ? () => onLongPress(match.id) : undefined;
+  if (match.closed) return <ClosedCard match={match} onLongPress={hold} />;
   if (phase === 'folded' && pick && split) {
     return (
       <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
@@ -150,6 +152,28 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
     </Pressable>
   );
 });
+
+/**
+ * Voting has closed (founder, 17 Oct): the match as it stands, both sides without buttons, the crowd's split and your
+ * pick if you made one, and «Οι ψήφοι έκλεισαν» under them. It leaves Σήμερα when the result comes in.
+ */
+function ClosedCard({ match, onLongPress }: { match: CardMatch; onLongPress?: () => void }) {
+  const t = useCopy();
+  const enter = useEnter();
+  const none = () => undefined;
+  return (
+    <Pressable onLongPress={onLongPress} delayLongPress={LONG_PRESS_MS} accessibilityLabel={`${match.meta}. ${t.match.closed}`}>
+      <Animated.View style={[styles.card, enter]}>
+        <Meta match={match} />
+        <View style={styles.grid}>
+          <VoteButton side="a" data={match.a} doubles={match.doubles} picked={match.myVote === 'a'} disabled pct={match.split ? match.split.pctA : null} onPress={none} />
+          <VoteButton side="b" data={match.b} doubles={match.doubles} picked={match.myVote === 'b'} disabled pct={match.split ? match.split.pctB : null} onPress={none} />
+        </View>
+        <Text style={styles.closed}>{t.match.closed}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
 
 /** the meta line; a match that moved to a new day gets the «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
 function Meta({ match, style }: { match: CardMatch; style?: object }) {
@@ -346,6 +370,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   meta: { ...text.meta, fontFamily: fonts.bodyBold },
+  closed: { ...text.meta, fontFamily: fonts.bodyBold, color: colors.inkSoft, textAlign: 'center' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   metaStack: { gap: 2 },
   place: text.meta,
