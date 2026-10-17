@@ -855,6 +855,27 @@ export const el = {
     rewardGold: 'Βαθμίδα {tier} · Frame Level',
     meBadges: 'Badges',
   },
+  /** Baller, the ball person that is you (founder, 17 Oct: the trademark) */
+  baller: {
+    meet: 'Γνώρισε τον Baller σου',
+    meetSub: 'Κάνε τον δικό σου. Αλλάζεις ό,τι θες όποτε θες.',
+    swipe: 'Σύρε για άλλο στυλ',
+    prev: 'Προηγούμενο στυλ',
+    next: 'Επόμενο στυλ',
+    nameTitle: 'Πώς τον λένε;',
+    nameHint: 'Θα φαίνεται στο προφίλ σου και στην Κατάταξη.',
+    go: 'Συνέχεια',
+    later: 'Αργότερα',
+    saving: 'Λίγο ακόμα…',
+    problems: {
+      short: 'Τουλάχιστον 2 γράμματα.',
+      long: 'Μέχρι 16 γράμματα.',
+      chars: 'Μόνο γράμματα, ελληνικά ή λατινικά.',
+      notAllowed: 'Αυτό το όνομα δεν γίνεται. Διάλεξε άλλο.',
+      failed: 'Δεν αποθηκεύτηκε. Ξαναδοκίμασε.',
+    },
+    edit: 'Ο Baller σου',
+  },
   look: {
     title: 'Εμφάνιση',
     sub: 'Κορνίζες, φόντα, ρούχα και ρακέτα',

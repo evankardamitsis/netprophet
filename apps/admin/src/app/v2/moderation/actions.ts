@@ -27,6 +27,11 @@ async function act(fn: string, args: object, ok: (data: unknown) => string): Pro
   }
 }
 
+/** a Baller name that should not stand goes back to none; the player can give a new one */
+export async function resetBallerName(userId: string): Promise<ActionResult> {
+  return act('admin_reset_baller_name', { p_user: userId }, () => 'Name removed. They can give a new one.');
+}
+
 const DECISIONS = { keep: 'Kept as logged', flip: 'Turned round', void: 'Voided' } as const;
 
 export async function resolveDispute(matchId: string, decision: keyof typeof DECISIONS): Promise<ActionResult> {

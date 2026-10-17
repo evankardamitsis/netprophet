@@ -11,7 +11,7 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
-import { useApi, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss, useMyAvatar } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss, useMyAvatar } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
@@ -389,7 +389,7 @@ function HeroCard({
   );
 }
 
-/** your drawn player on the card, by the name; a tap opens Εμφάνιση on «Παίκτης» to change it */
+/** your Baller on the card, its name over its head; a tap opens «Γνώρισε τον Baller σου» to change style or name */
 function HeroAvatar({
   look,
   kit,
@@ -405,16 +405,24 @@ function HeroAvatar({
 }) {
   const press = usePress();
   const pop = usePopIn(500, 350);
-  // a tap makes the ball jump first, then Εμφάνιση opens
+  const baller = useBaller();
+  // a tap makes Baller jump first, then its screen opens
   const [jump, setJump] = useState(0);
   const open = () => {
     setJump((n) => n + 1);
-    setTimeout(() => router.push('/look?tab=avatar'), 380);
+    setTimeout(() => router.push('/baller'), 380);
   };
   return (
     <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
       <Animated.View style={[styles.heroAvatar, pop, press.style]}>
         <Baller look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
+        {baller.name ? (
+          <View style={styles.ballerTag} pointerEvents="none">
+            <Text style={styles.ballerTagText} numberOfLines={1}>
+              {baller.name}
+            </Text>
+          </View>
+        ) : null}
       </Animated.View>
     </Pressable>
   );
@@ -943,6 +951,8 @@ const styles = StyleSheet.create({
   levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   heroAvatarHit: { position: 'absolute', right: 10, bottom: 8 },
   heroAvatar: { width: HERO_AVATAR, height: HERO_AVATAR },
+  ballerTag: { position: 'absolute', top: -4, alignSelf: 'center', maxWidth: HERO_AVATAR + 24, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.ink },
+  ballerTagText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.paper },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
   proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
   proRowText: { flex: 1, gap: 2 },

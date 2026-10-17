@@ -112,6 +112,10 @@ export function rpc(client: NetprophetClient) {
       call<GetLookResult>(client, 'equip_item', { p_category: category, p_key: key }),
     /** the drawn avatar you picked (one of the 12 defaults), or null for the default */
     setAvatar: (key: string | null) => call<{ avatar: string | null }>(client, 'set_avatar', { p_key: key }),
+    /** your Baller: its name (null until named), your avatar pick, and whether you have met it */
+    getBaller: () => call<{ name: string | null; avatar: string | null; met: boolean }>(client, 'get_baller', {}),
+    /** name your Baller; null clears it. Refused with bad_name or name_not_allowed */
+    setBallerName: (name: string | null) => call<{ name: string | null }>(client, 'set_baller_name', { p_name: name }),
     getMyLevel: () => call<GetMyLevelResult>(client, 'get_my_level', {}),
     getMe: () => call<MeResult>(client, 'get_me', {}),
     /** delete the signed-in account and everything that is theirs; cannot be undone */

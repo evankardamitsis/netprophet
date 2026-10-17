@@ -5,7 +5,7 @@ import { SignOut } from '../SignOut';
 import { Banner } from '../feedback';
 import { PageHeader } from '../kit';
 import { ui } from '../ui';
-import { Queue, type Moderation, type TournamentOption } from './Queue';
+import { Queue, type BallerName, type Moderation, type TournamentOption } from './Queue';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ export default async function ModerationPage() {
     );
   }
   const rpc = client.rpc.bind(client) as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
-  const [queue, tournaments] = await Promise.all([rpc('admin_moderation', {}), rpc('admin_tournaments', {})]);
+  const [queue, tournaments, names] = await Promise.all([rpc('admin_moderation', {}), rpc('admin_tournaments', {}), rpc('admin_baller_names', { p_limit: 200 })]);
   return (
     <div className="v2-shell">
       <Nav here="moderation" staff={staff} />
@@ -41,7 +41,7 @@ export default async function ModerationPage() {
             <Banner tone="problem" title="Could not load the queue" detail={queue.error.message} />
           </>
         ) : (
-          <Queue data={queue.data as Moderation} tournaments={((tournaments.data ?? []) as TournamentOption[]).map((t) => ({ id: t.id, name: t.name }))} />
+          <Queue data={queue.data as Moderation} tournaments={((tournaments.data ?? []) as TournamentOption[]).map((t) => ({ id: t.id, name: t.name }))} names={(names.data ?? []) as BallerName[]} />
         )}
       </main>
     </div>

@@ -15,7 +15,7 @@ import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
-import { useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
+import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import { groupHeads, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -27,6 +27,8 @@ import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
 import { colors, ease, fonts, text } from '../../src/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 
 const TITLE_IN_MS = 400;
 /** the tournaments link sits after this many cards */
@@ -35,6 +37,8 @@ const FIRST_RESULT_DELAY = 450;
 const NEXT_RESULT_GAP = 140;
 /** «Για σένα» rises full screen this long after Σήμερα settles, once a day (founder, 14 Oct) */
 const FOR_YOU_RISE_MS = 1500;
+/** a player who was here before Baller had a name meets it this long after Σήμερα settles, once */
+const MEET_BALLER_MS = 1200;
 
 export default function VoteScreen() {
   const t = useCopy();
@@ -186,6 +190,26 @@ export default function VoteScreen() {
       ))}
     </>
   );
+  // players from before Baller had a name meet it once, full screen, when nothing else is playing
+  const baller = useBaller();
+  const meetReady = baller.met === false && !loading && !current && !celebrating && !forYouOpen;
+  useEffect(() => {
+    if (!meetReady) return undefined;
+    let cancelled = false;
+    const id = setTimeout(() => {
+      AsyncStorage.getItem(BALLER_OFFERED_KEY)
+        .catch(() => null)
+        .then((offered) => {
+          if (cancelled || !shouldOfferBaller(baller.met, offered)) return;
+          AsyncStorage.setItem(BALLER_OFFERED_KEY, '1').catch(() => undefined);
+          router.push('/baller?first=1');
+        });
+    }, MEET_BALLER_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
+  }, [meetReady, baller.met]);
   const titleIn = useInA();
 
   return (

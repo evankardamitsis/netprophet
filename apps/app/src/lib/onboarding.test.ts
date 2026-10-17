@@ -6,8 +6,8 @@ const t = getCopy('el');
 
 describe('stepsFor', () => {
   it('a new player also answers «Πώς παίζεις;»', () => {
-    expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known', 'e1', 'e2', 'e3', 'e4']);
-    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known', 'e1', 'e2', 'e3', 'e4']);
+    expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known', 'baller', 'e1', 'e2', 'e3', 'e4']);
+    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known', 'baller', 'e1', 'e2', 'e3', 'e4']);
     // from an opponent link: confirm the player, pick who you know, done
     expect(stepsFor(false, true)).toEqual(['claim', 'known']);
   });

@@ -6,7 +6,7 @@ import { fmt } from './votes';
  * screens share. Differs from the prototype in one place: the name comes first, because a real
  * search for your player needs it (the prototype hard-codes «Βαγγέλης Κ»).
  */
-export type Step = 'name' | 'claim' | 'play' | 'area' | 'known' | IntroSlide;
+export type Step = 'name' | 'claim' | 'play' | 'area' | 'known' | 'baller' | IntroSlide;
 
 /** the four intro slides after «Ποια είναι η παρέα σου;», «1 από 4» to «4 από 4» */
 export type IntroSlide = 'e1' | 'e2' | 'e3' | 'e4';
@@ -19,7 +19,8 @@ export const INTRO: IntroSlide[] = ['e1', 'e2', 'e3', 'e4'];
  */
 export function stepsFor(isNew: boolean, fromLink = false): Step[] {
   if (fromLink) return ['claim', 'known'];
-  const setup: Step[] = isNew ? ['name', 'claim', 'play', 'area', 'known'] : ['name', 'claim', 'area', 'known'];
+  // «Γνώρισε τον Baller σου» comes after the friends, before the four slides (founder, 17 Oct)
+  const setup: Step[] = isNew ? ['name', 'claim', 'play', 'area', 'known', 'baller'] : ['name', 'claim', 'area', 'known', 'baller'];
   return setup.concat(INTRO);
 }
 

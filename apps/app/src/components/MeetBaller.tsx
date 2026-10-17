@@ -1,0 +1,193 @@
+import { useMemo, useRef, useState } from 'react';
+import { KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCopy } from '../i18n';
+import { DEFAULT_AVATARS, type DefaultAvatar } from '../lib/avatar';
+import { cleanName, nameProblem, suggestedName } from '../lib/ballerName';
+import type { BallerSave } from '../lib/data';
+import { usePress } from '../lib/motion';
+import { colors, fonts, text } from '../theme';
+import { Baller, type BallerHandle } from './Baller';
+
+/**
+ * «Γνώρισε τον Baller σου» (founder, 17 Oct: full-screen presentations, Baller as the trademark). Baller drops in and
+ * waves; swipe it or use ‹ › to try the twelve styles, each change a spin; then «Πώς τον λένε;» with a name ready.
+ * «Συνέχεια» (the screen's one blue) saves the style and the name, Baller jumps, and the screen hands back.
+ * Used at the end of onboarding and from the profile.
+ */
+const SIZE = 210;
+/** a swipe this far sideways changes the style */
+const SWIPE_PX = 36;
+/** the jump plays before the screen hands back */
+const DONE_MS = 900;
+
+interface Props {
+  /** who you are, for the ready name */
+  userId: string;
+  lang: 'el' | 'en';
+  /** the style you have now */
+  current: DefaultAvatar | null;
+  /** the name you gave, if any */
+  name: string | null;
+  kit: string;
+  gear: string | null;
+  frame: string | null;
+  pickAvatar: (key: string) => Promise<boolean>;
+  saveName: (name: string) => Promise<BallerSave>;
+  onDone: () => void;
+  /** «Αργότερα» (or `laterLabel`) when present */
+  onLater?: () => void;
+  laterLabel?: string;
+}
+
+export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pickAvatar, saveName, onDone, onLater, laterLabel }: Props) {
+  const t = useCopy();
+  const b = t.baller;
+  const insets = useSafeAreaInsets();
+  const baller = useRef<BallerHandle>(null);
+  const start = Math.max(0, DEFAULT_AVATARS.findIndex((a) => a.key === current?.key));
+  const [i, setI] = useState(start);
+  const [value, setValue] = useState(name ?? suggestedName(userId, lang));
+  const [problem, setProblem] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const press = usePress();
+  const style = DEFAULT_AVATARS[i]!;
+
+  const step = (d: number) => {
+    setI((n) => (n + d + DEFAULT_AVATARS.length) % DEFAULT_AVATARS.length);
+    baller.current?.play('spin');
+  };
+  const stepRef = useRef(step);
+  stepRef.current = step;
+
+  const swipe = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy),
+        onPanResponderRelease: (_, g) => {
+          if (Math.abs(g.dx) > SWIPE_PX) stepRef.current(g.dx < 0 ? 1 : -1);
+        },
+      }),
+    [],
+  );
+
+  const go = async () => {
+    const p = nameProblem(value);
+    if (p) {
+      setProblem(b.problems[p]);
+      return;
+    }
+    setBusy(true);
+    setProblem(null);
+    if (style.key !== current?.key && !(await pickAvatar(style.key))) {
+      setBusy(false);
+      setProblem(b.problems.failed);
+      return;
+    }
+    const r = await saveName(cleanName(value));
+    if (r !== 'ok') {
+      setBusy(false);
+      setProblem(r === 'notAllowed' ? b.problems.notAllowed : r === 'bad' ? b.problems.chars : b.problems.failed);
+      return;
+    }
+    baller.current?.play('jump');
+    setTimeout(onDone, DONE_MS);
+  };
+
+  return (
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 24 }]} keyboardShouldPersistTaps="handled">
+        {onLater ? (
+          <Pressable accessibilityRole="button" onPress={onLater} hitSlop={10} style={[styles.later, laterLabel ? styles.back : null]}>
+            <Text style={styles.laterText}>{laterLabel ?? b.later}</Text>
+          </Pressable>
+        ) : null}
+        <View style={styles.head}>
+          <Text style={styles.title}>{b.meet}</Text>
+          <Text style={styles.sub}>{b.meetSub}</Text>
+        </View>
+
+        <View style={styles.stage}>
+          <View style={styles.glow} pointerEvents="none" />
+          <Arrow label={b.prev} glyph="‹" onPress={() => step(-1)} />
+          <View {...swipe.panHandlers} style={styles.ball}>
+            <Baller ref={baller} look={style.look} size={SIZE} kit={kit} gear={gear} frame={frame} enter="drop" pokeable />
+          </View>
+          <Arrow label={b.next} glyph="›" onPress={() => step(1)} />
+        </View>
+        <Text style={styles.swipe}>{b.swipe}</Text>
+
+        <View style={styles.name}>
+          <Text style={styles.nameTitle}>{b.nameTitle}</Text>
+          <TextInput
+            value={value}
+            onChangeText={(v) => {
+              setValue(v);
+              setProblem(null);
+            }}
+            maxLength={20}
+            autoCapitalize="words"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={() => void go()}
+            style={styles.input}
+            accessibilityLabel={b.nameTitle}
+          />
+          <Text style={problem ? styles.problem : styles.hint}>{problem ?? b.nameHint}</Text>
+        </View>
+
+        <Pressable accessibilityRole="button" disabled={busy} onPress={() => void go()} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+          <Animated.View style={[styles.cta, busy && styles.ctaBusy, press.style]}>
+            <Text style={styles.ctaText}>{busy ? b.saving : b.go}</Text>
+          </Animated.View>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+function Arrow({ label, glyph, onPress }: { label: string; glyph: string; onPress: () => void }) {
+  const press = usePress(0.9);
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} hitSlop={8}>
+      <Animated.View style={[styles.arrow, press.style]}>
+        <Text style={styles.arrowText}>{glyph}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.ink },
+  scroll: { flexGrow: 1, paddingHorizontal: 20, gap: 18 },
+  later: { alignSelf: 'flex-end', minHeight: 32, justifyContent: 'center' },
+  // «‹ Πίσω» sits where back always sits
+  back: { alignSelf: 'flex-start' },
+  laterText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
+  head: { gap: 8 },
+  title: { ...text.title, color: colors.paper },
+  sub: { ...text.subtitle, color: colors.mist },
+  stage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
+  glow: { position: 'absolute', alignSelf: 'center', left: '50%', marginLeft: -150, width: 300, height: 300, borderRadius: 150, backgroundColor: colors.paper, opacity: 0.06 },
+  ball: { width: SIZE, height: SIZE },
+  arrow: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: colors.inkLine, alignItems: 'center', justifyContent: 'center' },
+  arrowText: { fontFamily: fonts.bodyBold, fontSize: 24, lineHeight: 26, color: colors.paper },
+  swipe: { ...text.meta, color: colors.mist, textAlign: 'center', marginTop: -8 },
+  name: { gap: 8 },
+  nameTitle: { ...text.heading, color: colors.paper },
+  input: {
+    minHeight: 54,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: colors.paper,
+    fontFamily: fonts.displayHeavy,
+    fontSize: 26,
+    color: colors.ink,
+  },
+  hint: { ...text.meta, color: colors.mist },
+  problem: { ...text.meta, fontFamily: fonts.bodyBold, color: colors.paper },
+  cta: { minHeight: 54, marginTop: 'auto', borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
+  ctaBusy: { opacity: 0.7 },
+  ctaText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.white },
+});
