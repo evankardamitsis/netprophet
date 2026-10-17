@@ -416,7 +416,7 @@ function HeroAvatar({
   return (
     <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
       <Animated.View style={[styles.heroAvatar, pop, press.style]}>
-        <Baller look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
+        <Baller look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} throwable />
         {baller.name ? (
           <View style={styles.ballerTag} pointerEvents="none">
             <Text style={styles.ballerTagText} numberOfLines={1}>

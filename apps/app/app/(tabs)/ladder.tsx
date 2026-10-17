@@ -6,8 +6,9 @@ import { greekCaps } from '@netprophet/copy';
 import type { Ladder, LadderRow, LadderScope } from '@netprophet/db';
 import { Segmented } from '../../src/components/OnboardingControls';
 import { useCopy } from '../../src/i18n';
-import { useLadder } from '../../src/lib/data';
-import { boardItems, motivation, nextLine, pickScope, pointRules, rowName, scopeLabel, scopeTabs } from '../../src/lib/ladder';
+import { useBallers, useLadder } from '../../src/lib/data';
+import { Baller } from '../../src/components/Baller';
+import { boardItems, motivation, nextLine, pickScope, podiumOf, pointRules, rowName, scopeLabel, scopeTabs } from '../../src/lib/ladder';
 import { usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { fmt } from '../../src/lib/votes';
@@ -58,6 +59,7 @@ export default function LadderScreen() {
           <View key={scope} style={styles.cards}>
             <MeCard ladder={ladder} />
             <Motivate ladder={ladder} />
+            <Podium ladder={ladder} />
             <Board ladder={ladder} />
             <HowPoints />
           </View>
@@ -116,6 +118,36 @@ function Motivate({ ladder }: { ladder: Ladder }) {
           <Text style={styles.motButtonText}>{m.button}</Text>
         </Animated.View>
       </Pressable>
+    </Animated.View>
+  );
+}
+
+/** the month's top three as Ballers on a podium, yours waving if you are there (founder, 17 Oct) */
+const PODIUM = { 1: { size: 96, block: 70 }, 2: { size: 78, block: 48 }, 3: { size: 78, block: 34 } } as const;
+
+function Podium({ ladder }: { ladder: Ladder }) {
+  const t = useCopy();
+  const top = podiumOf(ladder.rows);
+  const ballers = useBallers(top ? top.map((r) => r.user_id) : []);
+  const enter = useStgIn(STG_MS, 250);
+  if (!top) return null;
+  return (
+    <Animated.View style={[styles.podium, enter]}>
+      {top.map((r) => {
+        const p = PODIUM[r.position as 1 | 2 | 3];
+        const b = ballers[r.user_id];
+        return (
+          <View key={r.user_id} style={styles.step}>
+            {b ? <Baller look={b.look} size={p.size} kit={b.kit} gear={b.gear} enter={r.is_me ? 'wave' : 'hop'} pokeable /> : <View style={{ height: p.size }} />}
+            <Text style={[styles.stepName, r.is_me && styles.stepNameMe]} numberOfLines={1}>
+              {b?.name ?? rowName(r, t)}
+            </Text>
+            <View style={[styles.block, { height: p.block }, r.position === 1 && styles.blockFirst]}>
+              <Text style={[styles.blockPos, r.position === 1 && styles.blockPosFirst]}>{r.position}</Text>
+            </View>
+          </View>
+        );
+      })}
     </Animated.View>
   );
 }
@@ -224,6 +256,15 @@ const styles = StyleSheet.create({
   motSub: { ...text.body, color: colors.inkSoft },
   motButton: { minHeight: 48, marginTop: 4, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
   motButtonText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white, textAlign: 'center' },
+  podium: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 8, paddingTop: 8 },
+  step: { flex: 1, maxWidth: 120, alignItems: 'center', gap: 4 },
+  stepName: { ...text.meta, fontFamily: fonts.bodyBold, color: colors.ink, textAlign: 'center' },
+  stepNameMe: { color: colors.ink, textDecorationLine: 'underline' },
+  block: { alignSelf: 'stretch', borderTopLeftRadius: 14, borderTopRightRadius: 14, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+  // first place is the earned spot: lime
+  blockFirst: { backgroundColor: colors.lime },
+  blockPos: { fontFamily: fonts.displayHeavy, fontSize: 28, lineHeight: 30, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  blockPosFirst: { color: colors.ink },
   board: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 24, backgroundColor: colors.white },
   gap: { paddingVertical: 2, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 15, color: colors.inkSoft },
   row: {

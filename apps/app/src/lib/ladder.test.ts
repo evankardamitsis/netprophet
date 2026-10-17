@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { Ladder } from '@netprophet/db';
-import { boardItems, motivation, nextLine, pickScope, pointRules, rowName, scopeLabel, scopeTabs, votesToPass } from './ladder';
+import { boardItems, motivation, nextLine, pickScope, podiumOf, pointRules, rowName, scopeLabel, scopeTabs, votesToPass } from './ladder';
 
 const t = getCopy('el');
 
@@ -108,5 +108,16 @@ describe('league board', () => {
   it('the pill says the tier and the player count', () => {
     expect(scopeLabel(lgLadder('bronze'), t)).toBe('Χάλκινη · 20 παίκτες');
     expect(scopeLabel(base, t)).toBe('Όσοι ξέρεις · αυτόν τον μήνα');
+  });
+});
+
+describe('podiumOf', () => {
+  const r = (position: number, points: number) => ({ position, points });
+  it('lays out second, first, third', () => {
+    expect(podiumOf([r(1, 90), r(2, 70), r(3, 50), r(4, 10)])?.map((x) => x.position)).toEqual([2, 1, 3]);
+  });
+  it('needs two with points', () => {
+    expect(podiumOf([r(1, 90), r(2, 0)])).toBeNull();
+    expect(podiumOf([r(1, 90), r(2, 10)])?.map((x) => x.position)).toEqual([2, 1]);
   });
 });
