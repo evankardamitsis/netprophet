@@ -130,8 +130,7 @@ export default function LookScreen() {
           <>
             {/* the stage: the background you look at behind a soft light, Baller big in the middle */}
             <View style={styles.stage} {...swipe.panHandlers}>
-              <CardBackground bg={preview.background} k={0.62} scrim />
-              <View style={styles.light} pointerEvents="none" />
+              <CardBackground bg={preview.background} stage />
               <Baller ref={baller} look={who} size={BALLER} kit={preview.kit} gear={preview.gear} frame={preview.frame} effect={preview.effect} pokeable />
             </View>
             <View style={styles.named}>
@@ -220,8 +219,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 40 },
   topLink: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
   title: { ...text.title, color: colors.paper },
-  stage: { height: STAGE_H, borderRadius: 28, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.inkRaised },
-  light: { position: 'absolute', width: 280, height: 280, borderRadius: 140, backgroundColor: colors.paper, opacity: 0.08 },
+  stage: { height: STAGE_H, borderRadius: 28, overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: STAGE_H * 0.05, backgroundColor: colors.ink },
   named: { alignItems: 'center', gap: 6 },
   name: { ...text.heading, color: colors.paper, textAlign: 'center' },
   swipe: { ...text.meta, color: colors.mist },
