@@ -131,3 +131,13 @@ export function leagueCelebrationView(c: LeagueCelebration, t: Copy): { label: s
     reward: p.award ? l.league.award : fmt(l.league.next, { tier: l.tiers[p.next_tier] }),
   };
 }
+
+/**
+ * The podium over the board (founder, 17 Oct: Baller everywhere): the top three with points, laid out second, first,
+ * third. Null with fewer than two, where a podium says nothing.
+ */
+export function podiumOf<R extends { position: number; points: number }>(rows: R[]): R[] | null {
+  const top = rows.filter((r) => r.position <= 3 && r.points > 0).sort((a, b) => a.position - b.position);
+  if (top.length < 2) return null;
+  return top.length === 3 ? [top[1]!, top[0]!, top[2]!] : [top[1]!, top[0]!];
+}

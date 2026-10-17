@@ -2,6 +2,7 @@ import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
@@ -250,7 +251,7 @@ export default function VoteScreen() {
             </Fragment>
           ))}
           {split.later.length > 0 && !showLater ? <LaterFold count={split.later.length} open={false} onPress={() => setShowLater(true)} /> : null}
-          {empty ? <Text style={styles.end}>{error ? t.feed.error : t.feed.empty}</Text> : null}
+          {empty ? error ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.feed.empty} /> : null}
         </View>
       </ScrollView>
       {notice ? <Toast key={notice.n} text={t.feed[notice.kind]} /> : null}

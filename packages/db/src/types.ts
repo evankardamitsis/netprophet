@@ -604,6 +604,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      get_ballers: {
+        Args: { p_users: string[] };
+        Returns: Json;
+      };
       get_blocks: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
