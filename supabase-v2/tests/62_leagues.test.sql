@@ -8,7 +8,7 @@ create temp table lb (doc jsonb not null);
 insert into lb values (:'lb'::jsonb);
 grant select on lb to public;
 
-select plan((select count(*)::int from lb, jsonb_array_elements(doc -> 'groups') g, jsonb_array_elements(g -> 'cases') c) + 12);
+select plan((select count(*)::int from lb, jsonb_array_elements(doc -> 'groups') g, jsonb_array_elements(g -> 'cases') c) + 14);
 
 -- parity
 select is(core.league_close_group(c -> 'input'), c -> 'expected', 'closeGroup: ' || (c ->> 'name'))
@@ -36,6 +36,11 @@ select is((select array_agg(outcome order by g) from core.league_members m join 
           array['stayed', 'stayed', 'stayed'], 'nobody falls below Χάλκινη');
 select is((select count(*)::int from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id
             where c.key = 'frame_month_top' and uc.user_id in (select id from pl)), 3, 'the top 3 get the frame');
+select is((select array_agg(pl.g) from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id join pl on pl.id = uc.user_id
+            where c.key = 'gear_crown'), array[1], 'only the winner with points gets the crown');
+select is((select count(*)::int from core.cosmetic_items
+            where key in ('gear_phones', 'gear_beanie', 'gear_crown', 'kit_retro', 'kit_ocean', 'kit_sunset', 'kit_hard') and active), 7,
+          'the seven new things are in the wardrobe');
 select is((select payload from core.feed_inbox where user_id = (select id from pl where g = 1) and payload ->> 'type' = 'league')
             - 'month',
           '{"type": "league", "tier": "bronze", "position": 1, "movement": "promote", "next_tier": "silver", "award": true}'::jsonb,
