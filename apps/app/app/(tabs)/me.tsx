@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
@@ -28,6 +28,7 @@ import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { alpha, colors, ease, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
 import { Baller } from '../../src/components/Baller';
+import { CardBackground } from '../../src/components/CardBackground';
 import type { AvatarLook } from '../../src/lib/avatar';
 import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
 
@@ -41,8 +42,6 @@ const STG_MS = 450;
 const STAGGER = 70;
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
-/** the drawn player on the Εγώ card */
-const HERO_AVATAR = 92;
 
 export default function MeScreen() {
   const t = useCopy();
@@ -367,14 +366,15 @@ function HeroCard({
   const flip = usePress();
   const canFlip = PLAYER_LEVEL_SHOWN && has('stats') && level !== null;
   return (
+    <View style={styles.hero}>
+      {avatar ? <BallerStage look={avatar} bg={bg} kit={kit} gear={gear} effect={effect} frame={frame} /> : null}
     <FlipCard
-      bg={bg}
+      bg={null}
       flipped={flipped}
       front={
         <>
-          {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           <Name v={v} frame={frame} />
-          {avatar ? <HeroAvatar look={avatar} kit={kit} gear={gear} effect={effect} frame={frame} /> : null}
+          {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           {canFlip ? (
             <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
               <Animated.View style={[styles.flipPill, flip.style]}>
@@ -387,26 +387,36 @@ function HeroCard({
       }
       back={<StatsBack level={level} onBack={() => setFlipped(false)} />}
     />
+    </View>
   );
 }
 
-/** your Baller on the card, its name over its head; a tap opens «Γνώρισε τον Baller σου» to change style or name */
-function HeroAvatar({
+/**
+ * Your Baller, full width on its own background (founder, 17 Oct: "him full screen with his background and then below
+ * my name and info"): the frame ring around it, its name under it. A tap opens «Γνώρισε τον Baller σου»; drag it to
+ * throw it.
+ */
+function BallerStage({
   look,
+  bg,
   kit,
   gear,
   effect,
   frame,
 }: {
   look: AvatarLook;
+  bg: string | null;
   kit: string;
   gear: string | null;
   effect: string | null;
   frame: string | null;
 }) {
-  const press = usePress();
-  const pop = usePopIn(500, 350);
+  const press = usePress(0.98);
+  const pop = usePopIn(500, 250);
   const baller = useBaller();
+  const { width } = useWindowDimensions();
+  const height = Math.min(width - 40, 380);
+  const size = Math.round(height * 0.66);
   // a tap makes Baller jump first, then its screen opens
   const [jump, setJump] = useState(0);
   const open = () => {
@@ -414,9 +424,13 @@ function HeroAvatar({
     setTimeout(() => router.push('/baller'), 380);
   };
   return (
-    <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
-      <Animated.View style={[styles.heroAvatar, pop, press.style]}>
-        <Baller look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} throwable />
+    <Pressable accessibilityRole="button" accessibilityLabel={baller.name ?? 'Baller'} onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.stage, { height }, press.style]}>
+        <CardBackground bg={bg} k={0.62} scrim />
+        <View style={[styles.stageLight, { width: height * 0.9, height: height * 0.9, borderRadius: height }]} pointerEvents="none" />
+        <Animated.View style={pop}>
+          <Baller look={look} size={size} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} throwable />
+        </Animated.View>
         {baller.name ? (
           <View style={styles.ballerTag} pointerEvents="none">
             <Text style={styles.ballerTagText} numberOfLines={1}>
@@ -966,10 +980,11 @@ const styles = StyleSheet.create({
   streakLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -10, color: colors.ink },
   levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
-  heroAvatarHit: { position: 'absolute', right: 10, bottom: 8 },
-  heroAvatar: { width: HERO_AVATAR, height: HERO_AVATAR },
-  ballerTag: { position: 'absolute', top: -4, alignSelf: 'center', maxWidth: HERO_AVATAR + 24, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.ink },
-  ballerTagText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.paper },
+  hero: { gap: 10 },
+  stage: { borderRadius: 28, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  stageLight: { position: 'absolute', backgroundColor: colors.paper, opacity: 0.08 },
+  ballerTag: { position: 'absolute', bottom: 14, alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999, backgroundColor: alpha(colors.ink, 0.75) },
+  ballerTagText: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 26, color: colors.paper },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
   proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
   proRowText: { flex: 1, gap: 2 },
