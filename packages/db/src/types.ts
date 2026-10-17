@@ -516,6 +516,10 @@ export type Database = {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
         Returns: Json;
       };
+      admin_set_tournament_entry: {
+        Args: { p_id: string; p_entry_deadline: string; p_entry_link: string };
+        Returns: undefined;
+      };
       admin_tournament_suggestion: {
         Args: { p_text: string; p_tournament_id?: string };
         Returns: Json;
@@ -827,6 +831,10 @@ export type Database = {
       unregister_push_token: {
         Args: { p_token: string };
         Returns: boolean;
+      };
+      upcoming_tournaments: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       update_profile: {
         Args: { p_patch: Json };
