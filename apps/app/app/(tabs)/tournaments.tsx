@@ -1,12 +1,13 @@
-import type { ReactNode } from 'react';
-import { RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, type ReactNode } from 'react';
+import { Linking, RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
-import type { GetTournamentsResult, TournamentItem } from '@netprophet/db';
+import type { GetTournamentsResult, TournamentItem, UpcomingTournamentsResult } from '@netprophet/db';
 import { useCopy } from '../../src/i18n';
-import { useTournaments } from '../../src/lib/data';
+import { useTournaments, useUpcomingTournaments } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
+import { nextFooter, nextRow, type NextRow } from '../../src/lib/nextTournament';
 import { boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey } from '../../src/lib/tournaments';
 import { colors, fonts, text } from '../../src/theme';
 
@@ -22,7 +23,12 @@ const STAGGER = 70;
 export default function TournamentsScreen() {
   const t = useCopy();
   const c = t.tournaments;
-  const { data, loading, error, refresh } = useTournaments();
+  const { data, loading, error, refresh: refreshList } = useTournaments();
+  const upcoming = useUpcomingTournaments();
+  const refreshUpcoming = upcoming.refresh;
+  const refresh = useCallback(async () => {
+    await Promise.all([refreshList(), refreshUpcoming()]);
+  }, [refreshList, refreshUpcoming]);
   const today = todayKey();
   const sections = data ? sectionsOf(data.items, t) : [];
   let n = 0;
@@ -53,6 +59,7 @@ export default function TournamentsScreen() {
             ) : (
               <AlertsCard i={next()} />
             )}
+            {upcoming.data ? <NextSection data={upcoming.data} i={next()} /> : null}
             {sections.map((s) => (
               <View key={s.key} style={styles.group}>
                 <Reveal i={next()}>
@@ -170,6 +177,80 @@ function AlertsOn({ i }: { i: number }) {
   );
 }
 
+/**
+ * «Το επόμενο τουρνουά για σένα» (Pro, 17 Oct 2026): tournaments still to come, your area first, entry closing
+ * soonest. Free sees the first in full and an ink line to Pro (the alerts card above keeps the one blue).
+ */
+function NextSection({ data, i }: { data: UpcomingTournamentsResult; i: number }) {
+  const t = useCopy();
+  if (data.items.length === 0 && data.more === 0) return null;
+  const footer = nextFooter(data, t);
+  return (
+    <View style={styles.group}>
+      <Reveal i={i}>
+        <Text style={styles.groupTitle}>{greekCaps(t.tournaments.next.title)}</Text>
+      </Reveal>
+      {data.items.map((item, k) => (
+        <NextCard key={item.id} row={nextRow(item, t)} i={i + 1 + k} />
+      ))}
+      <Reveal i={i + 1 + data.items.length}>
+        {footer.locked ? <LockedLine text={footer.text} /> : <Text style={styles.nextOn}>{footer.text}</Text>}
+      </Reveal>
+    </View>
+  );
+}
+
+function NextCard({ row, i }: { row: NextRow; i: number }) {
+  const t = useCopy();
+  const press = usePress();
+  const enter = useStgIn(STG_MS, Math.min(i, 8) * STAGGER);
+  const link = row.link;
+  return (
+    <Animated.View style={[styles.card, enter]}>
+      <View style={styles.cardTop}>
+        <Text style={styles.name}>{row.name}</Text>
+        {row.played ? (
+          <View style={styles.chip}>
+            <Text style={styles.chipText}>{t.tournaments.next.played}</Text>
+          </View>
+        ) : null}
+      </View>
+      {row.where ? <Text style={styles.sub}>{row.where}</Text> : null}
+      {row.categories ? <Text style={styles.sub}>{row.categories}</Text> : null}
+      {row.deadline || link ? (
+        <View style={styles.nextBottom}>
+          {row.deadline ? <Text style={styles.bold}>{row.deadline}</Text> : <View />}
+          {link ? (
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => void Linking.openURL(link).catch(() => undefined)}
+              onPressIn={press.onPressIn}
+              onPressOut={press.onPressOut}
+              hitSlop={6}
+            >
+              <Animated.View style={[styles.enter, press.style]}>
+                <Text style={styles.enterText}>{t.tournaments.next.enter}</Text>
+              </Animated.View>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+    </Animated.View>
+  );
+}
+
+/** free: the rest of the list and the reminder are Pro; an outlined ink line, so the alerts card keeps the one blue */
+function LockedLine({ text: label }: { text: string }) {
+  const press = usePress(0.98);
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=next_tournament')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.locked, press.style]}>
+        <Text style={styles.lockedText}>{label}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 function TournamentRow({ item, today, i }: { item: TournamentItem; today: string; i: number }) {
   const t = useCopy();
   const press = usePress(0.97);
@@ -226,5 +307,11 @@ const styles = StyleSheet.create({
   chipText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.ink },
   sub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
   bold: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.ink },
+  nextBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 2 },
+  enter: { minHeight: 36, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  enterText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper },
+  locked: { minHeight: 48, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.ink, justifyContent: 'center' },
+  lockedText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
+  nextOn: { paddingHorizontal: 4, fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });

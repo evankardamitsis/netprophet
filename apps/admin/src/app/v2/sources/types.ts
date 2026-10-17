@@ -37,6 +37,10 @@ export interface SourceTournament {
   starts_on: string | null;
   ends_on: string | null;
   active: boolean;
+  /** entries close on this day (yyyy-mm-dd) */
+  entry_deadline: string | null;
+  /** where players sign up */
+  entry_link: string | null;
   source_kind: 'sheet' | 'csv' | 'site' | null;
   source_url: string | null;
   draw_url: string | null;
