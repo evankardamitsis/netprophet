@@ -6,6 +6,7 @@ import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
 import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts, motion } from '../theme';
+import { useCopy } from '../i18n';
 import { FitText } from './FitText';
 import { ReactionChips } from './ReactionChips';
 
@@ -13,7 +14,8 @@ import { ReactionChips } from './ReactionChips';
  * One finished match on Αποτελέσματα: white, or ink for an upset. Cleared out (founder, 14 Oct: "result cards look a
  * bit cluttered"): the card is the winner and the score. The «Ανατροπή» tag and the lime «Το ’πες · +10» sit on top
  * only when there is one. Under the names one quiet line: the set scores and «Το 69% έλεγε …». The reactions and
- * «Πες κάτι στον …» wait behind the «+» at the end of that line (or a tap on the card).
+ * «Πες κάτι στον …» wait behind the «+» at the end of that line (or a tap on the card). Your own win shows
+ * «Μοιράσου τη νίκη ›» (Pro «Η σεζόν σου»: the win card).
  */
 const STG_MS = 450;
 const TAG_MS = 450;
@@ -26,6 +28,7 @@ const REVEAL_MS = 4000;
 export function ResultRow({ item, index, onLongPress }: { item: ResultItem; index: number; onLongPress?: (matchId: string) => void }) {
   // prototype ms(min(i, 4), 100): 50, 100 ... 250ms
   const enter = useStgIn(STG_MS, 50 + Math.min(index, 4) * 50);
+  const t = useCopy();
   const hot = item.upset;
   const { has } = useUnlocks();
   const reactionsOpen = has('reactions');
@@ -69,6 +72,15 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
           </Text>
           {more ? <More open={open} color={soft} /> : null}
         </View>
+        {item.myWin ? (
+          <Pressable
+            accessibilityRole="button"
+            style={styles.thankHit}
+            onPress={() => router.push({ pathname: '/win-card', params: { match: item.id, from: 'results' } })}
+          >
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{t.winCard.open}</Text>
+          </Pressable>
+        ) : null}
         {open && showReactions ? <ReactionChips matchId={item.id} initial={item.reactions!} dark={hot} /> : null}
         {open && showThank ? (
           <Pressable

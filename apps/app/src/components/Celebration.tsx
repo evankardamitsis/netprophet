@@ -5,7 +5,8 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
-import { celebrationTitleSize, groupView } from '../lib/celebrate';
+import { router } from 'expo-router';
+import { celebrationTitleSize, groupView, isLeague } from '../lib/celebrate';
 import { useMyBaller } from '../lib/data';
 import { colors, ease, fonts, motion } from '../theme';
 import { Baller, type BallerHandle } from './Baller';
@@ -27,6 +28,8 @@ const JUMPS_AT = [1100, 2300];
 export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
   const v = groupView(items, t);
+  // the month closed: «Η σεζόν σου ›» opens that month's recap (a quiet link; «Συνέχεια» stays the one blue)
+  const league = items[0] && isLeague(items[0]) ? items[0].payload.month : null;
   const titleSize = celebrationTitleSize(v.title);
   const { width, height } = useWindowDimensions();
   const dim = useSharedValue(0);
@@ -89,6 +92,20 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
               <Text style={styles.ctaText}>{t.common.continue}</Text>
             </Pressable>
           </Animated.View>
+          {league ? (
+            <Animated.View style={cta}>
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => {
+                  onDone();
+                  router.push({ pathname: '/season', params: { month: league, from: 'month_end' } });
+                }}
+              >
+                <Text style={styles.season}>{t.season.monthEnd}</Text>
+              </Pressable>
+            </Animated.View>
+          ) : null}
         </View>
       </Animated.View>
     </Modal>
@@ -231,4 +248,5 @@ const styles = StyleSheet.create({
   reward: { minHeight: 24, fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime, textAlign: 'center' },
   cta: { marginTop: 18, minHeight: 52, paddingHorizontal: 44, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
   ctaText: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.paper },
+  season: { minHeight: 32, paddingTop: 6, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
 });

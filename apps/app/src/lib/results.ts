@@ -35,6 +35,8 @@ export interface ResultItem {
   reactions: Reactions | null;
   /** «Πες κάτι στον Νίκο ›» and who it goes to */
   thank: { label: string; playerId: string; first: string; gender: 'm' | 'f' | null } | null;
+  /** your own win (not a walkover): «Μοιράσου τη νίκη ›» */
+  myWin: boolean;
 }
 
 /**
@@ -97,7 +99,13 @@ export function eventParts(row: Pick<ResultRow, 'tournament' | 'round' | 'format
 const names = (players: FeedPlayer[]): ResultName[] => players.map((p) => ({ first: p.first_name, surname: p.surname }));
 const playersOf = (row: ResultRow, side: Side) => row.sides.find((s) => s.side === side)?.players ?? [];
 
-export function toResultItem(row: ResultRow, t: Copy): ResultItem {
+/** a result you won yourself (your claimed player on the winning side), and not a walkover: it can have a card */
+export function isMyWin(row: Pick<ResultRow, 'sides' | 'winner_side' | 'walkover'>, myPlayerId: string | null | undefined): boolean {
+  if (!myPlayerId || row.walkover) return false;
+  return row.sides.some((s) => s.side === row.winner_side && s.players.some((p) => p.id === myPlayerId));
+}
+
+export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null = null): ResultItem {
   const win = row.winner_side;
   const lose: Side = win === 1 ? 2 : 1;
   // a player-logged result knows only the sets («2-1»), not the games
@@ -135,11 +143,12 @@ export function toResultItem(row: ResultRow, t: Copy): ResultItem {
           gender: row.kudo_to.gender,
         }
       : null,
+    myWin: isMyWin(row, myPlayerId),
   };
 }
 
 /** Rows (newest first) into groups by day and event, in the order they come. */
-export function groupResults(rows: ResultRow[], t: Copy, now: Date): ResultGroup[] {
+export function groupResults(rows: ResultRow[], t: Copy, now: Date, myPlayerId: string | null = null): ResultGroup[] {
   const groups: ResultGroup[] = [];
   const byKey = new Map<string, ResultGroup>();
   const days = new Set<string>();
@@ -153,7 +162,7 @@ export function groupResults(rows: ResultRow[], t: Copy, now: Date): ResultGroup
       byKey.set(key, g);
       groups.push(g);
     }
-    g.items.push(toResultItem(row, t));
+    g.items.push(toResultItem(row, t, myPlayerId));
   }
   return groups;
 }

@@ -551,6 +551,80 @@ export const el = {
       me: 'Μια εβδομάδα Pro δωρεάν ›',
     },
   },
+  /** Pro «Η σεζόν σου» (17 Oct 2026, drafts for the founder): the month recap and a card for every win */
+  season: {
+    title: 'Η σεζόν σου',
+    sub: 'Ό,τι έπαιξες κι ό,τι μάντεψες, σε έναν μήνα.',
+    /** nominative; the accusative («τον Σεπτέμβριο») comes from accusativeWord */
+    months: ['Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος', 'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'],
+    stats: {
+      played: 'ματς',
+      won: 'νίκες',
+      lost: 'ήττες',
+      points: 'πόντοι',
+      sets: 'σετ',
+      winRun: 'νίκες στη σειρά',
+      deciding: 'στο τρίτο σετ',
+      tiebreaks: 'στα tie-break',
+      tournaments: 'τουρνουά',
+      bestStreak: 'καλύτερο σερί',
+      ladder: 'Ladder',
+    },
+    /** {month} is «τον Σεπτέμβριο» */
+    vsLast: '↑ ↓ σε σχέση με {month}',
+    /** names in a sentence take the article and the accusative («στον Νίκο Ψηλό») */
+    grammar: true as boolean,
+    and: ' και ',
+    bestWin: 'Η καλύτερη νίκη',
+    /** «νίκη απέναντι στον Νίκο Ψηλό»: {who} is «τον Νίκο Ψηλό», «τους Νίκο και Γιώργο» */
+    against: 'Νίκη απέναντι σ{who}',
+    /** «Ladder · Ασημένια» and «2ος από 20» */
+    ladder: 'Ladder · {tier}',
+    ladderValue: '{n}ος από {size}',
+    locked: {
+      title: 'Όλη η σεζόν σου, με Pro',
+      line: 'Σετ, η καλύτερη νίκη, νίκες στη σειρά, tie-break, σερί, Ladder και η σύγκριση με τον προηγούμενο μήνα.',
+      cta: 'Δες το Pro ›',
+    },
+    noPlayer: 'Βρες τον εαυτό σου στους παίκτες και θα μετράμε και τα ματς σου.',
+    empty: 'Δεν έπαιξες ματς αυτόν τον μήνα ακόμα. Οι πόντοι σου μετράνε κανονικά.',
+    /** the free card of the month, offered on the screen */
+    freeCard: 'Η πρώτη σου νίκη του μήνα: μοιράσου την ›',
+    share: 'Μοιράσου τη σεζόν',
+    making: 'Ετοιμάζεται…',
+    failed: 'Δεν έφυγε. Ξαναδοκίμασε.',
+    /** on the picture: «Η σεζόν μου · Οκτώβριος» */
+    cardTitle: 'Η σεζόν μου',
+    /** {month} is «τον Οκτώβριο» */
+    message: 'Η σεζόν μου στο NetProphet: {won} νίκες σε {played} ματς {month}. {url}',
+    messageNoMatches: 'Η σεζόν μου στο NetProphet: {points} πόντοι {month}. {url}',
+    /** the link on the month-end moment */
+    monthEnd: 'Η σεζόν σου ›',
+    error: 'Δεν φόρτωσε. Ξαναδοκίμασε.',
+  },
+  winCard: {
+    /** on your own win in Αποτελέσματα */
+    open: 'Μοιράσου τη νίκη ›',
+    title: 'Μοιράσου τη νίκη',
+    sub: 'Στείλ’ την στην παρέα ή βάλ’ την στο story σου.',
+    label: 'Νίκη',
+    /** {who} is «τον Νίκο Ψηλό» */
+    against: 'απέναντι σ{who}',
+    free: 'Η πρώτη νίκη κάθε μήνα μοιράζεται δωρεάν.',
+    send: 'Στείλ’ την',
+    making: 'Ετοιμάζεται…',
+    failed: 'Δεν έφυγε. Ξαναδοκίμασε.',
+    /** {score} is «7-6(4), 6-2» */
+    message: 'Νίκη {score} απέναντι σ{who}. Παίξε κι εσύ: {url}',
+    locked: {
+      title: 'Κάρτα για κάθε νίκη, με Pro',
+      line: 'Η πρώτη νίκη κάθε μήνα είναι δική σου, δωρεάν. Για όλες τις άλλες, Pro.',
+      cta: 'Δες το Pro ›',
+    },
+    notYours: 'Αυτή η νίκη δεν είναι δική σου.',
+    notShareable: 'Αυτό το ματς δεν μπαίνει σε κάρτα.',
+    error: 'Δεν φόρτωσε. Ξαναδοκίμασε.',
+  },
   scout: {
     title: 'Ο αντίπαλος πριν το ματς',
     /** the entry on Εγώ's next match */

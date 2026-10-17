@@ -621,6 +621,77 @@ export interface WinLossSplits {
   rows: (WinLoss & { key: WinLossKey })[];
 }
 
+/** a person on a season recap or a win card: the name only, never a level */
+export interface SeasonPerson {
+  first_name: string;
+  surname: string;
+  gender: 'm' | 'f' | null;
+}
+
+/** One month of «Η σεζόν σου» (api.my_season). Free gets the first four; the rest are Pro (missing for free). */
+export interface SeasonNumbers {
+  played: number;
+  won: number;
+  lost: number;
+  points: number;
+  sets_won?: number;
+  sets_lost?: number;
+  /** the longest run of wins in a row */
+  win_run?: number;
+  /** matches that went to a deciding set */
+  deciding?: WinLoss;
+  /** tie-break sets */
+  tiebreaks?: WinLoss;
+  tournaments?: number;
+  /** the best σερί reached this month */
+  best_streak?: number;
+  /** the win over the strongest opponent (no level is ever sent) */
+  best_win?: {
+    match_id: string;
+    starts_at: string;
+    sets: SetScore[];
+    score_summary: string | null;
+    opponents: SeasonPerson[];
+    tournament: string | null;
+  } | null;
+  /** your Ladder group this month: the final rank once the month closed */
+  ladder?: { tier: LeagueTier; position: number | null; size: number; closed: boolean } | null;
+}
+
+/** «Η σεζόν σου» (api.my_season): a month and, with Pro, the month before for the arrows. */
+export interface MySeason {
+  /** '2026-10' (Athens) */
+  month: string;
+  prev_month: string;
+  pro: boolean;
+  has_player: boolean;
+  now: SeasonNumbers;
+  /** null without Pro */
+  prev: SeasonNumbers | null;
+  /** the first win of the month: its card is free for everyone */
+  free_card: string | null;
+}
+
+/** A share card of one of your own wins (api.win_card). Pro: every win; free: the first win of each month. */
+export interface WinCard {
+  match_id: string;
+  starts_at: string;
+  format: MatchFormat;
+  tournament: string | null;
+  /** the event, «Ανδρών Α» */
+  category: string | null;
+  round: string | null;
+  /** winner first, so yours first */
+  sets: SetScore[];
+  score_summary: string | null;
+  retired: boolean;
+  me: SeasonPerson[];
+  opponents: SeasonPerson[];
+  pro: boolean;
+  /** this was the month's free card */
+  free: boolean;
+}
+
 /** «Ο αντίπαλος πριν το ματς» (Pro): only your own upcoming match. */
 export interface Scout {
   match_id: string;
