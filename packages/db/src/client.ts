@@ -39,6 +39,7 @@ import type {
   PublicTournament,
   ResolveMatchResult,
   ResultRow,
+  ResultsTournament,
   Scout,
   SetScore,
   Side,
@@ -175,7 +176,9 @@ export function rpc(client: NetprophetClient) {
     getScout: (matchId: string) => call<Scout>(client, 'get_scout', { p_match_id: matchId }),
     joinProWaitlist: () => call<boolean>(client, 'join_pro_waitlist', {}),
     adminGrantPro: (userId: string, days = 30) => call<{ id: string; ends_at: string }>(client, 'admin_grant_pro', { p_user_id: userId, p_days: days }),
-    getResults: (days = 14, limit = 60) => call<ResultRow[]>(client, 'get_results', { p_days: days, p_limit: limit }),
+    getResults: (days = 14, limit = 60, tournament: string | null = null, query: string | null = null) =>
+      call<ResultRow[]>(client, 'get_results', { p_days: days, p_limit: limit, p_tournament: tournament, p_query: query }),
+    resultsTournaments: () => call<ResultsTournament[]>(client, 'results_tournaments', {}),
     getLadder: (scope: LadderScope, limit = 20) => call<Ladder>(client, 'get_ladder', { p_scope: scope, p_limit: limit }),
     getPlayersHome: (limit = 60) => call<PlayersHome>(client, 'get_players_home', { p_limit: limit }),
     findPlayers: (query: string, limit = 20) => call<PlayerCard[]>(client, 'find_players', { p_query: query, p_limit: limit }),

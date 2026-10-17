@@ -237,6 +237,9 @@ export const en: Copy = {
   results: {
     title: 'Results',
     subtitle: 'What happened on court.',
+    all: 'All',
+    search: 'Find a player',
+    noneFound: 'Nothing here. Try another name or «All».',
     yesterday: 'Yesterday',
     dayBefore: 'Two days ago',
     weekdaysOn: ['On Sunday', 'On Monday', 'On Tuesday', 'On Wednesday', 'On Thursday', 'On Friday', 'On Saturday'],

@@ -673,7 +673,7 @@ export type Database = {
         Returns: Json;
       };
       get_results: {
-        Args: { p_days?: number; p_limit?: number };
+        Args: { p_days?: number; p_limit?: number; p_tournament?: string; p_query?: string };
         Returns: Json;
       };
       get_scout: {
@@ -762,6 +762,10 @@ export type Database = {
       };
       resolve_match: {
         Args: { p_match_id: string };
+        Returns: Json;
+      };
+      results_tournaments: {
+        Args: { p_days?: number };
         Returns: Json;
       };
       search_players: {

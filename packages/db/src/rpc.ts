@@ -348,6 +348,13 @@ export type LeagueCelebration = Celebration<LeagueCelebrationPayload>;
 export type LevelCelebration = Celebration<LevelCelebrationPayload>;
 
 /** One finished match on the Αποτελέσματα scoreboard (api.get_results, newest first). */
+/** a tournament with results lately, for the filter on Αποτελέσματα; yours first */
+export interface ResultsTournament {
+  id: string;
+  name: string;
+  results: number;
+}
+
 export interface ResultRow {
   match_id: string;
   sport_id: string;
@@ -358,6 +365,7 @@ export interface ResultRow {
   area_id: string | null;
   /** null for friendlies */
   tournament: string | null;
+  tournament_id?: string | null;
   /** the category, «Μ 40+», when the match belongs to an event */
   level?: string | null;
   /** MS, WS, MD, WD, XD */

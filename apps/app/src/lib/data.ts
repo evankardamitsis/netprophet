@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { levelNumber } from '@netprophet/copy';
+import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -506,29 +506,47 @@ export interface ResultsState {
   refresh: () => Promise<void>;
 }
 
-/** Αποτελέσματα: finished matches of the last two weeks, grouped by day and event. */
-export function useResults(): ResultsState {
+/** the filter on Αποτελέσματα: one tournament (all of its results) and a player's name */
+export interface ResultsFilter {
+  tournament: string | null;
+  query: string;
+}
+
+/** sample mode: the filter applied to the sample rows (a sample tournament's id is its name) */
+function filterSample(rows: ResultRow[], f: ResultsFilter): ResultRow[] {
+  const q = f.query.trim();
+  return rows.filter(
+    (r) =>
+      (!f.tournament || (r.tournament_id ?? r.tournament) === f.tournament) &&
+      (!q || r.sides.some((s) => s.players.some((p) => matchesLoosely(`${p.first_name} ${p.surname}`, q) || matchesLoosely(`${p.surname} ${p.first_name}`, q)))),
+  );
+}
+
+/** Αποτελέσματα: finished matches of the last two weeks, grouped by day and event; or one tournament's, or a name's. */
+export function useResults(filter: ResultsFilter = { tournament: null, query: '' }): ResultsState {
   const t = useCopy();
   const api = useApi();
-  const [rows, setRows] = useState<ResultRow[]>(() => (api ? [] : mockResults(new Date())));
+  const [rows, setRows] = useState<ResultRow[]>(() => (api ? [] : filterSample(mockResults(new Date()), filter)));
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
+  const { tournament, query } = filter;
 
   const refresh = useCallback(async () => {
     if (!api) {
-      setRows(mockResults(new Date()));
+      setRows(filterSample(mockResults(new Date()), { tournament, query }));
       return;
     }
     setLoading(true);
     try {
-      setRows(await api.getResults(14, 60));
+      const q = query.trim();
+      setRows(await api.getResults(14, tournament || q ? 200 : 60, tournament, q.length >= 2 ? q : null));
       setError(false);
     } catch {
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [api]);
+  }, [api, tournament, query]);
 
   useEffect(() => {
     void refresh();
@@ -536,6 +554,32 @@ export function useResults(): ResultsState {
 
   const groups = useMemo(() => groupResults(rows, t, new Date()), [rows, t]);
   return { groups, loading, error, refresh };
+}
+
+/** the tournaments with results lately, for the chips on Αποτελέσματα; yours first */
+export function useResultsTournaments(): ResultsTournament[] {
+  const api = useApi();
+  const [list, setList] = useState<ResultsTournament[]>(() => (api ? [] : sampleTournaments()));
+  useEffect(() => {
+    if (!api) return;
+    let live = true;
+    api
+      .resultsTournaments()
+      .then((l) => {
+        if (live) setList(l);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [api]);
+  return list;
+}
+
+function sampleTournaments(): ResultsTournament[] {
+  const n = new Map<string, number>();
+  for (const r of mockResults(new Date())) if (r.tournament) n.set(r.tournament, (n.get(r.tournament) ?? 0) + 1);
+  return [...n].map(([name, results]) => ({ id: name, name, results }));
 }
 
 export interface LadderState {
