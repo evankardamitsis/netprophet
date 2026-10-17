@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BallArt } from '../src/components/Avatar';
 import { BG_KEYS, CardBackground } from '../src/components/CardBackground';
+import { Baller } from '../src/components/Baller';
+import { WIN_EFFECTS } from '../src/components/WinEffects';
 import { DEFAULT_AVATARS } from '../src/lib/avatar';
 import { colors, fonts } from '../src/theme';
 
@@ -11,9 +14,24 @@ const FRAMES = ['frame_gold', 'frame_seven', 'frame_ten', 'frame_week', 'frame_m
 export default function LooksScreen() {
   const insets = useSafeAreaInsets();
   const look = DEFAULT_AVATARS[0]!.look;
+  // every effect replays on its own every few seconds
+  const [jump, setJump] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setJump((n) => n + 1), 2600);
+    return () => clearInterval(t);
+  }, []);
   if (!__DEV__) return null;
   return (
     <ScrollView style={styles.screen} contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 40 }]}>
+      <View style={styles.grid}>
+        {WIN_EFFECTS.map((fx) => (
+          <View key={fx} style={styles.fx}>
+            <CardBackground bg="bg_night" stage />
+            <Baller look={look} size={84} kit="kit_green" effect={fx} jump={jump} />
+            <Text style={styles.key}>{fx}</Text>
+          </View>
+        ))}
+      </View>
       <View style={styles.grid}>
         {BG_KEYS.map((bg) => (
           <View key={bg} style={styles.stage}>
@@ -47,6 +65,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 12, gap: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   stage: { width: 182, height: 182, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 6 },
+  fx: { width: 118, height: 150, borderRadius: 14, overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 8 },
   cell: { width: 70, alignItems: 'center' },
   thumb: { width: 76, height: 106, borderRadius: 12, overflow: 'hidden' },
   key: { position: 'absolute', top: 4, left: 6, fontFamily: fonts.bodyBold, fontSize: 9, color: colors.paper },

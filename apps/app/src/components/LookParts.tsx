@@ -4,6 +4,7 @@ import type { Tile } from '../lib/look';
 import { colors, cosmetics } from '../theme';
 import { Lit } from './Lit';
 import { Avatar } from './Avatar';
+import { WinEffect } from './WinEffects';
 import type { AvatarLook } from '../lib/avatar';
 
 /** the shirt and racket colours of a kit */
@@ -55,7 +56,12 @@ export function LookThumb({ tile, who }: { tile: Tile; who: AvatarLook }) {
           gear={tile.category === 'gear' ? tile.key : null}
           frame={tile.category === 'frame' ? tile.key : null}
         />
-        {tile.category === 'win_effect' && !none ? <ConfettiDots /> : null}
+        {tile.key === 'fx_confetti' ? <ConfettiDots /> : null}
+        {tile.category === 'win_effect' && tile.key && tile.key !== 'fx_confetti' ? (
+          <View pointerEvents="none" style={styles.fxBox}>
+            <WinEffect effect={tile.key} size={64} still />
+          </View>
+        ) : null}
       </View>
     );
   }
@@ -87,6 +93,8 @@ function ConfettiDots() {
 const styles = StyleSheet.create({
   thumb: { width: 76, height: 106, borderRadius: 12, overflow: 'hidden', backgroundColor: colors.ink },
   kitThumb: { backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
+  // the effect's still frame, laid over the ball it plays round
+  fxBox: { position: 'absolute', width: 64, height: 64, top: 21, left: 6 },
   ballThumb: { backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute', width: 6, height: 6, borderRadius: 1.5, transform: [{ rotate: '20deg' }] },
   none: { borderWidth: 2, borderStyle: 'dashed', borderColor: colors.slate },

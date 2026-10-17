@@ -15,7 +15,8 @@ import * as Haptics from 'expo-haptics';
 import type { AvatarLook } from '../lib/avatar';
 import { nextPoke } from '../lib/baller';
 import { playSound } from '../lib/sound';
-import { BallArt, Confetti, type Mouth } from './Avatar';
+import { BallArt, type Mouth } from './Avatar';
+import { EFFECT_BEHIND, EFFECT_SOUND, WinEffect } from './WinEffects';
 
 /**
  * Baller (founder, 17 Oct: "we need this Baller figure to be our trademark"): the one living ball person. It bobs,
@@ -36,7 +37,7 @@ interface Props {
   gear?: string | null;
   frame?: string | null;
   bg?: string | null;
-  /** the win effect worn: fx_confetti bursts on a jump */
+  /** the win effect worn: it plays round Baller on every jump */
   effect?: string | null;
   /** a new number plays a jump (for screens that count celebrations) */
   jump?: number;
@@ -152,7 +153,11 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
           lift.value = withSequence(withTiming(size * 0.38, { duration: 260, easing: out }), withTiming(0, { duration: 330, easing: Easing.in(Easing.quad) }), withTiming(size * 0.06, { duration: 120, easing: out }), withTiming(0, { duration: 140 }));
           tilt.value = withSequence(withTiming(-8, { duration: 260 }), withTiming(0, { duration: 420 }));
           swing([[60, true], [760, false]]);
-          if (effect === 'fx_confetti') setBurst((b) => b + 1);
+          if (effect) {
+            setBurst((b) => b + 1);
+            const sound = EFFECT_SOUND[effect];
+            if (sound) later(120, () => playSound(sound));
+          }
           later(590, () => buzz('success'));
           break;
         case 'hop':
@@ -276,10 +281,11 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
 
   const art = (
     <View {...(throwable ? fling.panHandlers : {})}>
+      {burst > 0 && effect && EFFECT_BEHIND.has(effect) ? <WinEffect key={`b${burst}`} effect={effect} size={size} /> : null}
       <Animated.View style={style}>
         <BallArt look={look} size={size} kit={kit} gear={gear} frame={frame} bg={bg} mouth={mouth} dizzy={dizzy} raised={raised} eyes={{ open, look: glance }} />
       </Animated.View>
-      {burst > 0 ? <Confetti key={burst} size={size} /> : null}
+      {burst > 0 && effect && !EFFECT_BEHIND.has(effect) ? <WinEffect key={burst} effect={effect} size={size} /> : null}
     </View>
   );
   if (!pokeable) return art;

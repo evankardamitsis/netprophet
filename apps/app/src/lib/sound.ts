@@ -8,7 +8,7 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
  * «ωχ» on a miss, a squeak on a poke. On by default and quiet; silent with the ringer off, mixed with whatever else is
  * playing (never stops your music); one switch, «Ήχοι», in Ρυθμίσεις. Short synthesised clips in assets/sounds.
  */
-export type SoundName = 'pop' | 'cheer' | 'aw' | 'squeak';
+export type SoundName = 'pop' | 'cheer' | 'aw' | 'squeak' | 'boom' | 'bounce' | 'fanfare' | 'whoosh' | 'applause';
 
 const SOURCES: Record<SoundName, number> = {
   /* eslint-disable @typescript-eslint/no-require-imports */
@@ -16,6 +16,11 @@ const SOURCES: Record<SoundName, number> = {
   cheer: require('../../assets/sounds/cheer.wav'),
   aw: require('../../assets/sounds/aw.wav'),
   squeak: require('../../assets/sounds/squeak.wav'),
+  boom: require('../../assets/sounds/boom.wav'),
+  bounce: require('../../assets/sounds/bounce.wav'),
+  fanfare: require('../../assets/sounds/fanfare.wav'),
+  whoosh: require('../../assets/sounds/whoosh.wav'),
+  applause: require('../../assets/sounds/applause.wav'),
   /* eslint-enable @typescript-eslint/no-require-imports */
 };
 const VOLUME = 0.6;

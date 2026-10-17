@@ -143,6 +143,18 @@ export const cosmetics = {
   },
   /** the confetti win effect */
   confetti: ['#D9F03F', '#F3F5EE', '#9DB0FF', '#F2D36B'],
+  /** the win effects (founder, 17 Oct: "more cheers that actually do stuff") */
+  effects: {
+    fireworks: ['#FF6B5A', '#9DB0FF', '#F2D36B', '#7FE0D0'],
+    spark: '#FFF6D8',
+    tennisBall: '#E3F04A',
+    gold: '#E4C25A',
+    goldLight: '#F7E7A3',
+    goldDark: '#8C6A12',
+    fire: '#FF7A1A',
+    fireCore: '#FFD54A',
+    fireTip: '#E2381B',
+  },
   /**
    * The drawn avatars (founder, 14 Oct: drawn in code like the logo's balls): skin and hair are part of the person,
    * never sold. The outline is ink; the kit colours above dress the shirt.
