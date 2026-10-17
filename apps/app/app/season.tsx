@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   linkHit: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
   link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
   lockedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6, opacity: 0.55 },
-  lockedTile: { flexGrow: 1, flexBasis: '30%', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: colors.inkLine },
+  lockedTile: { flexGrow: 1, flexBasis: '45%', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: colors.inkLine },
   lockedValue: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 30, color: colors.mist },
   lockTitle: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 28, color: colors.paper },
   lockCta: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper, marginTop: 4 },

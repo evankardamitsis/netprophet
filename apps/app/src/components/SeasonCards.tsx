@@ -58,22 +58,24 @@ export const WinShareCard = forwardRef<View, BallerLook & { width: number; view:
       <View style={[styles.ball, { paddingTop: 40 * k }]}>
         <JumpingBaller who={who} size={Math.round(height * 0.34)} k={k} />
       </View>
-      <View style={{ paddingHorizontal: 18 * k, paddingBottom: 16 * k, gap: 6 * k, alignItems: 'center' }}>
-        <Text style={[styles.label, { fontSize: 13 * k, lineHeight: 17 * k, letterSpacing: 1.2 * k }]}>{view.label}</Text>
-        <View style={[styles.sets, { gap: 14 * k }]}>
-          {view.sets.map((s, i) => (
-            <Text key={i} style={[styles.set, { fontSize: big * k, lineHeight: (big + 6) * k }]}>
-              {s}
-            </Text>
-          ))}
+      <View style={{ paddingHorizontal: 14 * k, paddingBottom: 14 * k, gap: 8 * k }}>
+        <View style={[styles.panel, { borderRadius: 20 * k, paddingVertical: 12 * k, paddingHorizontal: 12 * k, gap: 4 * k }]}>
+          <Text style={[styles.label, { fontSize: 13 * k, lineHeight: 17 * k, letterSpacing: 1.2 * k }]}>{view.label}</Text>
+          <View style={[styles.sets, { gap: 14 * k }]}>
+            {view.sets.map((s, i) => (
+              <Text key={i} style={[styles.set, { fontSize: big * k, lineHeight: (big + 6) * k }]}>
+                {s}
+              </Text>
+            ))}
+          </View>
+          <Text style={[styles.against, { fontSize: 18 * k, lineHeight: 23 * k }]} numberOfLines={2}>
+            {view.against}
+          </Text>
+          <Text style={[styles.event, { fontSize: 12 * k, lineHeight: 16 * k }]} numberOfLines={1}>
+            {view.event}
+          </Text>
         </View>
-        <Text style={[styles.against, { fontSize: 18 * k, lineHeight: 23 * k }]} numberOfLines={2}>
-          {view.against}
-        </Text>
-        <Text style={[styles.event, { fontSize: 12 * k, lineHeight: 16 * k }]} numberOfLines={1}>
-          {view.event}
-        </Text>
-        <Text style={[styles.site, { fontSize: 12 * k, lineHeight: 16 * k, marginTop: 6 * k }]}>{view.owner ? `${view.owner} · netprophetapp.com` : 'netprophetapp.com'}</Text>
+        <Text style={[styles.site, { fontSize: 12 * k, lineHeight: 16 * k }]}>{view.owner ? `${view.owner} · netprophetapp.com` : 'netprophetapp.com'}</Text>
       </View>
     </View>
   );
@@ -127,7 +129,9 @@ const styles = StyleSheet.create({
   ball: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
   shadow: { borderRadius: 999, backgroundColor: alpha(colors.ink, 0.45) },
   // «ΝΙΚΗ» is what happened: lime
-  label: { fontFamily: fonts.bodyBold, color: colors.lime },
+  // the words sit on a dark glass so the court lines never cross them
+  panel: { alignItems: 'center', backgroundColor: alpha(colors.ink, 0.72), borderWidth: 1, borderColor: colors.inkLine },
+  label: { fontFamily: fonts.bodyBold, color: colors.lime, textAlign: 'center' },
   sets: { flexDirection: 'row', justifyContent: 'center' },
   // the sets you won, big; a soft ink shadow keeps them readable on any background
   set: { fontFamily: fonts.displayHeavy, color: colors.lime, textShadowColor: alpha(colors.ink, 0.6), textShadowRadius: 8, textShadowOffset: { width: 0, height: 1 } },
