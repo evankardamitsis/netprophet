@@ -878,6 +878,8 @@ export const el = {
       failed: 'Δεν αποθηκεύτηκε. Ξαναδοκίμασε.',
     },
     edit: 'Ο Baller σου',
+    rename: 'Μετονομασία',
+    save: 'Αποθήκευση',
     /** the share card (drafts for the founder) */
     share: {
       open: 'Μοιράσου ›',
