@@ -253,6 +253,10 @@ export const el = {
   results: {
     title: 'Αποτελέσματα',
     subtitle: 'Τι έγινε στα γήπεδα.',
+    /** the filter on top (founder, 17 Oct): every result, or one tournament's; and a name */
+    all: 'Όλα',
+    search: 'Ψάξε παίκτη',
+    noneFound: 'Τίποτα εδώ. Δοκίμασε άλλο όνομα ή «Όλα».',
     yesterday: 'Χθες',
     dayBefore: 'Προχθές',
     /** «Την Κυριακή · OPEN ΓΛΥΦΑΔΑΣ»: the day with its article, for days within the last week */
