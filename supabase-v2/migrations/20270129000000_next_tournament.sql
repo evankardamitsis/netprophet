@@ -5,8 +5,8 @@
 -- earlier edition.
 --
 -- Who it is for: the organiser's categories are the "who" line. Players' playing levels stay hidden (founder,
--- 14 Oct), so a level never filters the list and never shows; a tournament whose level range or categories do not
--- fit the player only sorts a little lower.
+-- 14 Oct), so a level never filters or orders the list and never shows. A tournament whose categories are all for
+-- the other gender sorts after the ones that fit, within the player's area and outside it.
 --
 -- Free and Pro (decided here, server side, nothing hidden in the client):
 --   free: the first tournament in full (deadline and sign-up link included) and `more`, how many others there are;
@@ -52,21 +52,18 @@ returns table (id uuid, ord bigint, area_match boolean, doc jsonb)
 language sql stable security definer set search_path = core, pg_temp
 as $$
   with me as (
-    select pr.user_id, pr.primary_sport, pr.area_id, pr.area_ids, pr.gender, pr.claimed_player_id,
-           (select ps.level_tier from core.player_sports ps
-             where ps.player_id = pr.claimed_player_id and ps.sport_id = pr.primary_sport) as tier
+    select pr.user_id, pr.primary_sport, pr.area_id, pr.area_ids, pr.gender, pr.claimed_player_id
       from core.profiles pr where pr.user_id = p_user
   ),
   c as (
     select t.*,
            (t.area_id is not null and (t.area_id = me.area_id or t.area_id = any(me.area_ids))) as area_match,
            (t.entry_deadline is not null and t.entry_deadline >= p_today) as open_entry,
-           -- fit: no level range or the player inside it, and a category for their gender (or none named)
-           ((me.tier is null or ((t.level_min is null or me.tier >= t.level_min) and (t.level_max is null or me.tier <= t.level_max)))
-            and (me.gender is null
-                 or not exists (select 1 from core.tournament_events e where e.tournament_id = t.id and e.gender is not null)
-                 or exists (select 1 from core.tournament_events e where e.tournament_id = t.id
-                             and (e.gender is null or e.gender = me.gender or e.gender = 'mixed')))) as fits,
+           -- fit: a category for the player's gender, or none that names one
+           (me.gender is null
+            or not exists (select 1 from core.tournament_events e where e.tournament_id = t.id and e.gender is not null)
+            or exists (select 1 from core.tournament_events e where e.tournament_id = t.id
+                        and (e.gender is null or e.gender = me.gender or e.gender = 'mixed'))) as fits,
            core.played_edition(me.claimed_player_id, t.id) as played,
            me.claimed_player_id
       from core.tournaments t, me
@@ -75,8 +72,8 @@ as $$
        and ((t.starts_on is not null and t.starts_on > p_today) or (t.entry_deadline is not null and t.entry_deadline >= p_today))
   )
   select c.id,
-         row_number() over (order by c.area_match desc, c.open_entry desc, c.entry_deadline nulls last,
-                                     c.fits desc, c.starts_on nulls last, c.name, c.id) as ord,
+         row_number() over (order by c.area_match desc, c.fits desc, c.open_entry desc, c.entry_deadline nulls last,
+                                     c.starts_on nulls last, c.name, c.id) as ord,
          c.area_match,
          jsonb_build_object(
            'id', c.id, 'name', c.name, 'venue', c.venue, 'area_id', c.area_id,

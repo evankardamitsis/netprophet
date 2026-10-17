@@ -2,7 +2,7 @@
 -- entry deadline soonest; free sees the first in full and how many more, Pro sees all; staff set the deadline and
 -- the link; Pro gets one push two days before the deadline (area or an earlier edition), once.
 begin;
-select plan(22);
+select plan(23);
 
 select tests.create_user('nt-pro@test.local') as pro \gset
 select tests.create_user('nt-free@test.local') as free \gset
@@ -10,7 +10,7 @@ select tests.create_user('nt-ed@test.local', 'editor') as ed \gset
 select tests.create_user('nt-far@test.local') as far \gset
 insert into core.entitlements (user_id, source, status) values (:'pro'::uuid, 'gift', 'active'), (:'far'::uuid, 'gift', 'active');
 update core.profiles set area_id = 'glyfada' where user_id in (:'pro'::uuid, :'free'::uuid);
-update core.profiles set area_id = 'kifisia' where user_id = :'far'::uuid;
+update core.profiles set area_id = 'pagrati' where user_id = :'far'::uuid;
 select tests.mk_player('Νεξτ', 'Φαρίδης') as pf \gset
 select tests.mk_player('Νεξτ', 'Αντίπαλος') as po \gset
 update core.players set claimed_by_user_id = :'far'::uuid where id = :'pf'::uuid;
@@ -51,6 +51,16 @@ select is((select doc -> 'items' -> 0 -> 'categories' from up_pro), '["MEDIUM", 
 select is((select doc -> 'items' -> 0 ->> 'entry_link' from up_pro), 'https://example.org/c', 'with where to sign up');
 select is((select (doc -> 'items' -> 0 ->> 'entry_open')::boolean from up_pro), true, 'entry is open');
 select is((select (i ->> 'entry_open')::boolean from up_pro, jsonb_array_elements(doc -> 'items') i where i ->> 'name' = 'Κύπελλο Ζ'), false, 'closed for entry but still to start: shown, marked closed');
+
+-- a woman: Κύπελλο Γ has men's categories only, so it goes after the Glyfada ones that fit
+select tests.logout();
+update core.profiles set gender = 'f' where user_id = :'pro'::uuid;
+select tests.login(:'pro'::uuid);
+select is((select jsonb_agg(i ->> 'name' order by o) from jsonb_array_elements(api.upcoming_tournaments() -> 'items') with ordinality x(i, o)
+            where i ->> 'near' = 'true' and i ->> 'id' like '00000000-0000-0000-0000-00000000%'),
+          '["Κύπελλο Β", "Κύπελλο Δ", "Κύπελλο Γ"]'::jsonb, 'a tournament not for your gender sorts after the ones that are');
+select tests.logout();
+update core.profiles set gender = null where user_id = :'pro'::uuid;
 
 -- free: the first one in full, a count of the rest
 select tests.login(:'free'::uuid);
