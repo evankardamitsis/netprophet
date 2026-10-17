@@ -14,6 +14,7 @@ import { identify, screen } from "../src/lib/analytics";
 import { listenForPushTaps, refreshPushToken } from "../src/lib/push";
 import { api, isLive } from "../src/lib/supabase";
 import { colors } from "../src/theme";
+import { initSounds } from "../src/lib/sound";
 import { Loading } from "../src/components/Loading";
 
 /** the animated logo stays at least this long on a cold start, so its hop is seen and the screen never flickers */
@@ -32,6 +33,10 @@ export default function RootLayout() {
     /* eslint-enable @typescript-eslint/no-var-requires */
   });
   const [minDone, setMinDone] = useState(false);
+  // Baller's sounds: read the switch and set the audio session once
+  useEffect(() => {
+    void initSounds();
+  }, []);
   useEffect(() => {
     const id = setTimeout(() => setMinDone(true), LOADING_MIN_MS);
     return () => clearTimeout(id);

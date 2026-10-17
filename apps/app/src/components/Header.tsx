@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -9,11 +9,12 @@ import Animated, {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
-import type { MeSummary } from '../lib/data';
+import { useMyBaller, type MeSummary } from '../lib/data';
 import { useHud, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
+import { Baller, type BallerHandle } from './Baller';
 
 /** the account disc and the sport ball at its corner */
 const AVATAR = 34;
@@ -39,7 +40,7 @@ export function Header({ me }: { me: MeSummary | null }) {
       <View style={styles.right}>
         <Stat value={streak} label={t.streak.label} onPress={goMe} target={hud.targets.streak} fx={hud.streakFx} pill />
         <Stat value={points} label={t.header.points} target={hud.targets.points} countUp />
-        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} />
+        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} />
       </View>
     </View>
   );
@@ -142,13 +143,21 @@ function useStreakFx(fx: StreakFx) {
 }
 
 /**
- * The account button (founder, 14 Oct: "if no initials there noone knows its the account"): your initials on a paper
- * disc, with your sport's ball as a small crisp badge at its corner, so it reads as you and as your game.
+ * The account button (founder, 14 Oct: "if no initials there noone knows its the account"): your Baller on a paper
+ * disc (founder, 17 Oct: Baller lives in the top bar), your initials until it loads, with your sport's ball as a small
+ * crisp badge at its corner, so it reads as you and as your game. Baller hops when points land.
  */
-function Avatar({ initials, sport }: { initials: string; sport: string }) {
+function Avatar({ initials, sport, points }: { initials: string; sport: string; points: number | undefined }) {
   const t = useCopy();
   const kind: BallKind = (BALLS as string[]).includes(sport) ? (sport as BallKind) : 'tennis';
   const press = usePress();
+  const me = useMyBaller();
+  const baller = useRef<BallerHandle>(null);
+  const last = useRef(points);
+  useEffect(() => {
+    if (points !== undefined && last.current !== undefined && points > last.current) baller.current?.play('hop');
+    last.current = points;
+  }, [points]);
   return (
     <Pressable
       accessibilityRole="button"
@@ -159,9 +168,15 @@ function Avatar({ initials, sport }: { initials: string; sport: string }) {
       style={styles.avatarHit}
     >
       <Animated.View style={[styles.avatar, press.style]}>
-        <Text style={styles.initials} numberOfLines={1}>
-          {initials}
-        </Text>
+        {me.look ? (
+          <View style={styles.ballerDisc}>
+            <Baller ref={baller} look={me.look} size={AVATAR + 6} kit={me.kit} gear={me.gear} />
+          </View>
+        ) : (
+          <Text style={styles.initials} numberOfLines={1}>
+            {initials}
+          </Text>
+        )}
         <View style={styles.badge}>
           <View style={styles.badgeBall}>
             <Ball kind={kind} size={BADGE} />
@@ -194,6 +209,7 @@ const styles = StyleSheet.create({
   pillLabel: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 14, color: colors.ink },
   label: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.33, color: colors.mist },
   avatarHit: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  ballerDisc: { width: AVATAR, height: AVATAR, borderRadius: 999, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   avatar: {
     width: AVATAR,
     height: AVATAR,

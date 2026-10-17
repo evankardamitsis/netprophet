@@ -28,7 +28,7 @@ import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
 import { myMatchOf, type MyMatchView } from './myMatch';
-import { avatarByKey, defaultAvatarFor, type DefaultAvatar } from './avatar';
+import { avatarByKey, defaultAvatarFor, type AvatarLook, type DefaultAvatar } from './avatar';
 import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
@@ -1641,4 +1641,12 @@ export function useBaller(): { name: string | null; met: boolean | null; save: (
     [api],
   );
   return { name, met, save, refresh };
+}
+
+/** your Baller as it looks right now: your style and everything you wear (lime only where earned) */
+export function useMyBaller(): { look: AvatarLook | null; kit: string; gear: string | null; frame: string | null; effect: string | null } {
+  const my = useMyAvatar();
+  const { look } = useLook();
+  const eq = look?.equipped;
+  return { look: my.avatar?.look ?? null, kit: eq?.kit ?? 'kit_green', gear: eq?.gear ?? null, frame: eq?.frame ?? null, effect: eq?.win_effect ?? null };
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
@@ -11,6 +11,7 @@ import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { KudosCloud } from '../../src/components/KudosCloud';
+import { useSoundsOn } from '../../src/lib/sound';
 import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss, useMyAvatar } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
@@ -789,6 +790,7 @@ function Settings() {
               <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
             </Pressable>
           ) : null}
+          <SoundsRow />
           {blocks.list.length > 0 ? (
             <View style={styles.blocks}>
               <Text style={styles.blocksTitle}>{t.safety.list}</Text>
@@ -823,6 +825,21 @@ function Settings() {
           <DeleteAccount />
         </>
       ) : null}
+    </View>
+  );
+}
+
+/** «Ήχοι»: Baller's sounds on or off, on this phone */
+function SoundsRow() {
+  const t = useCopy();
+  const [on, setOn] = useSoundsOn();
+  return (
+    <View style={styles.soundsRow}>
+      <View style={styles.proText}>
+        <Text style={styles.proTitle}>{t.me.sounds}</Text>
+        <Text style={styles.muted}>{t.me.soundsLine}</Text>
+      </View>
+      <Switch value={on} onValueChange={setOn} trackColor={{ false: colors.navLine, true: colors.ink }} thumbColor={colors.white} accessibilityLabel={t.me.sounds} />
     </View>
   );
 }
@@ -1015,6 +1032,7 @@ const styles = StyleSheet.create({
   friendsText: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   friendsTitle: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   friendsCount: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
+  soundsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 6 },
   settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
   signOut: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
