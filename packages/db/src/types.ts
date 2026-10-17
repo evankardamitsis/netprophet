@@ -744,6 +744,10 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      my_season: {
+        Args: { p_month?: string };
+        Returns: Json;
+      };
       react: {
         Args: { p_match_id: string; p_key: string };
         Returns: Json;
@@ -814,6 +818,10 @@ export type Database = {
       };
       wear_badge: {
         Args: { p_key: string };
+        Returns: Json;
+      };
+      win_card: {
+        Args: { p_match: string };
         Returns: Json;
       };
     };
