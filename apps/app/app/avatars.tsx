@@ -1,8 +1,8 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState } from 'react';
-import { Avatar, AvatarSilhouette, LiveAvatar } from '../src/components/Avatar';
+import { Avatar, AvatarSilhouette } from '../src/components/Avatar';
+import { Baller } from '../src/components/Baller';
 import type { AvatarLook } from '../src/lib/avatar';
 import { Back } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
@@ -61,13 +61,12 @@ export default function AvatarsScreen() {
   );
 }
 
-/** one of the 12, alive; a tap makes it jump */
+/** one of the 12, alive; poke it */
 function LiveCell({ look }: { look: AvatarLook }) {
-  const [jump, setJump] = useState(0);
   return (
-    <Pressable accessibilityRole="button" onPress={() => setJump((n) => n + 1)} style={{ width: 96, height: 96 }}>
-      <LiveAvatar look={look} size={96} jump={jump} />
-    </Pressable>
+    <View style={{ width: 96, height: 96 }}>
+      <Baller look={look} size={96} pokeable />
+    </View>
   );
 }
 

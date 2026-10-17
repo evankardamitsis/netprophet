@@ -10,7 +10,8 @@ import { LookThumb } from '../../src/components/LookParts';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useLook, useMePage, useMyAvatar } from '../../src/lib/data';
-import { Avatar, LiveAvatar } from '../../src/components/Avatar';
+import { Avatar } from '../../src/components/Avatar';
+import { Baller } from '../../src/components/Baller';
 import { DEFAULT_AVATARS, type AvatarLook } from '../../src/lib/avatar';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { buySheetOf, ctaOf, findTile, LOOK_TABS, ownedKeys, previewOf, tagOf, tileName, tilesFor, type BuySheet, type Tile, type Tone } from '../../src/lib/look';
@@ -221,9 +222,10 @@ function PreviewCard({
           <Text style={styles.pvWord}>{t.level.label}</Text>
         </View>
       ) : null}
-      <Pressable accessibilityRole="button" onPress={() => setJump((n) => n + 1)} style={styles.pvKit}>
-        <LiveAvatar look={who} size={PV_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
-      </Pressable>
+      {/* poke it: a tap squashes, quick taps make it dizzy, a long press jumps */}
+      <View style={styles.pvKit}>
+        <Baller look={who} size={PV_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} pokeable />
+      </View>
       {name ? (
         <View style={styles.pvNameWrap}>
           <View style={plate?.box}>
