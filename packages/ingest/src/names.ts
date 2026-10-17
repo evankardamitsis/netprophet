@@ -80,11 +80,17 @@ export function sheetKey(s: string): string {
     .trim();
 }
 
-/** one side of a match: one person, or two with «/»; flags first_name_missing and latin_name */
-export function parseSheetSide(raw: string): { people: SheetPerson[]; flags: string[]; pair: boolean } {
-  const pair = raw.includes('/');
-  const parts = pair ? raw.split('/').map((p) => p.trim()) : [raw.trim()];
-  const flags = new Set<string>();
+/**
+ * One side of a match: one person, or two with «/»; flags first_name_missing and latin_name. In a doubles category
+ * (`doubles`) a side of exactly two words with no «/» is two surnames, «ΓΕΜΙΔΟΠΟΥΛΟΥ ΦΕΛΕΜΕΓΚΑΣ» (founder, 17 Oct: ΑΟΚ
+ * writes pairs that way); flagged pair_by_space.
+ */
+export function parseSheetSide(raw: string, doubles = false): { people: SheetPerson[]; flags: string[]; pair: boolean } {
+  const words = raw.trim().split(/\s+/).filter(Boolean);
+  const bySpace = doubles && !raw.includes('/') && words.length === 2;
+  const pair = raw.includes('/') || bySpace;
+  const parts = bySpace ? words : raw.includes('/') ? raw.split('/').map((p) => p.trim()) : [raw.trim()];
+  const flags = new Set<string>(bySpace ? ['pair_by_space'] : []);
   const people = parts.map((p) => {
     const n = p.trim().replace(/\s+/g, ' ');
     const at = n.indexOf(' ');
