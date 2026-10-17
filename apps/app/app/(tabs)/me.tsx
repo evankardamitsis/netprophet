@@ -425,9 +425,8 @@ function BallerStage({
   };
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={baller.name ?? 'Baller'} onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.stage, { height }, press.style]}>
-        <CardBackground bg={bg} k={0.62} scrim />
-        <View style={[styles.stageLight, { width: height * 0.9, height: height * 0.9, borderRadius: height }]} pointerEvents="none" />
+      <Animated.View style={[styles.stage, { height, paddingBottom: height * 0.05 }, press.style]}>
+        <CardBackground bg={bg} stage />
         <Animated.View style={pop}>
           <Baller look={look} size={size} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} throwable />
         </Animated.View>
@@ -981,8 +980,8 @@ const styles = StyleSheet.create({
   streakNum: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 48, paddingBottom: 10, marginBottom: -10, color: colors.ink },
   levelTitle: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   hero: { gap: 10 },
-  stage: { borderRadius: 28, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  stageLight: { position: 'absolute', backgroundColor: colors.paper, opacity: 0.08 },
+  // Baller stands on the court: at the bottom of the stage, its shadow in the pool of light
+  stage: { borderRadius: 28, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'flex-end' },
   ballerTag: { position: 'absolute', bottom: 14, alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999, backgroundColor: alpha(colors.ink, 0.75) },
   ballerTagText: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 26, color: colors.paper },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
