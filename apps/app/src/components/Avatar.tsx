@@ -97,7 +97,7 @@ export function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, mouth
   const skin = cosmetics.avatar.skin[look.skin] ?? cosmetics.avatar.skin[1];
   const hair = cosmetics.avatar.hair[look.hairColour];
   const k = cosmetics.kit[kit as KitKey] ?? cosmetics.kit.kit_green;
-  const collar = kit === 'kit_white' ? colors.slate : colors.paper;
+  const collar = kit === 'kit_white' || kit === 'kit_retro' ? colors.slate : colors.paper;
   // ids are per drawing so many avatars on one screen never share a gradient
   const id = `${look.skin}${look.hair}${look.hairColour}${kit}`;
   return (
@@ -117,7 +117,7 @@ export function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, mouth
       <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
       {frame ? <FrameRing frame={frame} id={id} /> : null}
       {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} raised={raised} /> : null}
-      <HairBack style={look.hair} fill={hair} hatOn={gear === 'gear_cap' || gear === 'gear_bandana' || gear === 'gear_bucket'} />
+      <HairBack style={look.hair} fill={hair} hatOn={gear === 'gear_cap' || gear === 'gear_bandana' || gear === 'gear_bucket' || gear === 'gear_beanie'} />
       <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={skin} />
       <G clipPath={`url(#cl${id})`}>
         {/* the kit: the lower band of the ball, a V at the collar */}
@@ -323,6 +323,32 @@ function HeadGear({ gear }: { gear: string }) {
           ].map(([x, y]) => (
             <Circle key={`${x}${y}`} cx={x} cy={y} r={1.8} fill={g.bandanaDot} />
           ))}
+        </G>
+      );
+    case 'gear_phones':
+      // headphones over the hair: a band across the top, warm cups at the sides
+      return (
+        <G>
+          <Path d="M17 54 C17 27 33 16 50 16 C67 16 83 27 83 54" fill="none" stroke={g.phonesBand} strokeWidth={5} strokeLinecap="round" />
+          <Rect x={9} y={47} width={13} height={20} rx={6} fill={g.phonesCup} stroke={g.phonesBand} strokeWidth={1.4} />
+          <Rect x={78} y={47} width={13} height={20} rx={6} fill={g.phonesCup} stroke={g.phonesBand} strokeWidth={1.4} />
+        </G>
+      );
+    case 'gear_beanie':
+      return (
+        <G>
+          <Path d="M18 46 C18 24 34 14 50 14 C66 14 82 24 82 46 Z" fill={g.beanie} />
+          <Path d="M30 20 L30 44 M40 16 L40 44 M50 15 L50 44 M60 16 L60 44 M70 20 L70 44" stroke={g.beanieCuff} strokeWidth={1.2} opacity={0.6} />
+          <Rect x={16} y={39} width={68} height={10} rx={5} fill={g.beanieCuff} />
+          <Circle cx={50} cy={12} r={6.5} fill={g.beaniePom} />
+        </G>
+      );
+    case 'gear_crown':
+      // lime: earned, first in your Ladder group for a month
+      return (
+        <G>
+          <Path d="M30 30 L34 13 L42 23 L50 9 L58 23 L66 13 L70 30 Z" fill={colors.lime} stroke={colors.ink} strokeOpacity={0.35} strokeWidth={1.4} strokeLinejoin="round" />
+          <Circle cx={50} cy={22} r={2.2} fill={colors.ink} opacity={0.5} />
         </G>
       );
     case 'gear_bucket':

@@ -6,7 +6,7 @@ select plan(9);
 select tests.create_user('gear-u@test.local') as u \gset
 select tests.login(:'u'::uuid);
 
-select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'category' = 'gear'), 6, 'six gear items listed');
+select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'category' = 'gear'), 9, 'nine gear items listed (six, then the Baller wardrobe adds three)');
 select ok((select bool_or(i ->> 'key' = 'fx_confetti') from jsonb_array_elements(api.get_look() -> 'items') i), 'the confetti is listed');
 select is(api.get_look() -> 'equipped' -> 'gear', 'null'::jsonb, 'nothing on at first');
 select is(api.equip_item('gear', 'gear_cap') -> 'equipped' ->> 'gear', 'gear_cap', 'the free cap goes on');

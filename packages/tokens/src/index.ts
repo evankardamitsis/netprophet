@@ -84,6 +84,11 @@ export const cosmetics = {
     kit_grass: { shirt: '#2E7D3A', racket: '#D9F03F' },
     kit_clay: { shirt: '#B4532A', racket: '#F3F5EE' },
     kit_night: { shirt: '#1B2A6B', racket: '#9DB0FF' },
+    // the Baller wardrobe (founder, 17 Oct)
+    kit_retro: { shirt: '#F1E6CC', racket: '#7A2E2E' },
+    kit_ocean: { shirt: '#147A80', racket: '#BFF0EC' },
+    kit_sunset: { shirt: '#E07A3F', racket: '#5B2A86' },
+    kit_hard: { shirt: '#3A6EA5', racket: '#F3F5EE' },
   },
   /**
    * Gear the ball people wear (founder, 15 Oct): one at a time, on the head or the eyes. The headband is lime because
@@ -100,6 +105,12 @@ export const cosmetics = {
     bandanaDot: '#F3F5EE',
     bucket: '#C9B48A',
     bucketShade: '#A38D63',
+    // the Baller wardrobe (founder, 17 Oct); the crown is lime because it is earned
+    phonesBand: '#2F3A36',
+    phonesCup: '#E8B04A',
+    beanie: '#7A4B9A',
+    beanieCuff: '#5E3878',
+    beaniePom: '#F3F5EE',
   },
   /** the confetti win effect */
   confetti: ['#D9F03F', '#F3F5EE', '#9DB0FF', '#F2D36B'],
