@@ -44,10 +44,25 @@ export interface SourcePatch {
   draw_url?: string;
   ongoing?: boolean;
   season_start_year?: number | null;
+  /** yyyy-mm-dd, or '' to clear */
+  entry_deadline?: string;
+  /** '' clears */
+  entry_link?: string;
 }
 
+const ENTRY_LINK_INVALID = 'The entry link must be a web address (https://...).';
+const entryFail = (e: unknown): ActionResult<never> =>
+  e instanceof Error && e.message.includes('entry_link_invalid') ? { ok: false, message: ENTRY_LINK_INVALID } : fail(e);
+
 /** Add a tournament from the three things that matter: name, surface and the links. Dates fill themselves from the sheet. */
-export async function createTournament(input: { name: string; surface: string; source_url: string; draw_url: string }): Promise<ActionResult<{ id: string }>> {
+export async function createTournament(input: {
+  name: string;
+  surface: string;
+  source_url: string;
+  draw_url: string;
+  entry_deadline?: string;
+  entry_link?: string;
+}): Promise<ActionResult<{ id: string }>> {
   try {
     const id = (await call(await staffRpc(), 'admin_save_tournament', {
       p: {
@@ -57,11 +72,13 @@ export async function createTournament(input: { name: string; surface: string; s
         draw_url: input.draw_url.trim(),
         source_kind: sourceKind(input.source_url),
         ongoing: true,
+        entry_deadline: input.entry_deadline ?? '',
+        entry_link: (input.entry_link ?? '').trim(),
       },
     })) as string;
     return { ok: true, message: 'Saved', data: { id } };
   } catch (e) {
-    return fail(e);
+    return entryFail(e);
   }
 }
 
@@ -86,11 +103,12 @@ export async function saveSource(id: string, patch: SourcePatch): Promise<Action
         ...patch,
         // a sheet link or an organiser's site page (athenstennis.gr)
         ...(patch.source_url ? { source_kind: sourceKind(patch.source_url) } : {}),
+        ...(patch.entry_link !== undefined ? { entry_link: patch.entry_link.trim() } : {}),
       },
     });
     return { ok: true, message: 'Saved' };
   } catch (e) {
-    return fail(e);
+    return entryFail(e);
   }
 }
 

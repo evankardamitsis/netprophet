@@ -704,9 +704,22 @@ export interface Scout {
 /** The Pro screen (api.get_pro). Pro belongs to the account, whichever platform paid for it. */
 export interface ProState {
   pro: boolean;
-  current: { source: 'subscription' | 'gift' | 'promo' | 'migration'; starts_at: string; ends_at: string | null } | null;
+  current: { source: 'subscription' | 'gift' | 'promo' | 'migration' | 'trial'; starts_at: string; ends_at: string | null } | null;
   /** pressed «Γίνε μέλος» while checkout was not live */
   waitlisted: boolean;
+}
+
+export type ProOfferMoment = 'draw' | 'before_match' | 'after_loss' | 'quiz' | 'me';
+
+/** api.pro_offer: the plans to show, the free week, and whether an offer may show now (one a day, not in the first days) */
+export interface ProOffer {
+  pro: boolean;
+  trial_available: boolean;
+  on_trial: boolean;
+  /** «2026-12-31» while the founding price is on */
+  founding_until: string | null;
+  plans: { product_id: 'pro_monthly' | 'pro_yearly' | 'pro_founding'; price: number; period: 'month' | 'year' }[];
+  can_offer: boolean;
 }
 
 /** A tournament for the «+ Ματς» picker (api.list_tournaments: active, not long finished). */
@@ -905,6 +918,37 @@ export interface GetTournamentsResult {
   pro: boolean;
   items: TournamentItem[];
   mine: (TournamentMatch & { tournament_id: string; tournament: string })[] | null;
+}
+
+/** one row of «Το επόμενο τουρνουά για σένα» (api.upcoming_tournaments) */
+export interface UpcomingTournament {
+  id: string;
+  name: string;
+  venue: string | null;
+  area_id: string | null;
+  /** the area's Greek name */
+  area: string | null;
+  surface: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  entry_deadline: string | null;
+  /** the deadline is today or later */
+  entry_open: boolean;
+  /** where to sign up */
+  entry_link: string | null;
+  /** the organiser's categories («Μ 40+», «MEDIUM») */
+  categories: string[];
+  /** played an earlier edition (same name without the year, or the same organiser link) */
+  played_before: boolean;
+  /** in one of your areas */
+  near: boolean;
+}
+
+/** api.upcoming_tournaments. Pro gets every row; free gets the first in full and `more`, how many others there are. */
+export interface UpcomingTournamentsResult {
+  pro: boolean;
+  items: UpcomingTournament[];
+  more: number;
 }
 
 export interface DrawEntrantRow {

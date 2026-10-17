@@ -131,7 +131,7 @@ export function Quiz() {
     <>
       <PageHeader
         title="Quiz questions"
-        intent="The questions «Οι 6 της ημέρας» is built from. Nothing needs you unless you want to change a question."
+        intent="The questions «Οι ερωτήσεις της ημέρας» is built from. Nothing needs you unless you want to change a question."
         actions={editing === null ? <Primary onClick={() => setEditing("new")}>+ New question</Primary> : null}
       />
       {error ? <Banner tone="problem" title="Couldn’t load the questions" detail={error} /> : null}

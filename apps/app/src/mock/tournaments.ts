@@ -1,5 +1,5 @@
 import { addDays, dayKey, localParts, toInstant } from '@netprophet/core';
-import type { DrawMatchRow, TournamentDraw, FeedPlayer, SetScore, GetTournamentResult, GetTournamentsResult, TournamentMatch } from '@netprophet/db';
+import type { DrawMatchRow, TournamentDraw, FeedPlayer, SetScore, GetTournamentResult, GetTournamentsResult, TournamentMatch, UpcomingTournament, UpcomingTournamentsResult } from '@netprophet/db';
 
 /**
  * Sample tournaments for mock mode and the dev guest: one on now (you are in it), one coming, one just finished.
@@ -200,4 +200,27 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
     masked: [],
     days,
   };
+}
+
+/** «Το επόμενο τουρνουά για σένα» for mock mode: the same split the server makes (free: the first and a count) */
+export function mockUpcoming(pro: boolean, now: Date = new Date()): UpcomingTournamentsResult {
+  const today = dayKey(now.toISOString());
+  const all: UpcomingTournament[] = [
+    {
+      id: 'tour-voula', name: 'Κύπελλο Βούλας', venue: 'Ο.Α. Βούλας', area_id: 'voula', area: 'Βούλα', surface: 'clay',
+      starts_on: addDays(today, 5), ends_on: addDays(today, 7), entry_deadline: addDays(today, 3), entry_open: true,
+      entry_link: 'https://example.org/voula', categories: ['Μ 40+', 'MEDIUM'], played_before: true, near: true,
+    },
+    {
+      id: 'tour-glyfada-winter', name: 'Χειμερινό Γλυφάδας', venue: 'Γήπεδα Γλυφάδας', area_id: 'glyfada', area: 'Γλυφάδα', surface: 'hard',
+      starts_on: addDays(today, 16), ends_on: addDays(today, 18), entry_deadline: addDays(today, 11), entry_open: true,
+      entry_link: null, categories: ['Μ 40+', '-40'], played_before: false, near: true,
+    },
+    {
+      id: 'tour-kifisia', name: 'Open Κηφισιάς', venue: 'Ο.Α. Κηφισιάς', area_id: 'kifisia', area: 'Κηφισιά', surface: 'clay',
+      starts_on: addDays(today, 24), ends_on: addDays(today, 26), entry_deadline: addDays(today, 19), entry_open: true,
+      entry_link: 'https://example.org/kifisia', categories: ['MEDIUM'], played_before: false, near: false,
+    },
+  ];
+  return pro ? { pro, items: all, more: 0 } : { pro, items: all.slice(0, 1), more: all.length - 1 };
 }

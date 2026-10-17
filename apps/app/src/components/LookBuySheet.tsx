@@ -1,24 +1,44 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import type { BuySheet } from '../lib/look';
+import { usePurchase } from '../lib/purchase';
+import { usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 
 const OUT_MS = 400;
 
 /**
- * «Αγόρασε · 1,99 €» opens this: what the item is and its price. Buying waits for the payment provider, so the
- * button says «Σύντομα», is off, and the sheet says so. Nothing pretends to sell.
+ * «Αγόρασε · 1,99 €» opens this: what the item is and its price, and the sheet's one blue button that buys it through
+ * the store (product `cos_<key>`; founder, 17 Oct). Until the store keys are set the button says «Σύντομα», is off,
+ * and the sheet says so: nothing pretends to sell. After a purchase it waits for the item to land in the wardrobe.
  */
-export function LookBuySheet({ sheet, onClose }: { sheet: BuySheet | null; onClose: () => void }) {
+export function LookBuySheet({
+  sheet,
+  onClose,
+  owned,
+  onBought,
+}: {
+  sheet: BuySheet | null;
+  onClose: () => void;
+  /** true once the wardrobe has the item (asked again after a purchase until the webhook lands) */
+  owned: (key: string) => Promise<boolean>;
+  onBought: () => void;
+}) {
   const t = useCopy();
+  const purchase = usePurchase();
+  const press = usePress();
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
   const insets = useSafeAreaInsets();
   const open = sheet !== null;
   const p = useSharedValue(0);
   useEffect(() => {
     if (open) {
+      setBusy(false);
+      setFailed(false);
       p.value = 0;
       p.value = withSpring(1, motion.spring);
     }
@@ -26,6 +46,17 @@ export function LookBuySheet({ sheet, onClose }: { sheet: BuySheet | null; onClo
   const close = () => {
     p.value = withTiming(0, { duration: OUT_MS, easing: ease });
     setTimeout(onClose, OUT_MS);
+  };
+  const buyIt = async () => {
+    if (!sheet || busy) return;
+    setBusy(true);
+    setFailed(false);
+    const r = await purchase.buy(`cos_${sheet.key}`, () => owned(sheet.key));
+    setBusy(false);
+    if (r === 'ok') {
+      onBought();
+      close();
+    } else if (r !== 'cancelled') setFailed(true);
   };
   const back = useAnimatedStyle(() => ({ opacity: Math.min(1, p.value) }));
   const body = useAnimatedStyle(() => ({ transform: [{ translateY: (1 - p.value) * 420 }] }));
@@ -41,10 +72,21 @@ export function LookBuySheet({ sheet, onClose }: { sheet: BuySheet | null; onClo
               <Text style={styles.price}>{sheet.price}</Text>
               <Text style={styles.line}>{sheet.line}</Text>
               <Text style={styles.note}>{sheet.note}</Text>
-              <View accessibilityRole="button" accessibilityState={{ disabled: true }} style={styles.soon}>
-                <Text style={styles.soonText}>{t.look.soon}</Text>
-              </View>
-              <Text style={styles.soonLine}>{t.look.soonLine}</Text>
+              {purchase.ready ? (
+                <Pressable accessibilityRole="button" disabled={busy} onPress={() => void buyIt()} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+                  <Animated.View style={[styles.buy, busy && styles.busy, press.style]}>
+                    <Text style={styles.buyText}>{busy ? t.pro.finishing : `${t.look.buyShort} · ${sheet.price}`}</Text>
+                  </Animated.View>
+                </Pressable>
+              ) : (
+                <>
+                  <View accessibilityRole="button" accessibilityState={{ disabled: true }} style={styles.soon}>
+                    <Text style={styles.soonText}>{t.look.soon}</Text>
+                  </View>
+                  <Text style={styles.soonLine}>{t.look.soonLine}</Text>
+                </>
+              )}
+              {failed ? <Text style={styles.soonLine}>{t.look.buyFailed}</Text> : null}
               <Pressable accessibilityRole="button" onPress={close} style={styles.close}>
                 <Text style={styles.closeText}>{t.look.close}</Text>
               </Pressable>
@@ -65,6 +107,9 @@ const styles = StyleSheet.create({
   price: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 30, paddingBottom: 6, marginBottom: -6, color: colors.paper },
   line: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.paper },
   note: { fontFamily: fonts.body, fontSize: 14, lineHeight: 19, color: colors.mist },
+  buy: { minHeight: 52, borderRadius: 16, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
+  busy: { opacity: 0.7 },
+  buyText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.white },
   soon: { minHeight: 52, borderRadius: 16, borderWidth: 2, borderColor: colors.slate, alignItems: 'center', justifyContent: 'center', opacity: 0.8 },
   soonText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.mist },
   soonLine: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.mist, textAlign: 'center' },

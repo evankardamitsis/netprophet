@@ -500,7 +500,7 @@ export const el = {
     /** {price} is «8,99€» */
     price: '{price} τον μήνα',
     /** notifications first (founder, 14 Oct: "include notifications about your tournaments, your draws, your matches") */
-    features: ['Τα τουρνουά σου, με ειδοποίηση', 'Η κλήρωση, μόλις βγει', 'Τα ματς σου: μέρα, ώρα, αλλαγές', 'Ο αντίπαλος πριν το ματς', 'Τα στατιστικά σου', 'Η σεζόν σου και μια κάρτα για κάθε νίκη'],
+    features: ['Τα τουρνουά σου, με ειδοποίηση', 'Η κλήρωση, μόλις βγει', 'Τα ματς σου: μέρα, ώρα, αλλαγές', 'Ο αντίπαλος πριν το ματς', 'Τα στατιστικά σου'],
     join: 'Γίνε μέλος',
     notNow: 'Όχι τώρα',
     close: 'Κλείσιμο',
@@ -512,6 +512,44 @@ export const el = {
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     /** the row in Εγώ › Ρυθμίσεις */
     settingsLine: 'Ειδοποιήσεις για τουρνουά, κληρώσεις και τα ματς σου',
+    /** the Pro screen (founder, 17 Oct: one promise, three outcomes, the plans and a free week); drafts for review */
+    promise: 'Ο βοηθός της σεζόν σου',
+    outcomes: [
+      { title: 'Ξέρεις πρώτος πότε και με ποιον παίζεις.', sub: 'Κλήρωση, ώρα και αλλαγές, με ειδοποίηση.' },
+      { title: 'Πας στο ματς ξέροντας τον αντίπαλο.', sub: 'Φόρμα, μεταξύ σας, τρίτα σετ και tie-break.' },
+      { title: 'Βλέπεις πού κερδίζεις και πού χάνεις.', sub: 'Τα στατιστικά σου και η σεζόν σου, μήνα με μήνα.' },
+    ],
+    also: 'Και 12 ερωτήσεις της ημέρας, το επόμενο τουρνουά για σένα και μια κάρτα για κάθε νίκη.',
+    plans: {
+      pro_founding: 'Ιδρυτικό μέλος',
+      pro_yearly: 'Ετήσιο',
+      pro_monthly: 'Μηνιαίο',
+      /** «49,99€ ο πρώτος χρόνος · μέχρι 31/12» */
+      foundingNote: 'ο πρώτος χρόνος · μέχρι 31/12',
+      yearlyNote: 'τον χρόνο',
+      monthlyNote: 'τον μήνα, ακυρώνεις όποτε θες',
+      /** «4,17€ τον μήνα» */
+      perMonth: '{price} τον μήνα',
+      best: 'Καλύτερη τιμή',
+    },
+    trial: 'Μια εβδομάδα δωρεάν',
+    trialNote: 'Χωρίς κάρτα. Στο τέλος διαλέγεις αν θα συνεχίσεις.',
+    /** «Η δωρεάν εβδομάδα σου τρέχει μέχρι 24/10.» */
+    trialOn: 'Η δωρεάν εβδομάδα σου τρέχει μέχρι {date}.',
+    /** «Συνέχεια · 49,99€» */
+    buy: 'Συνέχεια · {price}',
+    buyNow: 'ή αγόρασε τώρα',
+    unavailable: 'Οι πληρωμές ανοίγουν σύντομα. Σε κρατάμε στη λίστα με την τιμή του ιδρυτικού μέλους.',
+    finishing: 'Ολοκληρώνεται…',
+    welcome: 'Καλώς ήρθες στο Pro',
+    /** a quiet line at the moments Pro helps (one a day at most) */
+    nudge: {
+      draw: 'Μάθε την κλήρωση μόλις βγει. Μια εβδομάδα Pro δωρεάν ›',
+      before_match: 'Δες τον αντίπαλο πριν το ματς. Μια εβδομάδα Pro δωρεάν ›',
+      after_loss: 'Δες πού χάθηκε το ματς. Μια εβδομάδα Pro δωρεάν ›',
+      quiz: 'Θέλεις άλλες έξι; Μια εβδομάδα Pro δωρεάν ›',
+      me: 'Μια εβδομάδα Pro δωρεάν ›',
+    },
   },
   /** Pro «Η σεζόν σου» (17 Oct 2026, drafts for the founder): the month recap and a card for every win */
   season: {
@@ -1003,6 +1041,9 @@ export const el = {
     buy: 'Αγόρασε · {price}',
     soon: 'Σύντομα',
     soonLine: 'Οι αγορές ανοίγουν σύντομα.',
+    bought: 'Δικό σου ✓',
+    buyShort: 'Αγόρασε',
+    buyFailed: 'Η αγορά δεν ολοκληρώθηκε. Δοκίμασε ξανά.',
     close: 'Κλείσιμο',
     sheet: {
       frame: 'Κορνίζα {name}',
@@ -1063,6 +1104,23 @@ export const el = {
       on: '✓ Οι ειδοποιήσεις σου είναι ανοιχτές',
       /** with Pro and no match yet */
       onEmpty: 'Σου λέμε μόλις μπεις σε κλήρωση.',
+    },
+    /** Pro: «Το επόμενο τουρνουά για σένα», tournaments still to come, your area first, entry closing soonest */
+    next: {
+      title: 'Το επόμενο τουρνουά για σένα',
+      /** «Δηλώσεις έως Πεμ 23/10» */
+      deadline: 'Δηλώσεις έως {day} {date}',
+      closed: 'Οι δηλώσεις έκλεισαν',
+      enter: 'Δήλωση ›',
+      played: 'Το έχεις ξαναπαίξει',
+      /** free: the rest open the Pro screen */
+      moreOne: 'Άλλο ένα για σένα με Pro ›',
+      moreMany: 'Άλλα {n} για σένα με Pro ›',
+      /** free with nothing more to show: the reminder sells it */
+      remind: 'Με Pro σου θυμίζουμε πριν κλείσουν οι δηλώσεις ›',
+      /** Pro */
+      remindOn: '✓ Σου θυμίζουμε 2 μέρες πριν κλείσουν οι δηλώσεις',
+      empty: 'Δεν έχει βγει νέο τουρνουά ακόμα.',
     },
     sections: { ongoing: 'Τώρα', upcoming: 'Έρχονται', done: 'Τελείωσαν' },
     chipOngoing: 'σε εξέλιξη',

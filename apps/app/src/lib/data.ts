@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type MySeason, type WinCard } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -11,7 +11,7 @@ import { mockQuests } from '../mock/quests';
 import { mockAnswer, mockQuiz } from '../mock/quiz';
 import { withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
-import { mockTournament, mockTournaments } from '../mock/tournaments';
+import { mockTournament, mockTournaments, mockUpcoming } from '../mock/tournaments';
 import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { MOCK_ME_PLAYER, mockResults } from '../mock/results';
@@ -382,7 +382,7 @@ let mockLookState: GetLookResult = mockLook();
 
 export interface LookState {
   look: GetLookResult | null;
-  refresh: () => Promise<void>;
+  refresh: () => Promise<GetLookResult | null>;
   /** wear an item (null: take the frame or background off); on screen at once, undone if the server refuses. True when it stuck. */
   equip: (category: LookCategory, key: string | null) => Promise<boolean>;
 }
@@ -390,15 +390,18 @@ export interface LookState {
 export function useLook(): LookState {
   const api = useApi();
   const [look, setLook] = useState<GetLookResult | null>(api ? null : mockLookState);
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (): Promise<GetLookResult | null> => {
     if (!api) {
       setLook(mockLookState);
-      return;
+      return mockLookState;
     }
     try {
-      setLook(await api.getLook());
+      const fresh = await api.getLook();
+      setLook(fresh);
+      return fresh;
     } catch {
       // keep what is on screen
+      return null;
     }
   }, [api]);
   useEffect(() => {
@@ -1594,6 +1597,40 @@ export function useTournaments(): TournamentsState {
     setLoading(true);
     try {
       setData(await api.getTournaments());
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { data, loading, error, refresh };
+}
+
+export interface UpcomingState {
+  data: UpcomingTournamentsResult | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** «Το επόμενο τουρνουά για σένα»: tournaments still to come for you (free: the first and a count; Pro: all). */
+export function useUpcomingTournaments(): UpcomingState {
+  const api = useApi();
+  const [data, setData] = useState<UpcomingTournamentsResult | null>(api ? null : mockUpcoming(mockPro.pro));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setData(mockUpcoming(mockPro.pro));
+      return;
+    }
+    setLoading(true);
+    try {
+      setData(await api.upcomingTournaments());
       setError(false);
     } catch {
       setError(true);

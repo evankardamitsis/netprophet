@@ -286,6 +286,8 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
   const [surface, setSurface] = useState('');
   const [url, setUrl] = useState('');
   const [drawUrl, setDrawUrl] = useState('');
+  const [entryDeadline, setEntryDeadline] = useState('');
+  const [entryLink, setEntryLink] = useState('');
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' });
   const [pending, start] = useTransition();
   const locked = phase.kind === 'checking' || phase.kind === 'checked' || phase.kind === 'starting';
@@ -296,12 +298,14 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
     setSurface('');
     setUrl('');
     setDrawUrl('');
+    setEntryDeadline('');
+    setEntryLink('');
   };
 
   const check = () =>
     start(async () => {
       setPhase({ kind: 'checking' });
-      const created = await createTournament({ name, surface, source_url: url, draw_url: drawUrl });
+      const created = await createTournament({ name, surface, source_url: url, draw_url: drawUrl, entry_deadline: entryDeadline, entry_link: entryLink });
       if (!created.ok || !created.data) {
         setPhase({ kind: 'failed', text: `We couldn’t save the tournament: ${created.message}` });
         return;
@@ -382,6 +386,14 @@ function AddTournament({ onChanged, onClose }: { onChanged: () => Promise<void>;
           Draws sheet link (optional)
           <input className="v2-input" value={drawUrl} disabled={locked} placeholder="https://docs.google.com/spreadsheets/d/..." onChange={(e) => setDrawUrl(e.target.value)} />
         </label>
+        <label className="v2-field">
+          Entry deadline (optional)
+          <input className="v2-input" type="date" value={entryDeadline} disabled={locked} onChange={(e) => setEntryDeadline(e.target.value)} />
+        </label>
+        <label className="v2-field">
+          Entry link (optional)
+          <input className="v2-input" value={entryLink} disabled={locked} placeholder="Where players sign up: https://..." onChange={(e) => setEntryLink(e.target.value)} />
+        </label>
       </div>
       <span className="v2-muted">A Google Sheet must be shared as “Anyone with the link can view”. We check the links before anything goes into the app.</span>
       {phase.kind === 'checking' ? <Banner tone="working" title="Reading the links…" detail="We check them before adding anything. A few seconds." /> : null}
@@ -414,6 +426,8 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
   const [surface, setSurface] = useState(t.surface ?? '');
   const [url, setUrl] = useState(t.source_url ?? '');
   const [drawUrl, setDrawUrl] = useState(t.draw_url ?? '');
+  const [entryDeadline, setEntryDeadline] = useState(t.entry_deadline ?? '');
+  const [entryLink, setEntryLink] = useState(t.entry_link ?? '');
   const [note, setNote] = useState<{ tone: Tone; title: string; detail?: string } | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [, start] = useTransition();
@@ -469,7 +483,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
 
   const save = () =>
     run('save', async () => {
-      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl });
+      const r = await saveSource(t.id, { name: name.trim(), surface, source_url: url, draw_url: drawUrl, entry_deadline: entryDeadline, entry_link: entryLink });
       setNote(r.ok ? null : { tone: 'problem', title: 'Could not save', detail: r.message });
       if (r.ok) {
         notify('Saved');
@@ -543,6 +557,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             {t.name}
           </b>
           <span className="v2-muted">{[surfaceWord(t.surface), dates(t)].filter(Boolean).join(' · ') || 'No dates yet'}</span>
+          {t.entry_deadline ? <span className="v2-muted">Entries close {shortDate(t.entry_deadline)}{t.entry_link ? ' · entry link set' : ''}</span> : null}
         </div>
         <Badge tone={badge.tone}>{badge.text}</Badge>
       </div>
@@ -573,6 +588,14 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
           <label className="v2-field">
             Draws sheet link (optional)
             <input className="v2-input" value={drawUrl} onChange={(e) => setDrawUrl(e.target.value)} />
+          </label>
+          <label className="v2-field">
+            Entry deadline (optional)
+            <input className="v2-input" type="date" value={entryDeadline} onChange={(e) => setEntryDeadline(e.target.value)} />
+          </label>
+          <label className="v2-field">
+            Entry link (optional)
+            <input className="v2-input" value={entryLink} placeholder="Where players sign up: https://..." onChange={(e) => setEntryLink(e.target.value)} />
           </label>
           <div className="v2-row">
             <Secondary small busy={busy === 'save'} disabled={!idle || name.trim() === '' || (t.ongoing && url.trim() === '' && drawUrl.trim() === '')} onClick={save}>

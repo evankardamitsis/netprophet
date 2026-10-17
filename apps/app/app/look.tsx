@@ -172,7 +172,18 @@ export default function LookScreen() {
         ) : null}
       </ScrollView>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
-      <LookBuySheet sheet={sheet} onClose={() => setSheet(null)} />
+      <LookBuySheet
+        sheet={sheet}
+        onClose={() => setSheet(null)}
+        owned={async (key) => {
+          const fresh = await refresh();
+          return fresh?.items.some((i) => i.key === key && i.owned) ?? false;
+        }}
+        onBought={() => {
+          baller.current?.play('jump');
+          setToast({ text: t.look.bought, n: Date.now() });
+        }}
+      />
     </View>
   );
 }

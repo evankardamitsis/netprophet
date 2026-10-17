@@ -460,6 +460,10 @@ export type Database = {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
       };
+      admin_purchases: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
       admin_quiz_preview: {
         Args: { p_email: string; p_day?: string; p_pro?: boolean };
         Returns: Json;
@@ -512,6 +516,10 @@ export type Database = {
         Args: { p_match_id: string; p_winner_side: number; p_sets: Json; p_retired?: boolean; p_walkover?: boolean };
         Returns: Json;
       };
+      admin_set_tournament_entry: {
+        Args: { p_id: string; p_entry_deadline: string; p_entry_link: string };
+        Returns: undefined;
+      };
       admin_tournament_suggestion: {
         Args: { p_text: string; p_tournament_id?: string };
         Returns: Json;
@@ -542,6 +550,10 @@ export type Database = {
       };
       answer_link: {
         Args: { p_token: string; p_answer: string; p_fix?: Json };
+        Returns: Json;
+      };
+      apply_store_event: {
+        Args: { p_event: Json };
         Returns: Json;
       };
       block: {
@@ -748,6 +760,14 @@ export type Database = {
         Args: { p_month?: string };
         Returns: Json;
       };
+      pro_offer: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      pro_offer_shown: {
+        Args: { p_moment: string };
+        Returns: undefined;
+      };
       react: {
         Args: { p_match_id: string; p_key: string };
         Returns: Json;
@@ -788,6 +808,14 @@ export type Database = {
         Args: { p_status: string };
         Returns: string;
       };
+      start_pro_trial: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      store_products: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       suggest_players: {
         Args: { p_limit?: number };
         Returns: Json;
@@ -807,6 +835,10 @@ export type Database = {
       unregister_push_token: {
         Args: { p_token: string };
         Returns: boolean;
+      };
+      upcoming_tournaments: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       update_profile: {
         Args: { p_patch: Json };

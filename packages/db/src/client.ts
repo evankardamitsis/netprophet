@@ -14,6 +14,7 @@ import type {
   GetQuizResult,
   GetTournamentResult,
   GetTournamentsResult,
+  UpcomingTournamentsResult,
   AnswerCardResult,
   KudoOption,
   LinkKudo,
@@ -39,6 +40,8 @@ import type {
   PublicTournament,
   ResolveMatchResult,
   ResultRow,
+  ProOffer,
+  ProOfferMoment,
   ResultsTournament,
   Scout,
   SetScore,
@@ -128,6 +131,9 @@ export function rpc(client: NetprophetClient) {
     deleteMyAccount: () => call<{ deleted: boolean }>(client, 'delete_my_account', {}),
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),
+    proOffer: () => call<ProOffer>(client, 'pro_offer', {}),
+    startProTrial: () => call<{ ends_at: string }>(client, 'start_pro_trial', {}),
+    proOfferShown: (moment: ProOfferMoment) => call<null>(client, 'pro_offer_shown', { p_moment: moment }),
     getConfirmations: () => call<PendingConfirmation[]>(client, 'get_confirmations', {}),
     answerConfirmation: (matchId: string, a: ConfirmationAnswer) =>
       call<{ match_id: string; outcome: 'confirmed' | 'corrected' | 'disputed' }>(client, 'answer_confirmation', {
@@ -169,6 +175,7 @@ export function rpc(client: NetprophetClient) {
     unblock: (userId: string) => call<null>(client, 'unblock', { p_user_id: userId }),
     getBlocks: () => call<BlockedUser[]>(client, 'get_blocks', {}),
     getTournaments: () => call<GetTournamentsResult>(client, 'get_tournaments', {}),
+    upcomingTournaments: () => call<UpcomingTournamentsResult>(client, 'upcoming_tournaments', {}),
     getTournament: (id: string) => call<GetTournamentResult>(client, 'get_tournament', { p_id: id }),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
