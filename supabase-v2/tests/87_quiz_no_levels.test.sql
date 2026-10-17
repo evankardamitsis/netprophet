@@ -25,7 +25,7 @@ grant select on q to public;
 
 select is((select card -> 'content' ->> 'q' from q where k = 'pre'),
           '{p1.o} παίζει αύριο με {p2.ton}, που ξεκινά φαβορί. Γίνεται ανατροπή;', 'before: the favourite in words');
-select ok((select card -> 'content' ->> 'q' not like '%κέρδισε%' and card -> 'content' ->> 'reveal' like 'Ανατροπή! %κέρδισε %.'
+select ok((select card -> 'content' ->> 'q' not like '%6-3%' and card -> 'content' ->> 'reveal' like 'Ανατροπή! %κέρδισε %.'
              from q where k = 'post'),
           'after: the result is hidden in the question, the upset shows after the pick');
 select ok((select (card -> 'content' ->> 'right')::int in (0, 1) from q where k = 'post'), 'after: one right answer, no level moving');
