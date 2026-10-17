@@ -26,7 +26,7 @@ import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
 import { alpha, colors, ease, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
-import { LiveAvatar } from '../../src/components/Avatar';
+import { Baller } from '../../src/components/Baller';
 import type { AvatarLook } from '../../src/lib/avatar';
 import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
 
@@ -414,7 +414,7 @@ function HeroAvatar({
   return (
     <Pressable accessibilityRole="button" onPress={open} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.heroAvatarHit}>
       <Animated.View style={[styles.heroAvatar, pop, press.style]}>
-        <LiveAvatar look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
+        <Baller look={look} size={HERO_AVATAR} kit={kit} gear={gear} effect={effect} frame={frame} jump={jump} />
       </Animated.View>
     </Pressable>
   );

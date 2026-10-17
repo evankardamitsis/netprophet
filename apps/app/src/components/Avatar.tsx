@@ -1,14 +1,11 @@
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedProps,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
-  withDelay,
-  withRepeat,
-  withSequence,
   withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
@@ -32,13 +29,21 @@ type KitKey = keyof typeof cosmetics.kit;
 const AnimatedEllipse = Animated.createAnimatedComponent(Ellipse);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-interface ArtProps {
+export type Mouth = 'smile' | 'open' | 'sad';
+
+export interface ArtProps {
   look: AvatarLook;
   size: number;
   kit?: string;
   bg?: string | null;
-  /** an open, cheering mouth (the win jump) */
+  /** an open, cheering mouth (the win jump); `mouth` says it in full */
   cheer?: boolean;
+  /** the face: a smile, an open cheer or a little sigh */
+  mouth?: Mouth;
+  /** crossed-out eyes after too many pokes */
+  dizzy?: boolean;
+  /** the racket raised: Baller waves or cheers with it */
+  raised?: boolean;
   /** 1 open, 0 shut (blink); -1..1 where the pupils look */
   eyes?: { open: SharedValue<number>; look: SharedValue<number> };
   /** the gear worn: gear_cap, gear_headband, gear_visor, gear_shades, gear_bandana, gear_bucket */
@@ -52,65 +57,15 @@ export function Avatar(props: Omit<ArtProps, 'eyes' | 'cheer'>) {
   return <BallArt {...props} />;
 }
 
-/**
- * The avatar that lives (Εγώ, the picker's big preview): it bobs, blinks and looks around; a new `jump` makes it
- * celebrate. Idle motion stays here, never on the 40px faces in lists.
- */
-export function LiveAvatar({ jump = 0, effect = null, ...props }: Omit<ArtProps, 'eyes' | 'cheer'> & { jump?: number; effect?: string | null }) {
-  const reduced = useReducedMotion();
-  const bob = useSharedValue(0);
-  const hop = useSharedValue(0);
-  const open = useSharedValue(1);
-  const look = useSharedValue(0);
-
-  useEffect(() => {
-    if (reduced) return;
-    bob.value = withRepeat(withTiming(1, { duration: 800, easing: Easing.inOut(Easing.sin) }), -1, true);
-    open.value = withRepeat(withSequence(withDelay(3200, withTiming(0.08, { duration: 70 })), withTiming(1, { duration: 90 })), -1);
-    look.value = withRepeat(
-      withSequence(
-        withDelay(1400, withTiming(1, { duration: 260 })),
-        withDelay(900, withTiming(-1, { duration: 360 })),
-        withDelay(800, withTiming(0, { duration: 260 })),
-      ),
-      -1,
-    );
-  }, [reduced, bob, open, look]);
-
-  useEffect(() => {
-    if (!jump || reduced) return;
-    hop.value = withSequence(withTiming(1, { duration: 260, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 420, easing: Easing.bounce }));
-  }, [jump, reduced, hop]);
-
-  const size = props.size;
-  const style = useAnimatedStyle(() => {
-    const up = bob.value * 0.045 + hop.value * 0.32;
-    // a squash at the bottom of the bob, a stretch in the air
-    const stretch = hop.value > 0.05 ? 1 + hop.value * 0.1 : 1 - (1 - bob.value) * 0.03;
-    return {
-      transform: [{ translateY: -up * size }, { scaleY: stretch }, { scaleX: 2 - stretch }, { rotate: `${-hop.value * 8}deg` }],
-    };
-  });
-
-  return (
-    <View>
-      <Animated.View style={style}>
-        <BallArt {...props} eyes={{ open, look }} cheer={jump > 0 && !reduced} />
-      </Animated.View>
-      {effect === 'fx_confetti' && jump > 0 && !reduced ? <Confetti key={jump} size={size} /> : null}
-    </View>
-  );
-}
-
 /** the confetti win effect: a burst of little squares out of the ball, then gone */
-const PIECES = Array.from({ length: 14 }, (_, i) => ({
+export const PIECES = Array.from({ length: 14 }, (_, i) => ({
   angle: (i / 14) * Math.PI * 2 + (i % 2) * 0.2,
   dist: 0.42 + (i % 3) * 0.1,
   colour: cosmetics.confetti[i % cosmetics.confetti.length]!,
   spin: (i % 2 ? 1 : -1) * (180 + i * 20),
 }));
 
-function Confetti({ size }: { size: number }) {
+export function Confetti({ size }: { size: number }) {
   const t = useSharedValue(0);
   useEffect(() => {
     t.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) });
@@ -137,7 +92,8 @@ function Piece({ p, t, size }: { p: (typeof PIECES)[number]; t: SharedValue<numb
   return <Animated.View style={[{ position: 'absolute', left: size / 2 - piece / 2, top: size * 0.5, width: piece, height: piece, borderRadius: 1.5, backgroundColor: p.colour }, style]} />;
 }
 
-function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear = null, frame = null }: ArtProps) {
+export function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, mouth, dizzy = false, raised = false, eyes, gear = null, frame = null }: ArtProps) {
+  const face: Mouth = mouth ?? (cheer ? 'open' : 'smile');
   const skin = cosmetics.avatar.skin[look.skin] ?? cosmetics.avatar.skin[1];
   const hair = cosmetics.avatar.hair[look.hairColour];
   const k = cosmetics.kit[kit as KitKey] ?? cosmetics.kit.kit_green;
@@ -160,7 +116,7 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear =
       {bg ? <Rect x={0} y={0} width={100} height={100} fill={bg} /> : null}
       <Ellipse cx={50} cy={95} rx={24} ry={3.5} fill={colors.ink} opacity={0.22} />
       {frame ? <FrameRing frame={frame} id={id} /> : null}
-      {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} /> : null}
+      {size >= RACKET_MIN ? <Racket frame={k.racket} grip={k.shirt} raised={raised} /> : null}
       <HairBack style={look.hair} fill={hair} hatOn={gear === 'gear_cap' || gear === 'gear_bandana' || gear === 'gear_bucket'} />
       <Circle cx={BALL.cx} cy={BALL.cy} r={BALL.r} fill={skin} />
       <G clipPath={`url(#cl${id})`}>
@@ -177,7 +133,7 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear =
         <Path d="M22 60 C25 79 37 88 50 88 C63 88 75 79 78 60 C72 70 62 74 50 74 C38 74 28 70 22 60 Z" fill={hair} clipPath={`url(#cl${id})`} />
       ) : null}
       {gear ? <HeadGear gear={gear} /> : null}
-      <Eyes eyes={eyes} />
+      {dizzy ? <DizzyEyes /> : <Eyes eyes={eyes} />}
       {look.glasses ? (
         <G>
           <Circle cx={50 - EYE.dx} cy={EYE.y} r={10} fill={colors.white} fillOpacity={0.12} stroke={colors.ink} strokeWidth={2.4} />
@@ -188,8 +144,10 @@ function BallArt({ look, size, kit = 'kit_green', bg = null, cheer, eyes, gear =
       {gear === 'gear_shades' ? <Shades /> : null}
       <Ellipse cx={29} cy={67} rx={5} ry={3.4} fill={cosmetics.avatar.blush} opacity={0.4} />
       <Ellipse cx={71} cy={67} rx={5} ry={3.4} fill={cosmetics.avatar.blush} opacity={0.4} />
-      {cheer ? (
+      {face === 'open' ? (
         <Path d="M42 67 Q50 79 58 67 Z" fill={colors.ink} />
+      ) : face === 'sad' ? (
+        <Path d="M44 71 Q50 66.5 56 71" fill="none" stroke={colors.ink} strokeWidth={2.8} strokeLinecap="round" />
       ) : (
         <Path d="M43.5 68 Q50 73.5 56.5 68" fill="none" stroke={colors.ink} strokeWidth={2.8} strokeLinecap="round" />
       )}
@@ -422,11 +380,35 @@ function Eye({ cx, eyes }: { cx: number; eyes?: ArtProps['eyes'] }) {
   );
 }
 
-/** a small racket behind the ball, in the kit's colours */
-function Racket({ frame, grip }: { frame: string; grip: string }) {
+/** crossed-out eyes: Baller is dizzy */
+function DizzyEyes() {
+  return (
+    <G stroke={colors.ink} strokeWidth={2.8} strokeLinecap="round">
+      {[50 - EYE.dx, 50 + EYE.dx].map((x) => (
+        <Path key={x} d={`M${x - 5} ${EYE.y - 5} L${x + 5} ${EYE.y + 5} M${x + 5} ${EYE.y - 5} L${x - 5} ${EYE.y + 5}`} />
+      ))}
+    </G>
+  );
+}
+
+/** a small racket behind the ball, in the kit's colours; `raised` swings it up from the grip */
+function Racket({ frame, grip, raised }: { frame: string; grip: string; raised?: boolean }) {
+  // both poses are always drawn with fixed transforms and only their opacity changes: react-native-svg on iOS stops
+  // drawing a group whose transform changes after the first render
+  return (
+    <G>
+      <G opacity={raised ? 0 : 1}>{racketHead(frame, grip, 28)}</G>
+      <G opacity={raised ? 1 : 0} transform="translate(0 -16)">
+        {racketHead(frame, grip, 14)}
+      </G>
+    </G>
+  );
+}
+
+function racketHead(frame: string, grip: string, angle: number): ReactNode {
   // held behind the ball: the handle disappears into it, the head stands up at the right
   return (
-    <G transform="rotate(28 86 36)">
+    <G transform={`rotate(${angle} 86 36)`}>
       <Path d="M86 50 L86 70" stroke={grip} strokeWidth={5} strokeLinecap="round" />
       <Path d="M83 48 L86 52 L89 48" fill="none" stroke={frame} strokeWidth={2.4} strokeLinejoin="round" />
       <Ellipse cx={86} cy={34} rx={10} ry={13.5} fill={colors.white} fillOpacity={0.12} stroke={frame} strokeWidth={3} />
