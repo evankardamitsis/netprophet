@@ -1,4 +1,4 @@
--- «Εμφάνιση»: the prototype's catalogue, wear what you own (free kits are everyone's), never what you have not got;
+-- «Εμφάνιση»: the prototype's catalogue, wear what you own (Πράσινο is everyone's), never what you have not got;
 -- «Μάντης του κλαμπ» gives the night set; the back of the card shows the exact level only to Pro.
 begin;
 select plan(11);
@@ -15,7 +15,7 @@ select tests.login(:'u'::uuid);
 select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'category' = 'background'), 6,
           'six backgrounds, as in the prototype');
 select is(api.get_look() -> 'equipped' ->> 'kit', 'kit_green', 'everyone starts in Πράσινο');
-select is(api.equip_item('kit', 'kit_white') -> 'equipped' ->> 'kit', 'kit_white', 'a free kit, worn');
+select throws_ok($$select api.equip_item('kit', 'kit_white')$$, '42501', 'not_owned', 'Λευκό is bought now, only Πράσινο is free');
 select throws_ok($$select api.equip_item('frame', 'frame_gold')$$, '42501', 'not_owned', 'not what you have not bought');
 select throws_ok($$select api.equip_item('background', 'frame_seven')$$, 'P0002', 'not_found', 'a frame is not a background');
 select tests.logout();
