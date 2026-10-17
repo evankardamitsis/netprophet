@@ -28,7 +28,8 @@ describe('tiles', () => {
 
 describe('tags', () => {
   it('free, earned, price and the earn rule', () => {
-    expect(tagOf(tile('kit', 'kit_white'), t)).toEqual({ text: 'Δωρεάν', tone: 'free' });
+    expect(tagOf(tile('kit', 'kit_green'), t)).toEqual({ text: 'Δωρεάν', tone: 'free' });
+    expect(tagOf(tile('kit', 'kit_white'), t)).toEqual({ text: '0,99€', tone: 'price' });
     expect(tagOf(tile('frame', 'frame_seven'), t)).toEqual({ text: 'Το κέρδισες', tone: 'earned' });
     expect(tagOf(tile('frame', 'frame_gold'), t)).toEqual({ text: '1,99€', tone: 'price' });
     expect(tagOf(tile('background', 'bg_hard'), t)).toEqual({ text: '0,99€', tone: 'price' });
