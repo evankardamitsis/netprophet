@@ -83,8 +83,9 @@ export const cosmetics = {
     woodDark: '#8E5F2E',
     stands: '#141C33',
     standsLight: '#24304F',
-    crowd: ['#E9E4D8', '#C9473B', '#3E6FD8', '#F0C24B', '#7FB5A0'],
   },
+  /** the centre court's crowd, shirts in the stands */
+  crowd: ['#E9E4D8', '#C9473B', '#3E6FD8', '#F0C24B', '#7FB5A0'],
   frame: {
     /** the glow and ring of «Επτά» */
     glow: '#F2D36B',

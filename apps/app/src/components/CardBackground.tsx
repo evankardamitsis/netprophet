@@ -417,7 +417,7 @@ function Scene({ bg, cam: c, k, id }: { bg: string; cam: Cam; k: number; id: str
             x: ((i + (t % 2) * 0.5 + (j - 0.5) * 0.4) * c.w) / per,
             y: y + (j - 0.5) * ((foot - top) / tiers) * 0.3,
             r: Math.max(0.7, (c.w / per) * (0.24 + j * 0.1)),
-            color: s.crowd[(i * 7 + t * 3 + Math.floor(j * 5)) % s.crowd.length]!,
+            color: cosmetics.crowd[(i * 7 + t * 3 + Math.floor(j * 5)) % cosmetics.crowd.length]!,
           });
         }
       }
