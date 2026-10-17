@@ -11,7 +11,7 @@ select throws_ok($$select api.admin_quiz_templates()$$, '42501', 'forbidden', 's
 select tests.logout();
 
 select tests.login(:'adm'::uuid);
-select is(jsonb_array_length(api.admin_quiz_templates()), 30, 'the 30 templates');
+select is(jsonb_array_length(api.admin_quiz_templates()), 40, 'the 40 templates (ten more opinions since 17 Oct)');
 select api.admin_save_quiz_template(null, '{"family": "o", "tag": "Άποψη", "q": "Το διπλό θέλει δύο φίλους.", "options": ["Συμφωνώ", "Με τίποτα"]}') ->> 'id' as nt \gset
 select is((select active from core.quiz_templates where id = :'nt'::uuid), true, 'a new Άποψη goes live');
 select throws_ok($$select api.admin_save_quiz_template(null, '{"family": "s", "tag": "Σενάριο", "q": "{p3.o} με {p1.ton};", "players": 2, "gender": "m", "options": ["{p1}", "{p2}"]}')$$,

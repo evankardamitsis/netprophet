@@ -24,11 +24,11 @@ select k, core.quiz_dynamic(:'u'::uuid, 'tennis', k, core.quiz_day_key(now()), '
 grant select on q to public;
 
 select is((select card -> 'content' ->> 'q' from q where k = 'pre'),
-          '{p1.o} παίζει αύριο με {p2.ton}, που ξεκινά φαβορί. Γίνεται Ανατροπή;', 'before: the favourite in words');
-select ok((select card -> 'content' ->> 'q' like 'Ανατροπή! {p1.o} κέρδισε {p2.ton} %. Το περίμενες;' from q where k = 'post'),
-          'after: did you see it coming');
-select is((select jsonb_agg(o ->> 'label') from q, jsonb_array_elements(card -> 'content' -> 'options') o where k = 'post'),
-          '["Ναι, το είδα να έρχεται", "Όχι, καθόλου"]'::jsonb, 'after: an opinion, no level moving');
+          '{p1.o} παίζει αύριο με {p2.ton}, που ξεκινά φαβορί. Γίνεται ανατροπή;', 'before: the favourite in words');
+select ok((select card -> 'content' ->> 'q' not like '%6-3%' and card -> 'content' ->> 'reveal' like 'Ανατροπή! %κέρδισε %.'
+             from q where k = 'post'),
+          'after: the result is hidden in the question, the upset shows after the pick');
+select ok((select (card -> 'content' ->> 'right')::int in (0, 1) from q where k = 'post'), 'after: one right answer, no level moving');
 select is((select count(*)::int from q where card::text like '%(level%'), 0, 'no question names a level');
 select is((select count(*)::int from q where card is not null), 2, 'both upset cards were made');
 

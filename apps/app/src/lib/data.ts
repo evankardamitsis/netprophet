@@ -272,7 +272,7 @@ export interface QuizState {
   answer: (cardId: string, option: number) => Promise<AnswerCardResult | null>;
 }
 
-/** «Οι 6 της ημέρας» (api.get_quiz / api.answer_card). Mock mode and the dev guest play the prototype's day-0 cards. */
+/** «Οι ερωτήσεις της ημέρας» (api.get_quiz / api.answer_card). Mock mode and the dev guest play the prototype's day-0 cards. */
 export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
   const api = useApi();
   const store = useSyncExternalStore(quizSubscribe, () => quizStore, () => quizStore);

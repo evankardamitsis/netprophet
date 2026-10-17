@@ -3,7 +3,7 @@ import type { AnswerCardResult, GetQuizResult, QuizCard } from '@netprophet/db';
 import { fmt } from './votes';
 
 /**
- * «Οι 6 της ημέρας» view logic. The server decides what counts; this only turns its cards into text for the screens.
+ * «Οι ερωτήσεις της ημέρας» view logic. The server decides what counts; this only turns its cards into text for the screens.
  */
 
 /** a hyphen inside a score never breaks the line («6-6», «5-2») */
@@ -53,7 +53,9 @@ export function verdict(card: QuizCard, t: Copy): string {
   if (card.family === 'o' || (card.family === 'd' && (card.content.right === undefined || card.content.right === null))) return '';
   if (card.family === 'd') {
     const r = card.content.right!;
-    return (card.my_option - 1 === r ? t.quiz.right : t.quiz.wrong) + capitalizeFirst(renderQuizText(`{p${r + 1}.o}.`, card.content.players));
+    // a result card says what happened («Ο Νίκος κέρδισε 6-3, 6-4.»); others name the right player
+    const fact = card.content.reveal ?? `{p${r + 1}.o}.`;
+    return (card.my_option - 1 === r ? t.quiz.right : t.quiz.wrong) + capitalizeFirst(renderQuizText(fact, card.content.players));
   }
   if (card.family !== 'q') return q.counted;
   const right = card.content.right;

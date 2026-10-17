@@ -1,6 +1,6 @@
 // packages/copy/src/quizText.ts
 //
-// «Οι 6 της ημέρας»: the server sends card text with player tokens and the client fills in the grammar.
+// «Οι ερωτήσεις της ημέρας»: the server sends card text with player tokens and the client fills in the grammar.
 //   {p1}         Νίκος Ροδίτης       full name
 //   {p1.first}   Νίκος               first name
 //   {p1.o}       ο Νίκος Ροδίτης     article + nominative full name

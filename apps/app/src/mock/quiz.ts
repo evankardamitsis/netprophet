@@ -1,7 +1,7 @@
 import type { AnswerCardResult, GetQuizResult, QuizCard, QuizPlayer } from '@netprophet/db';
 
 /**
- * «Οι 6 της ημέρας» for mock mode and the dev guest: the prototype's day-0 cards (qs6), in the shape the server
+ * «Οι ερωτήσεις της ημέρας» for mock mode and the dev guest: the prototype's day-0 cards (qs6), in the shape the server
  * sends, with the prototype's fixed percentages as the split after answering. The prototype's «Η ώρα της αλήθειας»
  * card (a result teaser) is a plain two-name vote here. Answers live in memory for the session; the sixth pays +30.
  */

@@ -702,9 +702,9 @@ export const en: Copy = {
   },
   quiz: {
     label: 'Game of the day',
-    head: 'Today\'s {n}',
-    subSix: 'Six quick questions about players you know.',
-    subTwelve: 'Twelve quick questions about players you know.',
+    head: 'Today\'s questions',
+    subSix: 'Six quick questions from the courts and the players you know.',
+    subTwelve: 'Twelve quick questions from the courts and the players you know.',
     progress: '{n} of {total}',
     done: '✓ You played them today.',
     play: 'Play ›',
