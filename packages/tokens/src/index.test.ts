@@ -17,7 +17,7 @@ describe('tokens', () => {
     for (const v of Object.values(colors)) expect(v).toMatch(/^#[0-9A-F]{6}$/);
   });
   it('keeps every cosmetic colour a 6-digit hex', () => {
-    const hexes = [...Object.values(cosmetics.bg), ...Object.values(cosmetics.frame), ...Object.values(cosmetics.kit).flatMap((k) => [k.shirt, k.racket]), ...Object.values(cosmetics.gear), ...cosmetics.confetti, ...cosmetics.crowd];
+    const hexes = [...Object.values(cosmetics.bg), ...Object.values(cosmetics.frame), ...Object.values(cosmetics.kit).flatMap((k) => [k.shirt, k.racket]), ...Object.values(cosmetics.gear), ...cosmetics.confetti, ...cosmetics.crowd, ...cosmetics.effects.fireworks, ...Object.values(cosmetics.effects).flat()];
     for (const v of hexes) expect(v).toMatch(/^#[0-9A-F]{6}$/);
   });
   it('keeps the type scale in descending order', () => {
