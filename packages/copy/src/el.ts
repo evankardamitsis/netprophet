@@ -500,7 +500,7 @@ export const el = {
     /** {price} is «8,99€» */
     price: '{price} τον μήνα',
     /** notifications first (founder, 14 Oct: "include notifications about your tournaments, your draws, your matches") */
-    features: ['Τα τουρνουά σου, με ειδοποίηση', 'Η κλήρωση, μόλις βγει', 'Τα ματς σου: μέρα, ώρα, αλλαγές', 'Ο αντίπαλος πριν το ματς', 'Τα στατιστικά σου'],
+    features: ['Τα τουρνουά σου, με ειδοποίηση', 'Η κλήρωση, μόλις βγει', 'Τα ματς σου: μέρα, ώρα, αλλαγές', 'Ο αντίπαλος πριν το ματς', 'Το επόμενο τουρνουά για σένα', 'Τα στατιστικά σου'],
     join: 'Γίνε μέλος',
     notNow: 'Όχι τώρα',
     close: 'Κλείσιμο',
@@ -1030,6 +1030,23 @@ export const el = {
       on: '✓ Οι ειδοποιήσεις σου είναι ανοιχτές',
       /** with Pro and no match yet */
       onEmpty: 'Σου λέμε μόλις μπεις σε κλήρωση.',
+    },
+    /** Pro: «Το επόμενο τουρνουά για σένα», tournaments still to come, your area first, entry closing soonest */
+    next: {
+      title: 'Το επόμενο τουρνουά για σένα',
+      /** «Δηλώσεις έως Πεμ 23/10» */
+      deadline: 'Δηλώσεις έως {day} {date}',
+      closed: 'Οι δηλώσεις έκλεισαν',
+      enter: 'Δήλωση ›',
+      played: 'Το έχεις ξαναπαίξει',
+      /** free: the rest open the Pro screen */
+      moreOne: 'Άλλο ένα για σένα με Pro ›',
+      moreMany: 'Άλλα {n} για σένα με Pro ›',
+      /** free with nothing more to show: the reminder sells it */
+      remind: 'Με Pro σου θυμίζουμε πριν κλείσουν οι δηλώσεις ›',
+      /** Pro */
+      remindOn: '✓ Σου θυμίζουμε 2 μέρες πριν κλείσουν οι δηλώσεις',
+      empty: 'Δεν έχει βγει νέο τουρνουά ακόμα.',
     },
     sections: { ongoing: 'Τώρα', upcoming: 'Έρχονται', done: 'Τελείωσαν' },
     chipOngoing: 'σε εξέλιξη',

@@ -849,6 +849,37 @@ export interface GetTournamentsResult {
   mine: (TournamentMatch & { tournament_id: string; tournament: string })[] | null;
 }
 
+/** one row of «Το επόμενο τουρνουά για σένα» (api.upcoming_tournaments) */
+export interface UpcomingTournament {
+  id: string;
+  name: string;
+  venue: string | null;
+  area_id: string | null;
+  /** the area's Greek name */
+  area: string | null;
+  surface: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  entry_deadline: string | null;
+  /** the deadline is today or later */
+  entry_open: boolean;
+  /** where to sign up */
+  entry_link: string | null;
+  /** the organiser's categories («Μ 40+», «MEDIUM») */
+  categories: string[];
+  /** played an earlier edition (same name without the year, or the same organiser link) */
+  played_before: boolean;
+  /** in one of your areas */
+  near: boolean;
+}
+
+/** api.upcoming_tournaments. Pro gets every row; free gets the first in full and `more`, how many others there are. */
+export interface UpcomingTournamentsResult {
+  pro: boolean;
+  items: UpcomingTournament[];
+  more: number;
+}
+
 export interface DrawEntrantRow {
   pos: number;
   raw: string;

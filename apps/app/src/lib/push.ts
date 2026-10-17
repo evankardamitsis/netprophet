@@ -80,6 +80,8 @@ export function pushRoute(data: Record<string, unknown> | undefined): string | n
   if (data.type === 'results') return '/results';
   // a match reminder: Σήμερα, where «Το ματς σου» leads
   if (data.type === 'reminder') return '/';
+  // entries close in two days: Τουρνουά, where «Το επόμενο τουρνουά για σένα» lists it
+  if (data.type === 'entry') return '/tournaments';
   return null;
 }
 
