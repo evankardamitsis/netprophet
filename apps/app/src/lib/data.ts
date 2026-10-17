@@ -28,7 +28,7 @@ import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
 import { toScoutView, type ScoutView } from './scout';
 import { myMatchOf, type MyMatchView } from './myMatch';
-import { avatarByKey, defaultAvatarFor, type AvatarLook, type DefaultAvatar } from './avatar';
+import { avatarByKey, defaultAvatarFor, playerAvatar, type AvatarLook, type DefaultAvatar } from './avatar';
 import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
 import { winLossRows, type WinLossRow } from './winLoss';
 import { when } from './feed';
@@ -1649,4 +1649,38 @@ export function useMyBaller(): { look: AvatarLook | null; kit: string; gear: str
   const { look } = useLook();
   const eq = look?.equipped;
   return { look: my.avatar?.look ?? null, kit: eq?.kit ?? 'kit_green', gear: eq?.gear ?? null, frame: eq?.frame ?? null, effect: eq?.win_effect ?? null };
+}
+
+export interface OtherBaller {
+  look: AvatarLook;
+  name: string | null;
+  kit: string;
+  gear: string | null;
+}
+
+/** other players' Ballers by user id (the Ladder podium); empty until loaded, and in sample mode */
+export function useBallers(ids: string[]): Record<string, OtherBaller> {
+  const api = useApi();
+  const [map, setMap] = useState<Record<string, OtherBaller>>({});
+  const key = ids.join(',');
+  useEffect(() => {
+    if (!api || !key) return;
+    let live = true;
+    api
+      .getBallers(key.split(','))
+      .then((rows) => {
+        if (!live) return;
+        const next: Record<string, OtherBaller> = {};
+        for (const r of rows) {
+          const look = playerAvatar(r.user_id, r.gender, r.avatar);
+          if (look) next[r.user_id] = { look, name: r.name, kit: r.kit ?? 'kit_green', gear: r.gear };
+        }
+        setMap(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [api, key]);
+  return map;
 }

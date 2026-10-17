@@ -1,5 +1,5 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { Platform, Pressable, View } from 'react-native';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { PanResponder, Platform, Pressable, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -8,6 +8,7 @@ import Animated, {
   withDelay,
   withRepeat,
   withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -45,6 +46,10 @@ interface Props {
   onPoke?: (move: BallerMove) => void;
   /** the first thing it does when it appears */
   enter?: BallerMove | null;
+  /** its face at rest: a smile, or a little sad on an empty screen */
+  mood?: Mouth;
+  /** drag it and let go: it flies back and lands with a squash */
+  throwable?: boolean;
 }
 
 function buzz(kind: 'light' | 'medium' | 'soft' | 'rigid' | 'success' | 'select') {
@@ -67,7 +72,7 @@ function buzz(kind: 'light' | 'medium' | 'soft' | 'rigid' | 'success' | 'select'
 }
 
 export const Baller = forwardRef<BallerHandle, Props>(function Baller(
-  { look, size, kit, gear = null, frame = null, bg = null, effect = null, jump = 0, pokeable = false, onPoke, enter = null },
+  { look, size, kit, gear = null, frame = null, bg = null, effect = null, jump = 0, pokeable = false, onPoke, enter = null, mood = 'smile', throwable = false },
   ref,
 ) {
   const reduced = useReducedMotion();
@@ -82,7 +87,10 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
   const tilt = useSharedValue(0);
   const turn = useSharedValue(0);
   const [raised, setRaised] = useState(false);
-  const [mouth, setMouth] = useState<Mouth>('smile');
+  const [mouth, setMouth] = useState<Mouth>(mood);
+  // a throw: where the finger took it
+  const dx = useSharedValue(0);
+  const dy = useSharedValue(0);
   const [dizzy, setDizzy] = useState(false);
   const [burst, setBurst] = useState(0);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -123,9 +131,9 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
   const face = useCallback(
     (m: Mouth, ms: number) => {
       setMouth(m);
-      later(ms, () => setMouth('smile'));
+      later(ms, () => setMouth(mood));
     },
-    [later],
+    [later, mood],
   );
 
   const play = useCallback(
@@ -223,7 +231,8 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
     return {
       transform: [
         { perspective: 600 },
-        { translateY: -up },
+        { translateX: dx.value },
+        { translateY: -up + dy.value },
         { rotateY: `${turn.value}deg` },
         { rotate: `${tilt.value}deg` },
         { scaleX: sx.value * (2 - breathe) },
@@ -240,8 +249,33 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
     onPoke?.(move);
   };
 
+  // a throw: Baller follows the finger, then springs back home and lands with a squash
+  const fling = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) => throwable && Math.abs(g.dx) + Math.abs(g.dy) > 8,
+        onPanResponderGrant: () => face('open', 900),
+        onPanResponderMove: (_, g) => {
+          dx.value = g.dx;
+          dy.value = g.dy;
+        },
+        onPanResponderRelease: (_, g) => {
+          const spring = { damping: 7, stiffness: 140, mass: 0.8, velocity: 0 };
+          dx.value = withSpring(0, { ...spring, velocity: g.vx * 1000 });
+          dy.value = withSpring(0, { ...spring, velocity: g.vy * 1000 });
+          later(260, () => play('squash'));
+        },
+        onPanResponderTerminate: () => {
+          dx.value = withSpring(0);
+          dy.value = withSpring(0);
+        },
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [throwable, play],
+  );
+
   const art = (
-    <View>
+    <View {...(throwable ? fling.panHandlers : {})}>
       <Animated.View style={style}>
         <BallArt look={look} size={size} kit={kit} gear={gear} frame={frame} bg={bg} mouth={mouth} dizzy={dizzy} raised={raised} eyes={{ open, look: glance }} />
       </Animated.View>

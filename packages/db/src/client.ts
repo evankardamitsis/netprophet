@@ -114,6 +114,9 @@ export function rpc(client: NetprophetClient) {
     setAvatar: (key: string | null) => call<{ avatar: string | null }>(client, 'set_avatar', { p_key: key }),
     /** your Baller: its name (null until named), your avatar pick, and whether you have met it */
     getBaller: () => call<{ name: string | null; avatar: string | null; met: boolean }>(client, 'get_baller', {}),
+    /** other players' Ballers (the podium): style, name, kit and gear; hidden profiles left out */
+    getBallers: (users: string[]) =>
+      call<{ user_id: string; avatar: string; gender: 'm' | 'f' | null; name: string | null; kit: string | null; gear: string | null }[]>(client, 'get_ballers', { p_users: users }),
     /** name your Baller; null clears it. Refused with bad_name or name_not_allowed */
     setBallerName: (name: string | null) => call<{ name: string | null }>(client, 'set_baller_name', { p_name: name }),
     getMyLevel: () => call<GetMyLevelResult>(client, 'get_my_level', {}),
