@@ -56,7 +56,7 @@ export default function VoteScreen() {
   unlocksNow.current = unlocks;
   const quests = useQuests();
   const quiz = useQuiz();
-  // «Οι 6 της ημέρας»: read again whenever the feed comes back into view (after playing, or a new day)
+  // «Οι ερωτήσεις της ημέρας»: read again whenever the feed comes back into view (after playing, or a new day)
   const quizRefresh = quiz.refresh;
   useFocusEffect(
     useCallback(() => {

@@ -67,6 +67,11 @@ describe('verdict', () => {
     expect(verdict(recall, el)).toMatch(/Ιωάννα/);
     expect(verdict(vote('d', { family: 'd', my_option: 1 }), el)).toBe('');
   });
+  it('a result to guess says what happened after the pick', () => {
+    const guess = vote('g', { family: 'd', my_option: 1, content: { ...vote('g').content, tag: 'Τρίτο σετ;', right: 0, reveal: '{p2.o} κέρδισε 6-4, 3-6, 7-5.' } });
+    expect(verdict(guess, el)).toMatch(/κέρδισε 6-4, 3-6, 7-5\.$/);
+    expect(verdict(guess, el)).not.toMatch(/\{p/);
+  });
 
   it('judges «Ποιος είναι;» and names the right player', () => {
     expect(verdict(who('w', { my_option: 2 }), el)).toBe('Σωστά. Η Ιωάννα Τσάκου.');
@@ -89,8 +94,8 @@ describe('stripView', () => {
   const cards = (n: number, done: number) => Array.from({ length: n }, (_, i) => vote(`c${i}`, { my_option: i < done ? 1 : null }));
   it('starts with the sub line and «Παίξε ›»', () => {
     const v = stripView(quiz(cards(6, 0)), el);
-    expect(v.head).toBe('Οι 6 της ημέρας');
-    expect(v.sub).toBe('Έξι γρήγορες ερωτήσεις για παίκτες που ξέρεις.');
+    expect(v.head).toBe('Οι ερωτήσεις της ημέρας');
+    expect(v.sub).toBe('Έξι γρήγορες ερωτήσεις από τα γήπεδα και τους παίκτες που ξέρεις.');
     expect(v.cta).toBe('Παίξε ›');
     expect(v.badge).toBe(true);
     expect(v.segs).toHaveLength(6);
@@ -110,8 +115,8 @@ describe('stripView', () => {
   });
   it('speaks of twelve for Pro', () => {
     const v = stripView(quiz(cards(12, 0), { pro: true }), el);
-    expect(v.head).toBe('Οι 12 της ημέρας');
-    expect(v.sub).toBe('Δώδεκα γρήγορες ερωτήσεις για παίκτες που ξέρεις.');
+    expect(v.head).toBe('Οι ερωτήσεις της ημέρας');
+    expect(v.sub).toBe('Δώδεκα γρήγορες ερωτήσεις από τα γήπεδα και τους παίκτες που ξέρεις.');
   });
 });
 

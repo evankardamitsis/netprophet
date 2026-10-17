@@ -161,7 +161,7 @@ export interface GetQuestsResult {
   weekly: QuestRow[];
 }
 
-/** «Οι 6 της ημέρας»: a player named on a card; the text tokens {p1}, {p1.o}, {p1.ton}... refer to players[0] */
+/** «Οι ερωτήσεις της ημέρας»: a player named on a card; the text tokens {p1}, {p1.o}, {p1.ton}... refer to players[0] */
 export interface QuizPlayer {
   id: string;
   first_name: string;
@@ -182,8 +182,10 @@ export interface QuizCard {
     options: { label: string }[];
     /** only on a 'q' card */
     clues?: string[];
-    /** 0-based index of the right option; only on a 'q' card */
+    /** 0-based index of the right option: «Ποιος είναι;» and the dynamic cards with an answer */
     right?: number;
+    /** what happened, shown after the pick on a card with an answer («{p1.o} κέρδισε 6-3, 6-4.») */
+    reveal?: string;
     players: QuizPlayer[];
     /** a dynamic card about this week («αυτή τη βδομάδα») */
     week?: boolean;

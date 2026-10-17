@@ -140,7 +140,7 @@ export function daysLeftInMonth(at: Instant): number {
   return last - p.day + 1;
 }
 
-/** The «Οι 6 της ημέρας» set changes at 09:00 Athens. Before 09:00 you are still on the previous set. */
+/** The «Οι ερωτήσεις της ημέρας» set changes at 09:00 Athens. Before 09:00 you are still on the previous set. */
 export function quizDayKey(at: Instant): string {
   const p = localParts(at);
   const key = dateKey(p.year, p.month, p.day);

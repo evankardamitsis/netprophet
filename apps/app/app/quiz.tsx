@@ -19,7 +19,7 @@ import { useUnlocks } from '../src/lib/unlocks';
 import { colors, fonts } from '../src/theme';
 
 /**
- * «Οι 6 της ημέρας» (prototype V2, isGame and isGameEnd): dots on top, the tag, the question, a clue box on
+ * «Οι ερωτήσεις της ημέρας» (prototype V2, isGame and isGameEnd): dots on top, the tag, the question, a clue box on
  * «Ποιος είναι;», the options, one line of verdict and «‹ Πίσω» / «Επόμενη ›». No auto-advance: «Επόμενη ›» waits
  * for an answer. Past the last card comes «Αυτά για σήμερα.» with the +30.
  */

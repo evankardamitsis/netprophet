@@ -1,4 +1,4 @@
--- «Οι 6 της ημέρας»: a personal set of six (twelve with Pro), the players you follow first, never minors, hidden
+-- «Οι ερωτήσεις της ημέρας»: a personal set of six (twelve with Pro), the players you follow first, never minors, hidden
 -- players or anyone twice; the same set all day; an answer is a 'card' vote; the sixth pays +30 once, Pro too;
 -- σερί never moves.
 begin;
@@ -22,7 +22,13 @@ insert into core.player_sports (player_id, sport_id, level_tier, level_direction
 select id, 'tennis', 3 + (g % 4) * 0.5, case when g % 3 = 0 then 'up' else 'same' end, '["W","W","L","W"]'::jsonb from pp
 on conflict (player_id, sport_id) do update set level_tier = excluded.level_tier, level_direction = excluded.level_direction,
                                               form = excluded.form;
-insert into core.follows (user_id, player_id) select :'u'::uuid, id from pp where g <= 4 or g between 13 and 16;
+insert into core.follows (user_id, player_id) select :'u'::uuid, id from pp where g <= 8 or g between 13 and 16;
+-- the ones u follows have played lately, so «Ποιος είναι;» has facts to give
+update core.player_sports set hand = 'L' where player_id in (select id from pp where g <= 8 or g between 13 and 16);
+select tests.finish_match(tests.mk_match((select id from pp where g = 1), (select id from pp where g = 2), now() - interval '20 hours'), 1);
+select tests.finish_match(tests.mk_match((select id from pp where g = 3), (select id from pp where g = 4), now() - interval '22 hours'), 2);
+select tests.finish_match(tests.mk_match((select id from pp where g = 13), (select id from pp where g = 14), now() - interval '20 hours'), 1);
+select tests.finish_match(tests.mk_match((select id from pp where g = 15), (select id from pp where g = 16), now() - interval '22 hours'), 2);
 select tests.mk_player('Μικρός', 'Ανήλικος') as kid \gset
 update core.players set is_minor = true where id = :'kid'::uuid;
 insert into core.follows (user_id, player_id) values (:'u'::uuid, :'kid'::uuid);
@@ -37,8 +43,8 @@ create temp table q1 as select api.get_quiz() as doc;
 grant select on q1 to public;
 select is(jsonb_array_length((select doc -> 'cards' from q1)), 6, 'six cards');
 select matches((select string_agg(c ->> 'family', '' order by (c ->> 'position')::int) from q1, jsonb_array_elements(doc -> 'cards') c),
-               '^s[cd]q[od]s[cd]$', 'Σενάριο, Διάλεξε έναν, Ποιος είναι;, Άποψη, Σενάριο, Διάλεξε έναν (2, 4 and 6 can be dynamic cards)');
-select ok((select bool_and(p.id in (select id from pp where g <= 4 or g between 13 and 16))
+               '^s[cd]q[od][sdo][cdo]$', 'Σενάριο, Διάλεξε έναν, Ποιος είναι;, Άποψη, Σενάριο, Διάλεξε έναν (2, 4, 5 and 6 can be cards from real matches)');
+select ok((select bool_and(p.id in (select id from pp where g <= 8 or g between 13 and 16))
              from q1, jsonb_array_elements(doc -> 'cards') c, jsonb_array_elements(c -> 'content' -> 'players') x,
                   core.players p
             where (c ->> 'position')::int = 1 and p.id = (x ->> 'id')::uuid),
@@ -70,13 +76,13 @@ select is((select done_at is not null from core.user_quest_progress where user_i
           true, 'cards count on «Ψήφισε 3 κάρτες»');
 select tests.logout();
 
--- a player who follows nobody still gets a full set, with «Ποιος είναι;» even when nobody has an area (the roster today)
+-- a player who follows and has played nobody still gets a full set, and no question about strangers
 update core.players set area_id = null where id in (select id from pp);
 select tests.login(:'v'::uuid);
 create temp table q3 as select api.get_quiz() as doc;
 select is(jsonb_array_length((select doc -> 'cards' from q3)), 6, 'no follows: still six');
-select ok(exists (select 1 from q3, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' = 'q'),
-          '«Ποιος είναι;» from the level alone');
+select ok(not exists (select 1 from q3, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' in ('s', 'c', 'q')),
+          'no questions about people you cannot know');
 select tests.logout();
 
 -- Pro: twelve cards, still +30 at the sixth

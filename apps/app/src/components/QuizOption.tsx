@@ -5,7 +5,7 @@ import { runJpop, usePopIn, usePress } from '../lib/motion';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
- * One answer of «Οι 6 της ημέρας» (prototype gOpts). White, radius 22, a 3px ink border once chosen. After answering a
+ * One answer of «Οι ερωτήσεις της ημέρας» (prototype gOpts). White, radius 22, a 3px ink border once chosen. After answering a
  * lime fill grows to the split (to the full width on the right answer of «Ποιος είναι;») and the percent, or ✓,
  * pops in bottom-right. Two options are tall with a 48px name; three or more are 72px with a 32px name.
  */
