@@ -81,6 +81,14 @@ export interface FeedResultCard {
   };
 }
 
+/** a tournament named on a card */
+export interface TournamentRef {
+  id: string;
+  name: string;
+  /** its logo path in the public `logos` bucket; missing on servers before 18 Oct 2026 */
+  logo?: string | null;
+}
+
 export interface FeedMatchCard {
   kind: 'match';
   match_id: string;
@@ -89,7 +97,7 @@ export interface FeedMatchCard {
   venue: string | null;
   round: string | null;
   status: string;
-  tournament: { id: string; name: string } | null;
+  tournament: TournamentRef | null;
   /** the category, «Μ 40+», when the match belongs to an event */
   level?: string | null;
   /** MS, WS, MD, WD, XD */
@@ -105,6 +113,8 @@ export interface FeedMatchCard {
   moved_from?: string | null;
   /** the club it is played at, when the source names it */
   club?: string | null;
+  /** the club's logo path in the `logos` bucket */
+  club_logo?: string | null;
   /** the club's surface, else the tournament's */
   surface?: string | null;
 }
@@ -116,7 +126,7 @@ export interface FeedPostponedCard {
   format: 'singles' | 'doubles' | 'mixed';
   /** the original time */
   starts_at: string | null;
-  tournament: { id: string; name: string } | null;
+  tournament: TournamentRef | null;
   sides: { side: Side; players: FeedPlayer[] }[];
   my_vote: Side | null;
 }
@@ -356,6 +366,8 @@ export type LevelCelebration = Celebration<LevelCelebrationPayload>;
 export interface ResultsTournament {
   id: string;
   name: string;
+  /** its logo path in the `logos` bucket; missing on servers before 18 Oct 2026 */
+  logo?: string | null;
   results: number;
 }
 
@@ -373,6 +385,8 @@ export interface ResultRow {
   /** null for friendlies */
   tournament: string | null;
   tournament_id?: string | null;
+  /** the tournament's logo path in the `logos` bucket */
+  tournament_logo?: string | null;
   /** the category, «Μ 40+», when the match belongs to an event */
   level?: string | null;
   /** MS, WS, MD, WD, XD */
@@ -733,6 +747,8 @@ export interface ProOffer {
 export interface PublicTournament {
   id: string;
   name: string;
+  /** its logo path in the `logos` bucket; missing on servers before 18 Oct 2026 */
+  logo?: string | null;
   venue: string | null;
   area_id: string | null;
   starts_on: string | null;
@@ -896,6 +912,8 @@ export interface TournamentMatch {
   moved_from?: string | null;
   /** the club and court it is played at, when the source names them */
   club?: string | null;
+  /** the club's logo path in the `logos` bucket */
+  club_logo?: string | null;
   court?: string | null;
   /** the club's surface, else the tournament's */
   surface?: string | null;
@@ -904,6 +922,8 @@ export interface TournamentMatch {
 export interface TournamentItem {
   id: string;
   name: string;
+  /** its logo path in the `logos` bucket; missing on servers before 18 Oct 2026 */
+  logo?: string | null;
   venue: string | null;
   area_id: string | null;
   surface: string | null;
@@ -925,13 +945,15 @@ export interface TournamentItem {
 export interface GetTournamentsResult {
   pro: boolean;
   items: TournamentItem[];
-  mine: (TournamentMatch & { tournament_id: string; tournament: string })[] | null;
+  mine: (TournamentMatch & { tournament_id: string; tournament: string; tournament_logo?: string | null })[] | null;
 }
 
 /** one row of «Το επόμενο τουρνουά για σένα» (api.upcoming_tournaments) */
 export interface UpcomingTournament {
   id: string;
   name: string;
+  /** its logo path in the `logos` bucket; missing on servers before 18 Oct 2026 */
+  logo?: string | null;
   venue: string | null;
   area_id: string | null;
   /** the area's Greek name */
@@ -1021,6 +1043,8 @@ export interface TournamentDraw {
 export interface GetTournamentResult {
   id: string;
   name: string;
+  /** its logo path in the `logos` bucket; missing on servers before 18 Oct 2026 */
+  logo?: string | null;
   venue: string | null;
   area_id: string | null;
   surface: string | null;

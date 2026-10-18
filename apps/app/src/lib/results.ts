@@ -55,6 +55,8 @@ export interface ResultGroup {
   title: string;
   /** «Μ 40+ · Απλό · Προημιτελικά»; null when there is nothing to add */
   detail: string | null;
+  /** the tournament's logo (its path, null for the letter); null for friendlies, which show none */
+  logo: { path: string | null } | null;
   items: ResultItem[];
 }
 
@@ -162,7 +164,14 @@ export function groupResults(rows: ResultRow[], t: Copy, now: Date, myPlayerId: 
     const key = `${dk}|${eventLabel(row, t)}`;
     let g = byKey.get(key);
     if (!g) {
-      g = { key, day: greekCaps(dayLabel(row.starts_at, now, t)), firstOfDay: !days.has(dk), ...eventParts(row, t), items: [] };
+      g = {
+        key,
+        day: greekCaps(dayLabel(row.starts_at, now, t)),
+        firstOfDay: !days.has(dk),
+        ...eventParts(row, t),
+        logo: row.tournament ? { path: row.tournament_logo ?? null } : null,
+        items: [],
+      };
       days.add(dk);
       byKey.set(key, g);
       groups.push(g);

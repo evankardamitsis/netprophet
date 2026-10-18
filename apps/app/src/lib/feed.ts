@@ -53,9 +53,12 @@ export interface CardMatch {
   place?: string;
   /**
    * The tournament and where it is played, said once above its run of matches (founder, 16 Oct: easy to read);
-   * the card's own line then keeps only the time, format, category and round.
+   * the card's own line then keeps only the time, format, category and round. `logo` is the tournament's logo path
+   * (null: its letter); `club` leads the place line with the club's logo.
    */
-  group?: { key: string; title: string; sub: string | null };
+  group?: { key: string; title: string; logo: string | null; sub: string | null; club: ClubMark | null };
+  /** the club the match is played at, for its logo by the place line */
+  club?: ClubMark;
   /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
   later?: boolean;
   /** when it starts, for the order of «Αύριο και μετά» */
@@ -229,6 +232,12 @@ function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): Ca
   return { people, sub, level: sub, area: null };
 }
 
+/** a club named in a place line, with its logo path (null: its letter) */
+export interface ClubMark {
+  name: string;
+  logo: string | null;
+}
+
 export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>, t: Copy, now = new Date()): CardMatch {
   const w = when(card.starts_at, now, t);
   const doubles = card.format !== 'singles';
@@ -239,6 +248,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   // shows from the card itself, so only who plays is said: «Γυναικών», «Μικτό»
   const who = t.match.categoryWho[card.discipline ?? ''] ?? t.match.categoryWho[card.format] ?? null;
   const category = [card.tournament ? card.level : null, who].filter(Boolean).join(' · ') || undefined;
+  const club: ClubMark | null = card.club ? { name: card.club, logo: card.club_logo ?? null } : null;
   const meta = [
     w.label,
     roundLabel(card.round, t),
@@ -268,9 +278,16 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     // a later day says its day above the tournament's run, so «Αύριο και μετά» reads day by day
     group: card.tournament
       ? later && card.starts_at
-        ? { key: `${dayKey(card.starts_at)}|${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: [dayShort(card.starts_at, t), place].filter(Boolean).join(' · ') }
-        : { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: place }
+        ? {
+            key: `${dayKey(card.starts_at)}|${card.tournament.id}|${place ?? ''}`,
+            title: card.tournament.name,
+            logo: card.tournament.logo ?? null,
+            sub: [dayShort(card.starts_at, t), place].filter(Boolean).join(' · '),
+            club,
+          }
+        : { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, logo: card.tournament.logo ?? null, sub: place, club }
       : undefined,
+    club: club ?? undefined,
   };
 }
 

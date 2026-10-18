@@ -26,6 +26,9 @@ describe('next tournament', () => {
     expect(r.link).toBe('https://example.org/entry');
     expect(nextRow(item({ entry_open: false }), t).link).toBeNull();
     expect(nextRow(item({ entry_link: null }), t).link).toBeNull();
+    // the logo path when staff gave one; null shows the letter (and servers before 18 Oct send none)
+    expect(r.logo).toBeNull();
+    expect(nextRow(item({ logo: 'tournaments/a/k1.png' }), t).logo).toBe('tournaments/a/k1.png');
   });
 
   it('a row leaves out what is missing', () => {

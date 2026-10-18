@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { BallerNote } from '../../src/components/BallerNote';
+import { Logo } from '../../src/components/Logo';
 import { ResultRow } from '../../src/components/ResultRow';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { Toast } from '../../src/components/Toast';
@@ -64,7 +65,7 @@ export default function ResultsScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipsRow}>
               <Chip label={t.results.all} on={tournament === null} onPress={() => setTournament(null)} />
               {tournaments.map((x) => (
-                <Chip key={x.id} label={x.name} on={tournament === x.id} onPress={() => setTournament(tournament === x.id ? null : x.id)} />
+                <Chip key={x.id} label={x.name} logo={x.logo ?? null} on={tournament === x.id} onPress={() => setTournament(tournament === x.id ? null : x.id)} />
               ))}
             </ScrollView>
           ) : null}
@@ -72,7 +73,10 @@ export default function ResultsScreen() {
             <View key={g.key} style={styles.group}>
               {g.firstOfDay ? <Text style={styles.day}>{g.day}</Text> : null}
               <View style={styles.event}>
-                <Text style={styles.eventTitle}>{g.title}</Text>
+                <View style={styles.eventHead}>
+                  {g.logo ? <Logo path={g.logo.path} name={g.title} size={24} /> : null}
+                  <Text style={styles.eventTitle}>{g.title}</Text>
+                </View>
                 {g.detail ? <Text style={text.meta}>{g.detail}</Text> : null}
               </View>
               {g.items.map((item) => (
@@ -92,11 +96,12 @@ export default function ResultsScreen() {
 }
 
 /** a quiet chip: an outline, ink when picked (never lime: nothing was earned; never blue: not the screen's action) */
-function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+function Chip({ label, logo, on, onPress }: { label: string; logo?: string | null; on: boolean; onPress: () => void }) {
   const press = usePress(0.95);
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.chip, on && styles.chipOn, press.style]}>
+      <Animated.View style={[styles.chip, on && styles.chipOn, logo !== undefined && styles.chipWithLogo, press.style]}>
+        {logo !== undefined ? <Logo path={logo} name={label} size={18} onInk={on} /> : null}
         <Text style={[styles.chipText, on && styles.chipTextOn]} numberOfLines={1}>
           {label}
         </Text>
@@ -138,12 +143,15 @@ const styles = StyleSheet.create({
   chips: { gap: 8, paddingHorizontal: 20 },
   chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.navLine },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  // a tournament chip leads with its logo, a little tighter on the left so the round sits evenly
+  chipWithLogo: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 6, paddingVertical: 6 },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   chipTextOn: { color: colors.paper },
   group: { gap: 8 },
   // the day is the small label; the tournament is the heading of its rows
   day: { ...text.label, marginTop: 10 },
   event: { gap: 2, paddingHorizontal: 4, marginBottom: 2 },
-  eventTitle: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  eventHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  eventTitle: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });

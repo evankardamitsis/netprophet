@@ -31,6 +31,8 @@ export type Health = 'ok' | 'drop' | 'empty' | 'error';
 export interface SourceTournament {
   id: string;
   name: string;
+  /** the logo in the `logos` bucket */
+  logo_path?: string | null;
   venue: string | null;
   area_id: string | null;
   surface: string | null;

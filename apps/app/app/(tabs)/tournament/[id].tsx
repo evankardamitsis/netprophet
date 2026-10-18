@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
+import { Logo } from '../../../src/components/Logo';
 import { useCopy } from '../../../src/i18n';
 import { useTournament } from '../../../src/lib/data';
 import { BracketTree } from '../../../src/components/BracketTree';
@@ -73,7 +74,10 @@ function Body({ d, today, openDraw }: { d: GetTournamentResult; today: string; o
   return (
     <>
       <Reveal i={0}>
-        <Text style={styles.title}>{d.name}</Text>
+        <View style={styles.titleRow}>
+          <Logo path={d.logo} name={d.name} size={36} />
+          <Text style={styles.title}>{d.name}</Text>
+        </View>
       </Reveal>
       {sub ? (
         <Reveal i={1}>
@@ -159,7 +163,12 @@ function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
             ) : null}
           </View>
         ) : null}
-        {row.place ? <Text style={[styles.place, { color: soft }]}>{row.place}</Text> : null}
+        {row.place ? (
+          <View style={styles.placeRow}>
+            {row.club ? <Logo path={row.club.logo} name={row.club.name} size={16} onInk={row.mine} /> : null}
+            <Text style={[styles.place, { color: soft }]}>{row.place}</Text>
+          </View>
+        ) : null}
         {row.sides.map((s, k) => (
           <Text key={k} style={[s.winner ? styles.nameWin : styles.name, { color: fg }]} numberOfLines={1}>
             {s.people.length === 0 ? dash : null}
@@ -210,7 +219,8 @@ const styles = StyleSheet.create({
   scroll: { paddingTop: 8, paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  title: { ...text.title },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  title: { ...text.title, flexShrink: 1 },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
   seg: { flexDirection: 'row', gap: 6, padding: 5, borderRadius: 18, backgroundColor: colors.white },
   segBtn: { flex: 1, minHeight: 48, paddingHorizontal: 4, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
@@ -236,7 +246,8 @@ const styles = StyleSheet.create({
   chipText: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 15, color: colors.inkSoft },
   matchBody: { flex: 1, minWidth: 0, gap: 2 },
   meta: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16 },
-  place: { fontFamily: fonts.body, fontSize: 12, lineHeight: 16 },
+  placeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  place: { flexShrink: 1, fontFamily: fonts.body, fontSize: 12, lineHeight: 16 },
   name: { fontFamily: fonts.display, fontSize: 26, lineHeight: 30, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   nameWin: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 30, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   score: { marginTop: 2, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },

@@ -8,6 +8,7 @@ import { createTournament, deleteTournament, loadClubs, writeRecordsNow, loadRev
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
 import { reviewAnswers, reviewQuestions } from '@/lib/v2/ingestRows';
 import type { RecordsResult } from '@/lib/v2/records';
+import { LogoEditor, LogoMark } from './LogoEditor';
 
 /**
  * Tournaments (founder, 13-14 Oct): add a tournament once (name, surface, links) and it updates itself 3 times a day;
@@ -552,12 +553,15 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
   return (
     <div className={['v2-card', 'v2-enter', working ? 'busy' : '', leaving ? 'leaving' : '', !t.ongoing ? 'paused' : ''].filter(Boolean).join(' ')} aria-busy={working || undefined}>
       <div className="v2-row between" style={{ alignItems: 'flex-start' }}>
-        <div className="v2-stack" style={{ gap: 2 }}>
-          <b className="v2-h3" style={{ fontSize: 18 }}>
-            {t.name}
-          </b>
-          <span className="v2-muted">{[surfaceWord(t.surface), dates(t)].filter(Boolean).join(' · ') || 'No dates yet'}</span>
-          {t.entry_deadline ? <span className="v2-muted">Entries close {shortDate(t.entry_deadline)}{t.entry_link ? ' · entry link set' : ''}</span> : null}
+        <div className="v2-row" style={{ gap: 10, flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+          <LogoMark name={t.name} path={t.logo_path} size={36} />
+          <div className="v2-stack" style={{ gap: 2 }}>
+            <b className="v2-h3" style={{ fontSize: 18 }}>
+              {t.name}
+            </b>
+            <span className="v2-muted">{[surfaceWord(t.surface), dates(t)].filter(Boolean).join(' · ') || 'No dates yet'}</span>
+            {t.entry_deadline ? <span className="v2-muted">Entries close {shortDate(t.entry_deadline)}{t.entry_link ? ' · entry link set' : ''}</span> : null}
+          </div>
         </div>
         <Badge tone={badge.tone}>{badge.text}</Badge>
       </div>
@@ -577,6 +581,10 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             Name
             <input className="v2-input" value={name} onChange={(e) => setName(e.target.value)} />
           </label>
+          <div className="v2-field">
+            Logo (saved as soon as you pick it)
+            <LogoEditor kind="tournament" id={t.id} name={t.name} path={t.logo_path} onChanged={onChanged} notify={notify} />
+          </div>
           <label className="v2-field">
             Surface
             <SurfaceSelect value={surface} onChange={setSurface} />
@@ -894,6 +902,12 @@ function Clubs({ clubs, onChanged, notify }: { clubs: Club[] | null; onChanged: 
           pageSize={20}
           columns={[
             { key: 'name', label: 'Club', render: (c) => <b>{c.name}</b> },
+            {
+              key: 'logo',
+              label: 'Logo',
+              width: 250,
+              render: (c) => <LogoEditor kind="club" id={c.id} name={c.name} path={c.logo_path} onChanged={onChanged} notify={notify} compact />,
+            },
             { key: 'courts', label: 'Courts', render: (c) => <span className="v2-muted">{c.courts.length ? c.courts.join(', ') : '·'}</span> },
             { key: 'matches', label: 'Matches', num: true, width: 100, render: (c) => c.matches },
             {

@@ -146,3 +146,13 @@
 .v2-choice { display: flex; gap: 8px; align-items: center; font-size: 15px; padding: 8px 10px; border-radius: var(--np-radius-sm); cursor: pointer; }
 .v2-choice:hover { background: var(--np-paper); }
 .v2-choice input { accent-color: var(--np-ink); width: 18px; height: 18px; }
+
+/* ---------- logos (18 Oct 2026): round, as players see them; the first letter when there is none ---------- */
+.v2-logo {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;
+  border-radius: var(--np-radius-pill); background: var(--np-sand); border: 1px solid var(--np-mist);
+  color: var(--np-inkSoft); font-family: var(--font-display), sans-serif; font-weight: 800; line-height: 1;
+}
+.v2-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.v2-logo.working { animation: v2LogoPulse var(--np-reveal-dur) var(--np-ease) infinite alternate; }
+@keyframes v2LogoPulse { from { opacity: 1; } to { opacity: .45; } }

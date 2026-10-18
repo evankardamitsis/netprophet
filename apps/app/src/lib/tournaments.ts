@@ -201,6 +201,8 @@ export interface ScheduleRow {
   /** «από Τρι 13/10», under the time, when the match moved */
   movedFrom: string | null;  /** «Court 1 PRC · PRC (Μαρούσι) · Σκληρό», when known */
   place: string | null;
+  /** the club in that line, for its logo (path null: its letter) */
+  club: { name: string; logo: string | null } | null;
 }
 
 export { disciplineLabel };
@@ -226,6 +228,7 @@ export function scheduleRows(matches: TournamentMatch[], me: string | null, t: C
         postponed: m.postponed === true,
         movedFrom: m.moved_from ? fmt(t.tournaments.detail.movedFrom, { when: dayShort(m.moved_from, t) }) : null,
         place: placeLine(m, t, true),
+        club: m.club ? { name: m.club, logo: m.club_logo ?? null } : null,
       };
     });
 }

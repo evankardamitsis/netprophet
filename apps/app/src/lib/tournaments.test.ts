@@ -87,7 +87,13 @@ describe('schedule', () => {
     expect(rows[0]).toMatchObject({ time: '10:00', meta: 'Μ 40+ · Απλό', score: '6-4, 7-6(5)', mine: true });
     expect(rows[0]!.sides.map((s) => s.winner)).toEqual([true, false]);
     expect(rows[1]!.score).toBeNull();
-    expect(rows[0]).toMatchObject({ postponed: false, movedFrom: null });
+    expect(rows[0]).toMatchObject({ postponed: false, movedFrom: null, club: null });
+  });
+  it('the club in the place line carries its logo', () => {
+    const [row] = scheduleRows([match({ club: 'PRC (Μαρούσι)', club_logo: 'clubs/c/k1.png', court: 'Court 1' })], null, t);
+    expect(row!.club).toEqual({ name: 'PRC (Μαρούσι)', logo: 'clubs/c/k1.png' });
+    const [plain] = scheduleRows([match({ club: 'PRC (Μαρούσι)' })], null, t);
+    expect(plain!.club).toEqual({ name: 'PRC (Μαρούσι)', logo: null });
   });
   it('a put-off match says «Αναβολή» and goes last; a moved one says where from', () => {
     const rows = scheduleRows(

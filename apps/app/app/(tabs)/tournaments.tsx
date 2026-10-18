@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import type { GetTournamentsResult, TournamentItem, UpcomingTournamentsResult } from '@netprophet/db';
+import { Logo } from '../../src/components/Logo';
 import { useCopy } from '../../src/i18n';
 import { useTournaments, useUpcomingTournaments } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
@@ -209,7 +210,10 @@ function NextCard({ row, i }: { row: NextRow; i: number }) {
   return (
     <Animated.View style={[styles.card, enter]}>
       <View style={styles.cardTop}>
-        <Text style={styles.name}>{row.name}</Text>
+        <View style={styles.nameRow}>
+          <Logo path={row.logo} name={row.name} size={26} />
+          <Text style={styles.name}>{row.name}</Text>
+        </View>
         {row.played ? (
           <View style={styles.chip}>
             <Text style={styles.chipText}>{t.tournaments.next.played}</Text>
@@ -264,7 +268,10 @@ function TournamentRow({ item, today, i }: { item: TournamentItem; today: string
       <Pressable accessibilityRole="button" onPress={() => router.push(`/tournament/${item.id}`)} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
         <Animated.View style={[styles.card, press.style]}>
           <View style={styles.cardTop}>
-            <Text style={styles.name}>{item.name}</Text>
+            <View style={styles.nameRow}>
+              <Logo path={item.logo} name={item.name} size={26} />
+              <Text style={styles.name}>{item.name}</Text>
+            </View>
             <View style={[styles.chip, chip.hot && styles.chipHot]}>
               <Text style={styles.chipText}>{chip.text}</Text>
             </View>
@@ -302,6 +309,8 @@ const styles = StyleSheet.create({
   groupTitle: { ...text.label, marginTop: 4 },
   card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 6 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
+  // the logo sits by the name; the name wraps beside it
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   name: { ...text.heading, flexShrink: 1 },
   chip: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand, alignItems: 'center', justifyContent: 'center' },
   chipHot: { backgroundColor: colors.lime },
