@@ -189,9 +189,23 @@ function Meta({ match, style }: { match: CardMatch; style?: object }) {
 
 function MetaLine({ match, style }: { match: CardMatch; style?: object }) {
   const m = match.moved;
-  if (!m) return <Text style={[styles.meta, style]}>{match.meta}</Text>;
+  const cat = match.category ? (
+    <View style={styles.category}>
+      <Text style={styles.categoryText}>{match.category}</Text>
+    </View>
+  ) : null;
+  if (!m)
+    return cat ? (
+      <View style={[styles.metaRow, style]}>
+        {cat}
+        <Text style={styles.meta}>{match.meta}</Text>
+      </View>
+    ) : (
+      <Text style={[styles.meta, style]}>{match.meta}</Text>
+    );
   return (
     <View style={[styles.metaRow, style]}>
+      {cat}
       <Text style={styles.meta}>{m.head}</Text>
       <View style={styles.chip}>
         <Text style={styles.chipText}>{m.chip}</Text>
@@ -374,6 +388,9 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   metaStack: { gap: 2 },
   place: text.meta,
+  // the category: the card's tag, in the display face (founder, 18 Oct)
+  category: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.ink },
+  categoryText: { fontFamily: fonts.displayHeavy, fontSize: 17, lineHeight: 22, color: colors.paper },
   chip: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   grid: { flexDirection: 'row', gap: 10 },

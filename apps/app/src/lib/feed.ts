@@ -3,7 +3,6 @@ import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy
 import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
-import { disciplineLabel } from './category';
 import { dayShort, dayTimeShort } from './tournaments';
 import { playerAvatar, type AvatarLook } from './avatar';
 import { fmt, voteSplit, type Side } from './votes';
@@ -61,6 +60,8 @@ export interface CardMatch {
   later?: boolean;
   /** when it starts, for the order of «Αύριο και μετά» */
   startsAt?: string;
+  /** «40+», «Μ 50+ · Γυναικών», «Μικτό»: shown as its own tag, bigger than the meta line */
+  category?: string;
 }
 
 /** A match put off: compact, not votable, muted. */
@@ -234,10 +235,12 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   // prototype order: «Σήμερα 21:00 · Μικτό · Φιλικό · Γλυφάδα», «Σήμερα 18:00 · Open Γλυφάδας · Ημιτελικός»
   // the category follows the tournament («Μ 40+»); in doubles its discipline («Διπλό γυναικών») names the format
   const place = placeLine(card, t);
+  // the category stands apart on the card (founder, 18 Oct: "more prominent, not the same font"); singles or doubles
+  // shows from the card itself, so only who plays is said: «Γυναικών», «Μικτό»
+  const who = t.match.categoryWho[card.discipline ?? ''] ?? t.match.categoryWho[card.format] ?? null;
+  const category = [card.tournament ? card.level : null, who].filter(Boolean).join(' · ') || undefined;
   const meta = [
     w.label,
-    doubles ? disciplineLabel(card.discipline, t) ?? t.match.formats[card.format as 'doubles' | 'mixed'] : null,
-    card.tournament ? card.level : null,
     roundLabel(card.round, t),
     card.tournament || card.club ? null : card.venue,
   ]
@@ -248,6 +251,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   const later = card.starts_at ? dayKey(card.starts_at) > feedDay(now) : false;
   return {
     kind: 'match',
+    category,
     moved: card.moved_from && w.label ? movedOf(w.label, rest, dayShort(card.moved_from, t), t) : undefined,
     id: card.match_id,
     meta,
@@ -281,16 +285,22 @@ export function feedDay(now: Date): string {
 
 /**
  * Σήμερα shows today (founder, 14 Oct: «Τι παίζει σήμερα» first, the rest out of the way): matches on a later day go
- * into the folded «Αύριο και μετά». Today keeps the feed's order (yours first); the later days run in time order
- * (founder, 18 Oct: "tomorrow's matches are mixed with the day after and wednesday").
+ * into the folded «Αύριο και μετά». Both run in time order (founder, 18 Oct: "tomorrow's matches are mixed with the
+ * day after and wednesday, we need the chronological order to be correct").
  */
-export function splitToday<C extends { kind: string; later?: boolean; startsAt?: string }>(cards: C[]): { today: C[]; later: C[] } {
-  const later = cards
-    .map((c, i) => ({ c, i }))
-    .filter(({ c }) => c.later)
-    .sort((x, y) => (x.c.startsAt ?? '\uffff').localeCompare(y.c.startsAt ?? '\uffff') || x.i - y.i)
-    .map(({ c }) => c);
-  return { today: cards.filter((c) => !c.later), later };
+export function splitToday<C extends { kind: string; later?: boolean; startsAt?: string; closed?: boolean }>(cards: C[]): { today: C[]; later: C[] } {
+  // in time order; the feed's own order (yours first) only breaks ties
+  const byTime = (list: C[]) =>
+    list
+      .map((c, i) => ({ c, i }))
+      .sort((x, y) => (x.c.startsAt ?? '\uffff').localeCompare(y.c.startsAt ?? '\uffff') || x.i - y.i)
+      .map(({ c }) => c);
+  const todays = cards.filter((c) => !c.later);
+  const open = todays.filter((c) => c.kind === 'match' && !c.closed);
+  const closed = todays.filter((c) => c.kind === 'match' && c.closed);
+  const rest = todays.filter((c) => c.kind !== 'match');
+  // the matches still to vote first, then the rest (ads, put-off), then the ones that already started
+  return { today: [...byTime(open), ...rest, ...byTime(closed)], later: byTime(cards.filter((c) => c.later)) };
 }
 
 /**

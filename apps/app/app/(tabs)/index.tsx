@@ -1,3 +1,4 @@
+import { dayKey } from '@netprophet/core';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -17,7 +18,7 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
-import { groupHeads, laterOpenByDefault, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
+import { feedDay, groupHeads, laterOpenByDefault, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import { ProNudge } from '../../src/components/ProNudge';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -225,7 +226,7 @@ export default function VoteScreen() {
       >
         <View style={styles.feed}>
           <Animated.View style={[styles.head, titleIn]}>
-            <Text style={styles.title}>{t.feed.title}</Text>
+            <Text style={styles.title}>{feedDay(new Date()) > dayKey(new Date().toISOString()) ? t.feed.titleTomorrow : t.feed.title}</Text>
             <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
           </Animated.View>
           {myMatch.match ? <MyMatchCard match={myMatch.match} pro={proState?.pro ?? false} /> : null}
