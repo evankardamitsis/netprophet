@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, splitToday, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -248,5 +248,26 @@ describe('groupHeads', () => {
       { kind: 'match', group: g('b') },
     ];
     expect([...groupHeads(cards)]).toEqual([0, 4, 6]);
+  });
+});
+
+describe('splitToday', () => {
+  const c = (id: string, later: boolean, startsAt?: string) => ({ kind: 'match', id, later, startsAt });
+  it('keeps today in the feed order and runs the later days in time order', () => {
+    const cards = [
+      c('t2', false, '2026-10-18T19:00:00Z'),
+      c('wed', true, '2026-10-21T08:00:00Z'),
+      c('t1', false, '2026-10-18T09:00:00Z'),
+      c('mon-late', true, '2026-10-19T17:00:00Z'),
+      c('tue', true, '2026-10-20T10:00:00Z'),
+      c('mon-early', true, '2026-10-19T07:00:00Z'),
+    ];
+    const s = splitToday(cards);
+    expect(s.today.map((x) => x.id)).toEqual(['t2', 't1']);
+    expect(s.later.map((x) => x.id)).toEqual(['mon-early', 'mon-late', 'tue', 'wed']);
+  });
+  it('puts a later match without a time last, keeping the rest stable', () => {
+    const s = splitToday([c('x', true), c('a', true, '2026-10-20T10:00:00Z'), c('b', true, '2026-10-20T10:00:00Z')]);
+    expect(s.later.map((x) => x.id)).toEqual(['a', 'b', 'x']);
   });
 });

@@ -59,6 +59,8 @@ export interface CardMatch {
   group?: { key: string; title: string; sub: string | null };
   /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
   later?: boolean;
+  /** when it starts, for the order of «Αύριο και μετά» */
+  startsAt?: string;
 }
 
 /** A match put off: compact, not votable, muted. */
@@ -243,6 +245,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     .join(' · ');
   const players = (s: DbSide) => card.sides.find((x) => x.side === s)?.players ?? [];
   const rest = meta.slice(w.label ? w.label.length : 0).replace(/^ · /, '');
+  const later = card.starts_at ? dayKey(card.starts_at) > dayKey(now.toISOString()) : false;
   return {
     kind: 'match',
     moved: card.moved_from && w.label ? movedOf(w.label, rest, dayShort(card.moved_from, t), t) : undefined,
@@ -256,17 +259,29 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     split: card.split ? toPct(card.split) : undefined,
     closed: card.closed === true ? true : undefined,
     place: card.tournament ? undefined : place ?? undefined,
-    group: card.tournament ? { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: place } : undefined,
-    later: card.starts_at ? dayKey(card.starts_at) > dayKey(now.toISOString()) : false,
+    later,
+    startsAt: card.starts_at ?? undefined,
+    // a later day says its day above the tournament's run, so «Αύριο και μετά» reads day by day
+    group: card.tournament
+      ? later && card.starts_at
+        ? { key: `${dayKey(card.starts_at)}|${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: [dayShort(card.starts_at, t), place].filter(Boolean).join(' · ') }
+        : { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, sub: place }
+      : undefined,
   };
 }
 
 /**
  * Σήμερα shows today (founder, 14 Oct: «Τι παίζει σήμερα» first, the rest out of the way): matches on a later day go
- * into the folded «Αύριο και μετά»; everything else stays in order.
+ * into the folded «Αύριο και μετά». Today keeps the feed's order (yours first); the later days run in time order
+ * (founder, 18 Oct: "tomorrow's matches are mixed with the day after and wednesday").
  */
-export function splitToday<C extends { kind: string; later?: boolean }>(cards: C[]): { today: C[]; later: C[] } {
-  return { today: cards.filter((c) => !c.later), later: cards.filter((c) => c.later) };
+export function splitToday<C extends { kind: string; later?: boolean; startsAt?: string }>(cards: C[]): { today: C[]; later: C[] } {
+  const later = cards
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => c.later)
+    .sort((x, y) => (x.c.startsAt ?? '\uffff').localeCompare(y.c.startsAt ?? '\uffff') || x.i - y.i)
+    .map(({ c }) => c);
+  return { today: cards.filter((c) => !c.later), later };
 }
 
 /**
