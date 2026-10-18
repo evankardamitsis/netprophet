@@ -16,7 +16,7 @@ describe('toMeView', () => {
     expect(v.direction).toEqual({ arrow: '↑', word: 'Ανεβαίνεις' });
     expect(v.sub).toBe('Γλυφάδα · δεξί χέρι · τένις');
     expect(v.best).toBe('ρεκόρ 9');
-    expect(v.stats.map((s) => s.value)).toEqual(['12-7', '4-2', '21/30', '340']);
+    expect(v.stats.map((s) => s.value)).toEqual(['21/30', '340']);
     expect(v.votes).toEqual({ title: '2 ψήφοι περιμένουν αποτέλεσμα', sub: 'Αν πέσεις μέσα παντού: +40 πόντοι' });
     expect(v.freezes.slots.map((s) => s.ready)).toEqual([true, false]);
     expect(v.freezes.line).toBe('Δωρεάν Ασφάλεια σε 11 ψήφους');

@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { levelNumber, matchesLoosely } from '@netprophet/copy';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard } from '@netprophet/db';
+import { RpcError, type BlockedUser, type Celebration, type GetBadgesResult, type GetLookResult, type GetMyLevelResult, type LookCategory, type GetQuestsResult, type GetQuizResult, type AnswerCardResult, type ConfirmationAnswer, type ReportReason, type KudoOption, type Reactions, type ReceivedKudo, type LinkKudo, type MatchLink, type MatchLinkView, type PendingConfirmation, type LogMatchInput, type MatchFormat, type MyMatchCandidate, type PlayerCard, type ProState, type PublicTournament, type Ladder, type LadderScope, type MeResult, type GetTournamentResult, type GetTournamentsResult, type PlayerProfile, type PlayerTraits, type MyTraits, type ResultRow, type ResultsTournament, type UpcomingTournamentsResult, type MySeason, type WinCard, type MyMatchStats, type MatchStatsPeriod } from '@netprophet/db';
 import { mockLadder } from '../mock/ladder';
 import { mockMe } from '../mock/me';
 import { mockBadges } from '../mock/badges';
@@ -16,6 +16,7 @@ import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { MOCK_ME_PLAYER, mockResults } from '../mock/results';
 import { mockSeason, mockWinCard } from '../mock/season';
+import { mockMatchStats } from '../mock/matchStats';
 import { withMockAds } from '../mock/sponsored';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
@@ -622,6 +623,40 @@ export function useSeason(month: string | null): SeasonState {
     void refresh();
   }, [refresh]);
   return { season, loading, error, refresh };
+}
+
+export interface MatchStatsState {
+  stats: MyMatchStats | null;
+  loading: boolean;
+  error: boolean;
+  refresh: () => Promise<void>;
+}
+
+/** «Τα στατιστικά σου» for a period: your real matches; the teaser without Pro, everything with it */
+export function useMatchStats(period: MatchStatsPeriod): MatchStatsState {
+  const api = useApi();
+  const [stats, setStats] = useState<MyMatchStats | null>(() => (api ? null : mockMatchStats(new Date(), mockPro.pro, period)));
+  const [loading, setLoading] = useState(api !== null);
+  const [error, setError] = useState(false);
+  const refresh = useCallback(async () => {
+    if (!api) {
+      setStats(mockMatchStats(new Date(), mockPro.pro, period));
+      return;
+    }
+    setLoading(true);
+    try {
+      setStats(await api.myMatchStats(period));
+      setError(false);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [api, period]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+  return { stats, loading, error, refresh };
 }
 
 export type WinCardError = 'pro_required' | 'not_your_win' | 'not_shareable' | 'failed';

@@ -67,7 +67,6 @@ export function toMeView(
   const matches = Math.min(page.matches, LEVEL_MATCHES);
   const votes = Math.min(me.game.votes_cast, LEVEL_VOTES);
   const correct = `${page.votes.correct}/${page.votes.resolved}`;
-  const wl = (r: { w: number; l: number }) => `${r.w}-${r.l}`;
 
   const profile = player ? toProfile(player, areas, t, now) : null;
   const gl = me.game.level ?? gameLevel(me.game.total_points);
@@ -102,18 +101,11 @@ export function toMeView(
       votesLabel: fmt(m.progressVotes, { n: votes }),
       cta: page.matches >= 1 ? m.addMatch : m.addFirst,
     },
-    stats:
-      isNew || !page.record_year
-        ? [
-            { value: correct, label: m.stats.correct },
-            { value: String(me.game.month_points), label: m.stats.points },
-          ]
-        : [
-            { value: wl(page.record_year.singles), label: m.stats.singles },
-            { value: wl(page.record_year.doubles), label: m.stats.doubles },
-            { value: correct, label: m.stats.correct },
-            { value: String(me.game.month_points), label: m.stats.points },
-          ],
+    // votes only: your match record lives in «Τα στατιστικά σου» (founder, 18 Oct 2026)
+    stats: [
+      { value: correct, label: m.stats.correct },
+      { value: String(me.game.month_points), label: m.stats.points },
+    ],
     votes: {
       title:
         page.votes.waiting > 0

@@ -788,6 +788,10 @@ export type Database = {
         Args: { p_match_id: string };
         Returns: Json;
       };
+      my_match_stats: {
+        Args: { p_period?: string };
+        Returns: Json;
+      };
       my_season: {
         Args: { p_month?: string };
         Returns: Json;
