@@ -106,6 +106,8 @@ export default function OnboardingScreen() {
 
   const [going, setGoing] = useState(false);
   const [busy, setBusy] = useState(false);
+  // the claim went to staff: say so, never pretend the player is theirs yet
+  const [requested, setRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // the name we already know (Google, or a v1 profile) fills the first step
@@ -193,6 +195,7 @@ export default function OnboardingScreen() {
       const r = await ob.claim(picked);
       track('claim_completed', { result: r });
       if (r === 'ok') return go(i + 1);
+      if (r === 'requested') return setRequested(true);
       setError(r === 'taken' ? o.claim.taken : r === 'other' ? o.claim.otherClaimed : o.claim.failed);
     });
 
@@ -201,13 +204,20 @@ export default function OnboardingScreen() {
     run(async () => {
       if (!link) return;
       const p = link.view.player;
-      try {
-        if (api) await api.claimViaLink(link.token);
-        track('link_claimed', { result: 'ok' });
-      } catch {
-        track('link_claimed', { result: 'taken' });
-        setError(t.link.claimTaken);
-        return;
+      // a roster player through a link is a request: say so first, the next tap walks on
+      if (!requested) {
+        try {
+          const r = api ? await api.claimViaLink(link.token) : null;
+          track('link_claimed', { result: r?.requested ? 'requested' : 'ok' });
+          if (r?.requested) {
+            setRequested(true);
+            return;
+          }
+        } catch {
+          track('link_claimed', { result: 'taken' });
+          setError(t.link.claimTaken);
+          return;
+        }
       }
       if (!first.trim() && !surname.trim()) {
         await ob.saveProfile({ first_name: p.first_name, surname: p.surname, display_name: `${p.first_name} ${p.surname}` });
@@ -370,8 +380,9 @@ export default function OnboardingScreen() {
               <Candidate row={{ id: lp.id, name: `${lp.first_name} ${lp.surname}`, sub: link.view.tournament ?? '' }} index={0} on onPress={() => undefined} />
               <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
               <Err text={error} />
-              <Primary label={t.link.claimYes} ready={adult} busy={busy} onPress={claimLink} />
-              <Dashed label={t.link.claimNo} onPress={dropLink} />
+              {requested ? <Text style={styles.note}>{t.link.claimRequested}</Text> : null}
+              <Primary label={requested ? t.common.continue : t.link.claimYes} ready={adult} busy={busy} onPress={claimLink} />
+              {requested ? null : <Dashed label={t.link.claimNo} onPress={dropLink} />}
               <Back label={o.back} onPress={toWelcome} />
             </>
           ) : null}
@@ -397,8 +408,17 @@ export default function OnboardingScreen() {
                 ))
               )}
               <Err text={error} />
-              {candidates && candidates.length > 0 ? <Primary label={o.claim.me} ready={picked !== null} busy={busy} onPress={claimMe} /> : null}
-              <Dashed label={o.claim.newPlayer} onPress={claimNew} />
+              {requested ? (
+                <>
+                  <Text style={styles.note}>{o.claim.requested}</Text>
+                  <Primary label={t.common.continue} ready busy={busy} onPress={() => go(i + 1)} />
+                </>
+              ) : (
+                <>
+                  {candidates && candidates.length > 0 ? <Primary label={o.claim.me} ready={picked !== null} busy={busy} onPress={claimMe} /> : null}
+                  <Dashed label={o.claim.newPlayer} onPress={claimNew} />
+                </>
+              )}
               <Back label={o.back} onPress={back} />
             </>
           ) : null}

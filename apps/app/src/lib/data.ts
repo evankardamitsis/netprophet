@@ -1545,11 +1545,12 @@ export function useOnboardingApi() {
           };
         });
       },
-      async claim(playerId: string): Promise<'ok' | 'taken' | 'other' | 'failed'> {
-        if (!api) return 'ok';
+      /** 'requested': a roster player is asked for and staff approve it (founder, 18 Oct 2026); 'ok' only when it is theirs */
+      async claim(playerId: string): Promise<'ok' | 'requested' | 'taken' | 'other' | 'failed'> {
+        if (!api) return 'requested';
         try {
-          await api.claimPlayer(playerId);
-          return 'ok';
+          const r = await api.claimPlayer(playerId);
+          return r.requested ? 'requested' : 'ok';
         } catch (err) {
           if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
           if (err instanceof RpcError && err.code.startsWith('already_claimed')) return 'other';

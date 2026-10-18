@@ -29,7 +29,10 @@ select is((select count(*)::int from api.search_players('kryfos')), 0, 'hidden p
 -- claim
 select throws_ok($$select api.claim_player('11000000-0000-0000-0000-000000000004')$$, 'P0002', null, 'a hidden player cannot be claimed');
 select throws_ok($$select api.claim_player(gen_random_uuid())$$, 'P0002', null, 'unknown player');
-select is((api.claim_player('11000000-0000-0000-0000-000000000001') ->> 'replayed')::boolean, false, 'claim works');
+select is((api.claim_player('11000000-0000-0000-0000-000000000001') ->> 'requested')::boolean, true, 'a roster player is asked for (staff approve)');
+select tests.logout();
+select tests.approve_claim(:'a'::uuid) is not null as x \gset
+select tests.login(:'a'::uuid);
 select is((select claimed_player_id from core.profiles where user_id = auth.uid()), '11000000-0000-0000-0000-000000000001'::uuid, 'profile points at the player (sync trigger)');
 select is((select claim_status from core.profiles where user_id = auth.uid()), 'claimed', 'claim_status = claimed');
 select is((api.claim_player('11000000-0000-0000-0000-000000000001') ->> 'replayed')::boolean, true, 'claiming the same player again is a replay');

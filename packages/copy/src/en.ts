@@ -323,6 +323,7 @@ export const en: Copy = {
       newPlayer: 'I cannot find myself, I am new',
       taken: 'Someone else already has this player. If it is you, write to us.',
       otherClaimed: 'Your account already has a player.',
+      requested: 'Your request is in. We will look at it soon.',
       failed: 'That did not work. Try again.',
     },
     play: {
@@ -677,6 +678,7 @@ export const en: Copy = {
     claimSub: 'From the match you were sent. We keep it on your profile.',
     claimYes: 'Yes, that is me',
     claimTaken: 'This player already has a profile.',
+    claimRequested: 'Your request is in. We will look at it soon.',
     claimNo: 'That is not me',
     knownNote: 'Pick the people you know. {who} is already in.',
   },

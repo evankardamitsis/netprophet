@@ -18,6 +18,7 @@ import type {
   AnswerCardResult,
   KudoOption,
   LinkKudo,
+  ClaimResult,
   LogMatchInput,
   MatchReview,
   MatchFormat,
@@ -153,7 +154,7 @@ export function rpc(client: NetprophetClient) {
       }),
     linkKudo: (token: string, kudo: LinkKudo) => call<null>(client, 'link_kudo', { p_token: token, p_kudo: kudo }),
     hideViaLink: (token: string, hidden: boolean) => call<{ player_id: string; hidden: boolean }>(client, 'hide_via_link', { p_token: token, p_hidden: hidden }),
-    claimViaLink: (token: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_via_link', { p_token: token }),
+    claimViaLink: (token: string) => call<ClaimResult>(client, 'claim_via_link', { p_token: token }),
     kudosOptions: (matchId: string, toPlayer?: string) =>
       call<KudoOption[]>(client, 'kudos_options', { p_match_id: matchId, ...(toPlayer ? { p_to_player: toPlayer } : {}) }),
     giveKudo: (matchId: string, key: string, toPlayer?: string) =>
@@ -205,7 +206,7 @@ export function rpc(client: NetprophetClient) {
       call<boolean>(client, 'register_push_token', { p_token: token, p_platform: platform }),
     unregisterPushToken: (token: string) => call<boolean>(client, 'unregister_push_token', { p_token: token }),
     markInboxSeen: (ids: string[]) => call<number>(client, 'mark_inbox_seen', { p_ids: ids }),
-    claimPlayer: (playerId: string) => call<{ player_id: string; claimed: boolean; replayed: boolean }>(client, 'claim_player', { p_player_id: playerId }),
+    claimPlayer: (playerId: string) => call<ClaimResult>(client, 'claim_player', { p_player_id: playerId }),
     followPlayer: (playerId: string, relation: 'known' | 'friend' = 'known', source: 'onboarding' | 'profile' | 'card' | 'invite' = 'profile') =>
       call<void>(client, 'follow_player', { p_player_id: playerId, p_relation: relation, p_source: source }),
     unfollowPlayer: (playerId: string) => call<void>(client, 'unfollow_player', { p_player_id: playerId }),

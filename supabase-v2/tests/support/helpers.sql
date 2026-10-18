@@ -105,6 +105,22 @@ create or replace function tests.unused_freezes(p_user uuid) returns int languag
   select count(*)::int from core.freezes where user_id = p_user and used_at is null
 $$;
 
+-- staff approve (or reject) a user's request to be a roster player: «Αιτήματα παικτών». Call it logged out.
+create or replace function tests.approve_claim(p_user uuid, p_approve boolean default true)
+returns jsonb language plpgsql as $$
+declare v_staff uuid; v_out jsonb;
+begin
+  select user_id into v_staff from core.profiles where role = 'editor' and first_name = 'tests-claims';
+  if v_staff is null then
+    v_staff := tests.create_user('tests-claims@test.local', 'editor', 'tests-claims');
+    update core.profiles set first_name = 'tests-claims' where user_id = v_staff;
+  end if;
+  perform tests.login(v_staff);
+  v_out := api.admin_review_claim(p_user, p_approve);
+  perform tests.logout();
+  return v_out;
+end $$;
+
 -- rows affected by a DML statement, run as the current role (RLS applies)
 create or replace function tests.rowcount(p_sql text) returns int language plpgsql as $$
 declare n int;

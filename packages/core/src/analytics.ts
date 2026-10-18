@@ -6,7 +6,7 @@
 export interface AnalyticsEvents {
   onboarding_step: { step: string; index: number };
   onboarding_done: { claimed: boolean; known: number };
-  claim_completed: { result: 'ok' | 'taken' | 'other' | 'failed' };
+  claim_completed: { result: 'ok' | 'requested' | 'taken' | 'other' | 'failed' };
   vote_cast: { match_id: string; side: 1 | 2 };
   result_card_seen: { outcome: 'correct' | 'wrong' | 'none'; points: number };
   pro_sheet_viewed: { moment: string };
@@ -19,7 +19,7 @@ export interface AnalyticsEvents {
   link_opened: { state: 'pending' | 'confirmed' | 'disputed' | 'not_me' | 'gone' };
   link_answered: { outcome: 'confirmed' | 'corrected' | 'disputed' };
   link_hidden: { hidden: boolean };
-  link_claimed: { result: 'ok' | 'taken' | 'other' | 'failed' };
+  link_claimed: { result: 'ok' | 'requested' | 'taken' | 'other' | 'failed' };
   kudo_given: { source: 'log' | 'results' };
   reaction_set: { key: string | null };
   report_sent: { kind: 'match' | 'player'; reason: string };

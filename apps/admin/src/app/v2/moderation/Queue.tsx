@@ -3,7 +3,7 @@ import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, reviewMatch, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
+import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, reviewClaim, reviewMatch, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
   match_id: string;
@@ -34,6 +34,17 @@ export interface PlayerMatch {
   logger: { user_id: string; name: string | null; display_name: string | null } | null;
   answers: { player: string; state: string; fix: { winner: 'me' | 'them'; sets: string } | null }[];
   votes: number;
+}
+
+/** «Αιτήματα παικτών»: a user asks to be a roster player (from «Ποιος είσαι;» or a match link) */
+export interface ClaimRequest {
+  user_id: string;
+  via: 'app' | 'link';
+  created_at: string;
+  user: { name: string | null; display_name: string | null; area_id: string | null; joined_at: string };
+  player: { id: string; first_name: string; surname: string; area_id: string | null; birth_year: number | null; source: string; claimed: boolean; matches: number };
+  /** other people asking for the same player */
+  others: number;
 }
 
 export interface PendingPlayer {
@@ -135,9 +146,15 @@ function useItemAction({ onNotice, notify }: Cues) {
   return { pending, busy, run, cardClass };
 }
 
-type Tab = 'matches' | 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
+type Tab = 'matches' | 'claims' | 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
 
 const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: string }> = {
+  claims: {
+    label: 'Αιτήματα παικτών',
+    title: 'People asking to be a player',
+    hint: 'Someone says they are this player. Approving makes the player theirs: their matches, level and page.',
+    noun: 'requests',
+  },
   matches: {
     label: 'Ματς παικτών',
     title: 'Matches players logged',
@@ -181,20 +198,21 @@ const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: 
     noun: 'names',
   },
 };
-const ORDER: Tab[] = ['matches', 'reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
+const ORDER: Tab[] = ['matches', 'claims', 'reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
 /** tabs that wait for a decision; Baller names are only there to look over */
-const WAITING: Tab[] = ['matches', 'reports', 'disputes', 'players', 'traits', 'tournaments'];
+const WAITING: Tab[] = ['matches', 'claims', 'reports', 'disputes', 'players', 'traits', 'tournaments'];
 
 /**
  * The moderation queue: things only a person can decide. Each item is a question with plain buttons.
  * Player-logged matches and results wait for staff here (founder, 18 Oct 2026); names are live at once.
  */
-export function Queue({ data, tournaments, names, matches }: { data: Moderation; tournaments: TournamentOption[]; names: BallerName[]; matches: PlayerMatch[] }) {
+export function Queue({ data, tournaments, names, matches, claims }: { data: Moderation; tournaments: TournamentOption[]; names: BallerName[]; matches: PlayerMatch[]; claims: ClaimRequest[] }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const { toast, notify } = useToast();
   const traits = data.traits ?? [];
   const counts: Record<Tab, number> = {
     matches: matches.length,
+    claims: claims.length,
     reports: data.reports.length,
     disputes: data.disputes.length,
     players: data.players.length,
@@ -216,6 +234,8 @@ export function Queue({ data, tournaments, names, matches }: { data: Moderation;
     );
   } else if (tab === 'matches') {
     body = <Paged key={tab} items={matches} noun={s.noun} grid render={(m) => <PlayerMatchRow key={m.match_id} m={m} cues={cues} />} />;
+  } else if (tab === 'claims') {
+    body = <Paged key={tab} items={claims} noun={s.noun} grid render={(c) => <ClaimRow key={c.user_id} c={c} cues={cues} />} />;
   } else if (tab === 'reports') {
     body = <Paged key={tab} items={data.reports} noun={s.noun} grid render={(r) => <ReportRow key={r.id} r={r} cues={cues} />} />;
   } else if (tab === 'disputes') {
@@ -237,6 +257,7 @@ export function Queue({ data, tournaments, names, matches }: { data: Moderation;
         items={[
           { label: total === 0 ? 'all clear' : 'waiting for you', value: total, ink: true },
           { label: 'player matches', value: counts.matches },
+          { label: 'player requests', value: counts.claims },
           { label: 'reports', value: counts.reports },
           { label: 'disputed results', value: counts.disputes },
           { label: 'new players', value: counts.players },
@@ -409,6 +430,48 @@ function PlayerMatchRow({ m, cues }: { m: PlayerMatch; cues: Cues }) {
           busy={busy === 'reject'}
           disabled={pending}
           onYes={() => run('reject', names, 'Rejecting', () => reviewMatch(m.match_id, false), 'Rejected')}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ClaimRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
+  const { pending, busy, run, cardClass } = useItemAction(cues);
+  const who = c.user.name ?? c.user.display_name ?? 'Someone';
+  const player = `${c.player.first_name} ${c.player.surname}`;
+  const facts = [c.player.area_id, c.player.birth_year ? `born ${c.player.birth_year}` : null, plural(c.player.matches, 'match', 'matches')].filter(Boolean).join(' · ');
+  return (
+    <div className={cardClass()} aria-busy={pending || undefined}>
+      <div className="v2-row between">
+        <span className="v2-muted">
+          {when(c.created_at)} · {c.via === 'link' ? 'from a match link' : 'from «Ποιος είσαι;»'}
+        </span>
+        <span className="v2-row" style={{ gap: 6 }}>
+          {c.player.claimed ? <Badge tone="attention">Already has an account</Badge> : null}
+          {c.others > 0 ? <Badge tone="attention">{plural(c.others, 'other request')}</Badge> : null}
+        </span>
+      </div>
+      <div style={{ fontSize: 16 }}>
+        <b>{who}</b> says they are <b>{player}</b>.
+      </div>
+      <span className="v2-muted">
+        {facts}
+        {c.user.area_id ? ` · they live in ${c.user.area_id}` : ''} · joined {when(c.user.joined_at)}
+      </span>
+      <b style={{ fontSize: 14 }}>Is this them?</b>
+      <div className="v2-row">
+        <Secondary busy={busy === 'approve'} disabled={pending} onClick={() => run('approve', player, 'Approving', () => reviewClaim(c.user_id, true), 'Approved')}>
+          {busy === 'approve' ? 'Approving…' : 'Έγκριση'}
+        </Secondary>
+        <Confirm
+          label="Απόρριψη"
+          question={`Reject? ${who} does not get ${player}.`}
+          yes="Yes, reject"
+          working="Rejecting…"
+          busy={busy === 'reject'}
+          disabled={pending}
+          onYes={() => run('reject', player, 'Rejecting', () => reviewClaim(c.user_id, false), 'Rejected')}
         />
       </div>
     </div>

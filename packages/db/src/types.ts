@@ -372,6 +372,10 @@ export type Database = {
         Args: { p_limit?: number };
         Returns: Json;
       };
+      admin_claim_queue: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_close_report: {
         Args: { p_report_id: string; p_hide: boolean };
         Returns: Json;
@@ -506,6 +510,10 @@ export type Database = {
       };
       admin_resolve_ingest_review: {
         Args: { p_id: string; p: Json };
+        Returns: Json;
+      };
+      admin_review_claim: {
+        Args: { p_user: string; p_approve: boolean };
         Returns: Json;
       };
       admin_review_match: {
