@@ -1,5 +1,6 @@
 'use server';
 import { createV2ServerClient, getStaff } from '@/lib/v2/server';
+import { isLogoKind, logoPath, logoProblem, sniffLogo, type LogoKind } from '@/lib/v2/logos';
 import type { RecordsResult } from '@/lib/v2/records';
 import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
 import { drawsForTournament, rowsForTournament, sourceKind } from '@/lib/v2/sheets';
@@ -191,6 +192,8 @@ export interface Club {
   id: string;
   name: string;
   surface: string | null;
+  /** the logo in the `logos` bucket */
+  logo_path?: string | null;
   matches: number;
   courts: string[];
 }
@@ -228,4 +231,77 @@ export async function writeRecordsNow(): Promise<RecordsResult> {
     return { ok: false, configured: true, message: e instanceof Error ? e.message : 'failed' };
   }
   return writeRecordsSheet(rpc);
+}
+
+/* ---------- logos (18 Oct 2026) ---------- */
+
+const LOGO_ERRORS: Record<string, string> = {
+  forbidden: 'Only staff can change logos.',
+  not_found: 'It is not there any more. Reload the page.',
+  bad_path: 'That file name was refused. Try again.',
+};
+const logoFail = (e: unknown): ActionResult<never> => {
+  const m = e instanceof Error ? e.message : 'failed';
+  const known = Object.keys(LOGO_ERRORS).find((k) => m.includes(k));
+  return { ok: false, message: known ? LOGO_ERRORS[known]! : m };
+};
+
+type LogoRpc = (fn: 'admin_set_logo', args: { p_kind: LogoKind; p_id: string; p_path: string | null }) => Promise<{ data: unknown; error: { message: string } | null }>;
+
+/** set or clear the logo on the row; returns the old path to remove */
+async function setLogo(client: Awaited<ReturnType<typeof createV2ServerClient>>, kind: LogoKind, id: string, path: string | null): Promise<string | null> {
+  const rpc = client.rpc.bind(client) as unknown as LogoRpc;
+  const { data, error } = await rpc('admin_set_logo', { p_kind: kind, p_id: id, p_path: path });
+  if (error) throw new Error(error.message);
+  return (data as { previous?: string | null } | null)?.previous ?? null;
+}
+
+/**
+ * Upload a tournament's or club's logo (form: kind, id, file), checked here again (type by its first bytes, size),
+ * stored at a new path so caches never show the old one, set on the row, then the old file is removed.
+ */
+export async function uploadLogo(form: FormData): Promise<ActionResult<{ logo_path: string }>> {
+  try {
+    const kind = form.get('kind');
+    const id = String(form.get('id') ?? '');
+    const file = form.get('file');
+    if (!isLogoKind(kind) || !/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, message: 'Nothing to put the logo on.' };
+    if (!(file instanceof File)) return { ok: false, message: 'Choose an image first.' };
+    const declared = logoProblem(file);
+    if (declared) return { ok: false, message: declared };
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const mime = sniffLogo(bytes);
+    if (!mime) return { ok: false, message: 'Use a PNG, JPG or WebP image.' };
+
+    const client = await createV2ServerClient();
+    if (!(await getStaff(client))) throw new Error('forbidden');
+    const path = logoPath(kind, id, mime, Date.now().toString(36));
+    const up = await client.storage.from('logos').upload(path, bytes, { contentType: mime, cacheControl: '31536000', upsert: false });
+    if (up.error) throw new Error(up.error.message);
+    let previous: string | null;
+    try {
+      previous = await setLogo(client, kind, id, path);
+    } catch (e) {
+      await client.storage.from('logos').remove([path]);
+      throw e;
+    }
+    if (previous) await client.storage.from('logos').remove([previous]);
+    return { ok: true, message: 'Logo saved', data: { logo_path: path } };
+  } catch (e) {
+    return logoFail(e);
+  }
+}
+
+/** remove a logo: the name's first letter shows in its place */
+export async function removeLogo(kind: LogoKind, id: string): Promise<ActionResult> {
+  try {
+    if (!isLogoKind(kind)) return { ok: false, message: 'Nothing to remove.' };
+    const client = await createV2ServerClient();
+    if (!(await getStaff(client))) throw new Error('forbidden');
+    const previous = await setLogo(client, kind, id, null);
+    if (previous) await client.storage.from('logos').remove([previous]);
+    return { ok: true, message: 'Logo removed' };
+  } catch (e) {
+    return logoFail(e);
+  }
 }

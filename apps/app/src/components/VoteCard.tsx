@@ -17,6 +17,7 @@ import { useCopy } from '../i18n';
 import { Lit } from './Lit';
 import { Avatar as DrawnAvatar } from './Avatar';
 import type { AvatarLook } from '../lib/avatar';
+import { Logo } from './Logo';
 
 /**
  * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
@@ -182,7 +183,10 @@ function Meta({ match, style }: { match: CardMatch; style?: object }) {
   return (
     <View style={[styles.metaStack, style]}>
       <MetaLine match={match} />
-      <Text style={styles.place}>{match.place}</Text>
+      <View style={styles.placeRow}>
+        {match.club ? <Logo path={match.club.logo} name={match.club.name} size={16} /> : null}
+        <Text style={styles.place}>{match.place}</Text>
+      </View>
     </View>
   );
 }
@@ -387,7 +391,8 @@ const styles = StyleSheet.create({
   closed: { ...text.meta, fontFamily: fonts.bodyBold, color: colors.inkSoft, textAlign: 'center' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   metaStack: { gap: 2 },
-  place: text.meta,
+  placeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  place: { ...text.meta, flexShrink: 1 },
   // the category: the card's tag, in the display face (founder, 18 Oct)
   category: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.ink },
   categoryText: { fontFamily: fonts.displayHeavy, fontSize: 17, lineHeight: 22, color: colors.paper },

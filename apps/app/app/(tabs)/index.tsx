@@ -5,6 +5,7 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
+import { Logo } from '../../src/components/Logo';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmCard } from '../../src/components/ConfirmCard';
 import { DailyFold, ForYouSheet } from '../../src/components/DailyFold';
@@ -286,8 +287,16 @@ function useInA() {
 function GroupHead({ group }: { group: NonNullable<CardMatch['group']> }) {
   return (
     <View style={styles.group}>
-      <Text style={styles.groupTitle}>{group.title}</Text>
-      {group.sub ? <Text style={text.meta}>{group.sub}</Text> : null}
+      <View style={styles.groupHead}>
+        <Logo path={group.logo} name={group.title} size={24} />
+        <Text style={styles.groupTitle}>{group.title}</Text>
+      </View>
+      {group.sub ? (
+        <View style={styles.groupSub}>
+          {group.club ? <Logo path={group.club.logo} name={group.club.name} size={16} /> : null}
+          <Text style={[text.meta, styles.groupSubText]}>{group.sub}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -305,7 +314,10 @@ function LaterFold({ count, open, onPress }: { count: number; open: boolean; onP
 
 const styles = StyleSheet.create({
   group: { marginTop: 8, marginBottom: -4, paddingHorizontal: 4, gap: 2 },
-  groupTitle: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  groupSub: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  groupSubText: { flexShrink: 1 },
+  groupTitle: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   later: { minHeight: 52, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: colors.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   laterText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   screen: { flex: 1, backgroundColor: colors.paper },

@@ -11,6 +11,8 @@ import { fmt } from './votes';
 export interface NextRow {
   key: string;
   name: string;
+  /** the tournament's logo path; null shows its letter */
+  logo: string | null;
   /** «Γλυφάδα · 25/10 έως 27/10 · Χώμα» */
   where: string;
   /** «Μ 40+ · MEDIUM», or null */
@@ -40,6 +42,7 @@ export function nextRow(item: UpcomingTournament, t: Copy): NextRow {
   return {
     key: item.id,
     name: item.name,
+    logo: item.logo ?? null,
     where: [item.area ?? item.venue, dates, surface].filter(Boolean).join(' · '),
     categories: item.categories.length > 0 ? item.categories.join(' · ') : null,
     deadline: deadlineLine(item, t),

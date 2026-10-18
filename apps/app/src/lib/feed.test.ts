@@ -82,12 +82,18 @@ describe('fromFeedCard', () => {
     // the tournament heads its run of cards, so the card keeps the time and round
     expect(c.meta).toBe('Σήμερα 18:00 · Ημιτελικός');
     expect(c.group?.title).toBe('Open Γλυφάδας');
+    expect(c.group?.logo).toBeNull();
     expect(c.place).toBeUndefined();
     expect(c.doubles).toBe(false);
     expect(c.a).toEqual({ people: [{ surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ', look: null }], sub: 'Γλυφάδα', level: null, area: 'Γλυφάδα' }); // players' levels are hidden (14 Oct)
     // unknown area and no level: no sub line
     expect(c.b).toEqual({ people: [{ surname: 'Βλάχος', first: 'Γιώργος', initials: 'ΓΒ', look: null }], sub: null, level: null, area: null });
     expect(c.myVote).toBeUndefined();
+  });
+
+  it('carries the tournament logo to its group head', () => {
+    const c = fromFeedCard(card({ tournament: { id: 't1', name: 'Open Γλυφάδας', logo: 'tournaments/t1/k1.png' } }), areas, t, NOW);
+    expect(c.group?.logo).toBe('tournaments/t1/k1.png');
   });
 
   it('puts a friendly the prototype way: round text, then the venue', () => {
@@ -238,7 +244,7 @@ describe('put-off matches', () => {
 
 describe('groupHeads', () => {
   it('heads each run of one tournament once, across ads, and not a friendly', () => {
-    const g = (key: string) => ({ key, title: key, sub: null });
+    const g = (key: string) => ({ key, title: key, logo: null, sub: null, club: null });
     const cards = [
       { kind: 'match', group: g('a') },
       { kind: 'match', group: g('a') },

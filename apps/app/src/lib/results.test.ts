@@ -137,5 +137,13 @@ describe('groupResults', () => {
     ]);
     expect(groups[0]!.detail).toContain('Προημιτελικά');
     expect(groups[1]!.detail).toBeNull();
+    // a tournament shows its logo (or its letter); friendlies show none
+    expect(groups[0]!.logo).toEqual({ path: null });
+    expect(groups[1]!.logo).toBeNull();
+  });
+
+  it('carries the tournament logo', () => {
+    const [g] = groupResults([row({ match_id: 'a', tournament_logo: 'tournaments/t/k1.webp' })], t, NOW);
+    expect(g!.logo).toEqual({ path: 'tournaments/t/k1.webp' });
   });
 });

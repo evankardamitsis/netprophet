@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 17 Oct 2026 (M4 built, Baller live). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 17 Oct» and «Waiting on the founder» below.
+Last updated: 18 Oct 2026 (M4 built, Baller live, logos). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct» and «Waiting on the founder» below.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
@@ -91,7 +91,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - **Next (13 Oct, since built as M4 above):** M4 (tournaments and ingestion at scale). `parse_oop.py` and the TAF sheet are in `tools/match-data/fixtures/` and ported (`packages/ingest`, 54/54); a second results platform is to be named by the founder. The v1 names accent pass (below) is built and waits for the founder's apply on /v2/names.
 - Ads: sponsored cards are banners (`20261126000000_ad_banners.sql`): `image_url` for a sponsor's own banner, else one of five drawn scenes (`art`). The demo ads use the drawn ones.
 
-## 15 to 17 Oct
+## 15 to 18 Oct
 - 15 Oct, ball people (founder: avatars are shaded balls with faces, coded, not drawn busts or DiceBear): #138 the 12 defaults in `components/Avatar.tsx`, #139 other players' ball people on vote cards and in Παίκτες, #140 gear (white cap free, lime headband earned at 5 in a row, the rest 0,99 €) and the wearable confetti, #141 frames as rings. Also #133 the intro balls answer the finger, #134 the category on players' matches, #135 to #137 and #143 admin and import fixes.
 - 16 Oct, website: netprophetapp.com is `apps/site` (#145, #147 to #151, #156, #157): built around the three questions, app screens drawn in code, /privacy and /support for the stores, the feed section shows two matches and the day's quiz, links in the footer. The founder moved the domains to it (www is primary) and retired the v1 web app there; the v1 Stripe webhook is off (v1 Stripe was sandbox only).
 - 16 Oct, store readiness: app ID `gr.monadlabs.netprophet` under Monad Labs (#144), delete your account from Ρυθμίσεις (#146), store texts in `store-listing.md` and `store-privacy.md`. Apple enrolment submitted, Google Play waiting for identity checks.
@@ -102,6 +102,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Not done from the Baller plan: the share card, the new gear on the website.
 - 17 Oct, Pro «Το επόμενο τουρνουά για σένα» (`api.upcoming_tournaments`, `core.entry_reminders`, migration `20270201000000_next_tournament.sql`): tournaments still to come or open for entry, your area first, entry closing soonest, with the organiser's categories and whether you played an earlier edition. Free sees the first in full (deadline and sign-up link) and how many more; Pro sees all and gets a push two days before an entry deadline (area match or an earlier edition, once per tournament). Staff set «Entry deadline» and «Entry link» on the admin Tournaments page. Greek lines are drafts for the founder.
 - 17 Oct, Pro «Η σεζόν σου» (`api.my_season`, `api.win_card`, migration `20270202000000_season_recap.sql`; `app/season.tsx`, `app/win-card.tsx`): a month recap on ink from Εγώ («Η σεζόν σου ›») and from the month-end Ladder moment, and a 4:5 share card for your own wins («Μοιράσου τη νίκη ›» on your win in Αποτελέσματα). Free sees the month's matches, wins, losses and points, and a locked card that opens Pro; Pro adds sets, the best win (the strongest opponent by hidden level, which never leaves the database), wins in a row, deciding sets, tie-breaks, tournaments, best σερί, the Ladder place and ↑ ↓ against last month. Win cards: Pro for every win; free gets the first win of each month (stateless: the earliest shareable win of that month), any other shows the Pro lock. No card for walkovers, disputed matches or matches with a minor or hidden player. Greek lines are drafts for the founder.
+- 18 Oct, logos (founder: «so players can recognize which is which»; migration `20270212000000_logos.sql`): `logo_path` on tournaments and clubs, a public `logos` bucket only staff write (PNG, JPG, WebP, 512 KB), `api.admin_set_logo`. Staff add, replace or remove a logo on the admin Tournaments page (a tournament's Edit, the Clubs table); each upload gets a new file name so no cache shows the old one. The app shows it small and round next to the name on Σήμερα's tournament heads, Αποτελέσματα (headings and filter chips), Τουρνουά (rows, the next tournament, a tournament's page) and by the club in place lines; no logo shows the first letter. Hosted needs `scripts/v2-db-remote.sh push`.
 
 ## Waiting on the founder
 - Run `node scripts/v1-users-to-resend.mjs` with `V2_SUPABASE_URL` and `V2_SUPABASE_SERVICE_ROLE_KEY` in the root `.env.local`, then again with `--apply`.
