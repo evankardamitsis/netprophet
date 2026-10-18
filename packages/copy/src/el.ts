@@ -158,6 +158,14 @@ export const el = {
       goSoon: 'Δες το στα ματς',
       goPlayed: 'Δες το στα αποτελέσματα',
       again: 'Άλλο ένα ματς',
+      /** a player's match goes to staff first (founder, 18 Oct 2026: no match can be invented) */
+      review: {
+        pill: 'Σε έλεγχο',
+        head: 'Για έλεγχο',
+        subSoon: 'Το στείλαμε για έλεγχο. Μόλις εγκριθεί, μπαίνει στο feed.',
+        subPlayed: 'Το στείλαμε για έλεγχο. Μόλις εγκριθεί, μπαίνει στα αποτελέσματα και μετράνε οι ψήφοι.',
+        ok: 'Εντάξει',
+      },
     },
     share: {
       one: 'Στείλ’ το απέναντι',
@@ -274,6 +282,8 @@ export const el = {
       final: 'Τελικός',
     },
     upset: 'Ανατροπή',
+    /** your own result that staff have not checked yet */
+    inReview: 'Σε έλεγχο',
     calledIt: 'Το ’πες · +{points}',
     /** «Το 69% έλεγε Πράτσας»: the side most people picked */
     line: 'Το {pct}% έλεγε {name}',

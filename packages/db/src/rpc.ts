@@ -359,6 +359,9 @@ export interface ResultsTournament {
   results: number;
 }
 
+/** staff review of what a player logged (founder, 18 Oct 2026); null for admin and import matches */
+export type MatchReview = 'pending' | 'approved' | 'rejected';
+
 export interface ResultRow {
   match_id: string;
   sport_id: string;
@@ -392,6 +395,8 @@ export interface ResultRow {
   reactions?: Reactions;
   /** «Πες κάτι στον …»: an opponent the viewer has not thanked, or a player they follow; null when nobody */
   kudo_to?: { player_id: string; first_name: string; gender: 'm' | 'f' | null } | null;
+  /** 'pending': the viewer's own result that staff have not checked yet (only its logger gets it) */
+  review?: MatchReview | null;
 }
 
 export interface Reactions {

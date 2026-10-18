@@ -16,6 +16,10 @@ update core.players set claimed_by_user_id = :'w'::uuid where id = :'o'::uuid;
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}], "result": {"won": true, "sets": "2-0"}}',
                             core.athens_day(), :'o')::jsonb) ->> 'match_id' as m1 \gset
+select tests.logout();
+-- staff check every match a player logs
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
+select tests.login(:'u'::uuid);
 
 -- «Πες μια καλή κουβέντα»
 select is(jsonb_array_length(api.kudos_options(:'m1'::uuid)), 5, 'five lines to pick from');
@@ -56,6 +60,9 @@ select is((select sum((x ->> 'n')::int)::int from jsonb_array_elements(api.get_m
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}], "result": {"won": true, "sets": "2-1"}}',
                             core.athens_day() - 1, :'kid')::jsonb) ->> 'match_id' as m2 \gset
+select tests.logout();
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
+select tests.login(:'u'::uuid);
 select throws_ok(format($$select api.give_kudo(%L, 'stamina')$$, :'m2'), '42501', 'nobody_to_thank', 'no kudos for minors');
 
 -- the good word from a link becomes a kudo when that person joins

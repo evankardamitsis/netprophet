@@ -64,6 +64,8 @@ export default function AddMatch() {
   const [mine, setMine] = useState<MyMatchCandidate[] | null>(null);
   const [done, setDone] = useState(false);
   const [doneId, setDoneId] = useState<string | null>(null);
+  // staff check a player's match before it goes live (founder, 18 Oct 2026)
+  const [inReview, setInReview] = useState(false);
   // a played match asks for a good word first (prototype fstep 'kudos'), then shows the Done card
   const [thanking, setThanking] = useState(false);
   const [kudo, setKudo] = useState<string | null>(null);
@@ -89,7 +91,9 @@ export default function AddMatch() {
     setBusy(false);
     if (r.ok) {
       setDoneId(r.matchId);
-      setThanking(form.mode === 'played' && kudosOpen);
+      setInReview(r.inReview);
+      // a good word needs a match that is live: not while staff still check it
+      setThanking(form.mode === 'played' && kudosOpen && !r.inReview);
       setKudo(null);
       setDone(true);
     }
@@ -110,7 +114,7 @@ export default function AddMatch() {
   };
 
   if (done && thanking) return <Thank form={form} matchId={doneId} onDone={(text) => { setKudo(text); setThanking(false); }} />;
-  if (done) return <Done form={form} matchId={doneId} kudo={kudo} onAgain={() => { setForm(emptyForm(form.mode)); setOpen('d'); setDone(false); setDoneId(null); setMine(null); }} />;
+  if (done) return <Done form={form} matchId={doneId} kudo={kudo} inReview={inReview} onAgain={() => { setForm(emptyForm(form.mode)); setOpen('d'); setDone(false); setDoneId(null); setInReview(false); setMine(null); }} />;
 
   const single = form.format === 'singles';
   return (
@@ -447,10 +451,12 @@ function Thank({ form, matchId, onDone }: { form: LogForm; matchId: string | nul
 /**
  * isDone: «Μπήκε», the match, what happens now. A played match against people not in the app gets
  * «Στείλ’ το απέναντι» (the share sheet with their link) and «Δες τι βλέπει απέναντι ›».
+ * A player's match goes to staff first (`inReview`): «Σε έλεγχο», and it says when it goes live.
  */
-function Done({ form, matchId, kudo, onAgain }: { form: LogForm; matchId: string | null; kudo: string | null; onAgain: () => void }) {
+function Done({ form, matchId, kudo, inReview, onAgain }: { form: LogForm; matchId: string | null; kudo: string | null; inReview: boolean; onAgain: () => void }) {
   const t = useCopy();
   const d = t.addMatch.done;
+  const rv = d.review;
   const s = t.addMatch.share;
   const links = useMatchLinks(form.mode === 'played' ? matchId : null);
   const { raw } = useMe();
@@ -476,11 +482,13 @@ function Done({ form, matchId, kudo, onAgain }: { form: LogForm; matchId: string
       <StatusBar style="dark" />
       <Animated.View style={[styles.doneCard, enter]}>
         <View style={styles.pill}>
-          <Text style={styles.pillText}>{d.pill}</Text>
+          <Text style={styles.pillText}>{inReview ? rv.pill : d.pill}</Text>
         </View>
-        <Text style={styles.doneHead}>{form.mode === 'played' ? d.headPlayed : d.head}</Text>
+        <Text style={styles.doneHead}>{inReview ? rv.head : form.mode === 'played' ? d.headPlayed : d.head}</Text>
         <Text style={styles.doneLine}>{fmt(d.line, { me: us, them })}</Text>
-        <Text style={styles.doneSub}>{form.mode === 'played' ? d.subPlayed : d.subSoon}</Text>
+        <Text style={styles.doneSub}>
+          {inReview ? (form.mode === 'played' ? rv.subPlayed : rv.subSoon) : form.mode === 'played' ? d.subPlayed : d.subSoon}
+        </Text>
         {kudo ? <Text style={styles.doneSub}>{`${t.kudos.yours}: ${kudo}`}</Text> : null}
       </Animated.View>
       {links.length > 0 ? (
@@ -495,7 +503,11 @@ function Done({ form, matchId, kudo, onAgain }: { form: LogForm; matchId: string
         </View>
       ) : (
         <View style={styles.doneActions}>
-          <Primary label={form.mode === 'played' ? d.goPlayed : d.goSoon} onPress={() => router.replace(form.mode === 'played' ? '/results' : '/')} />
+          {/* a match still in review is not in the feed yet: back home; a played one shows on Αποτελέσματα as «Σε έλεγχο» */}
+          <Primary
+            label={form.mode === 'played' ? d.goPlayed : inReview ? rv.ok : d.goSoon}
+            onPress={() => router.replace(form.mode === 'played' ? '/results' : '/')}
+          />
           <Pressable accessibilityRole="button" onPress={onAgain} style={styles.againHit}>
             <Text style={styles.again}>{d.again}</Text>
           </Pressable>

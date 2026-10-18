@@ -48,9 +48,9 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
       delayLongPress={450}
     >
       <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
-        {item.tag || item.calledIt ? (
+        {item.tag || item.calledIt || item.review ? (
           <View style={styles.top}>
-            {item.tag ? <Tag text={item.tag} /> : <View />}
+            {item.review ? <Tag text={item.review} quiet /> : item.tag ? <Tag text={item.tag} /> : <View />}
             {item.calledIt ? <Pill text={item.calledIt} /> : null}
           </View>
         ) : null}
@@ -115,10 +115,11 @@ function More({ open, color }: { open: boolean; color: string }) {
   );
 }
 
-function Tag({ text }: { text: string }) {
+/** `quiet`: «Σε έλεγχο», nothing has happened yet, so it is not lime */
+function Tag({ text, quiet }: { text: string; quiet?: boolean }) {
   const slam = useSlamIn(TAG_MS, TAG_DELAY);
   return (
-    <Animated.View style={[styles.tag, slam]}>
+    <Animated.View style={[styles.tag, quiet ? styles.tagQuiet : null, slam]}>
       <Text style={styles.tagText}>{text}</Text>
     </Animated.View>
   );
@@ -176,6 +177,7 @@ const styles = StyleSheet.create({
   moreHit: { width: 28, height: 28, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
   more: { fontFamily: fonts.bodyBold, fontSize: 22, lineHeight: 26 },
   tag: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
+  tagQuiet: { backgroundColor: colors.mist },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 14, letterSpacing: 0.48, color: colors.ink },
   pill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
   pillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },

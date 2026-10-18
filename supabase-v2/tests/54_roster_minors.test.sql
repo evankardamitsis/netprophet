@@ -17,6 +17,9 @@ select is((select string_agg(is_minor::text, ',' order by surname, first_name) f
 
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}', core.athens_day() + 1, :'kid')::jsonb) ->> 'match_id' as m1 \gset
+select tests.logout();
+-- staff check every match a player logs
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
 
 select tests.login(:'v'::uuid);
 select ok(not exists (select 1 from jsonb_array_elements(api.get_feed(50) -> 'items') i where i ->> 'match_id' = :'m1'), 'a match with a minor is not in the feed');
@@ -28,6 +31,8 @@ select is((select count(*)::int from api.players where id = :'kid'::uuid), 0, 'n
 
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}', core.athens_day(), :'m1')::jsonb) is not null as x \gset
+select tests.logout();
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
 select tests.login(:'v'::uuid);
 select ok(not exists (select 1 from jsonb_array_elements(api.get_results(14, 200)) r where r ->> 'match_id' = :'m1'), 'nor in Αποτελέσματα');
 

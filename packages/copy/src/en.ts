@@ -149,6 +149,13 @@ export const en: Copy = {
       goSoon: 'See it in the matches',
       goPlayed: 'See it in the results',
       again: 'Another match',
+      review: {
+        pill: 'In review',
+        head: 'Sent for review',
+        subSoon: 'We sent it for a check. Once it is approved, it goes into the feed.',
+        subPlayed: 'We sent it for a check. Once it is approved, it goes into the results and the votes count.',
+        ok: 'OK',
+      },
     },
     share: {
       one: 'Send it to the other side',
@@ -254,6 +261,7 @@ export const en: Copy = {
       final: 'Final',
     },
     upset: 'Upset',
+    inReview: 'In review',
     calledIt: 'Called it · +{points}',
     line: '{pct}% said {name}',
     retired: 'ret.',
