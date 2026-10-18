@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -9,6 +10,10 @@ const supabase = createClient(
 // GET - Fetch notifications with filters
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAdmin(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
     const severity = searchParams.get("severity");
@@ -66,6 +71,10 @@ export async function GET(request: NextRequest) {
 // POST - Create a new notification (for system events)
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
     const body = await request.json();
     const { type, severity = "info", title, message, metadata = {} } = body;
 

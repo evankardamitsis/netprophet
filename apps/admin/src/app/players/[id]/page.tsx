@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Player } from '@netprophet/lib/types/player';
+import { supabase } from '@/lib/supabase';
 import { insertPlayer, updatePlayer, fetchPlayerById, fetchPlayers } from '@netprophet/lib/supabase/players';
 import { uploadAthletePhoto, deleteAthletePhoto } from '@netprophet/lib';
 import { toast } from 'sonner';
@@ -171,8 +172,15 @@ export default function PlayerEditPage() {
 
         setNotifying(true);
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
             const response = await fetch(`/api/players/${player.id}/notify-activation`, {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
             });
 
             const data = await response.json();

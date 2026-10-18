@@ -15,10 +15,11 @@ export function storeReady(): boolean {
   return KEY.length > 0;
 }
 
-function client(userId: string): Purchases {
+/** The shared RevenueCat client, switched to this user (and waited for) before anything is bought. */
+async function client(userId: string): Promise<Purchases> {
   if (!instance || forUser !== userId) {
     instance = Purchases.isConfigured() ? Purchases.getSharedInstance() : Purchases.configure({ apiKey: KEY, appUserId: userId });
-    if (forUser && forUser !== userId) void instance.changeUser(userId);
+    if (instance.getAppUserId() !== userId) await instance.changeUser(userId);
     forUser = userId;
   }
   return instance;
@@ -27,12 +28,14 @@ function client(userId: string): Purchases {
 export async function buy(productId: string, userId: string): Promise<BuyResult> {
   if (!storeReady()) return 'unavailable';
   try {
-    const p = client(userId);
+    const p = await client(userId);
     const offerings = await p.getOfferings();
     const pkg = Object.values(offerings.all)
       .flatMap((o) => o.availablePackages)
       .find((x) => x.webBillingProduct.identifier === productId);
     if (!pkg) return 'unavailable';
+    // never let a purchase land on another account
+    if (p.getAppUserId() !== userId) return 'failed';
     await p.purchase({ rcPackage: pkg });
     return 'ok';
   } catch (e) {

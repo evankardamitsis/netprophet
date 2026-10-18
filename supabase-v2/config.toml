@@ -32,7 +32,7 @@ enable_signup = true
 # login is by one-time code, no passwords
 enable_confirmations = true
 otp_length = 6
-otp_expiry = 3600
+otp_expiry = 600
 
 # Login is by a 6-digit code, so both emails carry {{ .Token }} instead of a link. Greek copy: founder review.
 [auth.email.template.confirmation]
@@ -65,3 +65,7 @@ port = 54424
 
 [analytics]
 port = 54427
+
+# RevenueCat calls this with its own shared secret (checked in the function), not a Supabase JWT
+[functions.revenuecat-webhook]
+verify_jwt = false

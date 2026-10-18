@@ -7,6 +7,7 @@ import { useCopy } from '../i18n';
 import { usePress } from '../lib/motion';
 import { cardSurface, colors, fonts, radii } from '../theme';
 import { AdArt, isAdArt } from './AdArt';
+import { isHttpsUrl, safeOpen } from '../lib/openUrl';
 
 const ART_H = 150;
 
@@ -14,9 +15,9 @@ const ART_H = 150;
 export function SponsoredCard({ card }: { card: CardSponsored }) {
   const t = useCopy();
   const press = usePress(0.97);
-  const url = card.ctaUrl;
+  const url = isHttpsUrl(card.ctaUrl) ? card.ctaUrl : null;
   const open = () => {
-    if (url) void Linking.openURL(url).catch(() => undefined);
+    safeOpen(url, (u) => Linking.openURL(u));
   };
   const body = (
     <View style={styles.card}>
