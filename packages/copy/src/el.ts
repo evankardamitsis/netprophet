@@ -458,8 +458,10 @@ export const el = {
     /** dev builds only: the guest plays as a brand new player */
     newPlayer: 'Νέος παίκτης',
     newPlayerOn: 'Νέος παίκτης ✓',
-    /** the row on Εγώ and the title of the page it opens: the numbers, badges, matches and friends */
+    /** the row on Εγώ that opens your match statistics (/match-stats) */
     statsPage: 'Τα στατιστικά σου',
+    /** the row on Εγώ and the title of the page it opens: σερί, votes, score and badges */
+    predictionsPage: 'Οι προβλέψεις σου',
     /** dev builds only: the drawn avatars for review */
     avatarsDev: 'Τα avatar (δοκιμή)',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
@@ -487,8 +489,6 @@ export const el = {
     freezesFull: 'Έχεις όσες Ασφάλειες χωράνε',
     score: 'Το σκορ σου',
     stats: {
-      singles: 'Φέτος στα μονά',
-      doubles: 'Φέτος στα διπλά',
       correct: 'Σωστές ψήφοι',
       points: 'Πόντοι αυτόν τον μήνα',
     },
@@ -673,6 +673,60 @@ export const el = {
     fair: 'Το βλέπεις μόνο για το δικό σου ματς, ώστε οι ψήφοι να μένουν δίκαιες.',
     notYours: 'Αυτό δεν είναι δικό σου ματς.',
     over: 'Αυτό το ματς έχει παιχτεί.',
+    error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
+  },
+  /** «Τα στατιστικά σου»: your real matches in numbers, never votes (founder, 18 Oct 2026) */
+  matchStats: {
+    title: 'Τα στατιστικά σου',
+    sub: 'Τα ματς που έπαιξες, σε νούμερα. Οι ψήφοι σου είναι αλλού.',
+    periods: { all: 'Όλα', year: 'Φέτος', last12: '12 μήνες' },
+    formats: { singles: 'Μονά', doubles: 'Διπλά' },
+    head: { played: 'ματς', won: 'νίκες', lost: 'ήττες', pct: 'ποσοστό νικών' },
+    sections: {
+      form: 'Η φόρμα σου',
+      months: 'Μήνα με μήνα',
+      sets: 'Σετ και γκέιμ',
+      tight: 'Στα δύσκολα',
+      where: 'Πού παίζεις',
+      tournaments: 'Τα τουρνουά σου',
+      rounds: 'Ανά γύρο',
+      opponents: 'Αυτούς βρίσκεις πιο συχνά',
+      partners: 'Οι συμπαίκτες σου',
+      bestWins: 'Οι καλύτερες νίκες σου',
+      other: 'Και κάτι ακόμα',
+    },
+    rows: {
+      runNow: 'Νίκες στη σειρά, τώρα',
+      runBest: 'Οι περισσότερες νίκες στη σειρά',
+      sets: 'Σετ',
+      games: 'Γκέιμ',
+      /** under the games: they come only from scores with games */
+      gamesFrom: { one: 'Από 1 ματς με σκορ σε γκέιμ', many: 'Από {n} ματς με σκορ σε γκέιμ' },
+      straightWon: 'Νίκες χωρίς να χάσεις σετ',
+      straightLost: 'Ήττες χωρίς να πάρεις σετ',
+      tiebreaks: 'Tie-break',
+      superTiebreaks: 'Super tie-break',
+      deciding: 'Στο καθοριστικό σετ',
+      firstLost: 'Όταν χάνεις το πρώτο σετ',
+      firstWon: 'Όταν παίρνεις το πρώτο σετ',
+      tournament: 'Σε τουρνουά',
+      friendly: 'Σε φιλικά',
+      walkovers: 'Χωρίς να παιχτεί (w.o.)',
+      retired: 'Με εγκατάλειψη',
+    },
+    /** how far you went in a tournament: your last match there */
+    tour: { champion: 'Το πήρες!', won: 'νίκη', lost: 'ήττα', count: { one: '1 τουρνουά', many: '{n} τουρνουά' } },
+    pct: '{n}%',
+    /** «Οκτ 2026» */
+    monthsShort: ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μαΐ', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'],
+    and: ' και ',
+    empty: 'Δεν έχεις ματς εδώ ακόμα.',
+    noPlayer: 'Βρες τον εαυτό σου στους παίκτες και θα μετράμε τα ματς σου.',
+    locked: {
+      title: 'Όλα τα ματς σου σε νούμερα, με Pro',
+      line: 'Σετ, γκέιμ, tie-break, καθοριστικά σετ, τι γίνεται όταν χάνεις το πρώτο σετ, επιφάνειες, γύροι, αντίπαλοι, συμπαίκτες και τουρνουά.',
+      cta: 'Δες το Pro',
+    },
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
   },
   winLoss: {

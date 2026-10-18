@@ -1067,3 +1067,111 @@ export interface ClaimResult {
   requested?: boolean;
   replayed: boolean;
 }
+
+/** played and won (tie-breaks, deciding sets, after the first set) */
+export interface PlayedWon {
+  played: number;
+  won: number;
+}
+
+/** won and lost in one split of «Τα στατιστικά σου» */
+export interface StatSplit {
+  /** surface ('clay'), category name, or round as stored ('final' or the organiser's text) */
+  key: string;
+  won: number;
+  lost: number;
+}
+
+/** a person in the match stats: the name only (never a minor or a hidden player, never a level) */
+export interface StatsPerson extends SeasonPerson {
+  player_id: string;
+}
+
+/** an opponent or a partner with your record together */
+export interface StatsPersonRecord extends StatsPerson {
+  played: number;
+  won: number;
+  lost: number;
+}
+
+/** the Pro part of one format: null for free */
+export interface MatchStatsMore {
+  walkovers: { won: number; lost: number };
+  /** won: the opponent retired; lost: you did */
+  retired: { won: number; lost: number };
+  runs: { current: number; best: number };
+  sets: { won: number; lost: number; pct: number | null };
+  /** only from scores with games; null when none has them */
+  games: { won: number; lost: number; pct: number | null; matches: number } | null;
+  tiebreaks: PlayedWon | null;
+  super_tiebreaks: PlayedWon | null;
+  /** matches that went the whole distance (best of `best_of`) */
+  deciding: PlayedWon;
+  best_of: number;
+  /** after losing the first set: the won ones are comebacks (null when no score has games) */
+  first_set_lost: PlayedWon | null;
+  first_set_won: PlayedWon | null;
+  straight: { won: number; lost: number };
+  kinds: { tournament: { won: number; lost: number }; friendly: { won: number; lost: number } };
+  by_surface: StatSplit[];
+  by_category: StatSplit[];
+  by_round: StatSplit[];
+  /** the last 12 months that had a match, oldest first; month is '2026-10' */
+  by_month: { month: string; won: number; lost: number }[];
+  /** the five you met most */
+  opponents: StatsPersonRecord[];
+  /** doubles only (null in singles) */
+  partners: StatsPersonRecord[] | null;
+  /** up to three, the strongest opponents first */
+  best_wins: {
+    match_id: string;
+    starts_at: string | null;
+    sets: SetScore[];
+    score_summary: string | null;
+    retired: boolean;
+    round: string | null;
+    opponents: StatsPerson[];
+    partners: StatsPerson[];
+    tournament: string | null;
+  }[];
+  tournaments: {
+    count: number;
+    /** the twelve most recent */
+    list: {
+      tournament_id: string;
+      name: string;
+      starts_on: string | null;
+      played: number;
+      won: number;
+      lost: number;
+      /** your last match there: its round and whether you won it */
+      last_round: string | null;
+      last_won: boolean;
+    }[];
+  };
+}
+
+/** one format of «Τα στατιστικά σου»: the free numbers, and the rest with Pro */
+export interface MatchStatsPart {
+  played: number;
+  won: number;
+  lost: number;
+  win_pct: number | null;
+  more: MatchStatsMore | null;
+}
+
+export type MatchStatsPeriod = 'all' | 'year' | '12m';
+
+/** «Τα στατιστικά σου» (api.my_match_stats): your real matches, never votes */
+export interface MyMatchStats {
+  period: MatchStatsPeriod;
+  /** the first day counted (Athens), null for 'all' */
+  from: string | null;
+  pro: boolean;
+  has_player: boolean;
+  sport: string;
+  total: { played: number; won: number; lost: number; win_pct: number | null };
+  singles: MatchStatsPart;
+  /** doubles and mixed */
+  doubles: MatchStatsPart;
+}

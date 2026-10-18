@@ -131,6 +131,7 @@ function Routes() {
             name="kudos"
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
+          <Stack.Screen name="match-stats" />
         </Stack.Protected>
         <Stack.Protected
           guard={signedIn && (onboarding || (__DEV__ && (guest || !isLive)))}

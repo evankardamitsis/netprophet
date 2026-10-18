@@ -51,6 +51,8 @@ import type {
   SuggestedPlayer,
   WinLossSplits,
   MySeason,
+  MyMatchStats,
+  MatchStatsPeriod,
   WinCard,
 } from './rpc';
 
@@ -185,6 +187,8 @@ export function rpc(client: NetprophetClient) {
     getWinLoss: () => call<WinLossSplits>(client, 'get_win_loss', {}),
     /** «Η σεζόν σου»: a month key like '2026-10', or the current month */
     mySeason: (month: string | null = null) => call<MySeason>(client, 'my_season', month ? { p_month: month } : {}),
+    /** «Τα στατιστικά σου»: your real matches in a period */
+    myMatchStats: (period: MatchStatsPeriod = 'all') => call<MyMatchStats>(client, 'my_match_stats', { p_period: period }),
     /** a share card of one of your own wins */
     winCard: (matchId: string) => call<WinCard>(client, 'win_card', { p_match: matchId }),
     getScout: (matchId: string) => call<Scout>(client, 'get_scout', { p_match_id: matchId }),

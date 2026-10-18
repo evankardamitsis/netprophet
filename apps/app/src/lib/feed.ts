@@ -183,11 +183,11 @@ export function toPct(split: VoteSplit): CardPct {
   return { pctA: split.pct1, pctB: split.pct2 };
 }
 
-const ROUND_KEYS = ['round64', 'round32', 'round16', 'quarter', 'semi', 'final'] as const;
+export const ROUND_KEYS = ['round64', 'round32', 'round16', 'quarter', 'semi', 'final'] as const;
 type RoundKey = (typeof ROUND_KEYS)[number];
 const isRoundKey = (r: string): r is RoundKey => (ROUND_KEYS as readonly string[]).includes(r);
 
-function roundLabel(round: string | null, t: Copy): string | null {
+export function roundLabel(round: string | null, t: Copy): string | null {
   if (!round) return null;
   return isRoundKey(round) ? t.match.rounds[round] : round;
 }

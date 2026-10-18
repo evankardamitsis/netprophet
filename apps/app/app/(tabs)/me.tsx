@@ -10,18 +10,15 @@ import { FlipCard } from '../../src/components/FlipCard';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
-import { KudosCloud } from '../../src/components/KudosCloud';
 import { useSoundsOn } from '../../src/lib/sound';
-import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, useMyKudos, useMyTraits, usePro, useQuests, useWinLoss, useMyAvatar } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
-import { teaserRows, type WinLossRow } from '../../src/lib/winLoss';
-import { greekCaps, nameGender } from '@netprophet/copy';
+import { greekCaps } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
 import { activeLine, priceLine } from '../../src/lib/pro';
 import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
-import { MyTraits } from '../../src/components/MyTraits';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
@@ -46,10 +43,8 @@ const ACCENT_PAD = 10;
 export default function MeScreen() {
   const t = useCopy();
   const { view, loading, error, refresh } = useMePage();
-  const kudos = useMyKudos();
   const quests = useQuests();
   const badges = useBadges();
-  const myTraits = useMyTraits();
   const look = useLook();
   const myLevel = useMyLevel();
   const { seen } = useLookSeen();
@@ -117,6 +112,9 @@ export default function MeScreen() {
               <StatsRow />
             </Section>
             <Section i={next()}>
+              <PredictionsRow />
+            </Section>
+            <Section i={next()}>
               <SeasonRow />
             </Section>
             {has('frames') || has('backgrounds') ? (
@@ -132,7 +130,7 @@ export default function MeScreen() {
         {view && statsPage ? (
           <>
             <Section i={next()}>
-              <Text style={styles.statsTitle}>{t.me.statsPage}</Text>
+              <Text style={styles.statsTitle}>{t.me.predictionsPage}</Text>
             </Section>
             {has('badges_shelf') && badges.badges && earned(badges.badges.badges).length > 0 ? (
               <Section i={next()}>
@@ -151,24 +149,6 @@ export default function MeScreen() {
               <Score v={view} />
             </Section>
             <Section i={next()}>
-              <Matches v={view} />
-            </Section>
-            {kudos && has('kudos') ? (
-              <Section i={next()}>
-                <KudosCloud list={kudos} gender={nameGender(view.first)} />
-              </Section>
-            ) : null}
-            {myTraits ? (
-              <Section i={next()}>
-                <MyTraits data={myTraits} first={view.first} proOpen={has('pro_sheet')} />
-              </Section>
-            ) : null}
-            {!view.isNew && has('pro_sheet') ? (
-              <Section i={next()}>
-                <WinLoss />
-              </Section>
-            ) : null}
-            <Section i={next()}>
               <Friends v={view} />
             </Section>
           </>
@@ -180,14 +160,28 @@ export default function MeScreen() {
   );
 }
 
-/** «Τα στατιστικά σου ›»: the numbers, badges, matches and friends, one tap away */
+/** «Τα στατιστικά σου ›»: your real matches in numbers (founder, 18 Oct 2026: match statistics, not votes) */
 function StatsRow() {
+  const t = useCopy();
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push('/match-stats?from=me')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.questsRow, press.style]}>
+        <Text style={styles.questsTitle}>{t.me.statsPage}</Text>
+        <Text style={styles.questsCount}>›</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** «Οι προβλέψεις σου ›»: σερί, badges, your score and votes, one tap away */
+function PredictionsRow() {
   const t = useCopy();
   const press = usePress();
   return (
     <Pressable accessibilityRole="button" onPress={() => router.push('/me?page=stats')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
       <Animated.View style={[styles.questsRow, press.style]}>
-        <Text style={styles.questsTitle}>{t.me.statsPage}</Text>
+        <Text style={styles.questsTitle}>{t.me.predictionsPage}</Text>
         <Text style={styles.questsCount}>›</Text>
       </Animated.View>
     </Pressable>
@@ -687,90 +681,6 @@ function Score({ v }: { v: MeView }) {
           <Text style={styles.votesSub}>{v.votes.sub}</Text>
         </Animated.View>
       </Pressable>
-    </View>
-  );
-}
-
-/** «Πού κερδίζεις, πού χάνεις» (Pro): your strengths ↑ and weaknesses ↓; blurred sample rows without Pro */
-function WinLoss() {
-  const t = useCopy();
-  const { state } = usePro();
-  const pro = state?.pro ?? false;
-  const { rows } = useWinLoss(pro);
-  const shown: WinLossRow[] = pro ? rows ?? [] : teaserRows(t);
-  return (
-    <View style={styles.block}>
-      <View style={styles.rowBetween}>
-        <Text style={styles.kicker}>{greekCaps(t.winLoss.title)}</Text>
-        {pro ? (
-          <View style={styles.proPill}>
-            <Text style={styles.proPillText}>{t.pro.title}</Text>
-          </View>
-        ) : null}
-      </View>
-      <View style={[styles.wlRows, !pro && styles.wlLocked]} importantForAccessibility={pro ? 'auto' : 'no-hide-descendants'}>
-        {shown.map((r) => (
-          <View key={r.key} style={styles.wlRow}>
-            <Text style={styles.wlLabel}>{r.label}</Text>
-            <Text style={[styles.wlValue, !r.up && styles.wlDown]}>{r.value}</Text>
-          </View>
-        ))}
-        {pro && rows && rows.length === 0 ? <Text style={styles.muted}>{t.winLoss.empty}</Text> : null}
-      </View>
-      {!pro ? (
-        <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=win_loss')} style={styles.linkHit}>
-          <Text style={styles.unlock}>{t.winLoss.unlock}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-/** «Τα ματς σου»: last results with Ν / Η, then the next match or how to add one */
-function Matches({ v }: { v: MeView }) {
-  const t = useCopy();
-  const { state } = usePro();
-  const proOpen = useUnlocks().has('pro_sheet');
-  const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : router.push('/pro?from=scout'));
-  return (
-    <View style={styles.block}>
-      <Text style={styles.heading}>{t.me.matches.title}</Text>
-      <View style={styles.card}>
-        {v.last.map((m, i) => (
-          <View key={i} style={[styles.matchRow, i > 0 && styles.matchLine]}>
-            <View style={[styles.letter, m.win ? styles.letterWin : styles.letterLoss]}>
-              <Text style={[styles.letterText, { color: m.win ? colors.ink : colors.lime }]}>{m.win ? t.me.matches.win : t.me.matches.loss}</Text>
-            </View>
-            <View style={styles.matchText}>
-              <Text style={styles.matchAgainst} numberOfLines={1}>
-                {m.against}
-              </Text>
-              <Text style={styles.muted}>{[m.score, m.when].filter(Boolean).join(' · ')}</Text>
-            </View>
-          </View>
-        ))}
-        {v.next ? (
-          <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
-            <Text style={styles.label}>{t.me.matches.next}</Text>
-            <Text style={styles.nextText}>{v.next}</Text>
-            {v.nextMatchId && proOpen ? (
-              <Pressable accessibilityRole="button" onPress={scout} style={styles.scoutRow}>
-                <Text style={styles.link}>{t.scout.open}</Text>
-                <View style={styles.proPill}>
-                  <Text style={styles.proPillText}>{t.pro.title}</Text>
-                </View>
-              </Pressable>
-            ) : null}
-          </View>
-        ) : (
-          <View style={[styles.nextBox, v.last.length > 0 && styles.matchLine]}>
-            <Text style={styles.muted}>{t.me.matches.nextEmpty}</Text>
-            <Pressable accessibilityRole="button" onPress={() => router.push('/add-match')} style={styles.linkHit}>
-              <Text style={styles.link}>{t.me.matches.add}</Text>
-            </Pressable>
-          </View>
-        )}
-      </View>
     </View>
   );
 }

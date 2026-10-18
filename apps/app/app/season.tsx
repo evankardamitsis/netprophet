@@ -12,7 +12,7 @@ import { track } from '../src/lib/analytics';
 import { useLook, useMyAvatar, useSeason } from '../src/lib/data';
 import { seasonMessage, seasonView, type SeasonStat } from '../src/lib/season';
 import { shareCard } from '../src/lib/shareCard';
-import { usePopIn, usePress, useStgIn } from '../src/lib/motion';
+import { useCountFromZero, usePopIn, usePress, useStgIn } from '../src/lib/motion';
 import { colors, fonts, motion, text } from '../src/theme';
 
 /**
@@ -171,29 +171,6 @@ function Tile({ stat, i, small = false }: { stat: SeasonStat; i: number; small?:
       </Text>
     </Animated.View>
   );
-}
-
-/** «5», or «9-3»: each number in the text counts up from 0 over `ms` after `delay` (ease-out cubic) */
-function useCountFromZero(value: string, ms: number, delay: number): string {
-  const [q, setQ] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    let t0 = 0;
-    const step = () => {
-      const p = Math.min(1, (Date.now() - t0) / ms);
-      setQ(1 - Math.pow(1 - p, 3));
-      if (p < 1) raf = requestAnimationFrame(step);
-    };
-    const id = setTimeout(() => {
-      t0 = Date.now();
-      raf = requestAnimationFrame(step);
-    }, delay);
-    return () => {
-      clearTimeout(id);
-      cancelAnimationFrame(raf);
-    };
-  }, [value, ms, delay]);
-  return value.replace(/\d+/g, (n) => String(Math.round(Number(n) * q)));
 }
 
 function Block({ i, children }: { i: number; children: ReactNode }) {

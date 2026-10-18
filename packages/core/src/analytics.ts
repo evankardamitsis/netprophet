@@ -29,6 +29,8 @@ export interface AnalyticsEvents {
   /** «Η σεζόν σου» (Pro, a teaser without): opened, and its recap card sent */
   season_viewed: { pro: boolean; month: string; from: string };
   season_shared: { via: 'image' | 'text' };
+  /** «Τα στατιστικά σου» (your matches; Pro for the detail): opened */
+  match_stats_viewed: { pro: boolean; from: string };
   /** a share card of your own win: sent, or the Pro lock shown instead */
   win_card_shared: { via: 'image' | 'text'; free: boolean };
   win_card_locked: { from: string };
