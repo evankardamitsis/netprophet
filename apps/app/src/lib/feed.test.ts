@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, splitToday, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, splitToday, feedDay, laterOpenByDefault, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -269,5 +269,21 @@ describe('splitToday', () => {
   it('puts a later match without a time last, keeping the rest stable', () => {
     const s = splitToday([c('x', true), c('a', true, '2026-10-20T10:00:00Z'), c('b', true, '2026-10-20T10:00:00Z')]);
     expect(s.later.map((x) => x.id)).toEqual(['a', 'b', 'x']);
+  });
+});
+
+describe('feedDay', () => {
+  it('is today until 23:00 in Athens, then tomorrow', () => {
+    expect(feedDay(new Date('2026-10-18T19:59:00Z'))).toBe('2026-10-18'); // 22:59 Athens
+    expect(feedDay(new Date('2026-10-18T20:00:00Z'))).toBe('2026-10-19'); // 23:00 Athens
+    expect(feedDay(new Date('2026-10-18T21:30:00Z'))).toBe('2026-10-19'); // 00:30 Athens, already the 19th
+  });
+});
+
+describe('laterOpenByDefault', () => {
+  it('opens the later days once today has nothing left to vote', () => {
+    expect(laterOpenByDefault([])).toBe(true);
+    expect(laterOpenByDefault([{ kind: 'match', myVote: 'a' }, { kind: 'match', closed: true }, { kind: 'sponsored' }])).toBe(true);
+    expect(laterOpenByDefault([{ kind: 'match' }, { kind: 'match', myVote: 'b' }])).toBe(false);
   });
 });

@@ -245,7 +245,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     .join(' · ');
   const players = (s: DbSide) => card.sides.find((x) => x.side === s)?.players ?? [];
   const rest = meta.slice(w.label ? w.label.length : 0).replace(/^ · /, '');
-  const later = card.starts_at ? dayKey(card.starts_at) > dayKey(now.toISOString()) : false;
+  const later = card.starts_at ? dayKey(card.starts_at) > feedDay(now) : false;
   return {
     kind: 'match',
     moved: card.moved_from && w.label ? movedOf(w.label, rest, dayShort(card.moved_from, t), t) : undefined,
@@ -270,6 +270,15 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   };
 }
 
+/** from 23:00 (Athens) the evening is over: Σήμερα already shows tomorrow's matches (founder, 18 Oct) */
+export const NEXT_DAY_FROM_HOUR = 23;
+
+/** the day Σήμερα counts as today: today, or tomorrow once it is past NEXT_DAY_FROM_HOUR */
+export function feedDay(now: Date): string {
+  const late = localParts(now.toISOString()).hour >= NEXT_DAY_FROM_HOUR;
+  return dayKey(new Date(now.getTime() + (late ? 86_400_000 : 0)).toISOString());
+}
+
 /**
  * Σήμερα shows today (founder, 14 Oct: «Τι παίζει σήμερα» first, the rest out of the way): matches on a later day go
  * into the folded «Αύριο και μετά». Today keeps the feed's order (yours first); the later days run in time order
@@ -282,6 +291,14 @@ export function splitToday<C extends { kind: string; later?: boolean; startsAt?:
     .sort((x, y) => (x.c.startsAt ?? '\uffff').localeCompare(y.c.startsAt ?? '\uffff') || x.i - y.i)
     .map(({ c }) => c);
   return { today: cards.filter((c) => !c.later), later };
+}
+
+/**
+ * «Αύριο και μετά» starts open when today holds nothing left to vote on (founder, 18 Oct: "the main list should not be
+ * hidden no matter if we voted on the matches"); while today still has a match to vote, it waits folded.
+ */
+export function laterOpenByDefault<C extends { kind: string; myVote?: unknown; closed?: boolean }>(today: C[]): boolean {
+  return !today.some((c) => c.kind === 'match' && c.myVote === undefined && !c.closed);
 }
 
 /**
