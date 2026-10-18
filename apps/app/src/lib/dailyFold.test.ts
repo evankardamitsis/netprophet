@@ -37,8 +37,9 @@ describe('dailyFold', () => {
     expect(dailyFold(null, 3, el)).toEqual({ show: true, count: 3, preview: '3 ματς να επιβεβαιώσεις' });
     expect(dailyFold(null, 2, en).preview).toBe('2 matches to confirm');
   });
-  it('a played game alone keeps the row, with nothing to count', () => {
-    expect(dailyFold(quiz(6), 0, el)).toEqual({ show: true, count: 0, preview: '✓ Έχεις παίξει τις σημερινές ερωτήσεις.' });
+  it('once nothing waits, the row goes', () => {
+    expect(dailyFold(quiz(6), 0, el).show).toBe(false);
+    expect(dailyFold(null, 0, el).show).toBe(false);
     expect(dailyFold(quiz(6), 1, el)).toEqual({ show: true, count: 1, preview: 'Ένα ματς να επιβεβαιώσεις' });
   });
 });
