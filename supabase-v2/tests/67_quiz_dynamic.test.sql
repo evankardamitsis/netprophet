@@ -35,10 +35,13 @@ select is((select c -> 'content' ->> 'match_id' from q, jsonb_array_elements(doc
 select ok((select c -> 'content' ->> 'tag' from q, jsonb_array_elements(doc -> 'cards') c where (c ->> 'position')::int = 6)
             in ('Ποιος κέρδισε;', 'Τρίτο σετ;') or :'monday'::boolean,
           'position 6: a result to guess (or the weekly on a Monday)');
-select ok((select bool_or(c -> 'content' ->> 'reveal' like '%κέρδισε 6-4, 3-6, 7-5.' and c -> 'content' ->> 'q' not like '%6-4%'
-                          and (c -> 'content' ->> 'right')::int in (0, 1))
+-- the right answer stays on the server until you answer: read it from the card
+select tests.logout();
+select ok((select bool_or((select x.content ->> 'reveal' from core.quiz_set_cards x where x.id = (c ->> 'id')::uuid) like '%κέρδισε 6-4, 3-6, 7-5.' and c -> 'content' ->> 'q' not like '%6-4%'
+                          and ((select x.content ->> 'right' from core.quiz_set_cards x where x.id = (c ->> 'id')::uuid))::int in (0, 1))
              from q, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' = 'd')
           or :'monday'::boolean, 'the three-setter: hidden in the question, the score after the pick');
+select tests.login(:'u'::uuid);
 select is((select count(*)::int from q, jsonb_array_elements(doc -> 'cards') c), 6, 'still six cards');
 select tests.logout();
 

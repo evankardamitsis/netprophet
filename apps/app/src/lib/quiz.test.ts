@@ -147,6 +147,11 @@ describe('answers', () => {
     expect(done.awarded).toBe(true);
     expect(done.cards[0]!.content.right).toBe(1);
   });
+  it('takes the reveal from the reply too: the card had none before the answer', () => {
+    const q = quiz([who('w', { content: { ...who('w').content, right: undefined, reveal: undefined } })]);
+    const done = withAnswer(q, 'w', 1, { option: 1, right: 0, reveal: 'Ο {p1.s} με 6-3.', split: null, answered: 1, awarded: 0 });
+    expect(done.cards[0]!.content.reveal).toBe('Ο {p1.s} με 6-3.');
+  });
   it('keeps hyphens in scores together', () => {
     expect(noBreak('6-6 και 5-2, όχι Ν-Β')).toBe('6-⁠6 και 5-⁠2, όχι Ν-Β');
   });

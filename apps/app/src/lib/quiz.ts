@@ -122,7 +122,11 @@ export function withAnswer(quiz: GetQuizResult, cardId: string, option: number, 
             ...c,
             my_option: option,
             split: res ? res.split : c.split,
-            content: res && res.right !== null && c.content.right === undefined ? { ...c.content, right: res.right } : c.content,
+            // the server keeps the right answer and the reveal until you answer: they come with the reply
+            content:
+              res && c.content.right === undefined
+                ? { ...c.content, ...(res.right !== null ? { right: res.right } : {}), ...(res.reveal ? { reveal: res.reveal } : {}) }
+                : c.content,
           },
     ),
   };

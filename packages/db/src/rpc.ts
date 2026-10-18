@@ -216,6 +216,8 @@ export interface AnswerCardResult {
   option: number;
   /** 0-based, only for a 'q' card */
   right: number | null;
+  /** the line said after answering, when the card has one */
+  reveal?: string | null;
   split: number[] | null;
   answered: number;
   /** 30 on the sixth answer of the day, else 0 */
