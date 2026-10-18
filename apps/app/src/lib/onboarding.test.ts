@@ -49,6 +49,8 @@ describe('splitName', () => {
     expect(splitName('kardamitsis.e')).toEqual({ first: '', surname: '' });
     expect(splitName('Νίκος')).toEqual({ first: 'Νίκος', surname: '' });
     expect(splitName(null)).toEqual({ first: '', surname: '' });
+    // a new account's neutral name is not a name to fill in
+    expect(splitName('Παίκτης 4821')).toEqual({ first: '', surname: '' });
   });
 });
 
