@@ -40,15 +40,18 @@ export function TopBar({ userEmail, onMenuClick, onSignOut }: TopBarProps) {
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) return;
+                const headers = { Authorization: `Bearer ${session.access_token}` };
                 // Fetch unread count
-                const countResponse = await fetch('/api/admin/in-app-notifications?limit=1');
+                const countResponse = await fetch('/api/admin/in-app-notifications?limit=1', { headers });
                 if (countResponse.ok) {
                     const countData = await countResponse.json();
                     setUnreadCount(countData.unreadCount || 0);
                 }
 
                 // Fetch recent notifications (prioritize unread, but show recent ones too)
-                const response = await fetch('/api/admin/in-app-notifications?limit=5');
+                const response = await fetch('/api/admin/in-app-notifications?limit=5', { headers });
                 if (response.ok) {
                     const data = await response.json();
                     // Sort: unread first, then by date

@@ -10,6 +10,7 @@ import { usePress, useStgIn } from '../../src/lib/motion';
 import { nextFooter, nextRow, type NextRow } from '../../src/lib/nextTournament';
 import { boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey } from '../../src/lib/tournaments';
 import { colors, fonts, text } from '../../src/theme';
+import { isHttpsUrl, safeOpen } from '../../src/lib/openUrl';
 
 /**
  * The Τουρνουά tab, «Τα τουρνουά σου» (founder, 14 Oct: a tab in the bottom bar that also holds «+ Ματς»): your
@@ -204,7 +205,7 @@ function NextCard({ row, i }: { row: NextRow; i: number }) {
   const t = useCopy();
   const press = usePress();
   const enter = useStgIn(STG_MS, Math.min(i, 8) * STAGGER);
-  const link = row.link;
+  const link = isHttpsUrl(row.link) ? row.link : null;
   return (
     <Animated.View style={[styles.card, enter]}>
       <View style={styles.cardTop}>
@@ -223,7 +224,7 @@ function NextCard({ row, i }: { row: NextRow; i: number }) {
           {link ? (
             <Pressable
               accessibilityRole="link"
-              onPress={() => void Linking.openURL(link).catch(() => undefined)}
+              onPress={() => safeOpen(link, (u) => Linking.openURL(u))}
               onPressIn={press.onPressIn}
               onPressOut={press.onPressOut}
               hitSlop={6}

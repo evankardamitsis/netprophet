@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { V2_URL } from '@/lib/v2/env';
+import { bearerMatches } from '@/lib/cronAuth';
 import { athensHour, morningEmail, type Digest } from '@/lib/v2/morningEmail';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,7 @@ type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { messa
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return NextResponse.json({ error: 'CRON_SECRET is not set' }, { status: 500 });
-  if (request.headers.get('authorization') !== `Bearer ${secret}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!bearerMatches(request.headers.get('authorization'), secret)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const hour = athensHour();
   if (request.nextUrl.searchParams.get('force') !== '1' && hour !== 8) return NextResponse.json({ skipped: true, athensHour: hour });
 

@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/adminAuth";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -6,8 +7,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAdmin(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
     // Call the database function to process pending notifications
     const { data, error } = await supabase.rpc(
       "process_pending_admin_notifications"

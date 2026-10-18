@@ -218,8 +218,15 @@ export default function InAppNotificationsPage() {
         }
 
         try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error('No authentication token available');
+            }
             const response = await fetch(`/api/admin/in-app-notifications/${id}`, {
                 method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`,
+                },
             });
 
             if (!response.ok) {
