@@ -22,12 +22,15 @@ begin
     perform tests.login(v_u);
     v_m := (api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}',
                                  core.athens_day() + 1, o.id)::jsonb) ->> 'match_id')::uuid;
+    perform tests.logout();
+    perform tests.approve_match(v_m);   -- staff check every match and result a player logs
     perform tests.login(v_v);
     perform api.cast_vote(v_m, 1);
     perform tests.login(v_u);
     perform api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}',
                                  core.athens_day(), v_m)::jsonb);
     perform tests.logout();
+    perform tests.approve_match(v_m);
     perform core.process_outbox(50);
   end loop;
 end $$;

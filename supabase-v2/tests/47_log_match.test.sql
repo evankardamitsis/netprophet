@@ -1,4 +1,5 @@
--- «+ Ματς»: players log played and upcoming matches; votes on a logged match pay out when its result comes in.
+-- «+ Ματς»: players log played and upcoming matches; staff check each one, then votes on it pay out when its result
+-- comes in (18 Oct 2026: no match can be invented).
 begin;
 select plan(15);
 
@@ -20,13 +21,13 @@ select format('{"mode": "played", "date": "%s", "format": "singles", "opponents"
               core.athens_day(), :'o') as played \gset
 select api.log_match(:'played'::jsonb) ->> 'match_id' as m1 \gset
 select tests.logout();
-select is((select status from core.matches where id = :'m1'::uuid), 'confirmed', 'a played match is confirmed at once');
+select is((select review from core.matches where id = :'m1'::uuid), 'pending', 'a played match waits for staff');
 select is((select score_summary from core.match_results where match_id = :'m1'::uuid), '2-1', 'the sets, no games');
 select is((select winner_side::int from core.match_results where match_id = :'m1'::uuid), 1, 'won by the logger''s side');
 select is((select state from core.match_confirmations where match_id = :'m1'::uuid and player_id = :'o'::uuid), 'pending',
           'the opponent has a confirmation waiting');
 select is((select counts_for_levels from core.matches where id = :'m1'::uuid), false, 'it counts for levels only once confirmed');
-select ok(exists (select 1 from core.outbox where kind = 'resolve_match' and payload ->> 'match_id' = :'m1'), 'its votes resolve at once');
+select ok(not exists (select 1 from core.outbox where kind = 'resolve_match' and payload ->> 'match_id' = :'m1'), 'nothing resolves before staff approve it');
 
 select tests.login(:'u'::uuid);
 select throws_ok(format($$select api.log_match(%L)$$, :'played'), '23505', 'duplicate_match', 'the same match twice is refused');
@@ -39,6 +40,7 @@ select format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": 
 select api.log_match(:'soon'::jsonb) ->> 'match_id' as m2 \gset
 select tests.logout();
 select is((select status from core.players where surname = 'Αντίπαλος'), 'pending', 'a new name is a pending player');
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
 select ok(core.match_sides_json(:'m2'::uuid)::text like '%Αντίπαλος%', 'and shows by name on the card');
 
 -- someone votes for the logger, then the logger adds the result to that same match
@@ -52,6 +54,7 @@ select is(jsonb_array_length(api.find_my_matches(array[:'newbie'::uuid], core.at
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}',
                             core.athens_day() + 1, :'m2')::jsonb) is not null as x \gset
 select tests.logout();
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
 select core.process_outbox(50) is not null as x \gset
 select is((select outcome from core.votes where user_id = :'v'::uuid and subject_id = :'m2'::uuid), 'correct', 'the vote pays out');
 

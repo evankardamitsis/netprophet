@@ -448,6 +448,10 @@ export type Database = {
         Args: { p_people: Json };
         Returns: Json;
       };
+      admin_match_review_queue: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_moderation: {
         Args: Record<PropertyKey, never>;
         Returns: Json;
@@ -502,6 +506,10 @@ export type Database = {
       };
       admin_resolve_ingest_review: {
         Args: { p_id: string; p: Json };
+        Returns: Json;
+      };
+      admin_review_match: {
+        Args: { p_match: string; p_approve: boolean };
         Returns: Json;
       };
       admin_save_club: {

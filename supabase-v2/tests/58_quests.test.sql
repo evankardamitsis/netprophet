@@ -83,7 +83,11 @@ select ok((select done_at is not null from core.user_quest_progress
           'a kudos finishes «Δώσε ένα μπράβο»');
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}',
-                            core.athens_day() + 3, :'o')::jsonb);
+                            core.athens_day() + 3, :'o')::jsonb) ->> 'match_id' as lq \gset
+select tests.logout();
+-- it counts once staff approve it
+select tests.approve_match(:'lq'::uuid) is not null as x \gset
+select tests.login(:'u'::uuid);
 select is((select q -> 'progress' from jsonb_array_elements(api.get_quests() -> 'weekly') q where q ->> 'key' = 'weekly_log_2_matches'),
           '1'::jsonb, 'a logged match counts on «Πέρνα 2 αγώνες σου»');
 select tests.logout();

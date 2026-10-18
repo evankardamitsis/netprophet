@@ -41,6 +41,15 @@ export async function resolveDispute(matchId: string, decision: keyof typeof DEC
   });
 }
 
+/** «Ματς παικτών»: a match or a result a player logged; approving lets its votes pay, rejecting takes it away */
+export async function reviewMatch(matchId: string, approve: boolean): Promise<ActionResult> {
+  return act('admin_review_match', { p_match: matchId, p_approve: approve }, (d) => {
+    const kind = (d as { kind: 'match' | 'result' }).kind;
+    if (approve) return kind === 'match' ? 'Approved. It shows in the app now.' : 'Approved. The votes on it pay out.';
+    return kind === 'match' ? 'Rejected. The match is gone.' : 'Rejected. The result is gone; the match waits for its real result.';
+  });
+}
+
 export async function approvePlayer(playerId: string, first: string, surname: string): Promise<ActionResult> {
   return act('admin_decide_player', { p_player_id: playerId, p_action: 'approve', p_first: first, p_surname: surname }, () => 'Approved.');
 }

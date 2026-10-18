@@ -37,6 +37,8 @@ export interface ResultItem {
   thank: { label: string; playerId: string; first: string; gender: 'm' | 'f' | null } | null;
   /** your own win (not a walkover): «Μοιράσου τη νίκη ›» */
   myWin: boolean;
+  /** «Σε έλεγχο» in capitals: your own result that staff have not checked yet; null otherwise */
+  review: string | null;
 }
 
 /**
@@ -123,6 +125,8 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
     line = fmt(t.results.line, { pct, name });
   }
 
+  // your own result staff have not checked: it shows only to you, with nothing to react to or share yet
+  const inReview = row.review === 'pending';
   return {
     id: row.match_id,
     upset: row.upset,
@@ -134,8 +138,8 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
     winnerSets: row.walkover ? '' : String(wonSets),
     loserSets: row.walkover ? '' : String(lostSets),
     score: summary ? '' : formatWinnerSets(row.sets, { retired: row.retired, walkover: row.walkover }, t.results),
-    reactions: row.reactions && row.reactions.options.length > 0 ? row.reactions : null,
-    thank: row.kudo_to
+    reactions: !inReview && row.reactions && row.reactions.options.length > 0 ? row.reactions : null,
+    thank: !inReview && row.kudo_to
       ? {
           label: fmt(t.kudos.prompt, { to: withArticleAccusative(row.kudo_to.first_name, '', row.kudo_to.gender).trim() }),
           playerId: row.kudo_to.player_id,
@@ -143,7 +147,8 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
           gender: row.kudo_to.gender,
         }
       : null,
-    myWin: isMyWin(row, myPlayerId),
+    myWin: !inReview && isMyWin(row, myPlayerId),
+    review: inReview ? greekCaps(t.results.inReview) : null,
   };
 }
 

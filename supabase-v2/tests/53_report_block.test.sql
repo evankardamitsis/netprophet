@@ -15,8 +15,11 @@ select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles
                             core.athens_day(), :'o')::jsonb) ->> 'match_id' as m1 \gset
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "doubles", "partner": {"new": {"first": "Συν", "surname": "Εργάτης"}}, "opponents": [{"new": {"first": "Α", "surname": "Ένας"}}, {"new": {"first": "Β", "surname": "Δύο"}}]}',
                             core.athens_day() + 1)::jsonb) ->> 'match_id' as m2 \gset
-
+select tests.logout();
+-- staff check every match a player logs
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
 -- block the person who logged them
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
 select tests.login(:'w'::uuid);
 select ok(exists (select 1 from jsonb_array_elements(api.get_results(14, 200)) r where r ->> 'match_id' = :'m1'), 'before: the match shows');
 select is((api.block_target(null, :'m1'::uuid) ->> 'first_name'), 'Λογ', 'the sheet knows who logged it');

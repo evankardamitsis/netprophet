@@ -84,6 +84,14 @@ describe('toResultItem', () => {
     expect(none.reactions).toBeNull();
     expect(none.thank).toBeNull();
   });
+  it('your own result staff have not checked: «ΣΕ ΕΛΕΓΧΟ», nothing to react to yet', () => {
+    const r = { options: [{ key: 'bravo', label: 'Μπράβο' }], counts: {}, mine: null };
+    const it0 = toResultItem(row({ review: 'pending', reactions: r, kudo_to: { player_id: 'p', first_name: 'Νίκος', gender: null } }), t);
+    expect(it0.review).toBe('ΣΕ ΕΛΕΓΧΟ');
+    expect(it0.reactions).toBeNull();
+    expect(it0.thank).toBeNull();
+    expect(toResultItem(row({ review: 'approved' }), t).review).toBeNull();
+  });
   it('no votes, no line; a wrong call, no pill', () => {
     const it2 = toResultItem(row({ split: null, upset: false, my: { pick: 2, outcome: 'wrong', points: 0 } }), t);
     expect(it2.line).toBeNull();

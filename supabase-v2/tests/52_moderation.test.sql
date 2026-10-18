@@ -17,6 +17,11 @@ select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}', core.athens_day() + 2, :'o')::jsonb) ->> 'match_id' as m1 \gset
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}', core.athens_day() + 4, :'o')::jsonb) ->> 'match_id' as m2 \gset
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}', core.athens_day() + 6, :'o')::jsonb) ->> 'match_id' as m3 \gset
+select tests.logout();
+-- staff approve each match a player logs, and each result a player gives
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
+select tests.approve_match(:'m3'::uuid) is not null as x \gset
 select tests.login(:'v'::uuid);
 select api.cast_vote(:'m1'::uuid, 1) is not null as x \gset
 select api.cast_vote(:'m2'::uuid, 2) is not null as x \gset
@@ -26,6 +31,9 @@ select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}', core.athens_day(), :'m2')::jsonb) is not null as x \gset
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}', core.athens_day(), :'m3')::jsonb) is not null as x \gset
 select tests.logout();
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
+select tests.approve_match(:'m3'::uuid) is not null as x \gset
 select core.process_outbox(50) is not null as x \gset
 -- the opponent says they won each one, 2-1
 select tests.login(:'w'::uuid);

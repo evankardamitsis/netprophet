@@ -1113,7 +1113,7 @@ export interface LogMatchData {
   areas: Record<string, string>;
   search: (q: string) => Promise<PlayerCard[]>;
   findMine: (people: string[], date: string, format: MatchFormat) => Promise<MyMatchCandidate[]>;
-  submit: (input: LogMatchInput) => Promise<{ ok: true; matchId: string } | { ok: false; error: LogError }>;
+  submit: (input: LogMatchInput) => Promise<{ ok: true; matchId: string; inReview: boolean } | { ok: false; error: LogError }>;
 }
 
 /** what «+ Ματς» needs: the pickers, search, «Αυτό είναι το ματς σου;» and the submit */
@@ -1152,11 +1152,12 @@ export function useLogMatch(): LogMatchData {
   );
   const submit = useCallback(
     async (input: LogMatchInput) => {
-      if (!api) return { ok: true as const, matchId: 'mock' };
+      // sample data: a player's match goes to staff first, as on the server
+      if (!api) return { ok: true as const, matchId: 'mock', inReview: true };
       try {
         const r = await api.logMatch(input);
         track('match_logged', { mode: input.mode, format: input.format, attached: !!input.match_id, new_people: (input.opponents ?? []).filter((p) => 'new' in p).length + (input.partner && 'new' in input.partner ? 1 : 0) });
-        return { ok: true as const, matchId: r.match_id };
+        return { ok: true as const, matchId: r.match_id, inReview: r.review === 'pending' };
       } catch (err) {
         const code = err instanceof RpcError ? err.code : '';
         return { ok: false as const, error: code === 'duplicate_match' ? 'duplicate' : code === 'name_required' ? 'name_required' : 'failed' } as const;

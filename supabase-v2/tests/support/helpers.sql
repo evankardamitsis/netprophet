@@ -113,3 +113,20 @@ begin
   get diagnostics n = row_count;
   return n;
 end $$;
+
+-- staff approve (or reject) what a player logged, a new match or a result: the moderation desk's «Έγκριση».
+-- Call it logged out; it logs out again after.
+create or replace function tests.approve_match(p_match uuid, p_approve boolean default true)
+returns jsonb language plpgsql as $$
+declare v_staff uuid; v_out jsonb;
+begin
+  select user_id into v_staff from core.profiles where role = 'editor' and first_name = 'tests-reviewer';
+  if v_staff is null then
+    v_staff := tests.create_user('tests-reviewer@test.local', 'editor', 'tests-reviewer');
+    update core.profiles set first_name = 'tests-reviewer' where user_id = v_staff;
+  end if;
+  perform tests.login(v_staff);
+  v_out := api.admin_review_match(p_match, p_approve);
+  perform tests.logout();
+  return v_out;
+end $$;

@@ -19,6 +19,7 @@ import type {
   KudoOption,
   LinkKudo,
   LogMatchInput,
+  MatchReview,
   MatchFormat,
   MatchLink,
   MatchLinkView,
@@ -179,7 +180,7 @@ export function rpc(client: NetprophetClient) {
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),
-    logMatch: (input: LogMatchInput) => call<{ match_id: string; mode: 'played' | 'soon' }>(client, 'log_match', { p: input }),
+    logMatch: (input: LogMatchInput) => call<{ match_id: string; mode: 'played' | 'soon'; review: MatchReview | null }>(client, 'log_match', { p: input }),
     getWinLoss: () => call<WinLossSplits>(client, 'get_win_loss', {}),
     /** «Η σεζόν σου»: a month key like '2026-10', or the current month */
     mySeason: (month: string | null = null) => call<MySeason>(client, 'my_season', month ? { p_month: month } : {}),

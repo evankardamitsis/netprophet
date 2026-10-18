@@ -16,6 +16,10 @@ update core.players set claimed_by_user_id = :'w'::uuid where id = :'o'::uuid;
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}', core.athens_day() + 2, :'o')::jsonb) ->> 'match_id' as m1 \gset
 select api.log_match(format('{"mode": "soon", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}]}', core.athens_day() + 4, :'o')::jsonb) ->> 'match_id' as m2 \gset
+select tests.logout();
+-- staff approve each match a player logs, and each result a player gives
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
 select tests.login(:'v'::uuid);
 select api.cast_vote(:'m1'::uuid, 1) is not null as x \gset
 select api.cast_vote(:'m2'::uuid, 1) is not null as x \gset
@@ -23,8 +27,10 @@ select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}', core.athens_day(), :'m1')::jsonb) is not null as x \gset
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "match_id": "%s", "result": {"won": true, "sets": "2-0"}}', core.athens_day(), :'m2')::jsonb) is not null as x \gset
 select tests.logout();
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
 select core.process_outbox(50) is not null as x \gset
-select is((select coalesce(sum(delta), 0)::int from core.points_ledger where user_id = :'v'::uuid and ref_id = :'m2'::uuid), 15, 'the vote paid at once (+10 and the chain bonus)');
+select is((select coalesce(sum(delta), 0)::int from core.points_ledger where user_id = :'v'::uuid and ref_id = :'m2'::uuid), 15, 'the vote paid once approved (+10 and the chain bonus)');
 
 select tests.as_anon();
 select throws_ok($$select api.get_confirmations()$$, '42501', null, 'anonymous callers have nothing to confirm');
@@ -53,6 +59,8 @@ select throws_ok(format($$select api.answer_confirmation(%L, 'yes')$$, :'m1'), '
 -- «Δεν έπαιξα εγώ» on a match logged as played
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}], "result": {"won": true, "sets": "2-1"}}', core.athens_day(), :'o')::jsonb) ->> 'match_id' as m3 \gset
+select tests.logout();
+select tests.approve_match(:'m3'::uuid) is not null as x \gset
 select tests.login(:'w'::uuid);
 select is((api.answer_confirmation(:'m3'::uuid, 'not_me') ->> 'outcome'), 'disputed', '«Δεν έπαιξα εγώ» disputes it');
 

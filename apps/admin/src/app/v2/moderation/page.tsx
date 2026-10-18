@@ -5,11 +5,14 @@ import { SignOut } from '../SignOut';
 import { Banner } from '../feedback';
 import { PageHeader } from '../kit';
 import { ui } from '../ui';
-import { Queue, type BallerName, type Moderation, type TournamentOption } from './Queue';
+import { Queue, type BallerName, type Moderation, type PlayerMatch, type TournamentOption } from './Queue';
 
 export const dynamic = 'force-dynamic';
 
-/** Moderation queue (api.admin_moderation): reports, disputed matches, new players, «Άλλο» tournament names. */
+/**
+ * Moderation queue (api.admin_moderation): reports, disputed matches, new players, «Άλλο» tournament names; and
+ * «Ματς παικτών» (api.admin_match_review_queue): what players logged, waiting for staff before it goes live.
+ */
 export default async function ModerationPage() {
   if (!v2Configured) {
     return (
@@ -30,7 +33,12 @@ export default async function ModerationPage() {
     );
   }
   const rpc = client.rpc.bind(client) as unknown as (f: string, a: object) => Promise<{ data: unknown; error: { message: string } | null }>;
-  const [queue, tournaments, names] = await Promise.all([rpc('admin_moderation', {}), rpc('admin_tournaments', {}), rpc('admin_baller_names', { p_limit: 200 })]);
+  const [queue, tournaments, names, matches] = await Promise.all([
+    rpc('admin_moderation', {}),
+    rpc('admin_tournaments', {}),
+    rpc('admin_baller_names', { p_limit: 200 }),
+    rpc('admin_match_review_queue', {}),
+  ]);
   return (
     <div className="v2-shell">
       <Nav here="moderation" staff={staff} />
@@ -41,7 +49,12 @@ export default async function ModerationPage() {
             <Banner tone="problem" title="Could not load the queue" detail={queue.error.message} />
           </>
         ) : (
-          <Queue data={queue.data as Moderation} tournaments={((tournaments.data ?? []) as TournamentOption[]).map((t) => ({ id: t.id, name: t.name }))} names={(names.data ?? []) as BallerName[]} />
+          <Queue
+            data={queue.data as Moderation}
+            tournaments={((tournaments.data ?? []) as TournamentOption[]).map((t) => ({ id: t.id, name: t.name }))}
+            names={(names.data ?? []) as BallerName[]}
+            matches={(matches.data ?? []) as PlayerMatch[]}
+          />
         )}
       </main>
     </div>

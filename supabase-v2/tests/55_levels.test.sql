@@ -46,6 +46,9 @@ select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}], "result": {"won": true, "sets": "2-0"}}',
                             core.athens_day() - 3, :'o')::jsonb) ->> 'match_id' as m2 \gset
 select tests.logout();
+-- staff check every match a player logs
+select tests.approve_match(:'m1'::uuid) is not null as x \gset
+select tests.approve_match(:'m2'::uuid) is not null as x \gset
 update core.matches set counts_for_levels = true where id = :'m1'::uuid;
 update core.matches set status = 'disputed', counts_for_levels = false where id = :'m2'::uuid;
 

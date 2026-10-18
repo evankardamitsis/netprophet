@@ -3,7 +3,7 @@ import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
+import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, reviewMatch, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
   match_id: string;
@@ -16,6 +16,23 @@ export interface Dispute {
   reason: 'not_me' | 'other_winner' | null;
   logged_by: { first_name: string | null; surname: string | null } | null;
   answers: { player: string; side: Side; state: string; via: string | null; fix: { winner: 'me' | 'them'; sets: string } | null }[];
+  votes: number;
+}
+
+/** «Ματς παικτών»: a new match a player logged ('match', hidden until approved) or their result for one already in the app ('result') */
+export interface PlayerMatch {
+  match_id: string;
+  kind: 'match' | 'result';
+  format: 'singles' | 'doubles' | 'mixed';
+  starts_at: string;
+  created_at: string;
+  entered_at: string | null;
+  tournament: string | null;
+  tournament_suggestion: string | null;
+  sides: { side: Side; players: FeedPlayer[] }[];
+  result: { winner_side: Side; score: string | null } | null;
+  logger: { user_id: string; name: string | null; display_name: string | null } | null;
+  answers: { player: string; state: string; fix: { winner: 'me' | 'them'; sets: string } | null }[];
   votes: number;
 }
 
@@ -118,9 +135,15 @@ function useItemAction({ onNotice, notify }: Cues) {
   return { pending, busy, run, cardClass };
 }
 
-type Tab = 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
+type Tab = 'matches' | 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
 
 const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: string }> = {
+  matches: {
+    label: 'Ματς παικτών',
+    title: 'Matches players logged',
+    hint: 'No match can be invented: what players log waits here. A new match shows in the app, and votes on a result pay out, only once you approve it.',
+    noun: 'matches',
+  },
   reports: {
     label: 'Reports',
     title: 'Reports from users',
@@ -158,19 +181,20 @@ const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: 
     noun: 'names',
   },
 };
-const ORDER: Tab[] = ['reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
+const ORDER: Tab[] = ['matches', 'reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
 /** tabs that wait for a decision; Baller names are only there to look over */
-const WAITING: Tab[] = ['reports', 'disputes', 'players', 'traits', 'tournaments'];
+const WAITING: Tab[] = ['matches', 'reports', 'disputes', 'players', 'traits', 'tournaments'];
 
 /**
  * The moderation queue: things only a person can decide. Each item is a question with plain buttons.
- * Player-logged matches and names are live at once; this is where staff review them.
+ * Player-logged matches and results wait for staff here (founder, 18 Oct 2026); names are live at once.
  */
-export function Queue({ data, tournaments, names }: { data: Moderation; tournaments: TournamentOption[]; names: BallerName[] }) {
+export function Queue({ data, tournaments, names, matches }: { data: Moderation; tournaments: TournamentOption[]; names: BallerName[]; matches: PlayerMatch[] }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const { toast, notify } = useToast();
   const traits = data.traits ?? [];
   const counts: Record<Tab, number> = {
+    matches: matches.length,
     reports: data.reports.length,
     disputes: data.disputes.length,
     players: data.players.length,
@@ -190,6 +214,8 @@ export function Queue({ data, tournaments, names }: { data: Moderation; tourname
         <Empty title="All clear">Nothing waiting here.</Empty>
       </Card>
     );
+  } else if (tab === 'matches') {
+    body = <Paged key={tab} items={matches} noun={s.noun} grid render={(m) => <PlayerMatchRow key={m.match_id} m={m} cues={cues} />} />;
   } else if (tab === 'reports') {
     body = <Paged key={tab} items={data.reports} noun={s.noun} grid render={(r) => <ReportRow key={r.id} r={r} cues={cues} />} />;
   } else if (tab === 'disputes') {
@@ -206,10 +232,11 @@ export function Queue({ data, tournaments, names }: { data: Moderation; tourname
 
   return (
     <>
-      <PageHeader title="Moderation" intent="Things only a person can decide: reports, disputed results, new players, phrases and typed tournament names. Nothing here blocks the app; it keeps working until you decide." />
+      <PageHeader title="Moderation" intent="Things only a person can decide: matches players logged, reports, disputed results, new players, phrases and typed tournament names. Matches players log wait for you; the rest keeps working until you decide." />
       <Stats
         items={[
           { label: total === 0 ? 'all clear' : 'waiting for you', value: total, ink: true },
+          { label: 'player matches', value: counts.matches },
           { label: 'reports', value: counts.reports },
           { label: 'disputed results', value: counts.disputes },
           { label: 'new players', value: counts.players },
@@ -316,6 +343,72 @@ function DisputeRow({ d, cues }: { d: Dispute; cues: Cues }) {
           busy={busy === 'void'}
           disabled={pending}
           onYes={() => go('void', 'Removing', 'Match removed')}
+        />
+      </div>
+    </div>
+  );
+}
+
+const sidesOf = (m: PlayerMatch, side: Side) =>
+  (m.sides.find((s) => s.side === side)?.players ?? []).map((p) => `${p.first_name} ${p.surname}`).join(' / ') || 'Unknown';
+
+function PlayerMatchRow({ m, cues }: { m: PlayerMatch; cues: Cues }) {
+  const { pending, busy, run, cardClass } = useItemAction(cues);
+  const logger = m.logger?.name ?? m.logger?.display_name ?? 'Someone';
+  const names = `${sidesOf(m, 1)} vs ${sidesOf(m, 2)}`;
+  const where = m.tournament ?? (m.tournament_suggestion ? `«${m.tournament_suggestion}» (typed)` : 'Friendly');
+  const r = m.result;
+  return (
+    <div className={cardClass()} aria-busy={pending || undefined}>
+      <div className="v2-row between">
+        <span className="v2-muted">
+          {when(m.starts_at)} · {where} · {FORMATS[m.format]}
+        </span>
+        <span className="v2-row" style={{ gap: 6 }}>
+          <Badge tone="ink">{m.kind === 'match' ? 'New match' : 'Result'}</Badge>
+          {m.votes > 0 ? <Badge>{plural(m.votes, 'vote')}</Badge> : null}
+        </span>
+      </div>
+      <div style={{ fontSize: 16 }}>
+        <b>{logger}</b> {m.kind === 'match' ? 'logged' : 'gave the result of'} <b>{names}</b>
+        {r ? (
+          <>
+            : <b>{sidesOf(m, r.winner_side)}</b> won{r.score ? ` ${r.score}` : ''}.
+          </>
+        ) : (
+          ', still to play.'
+        )}
+      </div>
+      <span className="v2-muted">Sent {when(m.entered_at ?? m.created_at)}</span>
+      {m.answers.length > 0 ? (
+        <div className="v2-stack" style={{ gap: 4 }}>
+          {m.answers.map((a) => (
+            <span key={a.player}>
+              <b>{a.player}</b>
+              {a.state === 'confirmed'
+                ? ' confirmed it.'
+                : a.state === 'not_me'
+                  ? ' says they did not play this.'
+                  : a.fix
+                    ? ` says ${a.fix.winner === 'me' ? 'they' : 'the other side'} won ${a.fix.sets}.`
+                    : ' disagrees.'}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <b style={{ fontSize: 14 }}>{m.kind === 'match' ? 'Did this match happen as logged?' : 'Is this the right result?'}</b>
+      <div className="v2-row">
+        <Secondary busy={busy === 'approve'} disabled={pending} onClick={() => run('approve', names, 'Approving', () => reviewMatch(m.match_id, true), 'Approved')}>
+          {busy === 'approve' ? 'Approving…' : 'Έγκριση'}
+        </Secondary>
+        <Confirm
+          label="Απόρριψη"
+          question={m.kind === 'match' ? 'Reject this match? It leaves the app and pays nothing.' : 'Reject this result? It is taken away; the match waits for its real result.'}
+          yes="Yes, reject"
+          working="Rejecting…"
+          busy={busy === 'reject'}
+          disabled={pending}
+          onYes={() => run('reject', names, 'Rejecting', () => reviewMatch(m.match_id, false), 'Rejected')}
         />
       </div>
     </div>
