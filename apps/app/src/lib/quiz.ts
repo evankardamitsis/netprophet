@@ -81,6 +81,8 @@ export interface StripView {
   cta: string | null;
   /** «+30» until it is paid */
   badge: boolean;
+  /** played them all without Pro: «Άλλες 6 κάθε μέρα με το Pro ›» */
+  more: string | null;
 }
 
 export function stripView(quiz: GetQuizResult, t: Copy): StripView {
@@ -100,6 +102,7 @@ export function stripView(quiz: GetQuizResult, t: Copy): StripView {
     allDone,
     cta: allDone ? null : played > 0 ? t.quiz.resume : t.quiz.play,
     badge: !quiz.awarded,
+    more: allDone && !quiz.pro ? t.quiz.more : null,
   };
 }
 

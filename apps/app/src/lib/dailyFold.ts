@@ -15,7 +15,7 @@ export type DailyFold = {
 /**
  * «Για σένα» (founder, 13 Oct): the daily reminders sit folded above the feed. The game of the day counts until it is
  * played; every match someone logged with you counts until you answer it. A played game alone still shows the row
- * (with «✓ Τις έπαιξες σήμερα.») so the result stays one tap away.
+ * (with «✓ Έχεις παίξει τις σημερινές ερωτήσεις.») so the result stays one tap away.
  */
 export function dailyFold(quiz: GetQuizResult | null, confirmations: number, t: Copy): DailyFold {
   const strip = quiz && quiz.cards.length > 0 ? stripView(quiz, t) : null;

@@ -6,9 +6,13 @@ import { useCopy } from '../i18n';
 import { DEFAULT_AVATARS, type DefaultAvatar } from '../lib/avatar';
 import { cleanName, nameProblem, suggestedName } from '../lib/ballerName';
 import type { BallerSave } from '../lib/data';
+import type { LookPreview } from '../lib/look';
 import { usePress } from '../lib/motion';
 import { colors, fonts, text } from '../theme';
 import { Baller, type BallerHandle } from './Baller';
+import { CardBackground } from './CardBackground';
+import { LookWardrobe } from './LookWardrobe';
+import { TOAST_MS, Toast } from './Toast';
 
 /**
  * «Γνώρισε τον Baller σου» (founder, 17 Oct: full-screen presentations, Baller as the trademark). Baller drops in and
@@ -16,7 +20,8 @@ import { Baller, type BallerHandle } from './Baller';
  * «Συνέχεια» (the screen's one blue) saves the style and the name, Baller jumps, and the screen hands back.
  * Opened again for a Baller that has a name (founder, 17 Oct), there is nothing to confirm: a new style saves as you
  * pick it, the name stays as it is with «Μετονομασία», and only renaming shows a blue «Αποθήκευση».
- * Used at the end of onboarding and from the profile.
+ * Used at the end of onboarding and from the profile. From the profile Εμφάνιση sits below as well (founder, 18 Oct:
+ * "it makes sense to see everything there"): Baller stands on the background you look at and wears what you tap.
  */
 const SIZE = 210;
 /** a swipe this far sideways changes the style */
@@ -61,6 +66,14 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
   const rename = usePress();
   const style = DEFAULT_AVATARS[i]!;
   const savedStyle = useRef(current?.key ?? null);
+  const [preview, setPreview] = useState<LookPreview | null>(null);
+  const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
+  useEffect(() => {
+    if (!toast) return undefined;
+    const id = setTimeout(() => setToast(null), TOAST_MS);
+    return () => clearTimeout(id);
+  }, [toast]);
+  const dressed = profile && preview !== null;
 
   // on the profile a picked style is kept a moment after the last swipe
   useEffect(() => {
@@ -149,11 +162,21 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
           <Text style={styles.sub}>{b.meetSub}</Text>
         </View>
 
-        <View style={styles.stage}>
-          <View style={styles.glow} pointerEvents="none" />
+        <View style={[styles.stage, dressed && styles.stageDressed]}>
+          {dressed ? <CardBackground bg={preview.background} stage /> : <View style={styles.glow} pointerEvents="none" />}
           <Arrow label={b.prev} glyph="‹" onPress={() => step(-1)} />
           <View {...swipe.panHandlers} style={styles.ball}>
-            <Baller ref={baller} look={style.look} size={SIZE} kit={kit} gear={gear} frame={frame} enter="drop" pokeable />
+            <Baller
+              ref={baller}
+              look={style.look}
+              size={SIZE}
+              kit={dressed ? preview.kit : kit}
+              gear={dressed ? preview.gear : gear}
+              frame={dressed ? preview.frame : frame}
+              effect={dressed ? preview.effect : null}
+              enter="drop"
+              pokeable
+            />
           </View>
           <Arrow label={b.next} glyph="›" onPress={() => step(1)} />
         </View>
@@ -202,7 +225,20 @@ export function MeetBaller({ userId, lang, current, name, kit, gear, frame, pick
             </Animated.View>
           </Pressable>
         ) : null}
+
+        {profile && !renaming ? (
+          <View style={styles.look}>
+            <Text style={styles.lookTitle}>{t.look.title}</Text>
+            <LookWardrobe
+              who={style.look}
+              onPreview={setPreview}
+              onPlay={(kind) => baller.current?.play(kind)}
+              onToast={(line) => setToast({ text: line, n: Date.now() })}
+            />
+          </View>
+        ) : null}
       </ScrollView>
+      {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </KeyboardAvoidingView>
   );
 }
@@ -229,6 +265,10 @@ const styles = StyleSheet.create({
   title: { ...text.title, color: colors.paper },
   sub: { ...text.subtitle, color: colors.mist },
   stage: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 8 },
+  // dressed: the background you look at, as on Εμφάνιση
+  stageDressed: { borderRadius: 28, overflow: 'hidden', paddingHorizontal: 8, paddingVertical: 20 },
+  look: { gap: 14, marginTop: 8 },
+  lookTitle: { ...text.heading, color: colors.paper },
   glow: { position: 'absolute', alignSelf: 'center', left: '50%', marginLeft: -150, width: 300, height: 300, borderRadius: 150, backgroundColor: colors.paper, opacity: 0.06 },
   ball: { width: SIZE, height: SIZE },
   arrow: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: colors.inkLine, alignItems: 'center', justifyContent: 'center' },

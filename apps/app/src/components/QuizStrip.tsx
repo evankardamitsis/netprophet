@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { router } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import type { GetQuizResult } from '@netprophet/db';
 import { useCopy } from '../i18n';
@@ -9,13 +10,15 @@ import { colors, fonts } from '../theme';
 
 /**
  * «Παιχνίδι της ημέρας» (prototype V2, the feed's game card): the first item of the feed. Ink, a lime label, the
- * heading, a sub line (progress, or «✓ Τις έπαιξες σήμερα.» in lime), one segment per card and a white pill; «+30»
- * sits top-right until it is paid. Tapping opens the game.
+ * heading, a sub line (progress, or «✓ Έχεις παίξει τις σημερινές ερωτήσεις.» in lime), one segment per card and a white pill; «+30»
+ * sits top-right until it is paid. Tapping opens the game. Played them all without Pro: a pill offers six more every day
+ * (founder, 18 Oct) and opens Pro.
  */
 export function QuizStrip({ quiz, onPress }: { quiz: GetQuizResult; onPress: () => void }) {
   const t = useCopy();
   const v = stripView(quiz, t);
   const press = usePress();
+  const more = usePress();
   const enter = useStgIn(400);
   return (
     <Animated.View style={enter}>
@@ -36,6 +39,13 @@ export function QuizStrip({ quiz, onPress }: { quiz: GetQuizResult; onPress: () 
               </View>
             ) : null}
           </View>
+          {v.more ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=quiz')} onPressIn={more.onPressIn} onPressOut={more.onPressOut} hitSlop={6}>
+              <Animated.View style={[styles.more, more.style]}>
+                <Text style={styles.ctaText}>{v.more}</Text>
+              </Animated.View>
+            </Pressable>
+          ) : null}
           {v.badge ? (
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{t.quiz.bonus}</Text>
@@ -59,6 +69,7 @@ const styles = StyleSheet.create({
   segOn: { backgroundColor: colors.lime },
   segOff: { backgroundColor: colors.slate },
   cta: { minHeight: 44, paddingHorizontal: 22, borderRadius: 999, backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center' },
+  more: { alignSelf: 'flex-start', minHeight: 44, marginTop: 4, paddingHorizontal: 18, borderRadius: 999, backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center' },
   ctaText: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   badge: { position: 'absolute', right: 16, top: 16, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime },
   badgeText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },

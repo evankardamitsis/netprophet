@@ -109,9 +109,14 @@ describe('stripView', () => {
   it('is done when every card is played; the badge goes once paid', () => {
     const v = stripView(quiz(cards(6, 6), { awarded: true }), el);
     expect(v.allDone).toBe(true);
-    expect(v.sub).toBe('✓ Τις έπαιξες σήμερα.');
+    expect(v.sub).toBe('✓ Έχεις παίξει τις σημερινές ερωτήσεις.');
     expect(v.cta).toBeNull();
     expect(v.badge).toBe(false);
+    expect(v.more).toBe('Άλλες 6 κάθε μέρα με το Pro ›');
+  });
+  it('offers no more to Pro', () => {
+    expect(stripView(quiz(cards(12, 12), { pro: true }), el).more).toBeNull();
+    expect(stripView(quiz(cards(6, 2)), el).more).toBeNull();
   });
   it('speaks of twelve for Pro', () => {
     const v = stripView(quiz(cards(12, 0), { pro: true }), el);
