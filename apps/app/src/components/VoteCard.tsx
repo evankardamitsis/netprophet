@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import type { CardMatch, CardPct, CardSide } from '../lib/feed';
+import { soonLabel, startsSoon, type CardMatch, type CardPct, type CardSide } from '../lib/feed';
 import { FitText } from './FitText';
 import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
 import type { Side } from '../lib/votes';
@@ -22,7 +22,9 @@ import { Logo } from './Logo';
 /**
  * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
  * idle      two vote buttons side by side, each player a small avatar beside the name (founder, 16 Oct: compact,
- *           easy to read; the tournament and where it is played sit once above the run of cards)
+ *           easy to read; the tournament and where it is played sit once above the run of cards). «Ποιος κερδίζει;»
+ *           over them and an empty ring on each side say it is yours to pick (founder, 18 Oct: make voting obvious);
+ *           in its last hour «Ξεκινά σε 40 λεπτά» sits beside the question
  * revealed  the pick gets an ink border and a jpop, lime fills grow to the split, percentages pop in
  * folded    1100ms after the tap (as in the prototype, whatever the network took), and never before the
  *           fills finish growing: one row, lime under the pick, ✓ and both percentages
@@ -39,6 +41,10 @@ const FOLD_MS = 550;
 const ENTER_MS = 400;
 const AVATAR_POP_MS = 400;
 const AVATAR_POP_DELAY = 150;
+const RING_MS = 250;
+const TICK_POP_MS = 400;
+/** how often an idle card in its last hour reads the clock again */
+const SOON_TICK_MS = 30_000;
 
 const cssEase = Easing.bezier(0.25, 0.1, 0.25, 1);
 const foldEase = Easing.bezier(0.4, 0, 0.2, 1);
@@ -129,6 +135,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
     <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
       <Animated.View style={[styles.card, enter]}>
         <Meta match={match} />
+        <Ask startsAt={match.startsAt} />
         <View style={styles.grid}>
           <VoteButton
             side="a"
@@ -137,6 +144,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
             picked={pick === 'a'}
             disabled={phase !== 'idle'}
             pct={revealed ? split.pctA : null}
+            ring
             onPress={vote}
           />
           <VoteButton
@@ -146,6 +154,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
             picked={pick === 'b'}
             disabled={phase !== 'idle'}
             pct={revealed ? split.pctB : null}
+            ring
             onPress={vote}
           />
         </View>
@@ -173,6 +182,35 @@ function ClosedCard({ match, onLongPress }: { match: CardMatch; onLongPress?: ()
         <Text style={styles.closed}>{t.match.closed}</Text>
       </Animated.View>
     </Pressable>
+  );
+}
+
+/** «Ποιος κερδίζει;», and in the last hour before the start «Ξεκινά σε 40 λεπτά» beside it */
+function Ask({ startsAt }: { startsAt?: string }) {
+  const t = useCopy();
+  const [now, setNow] = useState(() => new Date());
+  const soon = startsSoon(startsAt, now);
+  // read the clock again only while the start is near (or about to be)
+  const near = startsAt !== undefined && Date.parse(startsAt) - now.getTime() < 2 * 60 * 60_000;
+  useEffect(() => {
+    if (!near) return undefined;
+    const id = setInterval(() => setNow(new Date()), SOON_TICK_MS);
+    return () => clearInterval(id);
+  }, [near]);
+  return (
+    <View style={styles.ask}>
+      <Text style={styles.askText}>{t.match.who}</Text>
+      {soon !== null ? <SoonChip label={soonLabel(soon, t)} /> : null}
+    </View>
+  );
+}
+
+function SoonChip({ label }: { label: string }) {
+  const pop = usePopIn(TICK_POP_MS);
+  return (
+    <Animated.View style={[styles.soon, pop]}>
+      <Text style={styles.soonText}>{label}</Text>
+    </Animated.View>
   );
 }
 
@@ -227,10 +265,12 @@ interface VoteButtonProps {
   disabled: boolean;
   /** null until the split is known */
   pct: number | null;
+  /** the pick ring beside the first name: empty while you can vote, ✓ on your pick */
+  ring?: boolean;
   onPress: (side: Side) => void;
 }
 
-function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: VoteButtonProps) {
+function VoteButton({ side, data, doubles, picked, disabled, pct, ring = false, onPress }: VoteButtonProps) {
   const press = usePress();
   const line = useSharedValue(0);
   const jpop = useSharedValue(1);
@@ -284,7 +324,7 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
                 </View>
               </View>
             ))}
-            {data.level || data.area ? (
+            {data.level || data.area || ring ? (
               <View style={styles.facts}>
                 {data.level ? (
                   <View style={styles.levelPill}>
@@ -296,6 +336,8 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
                     {data.area}
                   </Text>
                 ) : null}
+                {/* where the split lands after the vote: the ring makes way for it */}
+                {ring ? <PickRing picked={picked} faded={disabled && !picked} gone={pct !== null} /> : null}
               </View>
             ) : data.sub ? (
               <Text style={styles.sub}>{data.sub}</Text>
@@ -304,6 +346,33 @@ function VoteButton({ side, data, doubles, picked, disabled, pct, onPress }: Vot
         </Animated.View>
       </Pressable>
     </View>
+  );
+}
+
+/** an empty ring that says «pick me»; your pick fills it in ink with a ✓ that pops */
+function PickRing({ picked, faded, gone }: { picked: boolean; faded: boolean; gone: boolean }) {
+  const fill = useSharedValue(picked ? 1 : 0);
+  const tickScale = useSharedValue(picked ? 1 : 0.4);
+  const tickOpacity = useSharedValue(picked ? 1 : 0);
+  const dim = useSharedValue(faded ? 1 : 0);
+  useEffect(() => {
+    fill.value = withTiming(picked ? 1 : 0, { duration: RING_MS, easing: cssEase });
+    if (picked) runPop(tickScale, tickOpacity, TICK_POP_MS);
+    else tickOpacity.value = withTiming(0, { duration: RING_MS });
+  }, [picked, fill, tickScale, tickOpacity]);
+  useEffect(() => {
+    dim.value = withTiming(gone ? 2 : faded ? 1 : 0, { duration: RING_MS, easing: cssEase });
+  }, [faded, gone, dim]);
+  // dim 0 full, 1 the side you did not pick, 2 gone (the split takes the corner)
+  const ringStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(fill.value, [0, 1], [colors.paper, colors.ink]),
+    opacity: dim.value <= 1 ? 1 - dim.value * 0.65 : 0.35 * (2 - dim.value),
+  }));
+  const tickStyle = useAnimatedStyle(() => ({ opacity: tickOpacity.value, transform: [{ scale: tickScale.value }] }));
+  return (
+    <Animated.View style={[styles.ring, ringStyle]} pointerEvents="none">
+      <Animated.Text style={[styles.ringTick, tickStyle]}>✓</Animated.Text>
+    </Animated.View>
   );
 }
 
@@ -377,6 +446,8 @@ function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
 
 /** the avatar disc beside the name */
 const AV_SIZE = 32;
+/** the pick ring in the corner of a side */
+const RING_SIZE = 22;
 
 const styles = StyleSheet.create({
   card: {
@@ -388,6 +459,22 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   meta: { ...text.meta, fontFamily: fonts.bodyBold },
+  ask: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: -2 },
+  askText: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  // outlined, so it does not compete with the category tag above it
+  soon: { paddingVertical: 1, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.ink },
+  soonText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
+  ring: {
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: 999,
+    borderWidth: 2,
+    borderColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+  },
+  ringTick: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.paper },
   closed: { ...text.meta, fontFamily: fonts.bodyBold, color: colors.inkSoft, textAlign: 'center' },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   metaStack: { gap: 2 },
@@ -426,7 +513,7 @@ const styles = StyleSheet.create({
   snDbl: { fontSize: 21, lineHeight: 21 },
   // the first name belongs to the name: dark and bold, right under the surname
   fn: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.ink },
-  facts: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  facts: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   levelPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.sand },
   levelText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
   area: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },

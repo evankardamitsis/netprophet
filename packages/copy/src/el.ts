@@ -82,6 +82,10 @@ export const el = {
     categoryWho: { WS: 'Γυναικών', WD: 'Γυναικών', XD: 'Μικτό', mixed: 'Μικτό' } as Record<string, string>,
     /** a match that started: no more votes (founder, 17 Oct) */
     closed: 'Οι ψήφοι έκλεισαν',
+    /** the question on a card you have not voted on yet (founder, 18 Oct: make voting obvious) */
+    who: 'Ποιος κερδίζει;',
+    /** under an hour before it starts, next to the question */
+    soon: { one: 'Ξεκινά σε 1 λεπτό', many: 'Ξεκινά σε {n} λεπτά' },
     today: 'Σήμερα',
     tomorrow: 'Αύριο',
     levelArea: 'level {level} · {area}',
@@ -231,6 +235,11 @@ export const el = {
     /** from 23:00 the feed already shows tomorrow */
     titleTomorrow: 'Τι παίζει αύριο;',
     subtitle: 'Ψήφισε τους νικητές και μάζεψε πόντους.',
+    /** the line under the title while today's matches wait for your vote (founder, 18 Oct) */
+    open: { one: 'Ένα ματς περιμένει την ψήφο σου.', many: '{n} ματς περιμένουν την ψήφο σου.' },
+    allVoted: 'Ψήφισες σε όλα. Τώρα περιμένουμε τα αποτελέσματα.',
+    /** nothing left today, but later days wait under «Αύριο και μετά» */
+    openLater: { one: 'Ένα ματς για αύριο και μετά περιμένει την ψήφο σου.', many: '{n} ματς για αύριο και μετά περιμένουν την ψήφο σου.' },
     /** «Το ματς σου» at the top of Σήμερα when you play today or tomorrow */
     myMatch: 'Το ματς σου',
     /** the fold for matches on later days: «Αύριο και μετά · 4» */
