@@ -57,13 +57,13 @@ describe('tier styles', () => {
 describe('badge lines', () => {
   it('rule, tier and left lines', () => {
     expect(ruleLine(get('club_oracle'), copy)).toBe('5 / 25 / 100 σωστές ψήφοι στο Ψήφισε');
-    expect(tierOfLine(get('in_a_row'), copy)).toBe('Ασημένιο · βαθμίδα 2 από 3');
+    expect(tierOfLine(get('in_a_row'), copy)).toBe('Ασημένια Βαθμίδα · 2 από 3');
     expect(tierOfLine(get('steady'), copy)).toBe('Κλειδωμένο');
-    expect(tileTierLine(get('gentleman'), copy)).toBe('Χάλκινο\u00A0· ακόμα\u00A08');
-    expect(tileTierLine(row(100, 3), copy)).toBe('Χρυσό');
-    expect(leftLine(get('gentleman'), copy)).toBe('Ακόμα 8 για το ασημένιο');
-    expect(leftLine(get('steady'), copy)).toBe('Ακόμα 1 για το χάλκινο');
-    expect(leftLine(row(100, 3), copy)).toBe('Χρυσό. Τα έχεις όλα.');
+    expect(tileTierLine(get('gentleman'), copy)).toBe('Χάλκινη Βαθμίδα\u00A0· ακόμα\u00A08');
+    expect(tileTierLine(row(100, 3), copy)).toBe('Χρυσή Βαθμίδα');
+    expect(leftLine(get('gentleman'), copy)).toBe('Ακόμα 8 για την Ασημένια Βαθμίδα');
+    expect(leftLine(get('steady'), copy)).toBe('Ακόμα 1 για την Χάλκινη Βαθμίδα');
+    expect(leftLine(row(100, 3), copy)).toBe('Χρυσή Βαθμίδα. Τα έχεις όλα.');
   });
 });
 

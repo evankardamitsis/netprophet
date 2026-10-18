@@ -58,11 +58,11 @@ const b = (id: string, badgeKey: string, tier: 1 | 2 | 3, isNew: boolean): Badge
 
 describe('badge celebrations', () => {
   it('a new badge and a new tier say it, with the tier and no pill', () => {
-    expect(groupView([b('x', 'gentleman', 1, true)], copy)).toEqual({ label: 'ΝΕΟ BADGE', streak: null, tier: 1, title: 'Ο ευγενικός', reward: 'Βαθμίδα Χάλκινο' });
-    expect(groupView([b('x', 'in_a_row', 2, false)], copy)).toMatchObject({ label: 'ΝΕΑ ΒΑΘΜΙΔΑ', tier: 2, reward: 'Βαθμίδα Ασημένιο' });
+    expect(groupView([b('x', 'gentleman', 1, true)], copy)).toEqual({ label: 'ΝΕΟ BADGE', streak: null, tier: 1, title: 'Ο ευγενικός', reward: 'Χάλκινη Βαθμίδα' });
+    expect(groupView([b('x', 'in_a_row', 2, false)], copy)).toMatchObject({ label: 'ΝΕΑ ΒΑΘΜΙΔΑ', tier: 2, reward: 'Ασημένια Βαθμίδα' });
   });
   it('gold also names the Frame Level', () => {
-    expect(groupView([b('x', 'many_votes', 3, false)], copy).reward).toBe('Βαθμίδα Χρυσό · Frame Level');
+    expect(groupView([b('x', 'many_votes', 3, false)], copy).reward).toBe('Χρυσή Βαθμίδα · Frame Level');
   });
   it('plays σερί, then quests, then badges one at a time', () => {
     const list = [b('b1', 'gentleman', 1, true), q('a', 'daily_kudos_1', badge), b('b2', 'upset', 1, true), c(5, false, null)];
@@ -116,7 +116,7 @@ describe('unlock celebrations', () => {
 describe('level celebrations', () => {
   const lv = (id: string, level: number): LevelCelebration => ({ id, created_at: '2026-10-14T10:00:00Z', payload: { type: 'level', level } });
   it('says the new level in the pill, with no «σερί» beside it', () => {
-    expect(groupView([lv('l', 4)], copy)).toEqual({ label: 'LEVEL', streak: 4, unit: '', tier: null, title: 'Ανέβηκες level!', reward: 'Συνέχισε να το λες σωστά' });
+    expect(groupView([lv('l', 4)], copy)).toEqual({ label: 'LEVEL', streak: 4, unit: '', tier: null, title: 'Ανέβηκες level!', reward: 'Συνέχισε τις σωστές προβλέψεις' });
   });
   it('plays after the σερί moment and before quests and badges', () => {
     const list = [b('b1', 'gentleman', 1, true), q('a', 'daily_kudos_1', badge), lv('l', 3), c(5, false, null)];
