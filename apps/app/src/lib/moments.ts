@@ -71,3 +71,25 @@ export function pick(s: PacerState, ready: readonly MomentKind[], opts: { asked?
 export function claim(s: PacerState, kind: MomentKind, opts: { asked?: boolean } = {}): PacerState | null {
   return mayShow(s, opts) ? { ...s, shown: kind } : null;
 }
+
+/** after a vote, an answer or a confirmation, the celebration queue is read again this long after the last one */
+export const REFETCH_AFTER_ACTION_MS = 1000;
+
+/** `fn` runs once, `ms` after the last call: rapid votes make one request */
+export function debounce(fn: () => void, ms: number): { call: () => void; cancel: () => void } {
+  let id: ReturnType<typeof setTimeout> | null = null;
+  const cancel = () => {
+    if (id !== null) clearTimeout(id);
+    id = null;
+  };
+  return {
+    call: () => {
+      cancel();
+      id = setTimeout(() => {
+        id = null;
+        fn();
+      }, ms);
+    },
+    cancel,
+  };
+}

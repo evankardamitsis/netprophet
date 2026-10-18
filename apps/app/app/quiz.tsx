@@ -49,10 +49,10 @@ export default function QuizScreen() {
   const toast = notice ? <Toast key={notice.n} text={notice.kind === 'expired' ? t.quiz.expired : t.quiz.answerFailed} /> : null;
 
   const onAnswer = (cardId: string, option: number) => {
-    // an answer opens the visit's one moment: a celebration it earned plays back on Σήμερα
-    momentsAct();
     void answer(cardId, option).then((res) => {
       if (!res) return;
+      // an answer opens the visit's one moment: a celebration it earned plays back on Σήμερα
+      momentsAct();
       // quests count answers; the sixth one pays +30, so the header's points are read again
       void quests.refresh();
       if (res.awarded > 0) void unlocks.refresh();

@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
-import { claim as claimIn, coldStart, mayShow, onAction, onAppPhase, pick as pickIn, type AppPhase, type MomentKind, type PacerState } from './moments';
+import { claim as claimIn, coldStart, debounce, mayShow, REFETCH_AFTER_ACTION_MS, onAction, onAppPhase, pick as pickIn, type AppPhase, type MomentKind, type PacerState } from './moments';
 
 /**
  * The one copy of the pacer for every screen (see moments.ts). It lives in memory: a cold start is a new visit
@@ -32,9 +32,26 @@ const subscribe = (l: () => void) => {
 };
 const snapshot = () => state;
 
-/** the player did something that matters (a vote, an answer, a confirmation): from here a moment may come */
+/** screens that read the celebration queue again once an action settles (Σήμερα's feed) */
+const actionListeners = new Set<() => void>();
+const afterAction = debounce(() => actionListeners.forEach((l) => l()), REFETCH_AFTER_ACTION_MS);
+
+/**
+ * The player did something that matters and it went through (a vote, an answer, a confirmation): from here a
+ * moment may come, and the celebration queue is read again a second after the last one, so what that action earned
+ * plays right after its reveal, this visit.
+ */
 export function momentsAct() {
   set(onAction(state));
+  afterAction.call();
+}
+
+/** run `l` (debounced) after every action; returns the unsubscribe */
+export function onMomentsAction(l: () => void): () => void {
+  actionListeners.add(l);
+  return () => {
+    actionListeners.delete(l);
+  };
 }
 
 export interface Moments {

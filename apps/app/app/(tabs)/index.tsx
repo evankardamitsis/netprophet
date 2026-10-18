@@ -237,8 +237,10 @@ export default function VoteScreen() {
           key={item.match_id}
           item={item}
           onAnswer={(a) => {
-            momentsAct();
-            void confirmations.answer(item.match_id, a).then((o) => setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]));
+            void confirmations.answer(item.match_id, a).then((o) => {
+              if (o !== 'failed') momentsAct();
+              setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]);
+            });
           }}
         />
       ))}
