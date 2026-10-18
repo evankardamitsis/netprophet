@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, splitToday, feedDay, laterOpenByDefault, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -111,7 +111,8 @@ describe('fromFeedCard', () => {
       t,
       NOW,
     );
-    expect(c.meta).toBe('Σήμερα 18:00 · Μικτό · Φιλικό · Γλυφάδα');
+    expect(c.meta).toBe('Σήμερα 18:00 · Φιλικό · Γλυφάδα');
+    expect(c.category).toBe('Μικτό');
     expect(c.doubles).toBe(true);
     expect(c.a.people.map((p) => p.initials)).toEqual(['ΜΚ', 'ΝΠ']);
     expect(c.a.sub).toBeNull(); // players' levels are hidden (14 Oct)
@@ -248,5 +249,54 @@ describe('groupHeads', () => {
       { kind: 'match', group: g('b') },
     ];
     expect([...groupHeads(cards)]).toEqual([0, 4, 6]);
+  });
+});
+
+describe('splitToday', () => {
+  const c = (id: string, later: boolean, startsAt?: string) => ({ kind: 'match', id, later, startsAt });
+  it('runs today and the later days in time order', () => {
+    const cards = [
+      c('t2', false, '2026-10-18T19:00:00Z'),
+      c('wed', true, '2026-10-21T08:00:00Z'),
+      c('t1', false, '2026-10-18T09:00:00Z'),
+      c('mon-late', true, '2026-10-19T17:00:00Z'),
+      c('tue', true, '2026-10-20T10:00:00Z'),
+      c('mon-early', true, '2026-10-19T07:00:00Z'),
+    ];
+    const s = splitToday(cards);
+    expect(s.today.map((x) => x.id)).toEqual(['t1', 't2']);
+    expect(s.later.map((x) => x.id)).toEqual(['mon-early', 'mon-late', 'tue', 'wed']);
+  });
+  it('puts a later match without a time last, keeping the rest stable', () => {
+    const s = splitToday([c('x', true), c('a', true, '2026-10-20T10:00:00Z'), c('b', true, '2026-10-20T10:00:00Z')]);
+    expect(s.later.map((x) => x.id)).toEqual(['a', 'b', 'x']);
+  });
+});
+
+describe('feedDay', () => {
+  it('is today until 23:00 in Athens, then tomorrow', () => {
+    expect(feedDay(new Date('2026-10-18T19:59:00Z'))).toBe('2026-10-18'); // 22:59 Athens
+    expect(feedDay(new Date('2026-10-18T20:00:00Z'))).toBe('2026-10-19'); // 23:00 Athens
+    expect(feedDay(new Date('2026-10-18T21:30:00Z'))).toBe('2026-10-19'); // 00:30 Athens, already the 19th
+  });
+});
+
+describe('laterOpenByDefault', () => {
+  it('opens the later days once today has nothing left to vote', () => {
+    expect(laterOpenByDefault([])).toBe(true);
+    expect(laterOpenByDefault([{ kind: 'match', myVote: 'a' }, { kind: 'match', closed: true }, { kind: 'sponsored' }])).toBe(true);
+    expect(laterOpenByDefault([{ kind: 'match' }, { kind: 'match', myVote: 'b' }])).toBe(false);
+  });
+});
+
+describe('splitToday, today', () => {
+  it('puts the matches to vote first in time order, then ads, then the started ones', () => {
+    const s = splitToday([
+      { kind: 'match', id: 'started', closed: true, startsAt: '2026-10-18T07:00:00Z' },
+      { kind: 'sponsored', id: 'ad' },
+      { kind: 'match', id: 'late', startsAt: '2026-10-18T18:00:00Z' },
+      { kind: 'match', id: 'early', startsAt: '2026-10-18T09:00:00Z' },
+    ]);
+    expect(s.today.map((x) => x.id)).toEqual(['early', 'late', 'ad', 'started']);
   });
 });

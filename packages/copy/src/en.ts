@@ -72,6 +72,7 @@ export const en: Copy = {
     points: 'points',
   },
   match: {
+    categoryWho: { WS: 'Women', WD: 'Women', XD: 'Mixed', mixed: 'Mixed' } as Record<string, string>,
     closed: 'Voting is closed',
     today: 'Today',
     tomorrow: 'Tomorrow',
@@ -214,6 +215,7 @@ export const en: Copy = {
   },
   feed: {
     title: 'What is on today?',
+    titleTomorrow: 'What is on tomorrow?',
     subtitle: 'Pick the winners and collect points.',
     myMatch: 'Your match',
     later: 'Tomorrow and after · {count}',

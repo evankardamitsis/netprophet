@@ -78,6 +78,8 @@ export const el = {
     points: 'πόντοι',
   },
   match: {
+    /** said with the category when the players alone don't say it (founder, 18 Oct: no «Διπλό»/«Μονό», it is obvious) */
+    categoryWho: { WS: 'Γυναικών', WD: 'Γυναικών', XD: 'Μικτό', mixed: 'Μικτό' } as Record<string, string>,
     /** a match that started: no more votes (founder, 17 Oct) */
     closed: 'Οι ψήφοι έκλεισαν',
     today: 'Σήμερα',
@@ -226,6 +228,8 @@ export const el = {
   },
   feed: {
     title: 'Τι παίζει σήμερα;',
+    /** from 23:00 the feed already shows tomorrow */
+    titleTomorrow: 'Τι παίζει αύριο;',
     subtitle: 'Ψήφισε τους νικητές και μάζεψε πόντους.',
     /** «Το ματς σου» at the top of Σήμερα when you play today or tomorrow */
     myMatch: 'Το ματς σου',
