@@ -74,6 +74,8 @@ export const en: Copy = {
   match: {
     categoryWho: { WS: 'Women', WD: 'Women', XD: 'Mixed', mixed: 'Mixed' } as Record<string, string>,
     closed: 'Voting is closed',
+    who: 'Who wins?',
+    soon: { one: 'Starts in 1 minute', many: 'Starts in {n} minutes' },
     today: 'Today',
     tomorrow: 'Tomorrow',
     levelArea: 'level {level} · {area}',
@@ -217,6 +219,9 @@ export const en: Copy = {
     title: 'What is on today?',
     titleTomorrow: 'What is on tomorrow?',
     subtitle: 'Pick the winners and collect points.',
+    open: { one: 'One match is waiting for your vote.', many: '{n} matches are waiting for your vote.' },
+    allVoted: 'You voted on them all. Now we wait for the results.',
+    openLater: { one: 'One match from tomorrow on is waiting for your vote.', many: '{n} matches from tomorrow on are waiting for your vote.' },
     myMatch: 'Your match',
     later: 'Tomorrow and after · {count}',
     end: 'The further down you go, the more matches from players you may not know.',

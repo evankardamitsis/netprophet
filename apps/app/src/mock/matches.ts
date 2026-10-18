@@ -24,6 +24,10 @@ export interface MockMatch {
   movedBack?: boolean;
   /** Votes already cast, before the viewer's. */
   votes: Record<Side, number>;
+  /** «40+»: the category tag on the card */
+  category?: string;
+  /** sample data: starts this many minutes after the feed loads, so «Ξεκινά σε …» shows */
+  startsInMin?: number;
   /** where it is played */
   club?: string;
   surface?: string;
@@ -32,6 +36,7 @@ export interface MockMatch {
 export const MOCK_MATCHES: MockMatch[] = [
   {
     id: 'm1',
+    category: '40+',
     club: 'Γήπεδα Γλυφάδας',
     surface: 'clay',
     day: 'today',
@@ -45,6 +50,8 @@ export const MOCK_MATCHES: MockMatch[] = [
   {
     id: 'm2',
     day: 'today',
+    startsInMin: 40,
+    category: '50+',
     time: '20:00',
     event: 'Open Γλυφάδας',
     round: 'semi',

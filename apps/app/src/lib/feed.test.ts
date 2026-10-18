@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import { RpcError, type FeedMatchCard, type FeedPlayer, type FeedPostponedCard, type FeedResultCard } from '@netprophet/db';
 import { authErrorKind } from './authErrors';
-import { fromFeedCard, fromPostponedCard, groupHeads, postponedLast, splitToday, feedDay, laterOpenByDefault, fromResultCard, fromSponsored, initials, toDbSide, toUiSide, voteErrorKind, when } from './feed';
+import { feedDay, feedLine, fromFeedCard, fromPostponedCard, groupHeads, laterOpenByDefault, openToVote, postponedLast, splitToday, fromResultCard, fromSponsored, initials, soonLabel, startsSoon, toDbSide, toUiSide, voteErrorKind, when, type FeedCard } from './feed';
 
 const t = getCopy('el');
 // 9 Oct 2026, 12:00 Athens (UTC+3)
@@ -298,5 +298,56 @@ describe('splitToday, today', () => {
       { kind: 'match', id: 'early', startsAt: '2026-10-18T09:00:00Z' },
     ]);
     expect(s.today.map((x) => x.id)).toEqual(['early', 'late', 'ad', 'started']);
+  });
+});
+
+describe('voting made obvious (founder, 18 Oct)', () => {
+  it('carries the start time on the card', () => {
+    expect(fromFeedCard(card(), {}, t, NOW).startsAt).toBe('2026-10-09T15:00:00Z');
+    expect(fromFeedCard(card({ starts_at: null }), {}, t, NOW).startsAt).toBeUndefined();
+  });
+
+  it('says «Ξεκινά σε …» only in the last hour before the start', () => {
+    expect(startsSoon('2026-10-09T09:40:00Z', NOW)).toBe(40);
+    expect(startsSoon('2026-10-09T09:00:20Z', NOW)).toBe(1);
+    expect(startsSoon('2026-10-09T10:00:00Z', NOW)).toBe(60);
+    expect(startsSoon('2026-10-09T10:01:00Z', NOW)).toBeNull();
+    expect(startsSoon('2026-10-09T09:00:00Z', NOW)).toBeNull();
+    expect(startsSoon('2026-10-09T08:30:00Z', NOW)).toBeNull();
+    expect(startsSoon(undefined, NOW)).toBeNull();
+    expect(soonLabel(40, t)).toBe('Ξεκινά σε 40 λεπτά');
+    expect(soonLabel(1, t)).toBe('Ξεκινά σε 1 λεπτό');
+  });
+
+  const today = (id: string, over: Partial<FeedMatchCard> = {}) => fromFeedCard(card({ match_id: id, ...over }), {}, t, NOW);
+
+  it('counts today\'s open matches waiting for the vote, leaving out later days, closed matches and ads', () => {
+    const cards: FeedCard[] = [
+      today('a'),
+      today('b'),
+      today('c', { my_vote: 1, split: { total: 4, side1: 3, side2: 1, pct1: 75, pct2: 25 } }),
+      today('d', { closed: true }),
+      today('e', { starts_at: '2026-10-10T15:00:00Z' }),
+      fromSponsored({ kind: 'sponsored', id: 's', label: 'Χορηγός', sponsor: 'X', title: 'Y', subtitle: null, cta_url: null, image_url: null, art: null }),
+    ];
+    expect(openToVote(cards)).toEqual({ open: 2, voted: 1, later: 1 });
+    // a vote cast since the feed loaded counts at once
+    expect(openToVote(cards, new Set(['a', 'e']))).toEqual({ open: 1, voted: 2, later: 0 });
+  });
+
+  it('after 23:00 Athens tomorrow\'s matches count as today\'s, as Σήμερα shows them (feedDay)', () => {
+    const late = new Date('2026-10-09T20:30:00Z'); // 23:30 Athens
+    const tomorrow = fromFeedCard(card({ starts_at: '2026-10-10T15:00:00Z' }), {}, t, late);
+    const dayAfter = fromFeedCard(card({ match_id: 'm2', starts_at: '2026-10-11T15:00:00Z' }), {}, t, late);
+    expect(openToVote([tomorrow, dayAfter])).toEqual({ open: 1, voted: 0, later: 1 });
+  });
+
+  it('the line under the title: what waits, then «Ψήφισες σε όλα», else what the tab is for', () => {
+    expect(feedLine({ open: 3, voted: 0, later: 5 }, t)).toBe('3 ματς περιμένουν την ψήφο σου.');
+    expect(feedLine({ open: 1, voted: 2, later: 0 }, t)).toBe('Ένα ματς περιμένει την ψήφο σου.');
+    expect(feedLine({ open: 0, voted: 2, later: 5 }, t)).toBe('Ψήφισες σε όλα. Τώρα περιμένουμε τα αποτελέσματα.');
+    expect(feedLine({ open: 0, voted: 0, later: 30 }, t)).toBe('30 ματς για αύριο και μετά περιμένουν την ψήφο σου.');
+    expect(feedLine({ open: 0, voted: 0, later: 1 }, t)).toBe('Ένα ματς για αύριο και μετά περιμένει την ψήφο σου.');
+    expect(feedLine({ open: 0, voted: 0, later: 0 }, t)).toBe(t.feed.subtitle);
   });
 });

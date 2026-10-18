@@ -58,7 +58,7 @@ export interface CardMatch {
   group?: { key: string; title: string; sub: string | null };
   /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
   later?: boolean;
-  /** when it starts, for the order of «Αύριο και μετά» */
+  /** when it starts: the order of «Αύριο και μετά», and «Ξεκινά σε 40 λεπτά» on an idle card in its last hour */
   startsAt?: string;
   /** «40+», «Μ 50+ · Γυναικών», «Μικτό»: shown as its own tag, bigger than the meta line */
   category?: string;
@@ -283,6 +283,60 @@ export function feedDay(now: Date): string {
   return dayKey(new Date(now.getTime() + (late ? 86_400_000 : 0)).toISOString());
 }
 
+/** how long before the start an idle card says «Ξεκινά σε …» */
+export const SOON_MINUTES = 60;
+
+/** Whole minutes until the start (rounded up) while it is under SOON_MINUTES away; null otherwise. */
+export function startsSoon(startsAt: string | undefined, now: Date, windowMin = SOON_MINUTES): number | null {
+  if (!startsAt) return null;
+  const ms = Date.parse(startsAt) - now.getTime();
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  const min = Math.ceil(ms / 60_000);
+  return min <= windowMin ? min : null;
+}
+
+export function soonLabel(min: number, t: Copy): string {
+  return min === 1 ? t.match.soon.one : fmt(t.match.soon.many, { n: min });
+}
+
+/**
+ * Today's matches still taking votes: how many wait for this viewer's vote and how many they voted on already.
+ * `votedNow` holds the ids voted on since the feed loaded (the cards keep the vote they loaded with).
+ */
+export interface VoteCount {
+  /** today, waiting for your vote */
+  open: number;
+  /** today, voted on */
+  voted: number;
+  /** later days (under «Αύριο και μετά»), waiting for your vote */
+  later: number;
+}
+
+export function openToVote(cards: FeedCard[], votedNow: ReadonlySet<string> = new Set()): VoteCount {
+  const n: VoteCount = { open: 0, voted: 0, later: 0 };
+  for (const c of cards) {
+    if (c.kind !== 'match' || c.closed) continue;
+    const mine = c.myVote !== undefined || votedNow.has(c.id);
+    if (c.later) n.later += mine ? 0 : 1;
+    else if (mine) n.voted += 1;
+    else n.open += 1;
+  }
+  return n;
+}
+
+/**
+ * The line under «Τι παίζει σήμερα;»: what waits for your vote today; once today is done, «Ψήφισες σε όλα»; with nothing
+ * today, what waits under «Αύριο και μετά»; else what the tab is for.
+ */
+export function feedLine(count: VoteCount, t: Copy): string {
+  if (count.open === 1) return t.feed.open.one;
+  if (count.open > 1) return fmt(t.feed.open.many, { n: count.open });
+  if (count.voted > 0) return t.feed.allVoted;
+  if (count.later === 1) return t.feed.openLater.one;
+  if (count.later > 1) return fmt(t.feed.openLater.many, { n: count.later });
+  return t.feed.subtitle;
+}
+
 /**
  * Σήμερα shows today (founder, 14 Oct: «Τι παίζει σήμερα» first, the rest out of the way): matches on a later day go
  * into the folded «Αύριο και μετά». Both run in time order (founder, 18 Oct: "tomorrow's matches are mixed with the
@@ -381,7 +435,9 @@ function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {
 }
 
 export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
-  const parts = [`${m.day === 'today' ? t.match.today : t.match.tomorrow} ${m.time}`, m.event];
+  const soonAt = m.startsInMin !== undefined ? new Date(now.getTime() + m.startsInMin * 60_000) : null;
+  const time = soonAt ? `${String(soonAt.getHours()).padStart(2, '0')}:${String(soonAt.getMinutes()).padStart(2, '0')}` : m.time;
+  const parts = [`${m.day === 'today' ? t.match.today : t.match.tomorrow} ${time}`, m.event];
   if (m.round) parts.push(t.match.rounds[m.round]);
   return {
     kind: 'match',
@@ -394,6 +450,8 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     a: mockSide(m.a, t, m.a2),
     b: mockSide(m.b, t, m.b2),
     place: placeLine(m, t) ?? undefined,
+    startsAt: soonAt ? soonAt.toISOString() : undefined,
+    category: m.category,
   };
 }
 

@@ -18,7 +18,7 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
-import { feedDay, groupHeads, laterOpenByDefault, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
+import { feedDay, feedLine, groupHeads, laterOpenByDefault, openToVote, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import { ProNudge } from '../../src/components/ProNudge';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -29,7 +29,8 @@ import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
-import { colors, ease, fonts, text } from '../../src/theme';
+import { useStgIn } from '../../src/lib/motion';
+import { colors, ease, fonts, motion, text } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 
@@ -74,11 +75,14 @@ export default function VoteScreen() {
   // after a vote: a toast for a quest that finished, else the slim bar for a quest that moved, else for a badge one
   // vote short of its next tier (never more than one)
   const [questNote, setQuestNote] = useState<(NonNullable<QuestFeedback> & { n: number }) | null>(null);
+  // votes cast since the feed loaded: the line under the title counts down at once (the cards keep their loaded vote)
+  const [votedNow, setVotedNow] = useState<ReadonlySet<string>>(() => new Set());
   const onVote = useCallback(
     async (matchId: string, side: Side) => {
       const before = questsNow.current;
       const badgesBefore = badgesNow.current;
       const pct = await vote(matchId, side);
+      setVotedNow((v) => new Set(v).add(matchId));
       void Promise.all([quests.refresh(), badges.refresh()]).then(([after, badgesAfter]) => {
         // quests and badges that are not open yet say nothing
         const { has } = unlocksNow.current;
@@ -159,6 +163,7 @@ export default function VoteScreen() {
   const showLater = laterChoice ?? laterOpenByDefault(split.today);
   const shown = [...split.today, ...(showLater ? split.later : [])];
   const heads = groupHeads(shown);
+  const voteCount = openToVote(cards, votedNow);
   const daily = dailyFold(unlocks.has('daily_quiz') ? quiz.quiz : null, confirmations.items.length, t);
   const forYouDaily = useForYouDaily();
   const [forYouOpen, setForYouOpen] = useState(false);
@@ -227,7 +232,12 @@ export default function VoteScreen() {
         <View style={styles.feed}>
           <Animated.View style={[styles.head, titleIn]}>
             <Text style={styles.title}>{feedDay(new Date()) > dayKey(new Date().toISOString()) ? t.feed.titleTomorrow : t.feed.title}</Text>
-            <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
+            {/* «3 ματς περιμένουν την ψήφο σου.» (founder, 18 Oct: make voting obvious); waits for the feed */}
+            {loading && cards.length === 0 ? (
+              <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
+            ) : (
+              <FeedLine key={feedLine(voteCount, t)} line={feedLine(voteCount, t)} open={voteCount.open > 0 || (voteCount.voted === 0 && voteCount.later > 0)} />
+            )}
           </Animated.View>
           {myMatch.match ? <MyMatchCard match={myMatch.match} pro={proState?.pro ?? false} /> : null}
           {myMatch.match && !proState?.pro ? <ProNudge moment="before_match" /> : null}
@@ -282,6 +292,12 @@ function useInA() {
 }
 
 
+/** the line under the title; it rises in again whenever it changes, so a vote visibly counts down */
+function FeedLine({ line, open }: { line: string; open: boolean }) {
+  const rise = useStgIn(motion.revealDurShort);
+  return <Animated.Text style={[styles.subtitle, open && styles.subtitleOpen, rise]}>{line}</Animated.Text>;
+}
+
 /** the tournament and where it is played, once above its run of matches */
 function GroupHead({ group }: { group: NonNullable<CardMatch['group']> }) {
   return (
@@ -315,6 +331,8 @@ const styles = StyleSheet.create({
   head: { gap: 6 },
   title: { ...text.title },
   subtitle: text.subtitle,
+  // matches wait for you: the line reads as the screen's job, in ink
+  subtitleOpen: { fontFamily: fonts.bodyBold, color: colors.ink },
   end: {
     paddingTop: 4,
     paddingHorizontal: 12,
