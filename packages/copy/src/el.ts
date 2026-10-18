@@ -833,7 +833,7 @@ export const el = {
     unit: 'σερί',
     aria: 'Γιορτή',
     /** a new game level: «LEVEL» over «Ανέβηκες level!», the number in the pill, then the line */
-    level: { label: 'Level', title: 'Ανέβηκες level!', line: 'Συνέχισε να το λες σωστά' },
+    level: { label: 'Level', title: 'Ανέβηκες level!', line: 'Συνέχισε τις σωστές προβλέψεις' },
   },
   /** the unlock ladder's full-screen moments: the title and the line by step key (other steps get none) */
   unlocks: {
@@ -920,19 +920,20 @@ export const el = {
     earned: 'Κερδισμένα',
     locked: 'Κλειδωμένα',
     lockedTier: 'Κλειδωμένο',
-    tierOf: '{tier} · βαθμίδα {n} από 3',
+    tierOf: '{tier} · {n} από 3',
     more: 'Ακόμα {n}',
     tileTier: '{tier}\u00A0· ακόμα\u00A0{n}',
-    leftFor: 'Ακόμα {n} για το {tierLower}',
-    maxed: 'Χρυσό. Τα έχεις όλα.',
+    leftFor: 'Ακόμα {n} για {tierLower}',
+    maxed: 'Χρυσή Βαθμίδα. Τα έχεις όλα.',
     wear: 'Βάλ’ το στην κάρτα',
     worn: 'Φοριέται',
     wornToast: 'Μπήκε στην κάρτα σου',
     footer: 'Τα badges δεν δίνουν πόντους ούτε αλλάζουν level.',
     oneMore: 'Ένα ακόμα για το badge {name}',
-    tiers: ['Χάλκινο', 'Ασημένιο', 'Χρυσό'] as string[],
-    /** the next tier, for «Ακόμα 4 για το …» */
-    tiersLower: ['χάλκινο', 'ασημένιο', 'χρυσό'] as string[],
+    /** founder, 18 Oct */
+    tiers: ['Χάλκινη Βαθμίδα', 'Ασημένια Βαθμίδα', 'Χρυσή Βαθμίδα'] as string[],
+    /** the next tier with its article, for «Ακόμα 4 για τη …» */
+    tiersLower: ['τη Χάλκινη Βαθμίδα', 'την Ασημένια Βαθμίδα', 'τη Χρυσή Βαθμίδα'] as string[],
     names: {
       first_serve: 'Πρώτο σερβίς',
       nice_player: 'Ωραίος ο παίχτης',
@@ -972,8 +973,8 @@ export const el = {
     } as Record<string, string>,
     celebrationNew: 'Νέο badge',
     celebrationTier: 'Νέα βαθμίδα',
-    reward: 'Βαθμίδα {tier}',
-    rewardGold: 'Βαθμίδα {tier} · Frame Level',
+    reward: '{tier}',
+    rewardGold: '{tier} · Frame Level',
     meBadges: 'Badges',
   },
   /** Baller, the ball person that is you (founder, 17 Oct: the trademark) */
