@@ -3,7 +3,7 @@ import { createV2ServerClient } from '@/lib/v2/server';
 import { SignOut } from './SignOut';
 
 /** the v2 admin's desks */
-type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names';
+type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'players' | 'quiz' | 'game' | 'names' | 'notifications';
 
 type Counts = Partial<Record<Desk, number>>;
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
@@ -15,11 +15,12 @@ async function waiting(): Promise<Counts> {
   try {
     const client = await createV2ServerClient();
     const rpc = client.rpc.bind(client) as unknown as Rpc;
-    const [reviews, desk, queue] = await Promise.all([
+    const [reviews, desk, queue, texts] = await Promise.all([
       // the client's requests are thenables without .catch: wrap them so one failure only drops its badge
       Promise.resolve(rpc('admin_ingest_reviews', { p_tournament_id: null })).catch(() => null),
       Promise.resolve(rpc('admin_desk', { p_days: 7 })).catch(() => null),
       Promise.resolve(rpc('admin_moderation', {})).catch(() => null),
+      Promise.resolve(rpc('admin_notification_texts', {})).catch(() => null),
     ]);
     const out: Counts = {};
     if (reviews && !reviews.error) out.tournaments = len(reviews.data);
@@ -31,6 +32,9 @@ async function waiting(): Promise<Counts> {
     if (queue && !queue.error && queue.data && typeof queue.data === 'object') {
       const q = queue.data as Record<string, unknown>;
       out.moderation = len(q.reports) + len(q.disputes) + len(q.players) + len(q.tournaments) + len(q.traits);
+    }
+    if (texts && !texts.error && Array.isArray(texts.data)) {
+      out.notifications = (texts.data as { approved_at?: string | null }[]).filter((t) => !t.approved_at).length;
     }
     return out;
   } catch {
@@ -72,6 +76,7 @@ export async function Nav({ here, staff }: { here: Desk; staff: { name: string; 
         {item('names', 'Names')}
         {item('quiz', 'Quiz')}
         {item('game', 'Game')}
+        {item('notifications', 'Ειδοποιήσεις')}
       </nav>
       <div className="v2-nav-foot">
         <span>

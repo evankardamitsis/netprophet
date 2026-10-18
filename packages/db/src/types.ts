@@ -364,6 +364,10 @@ export type Database = {
         Args: { p_player_ids?: string[]; p_confidence?: string };
         Returns: Json;
       };
+      admin_approve_notification_text: {
+        Args: { p_key: string };
+        Returns: Json;
+      };
       admin_baller_names: {
         Args: { p_limit?: number };
         Returns: Json;
@@ -456,6 +460,10 @@ export type Database = {
         Args: { p_confidence?: string; p_limit?: number; p_offset?: number };
         Returns: Json;
       };
+      admin_notification_texts: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
       admin_players: {
         Args: { p_query?: string; p_filter?: string; p_limit?: number };
         Returns: Json;
@@ -530,6 +538,10 @@ export type Database = {
       };
       admin_unclaim: {
         Args: { p_player_id: string };
+        Returns: Json;
+      };
+      admin_update_notification_text: {
+        Args: { p_key: string; p_title: string; p_body: string };
         Returns: Json;
       };
       admin_update_player: {
