@@ -808,10 +808,6 @@ export type Database = {
         Args: { p_status: string };
         Returns: string;
       };
-      start_pro_trial: {
-        Args: Record<PropertyKey, never>;
-        Returns: Json;
-      };
       store_products: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

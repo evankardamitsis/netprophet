@@ -8,7 +8,8 @@ import type { BuyResult } from './storeTypes';
 /**
  * Pro and cosmetics, bought (founder, 17 Oct). The store (RevenueCat: Stripe on the web, Google Play, later Apple)
  * takes the money; our database learns of it from the webhook a moment later, so after a purchase we ask again until
- * it shows. The free week is ours: no card, once per account.
+ * it shows. The free week is the store's trial on every plan: the card at the start, the charge on day 8 unless
+ * the player cancels (founder, 18 Oct).
  */
 
 /** sample mode: the guest sees the founding plans and a free week */
@@ -39,20 +40,6 @@ export function useProOffer(): { offer: ProOffer | null; refresh: () => Promise<
     void refresh();
   }, [refresh]);
   return { offer, refresh };
-}
-
-/** start the free week; true when Pro is on */
-export function useStartTrial(): () => Promise<boolean> {
-  const api = useApi();
-  return useCallback(async () => {
-    if (!api) return true;
-    try {
-      await api.startProTrial();
-      return true;
-    } catch {
-      return false;
-    }
-  }, [api]);
 }
 
 /** an offer moment showed its line: the server counts it toward one a day */

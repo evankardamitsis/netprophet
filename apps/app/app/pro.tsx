@@ -8,22 +8,23 @@ import { useCopy } from '../src/i18n';
 import { usePro } from '../src/lib/data';
 import { usePopIn, usePress, useRiseIn, useStgIn } from '../src/lib/motion';
 import { track } from '../src/lib/analytics';
-import { activeLine, planCards, type PlanCard } from '../src/lib/pro';
-import { usePurchase, useProOffer, useStartTrial } from '../src/lib/purchase';
+import { activeLine, planCards, trialLine, type PlanCard } from '../src/lib/pro';
+import { usePurchase, useProOffer } from '../src/lib/purchase';
 import { fmt } from '../src/lib/votes';
 import { alpha, colors, fonts } from '../src/theme';
 
 /**
  * Pro (founder, 17 Oct: "very attractive to players so they buy it"): one promise, «Ο βοηθός της σεζόν σου», three
- * outcomes the player feels, then the plans (the founding year until 31/12, or the year, and the month) and the free
- * week as the screen's one blue button; «ή αγόρασε τώρα» buys the picked plan. Payments go through RevenueCat; until
- * its keys are set, buying keeps you on the list at the founding price. With Pro it says until when.
+ * outcomes the player feels, then the plans (the founding year until 31/12, or the year, and the month). The one blue
+ * button buys the picked plan; while the free week is yours it starts with it (founder, 18 Oct: the store's trial,
+ * with a card, charged on day 8 unless cancelled; the line under it says so plainly). Payments go through
+ * RevenueCat; until its keys are set, buying keeps you on the list at the founding price. With Pro it says until when.
  */
 const STG_MS = 450;
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
 
-type Busy = null | 'trial' | 'buy';
+type Busy = null | 'buy';
 
 export default function ProScreen() {
   const t = useCopy();
@@ -31,7 +32,6 @@ export default function ProScreen() {
   const insets = useSafeAreaInsets();
   const { state, join, refresh } = usePro();
   const { offer, refresh: refreshOffer } = useProOffer();
-  const startTrial = useStartTrial();
   const purchase = usePurchase();
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
@@ -54,22 +54,11 @@ export default function ProScreen() {
     await Promise.all([refresh(), refreshOffer()]);
   };
 
-  const onStartTrial = async () => {
-    if (busy) return;
-    setBusy('trial');
-    setNote(null);
-    track('pro_cta_pressed', { price: 'trial', moment });
-    const ok = await startTrial();
-    setBusy(null);
-    if (ok) await done(p.welcome);
-    else setNote(p.failed);
-  };
-
   const onBuy = async () => {
     if (busy || !plan) return;
     setBusy('buy');
     setNote(p.finishing);
-    track('pro_cta_pressed', { price: plan.price, moment });
+    track('pro_cta_pressed', { price: canTrial ? `trial:${plan.price}` : plan.price, moment });
     const r = await purchase.buy(plan.productId, async () => {
       await refresh();
       return false;
@@ -99,7 +88,7 @@ export default function ProScreen() {
         {active ? <Text style={styles.active}>{active}</Text> : null}
         {trialEnd ? <Text style={styles.active}>{fmt(p.trialOn, { date: `${trialEnd.getDate()}/${trialEnd.getMonth() + 1}` })}</Text> : null}
 
-        {!paid && cards.length > 0 ? (
+        {!paid && !onTrial && cards.length > 0 ? (
           <View style={styles.plans}>
             {cards.map((c, i) => (
               <Plan key={c.productId} card={c} on={plan?.productId === c.productId} index={i} bestLabel={p.plans.best} onPress={() => setPicked(c.productId)} />
@@ -112,16 +101,17 @@ export default function ProScreen() {
         {note ? <Text style={styles.note}>{note}</Text> : null}
         {paid ? (
           <Button label={p.close} onPress={close} primary />
-        ) : canTrial ? (
+        ) : onTrial ? (
+          <Button label={p.close} onPress={close} primary />
+        ) : canTrial && plan ? (
           <>
-            <Button label={busy === 'trial' ? p.finishing : p.trial} onPress={() => void onStartTrial()} primary />
-            <Text style={styles.note}>{p.trialNote}</Text>
-            {plan ? <TextLink label={`${p.buyNow} · ${plan.price}`} onPress={() => void onBuy()} /> : null}
+            <Button label={busy === 'buy' ? p.finishing : p.trial} onPress={() => void onBuy()} primary />
+            <Text style={styles.note}>{trialLine(plan, t)}</Text>
           </>
         ) : plan ? (
           <Button label={busy === 'buy' ? p.finishing : fmt(p.buy, { price: plan.price })} onPress={() => void onBuy()} primary />
         ) : null}
-        {!paid ? <TextLink label={p.notNow} onPress={close} /> : null}
+        {!paid && !onTrial ? <TextLink label={p.notNow} onPress={close} /> : null}
       </View>
     </View>
   );

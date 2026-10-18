@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { activeLine, planCards, priceLine, proPrice } from './pro';
+import { activeLine, planCards, priceLine, proPrice, trialLine } from './pro';
 
 const t = getCopy('el');
 
@@ -35,5 +35,16 @@ describe('plan cards', () => {
   });
   it('the yearly plan after the founding offer', () => {
     expect(planCards([{ product_id: 'pro_yearly', price: 69.99, period: 'year' }], t)[0]).toMatchObject({ price: '69,99€', perMonth: '5,83€ τον μήνα' });
+  });
+});
+
+describe('trialLine', () => {
+  it('says what the free week costs today and after, with the date of the charge', () => {
+    const card = planCards([{ product_id: 'pro_monthly', price: 8.99, period: 'month' }], t)[0]!;
+    expect(trialLine(card, t, new Date(2026, 9, 18))).toBe('Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.');
+  });
+  it('names the founding year', () => {
+    const card = planCards([{ product_id: 'pro_founding', price: 49.99, period: 'year' }], t)[0]!;
+    expect(trialLine(card, t, new Date(2026, 9, 28))).toContain('49,99€ τον πρώτο χρόνο');
   });
 });
