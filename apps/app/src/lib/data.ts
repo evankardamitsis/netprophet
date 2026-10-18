@@ -23,6 +23,7 @@ import { useAuth } from './auth';
 import type { Area } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
+import { clearMe, currentMe, meTicket, publishMe, subscribeMe } from './meStore';
 import { askForPushOnce } from './push';
 import { MOCK_TOKEN, mockLinkView } from './link';
 import { hasMoment } from './unlockLadder';
@@ -484,18 +485,21 @@ function meInitials(raw: MeResult, email: string | undefined): string {
 /** Streak and total points for the header. Null while loading in live mode. */
 export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: () => Promise<void> } {
   const api = useApi();
-  const [raw, setRaw] = useState<MeResult | null>(null);
+  // the one get_me the header and Εγώ share, so both always show the same σερί
+  const raw = useSyncExternalStore(subscribeMe, currentMe, currentMe);
   const refresh = useCallback(async () => {
     if (!api) return;
+    const ticket = meTicket();
     try {
-      setRaw(await api.getMe());
+      publishMe(await api.getMe(), ticket);
     } catch {
       // the header keeps the last value; the feed shows its own error
     }
   }, [api]);
   useEffect(() => {
+    if (!api) clearMe();
     void refresh();
-  }, [refresh]);
+  }, [api, refresh]);
   if (!api) return { me: MOCK_ME, raw: null, refresh };
   return {
     me: raw ? { streak: raw.game.streak, points: raw.game.total_points, initials: meInitials(raw, email), sport: raw.profile.primary_sport } : null,
@@ -718,7 +722,8 @@ export interface LadderState {
   ladder: Ladder | null;
   loading: boolean;
   error: boolean;
-  refresh: () => Promise<void>;
+  /** `quiet`: no spinner (a read on focus) */
+  refresh: (quiet?: boolean) => Promise<void>;
 }
 
 /** This month's Κατάταξη in one scope; sample data for the guest. */
@@ -728,12 +733,12 @@ export function useLadder(scope: LadderScope): LadderState {
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (quiet?: boolean) => {
     if (!api) {
       setLadder(mockLadder(scope));
       return;
     }
-    setLoading(true);
+    if (quiet !== true) setLoading(true);
     try {
       setLadder(await api.getLadder(scope, 20));
       setError(false);
@@ -755,7 +760,8 @@ export interface MePageState {
   view: MeView | null;
   loading: boolean;
   error: boolean;
-  refresh: () => Promise<void>;
+  /** `quiet`: no spinner (a read on focus) */
+  refresh: (quiet?: boolean) => Promise<void>;
 }
 
 /** Εγώ: get_me, get_me_page and your player's profile in one view; sample data for the guest. */
@@ -766,15 +772,19 @@ export function useMePage(): MePageState {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  /** `quiet` reads again without the pull-to-refresh spinner (on focus) */
+  const refresh = useCallback(async (quiet?: boolean) => {
+    if (quiet !== true) setLoading(true);
     try {
       const now = new Date();
       if (!api) {
         const m = mockMe(now);
         setView(toMeView(m.me, m.page, m.player, await areasFor(false), t, now));
       } else {
+        const ticket = meTicket();
         const [me, page, areas] = await Promise.all([api.getMe(), api.getMePage(), areasFor(true)]);
+        // the header reads the same reply, so Εγώ and the header never disagree on σερί or πόντοι
+        publishMe(me, ticket);
         const player = me.player ? await api.getPlayer(me.player.id).catch(() => null) : null;
         setView(toMeView(me, page, player, areas, t, now));
       }

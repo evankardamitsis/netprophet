@@ -812,6 +812,8 @@ export const en: Copy = {
       frame: 'Frame «{name}»',
       both: 'Insurance and a frame',
       gear: '«{name}» for your player',
+      short: { freeze: 'Insurance', frame: 'Frame «{name}»', gear: '{name}' },
+      join: ' + ',
       none: 'Keep it going',
     },
     frames: { frame_seven: 'Seven', frame_ten: 'Ten' } as Record<string, string>,
@@ -957,6 +959,7 @@ export const en: Copy = {
     celebrationTier: 'New tier',
     reward: 'Tier {tier}',
     rewardGold: 'Tier {tier} · Frame Level',
+    rewardAt: '{tier} · {n} {unit}',
     meBadges: 'Badges',
   },
   baller: {

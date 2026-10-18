@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -43,6 +43,7 @@ const ACCENT_PAD = 10;
 export default function MeScreen() {
   const t = useCopy();
   const { view, loading, error, refresh } = useMePage();
+  const meSeen = useRef(false);
   const quests = useQuests();
   const badges = useBadges();
   const look = useLook();
@@ -57,10 +58,13 @@ export default function MeScreen() {
       void badges.refresh();
       void look.refresh();
       void myLevel.refresh();
+      // σερί, πόντοι and level: the newest get_me, shared with the header (it updates too)
+      if (meSeen.current) void refresh(true);
+      meSeen.current = true;
       // a vote or a moment may have opened something since last time
       void unlocks.refresh({ afterMoment: true });
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh]),
+    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh, refresh]),
   );
   // «Τα στατιστικά σου» is the same screen with ?page=stats (founder, 14 Oct: Εγώ down to a few rows)
   const { page } = useLocalSearchParams<{ page?: string }>();

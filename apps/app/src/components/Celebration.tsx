@@ -6,16 +6,17 @@ import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
 import { useCopy } from '../i18n';
 import { router } from 'expo-router';
-import { celebrationTitleSize, groupView, isLeague } from '../lib/celebrate';
+import { celebrationTitleSize, groupView, isLeague, isLevel } from '../lib/celebrate';
 import { useMyBaller } from '../lib/data';
 import { colors, ease, fonts, motion } from '../theme';
-import { Baller, type BallerHandle } from './Baller';
+import { LEVEL_UP_AT } from '../lib/levelUp';
+import { Baller, type BallerHandle, type BallerMove } from './Baller';
 
 /**
  * A full-screen celebration (prototype V2 celOn), waiting for «Συνέχεια»: ink with a lime glow, 30 pieces of
  * confetti bursting from the middle, «ΣΕΡΙ», the lime pill counting up to the σερί, the title, the reward line and,
  * at 3.5s, the blue «Συνέχεια». Quests use the same moment without the pill (all queued quests as one); a badge shows its name and three tier dots that fill one by one. Your Baller stars in it
- * (founder, 17 Oct): it drops in, waves and jumps with your win effect.
+ * (founder, 17 Oct): it drops in, waves and jumps with your win effect; for a new level it does its own level-up move.
  */
 const DIM_MS = 600;
 const COUNT_MS = 1100;
@@ -24,6 +25,8 @@ const CONFETTI = [colors.lime, colors.paper, colors.lime, colors.leaf];
 /** your Baller on the stage, and when it jumps */
 const BALLER = 150;
 const JUMPS_AT = [1100, 2300];
+/** «Συνέχεια» comes in here (3.5s); a new level's own move (lib/levelUp) is over by then */
+const CTA_AT = motion.celebration;
 
 export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
@@ -43,13 +46,16 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
   const pill = useSlam(600, 800);
   const title = useSlam(600, 1000);
   const reward = useMeIn(600, 2900);
-  const cta = useMeIn(500, 3500);
+  const cta = useMeIn(500, CTA_AT);
   const me = useMyBaller();
   const baller = useRef<BallerHandle>(null);
+  // a new level has its own move (founder, 18 Oct); every other moment jumps twice
+  const levelUp = items[0] !== undefined && isLevel(items[0]);
   useEffect(() => {
-    const ids = JUMPS_AT.map((at) => setTimeout(() => baller.current?.play('jump'), at));
+    const moves: [number, BallerMove][] = levelUp ? [[LEVEL_UP_AT, 'levelUp']] : JUMPS_AT.map((at) => [at, 'jump']);
+    const ids = moves.map(([at, move]) => setTimeout(() => baller.current?.play(move), at));
     return () => ids.forEach(clearTimeout);
-  }, []);
+  }, [levelUp]);
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onDone}>

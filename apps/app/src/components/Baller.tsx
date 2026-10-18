@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { PanResponder, Platform, Pressable, View } from 'react-native';
+import { PanResponder, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -15,6 +15,8 @@ import * as Haptics from 'expo-haptics';
 import type { AvatarLook } from '../lib/avatar';
 import { nextPoke } from '../lib/baller';
 import { playSound } from '../lib/sound';
+import { LEVEL_UP } from '../lib/levelUp';
+import { alpha, colors, motion } from '../theme';
 import { BallArt, type Mouth } from './Avatar';
 import { EFFECT_BEHIND, EFFECT_SOUND, WinEffect } from './WinEffects';
 
@@ -24,7 +26,14 @@ import { EFFECT_BEHIND, EFFECT_SOUND, WinEffect } from './WinEffects';
  * haptic. With `pokeable` it answers a touch: a tap squashes it, five quick taps make it dizzy, a long press makes it
  * jump. Lists keep the still `Avatar`; Baller is for the places where it is the star.
  */
-export type BallerMove = 'jump' | 'spin' | 'squash' | 'sigh' | 'wave' | 'dizzy' | 'drop' | 'hop';
+export type BallerMove = 'jump' | 'spin' | 'squash' | 'sigh' | 'wave' | 'dizzy' | 'drop' | 'hop' | 'levelUp';
+
+/**
+ * «Ανέβηκες level!» has its own move (founder, 18 Oct: "the level up should have a different baller animation"): a
+ * crouch, then Baller grows and spins up twice inside a lime glow ring, comes down, lands with a bounce and does a
+ * little victory hop. Lime because a level is earned. Used only for a new level; timing in lib/levelUp.
+ */
+const { crouch: LU_CROUCH, rise: LU_RISE, fall: LU_FALL, land: LU_LAND, hopAt: LU_HOP_AT } = LEVEL_UP;
 
 export interface BallerHandle {
   play: (move: BallerMove) => void;
@@ -87,6 +96,11 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
   const sy = useSharedValue(1);
   const tilt = useSharedValue(0);
   const turn = useSharedValue(0);
+  // level up: Baller grows, and the lime ring behind it (two waves) opens and fades
+  const grow = useSharedValue(1);
+  const ring = useSharedValue(0);
+  const ring2 = useSharedValue(0);
+  const [glow, setGlow] = useState(0);
   const [raised, setRaised] = useState(false);
   const [mouth, setMouth] = useState<Mouth>(mood);
   // a throw: where the finger took it
@@ -211,9 +225,51 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
           });
           swing([[900, true], [1100, false], [1300, true], [1600, false]]);
           break;
+        case 'levelUp': {
+          // crouch, then up: a quarter bigger, two turns, the lime ring opening behind; down, a bounce, a hop
+          face('open', LU_LAND + 400);
+          buzz('medium');
+          setGlow((g) => g + 1);
+          squish([[0.8, LU_CROUCH], [1.1, Math.round(LU_RISE * 0.3)], [1, Math.round(LU_RISE * 0.7)], [1, LU_FALL], [0.76, 90], [1.1, 160], [0.97, 140], [1, 160]]);
+          grow.value = withSequence(
+            withTiming(1, { duration: LU_CROUCH }),
+            withTiming(1.25, { duration: LU_RISE, easing: Easing.out(Easing.cubic) }),
+            withTiming(1, { duration: LU_FALL, easing: Easing.in(Easing.quad) }),
+          );
+          lift.value = withSequence(
+            withTiming(-size * 0.04, { duration: LU_CROUCH, easing: out }),
+            withTiming(size * 0.55, { duration: LU_RISE, easing: Easing.out(Easing.cubic) }),
+            withTiming(0, { duration: LU_FALL, easing: Easing.in(Easing.quad) }),
+            withTiming(size * 0.1, { duration: 150, easing: out }),
+            withTiming(0, { duration: 170, easing: Easing.in(Easing.quad) }),
+            // the victory hop
+            withDelay(LU_HOP_AT - LU_LAND - 320, withTiming(size * 0.18, { duration: 170, easing: out })),
+            withTiming(0, { duration: 280, easing: Easing.bounce }),
+          );
+          turn.value = withSequence(
+            withDelay(LU_CROUCH, withTiming(720, { duration: LU_RISE + LU_FALL, easing: Easing.inOut(Easing.cubic) })),
+            withTiming(0, { duration: 0 }),
+          );
+          ring.value = 0;
+          ring2.value = 0;
+          ring.value = withDelay(LU_CROUCH, withTiming(1, { duration: LU_RISE + LU_FALL, easing: Easing.out(Easing.cubic) }));
+          ring2.value = withDelay(LU_CROUCH + motion.stagger * 4, withTiming(1, { duration: LU_RISE + LU_FALL, easing: Easing.out(Easing.cubic) }));
+          later(LU_CROUCH, () => playSound('whoosh'));
+          later(LU_LAND, () => {
+            buzz('success');
+            playSound('cheer');
+            if (effect) setBurst((b) => b + 1);
+          });
+          swing([[LU_LAND, true], [LU_HOP_AT + 300, false]]);
+          later(LU_HOP_AT, () => {
+            buzz('light');
+            playSound('pop');
+          });
+          break;
+        }
       }
     },
-    [reduced, face, squish, swing, size, effect, later, lift, tilt, turn, sx, sy],
+    [reduced, face, squish, swing, size, effect, later, lift, tilt, turn, sx, sy, grow, ring, ring2],
   );
 
   useImperativeHandle(ref, () => ({ play }), [play]);
@@ -240,11 +296,16 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
         { translateY: -up + dy.value },
         { rotateY: `${turn.value}deg` },
         { rotate: `${tilt.value}deg` },
-        { scaleX: sx.value * (2 - breathe) },
-        { scaleY: sy.value * breathe },
+        { scaleX: sx.value * (2 - breathe) * grow.value },
+        { scaleY: sy.value * breathe * grow.value },
       ],
     };
   });
+  // the level-up ring: opens from Baller's size to twice it and fades; the glow disc under it swells and goes
+  const ringStyle = useAnimatedStyle(() => ({ opacity: ring.value === 0 ? 0 : 1 - ring.value, transform: [{ scale: 0.7 + 1.3 * ring.value }] }));
+  const ring2Style = useAnimatedStyle(() => ({ opacity: ring2.value === 0 ? 0 : 0.8 * (1 - ring2.value), transform: [{ scale: 0.7 + 1.1 * ring2.value }] }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: Math.sin(ring.value * Math.PI) * 0.9, transform: [{ scale: 0.9 + 0.5 * ring.value }] }));
+  const ringBase = { position: 'absolute' as const, width: size, height: size, borderRadius: size };
 
   const poke = () => {
     const r = nextPoke(taps.current, Date.now());
@@ -281,6 +342,13 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
 
   const art = (
     <View {...(throwable ? fling.panHandlers : {})}>
+      {glow > 0 ? (
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.ringBox]}>
+          <Animated.View style={[ringBase, { backgroundColor: alpha(colors.lime, 0.22) }, glowStyle]} />
+          <Animated.View style={[ringBase, { borderWidth: Math.max(3, size * 0.045), borderColor: colors.lime }, ringStyle]} />
+          <Animated.View style={[ringBase, { borderWidth: Math.max(2, size * 0.025), borderColor: colors.lime }, ring2Style]} />
+        </View>
+      ) : null}
       {burst > 0 && effect && EFFECT_BEHIND.has(effect) ? <WinEffect key={`b${burst}`} effect={effect} size={size} /> : null}
       <Animated.View style={style}>
         <BallArt look={look} size={size} kit={kit} gear={gear} frame={frame} bg={bg} mouth={mouth} dizzy={dizzy} raised={raised} eyes={{ open, look: glance }} />
@@ -304,3 +372,5 @@ export const Baller = forwardRef<BallerHandle, Props>(function Baller(
     </Pressable>
   );
 });
+
+const styles = StyleSheet.create({ ringBox: { alignItems: 'center', justifyContent: 'center' } });

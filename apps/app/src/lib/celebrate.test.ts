@@ -50,6 +50,45 @@ describe('quest celebrations', () => {
   });
 });
 
+const sc = (id: string, streak: number, reward: { freeze: boolean; frame: string | null; gear?: string | null }): StreakCelebration => ({
+  id,
+  created_at: '2026-10-18T08:00:00Z',
+  payload: { type: 'streak_milestone', streak, match_id: `m${streak}`, reward },
+});
+
+describe('σερί milestones queued together (founder, 18 Oct: σερί 5 and σερί 3 on two screens)', () => {
+  it('play as ONE moment, whatever order they came in, and all are marked seen', () => {
+    const three = sc('s3', 3, { freeze: true, frame: null, gear: null });
+    const five = sc('s5', 5, { freeze: false, frame: null, gear: 'gear_headband' });
+    for (const list of [[five, three], [three, five]]) {
+      const group = nextGroup([...list, b('b1', 'in_a_row', 1, true)]);
+      expect(group.map((x) => x.id).sort()).toEqual(['s3', 's5']);
+      const v = groupView(group, copy);
+      expect(v.streak).toBe(5);
+      expect(v.title).toBe('Πέντε στη σειρά!');
+      // both gifts, only what was given
+      expect(v.reward).toBe('Ασφάλεια + Κορδέλα');
+    }
+  });
+  it('names a single gift with the milestone line, and nothing when nothing was given', () => {
+    expect(groupView([sc('a', 3, { freeze: false, frame: null }), sc('b', 5, { freeze: false, frame: null, gear: 'gear_headband' })], copy).reward).toBe(
+      '«Κορδέλα» για τον παίκτη σου',
+    );
+    expect(groupView([sc('a', 3, { freeze: false, frame: null }), sc('b', 5, { freeze: false, frame: null })], copy)).toMatchObject({ streak: 5, reward: 'Συνέχισε έτσι' });
+    expect(groupView([sc('a', 5, { freeze: false, frame: null }), sc('b', 7, { freeze: false, frame: 'frame_seven' })], copy).reward).toBe('Κορνίζα «Επτά»');
+    expect(groupView([sc('a', 3, { freeze: true, frame: null }), sc('b', 7, { freeze: false, frame: 'frame_seven' })], copy).reward).toBe('Ασφάλεια και κορνίζα');
+    expect(groupView([sc('a', 3, { freeze: true, frame: null }), sc('b', 5, { freeze: false, frame: null, gear: 'gear_headband' }), sc('c', 7, { freeze: false, frame: 'frame_seven' })], copy)).toMatchObject({
+      streak: 7,
+      reward: 'Ασφάλεια + Κορδέλα + Κορνίζα «Επτά»',
+    });
+  });
+  it('the «Στη σειρά» badge names its tier number, so it never reads as the σερί you have now', () => {
+    expect(groupView([b('x', 'in_a_row', 1, true)], copy).reward).toBe('Χάλκινη Βαθμίδα · 5 σωστές ψήφοι στη σειρά');
+    expect(groupView([b('x', 'in_a_row', 3, false)], copy).reward).toBe('Χρυσή Βαθμίδα · Frame Level · 10 σωστές ψήφοι στη σειρά');
+    expect(groupView([b('x', 'gentleman', 1, true)], copy).reward).toBe('Χάλκινη Βαθμίδα');
+  });
+});
+
 const b = (id: string, badgeKey: string, tier: 1 | 2 | 3, isNew: boolean): BadgeCelebration => ({
   id,
   created_at: '2026-10-12T10:00:00Z',
@@ -59,7 +98,7 @@ const b = (id: string, badgeKey: string, tier: 1 | 2 | 3, isNew: boolean): Badge
 describe('badge celebrations', () => {
   it('a new badge and a new tier say it, with the tier and no pill', () => {
     expect(groupView([b('x', 'gentleman', 1, true)], copy)).toEqual({ label: 'ΝΕΟ BADGE', streak: null, tier: 1, title: 'Ο ευγενικός', reward: 'Χάλκινη Βαθμίδα' });
-    expect(groupView([b('x', 'in_a_row', 2, false)], copy)).toMatchObject({ label: 'ΝΕΑ ΒΑΘΜΙΔΑ', tier: 2, reward: 'Ασημένια Βαθμίδα' });
+    expect(groupView([b('x', 'in_a_row', 2, false)], copy)).toMatchObject({ label: 'ΝΕΑ ΒΑΘΜΙΔΑ', tier: 2, reward: 'Ασημένια Βαθμίδα · 7 σωστές ψήφοι στη σειρά' });
   });
   it('gold also names the Frame Level', () => {
     expect(groupView([b('x', 'many_votes', 3, false)], copy).reward).toBe('Χρυσή Βαθμίδα · Frame Level');

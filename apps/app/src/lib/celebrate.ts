@@ -1,3 +1,4 @@
+import { BADGES } from '@netprophet/core';
 import { greekCaps, type Copy } from '@netprophet/copy';
 import type { BadgeCelebration, Celebration, LeagueCelebration, LevelCelebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
 import { badgeName } from './badges';
@@ -23,10 +24,15 @@ export interface CelebrationView {
   reward: string;
 }
 
-/** which celebrations play together: the σερί ones one by one first, then a new level, then every queued quest as ONE, then badges, then unlocks, then the month's league result, one by one */
+/**
+ * which celebrations play together: every queued σερί milestone as ONE first (founder, 18 Oct: σερί 3 and σερί 5
+ * from one batch of results played as two moments, the 5 before the 3; now one moment shows the highest with every
+ * gift), then a new level, then every queued quest as ONE, then badges, then unlocks, then the month's league result,
+ * one by one
+ */
 export function nextGroup(list: Celebration[]): Celebration[] {
-  const streak = list.find((c) => c.payload.type === 'streak_milestone');
-  if (streak) return [streak];
+  const streaks = list.filter(isStreak);
+  if (streaks.length > 0) return streaks;
   const level = list.find(isLevel);
   if (level) return [level];
   const quests = list.filter((c) => c.payload.type === 'quest');
@@ -40,6 +46,7 @@ export function nextGroup(list: Celebration[]): Celebration[] {
 }
 
 const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
+export const isStreak = (c: Celebration): c is StreakCelebration => c.payload.type === 'streak_milestone';
 export const isLevel = (c: Celebration): c is LevelCelebration => c.payload.type === 'level';
 
 /** a new game level: «LEVEL», the number in the pill, «Ανέβηκες level!» */
@@ -72,12 +79,16 @@ export function celebrationTitleSize(title: string): number {
 export function badgeCelebrationView(c: BadgeCelebration, t: Copy): CelebrationView {
   const { badge, tier } = c.payload;
   const tierName = t.badges.tiers[tier - 1] ?? '';
+  // «Στη σειρά» counts your best σερί: the tier names its number («Χάλκινη Βαθμίδα · 5 σωστές ψήφοι στη σειρά»), so
+  // it never reads as the σερί you have now
+  const at = badge === 'in_a_row' ? BADGES.find((d) => d.id === badge)?.thresholds[tier - 1] : undefined;
+  const base = fmt(tier >= 3 ? t.badges.rewardGold : t.badges.reward, { tier: tierName });
   return {
     label: greekCaps(c.payload.new ? t.badges.celebrationNew : t.badges.celebrationTier),
     streak: null,
     tier,
     title: badgeName(badge, t),
-    reward: fmt(tier >= 3 ? t.badges.rewardGold : t.badges.reward, { tier: tierName }),
+    reward: at === undefined ? base : fmt(t.badges.rewardAt, { tier: base, n: at, unit: t.badges.units[badge] ?? '' }),
   };
 }
 
@@ -92,7 +103,38 @@ export function groupView(group: Celebration[], t: Copy): CelebrationView {
   if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
   if (isUnlock(group[0]!)) return unlockCelebrationView(group[0], t);
   if (isLeague(group[0]!)) return leagueView(group[0], t);
-  return celebrationView(group[0] as StreakCelebration, t);
+  return streakGroupView(group.filter(isStreak), t);
+}
+
+/**
+ * The σερί milestones queued together (one batch of results took σερί from 2 to 5): one moment with the highest,
+ * and a reward line that names every gift they gave («Ασφάλεια + Κορδέλα»), only what was actually given.
+ */
+export function streakGroupView(list: StreakCelebration[], t: Copy): CelebrationView {
+  const top = list.reduce((a, b) => (b.payload.streak > a.payload.streak ? b : a));
+  if (list.length === 1) return celebrationView(top, t);
+  const r = t.celebrate.rewards;
+  const gifts: string[] = [];
+  let frame: string | null = null;
+  let gear: string | null = null;
+  const freeze = list.some((c) => c.payload.reward?.freeze);
+  if (freeze) gifts.push(r.short.freeze);
+  for (const c of [...list].sort((a, b) => a.payload.streak - b.payload.streak)) {
+    const f = c.payload.reward?.frame;
+    const g = c.payload.reward?.gear;
+    if (f) {
+      frame = f;
+      gifts.push(fmt(r.short.frame, { name: t.celebrate.frames[f] ?? f }));
+    }
+    if (g) {
+      gear = g;
+      gifts.push(fmt(r.short.gear, { name: t.celebrate.gear[g] ?? g }));
+    }
+  }
+  // one gift (or none, or the old «Ασφάλεια και κορνίζα» pair): the single milestone's own line
+  const view = celebrationView({ ...top, payload: { ...top.payload, reward: { freeze, frame, gear } } }, t);
+  const pair = gifts.length === 2 && freeze && frame !== null;
+  return gifts.length > 1 && !pair ? { ...view, reward: gifts.join(r.join) } : view;
 }
 
 export function celebrationView(c: StreakCelebration, t: Copy): CelebrationView {

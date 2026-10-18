@@ -908,6 +908,9 @@ export const el = {
       frame: 'Κορνίζα «{name}»',
       both: 'Ασφάλεια και κορνίζα',
       gear: '«{name}» για τον παίκτη σου',
+      /** two milestones in one go (3 and 5 from one batch of results): every gift, joined */
+      short: { freeze: 'Ασφάλεια', frame: 'Κορνίζα «{name}»', gear: '{name}' },
+      join: ' + ',
       none: 'Συνέχισε έτσι',
     },
     frames: { frame_seven: 'Επτά', frame_ten: 'Δέκα' } as Record<string, string>,
@@ -1060,6 +1063,8 @@ export const el = {
     celebrationTier: 'Νέα βαθμίδα',
     reward: '{tier}',
     rewardGold: '{tier} · Frame Level',
+    /** «Στη σειρά» is about your best σερί: the tier names its number, so it never reads as today's σερί */
+    rewardAt: '{tier} · {n} {unit}',
     meBadges: 'Badges',
   },
   /** Baller, the ball person that is you (founder, 17 Oct: the trademark) */

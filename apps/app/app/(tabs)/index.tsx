@@ -125,6 +125,27 @@ export default function VoteScreen() {
     hud.setPending(results);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results]);
+  // the header holds σερί back for the cards only here; on every other screen it shows get_me as it is
+  const { setOnFeed } = hud;
+  useFocusEffect(
+    useCallback(() => {
+      setOnFeed(true);
+      // σερί and πόντοι: read get_me again, the same reply Εγώ and the Ladder read
+      void unlocksNow.current.refresh();
+      return () => setOnFeed(false);
+    }, [setOnFeed]),
+  );
+  // new result cards came in, or one played: get_me again, so the header lands on the server's σερί after the
+  // last card (it was read before these results resolved, it would fall back to an old number)
+  const resultIds = results.map((r) => r.id).join();
+  const firstIds = useRef(true);
+  useEffect(() => {
+    if (firstIds.current) {
+      firstIds.current = false;
+      return;
+    }
+    void unlocksNow.current.refresh();
+  }, [resultIds]);
 
   const onResultDone = useCallback(
     (card: CardResult) => {
@@ -137,7 +158,7 @@ export default function VoteScreen() {
   );
   const current = !between ? results[0] : undefined;
   // celebrations wait until every result card has played
-  // σερί ones first, one by one; every queued quest together as one
+  // every queued σερί milestone together as one (the highest), then the rest; every queued quest together as one
   const group = results.length === 0 && !between ? nextGroup(celebrations) : [];
   const celebrating = group.length > 0 ? group : undefined;
   // a step that opens quietly has no moment: mark it seen without showing anything

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { View } from 'react-native';
 import type { CardResult } from './feed';
+import { hudNumbers } from './hudNumbers';
 
 /**
  * The header's numbers while result cards play (prototype rqApply / fly):
@@ -30,6 +31,8 @@ interface Hud {
   streakFx: StreakFx;
   flights: Flight[];
   setPending(results: CardResult[]): void;
+  /** the feed (where result cards play) is on screen; elsewhere the header shows get_me as it is */
+  setOnFeed(on: boolean): void;
   /** the card's moment: its points and σερί reach the header */
   apply(card: CardResult): void;
   /** «+10» to πόντοι, and «+1» to σερί when `withStreak` */
@@ -67,6 +70,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
   const [pending, setPendingState] = useState<CardResult[]>([]);
   const [applied, setApplied] = useState<Set<string>>(() => new Set());
   const [streakFx, setStreakFx] = useState<StreakFx>(null);
+  const [onFeed, setOnFeed] = useState(true);
   const [flights, setFlights] = useState<Flight[]>([]);
   const points = useRef<View | null>(null);
   const streak = useRef<View | null>(null);
@@ -109,20 +113,19 @@ export function HudProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Hud>(() => {
-    const waiting = pending.filter((r) => !applied.has(r.id));
     return {
-      pointsOffset: waiting.reduce((sum, r) => sum + r.points, 0),
-      streakShown: waiting.length ? waiting[0]!.streakBefore : null,
+      ...hudNumbers(pending, applied, onFeed),
       streakFx,
       flights,
       setPending,
+      setOnFeed,
       apply,
       fly,
       targets: { points, streak },
       questBar,
       showQuestBar,
     };
-  }, [pending, applied, streakFx, flights, setPending, apply, fly, questBar, showQuestBar]);
+  }, [pending, applied, onFeed, streakFx, flights, setPending, apply, fly, questBar, showQuestBar]);
 
   return <HudContext.Provider value={value}>{children}</HudContext.Provider>;
 }
