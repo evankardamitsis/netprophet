@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import type { Ladder, LadderRow, LadderScope } from '@netprophet/db';
 import { Segmented } from '../../src/components/OnboardingControls';
@@ -35,6 +35,14 @@ export default function LadderScreen() {
   const [hasLeague, setHasLeague] = useState(true);
   const scope = pickScope(picked, hasLeague, areaOpen);
   const { ladder, loading, error, refresh } = useLadder(scope);
+  // the σερί line here reads get_ladder: read it again each time the tab comes back, so it matches the header
+  const seen = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (seen.current) void refresh(true);
+      seen.current = true;
+    }, [refresh]),
+  );
   const titleIn = useInA(IN_MS);
   useEffect(() => {
     if (ladder) setHasLeague(ladder.has_league);
