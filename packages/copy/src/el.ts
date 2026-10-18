@@ -923,7 +923,7 @@ export const el = {
     tierOf: '{tier} · {n} από 3',
     more: 'Ακόμα {n}',
     tileTier: '{tier}\u00A0· ακόμα\u00A0{n}',
-    leftFor: 'Ακόμα {n} για την {tierLower}',
+    leftFor: 'Ακόμα {n} για {tierLower}',
     maxed: 'Χρυσή Βαθμίδα. Τα έχεις όλα.',
     wear: 'Βάλ’ το στην κάρτα',
     worn: 'Φοριέται',
@@ -932,8 +932,8 @@ export const el = {
     oneMore: 'Ένα ακόμα για το badge {name}',
     /** founder, 18 Oct */
     tiers: ['Χάλκινη Βαθμίδα', 'Ασημένια Βαθμίδα', 'Χρυσή Βαθμίδα'] as string[],
-    /** the next tier, for «Ακόμα 4 για την …» */
-    tiersLower: ['Χάλκινη Βαθμίδα', 'Ασημένια Βαθμίδα', 'Χρυσή Βαθμίδα'] as string[],
+    /** the next tier with its article, for «Ακόμα 4 για τη …» */
+    tiersLower: ['τη Χάλκινη Βαθμίδα', 'την Ασημένια Βαθμίδα', 'τη Χρυσή Βαθμίδα'] as string[],
     names: {
       first_serve: 'Πρώτο σερβίς',
       nice_player: 'Ωραίος ο παίχτης',

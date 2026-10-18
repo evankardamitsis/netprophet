@@ -62,7 +62,7 @@ describe('badge lines', () => {
     expect(tileTierLine(get('gentleman'), copy)).toBe('Χάλκινη Βαθμίδα\u00A0· ακόμα\u00A08');
     expect(tileTierLine(row(100, 3), copy)).toBe('Χρυσή Βαθμίδα');
     expect(leftLine(get('gentleman'), copy)).toBe('Ακόμα 8 για την Ασημένια Βαθμίδα');
-    expect(leftLine(get('steady'), copy)).toBe('Ακόμα 1 για την Χάλκινη Βαθμίδα');
+    expect(leftLine(get('steady'), copy)).toBe('Ακόμα 1 για τη Χάλκινη Βαθμίδα');
     expect(leftLine(row(100, 3), copy)).toBe('Χρυσή Βαθμίδα. Τα έχεις όλα.');
   });
 });
