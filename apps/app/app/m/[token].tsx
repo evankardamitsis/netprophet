@@ -257,17 +257,21 @@ function Join({ view, token, onLater }: { view: MatchLinkView; token: string; on
   const gate = useOnboardingGate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // a roster player is asked for: staff approve it (founder, 18 Oct 2026)
+  const [requested, setRequested] = useState(false);
 
   const join = async () => {
+    if (requested) return router.replace('/');
     await savePendingLink(token);
     // signed in and past onboarding: claim here; otherwise sign-in and onboarding pick the token up
     if (session && api && gate.status === 'done') {
       setBusy(true);
       try {
-        await api.claimViaLink(token);
-        track('link_claimed', { result: 'ok' });
+        const r = await api.claimViaLink(token);
+        track('link_claimed', { result: r.requested ? 'requested' : 'ok' });
         await clearPendingLink();
-        router.replace('/');
+        if (r.requested) setRequested(true);
+        else router.replace('/');
       } catch {
         track('link_claimed', { result: 'failed' });
         setError(t.link.claimTaken);
@@ -289,7 +293,8 @@ function Join({ view, token, onLater }: { view: MatchLinkView; token: string; on
         <Text style={styles.joinSub}>{j.sub}</Text>
       </View>
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {view.player.claimed ? null : <Primary label={j.cta} busy={busy} onPress={join} />}
+      {requested ? <Text style={styles.joinNote}>{t.link.claimRequested}</Text> : null}
+      {view.player.claimed ? null : <Primary label={requested ? t.common.continue : j.cta} busy={busy} onPress={join} />}
       <Underlined label={j.later} onPress={onLater} />
     </Animated.View>
   );
@@ -377,6 +382,7 @@ const styles = StyleSheet.create({
   joinHead: { fontFamily: fonts.displayHeavy, fontSize: 64, lineHeight: 64, paddingBottom: 13, marginBottom: -19, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   joinSub: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 24, color: colors.mist },
   error: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  joinNote: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.ink },
   bye: { flexGrow: 1, justifyContent: 'center', gap: 16, minHeight: 420 },
   byeText: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, paddingBottom: 10, marginBottom: -12, color: colors.ink, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
 });

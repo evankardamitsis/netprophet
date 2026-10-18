@@ -351,6 +351,8 @@ export const el = {
       newPlayer: 'Δεν με βρίσκω, είμαι καινούριος',
       taken: 'Αυτόν τον παίκτη τον έχει ήδη κάποιος άλλος. Αν είσαι εσύ, γράψε μας.',
       otherClaimed: 'Ο λογαριασμός σου έχει ήδη έναν παίκτη.',
+      /** a roster player is asked for, staff approve (founder, 18 Oct 2026) */
+      requested: 'Το αίτημά σου στάλθηκε. Θα το δούμε σύντομα.',
       failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     },
     play: {
@@ -752,6 +754,7 @@ export const el = {
     claimSub: 'Από το ματς που σου έστειλαν. Το κρατάμε στο προφίλ σου.',
     claimYes: 'Ναι, εγώ είμαι',
     claimTaken: 'Αυτός ο παίκτης έχει ήδη προφίλ.',
+    claimRequested: 'Το αίτημά σου στάλθηκε. Θα το δούμε σύντομα.',
     claimNo: 'Δεν είμαι εγώ',
     /** Ποιους ξέρεις after a link: one is enough, the logger is already picked */
     knownNote: 'Διάλεξε όσους ξέρεις. {who} είναι ήδη μέσα.',

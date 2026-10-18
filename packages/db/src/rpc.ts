@@ -831,7 +831,8 @@ export interface MeResult {
     hidden: boolean;
     role: 'user' | 'editor' | 'admin';
     onboarding_state: Record<string, unknown>;
-    claim_status: 'none' | 'claimed' | 'skipped' | 'creation_requested';
+    /** 'requested': asked to be a roster player, staff have not decided yet */
+    claim_status: 'none' | 'claimed' | 'skipped' | 'creation_requested' | 'requested';
     /** the drawn avatar picked (m1 to m6, f1 to f6); null or missing: the default for the account */
     avatar?: string | null;
   };
@@ -1033,4 +1034,12 @@ export interface GetTournamentResult {
   /** raw names in the draws that belong to hidden players or minors */
   masked: string[];
   days: { date: string; matches: TournamentMatch[] }[];
+}
+
+/** claim_player / claim_via_link: a roster player is asked for (`requested`, staff approve); a pending player from a link is taken (`claimed`) */
+export interface ClaimResult {
+  player_id: string;
+  claimed: boolean;
+  requested?: boolean;
+  replayed: boolean;
 }

@@ -50,6 +50,13 @@ export async function reviewMatch(matchId: string, approve: boolean): Promise<Ac
   });
 }
 
+/** «Αιτήματα παικτών»: someone asks to be a roster player; approving makes the player theirs */
+export async function reviewClaim(userId: string, approve: boolean): Promise<ActionResult> {
+  return act('admin_review_claim', { p_user: userId, p_approve: approve }, () =>
+    approve ? 'Approved. The player is theirs now.' : 'Rejected. They can ask again or start as a new player.',
+  );
+}
+
 export async function approvePlayer(playerId: string, first: string, surname: string): Promise<ActionResult> {
   return act('admin_decide_player', { p_player_id: playerId, p_action: 'approve', p_first: first, p_surname: surname }, () => 'Approved.');
 }
