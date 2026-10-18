@@ -54,9 +54,12 @@ select ok(not exists (select 1 from q1, jsonb_array_elements(doc -> 'cards') c, 
           'never a minor, a hidden player or yourself');
 select is((select count(*) - count(distinct x ->> 'id') from q1, jsonb_array_elements(doc -> 'cards') c,
                   jsonb_array_elements(c -> 'content' -> 'players') x)::int, 0, 'nobody twice in a set');
-select ok((select (c -> 'content' ->> 'right')::int between 0 and 2 and jsonb_array_length(c -> 'content' -> 'clues') >= 2
+-- the right answer stays on the server until you answer: read it from the card
+select tests.logout();
+select ok((select ((select x.content ->> 'right' from core.quiz_set_cards x where x.id = (c ->> 'id')::uuid))::int between 0 and 2 and jsonb_array_length(c -> 'content' -> 'clues') >= 2
              from q1, jsonb_array_elements(doc -> 'cards') c where c ->> 'family' = 'q'),
           '«Ποιος είναι;» has clues and one right answer');
+select tests.login(:'u'::uuid);
 select is((select jsonb_agg(c -> 'id') from jsonb_array_elements(api.get_quiz() -> 'cards') c),
           (select jsonb_agg(c -> 'id') from q1, jsonb_array_elements(doc -> 'cards') c), 'the same set all day');
 
