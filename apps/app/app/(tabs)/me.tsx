@@ -28,6 +28,12 @@ import { Baller } from '../../src/components/Baller';
 import { CardBackground } from '../../src/components/CardBackground';
 import type { AvatarLook } from '../../src/lib/avatar';
 import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
+import { useMoments } from '../../src/lib/useMoments';
+
+/** opening Εγώ is the player's own calm moment to meet Baller: it comes this long after the page settles */
+const MEET_BALLER_ON_ME_MS = 900;
 
 /**
  * Εγώ (prototype V2, isMeScr), opened from the header's initials. M1 scope: the hero (level, σερί, πόντοι μήνα,
@@ -77,6 +83,7 @@ export default function MeScreen() {
       void avatarRefresh();
     }, [avatarRefresh]),
   );
+  useMeetBallerHere(!statsPage);
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(statsPage ? '/me' : '/'));
   let n = 0;
@@ -1015,3 +1022,32 @@ const styles = StyleSheet.create({
   proTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   proPrice: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
 });
+
+/**
+ * A player from before Baller had a name meets it on Εγώ, its home, if this visit has not had its moment yet
+ * (founder, 18 Oct). Opening Εγώ is asked for, so it needs no vote first; leaving before it comes cancels it.
+ */
+function useMeetBallerHere(on: boolean) {
+  const baller = useBaller();
+  const { claim } = useMoments();
+  const met = baller.met;
+  useFocusEffect(
+    useCallback(() => {
+      if (!on || met !== false) return undefined;
+      let cancelled = false;
+      const id = setTimeout(() => {
+        AsyncStorage.getItem(BALLER_OFFERED_KEY)
+          .catch(() => null)
+          .then((offered) => {
+            if (cancelled || !shouldOfferBaller(met, offered) || !claim('baller', { asked: true })) return;
+            AsyncStorage.setItem(BALLER_OFFERED_KEY, '1').catch(() => undefined);
+            router.push('/baller?first=1');
+          });
+      }, MEET_BALLER_ON_ME_MS);
+      return () => {
+        cancelled = true;
+        clearTimeout(id);
+      };
+    }, [on, met, claim]),
+  );
+}

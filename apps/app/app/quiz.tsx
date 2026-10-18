@@ -17,6 +17,7 @@ import { usePopIn, usePress, useStgIn } from '../src/lib/motion';
 import { chipText, fraction, questTitle } from '../src/lib/quests';
 import { cardView, firstUnanswered, verdict } from '../src/lib/quiz';
 import { useUnlocks } from '../src/lib/unlocks';
+import { momentsAct } from '../src/lib/useMoments';
 import { colors, fonts } from '../src/theme';
 
 /**
@@ -48,6 +49,8 @@ export default function QuizScreen() {
   const toast = notice ? <Toast key={notice.n} text={notice.kind === 'expired' ? t.quiz.expired : t.quiz.answerFailed} /> : null;
 
   const onAnswer = (cardId: string, option: number) => {
+    // an answer opens the visit's one moment: a celebration it earned plays back on Σήμερα
+    momentsAct();
     void answer(cardId, option).then((res) => {
       if (!res) return;
       // quests count answers; the sixth one pays +30, so the header's points are read again
