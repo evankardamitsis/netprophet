@@ -532,13 +532,16 @@ export const el = {
       perMonth: '{price} τον μήνα',
       best: 'Καλύτερη τιμή',
     },
-    trial: 'Μια εβδομάδα δωρεάν',
-    trialNote: 'Χωρίς κάρτα. Στο τέλος διαλέγεις αν θα συνεχίσεις.',
+    /** the blue button while the free week is yours (founder, 18 Oct: the store's trial, with a card) */
+    trial: 'Ξεκίνα τη δωρεάν εβδομάδα',
+    /** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.» */
+    trialNote: 'Σήμερα 0€. Από {date}, {then}. Ακύρωσε πριν και δεν χρεώνεσαι.',
+    /** what the plan costs after the week */
+    trialThen: { pro_monthly: '{price} τον μήνα', pro_yearly: '{price} τον χρόνο', pro_founding: '{price} τον πρώτο χρόνο' },
     /** «Η δωρεάν εβδομάδα σου τρέχει μέχρι 24/10.» */
-    trialOn: 'Η δωρεάν εβδομάδα σου τρέχει μέχρι {date}.',
+    trialOn: 'Η δωρεάν εβδομάδα σου τρέχει μέχρι {date}. Μετά συνεχίζει, εκτός αν την ακυρώσεις.',
     /** «Συνέχεια · 49,99€» */
     buy: 'Συνέχεια · {price}',
-    buyNow: 'ή αγόρασε τώρα',
     unavailable: 'Οι πληρωμές ανοίγουν σύντομα. Σε κρατάμε στη λίστα με την τιμή του ιδρυτικού μέλους.',
     finishing: 'Ολοκληρώνεται…',
     welcome: 'Καλώς ήρθες στο Pro',

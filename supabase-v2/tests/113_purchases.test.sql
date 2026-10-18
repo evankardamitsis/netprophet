@@ -1,8 +1,8 @@
 -- Purchases: a store event turns Pro on to its expiry, a renewal moves the end, a refund ends it; a cosmetic is
 -- owned for good (a refund takes it back); every event is applied once; only the service may apply; the free week
--- is once per account; the offers are capped.
+-- is offered; the offers are capped.
 begin;
-select plan(17);
+select plan(15);
 
 select tests.create_user('pay-u@test.local') as u \gset
 select tests.create_user('pay-v@test.local') as v \gset
@@ -62,12 +62,9 @@ select tests.logout();
 select ok(not exists (select 1 from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id
                        where uc.user_id = :'u'::uuid and c.key = 'fx_trophy'), 'a refunded cosmetic is taken back');
 
--- the free week: once, then the offer knows
+-- the free week is there for someone who never had Pro (it starts in the store now: 114)
 select tests.login(:'v'::uuid);
 select ok((api.pro_offer() ->> 'trial_available')::boolean, 'the free week is there');
-select api.start_pro_trial();
-select ok(core.is_pro(:'v'::uuid), 'the free week turns Pro on, no card');
-select throws_ok($$select api.start_pro_trial()$$, '23505', 'trial_used', 'once per account');
 -- the cap: one offer a day
 select tests.logout();
 select tests.login(:'u'::uuid);

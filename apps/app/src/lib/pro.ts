@@ -43,6 +43,15 @@ export interface PlanCard {
   best: boolean;
 }
 
+const TRIAL_DAYS = 7;
+
+/** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.»: what the free week costs, said plainly */
+export function trialLine(card: PlanCard, t: Copy, now: Date = new Date()): string {
+  const d = new Date(now.getTime() + TRIAL_DAYS * 86_400_000);
+  const then = t.pro.trialThen[card.productId as keyof Copy['pro']['trialThen']] ?? t.pro.trialThen.pro_monthly;
+  return fmt(t.pro.trialNote, { date: `${d.getDate()}/${d.getMonth() + 1}`, then: fmt(then, { price: card.price }) });
+}
+
 /** the plans as the Pro screen shows them: the yearly (or founding) first, then the monthly */
 export function planCards(plans: { product_id: string; price: number; period: 'month' | 'year' }[], t: Copy): PlanCard[] {
   const p = t.pro.plans;

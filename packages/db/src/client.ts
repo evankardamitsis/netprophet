@@ -132,7 +132,6 @@ export function rpc(client: NetprophetClient) {
     getMePage: () => call<MePage>(client, 'get_me_page', {}),
     getPro: () => call<ProState>(client, 'get_pro', {}),
     proOffer: () => call<ProOffer>(client, 'pro_offer', {}),
-    startProTrial: () => call<{ ends_at: string }>(client, 'start_pro_trial', {}),
     proOfferShown: (moment: ProOfferMoment) => call<null>(client, 'pro_offer_shown', { p_moment: moment }),
     getConfirmations: () => call<PendingConfirmation[]>(client, 'get_confirmations', {}),
     answerConfirmation: (matchId: string, a: ConfirmationAnswer) =>
