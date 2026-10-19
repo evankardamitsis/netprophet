@@ -126,6 +126,11 @@ describe('fromFeedCard', () => {
     expect(c.b.sub).toBeNull();
   });
 
+  it('shows an organiser sheet\'s capital category in a normal case, on the card and so on its head', () => {
+    expect(fromFeedCard(card({ level: 'MEDIUM' }), areas, t, NOW).category).toBe('Medium');
+    expect(fromFeedCard(card({ level: 'Μ 50+' }), areas, t, NOW).category).toBe('Μ 50+');
+  });
+
   it('carries an earlier vote and its split, so the card starts folded', () => {
     const c = fromFeedCard(card({ my_vote: 2, split: { total: 10, side1: 3, side2: 7, pct1: 30, pct2: 70 } }), areas, t, NOW);
     expect(c.myVote).toBe('b');

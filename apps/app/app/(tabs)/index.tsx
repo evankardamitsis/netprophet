@@ -231,7 +231,7 @@ export default function VoteScreen() {
   const heads = groupHeads(shown);
   const cats = runCategories(shown);
   const voteCount = openToVote(cards, votedNow);
-  // «Για σένα» and the Pro line wait below the first run that takes a vote: the first vote shows on the first screen
+  // «Για σένα» and the Pro line wait after the 3rd match of today (founder, 19 Oct), never between a head and its run
   const slot = foldSlot(shown, split.today.length);
   const firstOpen = firstOpenIndex(shown, votedNow);
   const scroller = useRef<ScrollView>(null);

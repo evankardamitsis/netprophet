@@ -20,14 +20,15 @@ import type { AvatarLook } from '../lib/avatar';
 import { Logo } from './Logo';
 
 /**
- * Feed match card (founder, 19 Oct, design B: voting is the prominent action):
- * idle      each side is itself a dark button: an ink tile with the names in paper, standing on a lip so it reads as
- *           pressable; a touch presses it down onto the lip. «Ποιος κερδίζει;» is said once above the feed, not here;
- *           in its last hour «Ξεκινά σε 40 λεπτά» sits at the end of the card's time line
- * picked    the side you did not pick fades to the paper outline at once; your side shows ✓ and jpops
- * revealed  your side turns paper too, with an ink border; lime fills grow to the split (ink on lime), percentages pop
+ * Feed match card. Design A light (founder, 19 Oct) replaced the dark ink tiles of design B: voting stays the prominent
+ * action, on light keys.
+ * idle      each side is a white key: an ink border on a thicker ink bottom edge, names in ink; a touch presses it down
+ *           and the edge shrinks. «Ποιος κερδίζει;» is said once above the feed, not here; in its last hour
+ *           «Ξεκινά σε 40 λεπτά» sits at the end of the card's time line
+ * picked    the side you did not pick fades to a lighter border at once; your side keeps its ink border, shows ✓ and jpops
+ * revealed  the keys lie flat; lime fills grow to the split (ink on lime), percentages pop
  * folded    1100ms after the tap (as in the prototype, whatever the network took), and never before the
- *           fills finish growing: one row, lime under the pick, ✓ and both percentages
+ *           fills finish growing: one row, lime only behind the half you picked, ✓ and both percentages
  */
 type Phase = 'idle' | 'sending' | 'revealed' | 'folded';
 
@@ -44,8 +45,8 @@ const AVATAR_POP_DELAY = 150;
 const TICK_POP_MS = 400;
 /** how often an idle card in its last hour reads the clock again */
 const SOON_TICK_MS = 30_000;
-/** the lip under a dark tile; a press takes the tile down to the last pixel of it */
-const EDGE = 5;
+/** the ink bottom edge under a key (with the 2px border about 5px of ink); a press takes the key down to its last pixel */
+const EDGE = 3;
 /** how much of the lip still shows while pressed */
 const EDGE_PRESSED = 1;
 /** the side you did not pick, once faded */
@@ -283,14 +284,15 @@ interface TileProps {
 }
 
 /**
- * One side as a dark pressable tile on a lip (design B). It turns to the paper look when it steps back (the other side
- * was picked) or once the split shows on your pick, so the lime fill always carries ink text. The names are drawn twice,
- * paper for the dark tile and ink for the paper one, and cross-fade with the tile.
+ * One side as a light key (design A, founder, 19 Oct): a white tile with an ink border standing on a thicker ink bottom
+ * edge, so it reads as pressable; a touch takes it down and the edge shrinks. Once the other side is picked it steps
+ * back to a lighter border; once the split shows, the lime fill grows behind ink text. A closed card lies flat.
  */
 function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress }: TileProps) {
-  const light = flat || faded || (picked && pct !== null);
+  // the key lies flat once it is no longer a button: a closed card, the side not picked, or your side once the split shows
+  const down = flat || faded || (picked && pct !== null);
   const press = useSharedValue(0);
-  const tone = useSharedValue(light ? 1 : 0);
+  const tone = useSharedValue(down ? 1 : 0);
   const dim = useSharedValue(faded ? 1 : 0);
   const jpop = useSharedValue(1);
   const fill = useSharedValue(0);
@@ -298,13 +300,10 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
   const pctOpacity = useSharedValue(0);
   const tickScale = useSharedValue(picked ? 1 : 0.4);
   const tickOpacity = useSharedValue(picked ? 1 : 0);
-  // the ink copy of the names mounts once it can show (a pick, or a closed card), so idle cards draw them once
-  const [inked, setInked] = useState(light);
-  if (light && !inked) setInked(true);
 
   useEffect(() => {
-    tone.value = withTiming(light ? 1 : 0, { duration: TONE_MS, easing: cssEase });
-  }, [light, tone]);
+    tone.value = withTiming(down ? 1 : 0, { duration: TONE_MS, easing: cssEase });
+  }, [down, tone]);
   useEffect(() => {
     dim.value = withTiming(faded ? 1 : 0, { duration: TONE_MS, easing: cssEase });
   }, [faded, dim]);
@@ -320,29 +319,17 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
     runPop(pctScale, pctOpacity, PCT_POP_MS, PCT_POP_DELAY);
   }, [pct, fill, pctScale, pctOpacity]);
 
+  // your pick keeps its ink border; a side that steps back (or a closed card's) goes to the lighter one
   const faceStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(tone.value, [0, 1], [colors.ink, colors.paper]),
-    borderColor: picked
-      ? interpolateColor(tone.value, [0, 1], [colors.inkLine, colors.ink])
-      : interpolateColor(tone.value, [0, 1], [colors.inkLine, colors.slate]),
+    borderColor: picked ? colors.ink : flat ? colors.mist : interpolateColor(dim.value, [0, 1], [colors.ink, colors.mist]),
     opacity: 1 - dim.value * (1 - FADED_OPACITY),
     transform: [{ translateY: press.value * (EDGE - EDGE_PRESSED) }, { scale: jpop.value }],
   }));
-  // the lip goes with the dark tile: a paper tile lies flat
+  // the bottom edge goes with the button: a key that lies flat has none
   const edgeStyle = useAnimatedStyle(() => ({ opacity: 1 - tone.value }));
-  const darkStyle = useAnimatedStyle(() => ({ opacity: 1 - tone.value }));
-  const lightStyle = useAnimatedStyle(() => ({ opacity: tone.value }));
   const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value}%` }));
-  const pctStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(tone.value, [0, 1], [colors.paper, colors.ink]),
-    opacity: pctOpacity.value,
-    transform: [{ scale: pctScale.value }],
-  }));
-  const tickStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(tone.value, [0, 1], [colors.paper, colors.ink]),
-    opacity: tickOpacity.value,
-    transform: [{ scale: tickScale.value }],
-  }));
+  const pctStyle = useAnimatedStyle(() => ({ opacity: pctOpacity.value, transform: [{ scale: pctScale.value }] }));
+  const tickStyle = useAnimatedStyle(() => ({ opacity: tickOpacity.value, transform: [{ scale: tickScale.value }] }));
   const names = data.people.map((p) => `${p.first} ${p.surname}`).join(' & ');
 
   return (
@@ -364,14 +351,9 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
         {flat ? null : <Animated.View style={[styles.edge, edgeStyle]} pointerEvents="none" />}
         <Animated.View style={[styles.face, faceStyle]}>
           <Animated.View style={[styles.fill, fillStyle]} pointerEvents="none" />
-          <Animated.View style={[styles.layer, darkStyle]}>
-            <TileText data={data} doubles={doubles} dark pop />
-          </Animated.View>
-          {inked ? (
-            <Animated.View style={[styles.layer, styles.layerOver, lightStyle]} pointerEvents="none">
-              <TileText data={data} doubles={doubles} dark={false} pop={false} />
-            </Animated.View>
-          ) : null}
+          <View style={styles.layer}>
+            <TileText data={data} doubles={doubles} />
+          </View>
           {/* always mounted: Reanimated (web) does not animate a view that appears mid-flight */}
           <Animated.Text style={[styles.tick, tickStyle]} pointerEvents="none">
             ✓
@@ -385,16 +367,16 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
   );
 }
 
-/** the names and facts of one side, in paper on the dark tile or in ink on the paper one */
-function TileText({ data, doubles, dark, pop }: { data: CardSide; doubles: boolean; dark: boolean; pop: boolean }) {
+/** the names and facts of one side, in ink on the white key */
+function TileText({ data, doubles }: { data: CardSide; doubles: boolean }) {
   return (
     <>
       {data.people.map((p, i) => (
         <View key={i} style={[styles.person, i === 0 && styles.personFirst]}>
-          <Avatar initials={p.initials} look={p.look ?? null} dark={dark} pop={pop} />
+          <Avatar initials={p.initials} look={p.look ?? null} />
           <View style={styles.names}>
-            <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl, dark ? styles.onInk : styles.onPaper]} />
-            <Text numberOfLines={1} style={[styles.fn, dark ? styles.fnInk : styles.onPaper]}>
+            <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
+            <Text numberOfLines={1} style={styles.fn}>
               {p.first}
             </Text>
           </View>
@@ -403,28 +385,28 @@ function TileText({ data, doubles, dark, pop }: { data: CardSide; doubles: boole
       {data.level || data.area ? (
         <View style={styles.facts}>
           {data.level ? (
-            <View style={[styles.levelPill, dark && styles.levelPillInk]}>
-              <Text style={[styles.levelText, dark && styles.factInk]}>{data.level}</Text>
+            <View style={styles.levelPill}>
+              <Text style={styles.levelText}>{data.level}</Text>
             </View>
           ) : null}
           {data.area ? (
-            <Text numberOfLines={1} style={[styles.area, dark && styles.factInk]}>
+            <Text numberOfLines={1} style={styles.area}>
               {data.area}
             </Text>
           ) : null}
         </View>
       ) : data.sub ? (
-        <Text style={[styles.sub, dark && styles.factInk]}>{data.sub}</Text>
+        <Text style={styles.sub}>{data.sub}</Text>
       ) : null}
     </>
   );
 }
 
 /** the player's drawn avatar when they have an account (founder, 14 Oct); otherwise their initials */
-function Avatar({ initials, look, dark, pop }: { initials: string; look: AvatarLook | null; dark: boolean; pop: boolean }) {
+function Avatar({ initials, look }: { initials: string; look: AvatarLook | null }) {
   const popIn = usePopIn(AVATAR_POP_MS, AVATAR_POP_DELAY);
   return (
-    <Animated.View style={[styles.av, dark && styles.avInk, look && styles.avDrawn, pop && popIn]} pointerEvents="none">
+    <Animated.View style={[styles.av, look && styles.avDrawn, popIn]} pointerEvents="none">
       {look ? (
         <DrawnAvatar look={look} size={AV_SIZE} />
       ) : (
@@ -457,23 +439,26 @@ function FoldedCard({
     if (!fresh) op.value = withTiming(1, { duration: FOLD_MS, easing: foldEase });
   }, [op, fresh]);
   const fold = useAnimatedStyle(() => ({ opacity: op.value }));
-  const myPct = pick === 'a' ? split.pctA : split.pctB;
   return (
     <Animated.View style={[styles.done, enter, fold]}>
       <Meta match={match} hideCategory={hideCategory} style={styles.doneMeta} />
       <View style={styles.row}>
-        <View style={[styles.rowFill, pick === 'a' ? styles.rowFillLeft : styles.rowFillRight, { width: `${myPct}%` }]} />
-        <Half data={match.a} pct={split.pctA} on={pick === 'a'} />
-        <Half data={match.b} pct={split.pctB} on={pick === 'b'} />
+        <Half data={match.a} pct={split.pctA} on={pick === 'a'} edge="left" />
+        <Half data={match.b} pct={split.pctB} on={pick === 'b'} edge="right" />
       </View>
     </Animated.View>
   );
 }
 
-function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
+/**
+ * One half of the folded row. The lime sits only behind the half you picked, as wide as your share within that half
+ * (founder, 19 Oct: a 100% / 0% split lit the whole row, as if both were picked); the other half stays paper.
+ */
+function Half({ data, pct, on, edge }: { data: CardSide; pct: number; on: boolean; edge: 'left' | 'right' }) {
   const fg = on ? colors.ink : colors.inkSoft;
   return (
     <View style={styles.half}>
+      {on ? <View style={[styles.rowFill, edge === 'left' ? styles.rowFillLeft : styles.rowFillRight, { width: `${pct}%` }]} /> : null}
       <Text style={[styles.rowTick, { color: fg }]}>{on ? '✓' : ''}</Text>
       <View style={styles.halfNames}>
         {data.people.map((p, i) => (
@@ -523,7 +508,7 @@ const styles = StyleSheet.create({
   tile: { flex: 1, paddingBottom: EDGE },
   tileFlat: { paddingBottom: 0 },
   edge: { position: 'absolute', left: 0, right: 0, top: EDGE, bottom: 0, borderRadius: TILE_RADIUS, backgroundColor: colors.ink },
-  face: { flex: 1, overflow: 'hidden', borderRadius: TILE_RADIUS, borderWidth: 2 },
+  face: { flex: 1, overflow: 'hidden', borderRadius: TILE_RADIUS, borderWidth: 2, backgroundColor: colors.white },
   layer: { padding: TILE_PAD, gap: 8 },
   layerOver: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   person: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -542,21 +527,15 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.ink,
   },
-  sn: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 24, paddingTop: 4, marginTop: -4, paddingBottom: 5, marginBottom: -5 },
+  sn: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 24, paddingTop: 4, marginTop: -4, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   snDbl: { fontSize: 21, lineHeight: 21 },
-  onInk: { color: colors.paper },
-  onPaper: { color: colors.ink },
-  // the first name belongs to the name: bold, right under the surname; a lighter paper on the dark tile
-  fn: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18 },
-  fnInk: { color: colors.mist },
+  // the first name belongs to the name: bold, right under the surname, in the softer ink
+  fn: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.inkSoft },
   facts: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   levelPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.sand },
-  levelPillInk: { backgroundColor: colors.inkRaised },
   levelText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
   area: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
-  // quiet on ink: the names lead
-  factInk: { color: colors.mist },
   av: {
     width: AV_SIZE,
     height: AV_SIZE,
@@ -565,7 +544,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avInk: { backgroundColor: colors.inkRaised },
   avText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   avDrawn: { overflow: 'hidden', backgroundColor: colors.paper },
   done: {
@@ -586,15 +564,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.paper,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    alignItems: 'stretch',
   },
   rowFill: { position: 'absolute', top: 0, bottom: 0, backgroundColor: colors.lime },
   rowFillLeft: { left: 0 },
   rowFillRight: { right: 0 },
-  half: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  // each half carries its own room, so the lime behind your half never reaches into the other one
+  half: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 12 },
   rowTick: { fontFamily: fonts.bodyBold, fontSize: 15 },
   halfNames: { flexShrink: 1, minWidth: 0 },
   rowSn: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, paddingBottom: 4, marginBottom: -4 },
