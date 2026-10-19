@@ -78,16 +78,54 @@ export function boldLine(item: Pick<TournamentItem, 'draws' | 'today'>, t: Copy)
 }
 
 export interface TournamentSection {
-  key: 'ongoing' | 'upcoming' | 'done';
+  key: 'mine' | 'ongoing' | 'upcoming' | 'done';
   title: string;
   items: TournamentItem[];
 }
 
-/** «Τώρα», «Έρχονται», «Τελείωσαν»: only the ones that have something, in that order */
+/**
+ * «Τα δικά σου» first (the ones you play in that are on or coming), then «Τώρα», «Έρχονται», «Τελείωσαν» without
+ * them; only the sections that have something. A finished one you played in stays in «Τελείωσαν», so the top of the
+ * screen is what is live for you (founder, 19 Oct: your own things first).
+ */
 export function sectionsOf(items: TournamentItem[], t: Copy): TournamentSection[] {
-  return (['ongoing', 'upcoming', 'done'] as const)
-    .map((key) => ({ key, title: t.tournaments.sections[key], items: items.filter((i) => i.state === key) }))
-    .filter((s) => s.items.length > 0);
+  const s = t.tournaments.sections;
+  const own = (i: TournamentItem) => i.in_it && i.state !== 'done';
+  const mine = (['ongoing', 'upcoming'] as const).flatMap((key) => items.filter((i) => own(i) && i.state === key));
+  return [
+    { key: 'mine' as const, title: s.mine, items: mine },
+    ...(['ongoing', 'upcoming', 'done'] as const).map((key) => ({ key, title: s[key], items: items.filter((i) => !own(i) && i.state === key) })),
+  ].filter((x) => x.items.length > 0);
+}
+
+/** one block of the Τουρνουά tab, top to bottom */
+export type TournamentsBlock =
+  | { kind: 'program' }
+  | { kind: 'section'; section: TournamentSection }
+  | { kind: 'next' }
+  | { kind: 'pro' };
+
+/**
+ * The order of the Τουρνουά tab (founder, 19 Oct: "optimize UX and not overwhelm the user"): your own things first
+ * (Pro: «Το πρόγραμμά σου», then «Τα δικά σου»), then what is on now and the next one near you, then the rest. The
+ * Pro row (free: the alerts; Pro with nothing scheduled: alerts on) is one quiet line right under your own things,
+ * or after now and next when you have none; never first, never above them. With the Pro card it is left out: the
+ * card already says the alerts are on.
+ */
+export function blocksOf(input: { sections: TournamentSection[]; program: boolean; next: boolean }): TournamentsBlock[] {
+  const by = (key: TournamentSection['key']) => input.sections.find((s) => s.key === key);
+  const section = (key: TournamentSection['key']): TournamentsBlock[] => {
+    const s = by(key);
+    return s ? [{ kind: 'section', section: s }] : [];
+  };
+  const own: TournamentsBlock[] = [...(input.program ? [{ kind: 'program' as const }] : []), ...section('mine')];
+  const pro: TournamentsBlock[] = input.program ? [] : [{ kind: 'pro' }];
+  const nowNext: TournamentsBlock[] = [...section('ongoing'), ...(input.next ? [{ kind: 'next' as const }] : [])];
+  const rest: TournamentsBlock[] = [...section('upcoming'), ...section('done')];
+  if (own.length > 0) return [...own, ...pro, ...nowNext, ...rest];
+  // nothing of yours: the Pro line waits until after now and next, and never opens the screen
+  if (nowNext.length > 0) return [...nowNext, ...pro, ...rest];
+  return rest.length > 0 ? [...rest.slice(0, 1), ...pro, ...rest.slice(1)] : pro;
 }
 
 /* ================= «Το πρόγραμμά σου» (Pro) ================= */

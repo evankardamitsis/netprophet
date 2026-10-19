@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { DrawMatchRow, GetTournamentResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
-import { allPairs, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, mineHeadline, mineRows, openCount, roundName, scheduleRows, sectionsOf, subLine } from './tournaments';
+import { allPairs, blocksOf, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, mineHeadline, mineRows, openCount, roundName, scheduleRows, sectionsOf, subLine } from './tournaments';
 
 const t = getCopy('el');
 
@@ -211,5 +211,46 @@ describe('round robin groups', () => {
     expect(g!.rows.filter((r) => r.champion).map((r) => r.team.pos)).toEqual([1]);
     expect(g!.matches[2]!.walkover).toBe(true);
     expect(g!.matches[2]!.played).toBe(true);
+  });
+});
+
+describe('the Τουρνουά order (founder, 19 Oct: your own first, Pro never above it)', () => {
+  const items = [
+    item({ id: 'on', state: 'ongoing' }),
+    item({ id: 'onMine', state: 'ongoing', in_it: true }),
+    item({ id: 'soon', state: 'upcoming' }),
+    item({ id: 'soonMine', state: 'upcoming', in_it: true }),
+    item({ id: 'doneMine', state: 'done', in_it: true }),
+    item({ id: 'done', state: 'done' }),
+  ];
+  const shape = (blocks: ReturnType<typeof blocksOf>) => blocks.map((b) => (b.kind === 'section' ? b.section.key : b.kind));
+
+  it('«Τα δικά σου» first, live ones only; the others without them', () => {
+    const s = sectionsOf(items, t);
+    expect(s.map((x) => [x.title, x.items.map((i) => i.id)])).toEqual([
+      ['Τα δικά σου', ['onMine', 'soonMine']],
+      ['Τώρα', ['on']],
+      ['Έρχονται', ['soon']],
+      ['Τελείωσαν', ['doneMine', 'done']],
+    ]);
+  });
+  it('free with tournaments of their own: own, the Pro line, now, next, the rest', () => {
+    expect(shape(blocksOf({ sections: sectionsOf(items, t), program: false, next: true }))).toEqual(['mine', 'pro', 'ongoing', 'next', 'upcoming', 'done']);
+  });
+  it('Pro with matches: the program card opens the screen and there is no Pro line', () => {
+    expect(shape(blocksOf({ sections: sectionsOf(items, t), program: true, next: true }))).toEqual(['program', 'mine', 'ongoing', 'next', 'upcoming', 'done']);
+  });
+  it('nothing of their own: now and next first, then the Pro line, never first', () => {
+    const others = items.filter((i) => !i.in_it);
+    expect(shape(blocksOf({ sections: sectionsOf(others, t), program: false, next: true }))).toEqual(['ongoing', 'next', 'pro', 'upcoming', 'done']);
+    expect(shape(blocksOf({ sections: sectionsOf(others, t), program: false, next: false }))).toEqual(['ongoing', 'pro', 'upcoming', 'done']);
+    const later = others.filter((i) => i.state !== 'ongoing');
+    expect(shape(blocksOf({ sections: sectionsOf(later, t), program: false, next: false }))).toEqual(['upcoming', 'pro', 'done']);
+  });
+  it('a finished one you played in is not «yours» at the top', () => {
+    expect(shape(blocksOf({ sections: sectionsOf([items[4]!], t), program: false, next: false }))).toEqual(['done', 'pro']);
+  });
+  it('nothing at all: only the Pro line', () => {
+    expect(shape(blocksOf({ sections: [], program: false, next: false }))).toEqual(['pro']);
   });
 });

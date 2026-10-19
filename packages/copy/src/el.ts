@@ -1181,6 +1181,8 @@ export const el = {
     search: 'Ψάξε παίκτη',
     /** Παίκτες opened from it */
     backTournaments: '‹ Τουρνουά',
+    /** the last line of Τουρνουά: back to the votes */
+    toVotes: 'Στα σημερινά ματς ›',
     /** the Pro card: «Παίζεις Σάββατο 10:00» */
     program: 'Το πρόγραμμά σου',
     playing: 'Παίζεις {when}',
@@ -1199,6 +1201,8 @@ export const el = {
       on: '✓ Οι ειδοποιήσεις σου είναι ανοιχτές',
       /** with Pro and no match yet */
       onEmpty: 'Σου λέμε μόλις μπεις σε κλήρωση.',
+      /** the one quiet line under your own tournaments (founder, 19 Oct: Pro below your own things) */
+      row: 'Ειδοποιήσεις για τα ματς σου, με Pro ›',
     },
     /** Pro: «Το επόμενο τουρνουά για σένα», tournaments still to come, your area first, entry closing soonest */
     next: {
@@ -1217,7 +1221,7 @@ export const el = {
       remindOn: '✓ Σου θυμίζουμε 2 μέρες πριν κλείσουν οι δηλώσεις',
       empty: 'Δεν έχει βγει νέο τουρνουά ακόμα.',
     },
-    sections: { ongoing: 'Τώρα', upcoming: 'Έρχονται', done: 'Τελείωσαν' },
+    sections: { mine: 'Τα δικά σου', ongoing: 'Τώρα', upcoming: 'Έρχονται', done: 'Τελείωσαν' },
     chipOngoing: 'σε εξέλιξη',
     chipTomorrow: 'αύριο',
     chipInDays: 'σε {n} μέρες',
