@@ -4,10 +4,10 @@ import { StyleSheet, Text, View, type StyleProp, type TextStyle } from 'react-na
 /**
  * One line of display text (names) that shrinks to fit its width instead of being cut with «…».
  * The width is measured, the text's width estimated from its length (Sofia Sans Extra Condensed runs
- * about 0.38em per letter), and the font size and line height scaled down together, never below
+ * about 0.44em per Greek capital-heavy letter in the heavy weight), and the font size and line height scaled down together, never below
  * `minScale` of the style's size. The same on iOS, Android and web.
  */
-const EM_PER_CHAR = 0.38;
+const EM_PER_CHAR = 0.44;
 
 export function FitText({
   text,
