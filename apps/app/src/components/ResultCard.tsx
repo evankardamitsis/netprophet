@@ -12,9 +12,9 @@ import * as Haptics from 'expo-haptics';
 import { useCopy } from '../i18n';
 import { useMyBaller } from '../lib/data';
 import { Baller, type BallerHandle } from './Baller';
-import type { CardResult } from '../lib/feed';
+import { resultStrip, type CardResult } from '../lib/feed';
 import { useHud } from '../lib/hud';
-import { runPop, usePopIn, usePress } from '../lib/motion';
+import { runPop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
@@ -23,6 +23,9 @@ import { colors, ease, fonts, motion } from '../theme';
  * wrong call  lighter card shakes; the header applies at 250ms (σερί falls, or frosts when a freeze saved it)
  * Your Baller is on the card (founder, 17 Oct): it jumps with your win effect when you called it, sighs when not.
  * `delay` holds the whole sequence back (the first card of a batch waits 450ms, the next ones 0).
+ * Once played it folds into a one-line strip (ResultStrip, founder, 19 Oct); a tap opens it again as a `replay`: the
+ * card shows as it was, without flying points to the header or applying them a second time.
+ * The ✓ and the «+10 · σερί 2» pill are its only lime (founder, 19 Oct: no «Το 'πες!» chip).
  */
 const FLY_AT = 350;
 const APPLY_OK_AT = 1080;
@@ -42,9 +45,11 @@ interface Props {
   more: boolean;
   delay: number;
   onDone: (card: CardResult) => void;
+  /** opened again from its strip: no header moment, no haptics, no Baller play */
+  replay?: boolean;
 }
 
-export function ResultCard({ card, more, delay, onDone }: Props) {
+export function ResultCard({ card, more, delay, onDone, replay = false }: Props) {
   const t = useCopy();
   const hud = useHud();
   const self = useRef<View>(null);
@@ -70,6 +75,7 @@ export function ResultCard({ card, more, delay, onDone }: Props) {
 
   // the header's moment
   useEffect(() => {
+    if (replay) return undefined;
     const timers: ReturnType<typeof setTimeout>[] = [];
     timers.push(setTimeout(() => baller.current?.play(card.ok ? 'jump' : 'sigh'), delay + (card.ok ? FLY_AT : APPLY_WRONG_AT)));
     if (card.ok) {
@@ -110,12 +116,15 @@ export function ResultCard({ card, more, delay, onDone }: Props) {
         <Animated.Text style={[styles.glyph, { color: card.ok ? colors.lime : colors.mist }, glyph]}>
           {card.ok ? '✓' : '↓'}
         </Animated.Text>
-        <View style={[styles.chip, { backgroundColor: card.ok ? colors.lime : colors.paper }]}>
-          <Text style={styles.chipText}>{card.ok ? t.result.correct : t.result.wrong}</Text>
-        </View>
+        {card.ok ? null : (
+          <View style={styles.chip}>
+            <Text style={styles.chipText}>{t.result.wrong}</Text>
+          </View>
+        )}
       </View>
       <Animated.View style={[styles.winner, win]}>
-        <Text style={styles.winSurname} numberOfLines={1}>
+        {/* doubles: two surnames wrap to a second line instead of being cut */}
+        <Text style={styles.winSurname} numberOfLines={2}>
           {card.winnerSurname}
         </Text>
         <Text style={styles.winFirst}>{card.winnerFirst}</Text>
@@ -140,6 +149,39 @@ export function ResultCard({ card, more, delay, onDone }: Props) {
   );
 }
 
+/**
+ * A played result as one line (founder, 19 Oct): «✓ Δρουλιάς · +10 · σερί 2» for a right call, «Δρουλιάς κέρδισε» for a
+ * miss. A tap opens the card again.
+ */
+export function ResultStrip({ card, onPress }: { card: CardResult; onPress: (card: CardResult) => void }) {
+  const t = useCopy();
+  const press = usePress(0.97);
+  const enter = useStgIn(motion.revealDurShort);
+  const s = resultStrip(card, t);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={[s.tick ? '✓' : '', s.name, s.pill ?? ''].filter(Boolean).join(' · ')}
+      onPress={() => onPress(card)}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+    >
+      <Animated.View style={[styles.strip, card.ok ? styles.stripOk : styles.stripMiss, enter, press.style]}>
+        {s.tick ? <Text style={styles.stripTick}>✓</Text> : null}
+        <Text style={[styles.stripName, !card.ok && styles.stripNameMiss]} numberOfLines={1}>
+          {s.name}
+        </Text>
+        {s.pill ? (
+          <Text style={[styles.stripPill, !card.ok && styles.stripPillMiss]} numberOfLines={1}>
+            {`· ${s.pill}`}
+          </Text>
+        ) : null}
+        <Text style={styles.stripGlyph}>↓</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 /** meIn: rise 16px and fade in over the short reveal (560ms) after `delay`. */
 function useMeIn(delay: number) {
   const p = useSharedValue(0);
@@ -154,7 +196,7 @@ const styles = StyleSheet.create({
   baller: { position: 'absolute', top: 10, right: 10, zIndex: 1 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   glyph: { fontFamily: fonts.displayHeavy, fontSize: 56, lineHeight: 56, paddingBottom: 11, marginBottom: -22, minWidth: 36 },
-  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999 },
+  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: colors.paper },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   winner: { gap: 2, paddingRight: BALLER - 10 },
   winSurname: { fontFamily: fonts.displayHeavy, fontSize: 40, lineHeight: 40, paddingBottom: 8, marginBottom: -10, color: colors.paper },
@@ -172,4 +214,13 @@ const styles = StyleSheet.create({
   pillText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
   btnHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center', paddingHorizontal: 2 },
   btn: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
+  strip: { minHeight: 48, borderRadius: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stripOk: { backgroundColor: colors.ink },
+  stripMiss: { backgroundColor: colors.inkRaised },
+  stripTick: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime },
+  stripName: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 24, color: colors.paper },
+  stripNameMiss: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20 },
+  stripPill: { flexShrink: 0, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
+  stripPillMiss: { color: colors.mist },
+  stripGlyph: { marginLeft: 'auto', fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
 });

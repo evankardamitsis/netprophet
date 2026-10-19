@@ -410,6 +410,92 @@ export function groupHeads<C extends { kind: string; group?: { key: string } }>(
   return heads;
 }
 
+type RunCard = { kind: string; group?: { key: string }; category?: string };
+
+/**
+ * The category tag, said only where it tells matches apart (founder, 19 Oct: not overwhelming). Inside one tournament
+ * run (as groupHeads reads it: consecutive matches of one group, ads and put-off cards in between do not break it) a
+ * category the whole run shares moves up to the run's head, and the cards drop it; a run that mixes «40+» and «50+»
+ * keeps it on every card. A match outside a tournament always keeps its own.
+ * `hide`: card indices whose tag is not shown; `head`: run head index → the category said once by its head.
+ */
+export function runCategories<C extends RunCard>(cards: C[]): { hide: Set<number>; head: Map<number, string> } {
+  const hide = new Set<number>();
+  const head = new Map<number, string>();
+  const runs: number[][] = [];
+  let last: string | null = null;
+  cards.forEach((c, i) => {
+    if (c.kind !== 'match') return;
+    const key = c.group?.key ?? null;
+    if (key === null) {
+      last = null;
+      return;
+    }
+    if (key !== last) runs.push([]);
+    runs[runs.length - 1]!.push(i);
+    last = key;
+  });
+  for (const run of runs) {
+    const cats = new Set(run.map((i) => cards[i]!.category ?? ''));
+    if (cats.size !== 1) continue;
+    const only = [...cats][0];
+    run.forEach((i) => hide.add(i));
+    if (only) head.set(run[0]!, only);
+  }
+  return { hide, head };
+}
+
+type OpenCard = { kind: string; id: string; myVote?: unknown; closed?: boolean };
+
+/** The first card still waiting for this viewer's vote (`votedNow`: voted since the feed loaded), or -1. */
+export function firstOpenIndex<C extends OpenCard>(cards: C[], votedNow: ReadonlySet<string> = new Set()): number {
+  return cards.findIndex((c) => c.kind === 'match' && !c.closed && c.myVote === undefined && !votedNow.has(c.id));
+}
+
+/**
+ * Where «Για σένα» sits on Σήμερα (founder, 19 Oct: voting comes first): right after the run of the first match
+ * waiting for a vote (its tournament's matches, or that one card outside a tournament), so the first vote shows on the
+ * first screen. It reads the votes the feed loaded with, so it does not jump while you vote. With nothing to vote it
+ * leads, as before. The index is the card it goes before (`cards.length`: at the end); a run in today's part never
+ * passes `bound` (the first later-day card), so it stays above «Αύριο και μετά».
+ */
+export function foldSlot<C extends OpenCard & { group?: { key: string } }>(cards: C[], bound = cards.length): number {
+  const first = firstOpenIndex(cards);
+  if (first < 0) return 0;
+  const key = cards[first]!.group?.key;
+  const stop = first < bound ? bound : cards.length;
+  let j = first + 1;
+  while (key !== undefined && j < stop && cards[j]!.kind === 'match' && cards[j]!.group?.key === key) j++;
+  return j;
+}
+
+/** The one line a result folds into once played (founder, 19 Oct): «✓ Δρουλιάς · +10 · σερί 2», or «Δρουλιάς κέρδισε». */
+export function resultStrip(card: CardResult, t: Copy): { tick: boolean; name: string; pill: string | null } {
+  if (card.ok) return { tick: true, name: card.winnerSurname, pill: card.pill };
+  const pair = card.winnerSurname.includes(' & ');
+  return { tick: false, name: fmt(pair ? t.result.wonPair : t.result.won, { winner: card.winnerSurname }), pill: card.pill };
+}
+
+/**
+ * The results played this visit, as strips: one is added once its moment is over, in the order they played, never twice.
+ * `open` is the strip opened again with a tap (null: all folded); a strip that leaves the list cannot stay open.
+ */
+export interface SeenResults {
+  list: CardResult[];
+  open: string | null;
+}
+
+export function seenAdd(s: SeenResults, card: CardResult): SeenResults {
+  if (s.list.some((c) => c.id === card.id)) return { ...s, open: s.open === card.id ? null : s.open };
+  return { list: [...s.list, card], open: s.open };
+}
+
+/** tap a strip: it opens (any other one folds); tap «Εντάξει» on it: it folds again */
+export function seenToggle(s: SeenResults, id: string): SeenResults {
+  if (!s.list.some((c) => c.id === id)) return s;
+  return { ...s, open: s.open === id ? null : id };
+}
+
 function movedOf(head: string, tail: string, wasDay: string, t: Copy): NonNullable<CardMatch['moved']> {
   return { chip: t.match.postponed.newDay, was: `(${fmt(t.match.postponed.was, { when: wasDay })})`, head, tail };
 }

@@ -82,7 +82,7 @@ export const el = {
     categoryWho: { WS: 'Γυναικών', WD: 'Γυναικών', XD: 'Μικτό', mixed: 'Μικτό' } as Record<string, string>,
     /** a match that started: no more votes (founder, 17 Oct) */
     closed: 'Οι ψήφοι έκλεισαν',
-    /** the question on a card you have not voted on yet (founder, 18 Oct: make voting obvious) */
+    /** the question, said once under Σήμερα's title while a card takes a vote (founder, 19 Oct) */
     who: 'Ποιος κερδίζει;',
     /** under an hour before it starts, next to the question */
     soon: { one: 'Ξεκινά σε 1 λεπτό', many: 'Ξεκινά σε {n} λεπτά' },
@@ -238,6 +238,8 @@ export const el = {
     /** the line under the title while today's matches wait for your vote (founder, 18 Oct) */
     open: { one: 'Ένα ματς περιμένει την ψήφο σου.', many: '{n} ματς περιμένουν την ψήφο σου.' },
     allVoted: 'Ψήφισες σε όλα. Τώρα περιμένουμε τα αποτελέσματα.',
+    /** beside «Ποιος κερδίζει;» under the title, said once for every card (founder, 19 Oct) */
+    hint: 'Πάτα τον νικητή',
     /** nothing left today, but later days wait under «Αύριο και μετά» */
     openLater: { one: 'Ένα ματς για αύριο και μετά περιμένει την ψήφο σου.', many: '{n} ματς για αύριο και μετά περιμένουν την ψήφο σου.' },
     /** «Το ματς σου» at the top of Σήμερα when you play today or tomorrow */
@@ -262,7 +264,6 @@ export const el = {
     },
   },
   result: {
-    correct: "Το 'πες!",
     wrong: 'Όχι αυτή τη φορά',
     /** «κέρδισε τον Νίκο Ροδίτη»: {loser} carries the article, see withArticleAccusative */
     beat: 'κέρδισε {loser}',
@@ -270,6 +271,9 @@ export const el = {
     beatPair: 'κέρδισαν τους {losers}',
     points: '+{points} · σερί {streak}',
     kept: 'κράτησες το σερί',
+    /** the one line a played result folds into when you did not call it: «Δρουλιάς κέρδισε» */
+    won: '{winner} κέρδισε',
+    wonPair: '{winner} κέρδισαν',
     next: 'Επόμενο ›',
     done: 'Εντάξει',
   },
