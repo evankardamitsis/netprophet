@@ -4,12 +4,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createV2BrowserClient } from '@/lib/v2/browser';
 import { v2Configured } from '@/lib/v2/env';
 import { ui } from '../ui';
+import { sendAdminCode } from './actions';
 
 /**
- * v2 admin sign-in: the same 6-digit email code as the app. Codes go only to existing accounts (no sign-up here), and
- * an account without a staff role is signed out straight away (the middleware checks it on every page too).
+ * v2 admin sign-in: the same 6-digit email code as the app. The server sends a code only to staff (admin or editor)
+ * and says the same thing for every email, so the form never tells who is staff. An account without a staff role is
+ * signed out straight away after the code (the middleware checks it on every page too).
  */
 const NO_ACCESS = 'This email has no admin access.';
+const SENT = 'If this email has admin access, a code is on its way.';
 
 // useSearchParams needs a Suspense boundary for the static build
 export default function V2LoginPage() {
@@ -52,12 +55,10 @@ function V2Login() {
 
   const send = () =>
     run(async () => {
-      const { error: err } = await createV2BrowserClient().auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: { shouldCreateUser: false },
-      });
-      // no account for this email: say the same as for a non-staff account, so the form tells nobody who exists
-      if (err) throw new Error(err.code === 'otp_disabled' || /signups not allowed/i.test(err.message) ? NO_ACCESS : err.message);
+      // the server decides; the answer is the same for staff and everyone else
+      const r = await sendAdminCode(email);
+      if (!r.ok) throw new Error(r.message);
+      setCode('');
       setStep('code');
     });
 
@@ -86,7 +87,7 @@ function V2Login() {
     <main className="v2-page narrow">
       <h1 style={ui.h1}>NetProphet v2 admin</h1>
       <p style={ui.muted}>
-        {step === 'email' ? 'Sign in with your staff email. You get a 6-digit code.' : `Code sent to ${email}.`}
+        {step === 'email' ? 'Sign in with your staff email. You get a 6-digit code.' : `${SENT} Check ${email.trim().toLowerCase()}.`}
       </p>
       <form
         style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}
@@ -119,7 +120,7 @@ function V2Login() {
         )}
         {error ? <p style={ui.error}>{error}</p> : null}
         <button style={ui.primary} disabled={busy || (step === 'email' ? !email.includes('@') : code.length !== 6)}>
-          {busy ? '…' : step === 'email' ? 'Send code' : 'Sign in'}
+          {busy ? (step === 'email' ? 'Sending…' : 'Signing in…') : step === 'email' ? 'Send code' : 'Sign in'}
         </button>
         {step === 'code' ? (
           <button type="button" style={ui.link} onClick={() => setStep('email')}>
