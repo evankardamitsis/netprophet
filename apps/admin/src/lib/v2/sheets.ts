@@ -1,5 +1,5 @@
 import { createSign } from 'node:crypto';
-import { parseAthensTennis, parseDraws, parseSheet } from '@netprophet/ingest';
+import { levelFromDraws, parseAthensTennis, parseDraws, parseSheet, type Draw } from '@netprophet/ingest';
 import { runRows } from './ingestRows';
 
 /**
@@ -125,12 +125,23 @@ export function season(t: { season_start_year: number | null }, now: Date = new 
   return now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
 }
 
-/** fetch, parse and build the rows of one tournament's run (people unresolved, walkovers queued for staff) */
-export async function rowsForTournament(t: { source_url: string | null; season_start_year: number | null }) {
+/**
+ * fetch, parse and build the rows of one tournament's run (people unresolved, walkovers queued for staff). With a draw
+ * sheet, a doubles row the organiser labelled as singles takes its category from the draw that lists the pair
+ * (levelFromDraws); pass `draws` when they are already read, else they are read here (a draw sheet that cannot be read
+ * leaves the rows as the schedule says).
+ */
+export async function rowsForTournament(
+  t: { source_url: string | null; draw_url?: string | null; season_start_year: number | null },
+  draws?: Draw[] | null,
+) {
   if (!t.source_url) throw new Error('this tournament has no source URL');
   if (isAthensTennis(t.source_url)) return runRows(parseAthensTennis(await fetchSite(t.source_url)));
   const tabs = await fetchSheetTabs(t.source_url);
-  return runRows(parseSheet(tabs, season(t)));
+  let known = draws ?? null;
+  if (!known && t.draw_url) known = await drawsForTournament({ draw_url: t.draw_url, season_start_year: t.season_start_year }).catch(() => null);
+  const matches = parseSheet(tabs, season(t));
+  return runRows(known ? levelFromDraws(matches, known) : matches);
 }
 
 /** fetch and parse one tournament's draw sheet (one bracket per category tab) */

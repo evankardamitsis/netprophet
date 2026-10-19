@@ -165,6 +165,21 @@ export async function resolveReview(id: string, decision: ReviewDecision): Promi
   }
 }
 
+/** «Check again»: the decisions waiting go through the name rules again (brothers, a known pair, the category) */
+export async function rerunReviews(): Promise<ActionResult<{ checked: number; resolved: number; still_open: number; failed: number }>> {
+  try {
+    const data = (await call(await staffRpc(), 'admin_rerun_ingest_reviews', { p_tournament_id: null })) as {
+      checked: number;
+      resolved: number;
+      still_open: number;
+      failed: number;
+    };
+    return { ok: true, message: 'Checked', data };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
 /** two roster entries that are the same person (a typo): keep one, the other's matches, follows and claim move to it */
 export async function mergePlayers(dropId: string, keepId: string): Promise<ActionResult> {
   try {

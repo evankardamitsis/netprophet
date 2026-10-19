@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SheetPerson } from '@netprophet/ingest';
-import { reviewAnswers, reviewQuestions, sameTwice } from './ingestRows';
+import { candidateContext, pairOptions, rankCandidates, reviewAnswers, reviewQuestions, sameTwice, twinQuestions, type ReviewCandidate } from './ingestRows';
 
 const person = (surname: string, first = ''): SheetPerson => ({ surname, first, key: `${surname}|${first}` }) as SheetPerson;
 
@@ -33,5 +33,58 @@ describe('the questions on a held match', () => {
     const qs = reviewQuestions(row, [{ raw: 'ΣΑΝΙΔΑΣ' }]);
     expect(qs).toHaveLength(1);
     expect(reviewAnswers(qs, { ΣΑΝΙΔΑΣ: 'b' }, 'new')).toEqual([{ raw: 'ΣΑΝΙΔΑΣ', player_id: 'b' }]);
+  });
+});
+
+describe('held names that know their place (smart names, 18 Oct)', () => {
+  const row = { side1: [{ raw: 'ΧΑΜΑΜΗΣ' }, { raw: 'ΧΑΜΑΜΗΣ' }], side2: [{ raw: 'ΣΚΙΑΔΑΣ' }] };
+  const unclear = [
+    { raw: 'ΧΑΜΑΜΗΣ', slot: '1:0' },
+    { raw: 'ΧΑΜΑΜΗΣ', slot: '1:1' },
+    { raw: 'ΣΚΙΑΔΑΣ', slot: '2:0' },
+  ];
+  it('one question per held place, no more', () => {
+    const qs = reviewQuestions(row, unclear);
+    expect(qs.map((q) => [q.key, q.label])).toEqual([
+      ['1:0', 'ΧΑΜΑΜΗΣ (first, side 1)'],
+      ['1:1', 'ΧΑΜΑΜΗΣ (second, side 1)'],
+      ['2:0', 'ΣΚΙΑΔΑΣ'],
+    ]);
+  });
+  it('the two places of one spelling on a side are twins, answered together', () => {
+    const qs = reviewQuestions(row, unclear);
+    const twins = twinQuestions(qs);
+    expect(twins.map(([a, b]) => [a.key, b.key])).toEqual([['1:0', '1:1']]);
+    expect(reviewAnswers(qs, { '1:0': 'nikos', '1:1': 'giorgos', '2:0': 'new' }, 'new')).toEqual([
+      { raw: 'ΧΑΜΑΜΗΣ', slot: '1:0', player_id: 'nikos' },
+      { raw: 'ΧΑΜΑΜΗΣ', slot: '1:1', player_id: 'giorgos' },
+      { raw: 'ΣΚΙΑΔΑΣ', slot: '2:0', new: true },
+    ]);
+  });
+  it('a place picked by a rule is not asked again', () => {
+    const held = { side1: [{ raw: 'ΧΑΜΑΜΗΣ' }, { raw: 'ΧΑΜΑΜΗΣ' }], side2: [{ raw: 'Χ' }] };
+    expect(reviewQuestions(held, [{ raw: 'ΧΑΜΑΜΗΣ', slot: '1:1' }]).map((q) => [q.key, q.label])).toEqual([['1:1', 'ΧΑΜΑΜΗΣ']]);
+  });
+});
+
+describe('candidates with context', () => {
+  const a: ReviewCandidate = { id: 'a', first_name: 'Α.', surname: 'Σαριδάκης', score: 0.85, rank: 1.15, matches: 3,
+    categories: [{ name: 'MASTER', n: 2 }, { name: '50+', n: 1 }], last_match: '2026-10-12', partners: [{ id: 'p', name: 'Πάολο Σαριδάκης', n: 2 }] };
+  const p: ReviewCandidate = { id: 'p', first_name: 'Πάολο', surname: 'Σαριδάκης', score: 0.85, rank: 1.15, matches: 2,
+    categories: [{ name: 'MASTER', n: 2 }], last_match: '2026-10-12', partners: [{ id: 'a', name: 'Α. Σαριδάκης', n: 2 }] };
+  const g: ReviewCandidate = { id: 'g', first_name: 'Αγγ.', surname: 'Σαριδάκης', score: 0.85, rank: 1.2, matches: 1, categories: [{ name: 'MASTER', n: 1 }] };
+  const empty: ReviewCandidate = { id: 'e', first_name: 'Θαν', surname: 'Τζαφλέρης', score: 0.85, rank: 0.85, matches: 0, likely_duplicate_of: 'x' };
+  it('best first by rank', () => {
+    expect(rankCandidates([a, empty, g]).map((c) => c.id)).toEqual(['g', 'a', 'e']);
+  });
+  it('a line that tells them apart', () => {
+    expect(candidateContext(a)).toBe('Played MASTER ×2, 50+ ×1 · last 12 Oct 2026 · with Πάολο Σαριδάκης (2)');
+    expect(candidateContext(empty)).toBe('No matches yet');
+    expect(candidateContext({ id: 'o', first_name: 'Ο', surname: 'Π', score: 1 })).toBe('');
+  });
+  it('pairs for a same-surname side: the two who played together first', () => {
+    const pairs = pairOptions([g, a, p]);
+    expect(pairs[0]).toMatchObject({ a: { id: 'a' }, b: { id: 'p' }, together: 2 });
+    expect(pairs).toHaveLength(3);
   });
 });

@@ -95,18 +95,100 @@ export interface ReviewQuestion<U> {
   label: string;
 }
 
-export function reviewQuestions<U extends { raw: string }>(row: { side1: { raw?: string }[]; side2: { raw?: string }[] }, unclear: U[]): ReviewQuestion<U>[] {
+const placeWord = (n: number) => (n === 0 ? 'first' : n === 1 ? 'second' : `no. ${n + 1}`);
+
+export function reviewQuestions<U extends { raw: string; slot?: string }>(
+  row: { side1: { raw?: string }[]; side2: { raw?: string }[] },
+  unclear: U[],
+): ReviewQuestion<U>[] {
+  // held since 15 Feb 2027: each held name knows its place («side:index»), one question each
+  if (unclear.length > 0 && unclear.every((u) => !!u.slot)) {
+    return unclear.map((u) => {
+      const [side, index] = u.slot!.split(':');
+      const twin = unclear.filter((o) => o.raw === u.raw && o.slot!.startsWith(`${side}:`)).length > 1;
+      return { key: u.slot!, u, slot: u.slot!, label: twin ? `${u.raw} (${placeWord(Number(index))}, side ${side})` : u.raw };
+    });
+  }
   return unclear.flatMap((u): ReviewQuestion<U>[] => {
     const slots = ([1, 2] as const).flatMap((s) => (s === 1 ? row.side1 : row.side2).flatMap((p, i) => (p.raw === u.raw ? [`${s}:${i}`] : [])));
     if (slots.length <= 1) return [{ key: u.raw, u, slot: null, label: u.raw }];
-    return slots.map((slot, n) => ({ key: slot, u, slot, label: `${u.raw} (${n === 0 ? 'first' : n === 1 ? 'second' : `no. ${n + 1}`}, side ${slot[0]})` }));
+    return slots.map((slot, n) => ({ key: slot, u, slot, label: `${u.raw} (${placeWord(n)}, side ${slot[0]})` }));
   });
+}
+
+/** a roster player offered for a held name, with what the database knows about them (newest holds only) */
+export interface ReviewCandidate {
+  id: string;
+  first_name: string;
+  surname: string;
+  score: number;
+  area_id?: string | null;
+  /** score plus the context: same category, this tournament, the partner or opponent on the row */
+  rank?: number;
+  why?: string[];
+  matches?: number;
+  last_match?: string | null;
+  categories?: { name: string; n: number }[];
+  partners?: { id: string; name: string; n: number }[];
+  same_category?: number;
+  /** this entry has no matches and its first name starts the other's (or the other way round) */
+  likely_duplicate_of?: string | null;
+}
+
+/** best first: the database's rank, else the name score */
+export function rankCandidates<C extends { score: number; rank?: number }>(cands: C[]): C[] {
+  return [...cands].sort((a, b) => (b.rank ?? b.score) - (a.rank ?? a.score));
+}
+
+const shortDay = (d: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${d}T00:00:00Z`));
+
+/** what tells two people with one surname apart, in a line: the categories they played, the last match, partners */
+export function candidateContext(c: ReviewCandidate): string {
+  if (c.matches === undefined) return '';
+  if (c.matches === 0) return 'No matches yet';
+  const cats = (c.categories ?? []).map((x) => `${x.name} ×${x.n}`).join(', ');
+  const parts = [cats ? `Played ${cats}` : `${c.matches} ${c.matches === 1 ? 'match' : 'matches'}`];
+  if (c.last_match) parts.push(`last ${shortDay(c.last_match)}`);
+  if (c.partners && c.partners.length > 0) parts.push(`with ${c.partners.map((p) => (p.n > 1 ? `${p.name} (${p.n})` : p.name)).join(', ')}`);
+  return parts.join(' · ');
+}
+
+/** two held places on one side with the same spelling (brothers): they can be answered together */
+export function twinQuestions<U extends { raw: string }>(qs: ReviewQuestion<U>[]): [ReviewQuestion<U>, ReviewQuestion<U>][] {
+  const out: [ReviewQuestion<U>, ReviewQuestion<U>][] = [];
+  for (let i = 0; i < qs.length; i += 1)
+    for (let j = i + 1; j < qs.length; j += 1) {
+      const a = qs[i]!;
+      const b = qs[j]!;
+      if (a.slot && b.slot && a.slot[0] === b.slot[0] && a.u.raw === b.u.raw) out.push([a, b]);
+    }
+  return out;
+}
+
+/**
+ * the pairs to offer for two places with one spelling, «Νίκος and Γιώργος»: partners who played together first,
+ * then the best ranked; at most `max`
+ */
+export function pairOptions(cands: ReviewCandidate[], max = 3): { a: ReviewCandidate; b: ReviewCandidate; together: number }[] {
+  const list = rankCandidates(cands);
+  const pairs: { a: ReviewCandidate; b: ReviewCandidate; together: number; weight: number }[] = [];
+  for (let i = 0; i < list.length; i += 1)
+    for (let j = i + 1; j < list.length; j += 1) {
+      const a = list[i]!;
+      const b = list[j]!;
+      const together = a.partners?.find((p) => p.id === b.id)?.n ?? b.partners?.find((p) => p.id === a.id)?.n ?? 0;
+      pairs.push({ a, b, together, weight: (a.rank ?? a.score) + (b.rank ?? b.score) });
+    }
+  return pairs
+    .sort((x, y) => y.together - x.together || y.weight - x.weight)
+    .slice(0, max)
+    .map(({ a, b, together }) => ({ a, b, together }));
 }
 
 export type ReviewAnswer = { raw: string; slot?: string; player_id: string } | { raw: string; slot?: string; new: true };
 
 /** one decision per question; `choice` holds a player id or `newKey` */
-export function reviewAnswers<U extends { raw: string }>(qs: ReviewQuestion<U>[], choice: Record<string, string>, newKey: string): ReviewAnswer[] {
+export function reviewAnswers<U extends { raw: string; slot?: string }>(qs: ReviewQuestion<U>[], choice: Record<string, string>, newKey: string): ReviewAnswer[] {
   return qs.map((q) => {
     const at = q.slot ? { slot: q.slot } : {};
     return choice[q.key] === newKey ? { raw: q.u.raw, ...at, new: true as const } : { raw: q.u.raw, ...at, player_id: choice[q.key]! };

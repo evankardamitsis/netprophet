@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { Banner, Toast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Primary, Secondary, Section, SkeletonCards, SkeletonRows, Stats, Table } from '../kit';
-import { createTournament, deleteTournament, loadClubs, writeRecordsNow, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
+import { createTournament, deleteTournament, loadClubs, writeRecordsNow, loadReviews, loadTournaments, mergePlayers, rainDay, saveClub, type Club, readDraws, rerunReviews, resolveReview, runNow, saveSource, type ReviewDecision } from '../sources/actions';
 import type { ReviewItem, ReviewRow, SourceTournament } from '../sources/types';
-import { reviewAnswers, reviewQuestions } from '@/lib/v2/ingestRows';
+import { candidateContext, pairOptions, rankCandidates, reviewAnswers, reviewQuestions, twinQuestions, type ReviewCandidate } from '@/lib/v2/ingestRows';
 import type { RecordsResult } from '@/lib/v2/records';
 import { LogoEditor, LogoMark } from './LogoEditor';
 
@@ -55,6 +55,9 @@ function foundSentence(m: { matches: number; results: number; draws: number | nu
   return s;
 }
 
+/** names a rule decided in a run: brothers, a known pair, the only one who played the category */
+const autoNamed = (c: { auto_brothers?: number; auto_pair?: number; auto_category?: number }) => (c.auto_brothers ?? 0) + (c.auto_pair ?? 0) + (c.auto_category ?? 0);
+
 /** what went wrong in the last run, in plain words; null when all is well */
 function problemOf(t: SourceTournament): string | null {
   const last = t.last_run;
@@ -97,7 +100,7 @@ function closeness(score: number, sheetHasFirst: boolean): string {
   return 'Only a little alike';
 }
 
-type Cand = { id: string; first_name: string; surname: string; score: number };
+type Cand = Pick<ReviewCandidate, 'id' | 'first_name' | 'surname' | 'score'>;
 
 /** two suggestions that are surely one person written two ways: same first name, surname a letter or two apart */
 function duplicatePair(cands: Cand[]): [Cand, Cand] | null {
@@ -476,7 +479,15 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
       setNote({
         tone: 'done',
         title: extra ? `Updated: ${extra}` : 'Updated, nothing new since last time',
-        detail: [draws !== null ? `${draws} draws refreshed.` : '', c.held_for_review ? `${c.held_for_review} need a decision (top of the page).` : ''].filter(Boolean).join(' ') || undefined,
+        detail:
+          [
+            draws !== null ? `${draws} draws refreshed.` : '',
+            autoNamed(c) ? `${plural(autoNamed(c), 'name')} decided from match history.` : '',
+            c.recategorised ? `${plural(c.recategorised, 'match', 'matches')} moved to the category of its draw.` : '',
+            c.held_for_review ? `${c.held_for_review} need a decision (top of the page).` : '',
+          ]
+            .filter(Boolean)
+            .join(' ') || undefined,
       });
       notify(`${t.name} updated`);
       await onChanged();
@@ -676,8 +687,39 @@ const sideNames = (side: { raw?: string; surname?: string; first?: string }[]) =
 const rowDate = (r: ReviewRow) => (r.date ? shortDate(r.date) : '');
 
 function NeedsYou({ items, onChanged, notify }: { items: ReviewItem[]; onChanged: () => Promise<void>; notify: (text: string) => void }) {
+  const [checking, start] = useTransition();
+  const [note, setNote] = useState<{ tone: Tone; title: string; detail?: string } | null>(null);
+  // «Check again»: the waiting names go through the rules (brothers, a pair who played together, the category)
+  const again = () =>
+    start(async () => {
+      setNote({ tone: 'working', title: 'Checking the waiting names against match history…' });
+      const res = await rerunReviews();
+      if (!res.ok || !res.data) {
+        setNote({ tone: 'problem', title: 'Could not check again', detail: res.message });
+        return;
+      }
+      const d = res.data;
+      setNote({
+        tone: 'done',
+        title: d.resolved ? `${plural(d.resolved, 'match', 'matches')} sorted out from match history` : 'Nothing more can be decided without you',
+        detail: d.still_open ? `${plural(d.still_open, 'decision')} still waiting.` : undefined,
+      });
+      if (d.resolved) notify(`${plural(d.resolved, 'match', 'matches')} in the app`);
+      await onChanged();
+    });
   return (
-    <Section title={`${plural(items.length, 'thing needs', 'things need')} a decision`} aside={<span className="v2-muted">Pick the right player, or “a new player”. Not sure? Skip it.</span>}>
+    <Section
+      title={`${plural(items.length, 'thing needs', 'things need')} a decision`}
+      aside={
+        <div className="v2-row" style={{ gap: 8 }}>
+          <span className="v2-muted">Pick the right player, or “a new player”. Not sure? Skip it.</span>
+          <Secondary small busy={checking} onClick={again}>
+            {checking ? 'Checking…' : 'Check again'}
+          </Secondary>
+        </div>
+      }
+    >
+      {note ? <Banner tone={note.tone} title={note.title} detail={note.detail} /> : null}
       <div className="v2-stack" style={{ gap: 12 }}>
         {items.map((item) => (
           <ReviewBlock key={item.id} item={item} onChanged={onChanged} notify={notify} />
@@ -692,6 +734,8 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
   const unclear = item.payload.unclear ?? [];
   // one question per place when one spelling is two people (two «ΚΑΛΙΒΡΟΥΣΗΣ» in a doubles, 15 Oct)
   const questions = reviewQuestions(r, unclear);
+  // brothers on one side: both places in one answer (founder, 18 Oct)
+  const twins = twinQuestions(questions);
   // nothing chosen at first: Save waits until every name on the card has an answer (founder, 13 Oct)
   const [choice, setChoice] = useState<Record<string, string>>({});
   const allChosen = questions.every((q) => !!choice[q.key]);
@@ -752,32 +796,113 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
         </>
       ) : item.kind === 'people' ? (
         <>
-          {questions.map(({ key, u, label }) => (
-            <fieldset key={key} className="v2-stack" style={{ border: 0, padding: 0, margin: 0, gap: 2 }}>
-              <legend style={{ padding: 0, marginBottom: 6, fontSize: 16, fontWeight: 700 }}>
-                In {where}: is “{label}” one of these players?
-                <span className="v2-muted" style={{ display: 'block', marginTop: 2, fontWeight: 400 }}>
-                  The match: {a} vs {b}
-                </span>
-              </legend>
-              {(u.candidates ?? [])
-                .filter((c) => !mergedIds.includes(c.id))
-                .map((c) => (
-                  <label key={c.id} className="v2-choice">
-                    <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === c.id} onChange={() => setChoice({ ...choice, [key]: c.id })} />
-                    <span>
-                      <b>
-                        {c.first_name} {c.surname}
-                      </b>{' '}
-                      <span className="v2-muted">· {closeness(c.score, (u.first ?? '').trim() !== '')}</span>
-                    </span>
-                  </label>
-                ))}
-              {(() => {
-                const pair = duplicatePair((u.candidates ?? []).filter((c) => !mergedIds.includes(c.id)));
-                if (!pair) return null;
-                const [p, q] = pair;
-                if (!merging || merging.raw !== key)
+          <span className="v2-muted">
+            In {where}: {a} vs {b}
+          </span>
+          {twins.map(([q1, q2]) => {
+            const options = pairOptions(rankCandidates(q1.u.candidates ?? []).filter((c) => !mergedIds.includes(c.id)));
+            if (options.length === 0) return null;
+            return (
+              <div key={`${q1.key}+${q2.key}`} className="v2-stack" style={{ gap: 6 }}>
+                <b>
+                  “{q1.u.raw}” twice on side {q1.slot?.[0]}: who are the two?
+                </b>
+                <div className="v2-row" style={{ gap: 8 }}>
+                  {options.map(({ a: x, b: y, together }) => {
+                    const on = choice[q1.key] === x.id && choice[q2.key] === y.id;
+                    return (
+                      <Secondary
+                        key={`${x.id}+${y.id}`}
+                        small
+                        disabled={pending}
+                        onClick={() => setChoice({ ...choice, [q1.key]: x.id, [q2.key]: y.id })}
+                      >
+                        {on ? '✓ ' : ''}
+                        {x.first_name} → 1, {y.first_name} → 2{together ? ` · played together ${together}×` : ''}
+                      </Secondary>
+                    );
+                  })}
+                </div>
+                <span className="v2-muted">Order does not matter in doubles. Or answer each place below.</span>
+              </div>
+            );
+          })}
+          {questions.map(({ key, u, label }) => {
+            const cands = rankCandidates(u.candidates ?? []).filter((c) => !mergedIds.includes(c.id));
+            const best = cands.length > 1 && (cands[0]!.rank ?? cands[0]!.score) > (cands[1]!.rank ?? cands[1]!.score) ? cands[0]!.id : null;
+            return (
+              <fieldset key={key} className="v2-stack" style={{ border: 0, padding: 0, margin: 0, gap: 2 }}>
+                <legend style={{ padding: 0, marginBottom: 6, fontSize: 16, fontWeight: 700 }}>Is “{label}” one of these players?</legend>
+                {cands.map((c) => {
+                  const dupOf = c.likely_duplicate_of ? cands.find((o) => o.id === c.likely_duplicate_of) : undefined;
+                  const line = candidateContext(c);
+                  return (
+                    <div key={c.id} className="v2-stack" style={{ gap: 0 }}>
+                      <label className="v2-choice" style={{ alignItems: 'flex-start' }}>
+                        <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === c.id} onChange={() => setChoice({ ...choice, [key]: c.id })} />
+                        <span className="v2-stack" style={{ gap: 2 }}>
+                          <span className="v2-row" style={{ gap: 6 }}>
+                            <b>
+                              {c.first_name} {c.surname}
+                            </b>
+                            {best === c.id ? <Badge tone="ink">Most likely</Badge> : null}
+                            {c.why?.includes('same_category') ? <Badge tone="neutral">Played {r.level || 'this category'}</Badge> : null}
+                            {c.why?.includes('with_partner') ? <Badge tone="neutral">Played with the partner on this card</Badge> : null}
+                            {dupOf ? <Badge tone="attention">πιθανό διπλότυπο</Badge> : null}
+                            <span className="v2-muted">· {closeness(c.score, (u.first ?? '').trim() !== '')}</span>
+                          </span>
+                          {line || c.area_id ? (
+                            <span className="v2-muted" style={{ fontSize: 13 }}>
+                              {[line, c.area_id ? `area ${c.area_id}` : ''].filter(Boolean).join(' · ')}
+                            </span>
+                          ) : null}
+                        </span>
+                      </label>
+                      {dupOf ? (
+                        <span className="v2-row" style={{ gap: 8, paddingLeft: 36 }}>
+                          <Ghost disabled={pending} onClick={() => setMerging({ raw: key, keep: dupOf.id, drop: c.id })}>
+                            Merge into {dupOf.first_name} {dupOf.surname}
+                          </Ghost>
+                          <Link href={`/v2/players?q=${encodeURIComponent(`${c.surname}`)}`} className="v2-muted" style={{ textDecoration: 'underline', fontSize: 13 }}>
+                            Open in Players
+                          </Link>
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+                {(() => {
+                  const flagged = merging && merging.raw === key ? null : duplicatePair(cands);
+                  if (merging && merging.raw === key) {
+                    const pq = [merging.keep, merging.drop].map((id) => cands.find((c) => c.id === id)).filter((c): c is ReviewCandidate => !!c);
+                    return (
+                      <div className="v2-confirm">
+                        <b>Merge into one player. Which spelling is right?</b>
+                        {pq.map((c) => (
+                          <label key={c.id} className="v2-choice">
+                            <input
+                              type="radio"
+                              name={`${item.id}-${key}-keep`}
+                              checked={merging.keep === c.id}
+                              onChange={() => setMerging({ raw: key, keep: c.id, drop: pq.find((o) => o.id !== c.id)!.id })}
+                            />
+                            {c.first_name} {c.surname}
+                          </label>
+                        ))}
+                        <span className="v2-muted">The other one’s matches, results and followers move to the one you keep.</span>
+                        <div className="v2-row">
+                          <Secondary small busy={pending} onClick={merge}>
+                            {pending ? 'Merging…' : 'Merge'}
+                          </Secondary>
+                          <Ghost disabled={pending} onClick={() => setMerging(null)}>
+                            Cancel
+                          </Ghost>
+                        </div>
+                      </div>
+                    );
+                  }
+                  if (!flagged || cands.some((c) => c.likely_duplicate_of)) return null;
+                  const [p, q] = flagged;
                   return (
                     <span style={{ alignSelf: 'flex-start' }}>
                       <Ghost disabled={pending} onClick={() => setMerging({ raw: key, keep: p.id, drop: q.id })}>
@@ -785,38 +910,19 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
                       </Ghost>
                     </span>
                   );
-                return (
-                  <div className="v2-confirm">
-                    <b>Merge into one player. Which spelling is right?</b>
-                    {[p, q].map((c) => (
-                      <label key={c.id} className="v2-choice">
-                        <input type="radio" name={`${item.id}-${key}-keep`} checked={merging.keep === c.id} onChange={() => setMerging({ raw: key, keep: c.id, drop: c.id === p.id ? q.id : p.id })} />
-                        {c.first_name} {c.surname}
-                      </label>
-                    ))}
-                    <span className="v2-muted">The other one’s matches, results and followers move to the one you keep.</span>
-                    <div className="v2-row">
-                      <Secondary small busy={pending} onClick={merge}>
-                        {pending ? 'Merging…' : 'Merge'}
-                      </Secondary>
-                      <Ghost disabled={pending} onClick={() => setMerging(null)}>
-                        Cancel
-                      </Ghost>
-                    </div>
-                  </div>
-                );
-              })()}
-              <label className="v2-choice">
-                <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === NEW} onChange={() => setChoice({ ...choice, [key]: NEW })} />
-                No, a new player
-              </label>
-            </fieldset>
-          ))}
+                })()}
+                <label className="v2-choice">
+                  <input type="radio" name={`${item.id}-${key}`} checked={choice[key] === NEW} onChange={() => setChoice({ ...choice, [key]: NEW })} />
+                  No, a new player
+                </label>
+              </fieldset>
+            );
+          })}
           <div className="v2-row">
             <Secondary small busy={pending} disabled={!allChosen} onClick={savePeople}>
               {pending ? 'Saving…' : 'Save'}
             </Secondary>
-            {!allChosen ? <span className="v2-muted">Choose an answer{unclear.length > 1 ? ' for each name' : ''} first.</span> : null}
+            {!allChosen ? <span className="v2-muted">Choose an answer{questions.length > 1 ? ' for each name' : ''} first.</span> : null}
             <Skip pending={pending} send={send} />
           </div>
         </>
