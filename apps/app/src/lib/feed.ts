@@ -238,6 +238,16 @@ export interface ClubMark {
   logo: string | null;
 }
 
+/**
+ * Categories from organiser sheets come in capitals («MEDIUM»): show them in a normal case like the others («Medium»,
+ * founder, 19 Oct). Only an all-caps Latin word of 3 or more letters changes; «40+», «-45 · Γυναικών» and «Μ 50+» stay
+ * as they are (Greek capitals follow greekCaps rules elsewhere).
+ */
+export function categoryCase(s: string): string {
+  // whole words of Latin, Greek or digits; no lookbehind or Unicode property classes, so it runs the same on Hermes
+  return s.replace(/[A-Za-z0-9\u0370-\u03FF\u1F00-\u1FFF]+/g, (w) => (/^[A-Z]{3,}$/.test(w) ? w[0] + w.slice(1).toLowerCase() : w));
+}
+
 export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>, t: Copy, now = new Date()): CardMatch {
   const w = when(card.starts_at, now, t);
   const doubles = card.format !== 'singles';
@@ -247,7 +257,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
   // the category stands apart on the card (founder, 18 Oct: "more prominent, not the same font"); singles or doubles
   // shows from the card itself, so only who plays is said: «Γυναικών», «Μικτό»
   const who = t.match.categoryWho[card.discipline ?? ''] ?? t.match.categoryWho[card.format] ?? null;
-  const category = [card.tournament ? card.level : null, who].filter(Boolean).join(' · ') || undefined;
+  const category = categoryCase([card.tournament ? card.level : null, who].filter(Boolean).join(' · ')) || undefined;
   const club: ClubMark | null = card.club ? { name: card.club, logo: card.club_logo ?? null } : null;
   const meta = [
     w.label,
@@ -452,21 +462,34 @@ export function firstOpenIndex<C extends OpenCard>(cards: C[], votedNow: Readonl
   return cards.findIndex((c) => c.kind === 'match' && !c.closed && c.myVote === undefined && !votedNow.has(c.id));
 }
 
+/** «Για σένα» comes after this many match cards (founder, 19 Oct) */
+export const FOLD_AFTER_MATCHES = 3;
+
 /**
- * Where «Για σένα» sits on Σήμερα (founder, 19 Oct: voting comes first): right after the run of the first match
- * waiting for a vote (its tournament's matches, or that one card outside a tournament), so the first vote shows on the
- * first screen. It reads the votes the feed loaded with, so it does not jump while you vote. With nothing to vote it
- * leads, as before. The index is the card it goes before (`cards.length`: at the end); a run in today's part never
- * passes `bound` (the first later-day card), so it stays above «Αύριο και μετά».
+ * Where «Για σένα» sits on Σήμερα (founder, 19 Oct: voting comes first, but not a whole tournament first): after the
+ * 3rd match card of today, whatever the tournament runs (ads and put-off cards do not count), or at the end of today
+ * when it has fewer. When the 3rd match opens a tournament run that goes on, it goes before that run's head instead, so
+ * it never splits a head from its first matches. It reads the cards the feed loaded with, so it does not jump while you
+ * vote. With nothing to vote it leads, as before. The index is the card it goes before (`cards.length`: at the end);
+ * it never passes `bound` (the first later-day card), so it stays above «Αύριο και μετά».
  */
 export function foldSlot<C extends OpenCard & { group?: { key: string } }>(cards: C[], bound = cards.length): number {
-  const first = firstOpenIndex(cards);
-  if (first < 0) return 0;
-  const key = cards[first]!.group?.key;
-  const stop = first < bound ? bound : cards.length;
-  let j = first + 1;
-  while (key !== undefined && j < stop && cards[j]!.kind === 'match' && cards[j]!.group?.key === key) j++;
-  return j;
+  if (firstOpenIndex(cards) < 0) return 0;
+  const stop = Math.min(bound, cards.length);
+  let count = 0;
+  let last: string | null = null;
+  for (let i = 0; i < stop; i++) {
+    const c = cards[i]!;
+    if (c.kind !== 'match') continue;
+    const key = c.group?.key ?? null;
+    // a head as groupHeads reads it: a tournament match whose group differs from the last match's
+    const head = key !== null && key !== last;
+    last = key;
+    if (++count < FOLD_AFTER_MATCHES) continue;
+    const next = cards.slice(i + 1, stop).find((x) => x.kind === 'match');
+    return head && next !== undefined && (next.group?.key ?? null) === key ? i : i + 1;
+  }
+  return stop;
 }
 
 /** The one line a result folds into once played (founder, 19 Oct): «✓ Δρουλιάς · +10 · σερί 2», or «Δρουλιάς κέρδισε». */
@@ -566,7 +589,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     b: mockSide(m.b, t, m.b2),
     place: placeLine(m, t) ?? undefined,
     startsAt: soonAt ? soonAt.toISOString() : undefined,
-    category: m.category,
+    category: m.category ? categoryCase(m.category) : undefined,
   };
 }
 

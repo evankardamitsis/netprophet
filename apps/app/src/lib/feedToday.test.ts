@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { firstOpenIndex, foldSlot, resultStrip, runCategories, seenAdd, seenToggle, type CardResult, type SeenResults } from './feed';
+import { categoryCase, firstOpenIndex, foldSlot, resultStrip, runCategories, seenAdd, seenToggle, type CardResult, type SeenResults } from './feed';
 
 const t = getCopy('el');
 
@@ -62,28 +62,59 @@ describe('firstOpenIndex', () => {
   });
 });
 
-describe('foldSlot («Για σένα» below the first vote)', () => {
-  it('goes after the run of the first open match', () => {
-    const cards = [m('1', 'a'), m('2', 'a'), m('3', 'b'), m('4', 'b')];
-    expect(foldSlot(cards)).toBe(2);
-  });
-  it('goes right after a first open match outside a tournament', () => {
-    expect(foldSlot([m('1'), m('2'), m('3', 'b')])).toBe(1);
-  });
-  it('passes a voted run first', () => {
-    const cards = [m('1', 'a', undefined, { myVote: 'a' }), m('2', 'b'), m('3', 'b'), m('4', 'c')];
+describe('foldSlot («Για σένα» after the 3rd match)', () => {
+  it('goes after the 3rd match card, even inside a long tournament run', () => {
+    const cards = Array.from({ length: 14 }, (_, i) => m(String(i), 'aok'));
     expect(foldSlot(cards)).toBe(3);
   });
-  it('stops before an ad', () => {
-    expect(foldSlot([m('1', 'a'), ad('x'), m('2', 'a')])).toBe(1);
+  it('reads across tournament runs and matches outside one', () => {
+    expect(foldSlot([m('1', 'a'), m('2'), m('3', 'b'), m('4', 'c')])).toBe(3);
+    expect(foldSlot([m('1'), m('2'), m('3'), m('4')])).toBe(3);
+  });
+  it('ads and put-off cards do not count', () => {
+    const cards = [m('1', 'a'), ad('x'), m('2', 'a'), { kind: 'postponed', id: 'p' }, m('3', 'a'), m('4', 'a')];
+    expect(foldSlot(cards)).toBe(5);
+  });
+  it('counts voted matches too', () => {
+    const cards = [m('1', 'a', undefined, { myVote: 'a' }), m('2', 'a', undefined, { myVote: 'b' }), m('3', 'a'), m('4', 'a')];
+    expect(foldSlot(cards)).toBe(3);
+  });
+  it('never splits a head from its run: a run that starts at the 3rd match gets it before its head', () => {
+    expect(foldSlot([m('1', 'a'), m('2', 'a'), m('3', 'b'), m('4', 'b')])).toBe(2);
+    expect(foldSlot([m('1', 'a'), m('2', 'a'), m('3', 'b'), ad('x'), m('4', 'b')])).toBe(2);
+  });
+  it('a run of one at the 3rd match is not split, so it goes after it', () => {
+    expect(foldSlot([m('1', 'a'), m('2', 'a'), m('3', 'b'), m('4', 'c')])).toBe(3);
+  });
+  it('a shorter day: at the end of it', () => {
+    expect(foldSlot([m('1', 'a'), m('2', 'a')])).toBe(2);
+    expect(foldSlot([m('1', 'a'), ad('x')])).toBe(2);
   });
   it('stays above «Αύριο και μετά»', () => {
-    const cards = [m('1', 'a'), m('2', 'a'), m('3', 'a', undefined, { kind: 'match' })];
+    const cards = [m('1', 'a'), m('2', 'a'), m('3', 'b'), m('4', 'b')];
     expect(foldSlot(cards, 2)).toBe(2);
+    expect(foldSlot([m('1', 'a'), m('2', 'a'), m('3', 'a', undefined, { myVote: 'a' }), m('4', 'a')], 3)).toBe(3);
   });
   it('leads when nothing waits for a vote', () => {
     expect(foldSlot([m('1', 'a', undefined, { myVote: 'b' })])).toBe(0);
     expect(foldSlot([])).toBe(0);
+  });
+});
+
+describe('categoryCase', () => {
+  it('turns an organiser sheet\'s capitals into a normal case', () => {
+    expect(categoryCase('MEDIUM')).toBe('Medium');
+    expect(categoryCase('MEDIUM · Γυναικών')).toBe('Medium · Γυναικών');
+    expect(categoryCase('ADVANCED 40+')).toBe('Advanced 40+');
+  });
+  it('leaves the rest as it is', () => {
+    for (const s of ['40+', '-45 · Γυναικών', 'Μ 50+', 'Medium', 'Open', 'Μικτό', 'ΑΝΔΡΩΝ', 'U14', 'A1', 'ΜΕ', 'MD']) {
+      expect(categoryCase(s)).toBe(s);
+    }
+  });
+  it('does not touch a Latin word mixed with Greek or digits', () => {
+    expect(categoryCase('MEDIUM2')).toBe('MEDIUM2');
+    expect(categoryCase('ΑMEDIUM')).toBe('ΑMEDIUM');
   });
 });
 
