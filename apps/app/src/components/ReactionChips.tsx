@@ -62,7 +62,7 @@ function Chip({ label, n, on, out, dark, onPress }: { label: string; n: number; 
   const bg = on ? colors.lime : dark ? 'transparent' : colors.white;
   const fg = on ? colors.ink : dark ? colors.paper : colors.ink;
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} hitSlop={8}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} style={styles.hit}>
       <Animated.View style={[styles.ring, (dark || on) && styles.noRing, style]}>
         <View style={[styles.chip, { backgroundColor: bg, borderColor: on || dark ? colors.lime : colors.ink }]}>
           <Text style={[styles.label, { color: fg }]}>{on ? `✓ ${label}` : label}</Text>
@@ -75,6 +75,8 @@ function Chip({ label, n, on, out, dark, onPress }: { label: string; n: number; 
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 6, marginTop: 2, minHeight: 36 },
+  // 44pt to tap around the 32pt chip and its ring; the negative margin keeps the rows where they were
+  hit: { minHeight: 44, marginVertical: -6, justifyContent: 'center' },
   // box-shadow 0 0 0 2px lime
   ring: { borderRadius: 999, borderWidth: 2, borderColor: colors.lime },
   noRing: { borderColor: 'transparent' },

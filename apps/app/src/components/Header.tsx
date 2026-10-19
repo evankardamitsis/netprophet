@@ -23,7 +23,7 @@ const BADGE = 14;
 const LOGO_H = 22;
 
 /**
- * Prototype V2 app header: logo left; σερί, πόντοι and the avatar (opens Εγώ) right. σερί is a lime pill (as on
+ * Prototype V2 app header: logo left; σερί and πόντοι (open «Οι προβλέψεις σου») and the avatar (opens Εγώ) right. σερί is a lime pill (as on
  * Εγώ), πόντοι a plain lime number (founder, 12 Oct: no moving shine, and σερί must not look like πόντοι).
  * `me` comes from the tabs layout, so all tabs share one get_me call. Null while loading.
  * While result cards are waiting to play, the numbers are the ones from before them (see lib/hud).
@@ -38,15 +38,17 @@ export function Header({ me }: { me: MeSummary | null }) {
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
       <BouncingLogo height={LOGO_H} />
       <View style={styles.right}>
-        <Stat value={streak} label={t.streak.label} onPress={goMe} target={hud.targets.streak} fx={hud.streakFx} pill />
-        <Stat value={points} label={t.header.points} target={hud.targets.points} countUp />
+        <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={hud.targets.streak} fx={hud.streakFx} pill />
+        <Stat value={points} label={t.header.points} onPress={goNumbers} target={hud.targets.points} countUp />
         <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} />
       </View>
     </View>
   );
 }
 
+/** the avatar opens Εγώ; σερί and πόντοι open «Οι προβλέψεις σου», where both are told in full */
 const goMe = () => router.push('/me');
+const goNumbers = () => router.push('/me?page=stats');
 
 function Stat({
   value,

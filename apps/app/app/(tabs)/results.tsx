@@ -99,7 +99,7 @@ export default function ResultsScreen() {
 function Chip({ label, logo, on, onPress }: { label: string; logo?: string | null; on: boolean; onPress: () => void }) {
   const press = usePress(0.95);
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.chipHit}>
       <Animated.View style={[styles.chip, on && styles.chipOn, logo !== undefined && styles.chipWithLogo, press.style]}>
         {logo !== undefined ? <Logo path={logo} name={label} size={18} onInk={on} /> : null}
         <Text style={[styles.chipText, on && styles.chipTextOn]} numberOfLines={1}>
@@ -139,7 +139,9 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   // the chips run edge to edge under the search
-  chipsRow: { marginHorizontal: -20 },
+  // the chips are about 33pt tall in 44pt targets; the negative margin keeps the row where it was
+  chipsRow: { marginHorizontal: -20, marginVertical: -5 },
+  chipHit: { minHeight: 44, justifyContent: 'center' },
   chips: { gap: 8, paddingHorizontal: 20 },
   chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.navLine },
   chipOn: { backgroundColor: colors.ink, borderColor: colors.ink },

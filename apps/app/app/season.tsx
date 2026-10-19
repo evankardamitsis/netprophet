@@ -219,7 +219,8 @@ function Locked({ i }: { i: number }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
   scroll: { flexGrow: 1, paddingHorizontal: 20, gap: 18 },
-  backHit: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
+  // 44pt to tap; the negative margin keeps the layout of the 32pt line it was
+  backHit: { alignSelf: 'flex-start', minHeight: 44, marginVertical: -6, justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
   head: { gap: 8 },
   kicker: { ...text.label, color: colors.mist },
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
   // the score of a win is what happened: lime
   bestScore: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 36, color: colors.lime },
   ladderValue: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 36, color: colors.paper },
-  linkHit: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
+  linkHit: { alignSelf: 'flex-start', minHeight: 44, marginVertical: -6, justifyContent: 'center' },
   link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
   lockedGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6, opacity: 0.55 },
   lockedTile: { flexGrow: 1, flexBasis: '45%', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, borderWidth: 1, borderColor: colors.inkLine },

@@ -124,7 +124,7 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
       ) : null}
 
       <Animated.View style={[styles.last, lastIn]}>
-        <Text style={[styles.cardHead, styles.blueHead]}>{greekCaps(t.players.lastMatches)}</Text>
+        <Text style={styles.cardHead}>{greekCaps(t.players.lastMatches)}</Text>
         {p.last.length === 0 ? (
           <Text style={styles.lastText}>{t.players.noMatches}</Text>
         ) : (
@@ -153,7 +153,7 @@ function LevelPill({ text }: { text: string }) {
   );
 }
 
-/** «+ Ακολούθησε» (white, blue text) or «✓ Στους φίλους σου» (lime); jpops when it changes. */
+/** «+ Ακολούθησε» (white, ink text: the screen's one blue is the traits' submit) or «✓ Στους φίλους σου» (lime); jpops when it changes. */
 function FollowPill({ on, onPress }: { on: boolean; onPress: () => void }) {
   const t = useCopy();
   const enter = usePopIn(400, 220);
@@ -175,10 +175,11 @@ function FollowPill({ on, onPress }: { on: boolean; onPress: () => void }) {
         accessibilityState={{ selected: on }}
         onPress={onPress}
         onPressIn={press.onPressIn}
+        style={styles.followHit}
         onPressOut={press.onPressOut}
       >
         <Animated.View style={[styles.follow, { backgroundColor: on ? colors.lime : colors.white }, press.style]}>
-          <Text style={[styles.followText, { color: on ? colors.ink : colors.blue }]}>{on ? t.players.following : t.players.follow}</Text>
+          <Text style={[styles.followText, { color: colors.ink }]}>{on ? t.players.following : t.players.follow}</Text>
         </Animated.View>
       </Pressable>
     </Animated.View>
@@ -201,6 +202,8 @@ const styles = StyleSheet.create({
   heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   levelPill: { paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: colors.lime },
   levelText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },
+  // 44pt to tap around the 36pt pill; the negative margin keeps the hero's layout
+  followHit: { minHeight: 44, marginVertical: -4, justifyContent: 'center' },
   follow: { minHeight: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center' },
   followText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16 },
   first: {
@@ -227,8 +230,6 @@ const styles = StyleSheet.create({
   statValue: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
   next: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.lime, gap: 4 },
   cardHead: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.ink },
-  // prototype: the «Τελευταία ματς» heading is blue (open question: one blue per screen)
-  blueHead: { color: colors.blue },
   nextText: { fontFamily: fonts.displayHeavy, fontSize: 32, lineHeight: 34, paddingBottom: 6, marginBottom: -6, color: colors.ink },
   last: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, gap: 8 },
   lastRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },

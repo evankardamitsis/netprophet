@@ -257,7 +257,8 @@ function Arrow({ label, glyph, onPress }: { label: string; glyph: string; onPres
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
   scroll: { flexGrow: 1, paddingHorizontal: 20, gap: 18 },
-  later: { alignSelf: 'flex-end', minHeight: 32, justifyContent: 'center' },
+  // 44pt to tap; the negative margin keeps the layout of the 32pt line it was
+  later: { alignSelf: 'flex-end', minHeight: 44, marginVertical: -6, justifyContent: 'center' },
   // «‹ Πίσω» sits where back always sits
   back: { alignSelf: 'flex-start' },
   laterText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },

@@ -103,7 +103,8 @@ export default function ShareBallerScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink },
   scroll: { flexGrow: 1, paddingHorizontal: 20, gap: 18 },
-  backHit: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
+  // 44pt to tap; the negative margin keeps the layout of the 32pt line it was
+  backHit: { alignSelf: 'flex-start', minHeight: 44, marginVertical: -6, justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
   head: { gap: 8 },
   title: { ...text.title, color: colors.paper },

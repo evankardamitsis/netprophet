@@ -188,7 +188,7 @@ function SubmitButton({ label, ready, busy, onPress }: { label: string; ready: b
 
 const styles = StyleSheet.create({
   card: { paddingVertical: 16, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 8 },
-  head: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.blue },
+  head: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.ink },
   chip: {
     minHeight: 50,
     paddingHorizontal: 14,

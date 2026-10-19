@@ -160,7 +160,7 @@ function Podium({ ladder }: { ladder: Ladder }) {
   );
 }
 
-/** the board: top rows, then your own row (after a ⋯) when it is further down */
+/** the board: top rows, then your own row (after a short rule) when it is further down */
 function Board({ ladder }: { ladder: Ladder }) {
   const t = useCopy();
   const rows = ladder.rows;
@@ -186,7 +186,7 @@ function BoardRow({ row, index, gap, zone }: { row: LadderRow; index: number; ga
   const enter = useStgIn(ROW_MS, 500 + Math.min(index, 8) * 70);
   return (
     <>
-      {gap ? <Text style={styles.gap}>⋯</Text> : null}
+      {gap ? <View accessible={false} style={styles.gap} /> : null}
       <Animated.View style={[styles.row, zone === 'up' && styles.rowUp, zone === 'down' && styles.rowDown, row.is_me && styles.rowMe, enter]}>
         <View style={styles.rowLeft}>
           <Text style={styles.rowPos}>{row.position}</Text>
@@ -208,7 +208,7 @@ function HowPoints() {
     <View style={styles.info}>
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={styles.infoHead}>
         <Text style={styles.infoTitle}>{greekCaps(t.ladder.how)}</Text>
-        <Text style={styles.infoMark}>{open ? '−' : '+'}</Text>
+        <Text style={[styles.infoMark, open && styles.markOpen]}>+</Text>
       </Pressable>
       {open ? <InfoRows /> : null}
     </View>
@@ -274,7 +274,8 @@ const styles = StyleSheet.create({
   blockPos: { fontFamily: fonts.displayHeavy, fontSize: 28, lineHeight: 30, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   blockPosFirst: { color: colors.ink },
   board: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 24, backgroundColor: colors.white },
-  gap: { paddingVertical: 2, textAlign: 'center', fontFamily: fonts.bodyBold, fontSize: 15, color: colors.inkSoft },
+  // rows skipped between the top and your own row: a short rule (the glyph set has no ellipsis)
+  gap: { alignSelf: 'center', width: 24, height: 2, marginVertical: 9, borderRadius: 999, backgroundColor: colors.inkLine },
   row: {
     minHeight: 50,
     marginVertical: 2,
@@ -298,8 +299,10 @@ const styles = StyleSheet.create({
   renews: { paddingVertical: 10, paddingHorizontal: 8, fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
   info: { paddingVertical: 4, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white },
   infoHead: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  infoTitle: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.blue },
-  infoMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.blue },
+  infoTitle: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.ink },
+  infoMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
+  // open: the «+» turns to a cross, as on the result cards (the glyph set has no minus)
+  markOpen: { transform: [{ rotate: '45deg' }] },
   infoRows: { gap: 8, paddingBottom: 8 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   infoLabel: { flexShrink: 1, fontFamily: fonts.body, fontSize: 15, color: colors.ink },
