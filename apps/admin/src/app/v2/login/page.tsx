@@ -1,18 +1,33 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createV2BrowserClient } from '@/lib/v2/browser';
 import { v2Configured } from '@/lib/v2/env';
 import { ui } from '../ui';
 
-/** v2 admin sign-in: the same 6-digit email code as the app. Staff role is checked on the next page. */
-export default function V2Login() {
+/**
+ * v2 admin sign-in: the same 6-digit email code as the app. Codes go only to existing accounts (no sign-up here), and
+ * an account without a staff role is signed out straight away (the middleware checks it on every page too).
+ */
+const NO_ACCESS = 'This email has no admin access.';
+
+// useSearchParams needs a Suspense boundary for the static build
+export default function V2LoginPage() {
+  return (
+    <Suspense>
+      <V2Login />
+    </Suspense>
+  );
+}
+
+function V2Login() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const denied = useSearchParams().get('denied') === '1';
+  const [error, setError] = useState<string | null>(denied ? NO_ACCESS : null);
 
   if (!v2Configured) {
     return (
@@ -41,18 +56,28 @@ export default function V2Login() {
         email: email.trim().toLowerCase(),
         options: { shouldCreateUser: false },
       });
-      if (err) throw err;
+      // no account for this email: say the same as for a non-staff account, so the form tells nobody who exists
+      if (err) throw new Error(err.code === 'otp_disabled' || /signups not allowed/i.test(err.message) ? NO_ACCESS : err.message);
       setStep('code');
     });
 
   const verify = () =>
     run(async () => {
-      const { error: err } = await createV2BrowserClient().auth.verifyOtp({
+      const client = createV2BrowserClient();
+      const { error: err } = await client.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token: code.trim(),
         type: 'email',
       });
       if (err) throw err;
+      const { data: me } = await client.rpc('get_me' as never);
+      const role = (me as { profile?: { role?: string } } | null)?.profile?.role;
+      if (role !== 'admin' && role !== 'editor') {
+        await client.auth.signOut();
+        setStep('email');
+        setCode('');
+        throw new Error(NO_ACCESS);
+      }
       router.replace('/v2/results');
       router.refresh();
     });
