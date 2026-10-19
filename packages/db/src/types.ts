@@ -500,6 +500,10 @@ export type Database = {
         Args: { p_player_id: string; p_first: string; p_surname: string };
         Returns: Json;
       };
+      admin_rerun_ingest_reviews: {
+        Args: { p_tournament_id?: string };
+        Returns: Json;
+      };
       admin_reset_baller_name: {
         Args: { p_user: string };
         Returns: Json;

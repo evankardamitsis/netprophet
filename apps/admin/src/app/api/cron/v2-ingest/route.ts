@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { V2_URL } from '@/lib/v2/env';
 import { bearerMatches } from '@/lib/cronAuth';
 import { writeRecordsSheet } from '@/lib/v2/recordsSheet';
+import type { Draw } from '@netprophet/ingest';
 import { drawsForTournament, rowsForTournament } from '@/lib/v2/sheets';
 
 export const dynamic = 'force-dynamic';
@@ -48,9 +49,19 @@ export async function GET(request: NextRequest) {
 
   const results: { id: string; name: string; kind: 'schedule' | 'draws'; ok: boolean; result?: unknown; error?: string }[] = [];
   for (const t of (due.data ?? []) as Due[]) {
+    // the draw sheet is read once: it is stored below and it corrects the category of doubles rows labelled as singles
+    let draws: Draw[] | null = null;
+    let drawError: string | null = null;
+    if (t.draw_url) {
+      try {
+        draws = await drawsForTournament(t);
+      } catch (e) {
+        drawError = e instanceof Error ? e.message : 'draw read failed';
+      }
+    }
     if (t.source_url) {
       try {
-        const rows = await rowsForTournament(t);
+        const rows = await rowsForTournament(t, t.draw_url ? (draws ?? []) : null);
         const run = await rpc('ingest_cron_run', { p_tournament_id: t.id, p_rows: rows });
         if (run.error) throw new Error(run.error.message);
         results.push({ id: t.id, name: t.name, kind: 'schedule', ok: true, result: run.data });
@@ -62,7 +73,7 @@ export async function GET(request: NextRequest) {
     }
     if (t.draw_url) {
       try {
-        const draws = await drawsForTournament(t);
+        if (drawError !== null || draws === null) throw new Error(drawError ?? 'draw read failed');
         const run = await rpc('ingest_cron_draws', { p_tournament_id: t.id, p_draws: draws });
         if (run.error) throw new Error(run.error.message);
         results.push({ id: t.id, name: t.name, kind: 'draws', ok: true, result: run.data });

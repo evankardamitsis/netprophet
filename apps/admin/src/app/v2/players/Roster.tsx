@@ -58,6 +58,12 @@ export function Roster() {
   const [tick, setTick] = useState(0);
   const [recomputing, recompute] = useTransition();
 
+  // opened from a held name on Tournaments («Open in Players»): start on that search
+  useEffect(() => {
+    const q0 = new URLSearchParams(window.location.search).get("q");
+    if (q0) setQ(q0);
+  }, []);
+
   useEffect(() => {
     setRows(null);
     const id = setTimeout(() => {

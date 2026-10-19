@@ -1,3 +1,5 @@
+import type { ReviewCandidate } from '@/lib/v2/ingestRows';
+
 export interface IngestCounts {
   run_id?: string;
   dry?: boolean;
@@ -16,6 +18,12 @@ export interface IngestCounts {
   score_conflicts?: number;
   missing?: number;
   cancelled?: number;
+  /** names a rule decided (smart names): two brothers on a side, a known pair, the only one who played the category */
+  auto_brothers?: number;
+  auto_pair?: number;
+  auto_category?: number;
+  /** imported matches the draw sheet moved to another category */
+  recategorised?: number;
 }
 
 export interface DrawCounts {
@@ -60,7 +68,9 @@ export interface ReviewPerson {
   raw: string;
   surname: string;
   first: string;
-  candidates: { id: string; first_name: string; surname: string; score: number }[] | null;
+  /** the place on the card, «side:index» (held since 15 Feb 2027) */
+  slot?: string;
+  candidates: ReviewCandidate[] | null;
   /** held because the sheet itself is short: a place with no name, or a side that does not fit the format */
   reason?: 'no_name' | 'side_incomplete';
 }
