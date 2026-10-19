@@ -275,17 +275,9 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     place: card.tournament ? undefined : place ?? undefined,
     later,
     startsAt: card.starts_at ?? undefined,
-    // a later day says its day above the tournament's run, so «Αύριο και μετά» reads day by day
+    // «Αύριο και μετά» too sits by tournament (founder, 19 Oct), each tournament once; every card says its own day
     group: card.tournament
-      ? later && card.starts_at
-        ? {
-            key: `${dayKey(card.starts_at)}|${card.tournament.id}|${place ?? ''}`,
-            title: card.tournament.name,
-            logo: card.tournament.logo ?? null,
-            sub: [dayShort(card.starts_at, t), place].filter(Boolean).join(' · '),
-            club,
-          }
-        : { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, logo: card.tournament.logo ?? null, sub: place, club }
+      ? { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, logo: card.tournament.logo ?? null, sub: place, club }
       : undefined,
     club: club ?? undefined,
   };
@@ -359,8 +351,8 @@ export function feedLine(count: VoteCount, t: Copy): string {
  * into the folded «Αύριο και μετά». Matches sit together by tournament, as on Αποτελέσματα (founder, 19 Oct: "list
  * everything based on the tournament"), each tournament once: the one whose next match to vote comes first leads, and
  * inside it the matches run in time order (founder, 18 Oct), the ones still to vote before the ones that started.
- * Tournaments with nothing left to vote go after the ads and put-off cards. Later days stay day by day (the group key
- * holds the day there).
+ * Tournaments with nothing left to vote go after the ads and put-off cards. «Αύριο και μετά» sits by tournament the same
+ * way (founder, 19 Oct), each card saying its own day.
  */
 export function splitToday<C extends { kind: string; later?: boolean; startsAt?: string; closed?: boolean; group?: { key: string } }>(
   cards: C[],

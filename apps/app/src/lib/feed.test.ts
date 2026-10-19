@@ -294,14 +294,14 @@ describe('splitToday, by tournament', () => {
     ]);
     expect(s.today.map((x) => x.id)).toEqual(['aok-1', 'aok-2', 'glyf-1', 'glyf-0', 'solo', 'ad', 'done-1']);
   });
-  it('keeps later days day by day, each tournament together inside its day', () => {
+  it('keeps each tournament together on later days too, led by its first match', () => {
     const s = splitToday([
-      { ...m('b-tue', '2026-10-20|b', '09:00', false, true), startsAt: '2026-10-20T09:00:00Z' },
-      m('a-mon-2', '2026-10-19|a', '18:00', false, true),
-      m('b-mon', '2026-10-19|b', '10:00', false, true),
-      m('a-mon-1', '2026-10-19|a', '08:00', false, true),
+      { ...m('b-tue', 'b', '09:00', false, true), startsAt: '2026-10-20T09:00:00Z' },
+      { ...m('a-tue', 'a', '18:00', false, true), startsAt: '2026-10-20T18:00:00Z' }, m('a-mon-2', 'a', '18:00', false, true),
+      m('b-mon', 'b', '10:00', false, true),
+      m('a-mon-1', 'a', '08:00', false, true),
     ]);
-    expect(s.later.map((x) => x.id)).toEqual(['a-mon-1', 'a-mon-2', 'b-mon', 'b-tue']);
+    expect(s.later.map((x) => x.id)).toEqual(['a-mon-1', 'a-mon-2', 'a-tue', 'b-mon', 'b-tue']);
   });
 });
 
