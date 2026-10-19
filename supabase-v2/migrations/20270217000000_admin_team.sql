@@ -89,7 +89,8 @@ begin
   if p_role is null or p_role not in ('user', 'editor', 'admin') then
     raise exception 'invalid_role' using errcode = '22023';
   end if;
-  if p_user is null or p_user = v_me then raise exception 'cannot_change_self' using errcode = '42501'; end if;
+  if p_user is null then raise exception 'invalid_argument: user' using errcode = '22023'; end if;
+  if p_user = v_me then raise exception 'cannot_change_self' using errcode = '42501'; end if;
 
   -- the admins first, in a fixed order, so two admins demoting each other at once cannot leave nobody
   perform 1 from core.profiles where role = 'admin' and deleted_at is null order by user_id for update;
