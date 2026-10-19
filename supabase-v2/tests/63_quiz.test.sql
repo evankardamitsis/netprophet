@@ -29,6 +29,12 @@ select tests.finish_match(tests.mk_match((select id from pp where g = 1), (selec
 select tests.finish_match(tests.mk_match((select id from pp where g = 3), (select id from pp where g = 4), now() - interval '22 hours'), 2);
 select tests.finish_match(tests.mk_match((select id from pp where g = 13), (select id from pp where g = 14), now() - interval '20 hours'), 1);
 select tests.finish_match(tests.mk_match((select id from pp where g = 15), (select id from pp where g = 16), now() - interval '22 hours'), 2);
+-- «Ποιος είναι;» needs one player and two decoys with different facts, of one gender, not used by other cards: u also
+-- follows the last two women, who played lately too, and hands differ, so a set of either gender always has enough
+-- (the set's order follows random ids, so the test must not depend on which players other cards take)
+insert into core.follows (user_id, player_id) select :'u'::uuid, id from pp where g in (17, 18);
+select tests.finish_match(tests.mk_match((select id from pp where g = 17), (select id from pp where g = 18), now() - interval '21 hours'), 1);
+update core.player_sports set hand = 'R' where player_id in (select id from pp where g in (2, 4, 6, 14, 16, 18));
 select tests.mk_player('Μικρός', 'Ανήλικος') as kid \gset
 update core.players set is_minor = true where id = :'kid'::uuid;
 insert into core.follows (user_id, player_id) values (:'u'::uuid, :'kid'::uuid);
@@ -44,7 +50,7 @@ grant select on q1 to public;
 select is(jsonb_array_length((select doc -> 'cards' from q1)), 6, 'six cards');
 select matches((select string_agg(c ->> 'family', '' order by (c ->> 'position')::int) from q1, jsonb_array_elements(doc -> 'cards') c),
                '^s[cd]q[od][sdo][cdo]$', 'Σενάριο, Διάλεξε έναν, Ποιος είναι;, Άποψη, Σενάριο, Διάλεξε έναν (2, 4, 5 and 6 can be cards from real matches)');
-select ok((select bool_and(p.id in (select id from pp where g <= 8 or g between 13 and 16))
+select ok((select bool_and(p.id in (select id from pp where g <= 8 or g >= 13))
              from q1, jsonb_array_elements(doc -> 'cards') c, jsonb_array_elements(c -> 'content' -> 'players') x,
                   core.players p
             where (c ->> 'position')::int = 1 and p.id = (x ->> 'id')::uuid),
