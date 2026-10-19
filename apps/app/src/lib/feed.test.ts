@@ -279,6 +279,32 @@ describe('splitToday', () => {
   });
 });
 
+describe('splitToday, by tournament', () => {
+  const m = (id: string, g: string | null, at: string, closed = false, later = false) =>
+    ({ kind: 'match', id, startsAt: `2026-10-19T${at}:00Z`, closed, later, group: g ? { key: g } : undefined });
+  it('keeps each tournament together, led by its next match to vote', () => {
+    const s = splitToday([
+      m('aok-1', 'aok', '09:00'),
+      m('glyf-1', 'glyf', '10:00'),
+      m('aok-2', 'aok', '12:00'),
+      m('solo', null, '11:00'),
+      m('glyf-0', 'glyf', '08:00', true),
+      { kind: 'sponsored', id: 'ad' },
+      m('done-1', 'done', '07:00', true),
+    ]);
+    expect(s.today.map((x) => x.id)).toEqual(['aok-1', 'aok-2', 'glyf-1', 'glyf-0', 'solo', 'ad', 'done-1']);
+  });
+  it('keeps later days day by day, each tournament together inside its day', () => {
+    const s = splitToday([
+      { ...m('b-tue', '2026-10-20|b', '09:00', false, true), startsAt: '2026-10-20T09:00:00Z' },
+      m('a-mon-2', '2026-10-19|a', '18:00', false, true),
+      m('b-mon', '2026-10-19|b', '10:00', false, true),
+      m('a-mon-1', '2026-10-19|a', '08:00', false, true),
+    ]);
+    expect(s.later.map((x) => x.id)).toEqual(['a-mon-1', 'a-mon-2', 'b-mon', 'b-tue']);
+  });
+});
+
 describe('feedDay', () => {
   it('is today until 23:00 in Athens, then tomorrow', () => {
     expect(feedDay(new Date('2026-10-18T19:59:00Z'))).toBe('2026-10-18'); // 22:59 Athens
