@@ -119,7 +119,7 @@ function Ghost({ pct, delay }: { pct: number; delay: number }) {
 const styles = StyleSheet.create({
   block: { gap: 8 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.blue },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, letterSpacing: 0.78, color: colors.ink },
   proPill: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: colors.ink },
   proPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   row: { minHeight: 52, paddingHorizontal: 16, borderRadius: 16, backgroundColor: colors.white, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   locked: { width: 34, height: 24, borderRadius: 8, overflow: 'hidden', backgroundColor: alpha(colors.ink, 0.18) },
   sweep: { position: 'absolute', top: 0, bottom: 0, left: 0, backgroundColor: alpha(colors.white, 0.55) },
   linkHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
-  link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   underline: { textDecorationLine: 'underline' },
   footer: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   ghost: { minHeight: 52, borderRadius: 16, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.fog, overflow: 'hidden' },

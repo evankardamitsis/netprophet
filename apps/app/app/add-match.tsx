@@ -292,7 +292,7 @@ function Row({ label, value, on, onPress }: { label: string; value: string; on: 
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.row}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={[styles.rowValue, { color: on ? colors.ink : colors.blue }]} numberOfLines={1}>
+      <Text style={[styles.rowValue, !on && styles.underline]} numberOfLines={1}>
         {value}
       </Text>
     </Pressable>
@@ -536,7 +536,8 @@ const styles = StyleSheet.create({
   card: { borderRadius: 18, backgroundColor: colors.white, paddingHorizontal: 14 },
   row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   rowLabel: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  rowValue: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, textAlign: 'right' },
+  // «Διάλεξε» (nothing chosen yet) is underlined ink: the screen's one blue is the submit
+  rowValue: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, textAlign: 'right', color: colors.ink },
   line: { height: 1, backgroundColor: colors.navLine },
   options: { gap: 8, paddingBottom: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -586,5 +587,5 @@ const styles = StyleSheet.create({
   againHit: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   again: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   underline: { textDecorationLine: 'underline' },
-  peek: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  peek: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
 });

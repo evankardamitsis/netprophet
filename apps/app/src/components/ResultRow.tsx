@@ -39,12 +39,20 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
   const showThank = !!item.thank && kudosOpen;
   const more = showReactions || showThank;
   const [open, setOpen] = useState(false);
+  const longPress = onLongPress ? () => onLongPress(item.id) : undefined;
+  const [names, setNames] = useState(false);
+  useEffect(() => {
+    if (!names) return undefined;
+    const id = setTimeout(() => setNames(false), REVEAL_MS);
+    return () => clearTimeout(id);
+  }, [names]);
+  const reveal = () => setNames((o) => !o);
   const meta = [item.score, item.line].filter(Boolean).join(' · ');
   return (
     <Pressable
       accessibilityState={more ? { expanded: open } : undefined}
       onPress={more ? () => setOpen((o) => !o) : undefined}
-      onLongPress={onLongPress ? () => onLongPress(item.id) : undefined}
+      onLongPress={longPress}
       delayLongPress={450}
     >
       <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
@@ -54,17 +62,24 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
             {item.calledIt ? <Pill text={item.calledIt} /> : null}
           </View>
         ) : null}
-        <View style={styles.winner}>
-          <View style={styles.nameBox}>
-            <Names people={item.winner} style={[styles.winName, { color: fg }]} />
+        {/* the names are one column, one target (about 60pt tall): a tap shows every first name; the scores sit beside */}
+        <View style={styles.pair}>
+          <Pressable style={styles.namesCol} onPress={reveal} onLongPress={longPress} delayLongPress={450}>
+            <View style={styles.winner}>
+              <Names people={item.winner} open={names} style={[styles.winName, { color: fg }]} />
+            </View>
+            <View style={[styles.loser, styles.dim]}>
+              <Names people={item.loser} open={names} style={[styles.loseName, { color: fg }]} />
+            </View>
+          </Pressable>
+          <View style={styles.scoresCol}>
+            <View style={[styles.winner, styles.scoreLine]}>
+              <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
+            </View>
+            <View style={[styles.loser, styles.scoreLine, styles.dim]}>
+              <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
+            </View>
           </View>
-          <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
-        </View>
-        <View style={styles.loser}>
-          <View style={styles.nameBox}>
-            <Names people={item.loser} style={[styles.loseName, { color: fg }]} />
-          </View>
-          <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
         </View>
         <View style={styles.metaRow}>
           <Text style={[styles.sets, { color: soft }]} numberOfLines={2}>
@@ -78,7 +93,7 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
             style={styles.thankHit}
             onPress={() => router.push({ pathname: '/win-card', params: { match: item.id, from: 'results' } })}
           >
-            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{t.winCard.open}</Text>
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.ink }]}>{t.winCard.open}</Text>
           </Pressable>
         ) : null}
         {open && showReactions ? <ReactionChips matchId={item.id} initial={item.reactions!} dark={hot} /> : null}
@@ -93,7 +108,7 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
               })
           }
           >
-            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank!.label}</Text>
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.ink }]}>{item.thank!.label}</Text>
           </Pressable>
         ) : null}
       </Animated.View>
@@ -138,35 +153,24 @@ function Pill({ text }: { text: string }) {
 
 /**
  * «Δεσύπρης Γ. & Μέμμος Η.»: the surname large, as on the feed cards, and the first name's initial;
- * a tap shows the first name for 4s (founder, 10 Oct; the prototype had it the other way round).
+ * a tap anywhere on the names column shows the first names for 4s (founder, 10 Oct; the prototype had it the other way
+ * round). `open` comes from the card, so both sides open together and the whole column is one 44pt+ target.
  */
-function Names({ people, style }: { people: ResultName[]; style: StyleProp<TextStyle> }) {
+function Names({ people, open, style }: { people: ResultName[]; open: boolean; style: StyleProp<TextStyle> }) {
   // measured as shown collapsed: «Δεσύπρης Γ. & Μέμμος Η.»
   const shown = people.map((p) => `${p.surname} ${p.first.slice(0, 1)}.`).join(' & ');
   return (
-    <FitText text={shown} style={[styles.names, style]}>
-      {people.map((p, i) => (
-        <Fragment key={`${p.first}-${p.surname}-${i}`}>
-          {i > 0 ? ' & ' : ''}
-          <Name person={p} />
-        </Fragment>
-      ))}
-    </FitText>
-  );
-}
-
-function Name({ person }: { person: ResultName }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return undefined;
-    const id = setTimeout(() => setOpen(false), REVEAL_MS);
-    return () => clearTimeout(id);
-  }, [open]);
-  return (
-    <Text onPress={() => setOpen((o) => !o)} suppressHighlighting>
-      {person.surname}{' '}
-      {open ? <Text style={styles.firstName}>{person.first}</Text> : `${person.first.slice(0, 1)}.`}
-    </Text>
+    <View style={styles.nameBox}>
+      <FitText text={shown} style={[styles.names, style]}>
+        {people.map((p, i) => (
+          <Fragment key={`${p.first}-${p.surname}-${i}`}>
+            {i > 0 ? ' & ' : ''}
+            {p.surname}{' '}
+            {open ? <Text style={styles.firstName}>{p.first}</Text> : `${p.first.slice(0, 1)}.`}
+          </Fragment>
+        ))}
+      </FitText>
+    </View>
   );
 }
 
@@ -183,17 +187,24 @@ const styles = StyleSheet.create({
   pillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },
   names: {},
   nameBox: { flex: 1, minWidth: 0 },
+  // names left (one tap target), scores right; the 2pt gap is the card's old gap between the rows
+  pair: { flexDirection: 'row', gap: 12 },
+  namesCol: { flex: 1, minWidth: 0, gap: 2 },
+  scoresCol: { gap: 2 },
+  scoreLine: { justifyContent: 'flex-end' },
+  dim: { opacity: 0.65 },
   // line heights at least the font size: iOS clips the tonos that rises above the line box
   // compact (founder, 16 Oct): the winner bold, the loser lighter, both one size so the eye reads down the scores
   winner: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   winName: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   winScore: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
-  loser: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, opacity: 0.65 },
+  loser: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   loseName: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   loseScore: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   // the revealed first name is smaller and lighter (prototype .ns)
   firstName: { fontSize: 16, fontFamily: fonts.bodySemi },
   sets: { flex: 1, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
-  thankHit: { minHeight: 32, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
+  // 44pt to tap; the negative margin keeps the card the height it was with a 32pt line
+  thankHit: { minHeight: 44, marginVertical: -6, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
   thank: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });

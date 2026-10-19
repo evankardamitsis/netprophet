@@ -112,7 +112,7 @@ function Chips({ options, value, onChange }: { options: { key: string; label: st
 function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   const press = usePress(0.95);
   return (
-    <Pressable accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+    <Pressable accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.chipHit}>
       <Animated.View style={[styles.chip, on && styles.chipOn, press.style]}>
         <Text style={[styles.chipText, on && styles.chipTextOn]}>{label}</Text>
       </Animated.View>
@@ -206,13 +206,16 @@ function Locked({ i }: { i: number }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingHorizontal: 20, gap: 14 },
-  backHit: { alignSelf: 'flex-start', minHeight: 32, justifyContent: 'center' },
+  // 44pt to tap; the negative margin keeps the layout of the 32pt line it was
+  backHit: { alignSelf: 'flex-start', minHeight: 44, marginVertical: -6, justifyContent: 'center' },
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.inkSoft },
   head: { gap: 8 },
   title: { ...text.title },
   sub: { ...text.subtitle },
   filters: { gap: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // 44pt to tap around the 40pt chip; the negative margin keeps the rows where they were
+  chipHit: { minHeight: 44, marginVertical: -2, justifyContent: 'center' },
   chip: { minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   chipOn: { backgroundColor: colors.ink },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },

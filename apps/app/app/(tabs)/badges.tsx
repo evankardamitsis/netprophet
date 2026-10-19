@@ -140,14 +140,14 @@ function SelectedCard({ b, worn, onWear }: { b: BadgeRow; worn: boolean; onWear:
   );
 }
 
-/** a grid slot: a transparent frame that turns blue when selected, 2px off the tile */
+/** a grid slot: a transparent frame that turns ink when selected, 2px off the tile (the wear button is the one blue) */
 function GridCell({ width, selected, i, onPress, children }: { width: number; selected: boolean; i: number; onPress: () => void; children: ReactNode }) {
   const enter = useStgIn(STG_MS, 150 + Math.min(i, 12) * 40);
   const press = usePress(0.96);
   return (
     <Animated.View style={[{ width }, enter]}>
       <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-        <Animated.View style={[styles.cell, { borderColor: selected ? colors.blue : 'transparent' }, press.style]}>{children}</Animated.View>
+        <Animated.View style={[styles.cell, { borderColor: selected ? colors.ink : 'transparent' }, press.style]}>{children}</Animated.View>
       </Pressable>
     </Animated.View>
   );
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   wearOn: { backgroundColor: colors.ink },
   wearOff: { backgroundColor: colors.blue },
   wearText: { fontFamily: fonts.bodyBold, fontSize: 16 },
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.blue, marginTop: 6 },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.ink, marginTop: 6 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   cell: { margin: -5, padding: 2, borderWidth: 3, borderRadius: 23 },
   tile: { minHeight: 108, padding: 12, borderRadius: 18, justifyContent: 'space-between', gap: 8 },
