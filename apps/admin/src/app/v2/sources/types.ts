@@ -24,6 +24,9 @@ export interface IngestCounts {
   auto_category?: number;
   /** imported matches the draw sheet moved to another category */
   recategorised?: number;
+  /** matches that kept their row through an edit (a substitute, a category or name typo), and the ones replaced */
+  relinked?: number;
+  replaced?: number;
 }
 
 export interface DrawCounts {

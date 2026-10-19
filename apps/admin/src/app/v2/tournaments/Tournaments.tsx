@@ -484,6 +484,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             draws !== null ? `${draws} draws refreshed.` : '',
             autoNamed(c) ? `${plural(autoNamed(c), 'name')} decided from match history.` : '',
             c.recategorised ? `${plural(c.recategorised, 'match', 'matches')} moved to the category of its draw.` : '',
+            c.relinked ? `${plural(c.relinked, 'edited row')} kept ${c.relinked === 1 ? 'its match' : 'their matches'}.` : '',
             c.held_for_review ? `${c.held_for_review} need a decision (top of the page).` : '',
           ]
             .filter(Boolean)
