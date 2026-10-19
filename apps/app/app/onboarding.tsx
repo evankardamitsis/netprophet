@@ -4,7 +4,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { GoSplash, IntroSlideView } from '../src/components/IntroSlides';
 import { track } from '../src/lib/analytics';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
@@ -15,8 +14,7 @@ import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/
 import { mockLinkView, who } from '../src/lib/link';
 import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
 import { usePress, useStgIn } from '../src/lib/motion';
-import { MeetBallerLive } from '../src/components/MeetBallerLive';
-import { areasOf, introNumber, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type IntroSlide, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
+import { areasOf, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
 import { colors, ease, fonts } from '../src/theme';
@@ -24,8 +22,9 @@ import { useOnboardingGate } from '../src/lib/onboardingGate';
 
 /**
  * Onboarding (prototype V2, after the welcome screen): your name, your player on the roster («Είσαι
- * ήδη εδώ;»), how you play (new players only), where you play, who you know, then the four intro
- * slides and the «Ας ξεκινήσουμε» splash. No header or tab bar, one blue button per screen.
+ * ήδη εδώ;»), how you play (new players only), where you play, and who you know (optional), then straight
+ * to Σήμερα and the first vote (founder, 19 Oct: no slides, no splash, Baller after the first vote).
+ * No header or tab bar, one blue button per screen.
  * Someone who came from an opponent link confirms the link's player and picks who they know (at least one, the
  * logger already picked), then goes straight in (prototype fromLink).
  */
@@ -102,9 +101,7 @@ export default function OnboardingScreen() {
   const [query, setQuery] = useState('');
   const [found, setFound] = useState<PlayerRow[] | null>(null);
   const [known, setKnown] = useState<string[]>([]);
-  const [skipped, setSkipped] = useState(false);
 
-  const [going, setGoing] = useState(false);
   const [busy, setBusy] = useState(false);
   // the claim went to staff: say so, never pretend the player is theirs yet
   const [requested, setRequested] = useState(false);
@@ -285,7 +282,7 @@ export default function OnboardingScreen() {
     if (!session) router.replace('/');
   }, [gate, session]);
 
-  // the setup is saved here, so quitting during the slides still opens the app next time
+  // the last step: save the setup and open Σήμερα, where the first vote card waits
   const knownDone = () =>
     run(async () => {
       await ob.follow(known);
@@ -297,15 +294,8 @@ export default function OnboardingScreen() {
       }
       await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null, age_15: true });
       track('onboarding_done', { claimed: !isNew && picked !== null, known: known.length });
-      go(i + 1);
+      enterApp();
     });
-
-  const skipKnown = () => {
-    setSkipped(true);
-    setQuery('');
-    setFound(null);
-    setKnown(suggested.slice(0, KNOWN_MIN).map((p) => p.id));
-  };
 
   // «Ψάξε όνομα»: a real search from two letters
   useEffect(() => {
@@ -329,16 +319,6 @@ export default function OnboardingScreen() {
 
   if (!linkChecked) return <View style={styles.screen} />;
   const lp = link?.view.player;
-
-  // «Γνώρισε τον Baller σου» takes the whole screen
-  if (step === 'baller') {
-    return (
-      <>
-        <StatusBar style="light" />
-        <MeetBallerLive onDone={() => go(i + 1)} />
-      </>
-    );
-  }
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -486,24 +466,17 @@ export default function OnboardingScreen() {
             </>
           ) : null}
 
-          {introNumber(step) > 0 ? (
-            <IntroSlideView slide={step as IntroSlide} onNext={() => (step === 'e4' ? setGoing(true) : go(i + 1))} onBack={back} />
-          ) : null}
-
           {step === 'known' ? (
             <>
               <Title text={o.known.title} />
               <Text style={styles.sub}>{o.known.subtitle}</Text>
               <Text style={styles.note}>
-                {link?.view.logged_by ? fmt(t.link.knownNote, { who: who(link.view.logged_by) }) : skipped ? o.known.noteSuggested : o.known.note}
+                {link?.view.logged_by ? fmt(t.link.knownNote, { who: who(link.view.logged_by) }) : o.known.noteOptional}
               </Text>
               <TextInput
                 value={query}
-                onChangeText={(q) => {
-                  setQuery(q);
-                  setSkipped(false);
-                }}
-                placeholder={skipped ? o.known.searchSuggested : o.known.search}
+                onChangeText={setQuery}
+                placeholder={o.known.search}
                 placeholderTextColor={colors.inkSoft}
                 autoCorrect={false}
                 autoCapitalize="none"
@@ -515,7 +488,7 @@ export default function OnboardingScreen() {
                   <KnownRow
                     key={p.id}
                     name={p.name}
-                    sub={[p.sub, skipped && p.followers ? fmt(o.known.followers, { n: p.followers }) : null].filter(Boolean).join(' · ')}
+                    sub={p.sub}
                     on={known.includes(p.id)}
                     onPress={() => toggleKnown(p.id)}
                     last={n === knownList.length - 1}
@@ -524,15 +497,11 @@ export default function OnboardingScreen() {
               </View>
               <Err text={error} />
               <Primary label={kb.label} ready={kb.ready} busy={busy} onPress={knownDone} />
-              <View style={styles.bottomRow}>
-                <Back label={o.back} onPress={back} />
-                {link ? null : <Link label={o.known.none} onPress={skipKnown} />}
-              </View>
+              <Back label={o.back} onPress={back} />
             </>
           ) : null}
         </StepIn>
       </ScrollView>
-      {going ? <GoSplash onDone={enterApp} /> : null}
     </KeyboardAvoidingView>
   );
 }
@@ -603,13 +572,6 @@ function Candidate({ row, index, on, onPress }: { row: ClaimRow; index: number; 
   );
 }
 
-function Link({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.linkHit}>
-      <Text style={styles.link}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const styles = StyleSheet.create({
   ageRow: { flexDirection: 'row' },
@@ -662,7 +624,4 @@ const styles = StyleSheet.create({
   },
   searchOn: { borderColor: colors.ink },
   list: { minHeight: 200, borderRadius: 22, backgroundColor: colors.white, paddingVertical: 4, paddingHorizontal: 14 },
-  bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  linkHit: { minHeight: 44, justifyContent: 'center' },
-  link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink, textDecorationLine: 'underline' },
 });

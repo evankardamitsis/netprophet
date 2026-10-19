@@ -368,6 +368,8 @@ export const en: Copy = {
       friends: { one: 'friend', many: 'friends' },
       none: 'I do not know anyone yet',
       noneFound: 'Nobody by that name.',
+      later: 'Later',
+      noteOptional: 'Optional. You can find them later too.',
     },
     intro: {
       of: '{n} of {total}',

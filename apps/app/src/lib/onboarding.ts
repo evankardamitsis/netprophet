@@ -5,12 +5,13 @@ import { fmt } from './votes';
  * Onboarding (prototype V2, after the welcome screen): the order of steps and the small rules the
  * screens share. Differs from the prototype in one place: the name comes first, because a real
  * search for your player needs it (the prototype hard-codes «Βαγγέλης Κ»).
+ *
+ * Short first run (founder, 19 Oct): only what makes the game yours, then straight to the first vote card.
+ * No intro slides and no «Ας ξεκινήσουμε» splash: Σήμερα teaches the vote where it happens («Ποιος κερδίζει;
+ * Πάτα τον νικητή»). «Γνώρισε τον Baller σου» comes after the first vote, as it does for older accounts
+ * (ballerOffer.ts). Progress lives only on the screen; the server keeps onboarding_state.done.
  */
-export type Step = 'name' | 'claim' | 'play' | 'area' | 'known' | 'baller' | IntroSlide;
-
-/** the four intro slides after «Ποια είναι η παρέα σου;», «1 από 4» to «4 από 4» */
-export type IntroSlide = 'e1' | 'e2' | 'e3' | 'e4';
-export const INTRO: IntroSlide[] = ['e1', 'e2', 'e3', 'e4'];
+export type Step = 'name' | 'claim' | 'play' | 'area' | 'known';
 
 /**
  * The claimed path skips «Πώς παίζεις;»: a roster player already has a hand and a history. Someone who came
@@ -19,27 +20,19 @@ export const INTRO: IntroSlide[] = ['e1', 'e2', 'e3', 'e4'];
  */
 export function stepsFor(isNew: boolean, fromLink = false): Step[] {
   if (fromLink) return ['claim', 'known'];
-  // «Γνώρισε τον Baller σου» comes after the friends, before the four slides (founder, 17 Oct)
-  const setup: Step[] = isNew ? ['name', 'claim', 'play', 'area', 'known', 'baller'] : ['name', 'claim', 'area', 'known', 'baller'];
-  return setup.concat(INTRO);
+  return isNew ? ['name', 'claim', 'play', 'area', 'known'] : ['name', 'claim', 'area', 'known'];
 }
 
-/** «2 από 4»: the slide's place among the intro slides, from 1; 0 for a setup step */
-export function introNumber(step: Step): number {
-  return INTRO.indexOf(step as IntroSlide) + 1;
-}
-
-/** the «Ας ξεκινήσουμε» splash stays this long unless tapped (prototype goStart) */
-export const GO_MS = 2300;
-
-export const KNOWN_MIN = 3;
+/** «Ποια είναι η παρέα σου;» never blocks: someone who knows nobody yet goes on with «Αργότερα» */
+export const KNOWN_MIN = 0;
 
 /** after a link, one is enough: the logger is already picked */
 export const KNOWN_MIN_LINK = 1;
 
-/** «Διάλεξε 2 ακόμα» until the minimum, then «Συνέχεια · 3 φίλοι». */
+/** «Αργότερα» with nobody picked, «Διάλεξε 1 ακόμα» under a minimum, then «Συνέχεια · 3 φίλοι». */
 export function knownButton(n: number, t: Copy, min = KNOWN_MIN): { label: string; ready: boolean } {
   if (n < min) return { label: fmt(t.onboarding.known.need, { n: min - n }), ready: false };
+  if (n === 0) return { label: t.onboarding.known.later, ready: true };
   return {
     label: fmt(t.onboarding.known.go, { n, friends: n === 1 ? t.onboarding.known.friends.one : t.onboarding.known.friends.many }),
     ready: true,
