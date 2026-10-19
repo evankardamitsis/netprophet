@@ -36,7 +36,8 @@
           "imageWidth": 246.67
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "./plugins/withSceneLifecycle"
     ],
     "experiments": {
       "typedRoutes": true
