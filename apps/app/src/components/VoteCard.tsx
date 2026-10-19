@@ -10,9 +10,9 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { soonLabel, startsSoon, type CardMatch, type CardPct, type CardSide } from '../lib/feed';
 import { FitText } from './FitText';
-import { runJpop, runPop, usePopIn, usePress } from '../lib/motion';
+import { PRESS_MS, runJpop, runPop, usePopIn } from '../lib/motion';
 import type { Side } from '../lib/votes';
-import { cardSurface, colors, ease, fonts, text } from '../theme';
+import { cardSurface, colors, ease, fonts, springEase, text, type } from '../theme';
 import { useCopy } from '../i18n';
 import { Lit } from './Lit';
 import { Avatar as DrawnAvatar } from './Avatar';
@@ -20,12 +20,12 @@ import type { AvatarLook } from '../lib/avatar';
 import { Logo } from './Logo';
 
 /**
- * Feed match card, prototype V2 («Τι παίζει σήμερα;»):
- * idle      two vote buttons side by side, each player a small avatar beside the name (founder, 16 Oct: compact,
- *           easy to read; the tournament and where it is played sit once above the run of cards). «Ποιος κερδίζει;»
- *           over them and an empty ring on each side say it is yours to pick (founder, 18 Oct: make voting obvious);
- *           in its last hour «Ξεκινά σε 40 λεπτά» sits beside the question
- * revealed  the pick gets an ink border and a jpop, lime fills grow to the split, percentages pop in
+ * Feed match card (founder, 19 Oct, design B: voting is the prominent action):
+ * idle      each side is itself a dark button: an ink tile with the names in paper, standing on a lip so it reads as
+ *           pressable; a touch presses it down onto the lip. «Ποιος κερδίζει;» is said once above the feed, not here;
+ *           in its last hour «Ξεκινά σε 40 λεπτά» sits at the end of the card's time line
+ * picked    the side you did not pick fades to the paper outline at once; your side shows ✓ and jpops
+ * revealed  your side turns paper too, with an ink border; lime fills grow to the split (ink on lime), percentages pop
  * folded    1100ms after the tap (as in the prototype, whatever the network took), and never before the
  *           fills finish growing: one row, lime under the pick, ✓ and both percentages
  */
@@ -35,16 +35,21 @@ const FOLD_AFTER_MS = 1100;
 const FILL_MS = 600;
 const PCT_POP_MS = 450;
 const PCT_POP_DELAY = 120;
-const BORDER_MS = 400;
+const TONE_MS = 400;
 const JPOP_MS = 400;
 const FOLD_MS = 550;
 const ENTER_MS = 400;
 const AVATAR_POP_MS = 400;
 const AVATAR_POP_DELAY = 150;
-const RING_MS = 250;
 const TICK_POP_MS = 400;
 /** how often an idle card in its last hour reads the clock again */
 const SOON_TICK_MS = 30_000;
+/** the lip under a dark tile; a press takes the tile down to the last pixel of it */
+const EDGE = 5;
+/** how much of the lip still shows while pressed */
+const EDGE_PRESSED = 1;
+/** the side you did not pick, once faded */
+const FADED_OPACITY = 0.72;
 
 const cssEase = Easing.bezier(0.25, 0.1, 0.25, 1);
 const foldEase = Easing.bezier(0.4, 0, 0.2, 1);
@@ -78,9 +83,11 @@ interface Props {
   onVote: (matchId: string, side: Side) => Promise<CardPct>;
   /** a long press opens «Αναφορά» */
   onLongPress?: (matchId: string) => void;
+  /** the category tag adds nothing here: its tournament's head says it (feed runCategories) */
+  hideCategory?: boolean;
 }
 
-export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: Props) {
+export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress, hideCategory = false }: Props) {
   const voted = match.myVote !== undefined && match.split !== undefined;
   const [phase, setPhase] = useState<Phase>(voted ? 'folded' : 'idle');
   const [pick, setPick] = useState<Side | undefined>(match.myVote);
@@ -121,11 +128,11 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
   }, [phase]);
 
   const hold = onLongPress ? () => onLongPress(match.id) : undefined;
-  if (match.closed) return <ClosedCard match={match} onLongPress={hold} />;
+  if (match.closed) return <ClosedCard match={match} hideCategory={hideCategory} onLongPress={hold} />;
   if (phase === 'folded' && pick && split) {
     return (
       <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
-        <FoldedCard match={match} pick={pick} split={split} fresh={voted} />
+        <FoldedCard match={match} pick={pick} split={split} fresh={voted} hideCategory={hideCategory} />
       </Pressable>
     );
   }
@@ -134,29 +141,22 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
   return (
     <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
       <Animated.View style={[styles.card, enter]}>
-        <Meta match={match} />
-        <Ask startsAt={match.startsAt} />
+        <Meta match={match} hideCategory={hideCategory} soonAt={phase === 'idle' ? match.startsAt : undefined} />
         <View style={styles.grid}>
-          <VoteButton
-            side="a"
-            data={match.a}
-            doubles={match.doubles}
-            picked={pick === 'a'}
-            disabled={phase !== 'idle'}
-            pct={revealed ? split.pctA : null}
-            ring
-            onPress={vote}
-          />
-          <VoteButton
-            side="b"
-            data={match.b}
-            doubles={match.doubles}
-            picked={pick === 'b'}
-            disabled={phase !== 'idle'}
-            pct={revealed ? split.pctB : null}
-            ring
-            onPress={vote}
-          />
+          {(['a', 'b'] as const).map((s) => (
+            <Tile
+              key={s}
+              side={s}
+              data={match[s]}
+              doubles={match.doubles}
+              picked={pick === s}
+              faded={pick !== undefined && pick !== s}
+              flat={false}
+              disabled={phase !== 'idle'}
+              pct={revealed ? (s === 'a' ? split.pctA : split.pctB) : null}
+              onPress={vote}
+            />
+          ))}
         </View>
       </Animated.View>
     </Pressable>
@@ -164,20 +164,32 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress }: P
 });
 
 /**
- * Voting has closed (founder, 17 Oct): the match as it stands, both sides without buttons, the crowd's split and your
+ * Voting has closed (founder, 17 Oct): the match as it stands, both sides flat (no buttons), the crowd's split and your
  * pick if you made one, and «Οι ψήφοι έκλεισαν» under them. It leaves Σήμερα when the result comes in.
  */
-function ClosedCard({ match, onLongPress }: { match: CardMatch; onLongPress?: () => void }) {
+function ClosedCard({ match, hideCategory, onLongPress }: { match: CardMatch; hideCategory: boolean; onLongPress?: () => void }) {
   const t = useCopy();
   const enter = useEnter();
   const none = () => undefined;
   return (
     <Pressable onLongPress={onLongPress} delayLongPress={LONG_PRESS_MS} accessibilityLabel={`${match.meta}. ${t.match.closed}`}>
       <Animated.View style={[styles.card, enter]}>
-        <Meta match={match} />
+        <Meta match={match} hideCategory={hideCategory} />
         <View style={styles.grid}>
-          <VoteButton side="a" data={match.a} doubles={match.doubles} picked={match.myVote === 'a'} disabled pct={match.split ? match.split.pctA : null} onPress={none} />
-          <VoteButton side="b" data={match.b} doubles={match.doubles} picked={match.myVote === 'b'} disabled pct={match.split ? match.split.pctB : null} onPress={none} />
+          {(['a', 'b'] as const).map((s) => (
+            <Tile
+              key={s}
+              side={s}
+              data={match[s]}
+              doubles={match.doubles}
+              picked={match.myVote === s}
+              faded={match.myVote !== undefined && match.myVote !== s}
+              flat
+              disabled
+              pct={match.split ? (s === 'a' ? match.split.pctA : match.split.pctB) : null}
+              onPress={none}
+            />
+          ))}
         </View>
         <Text style={styles.closed}>{t.match.closed}</Text>
       </Animated.View>
@@ -185,24 +197,18 @@ function ClosedCard({ match, onLongPress }: { match: CardMatch; onLongPress?: ()
   );
 }
 
-/** «Ποιος κερδίζει;», and in the last hour before the start «Ξεκινά σε 40 λεπτά» beside it */
-function Ask({ startsAt }: { startsAt?: string }) {
+/** «Ξεκινά σε 40 λεπτά» while the start is under an hour away; the clock is read again only while it is near */
+function useSoon(startsAt: string | undefined): string | null {
   const t = useCopy();
   const [now, setNow] = useState(() => new Date());
-  const soon = startsSoon(startsAt, now);
-  // read the clock again only while the start is near (or about to be)
   const near = startsAt !== undefined && Date.parse(startsAt) - now.getTime() < 2 * 60 * 60_000;
   useEffect(() => {
     if (!near) return undefined;
     const id = setInterval(() => setNow(new Date()), SOON_TICK_MS);
     return () => clearInterval(id);
   }, [near]);
-  return (
-    <View style={styles.ask}>
-      <Text style={styles.askText}>{t.match.who}</Text>
-      {soon !== null ? <SoonChip label={soonLabel(soon, t)} /> : null}
-    </View>
-  );
+  const soon = startsSoon(startsAt, now);
+  return soon === null ? null : soonLabel(soon, t);
 }
 
 function SoonChip({ label }: { label: string }) {
@@ -214,13 +220,21 @@ function SoonChip({ label }: { label: string }) {
   );
 }
 
+interface MetaProps {
+  match: CardMatch;
+  hideCategory?: boolean;
+  /** an idle card's start: «Ξεκινά σε …» at the end of the line in its last hour */
+  soonAt?: string;
+  style?: object;
+}
+
 /** the meta line; a match that moved to a new day gets the «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
-function Meta({ match, style }: { match: CardMatch; style?: object }) {
-  if (!match.place) return <MetaLine match={match} style={style} />;
+function Meta({ match, style, ...rest }: MetaProps) {
+  if (!match.place) return <MetaLine match={match} style={style} {...rest} />;
   // «PRC (Μαρούσι) · Σκληρό» under it: where it is played
   return (
     <View style={[styles.metaStack, style]}>
-      <MetaLine match={match} />
+      <MetaLine match={match} {...rest} />
       <View style={styles.placeRow}>
         {match.club ? <Logo path={match.club.logo} name={match.club.name} size={16} /> : null}
         <Text style={styles.place}>{match.place}</Text>
@@ -229,158 +243,184 @@ function Meta({ match, style }: { match: CardMatch; style?: object }) {
   );
 }
 
-function MetaLine({ match, style }: { match: CardMatch; style?: object }) {
+function MetaLine({ match, hideCategory = false, soonAt, style }: MetaProps) {
   const m = match.moved;
-  const cat = match.category ? (
-    <View style={styles.category}>
-      <Text style={styles.categoryText}>{match.category}</Text>
-    </View>
-  ) : null;
-  if (!m)
-    return cat ? (
-      <View style={[styles.metaRow, style]}>
-        {cat}
-        <Text style={styles.meta}>{match.meta}</Text>
-      </View>
-    ) : (
-      <Text style={[styles.meta, style]}>{match.meta}</Text>
-    );
+  const soon = useSoon(soonAt);
+  // the category: bold ink text a step bigger than the time, no fill (founder, 19 Oct: lighter)
+  const cat = match.category && !hideCategory ? <Text style={styles.category}>{match.category}</Text> : null;
   return (
     <View style={[styles.metaRow, style]}>
       {cat}
-      <Text style={styles.meta}>{m.head}</Text>
-      <View style={styles.chip}>
-        <Text style={styles.chipText}>{m.chip}</Text>
-      </View>
-      <Text style={styles.meta}>{m.tail ? `${m.was} · ${m.tail}` : m.was}</Text>
+      {m ? (
+        <>
+          <Text style={styles.meta}>{m.head}</Text>
+          <View style={styles.chip}>
+            <Text style={styles.chipText}>{m.chip}</Text>
+          </View>
+          <Text style={styles.meta}>{m.tail ? `${m.was} · ${m.tail}` : m.was}</Text>
+        </>
+      ) : (
+        <Text style={styles.meta}>{match.meta}</Text>
+      )}
+      {soon !== null ? <SoonChip label={soon} /> : null}
     </View>
   );
 }
 
-interface VoteButtonProps {
+interface TileProps {
   side: Side;
   data: CardSide;
   doubles: boolean;
   picked: boolean;
+  /** another side was picked: this one steps back to the paper outline */
+  faded: boolean;
+  /** not a button (voting closed): paper outline from the start, no lip */
+  flat: boolean;
   disabled: boolean;
   /** null until the split is known */
   pct: number | null;
-  /** the pick ring beside the first name: empty while you can vote, ✓ on your pick */
-  ring?: boolean;
   onPress: (side: Side) => void;
 }
 
-function VoteButton({ side, data, doubles, picked, disabled, pct, ring = false, onPress }: VoteButtonProps) {
-  const press = usePress();
-  const line = useSharedValue(0);
+/**
+ * One side as a dark pressable tile on a lip (design B). It turns to the paper look when it steps back (the other side
+ * was picked) or once the split shows on your pick, so the lime fill always carries ink text. The names are drawn twice,
+ * paper for the dark tile and ink for the paper one, and cross-fade with the tile.
+ */
+function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress }: TileProps) {
+  const light = flat || faded || (picked && pct !== null);
+  const press = useSharedValue(0);
+  const tone = useSharedValue(light ? 1 : 0);
+  const dim = useSharedValue(faded ? 1 : 0);
   const jpop = useSharedValue(1);
   const fill = useSharedValue(0);
   const pctScale = useSharedValue(0.4);
   const pctOpacity = useSharedValue(0);
+  const tickScale = useSharedValue(picked ? 1 : 0.4);
+  const tickOpacity = useSharedValue(picked ? 1 : 0);
+  // the ink copy of the names mounts once it can show (a pick, or a closed card), so idle cards draw them once
+  const [inked, setInked] = useState(light);
+  if (light && !inked) setInked(true);
 
   useEffect(() => {
-    line.value = withTiming(picked ? 1 : 0, { duration: BORDER_MS, easing: cssEase });
-    if (picked) runJpop(jpop, JPOP_MS);
-  }, [picked, line, jpop]);
-
+    tone.value = withTiming(light ? 1 : 0, { duration: TONE_MS, easing: cssEase });
+  }, [light, tone]);
+  useEffect(() => {
+    dim.value = withTiming(faded ? 1 : 0, { duration: TONE_MS, easing: cssEase });
+  }, [faded, dim]);
+  useEffect(() => {
+    if (picked) {
+      runJpop(jpop, JPOP_MS);
+      runPop(tickScale, tickOpacity, TICK_POP_MS);
+    } else tickOpacity.value = withTiming(0, { duration: TONE_MS });
+  }, [picked, jpop, tickScale, tickOpacity]);
   useEffect(() => {
     if (pct === null) return;
     fill.value = withTiming(pct, { duration: FILL_MS, easing: ease });
     runPop(pctScale, pctOpacity, PCT_POP_MS, PCT_POP_DELAY);
   }, [pct, fill, pctScale, pctOpacity]);
 
-  const box = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(line.value, [0, 1], [colors.slate, colors.ink]),
-    transform: [{ scale: jpop.value }],
+  const faceStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(tone.value, [0, 1], [colors.ink, colors.paper]),
+    borderColor: picked
+      ? interpolateColor(tone.value, [0, 1], [colors.inkLine, colors.ink])
+      : interpolateColor(tone.value, [0, 1], [colors.inkLine, colors.slate]),
+    opacity: 1 - dim.value * (1 - FADED_OPACITY),
+    transform: [{ translateY: press.value * (EDGE - EDGE_PRESSED) }, { scale: jpop.value }],
   }));
+  // the lip goes with the dark tile: a paper tile lies flat
+  const edgeStyle = useAnimatedStyle(() => ({ opacity: 1 - tone.value }));
+  const darkStyle = useAnimatedStyle(() => ({ opacity: 1 - tone.value }));
+  const lightStyle = useAnimatedStyle(() => ({ opacity: tone.value }));
   const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value}%` }));
   const pctStyle = useAnimatedStyle(() => ({ opacity: pctOpacity.value, transform: [{ scale: pctScale.value }] }));
+  const tickStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(tone.value, [0, 1], [colors.paper, colors.ink]),
+    opacity: tickOpacity.value,
+    transform: [{ scale: tickScale.value }],
+  }));
   const names = data.people.map((p) => `${p.first} ${p.surname}`).join(' & ');
 
   return (
-    <View style={styles.col}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={names}
-        accessibilityState={{ selected: picked, disabled }}
-        disabled={disabled}
-        onPress={() => onPress(side)}
-        onPressIn={press.onPressIn}
-        onPressOut={press.onPressOut}
-      >
-        <Animated.View style={press.style}>
-          <Animated.View style={[styles.vb, box]}>
-            <Animated.View style={[styles.fill, fillStyle]} />
-            {/* always mounted: Reanimated (web) does not animate a view that appears mid-flight */}
-            <Animated.Text style={[styles.pct, pctStyle]}>{pct === null ? '' : `${pct}%`}</Animated.Text>
-            {data.people.map((p, i) => (
-              <View key={i} style={styles.person}>
-                <Avatar initials={p.initials} look={p.look ?? null} />
-                <View style={styles.names}>
-                  <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
-                  <Text numberOfLines={1} style={styles.fn}>
-                    {p.first}
-                  </Text>
-                </View>
-              </View>
-            ))}
-            {data.level || data.area || ring ? (
-              <View style={styles.facts}>
-                {data.level ? (
-                  <View style={styles.levelPill}>
-                    <Text style={styles.levelText}>{data.level}</Text>
-                  </View>
-                ) : null}
-                {data.area ? (
-                  <Text numberOfLines={1} style={styles.area}>
-                    {data.area}
-                  </Text>
-                ) : null}
-                {/* where the split lands after the vote: the ring makes way for it */}
-                {ring ? <PickRing picked={picked} faded={disabled && !picked} gone={pct !== null} /> : null}
-              </View>
-            ) : data.sub ? (
-              <Text style={styles.sub}>{data.sub}</Text>
-            ) : null}
+    <Pressable
+      style={styles.col}
+      accessibilityRole="button"
+      accessibilityLabel={names}
+      accessibilityState={{ selected: picked, disabled }}
+      disabled={disabled}
+      onPress={() => onPress(side)}
+      onPressIn={() => {
+        press.value = withTiming(1, { duration: PRESS_MS, easing: springEase });
+      }}
+      onPressOut={() => {
+        press.value = withTiming(0, { duration: PRESS_MS, easing: springEase });
+      }}
+    >
+      <View style={[styles.tile, flat && styles.tileFlat]}>
+        {flat ? null : <Animated.View style={[styles.edge, edgeStyle]} pointerEvents="none" />}
+        <Animated.View style={[styles.face, faceStyle]}>
+          <Animated.View style={[styles.fill, fillStyle]} pointerEvents="none" />
+          <Animated.View style={[styles.layer, darkStyle]}>
+            <TileText data={data} doubles={doubles} dark pop />
           </Animated.View>
+          {inked ? (
+            <Animated.View style={[styles.layer, styles.layerOver, lightStyle]} pointerEvents="none">
+              <TileText data={data} doubles={doubles} dark={false} pop={false} />
+            </Animated.View>
+          ) : null}
+          {/* always mounted: Reanimated (web) does not animate a view that appears mid-flight */}
+          <Animated.Text style={[styles.tick, tickStyle]} pointerEvents="none">
+            ✓
+          </Animated.Text>
+          <Animated.Text style={[styles.pct, pctStyle]} pointerEvents="none">
+            {pct === null ? '' : `${pct}%`}
+          </Animated.Text>
         </Animated.View>
-      </Pressable>
-    </View>
+      </View>
+    </Pressable>
   );
 }
 
-/** an empty ring that says «pick me»; your pick fills it in ink with a ✓ that pops */
-function PickRing({ picked, faded, gone }: { picked: boolean; faded: boolean; gone: boolean }) {
-  const fill = useSharedValue(picked ? 1 : 0);
-  const tickScale = useSharedValue(picked ? 1 : 0.4);
-  const tickOpacity = useSharedValue(picked ? 1 : 0);
-  const dim = useSharedValue(faded ? 1 : 0);
-  useEffect(() => {
-    fill.value = withTiming(picked ? 1 : 0, { duration: RING_MS, easing: cssEase });
-    if (picked) runPop(tickScale, tickOpacity, TICK_POP_MS);
-    else tickOpacity.value = withTiming(0, { duration: RING_MS });
-  }, [picked, fill, tickScale, tickOpacity]);
-  useEffect(() => {
-    dim.value = withTiming(gone ? 2 : faded ? 1 : 0, { duration: RING_MS, easing: cssEase });
-  }, [faded, gone, dim]);
-  // dim 0 full, 1 the side you did not pick, 2 gone (the split takes the corner)
-  const ringStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(fill.value, [0, 1], [colors.paper, colors.ink]),
-    opacity: dim.value <= 1 ? 1 - dim.value * 0.65 : 0.35 * (2 - dim.value),
-  }));
-  const tickStyle = useAnimatedStyle(() => ({ opacity: tickOpacity.value, transform: [{ scale: tickScale.value }] }));
+/** the names and facts of one side, in paper on the dark tile or in ink on the paper one */
+function TileText({ data, doubles, dark, pop }: { data: CardSide; doubles: boolean; dark: boolean; pop: boolean }) {
   return (
-    <Animated.View style={[styles.ring, ringStyle]} pointerEvents="none">
-      <Animated.Text style={[styles.ringTick, tickStyle]}>✓</Animated.Text>
-    </Animated.View>
+    <>
+      {data.people.map((p, i) => (
+        <View key={i} style={[styles.person, i === 0 && styles.personFirst]}>
+          <Avatar initials={p.initials} look={p.look ?? null} dark={dark} pop={pop} />
+          <View style={styles.names}>
+            <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl, dark ? styles.onInk : styles.onPaper]} />
+            <Text numberOfLines={1} style={[styles.fn, dark ? styles.fnInk : styles.onPaper]}>
+              {p.first}
+            </Text>
+          </View>
+        </View>
+      ))}
+      {data.level || data.area ? (
+        <View style={styles.facts}>
+          {data.level ? (
+            <View style={[styles.levelPill, dark && styles.levelPillInk]}>
+              <Text style={[styles.levelText, dark && styles.factInk]}>{data.level}</Text>
+            </View>
+          ) : null}
+          {data.area ? (
+            <Text numberOfLines={1} style={[styles.area, dark && styles.factInk]}>
+              {data.area}
+            </Text>
+          ) : null}
+        </View>
+      ) : data.sub ? (
+        <Text style={[styles.sub, dark && styles.factInk]}>{data.sub}</Text>
+      ) : null}
+    </>
   );
 }
 
 /** the player's drawn avatar when they have an account (founder, 14 Oct); otherwise their initials */
-function Avatar({ initials, look }: { initials: string; look: AvatarLook | null }) {
-  const pop = usePopIn(AVATAR_POP_MS, AVATAR_POP_DELAY);
+function Avatar({ initials, look, dark, pop }: { initials: string; look: AvatarLook | null; dark: boolean; pop: boolean }) {
+  const popIn = usePopIn(AVATAR_POP_MS, AVATAR_POP_DELAY);
   return (
-    <Animated.View style={[styles.av, look && styles.avDrawn, pop]} pointerEvents="none">
+    <Animated.View style={[styles.av, dark && styles.avInk, look && styles.avDrawn, pop && popIn]} pointerEvents="none">
       {look ? (
         <DrawnAvatar look={look} size={AV_SIZE} />
       ) : (
@@ -398,12 +438,14 @@ function FoldedCard({
   pick,
   split,
   fresh,
+  hideCategory,
 }: {
   match: CardMatch;
   pick: Side;
   split: CardPct;
   /** true when the feed loaded it already voted: it enters like any card instead of folding */
   fresh: boolean;
+  hideCategory: boolean;
 }) {
   const enter = useEnter(fresh);
   const op = useSharedValue(fresh ? 1 : 0.35);
@@ -414,7 +456,7 @@ function FoldedCard({
   const myPct = pick === 'a' ? split.pctA : split.pctB;
   return (
     <Animated.View style={[styles.done, enter, fold]}>
-      <Meta match={match} style={styles.doneMeta} />
+      <Meta match={match} hideCategory={hideCategory} style={styles.doneMeta} />
       <View style={styles.row}>
         <View style={[styles.rowFill, pick === 'a' ? styles.rowFillLeft : styles.rowFillRight, { width: `${myPct}%` }]} />
         <Half data={match.a} pct={split.pctA} on={pick === 'a'} />
@@ -428,7 +470,7 @@ function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
   const fg = on ? colors.ink : colors.inkSoft;
   return (
     <View style={styles.half}>
-      <Text style={[styles.tick, { color: fg }]}>{on ? '✓' : ''}</Text>
+      <Text style={[styles.rowTick, { color: fg }]}>{on ? '✓' : ''}</Text>
       <View style={styles.halfNames}>
         {data.people.map((p, i) => (
           <View key={i}>
@@ -446,8 +488,8 @@ function Half({ data, pct, on }: { data: CardSide; pct: number; on: boolean }) {
 
 /** the avatar disc beside the name */
 const AV_SIZE = 32;
-/** the pick ring in the corner of a side */
-const RING_SIZE = 22;
+const TILE_RADIUS = 16;
+const TILE_PAD = 10;
 
 const styles = StyleSheet.create({
   card: {
@@ -459,46 +501,33 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   meta: { ...text.meta, fontFamily: fonts.bodyBold },
-  ask: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginTop: -2 },
-  askText: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
-  // outlined, so it does not compete with the category tag above it
-  soon: { paddingVertical: 1, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.ink },
+  // outlined: it is a fact about time, not an action
+  soon: { marginLeft: 'auto', paddingVertical: 1, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.ink },
   soonText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
-  ring: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    borderRadius: 999,
-    borderWidth: 2,
-    borderColor: colors.ink,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 'auto',
-  },
-  ringTick: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.paper },
   closed: { ...text.meta, fontFamily: fonts.bodyBold, color: colors.inkSoft, textAlign: 'center' },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8, rowGap: 4 },
   metaStack: { gap: 2 },
   placeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   place: { ...text.meta, flexShrink: 1 },
-  // the category: the card's tag, in the display face (founder, 18 Oct)
-  category: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 8, backgroundColor: colors.ink },
-  categoryText: { fontFamily: fonts.displayHeavy, fontSize: 17, lineHeight: 22, color: colors.paper },
+  // the category: bold ink, a step above the time line, no fill (founder, 19 Oct)
+  category: { fontFamily: fonts.bodyBold, fontSize: type.body.size, lineHeight: type.meta.line, color: colors.ink },
   chip: { paddingVertical: 2, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.sand },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   grid: { flexDirection: 'row', gap: 10 },
   col: { flex: 1, minWidth: 0 },
-  vb: {
-    overflow: 'hidden',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 16,
-    borderWidth: 2,
-    backgroundColor: colors.paper,
-    gap: 8,
-  },
+  // the room under the face is the lip
+  tile: { flex: 1, paddingBottom: EDGE },
+  tileFlat: { paddingBottom: 0 },
+  edge: { position: 'absolute', left: 0, right: 0, top: EDGE, bottom: 0, borderRadius: TILE_RADIUS, backgroundColor: colors.ink },
+  face: { flex: 1, overflow: 'hidden', borderRadius: TILE_RADIUS, borderWidth: 2 },
+  layer: { padding: TILE_PAD, gap: 8 },
+  layerOver: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   person: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  // room for the ✓ in the corner, on every tile so both sides lay out alike
+  personFirst: { paddingRight: 14 },
   names: { flex: 1, minWidth: 0 },
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.lime },
+  tick: { position: 'absolute', top: 6, right: 10, fontFamily: fonts.bodyBold, fontSize: 18, lineHeight: 22 },
   // the split, in the bottom corner over the lime, while the card waits to fold
   pct: {
     position: 'absolute',
@@ -509,15 +538,21 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.ink,
   },
-  sn: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 24, paddingTop: 4, marginTop: -4, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  sn: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 24, paddingTop: 4, marginTop: -4, paddingBottom: 5, marginBottom: -5 },
   snDbl: { fontSize: 21, lineHeight: 21 },
-  // the first name belongs to the name: dark and bold, right under the surname
-  fn: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.ink },
+  onInk: { color: colors.paper },
+  onPaper: { color: colors.ink },
+  // the first name belongs to the name: bold, right under the surname; a lighter paper on the dark tile
+  fn: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18 },
+  fnInk: { color: colors.mist },
   facts: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   levelPill: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 999, backgroundColor: colors.sand },
+  levelPillInk: { backgroundColor: colors.inkRaised },
   levelText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.ink },
   area: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
   sub: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 19.5, color: colors.inkSoft },
+  // quiet on ink: the names lead
+  factInk: { color: colors.mist },
   av: {
     width: AV_SIZE,
     height: AV_SIZE,
@@ -526,6 +561,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avInk: { backgroundColor: colors.inkRaised },
   avText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   avDrawn: { overflow: 'hidden', backgroundColor: colors.paper },
   done: {
@@ -555,7 +591,7 @@ const styles = StyleSheet.create({
   rowFillLeft: { left: 0 },
   rowFillRight: { right: 0 },
   half: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tick: { fontFamily: fonts.bodyBold, fontSize: 15 },
+  rowTick: { fontFamily: fonts.bodyBold, fontSize: 15 },
   halfNames: { flexShrink: 1, minWidth: 0 },
   rowSn: { fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 20, paddingBottom: 4, marginBottom: -4 },
   rowSnNext: { paddingTop: 4 },
@@ -563,3 +599,4 @@ const styles = StyleSheet.create({
   rowPct: { marginLeft: 'auto', fontFamily: fonts.bodySemi, fontSize: 15 },
   rowPctOn: { fontFamily: fonts.bodyBold },
 });
+

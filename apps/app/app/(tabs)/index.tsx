@@ -1,7 +1,7 @@
 import { dayKey } from '@netprophet/core';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
@@ -12,14 +12,30 @@ import { DailyFold, ForYouSheet } from '../../src/components/DailyFold';
 import { useForYouDaily } from '../../src/lib/forYouDaily';
 import { PostponedCard } from '../../src/components/PostponedCard';
 import { QuizStrip } from '../../src/components/QuizStrip';
-import { ResultCard } from '../../src/components/ResultCard';
+import { ResultCard, ResultStrip } from '../../src/components/ResultCard';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteCard } from '../../src/components/VoteCard';
 import { useCopy } from '../../src/i18n';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
-import { feedDay, feedLine, groupHeads, laterOpenByDefault, openToVote, splitToday, type CardMatch, type CardResult } from '../../src/lib/feed';
+import {
+  feedDay,
+  feedLine,
+  firstOpenIndex,
+  foldSlot,
+  groupHeads,
+  laterOpenByDefault,
+  openToVote,
+  runCategories,
+  seenAdd,
+  seenToggle,
+  splitToday,
+  type CardMatch,
+  type CardResult,
+  type SeenResults,
+} from '../../src/lib/feed';
+import { useToastQueue } from '../../src/lib/toastQueue';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import { ProNudge } from '../../src/components/ProNudge';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -27,11 +43,11 @@ import { isUnlock, nextGroup } from '../../src/lib/celebrate';
 import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { dailyFold } from '../../src/lib/dailyFold';
-import { feedbackAfterVote, type QuestFeedback } from '../../src/lib/quests';
+import { feedbackAfterVote } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
-import { useStgIn } from '../../src/lib/motion';
-import { colors, ease, fonts, motion, text } from '../../src/theme';
+import { usePress, useStgIn } from '../../src/lib/motion';
+import { colors, ease, fonts, motion, text, type } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 import { momentsAct, useMoments } from '../../src/lib/useMoments';
@@ -46,11 +62,21 @@ const NEXT_RESULT_GAP = 140;
 const VOTE_SETTLE_MS = 1400;
 /** after a vote, Baller or «Για σένα» wait for this long without scrolling (founder, 18 Oct: when it makes sense) */
 const CALM_MS = 2000;
+/** the tap on «Ποιος κερδίζει;» leaves this much of the screen above the first open card */
+const SCROLL_ROOM = 12;
+
+/** one line at a time over Σήμερα: a toast, or the quest bar over the tab bar (founder, 19 Oct) */
+type Note =
+  | { kind: 'toast'; text: string }
+  | { kind: 'bar'; bar: { title: string; from: number; to: number; progress: number; target: number } };
 
 export default function VoteScreen() {
   const t = useCopy();
-  const [notice, setNotice] = useState<{ kind: VoteErrorKind; n: number } | null>(null);
-  const onVoteError = useCallback((kind: VoteErrorKind) => setNotice((p) => ({ kind, n: (p?.n ?? 0) + 1 })), []);
+  // a failed vote, a confirmed match, a finished or moved quest, a report sent: one queue, one at a time
+  const notes = useToastQueue<Note>();
+  const pushNote = notes.push;
+  const toast = useCallback((text: string) => pushNote({ kind: 'toast', text }, TOAST_MS), [pushNote]);
+  const onVoteError = useCallback((kind: VoteErrorKind) => toast(t.feed[kind]), [toast, t]);
   const { cards, results, dismissResult, celebrations, dismissCelebration, loading, error, refresh, vote } = useFeed(onVoteError);
   const confirmations = useConfirmations();
   const myMatch = useMyMatch();
@@ -76,8 +102,7 @@ export default function VoteScreen() {
   const badgesNow = useRef(badges.badges);
   badgesNow.current = badges.badges;
   // after a vote: a toast for a quest that finished, else the slim bar for a quest that moved, else for a badge one
-  // vote short of its next tier (never more than one)
-  const [questNote, setQuestNote] = useState<(NonNullable<QuestFeedback> & { n: number }) | null>(null);
+  // vote short of its next tier (never more than one), in the queue
   // votes cast since the feed loaded: the line under the title counts down at once (the cards keep their loaded vote)
   const [votedNow, setVotedNow] = useState<ReadonlySet<string>>(() => new Set());
   const onVote = useCallback(
@@ -92,7 +117,8 @@ export default function VoteScreen() {
         const f = after
           ? feedbackAfterVote(before && gateQuests(before, has), gateQuests(after, has), t, has('badges_shelf') ? { before: badgesBefore, after: badgesAfter } : undefined)
           : null;
-        if (f) setQuestNote({ ...f, n: Date.now() });
+        if (f?.kind === 'toast') toast(f.text);
+        else if (f) pushNote({ kind: 'bar', bar: { title: f.title, from: f.from, to: f.to, progress: f.progress, target: f.target } }, QUEST_BAR_MS);
       });
       void unlocksNow.current.refresh();
       // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come
@@ -103,28 +129,17 @@ export default function VoteScreen() {
       return pct;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [vote, quests.refresh, badges.refresh, t],
+    [vote, quests.refresh, badges.refresh, t, toast, pushNote],
   );
-  useEffect(() => {
-    if (!questNote) return undefined;
-    const id = setTimeout(() => setQuestNote(null), questNote.kind === 'toast' ? TOAST_MS : QUEST_BAR_MS);
-    return () => clearTimeout(id);
-  }, [questNote]);
-  const [answered, setAnswered] = useState<string | null>(null);
   // «Αναφορά» from a long press on a card
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
-  const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
-  useEffect(() => {
-    if (!answered) return undefined;
-    const id = setTimeout(() => setAnswered(null), TOAST_MS);
-    return () => clearTimeout(id);
-  }, [answered]);
   const hud = useHud();
-  // the bar slides over the tab bar, so the tabs layout draws it (prototype mp)
+  // the bar slides over the tab bar, so the tabs layout draws it (prototype mp); it shows when its turn comes
   const { showQuestBar } = hud;
+  const note = notes.active;
   useEffect(() => {
-    showQuestBar(questNote?.kind === 'bar' ? { title: questNote.title, from: questNote.from, to: questNote.to, progress: questNote.progress, target: questNote.target } : null);
-  }, [questNote, showQuestBar]);
+    showQuestBar(note?.item.kind === 'bar' ? note.item.bar : null);
+  }, [note, showQuestBar]);
   const moments = useMoments();
   /** when the last vote settled: from then on we wait for a calm moment; 0 when not waiting */
   const [calmFrom, setCalmFrom] = useState(0);
@@ -169,8 +184,11 @@ export default function VoteScreen() {
     void unlocksNow.current.refresh();
   }, [resultIds]);
 
+  // results played this visit fold into strips; a tap opens one again (founder, 19 Oct)
+  const [seen, setSeen] = useState<SeenResults>({ list: [], open: null });
   const onResultDone = useCallback(
     (card: CardResult) => {
+      setSeen((s) => seenAdd(s, card));
       setBetween(true);
       setPlayed((n) => n + 1);
       dismissResult(card.id);
@@ -206,18 +224,25 @@ export default function VoteScreen() {
     if (list.some(isUnlock)) void unlocks.refresh({ afterMoment: true });
   };
 
-  useEffect(() => {
-    if (!notice) return undefined;
-    const id = setTimeout(() => setNotice(null), TOAST_MS);
-    return () => clearTimeout(id);
-  }, [notice]);
-
   const empty = !loading && cards.length === 0;
   const split = splitToday(cards);
   const showLater = laterChoice ?? laterOpenByDefault(split.today);
   const shown = [...split.today, ...(showLater ? split.later : [])];
   const heads = groupHeads(shown);
+  const cats = runCategories(shown);
   const voteCount = openToVote(cards, votedNow);
+  // «Για σένα» and the Pro line wait below the first run that takes a vote: the first vote shows on the first screen
+  const slot = foldSlot(shown, split.today.length);
+  const firstOpen = firstOpenIndex(shown, votedNow);
+  const scroller = useRef<ScrollView>(null);
+  const feedTop = useRef(0);
+  const cardTops = useRef(new Map<string, number>());
+  const firstOpenId = firstOpen >= 0 ? shown[firstOpen]!.id : null;
+  const toFirstVote = useCallback(() => {
+    const y = firstOpenId ? cardTops.current.get(firstOpenId) : undefined;
+    if (y === undefined) return;
+    scroller.current?.scrollTo({ y: Math.max(0, feedTop.current + y - SCROLL_ROOM), animated: true });
+  }, [firstOpenId]);
   const daily = dailyFold(unlocks.has('daily_quiz') ? quiz.quiz : null, confirmations.items.length, t);
   const forYouDaily = useForYouDaily();
   const { markShown } = forYouDaily;
@@ -239,7 +264,7 @@ export default function VoteScreen() {
           onAnswer={(a) => {
             void confirmations.answer(item.match_id, a).then((o) => {
               if (o !== 'failed') momentsAct();
-              setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]);
+              toast(o === 'failed' ? t.confirm.failed : t.confirm.done[o]);
             });
           }}
         />
@@ -292,10 +317,20 @@ export default function VoteScreen() {
     }
   }, [calm, focused, loading, current, celebrating, forYouOpen, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
   const titleIn = useInA();
+  // the Pro line only once you voted this visit or today, and never above the feed (founder, 19 Oct)
+  const votedToday = votedNow.size > 0 || voteCount.voted > 0;
+  const extras = (
+    <>
+      {/* «Για σένα»: the game of the day and the matches to confirm, folded (founder, 13 Oct) */}
+      <DailyFold fold={daily}>{forYouItems}</DailyFold>
+      {myMatch.match && !proState?.pro && votedToday ? <ProNudge moment="before_match" /> : null}
+    </>
+  );
 
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scroller}
         onScroll={onScrolled}
         onScrollBeginDrag={onScrolled}
         scrollEventThrottle={250}
@@ -303,20 +338,30 @@ export default function VoteScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={refresh} tintColor={colors.ink} />}
       >
-        <View style={styles.feed}>
+        <View style={styles.feed} onLayout={(e: LayoutChangeEvent) => (feedTop.current = e.nativeEvent.layout.y)}>
           <Animated.View style={[styles.head, titleIn]}>
             <Text style={styles.title}>{feedDay(new Date()) > dayKey(new Date().toISOString()) ? t.feed.titleTomorrow : t.feed.title}</Text>
-            {/* «3 ματς περιμένουν την ψήφο σου.» (founder, 18 Oct: make voting obvious); waits for the feed */}
+            {/* «3 ματς περιμένουν την ψήφο σου.» (founder, 18 Oct: make voting obvious); waits for the feed. «Ποιος
+                κερδίζει; Πάτα τον νικητή» is said here once for every card, and a tap takes you to the first vote */}
             {loading && cards.length === 0 ? (
               <Text style={styles.subtitle}>{t.feed.subtitle}</Text>
             ) : (
-              <FeedLine key={feedLine(voteCount, t)} line={feedLine(voteCount, t)} open={voteCount.open > 0 || (voteCount.voted === 0 && voteCount.later > 0)} />
+              <FeedHead
+                line={feedLine(voteCount, t)}
+                open={voteCount.open > 0 || (voteCount.voted === 0 && voteCount.later > 0)}
+                ask={firstOpen >= 0}
+                onPress={toFirstVote}
+              />
             )}
           </Animated.View>
           {myMatch.match ? <MyMatchCard match={myMatch.match} pro={proState?.pro ?? false} /> : null}
-          {myMatch.match && !proState?.pro ? <ProNudge moment="before_match" /> : null}
-          {/* «Για σένα»: the game of the day and the matches to confirm, folded (founder, 13 Oct) */}
-          <DailyFold fold={daily}>{forYouItems}</DailyFold>
+          {seen.list.map((r) =>
+            seen.open === r.id ? (
+              <ResultCard key={`seen-${r.id}`} card={r} more={false} delay={0} replay onDone={(c) => setSeen((s) => seenToggle(s, c.id))} />
+            ) : (
+              <ResultStrip key={`seen-${r.id}`} card={r} onPress={(c) => setSeen((s) => seenToggle(s, c.id))} />
+            ),
+          )}
           {current ? (
             <ResultCard
               key={current.id}
@@ -328,29 +373,31 @@ export default function VoteScreen() {
           ) : null}
           {shown.map((c, i) => (
             <Fragment key={c.id}>
+              {i === slot ? extras : null}
               {showLater && i === split.today.length ? <LaterFold count={split.later.length} open onPress={() => setShowLater(false)} /> : null}
-              {heads.has(i) && c.kind === 'match' ? <GroupHead group={c.group!} /> : null}
-              {c.kind === 'match' ? (
-                <VoteCard match={c} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
-              ) : c.kind === 'postponed' ? (
-                <PostponedCard card={c} />
-              ) : c.kind === 'sponsored' ? (
-                <SponsoredCard card={c} />
-              ) : null}
+              {heads.has(i) && c.kind === 'match' ? <GroupHead group={c.group!} category={cats.head.get(i)} /> : null}
+              {/* every card in a wrapper, always: its top is where «Ποιος κερδίζει;» scrolls to */}
+              <View onLayout={(e: LayoutChangeEvent) => cardTops.current.set(c.id, e.nativeEvent.layout.y)}>
+                {c.kind === 'match' ? (
+                  <VoteCard match={c} hideCategory={cats.hide.has(i)} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+                ) : c.kind === 'postponed' ? (
+                  <PostponedCard card={c} />
+                ) : c.kind === 'sponsored' ? (
+                  <SponsoredCard card={c} />
+                ) : null}
+              </View>
             </Fragment>
           ))}
+          {slot >= shown.length ? extras : null}
           {split.later.length > 0 && !showLater ? <LaterFold count={split.later.length} open={false} onPress={() => setShowLater(true)} /> : null}
           {empty ? error ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.feed.empty} /> : null}
         </View>
       </ScrollView>
-      {notice ? <Toast key={notice.n} text={t.feed[notice.kind]} /> : null}
-      {answered ? <Toast key={answered} text={answered} /> : null}
-      {questNote?.kind === 'toast' ? <Toast key={questNote.n} text={questNote.text} /> : null}
-      {said ? <Toast key={said.n} text={said.text} /> : null}
+      {note?.item.kind === 'toast' ? <Toast key={note.n} text={note.item.text} /> : null}
       <ForYouSheet visible={forYouOpen} onClose={() => setForYouOpen(false)}>
         {forYouItems}
       </ForYouSheet>
-      <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setSaid({ text, n: Date.now() }); }} />
+      <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) toast(text); }} />
       {celebrating ? <Celebration key={celebrating.map((c) => c.id).join()} items={celebrating} onDone={() => onCelebrated(celebrating)} /> : null}
     </View>
   );
@@ -366,24 +413,60 @@ function useInA() {
 }
 
 
+/**
+ * The lines under the title: what waits for your vote, and while a card takes a vote «Ποιος κερδίζει;» with «Πάτα τον
+ * νικητή» beside it, said once for the whole feed. A tap takes you to the first card still waiting for your vote.
+ */
+function FeedHead({ line, open, ask, onPress }: { line: string; open: boolean; ask: boolean; onPress: () => void }) {
+  const t = useCopy();
+  const press = usePress(0.97);
+  const body = (
+    <Animated.View style={[styles.feedHead, press.style]}>
+      <FeedLine key={line} line={line} open={open} />
+      {ask ? (
+        <View style={styles.ask}>
+          <Text style={styles.askText}>{t.match.who}</Text>
+          <Text style={styles.hint}>{t.feed.hint}</Text>
+        </View>
+      ) : null}
+    </Animated.View>
+  );
+  if (!ask) return body;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${line} ${t.match.who} ${t.feed.hint}`}
+      onPress={onPress}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+    >
+      {body}
+    </Pressable>
+  );
+}
+
 /** the line under the title; it rises in again whenever it changes, so a vote visibly counts down */
 function FeedLine({ line, open }: { line: string; open: boolean }) {
   const rise = useStgIn(motion.revealDurShort);
   return <Animated.Text style={[styles.subtitle, open && styles.subtitleOpen, rise]}>{line}</Animated.Text>;
 }
 
-/** the tournament and where it is played, once above its run of matches */
-function GroupHead({ group }: { group: NonNullable<CardMatch['group']> }) {
+/**
+ * The tournament and where it is played, once above its run of matches; with the category every match in the run
+ * shares («40+»), said here once instead of on each card.
+ */
+function GroupHead({ group, category }: { group: NonNullable<CardMatch['group']>; category?: string }) {
   return (
     <View style={styles.group}>
       <View style={styles.groupHead}>
         <Logo path={group.logo} name={group.title} size={24} />
         <Text style={styles.groupTitle}>{group.title}</Text>
       </View>
-      {group.sub ? (
+      {group.sub || category ? (
         <View style={styles.groupSub}>
-          {group.club ? <Logo path={group.club.logo} name={group.club.name} size={16} /> : null}
-          <Text style={[text.meta, styles.groupSubText]}>{group.sub}</Text>
+          {category ? <Text style={styles.groupCategory}>{category}</Text> : null}
+          {group.club && group.sub ? <Logo path={group.club.logo} name={group.club.name} size={16} /> : null}
+          {group.sub ? <Text style={[text.meta, styles.groupSubText]}>{group.sub}</Text> : null}
         </View>
       ) : null}
     </View>
@@ -406,6 +489,7 @@ const styles = StyleSheet.create({
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   groupSub: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   groupSubText: { flexShrink: 1 },
+  groupCategory: { fontFamily: fonts.bodyBold, fontSize: type.body.size, lineHeight: type.meta.line, color: colors.ink },
   groupTitle: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   later: { minHeight: 52, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: colors.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   laterText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
@@ -418,6 +502,10 @@ const styles = StyleSheet.create({
   subtitle: text.subtitle,
   // matches wait for you: the line reads as the screen's job, in ink
   subtitleOpen: { fontFamily: fonts.bodyBold, color: colors.ink },
+  feedHead: { gap: 4 },
+  ask: { flexDirection: 'row', alignItems: 'baseline', flexWrap: 'wrap', columnGap: 10 },
+  askText: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
+  hint: { ...text.meta },
   end: {
     paddingTop: 4,
     paddingHorizontal: 12,

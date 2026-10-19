@@ -5,12 +5,13 @@ import { router } from 'expo-router';
 import { useCopy } from '../i18n';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePress, useStgIn } from '../lib/motion';
-import { colors, fonts, text } from '../theme';
+import { cardSurface, colors, fonts, text } from '../theme';
 
 /**
  * «Το ματς σου» at the top of Σήμερα (founder, 14 Oct: "who is my opponent", and Pro high up): when you play today or
- * tomorrow, three short lines (when, against whom, the category; founder, 16 Oct: easy to read), then «Ο αντίπαλος πριν το ματς ›», the screen's one blue. With Pro it opens
- * the scouting page; without, the Pro sheet, marked with a small «Pro».
+ * tomorrow, three short lines (when, against whom, the category; founder, 16 Oct: easy to read), then «Ο αντίπαλος πριν το ματς ›». With Pro it opens
+ * the scouting page; without, the Pro sheet, marked with a small «Pro». A paper card with an ink outline button
+ * (founder, 19 Oct): voting is Σήμερα's job, so nothing here is blue and the card does not outshout the votes.
  */
 export function MyMatchCard({ match, pro }: { match: MyMatchView; pro: boolean }) {
   const t = useCopy();
@@ -40,14 +41,14 @@ export function MyMatchCard({ match, pro }: { match: MyMatchView; pro: boolean }
 }
 
 const styles = StyleSheet.create({
-  card: { padding: 18, borderRadius: 24, backgroundColor: colors.ink, gap: 10 },
-  label: { ...text.label, color: colors.mist },
-  lines: { gap: 4 },
-  when: { ...text.heading, color: colors.paper },
-  who: { fontFamily: fonts.bodySemi, fontSize: 17, lineHeight: 23, color: colors.paper },
-  category: { ...text.meta, color: colors.mist },
-  cta: { minHeight: 48, marginTop: 4, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.blue, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  ctaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
-  pro: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.white },
-  proText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.blue },
+  card: { padding: 16, borderRadius: 20, backgroundColor: cardSurface, borderWidth: 1, borderColor: colors.mist, gap: 10 },
+  label: { ...text.label },
+  lines: { gap: 2 },
+  when: { ...text.heading },
+  who: { fontFamily: fonts.bodySemi, fontSize: 17, lineHeight: 23, color: colors.ink },
+  category: { ...text.meta },
+  cta: { minHeight: 46, paddingHorizontal: 16, borderRadius: 999, borderWidth: 2, borderColor: colors.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  ctaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
+  pro: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: colors.ink },
+  proText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.paper },
 });
