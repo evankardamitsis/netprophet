@@ -56,7 +56,7 @@ export interface CardMatch {
    * the card's own line then keeps only the time, format, category and round. `logo` is the tournament's logo path
    * (null: its letter); `club` leads the place line with the club's logo.
    */
-  group?: { key: string; title: string; logo: string | null; sub: string | null; club: ClubMark | null };
+  group?: { key: string; title: string; logo: string | null; sub: string | null; club: ClubMark | null; surface?: string | null };
   /** the club the match is played at, for its logo by the place line */
   club?: ClubMark;
   /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
@@ -294,7 +294,15 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     startsAt: card.starts_at ?? undefined,
     // «Αύριο και μετά» too sits by tournament (founder, 19 Oct), each tournament once; every card says its own day
     group: card.tournament
-      ? { key: `${card.tournament.id}|${place ?? ''}`, title: card.tournament.name, logo: card.tournament.logo ?? null, sub: place, club }
+      ? {
+          key: `${card.tournament.id}|${place ?? ''}`,
+          title: card.tournament.name,
+          logo: card.tournament.logo ?? null,
+          // the surface leaves the line for its own pill (founder, 19 Oct)
+          sub: placeLine({ ...card, surface: null }, t),
+          club,
+          surface: card.surface ?? null,
+        }
       : undefined,
     club: club ?? undefined,
   };

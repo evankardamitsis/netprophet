@@ -1,9 +1,9 @@
 import { StyleSheet } from 'react-native';
 import { Easing } from 'react-native-reanimated';
-import { colors, cosmetics, motion, radii, spacing, type } from '@netprophet/tokens';
+import { colors, cosmetics, motion, radii, spacing, surfaceTints, type } from '@netprophet/tokens';
 import { parseBezier } from './lib/ease';
 
-export { colors, cosmetics, motion, radii, spacing, type };
+export { colors, cosmetics, motion, radii, spacing, surfaceTints, type };
 
 /**
  * Alpha variants of token colours, so nothing outside the tokens is hardcoded.

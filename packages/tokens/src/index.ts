@@ -41,6 +41,17 @@ export const colors = {
 } as const;
 
 /**
+ * The court surface pill on a tournament's head on Σήμερα (founder, 19 Oct): a quiet tint per surface, so it reads at
+ * a glance. Only for the surface; never an action, never "earned".
+ */
+export const surfaceTints = {
+  clay: { bg: '#F1DDD2', ink: '#7E3A1B' },
+  hard: { bg: '#D9E2EC', ink: '#2E4A63' },
+  grass: { bg: '#DCEAD3', ink: '#2F5A26' },
+  carpet: { bg: '#E6EAE0', ink: '#3F4E46' },
+} as const;
+
+/**
  * The cosmetics (Εμφάνιση): the colours of the card backgrounds, frames and kits, from the prototype's
  * `.bgl`, `.frm` and catalogue. They dress the Εγώ card only; they are never UI chrome, and lime still means earned.
  */
