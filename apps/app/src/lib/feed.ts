@@ -243,9 +243,16 @@ export interface ClubMark {
  * founder, 19 Oct). Only an all-caps Latin word of 3 or more letters changes; «40+», «-45 · Γυναικών» and «Μ 50+» stay
  * as they are (Greek capitals follow greekCaps rules elsewhere).
  */
+/**
+ * Level words the organisers' sheets write in capitals («MEDIUM», «ROOKIES 2») read in normal case like the other
+ * categories. Only these words: acronyms and short forms stay as written («ITF», «ATRP», «PRC», «MED/ADV»)
+ * (founder, 19 Oct: keep acronyms like ITF in capitals).
+ */
+const LEVEL_WORDS = new Set(['MEDIUM', 'MASTER', 'MASTERS', 'OPEN', 'ROOKIE', 'ROOKIES', 'ADVANCED', 'BEGINNER', 'BEGINNERS', 'INTERMEDIATE', 'ELITE', 'AMATEUR', 'REGULAR', 'SEASON']);
+
 export function categoryCase(s: string): string {
   // whole words of Latin, Greek or digits; no lookbehind or Unicode property classes, so it runs the same on Hermes
-  return s.replace(/[A-Za-z0-9\u0370-\u03FF\u1F00-\u1FFF]+/g, (w) => (/^[A-Z]{3,}$/.test(w) ? w[0] + w.slice(1).toLowerCase() : w));
+  return s.replace(/[A-Za-z0-9\u0370-\u03FF\u1F00-\u1FFF]+/g, (w) => (LEVEL_WORDS.has(w) ? w[0] + w.slice(1).toLowerCase() : w));
 }
 
 export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>, t: Copy, now = new Date()): CardMatch {
