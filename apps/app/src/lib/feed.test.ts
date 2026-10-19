@@ -96,6 +96,12 @@ describe('fromFeedCard', () => {
     expect(c.group?.logo).toBe('tournaments/t1/k1.png');
   });
 
+  it('gives the surface its own pill on the group head, out of the place line', () => {
+    const c = fromFeedCard(card({ club: 'Γήπεδα Γλυφάδας', surface: 'clay' }), areas, t, NOW);
+    expect(c.group?.surface).toBe('clay');
+    expect(c.group?.sub).toBe('Γήπεδα Γλυφάδας');
+  });
+
   it('puts a friendly the prototype way: round text, then the venue', () => {
     const c = fromFeedCard(card({ round: 'Φιλικό', tournament: null }), areas, t, NOW);
     expect(c.meta).toBe('Σήμερα 18:00 · Φιλικό · Γλυφάδα');

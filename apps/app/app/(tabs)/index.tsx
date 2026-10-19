@@ -47,7 +47,7 @@ import { feedbackAfterVote } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
 import { usePress, useStgIn } from '../../src/lib/motion';
-import { colors, ease, fonts, motion, text, type } from '../../src/theme';
+import { colors, ease, fonts, motion, surfaceTints, text, type } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 import { momentsAct, useMoments } from '../../src/lib/useMoments';
@@ -460,13 +460,27 @@ function GroupHead({ group, category }: { group: NonNullable<CardMatch['group']>
         <Logo path={group.logo} name={group.title} size={24} />
         <Text style={styles.groupTitle}>{group.title}</Text>
       </View>
-      {group.sub || category ? (
+      {group.sub || category || group.surface ? (
         <View style={styles.groupSub}>
           {category ? <Text style={styles.groupCategory}>{category}</Text> : null}
           {group.club && group.sub ? <Logo path={group.club.logo} name={group.club.name} size={16} /> : null}
           {group.sub ? <Text style={[text.meta, styles.groupSubText]}>{group.sub}</Text> : null}
+          {group.surface ? <SurfacePill surface={group.surface} /> : null}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/** the court surface as a quiet tinted pill: «Χώμα» in clay, «Σκληρό» in blue-grey (founder, 19 Oct) */
+function SurfacePill({ surface }: { surface: string }) {
+  const t = useCopy();
+  const label = t.match.surfaces[surface];
+  const tint = surfaceTints[surface as keyof typeof surfaceTints];
+  if (!label || !tint) return null;
+  return (
+    <View style={[styles.surfacePill, { backgroundColor: tint.bg }]}>
+      <Text style={[styles.surfaceText, { color: tint.ink }]}>{label}</Text>
     </View>
   );
 }
@@ -487,6 +501,8 @@ const styles = StyleSheet.create({
   groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   groupSub: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   groupSubText: { flexShrink: 1 },
+  surfacePill: { paddingVertical: 1, paddingHorizontal: 8, borderRadius: 999 },
+  surfaceText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17 },
   groupCategory: { fontFamily: fonts.bodyBold, fontSize: type.body.size, lineHeight: type.meta.line, color: colors.ink },
   groupTitle: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   later: { minHeight: 52, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: colors.ink, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
