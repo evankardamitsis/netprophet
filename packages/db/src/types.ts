@@ -408,6 +408,10 @@ export type Database = {
         Args: { p_player_id: string };
         Returns: Json;
       };
+      admin_fix_stale_twins: {
+        Args: { p_dry?: boolean; p_tournament?: string };
+        Returns: Json;
+      };
       admin_forget_spelling: {
         Args: { p_kind: string; p_word: string };
         Returns: Json;

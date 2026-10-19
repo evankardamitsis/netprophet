@@ -80,6 +80,16 @@ export function sheetKey(s: string): string {
     .trim();
 }
 
+const LATIN_GREEK: Record<string, string> = { A: 'Α', B: 'Β', E: 'Ε', Z: 'Ζ', H: 'Η', I: 'Ι', K: 'Κ', M: 'Μ', N: 'Ν', O: 'Ο', P: 'Ρ', T: 'Τ', Y: 'Υ', X: 'Χ' };
+
+/**
+ * Latin capitals that look Greek, inside a word that has a Greek letter, become Greek («ΖΑΝNΗΣ» with a Latin N is
+ * «ΖΑΝΝΗΣ», 18 Oct 2026); a Latin word («BINJAKU») stays as it is.
+ */
+export function greekLookalikes(s: string): string {
+  return s.replace(/\S+/g, (w) => (/[\u0370-\u03ff]/.test(w) ? [...w].map((c) => LATIN_GREEK[c] ?? c).join('') : w));
+}
+
 /**
  * One side of a match: one person, or two with «/»; flags first_name_missing and latin_name. In a doubles category
  * (`doubles`) a side of exactly two words with no «/» is two surnames, «ΓΕΜΙΔΟΠΟΥΛΟΥ ΦΕΛΕΜΕΓΚΑΣ» (founder, 17 Oct: ΑΟΚ
@@ -92,12 +102,12 @@ export function parseSheetSide(raw: string, doubles = false): { people: SheetPer
   const parts = bySpace ? words : raw.includes('/') ? raw.split('/').map((p) => p.trim()) : [raw.trim()];
   const flags = new Set<string>(bySpace ? ['pair_by_space'] : []);
   const people = parts.map((p) => {
-    const n = p.trim().replace(/\s+/g, ' ');
+    const n = greekLookalikes(p.trim().replace(/\s+/g, ' '));
     const at = n.indexOf(' ');
     const surname = at < 0 ? n : n.slice(0, at);
     const first = at < 0 ? '' : n.slice(at + 1);
     if (!first) flags.add('first_name_missing');
-    if (/[A-Za-z]/.test(p)) flags.add('latin_name');
+    if (/[A-Za-z]/.test(n)) flags.add('latin_name');
     return { surname, first, key: sheetKey(surname + (first ? ` ${first}` : '')) };
   });
   return { people, flags: [...flags], pair };
