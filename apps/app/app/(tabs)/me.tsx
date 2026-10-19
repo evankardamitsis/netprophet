@@ -742,7 +742,7 @@ function Settings() {
     <View style={styles.card}>
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={styles.rowBetween}>
         <Text style={styles.settingsTitle}>{t.me.settings}</Text>
-        <Text style={styles.settingsMark}>{open ? '−' : '+'}</Text>
+        <Text style={[styles.settingsMark, open && styles.markOpen]}>+</Text>
       </Pressable>
       {open ? (
         <>
@@ -878,7 +878,8 @@ const styles = StyleSheet.create({
   first: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingBottom: 5, marginBottom: -5, color: colors.paper },
   surname: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, paddingBottom: 10, marginBottom: -10, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   heroSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
-  flipHit: { alignSelf: 'flex-start' },
+  // 44pt to tap around the 40pt pill; the negative margin keeps the layout
+  flipHit: { alignSelf: 'flex-start', minHeight: 44, marginVertical: -2, justifyContent: 'center' },
   flipPill: { minHeight: 40, paddingHorizontal: 16, borderRadius: 999, borderWidth: 2, borderColor: colors.mist, backgroundColor: alpha(colors.ink, 0.68), alignItems: 'center', justifyContent: 'center' },
   flipPillText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper },
   backTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 },
@@ -906,18 +907,18 @@ const styles = StyleSheet.create({
   lookTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   lookSub: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft },
   lookEnd: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  lookMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.blue },
+  lookMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
   newPill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
   newPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.ink },
   questsRow: { minHeight: 56, paddingHorizontal: 18, borderRadius: 24, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   questsTitle: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.ink },
-  questsCount: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  questsCount: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   worn: { alignSelf: 'flex-start', minHeight: 26, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, borderColor: colors.lime, flexDirection: 'row', alignItems: 'center', gap: 6 },
   wornText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
   badgesCard: { paddingVertical: 16, paddingLeft: 18, paddingRight: 0, borderRadius: 24, backgroundColor: colors.white, gap: 10, overflow: 'hidden' },
   badgesHead: { paddingRight: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   seeAllHit: { minHeight: 44, justifyContent: 'center' },
-  seeAll: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  seeAll: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   tileRow: { gap: 8, paddingRight: 18 },
   badgeTile: { width: 136, minHeight: 104, paddingTop: 12, paddingHorizontal: 12, paddingBottom: 10, borderRadius: 18, justifyContent: 'space-between', gap: 8 },
   badgeTileName: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 26, paddingBottom: 5, marginBottom: -6 },
@@ -1005,15 +1006,17 @@ const styles = StyleSheet.create({
   soundsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: 6 },
   settingsTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   settingsMark: { fontFamily: fonts.bodyBold, fontSize: 18, color: colors.ink },
+  // open: the «+» turns to a cross, as on the result cards (the glyph set has no minus)
+  markOpen: { transform: [{ rotate: '45deg' }] },
   signOut: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.blue },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.inkSoft },
   wlRows: { gap: 6 },
   wlLocked: { opacity: 0.3 },
   wlRow: { minHeight: 48, paddingHorizontal: 16, borderRadius: 16, backgroundColor: colors.white, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   wlLabel: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   wlValue: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 28, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   wlDown: { color: colors.inkSoft },
-  unlock: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.blue },
+  unlock: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   scoutRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
   proPill: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: colors.ink },
   proPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },

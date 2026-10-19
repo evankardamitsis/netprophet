@@ -106,7 +106,7 @@ function Body({ d, today, openDraw }: { d: GetTournamentResult; today: string; o
 function Pill({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   const press = usePress();
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.pillHit}>
       <Animated.View style={[styles.pill, on && styles.pillOn, press.style]}>
         <Text style={[styles.pillText, on && styles.pillTextOn]}>{label}</Text>
       </Animated.View>
@@ -229,6 +229,8 @@ const styles = StyleSheet.create({
   segTextOn: { color: colors.paper },
   block: { gap: 12 },
   pillRow: { gap: 8, paddingRight: 20 },
+  // 44pt to tap around the 40pt pill; the negative margin keeps the rows where they were
+  pillHit: { minHeight: 44, marginVertical: -2, justifyContent: 'center' },
   pill: { minHeight: 40, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
   pillOn: { backgroundColor: colors.ink },
   pillText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },

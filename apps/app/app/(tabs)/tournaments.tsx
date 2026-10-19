@@ -231,7 +231,7 @@ function NextCard({ row, i }: { row: NextRow; i: number }) {
               onPress={() => safeOpen(link, (u) => Linking.openURL(u))}
               onPressIn={press.onPressIn}
               onPressOut={press.onPressOut}
-              hitSlop={6}
+              style={styles.enterHit}
             >
               <Animated.View style={[styles.enter, press.style]}>
                 <Text style={styles.enterText}>{t.tournaments.next.enter}</Text>
@@ -318,6 +318,8 @@ const styles = StyleSheet.create({
   sub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
   bold: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.ink },
   nextBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 2 },
+  // 44pt to tap around the 36pt pill; the negative margin keeps the layout
+  enterHit: { minHeight: 44, marginVertical: -4, justifyContent: 'center' },
   enter: { minHeight: 36, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   enterText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper },
   locked: { minHeight: 48, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.ink, justifyContent: 'center' },

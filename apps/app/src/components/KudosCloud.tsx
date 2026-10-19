@@ -103,7 +103,7 @@ function Empty() {
 const styles = StyleSheet.create({
   card: { paddingTop: 16, paddingHorizontal: 18, paddingBottom: 18, borderRadius: 24, backgroundColor: colors.white, gap: 12, overflow: 'hidden' },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.blue },
+  kicker: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.ink },
   moreHit: { minHeight: 44, paddingHorizontal: 4, justifyContent: 'center' },
   more: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },
   cloud: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 6, paddingBottom: 4 },

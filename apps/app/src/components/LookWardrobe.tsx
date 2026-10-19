@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   tag: { minHeight: 26, paddingVertical: 2, paddingHorizontal: 10, borderRadius: 999, borderWidth: 2, justifyContent: 'center' },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 15 },
   tabs: { gap: 6 },
-  tab: { minHeight: 40, paddingHorizontal: 14, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.inkRaised },
+  tab: { minHeight: 44, paddingHorizontal: 14, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.inkRaised },
   tabOn: { backgroundColor: colors.paper },
   tabText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.paper },
   tabTextOn: { color: colors.ink },

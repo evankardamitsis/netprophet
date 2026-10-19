@@ -39,12 +39,13 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
   const showThank = !!item.thank && kudosOpen;
   const more = showReactions || showThank;
   const [open, setOpen] = useState(false);
+  const longPress = onLongPress ? () => onLongPress(item.id) : undefined;
   const meta = [item.score, item.line].filter(Boolean).join(' · ');
   return (
     <Pressable
       accessibilityState={more ? { expanded: open } : undefined}
       onPress={more ? () => setOpen((o) => !o) : undefined}
-      onLongPress={onLongPress ? () => onLongPress(item.id) : undefined}
+      onLongPress={longPress}
       delayLongPress={450}
     >
       <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
@@ -55,15 +56,11 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
           </View>
         ) : null}
         <View style={styles.winner}>
-          <View style={styles.nameBox}>
-            <Names people={item.winner} style={[styles.winName, { color: fg }]} />
-          </View>
+          <Names people={item.winner} style={[styles.winName, { color: fg }]} onLongPress={longPress} />
           <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
         </View>
         <View style={styles.loser}>
-          <View style={styles.nameBox}>
-            <Names people={item.loser} style={[styles.loseName, { color: fg }]} />
-          </View>
+          <Names people={item.loser} style={[styles.loseName, { color: fg }]} onLongPress={longPress} />
           <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
         </View>
         <View style={styles.metaRow}>
@@ -78,7 +75,7 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
             style={styles.thankHit}
             onPress={() => router.push({ pathname: '/win-card', params: { match: item.id, from: 'results' } })}
           >
-            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{t.winCard.open}</Text>
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.ink }]}>{t.winCard.open}</Text>
           </Pressable>
         ) : null}
         {open && showReactions ? <ReactionChips matchId={item.id} initial={item.reactions!} dark={hot} /> : null}
@@ -93,7 +90,7 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
               })
           }
           >
-            <Text style={[styles.thank, { color: hot ? colors.lime : colors.blue }]}>{item.thank!.label}</Text>
+            <Text style={[styles.thank, { color: hot ? colors.lime : colors.ink }]}>{item.thank!.label}</Text>
           </Pressable>
         ) : null}
       </Animated.View>
@@ -138,35 +135,30 @@ function Pill({ text }: { text: string }) {
 
 /**
  * «Δεσύπρης Γ. & Μέμμος Η.»: the surname large, as on the feed cards, and the first name's initial;
- * a tap shows the first name for 4s (founder, 10 Oct; the prototype had it the other way round).
+ * a tap anywhere on the names shows the first names for 4s (founder, 10 Oct; the prototype had it the other way round).
+ * The whole name area is the target, 44pt tall (a negative margin keeps the row at its height).
  */
-function Names({ people, style }: { people: ResultName[]; style: StyleProp<TextStyle> }) {
-  // measured as shown collapsed: «Δεσύπρης Γ. & Μέμμος Η.»
-  const shown = people.map((p) => `${p.surname} ${p.first.slice(0, 1)}.`).join(' & ');
-  return (
-    <FitText text={shown} style={[styles.names, style]}>
-      {people.map((p, i) => (
-        <Fragment key={`${p.first}-${p.surname}-${i}`}>
-          {i > 0 ? ' & ' : ''}
-          <Name person={p} />
-        </Fragment>
-      ))}
-    </FitText>
-  );
-}
-
-function Name({ person }: { person: ResultName }) {
+function Names({ people, style, onLongPress }: { people: ResultName[]; style: StyleProp<TextStyle>; onLongPress?: () => void }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return undefined;
     const id = setTimeout(() => setOpen(false), REVEAL_MS);
     return () => clearTimeout(id);
   }, [open]);
+  // measured as shown collapsed: «Δεσύπρης Γ. & Μέμμος Η.»
+  const shown = people.map((p) => `${p.surname} ${p.first.slice(0, 1)}.`).join(' & ');
   return (
-    <Text onPress={() => setOpen((o) => !o)} suppressHighlighting>
-      {person.surname}{' '}
-      {open ? <Text style={styles.firstName}>{person.first}</Text> : `${person.first.slice(0, 1)}.`}
-    </Text>
+    <Pressable style={styles.nameBox} onPress={() => setOpen((o) => !o)} onLongPress={onLongPress} delayLongPress={450}>
+      <FitText text={shown} style={[styles.names, style]}>
+        {people.map((p, i) => (
+          <Fragment key={`${p.first}-${p.surname}-${i}`}>
+            {i > 0 ? ' & ' : ''}
+            {p.surname}{' '}
+            {open ? <Text style={styles.firstName}>{p.first}</Text> : `${p.first.slice(0, 1)}.`}
+          </Fragment>
+        ))}
+      </FitText>
+    </Pressable>
   );
 }
 
@@ -182,7 +174,8 @@ const styles = StyleSheet.create({
   pill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
   pillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },
   names: {},
-  nameBox: { flex: 1, minWidth: 0 },
+  // 44pt to tap; the negative margin keeps the 28 to 30pt rows as they were
+  nameBox: { flex: 1, minWidth: 0, minHeight: 44, marginVertical: -8, justifyContent: 'center' },
   // line heights at least the font size: iOS clips the tonos that rises above the line box
   // compact (founder, 16 Oct): the winner bold, the loser lighter, both one size so the eye reads down the scores
   winner: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
@@ -194,6 +187,7 @@ const styles = StyleSheet.create({
   // the revealed first name is smaller and lighter (prototype .ns)
   firstName: { fontSize: 16, fontFamily: fonts.bodySemi },
   sets: { flex: 1, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
-  thankHit: { minHeight: 32, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
+  // 44pt to tap; the negative margin keeps the card the height it was with a 32pt line
+  thankHit: { minHeight: 44, marginVertical: -6, justifyContent: 'center', alignSelf: 'flex-start', paddingHorizontal: 2 },
   thank: { fontFamily: fonts.bodyBold, fontSize: 13 },
 });
