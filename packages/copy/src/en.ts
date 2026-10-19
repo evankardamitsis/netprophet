@@ -1067,6 +1067,8 @@ export const en: Copy = {
     backFeed: '‹ Back',
     search: 'Find a player',
     backTournaments: '‹ Tournaments',
+    /** the last line of Τουρνουά: back to the votes */
+    toVotes: 'To today\'s matches ›',
     program: 'Your schedule',
     playing: 'You play {when}',
     playingToday: 'today',
@@ -1079,6 +1081,8 @@ export const en: Copy = {
       cta: 'Turn them on with Pro ›',
       on: '✓ Your alerts are on',
       onEmpty: 'We tell you the moment you are in a draw.',
+      /** the one quiet line under your own tournaments (founder, 19 Oct: Pro below your own things) */
+      row: 'Alerts for your matches, with Pro ›',
     },
     next: {
       title: 'Your next tournament',
@@ -1092,7 +1096,7 @@ export const en: Copy = {
       remindOn: '✓ We remind you 2 days before entries close',
       empty: 'No new tournament announced yet.',
     },
-    sections: { ongoing: 'On now', upcoming: 'Coming up', done: 'Finished' },
+    sections: { mine: 'Yours', ongoing: 'On now', upcoming: 'Coming up', done: 'Finished' },
     chipOngoing: 'on now',
     chipTomorrow: 'tomorrow',
     chipInDays: 'in {n} days',

@@ -9,15 +9,16 @@ import { useCopy } from '../../src/i18n';
 import { useTournaments, useUpcomingTournaments } from '../../src/lib/data';
 import { usePress, useStgIn } from '../../src/lib/motion';
 import { nextFooter, nextRow, type NextRow } from '../../src/lib/nextTournament';
-import { boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey } from '../../src/lib/tournaments';
+import { blocksOf, boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey, type TournamentSection } from '../../src/lib/tournaments';
 import { colors, fonts, text } from '../../src/theme';
 import { isHttpsUrl, safeOpen } from '../../src/lib/openUrl';
 
 /**
- * The Τουρνουά tab, «Τα τουρνουά σου» (founder, 14 Oct: a tab in the bottom bar that also holds «+ Ματς»): your
- * tournaments that are on, coming or just finished. With Pro, the ink card «Το πρόγραμμά σου» lists your next
- * matches; without it, one outlined line opens Pro (the screen's one blue element). «+ Ματς» sits by the title as an
- * ink pill, and player search opens from here (Παίκτες is no longer a tab).
+ * The Τουρνουά tab, «Τα τουρνουά σου» (founder, 14 Oct: a tab in the bottom bar that also holds «+ Ματς»). Founder,
+ * 19 Oct ("optimize UX and not overwhelm the user"): your own first (Pro: «Το πρόγραμμά σου», then «Τα δικά σου»),
+ * then what is on now and the next one near you, then the rest; the order is `blocksOf`. Pro is one quiet line under
+ * your own things, never above them. Player search is a small text line under the title (it is Παίκτες' job), and
+ * the screen ends with an ink way back to the votes. Nothing here is blue: no action on this screen is the primary one.
  */
 const STG_MS = 600;
 const STAGGER = 70;
@@ -33,6 +34,8 @@ export default function TournamentsScreen() {
   }, [refreshList, refreshUpcoming]);
   const today = todayKey();
   const sections = data ? sectionsOf(data.items, t) : [];
+  const program = !!data?.pro && (data.mine?.length ?? 0) > 0;
+  const blocks = blocksOf({ sections, program, next: !!upcoming.data && (upcoming.data.items.length > 0 || upcoming.data.more > 0) });
   let n = 0;
   const next = () => n++;
 
@@ -49,30 +52,17 @@ export default function TournamentsScreen() {
             <AddMatch />
           </View>
         </Reveal>
+        <SearchLink i={next()} />
         {data ? (
           <>
-            <SearchEntry i={next()} />
-            {data.pro ? (
-              data.mine && data.mine.length > 0 ? (
-                <ProCard mine={data.mine} today={today} i={next()} />
-              ) : (
-                <AlertsOn i={next()} />
-              )
-            ) : (
-              <AlertsCard i={next()} />
-            )}
-            {upcoming.data ? <NextSection data={upcoming.data} i={next()} /> : null}
-            {sections.map((s) => (
-              <View key={s.key} style={styles.group}>
-                <Reveal i={next()}>
-                  <Text style={styles.groupTitle}>{greekCaps(s.title)}</Text>
-                </Reveal>
-                {s.items.map((item) => (
-                  <TournamentRow key={item.id} item={item} today={today} i={next()} />
-                ))}
-              </View>
-            ))}
             {sections.length === 0 ? <Text style={styles.empty}>{c.empty}</Text> : null}
+            {blocks.map((b) => {
+              if (b.kind === 'program') return <ProCard key="program" mine={data.mine ?? []} today={today} i={next()} />;
+              if (b.kind === 'pro') return data.pro ? <AlertsOn key="pro" i={next()} /> : <AlertsRow key="pro" i={next()} />;
+              if (b.kind === 'next') return upcoming.data ? <NextSection key="next" data={upcoming.data} i={next()} /> : null;
+              return <Section key={b.section.key} section={b.section} today={today} next={next} />;
+            })}
+            <ToVotes i={next()} />
           </>
         ) : null}
         {!loading && error && !data ? <Text style={styles.empty}>{c.error}</Text> : null}
@@ -86,7 +76,7 @@ function Reveal({ i, children }: { i: number; children: ReactNode }) {
   return <Animated.View style={enter}>{children}</Animated.View>;
 }
 
-/** «+ Ματς»: log a match you played; an ink pill, so Pro stays the screen's one blue */
+/** «+ Ματς»: log a match you played; an ink pill */
 function AddMatch() {
   const t = useCopy();
   const press = usePress();
@@ -99,18 +89,32 @@ function AddMatch() {
   );
 }
 
-/** looks like the search field; opens Παίκτες with the keyboard up */
-function SearchEntry({ i }: { i: number }) {
+/** a small text line under the title: opens Παίκτες with the keyboard up (founder, 19 Oct: search is secondary here) */
+function SearchLink({ i }: { i: number }) {
   const t = useCopy();
-  const press = usePress(0.98);
+  const press = usePress(0.97);
   return (
     <Reveal i={i}>
-      <Pressable accessibilityRole="search" onPress={() => router.push('/players?focus=1')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-        <Animated.View style={[styles.search, press.style]}>
+      <Pressable accessibilityRole="search" onPress={() => router.push('/players?focus=1')} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.searchHit}>
+        <Animated.View style={press.style}>
           <Text style={styles.searchText}>{t.tournaments.search}</Text>
         </Animated.View>
       </Pressable>
     </Reveal>
+  );
+}
+
+/** one section: its label, then its tournaments */
+function Section({ section, today, next }: { section: TournamentSection; today: string; next: () => number }) {
+  return (
+    <View style={styles.group}>
+      <Reveal i={next()}>
+        <Text style={styles.groupTitle}>{greekCaps(section.title)}</Text>
+      </Reveal>
+      {section.items.map((item) => (
+        <TournamentRow key={item.id} item={item} today={today} i={next()} />
+      ))}
+    </View>
   );
 }
 
@@ -143,37 +147,36 @@ function MineLine({ when, what, i }: { when: string; what: string; i: number }) 
   );
 }
 
-/**
- * without Pro: what Pro sends you, on top of the screen (founder, 14 Oct: "push Pro features high very high up,
- * especially my tournaments and matches notifications reminders"); the blue button is the screen's one blue
- */
-function AlertsCard({ i }: { i: number }) {
+/** without Pro: one quiet line to Pro, under your own things (founder, 19 Oct: Pro never above them, and no blue) */
+function AlertsRow({ i }: { i: number }) {
   const t = useCopy();
-  const a = t.tournaments.alerts;
-  const press = usePress();
   return (
     <Reveal i={i}>
-      <View style={styles.proCard}>
-        <Text style={styles.alertsTitle}>{a.title}</Text>
-        <Text style={styles.alertLine}>{a.short}</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=tournaments')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-          <Animated.View style={[styles.alertsCta, press.style]}>
-            <Text style={styles.alertsCtaText}>{a.cta}</Text>
-          </Animated.View>
-        </Pressable>
-      </View>
+      <QuietLine label={t.tournaments.alerts.row} to="/pro?from=tournaments" />
     </Reveal>
   );
 }
 
-/** with Pro and nothing scheduled yet: the alerts are on */
+/** a quiet ink text line that opens a page, 44pt to tap */
+function QuietLine({ label, to }: { label: string; to: '/pro?from=tournaments' | '/pro?from=next_tournament' }) {
+  const press = usePress(0.98);
+  return (
+    <Pressable accessibilityRole="button" onPress={() => router.push(to)} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.quietHit}>
+      <Animated.View style={press.style}>
+        <Text style={styles.quietText}>{label}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+/** with Pro and nothing scheduled yet: the alerts are on, in the same quiet slot */
 function AlertsOn({ i }: { i: number }) {
   const t = useCopy();
   return (
     <Reveal i={i}>
-      <View style={styles.proCard}>
-        <Text style={styles.alertsOnBig}>{t.tournaments.alerts.on}</Text>
-        <Text style={styles.alertLine}>{t.tournaments.alerts.onEmpty}</Text>
+      <View style={styles.quietHit}>
+        <Text style={styles.quietText}>{t.tournaments.alerts.on}</Text>
+        <Text style={styles.nextOn}>{t.tournaments.alerts.onEmpty}</Text>
       </View>
     </Reveal>
   );
@@ -181,7 +184,7 @@ function AlertsOn({ i }: { i: number }) {
 
 /**
  * «Το επόμενο τουρνουά για σένα» (Pro, 17 Oct 2026): tournaments still to come, your area first, entry closing
- * soonest. Free sees the first in full and an ink line to Pro (the alerts card above keeps the one blue).
+ * soonest. Free sees the first in full and one quiet line to Pro.
  */
 function NextSection({ data, i }: { data: UpcomingTournamentsResult; i: number }) {
   const t = useCopy();
@@ -211,7 +214,7 @@ function NextCard({ row, i }: { row: NextRow; i: number }) {
     <Animated.View style={[styles.card, enter]}>
       <View style={styles.cardTop}>
         <View style={styles.nameRow}>
-          <Logo path={row.logo} name={row.name} size={26} />
+          <Logo path={row.logo} name={row.name} size={24} />
           <Text style={styles.name}>{row.name}</Text>
         </View>
         {row.played ? (
@@ -244,15 +247,23 @@ function NextCard({ row, i }: { row: NextRow; i: number }) {
   );
 }
 
-/** free: the rest of the list and the reminder are Pro; an outlined ink line, so the alerts card keeps the one blue */
+/** free: the rest of the list and the reminder are Pro; the same quiet line as the alerts */
 function LockedLine({ text: label }: { text: string }) {
-  const press = usePress(0.98);
+  return <QuietLine label={label} to="/pro?from=next_tournament" />;
+}
+
+/** the last line: back to the votes; ink, like Κατάταξη's way back, as nothing on this screen is the primary action */
+function ToVotes({ i }: { i: number }) {
+  const t = useCopy();
+  const press = usePress();
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=next_tournament')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.locked, press.style]}>
-        <Text style={styles.lockedText}>{label}</Text>
-      </Animated.View>
-    </Pressable>
+    <Reveal i={i}>
+      <Pressable accessibilityRole="button" onPress={() => router.navigate('/')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+        <Animated.View style={[styles.votes, press.style]}>
+          <Text style={styles.votesText}>{t.tournaments.toVotes}</Text>
+        </Animated.View>
+      </Pressable>
+    </Reveal>
   );
 }
 
@@ -269,7 +280,7 @@ function TournamentRow({ item, today, i }: { item: TournamentItem; today: string
         <Animated.View style={[styles.card, press.style]}>
           <View style={styles.cardTop}>
             <View style={styles.nameRow}>
-              <Logo path={item.logo} name={item.name} size={26} />
+              <Logo path={item.logo} name={item.name} size={24} />
               <Text style={styles.name}>{item.name}</Text>
             </View>
             <View style={[styles.chip, chip.hot && styles.chipHot]}>
@@ -290,8 +301,9 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, paddingTop: 8 },
   add: { minHeight: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
-  search: { minHeight: 52, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.fog, backgroundColor: colors.white, justifyContent: 'center' },
-  searchText: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.inkSoft },
+  // a small text line under the title, 44pt to tap; the negative margin keeps the gap to what follows
+  searchHit: { alignSelf: 'flex-start', minHeight: 44, marginTop: -10, marginBottom: -6, justifyContent: 'center' },
+  searchText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.inkSoft, textDecorationLine: 'underline' },
   title: { ...text.title, flexShrink: 1 },
   proCard: { padding: 18, borderRadius: 24, backgroundColor: colors.ink, gap: 10 },
   proHead: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.lime },
@@ -299,12 +311,7 @@ const styles = StyleSheet.create({
   mineRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   mineWhen: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
   mineWhat: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20, color: colors.mist, textAlign: 'right' },
-  alertsTitle: { ...text.heading, fontSize: 22, lineHeight: 24, color: colors.paper },
-  alertLine: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 21, color: colors.mist },
-  alertsCta: { minHeight: 48, marginTop: 2, borderRadius: 999, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
-  alertsCtaText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.white },
   alertsOn: { marginTop: 4, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.mist },
-  alertsOnBig: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.paper },
   group: { gap: 10 },
   groupTitle: { ...text.label, marginTop: 4 },
   card: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 24, backgroundColor: colors.white, gap: 6 },
@@ -322,8 +329,10 @@ const styles = StyleSheet.create({
   enterHit: { minHeight: 44, marginVertical: -4, justifyContent: 'center' },
   enter: { minHeight: 36, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   enterText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.paper },
-  locked: { minHeight: 48, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: colors.ink, justifyContent: 'center' },
-  lockedText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
+  quietHit: { minHeight: 44, paddingHorizontal: 4, justifyContent: 'center', gap: 2 },
+  quietText: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.ink },
+  votes: { minHeight: 48, marginTop: 8, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  votesText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
   nextOn: { paddingHorizontal: 4, fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });
