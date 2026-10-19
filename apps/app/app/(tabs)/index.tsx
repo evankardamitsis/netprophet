@@ -34,16 +34,18 @@ import { useStgIn } from '../../src/lib/motion';
 import { colors, ease, fonts, motion, text } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
+import { momentsAct, useMoments } from '../../src/lib/useMoments';
+import type { MomentKind } from '../../src/lib/moments';
 
 const TITLE_IN_MS = 400;
 /** the tournaments link sits after this many cards */
 /** prototype rqStart / rqNext: the first result waits 450ms, the next one comes 140ms after the last closes */
 const FIRST_RESULT_DELAY = 450;
 const NEXT_RESULT_GAP = 140;
-/** «Για σένα» rises full screen this long after Σήμερα settles, once a day (founder, 14 Oct) */
-const FOR_YOU_RISE_MS = 1500;
-/** a player who was here before Baller had a name meets it this long after Σήμερα settles, once */
-const MEET_BALLER_MS = 1200;
+/** a vote counts for the pacer once its reveal has played, so no moment covers the split (prototype reveal ~900ms) */
+const VOTE_SETTLE_MS = 1400;
+/** after a vote, Baller or «Για σένα» wait for this long without scrolling (founder, 18 Oct: when it makes sense) */
+const CALM_MS = 2000;
 
 export default function VoteScreen() {
   const t = useCopy();
@@ -93,6 +95,11 @@ export default function VoteScreen() {
         if (f) setQuestNote({ ...f, n: Date.now() });
       });
       void unlocksNow.current.refresh();
+      // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come
+      setTimeout(() => {
+        momentsAct();
+        setCalmFrom(Date.now());
+      }, VOTE_SETTLE_MS);
       return pct;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,6 +125,21 @@ export default function VoteScreen() {
   useEffect(() => {
     showQuestBar(questNote?.kind === 'bar' ? { title: questNote.title, from: questNote.from, to: questNote.to, progress: questNote.progress, target: questNote.target } : null);
   }, [questNote, showQuestBar]);
+  const moments = useMoments();
+  /** when the last vote settled: from then on we wait for a calm moment; 0 when not waiting */
+  const [calmFrom, setCalmFrom] = useState(0);
+  const lastScrollAt = useRef(0);
+  // a moment plays only while Σήμερα is in front (the game of the day or a profile may sit on top)
+  const [focused, setFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setFocused(true);
+      return () => setFocused(false);
+    }, []),
+  );
+  const onScrolled = useCallback(() => {
+    lastScrollAt.current = Date.now();
+  }, []);
   const [between, setBetween] = useState(false);
   const [played, setPlayed] = useState(0);
 
@@ -157,10 +179,19 @@ export default function VoteScreen() {
     [dismissResult],
   );
   const current = !between ? results[0] : undefined;
-  // celebrations wait until every result card has played
-  // every queued σερί milestone together as one (the highest), then the rest; every queued quest together as one
+  // celebrations wait until every result card has played and the player did something this visit (moments.ts);
+  // the group order is nextGroup's; every queued quest together as one. One a visit: the rest stay unseen on the
+  // server and come back next visit.
   const group = results.length === 0 && !between ? nextGroup(celebrations) : [];
-  const celebrating = group.length > 0 ? group : undefined;
+  const groupKey = group.map((c) => c.id).join();
+  const [celebrating, setCelebrating] = useState<CelebrationItem[] | undefined>(undefined);
+  const [forYouOpen, setForYouOpen] = useState(false);
+  const { claim, pick, acted } = moments;
+  useEffect(() => {
+    if (celebrating || !groupKey || forYouOpen || !acted || !focused) return;
+    if (claim('celebration')) setCelebrating(group);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupKey, celebrating, forYouOpen, acted, focused, claim]);
   // a step that opens quietly has no moment: mark it seen without showing anything
   const quiet = celebrations.filter((c) => isUnlock(c) && !hasMoment(c.payload.key)).map((c) => c.id).join();
   useEffect(() => {
@@ -170,6 +201,7 @@ export default function VoteScreen() {
   }, [quiet, dismissCelebration]);
   // after a moment, read the ladder again so what it opened shows
   const onCelebrated = (list: CelebrationItem[]) => {
+    setCelebrating(undefined);
     dismissCelebration(list.map((c) => c.id));
     if (list.some(isUnlock)) void unlocks.refresh({ afterMoment: true });
   };
@@ -188,18 +220,7 @@ export default function VoteScreen() {
   const voteCount = openToVote(cards, votedNow);
   const daily = dailyFold(unlocks.has('daily_quiz') ? quiz.quiz : null, confirmations.items.length, t);
   const forYouDaily = useForYouDaily();
-  const [forYouOpen, setForYouOpen] = useState(false);
-  // once a day, when it holds something to do and no result or moment is playing
-  const forYouReady = forYouDaily.may === true && daily.show && daily.count > 0 && !loading && !current && !celebrating;
   const { markShown } = forYouDaily;
-  useEffect(() => {
-    if (!forYouReady) return undefined;
-    const id = setTimeout(() => {
-      setForYouOpen(true);
-      markShown();
-    }, FOR_YOU_RISE_MS);
-    return () => clearTimeout(id);
-  }, [forYouReady, markShown]);
   const forYouItems = (
     <>
       {unlocks.has('daily_quiz') && quiz.quiz && quiz.quiz.cards.length > 0 ? (
@@ -215,38 +236,69 @@ export default function VoteScreen() {
         <ConfirmCard
           key={item.match_id}
           item={item}
-          onAnswer={(a) =>
-            void confirmations.answer(item.match_id, a).then((o) => setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]))
-          }
+          onAnswer={(a) => {
+            void confirmations.answer(item.match_id, a).then((o) => {
+              if (o !== 'failed') momentsAct();
+              setAnswered(o === 'failed' ? t.confirm.failed : t.confirm.done[o]);
+            });
+          }}
         />
       ))}
     </>
   );
-  // players from before Baller had a name meet it once, full screen, when nothing else is playing
+  // players from before Baller had a name meet it once, full screen; «Για σένα» rises once a day when it holds
+  // something to do. Neither comes on load (founder, 18 Oct): only after a vote, in a calm beat with no scrolling,
+  // and only if this visit has not had its moment (moments.ts: a celebration first, then Baller, then «Για σένα»).
   const baller = useBaller();
-  const meetReady = baller.met === false && !loading && !current && !celebrating && !forYouOpen;
+  /** this device already offered Baller: undefined while reading */
+  const [ballerOffered, setBallerOffered] = useState<string | null | undefined>(undefined);
   useEffect(() => {
-    if (!meetReady) return undefined;
-    let cancelled = false;
-    const id = setTimeout(() => {
-      AsyncStorage.getItem(BALLER_OFFERED_KEY)
-        .catch(() => null)
-        .then((offered) => {
-          if (cancelled || !shouldOfferBaller(baller.met, offered)) return;
-          AsyncStorage.setItem(BALLER_OFFERED_KEY, '1').catch(() => undefined);
-          router.push('/baller?first=1');
-        });
-    }, MEET_BALLER_MS);
-    return () => {
-      cancelled = true;
-      clearTimeout(id);
+    AsyncStorage.getItem(BALLER_OFFERED_KEY)
+      .catch(() => null)
+      .then((v) => setBallerOffered(v));
+  }, []);
+  const [calm, setCalm] = useState(false);
+  useEffect(() => {
+    if (!calmFrom) return undefined;
+    let id: ReturnType<typeof setTimeout>;
+    const check = () => {
+      const quietFor = Date.now() - Math.max(lastScrollAt.current, calmFrom);
+      if (quietFor >= CALM_MS) setCalm(true);
+      else id = setTimeout(check, CALM_MS - quietFor);
     };
-  }, [meetReady, baller.met]);
+    id = setTimeout(check, CALM_MS);
+    return () => clearTimeout(id);
+  }, [calmFrom]);
+  const ballerReady = ballerOffered !== undefined && shouldOfferBaller(baller.met, ballerOffered);
+  const forYouReady = forYouDaily.may === true && daily.show && daily.count > 0;
+  useEffect(() => {
+    if (!calm || !focused || loading || current || celebrating || forYouOpen) return;
+    const ready: MomentKind[] = [];
+    if (groupKey) ready.push('celebration');
+    if (ballerReady) ready.push('baller');
+    if (forYouReady) ready.push('forYou');
+    const next = pick(ready);
+    // a waiting celebration plays on its own (above); otherwise this calm beat is used up
+    if (next === 'celebration') return;
+    setCalm(false);
+    setCalmFrom(0);
+    if (next === 'baller' && claim('baller')) {
+      setBallerOffered('1');
+      AsyncStorage.setItem(BALLER_OFFERED_KEY, '1').catch(() => undefined);
+      router.push('/baller?first=1');
+    } else if (next === 'forYou' && claim('forYou')) {
+      setForYouOpen(true);
+      markShown();
+    }
+  }, [calm, focused, loading, current, celebrating, forYouOpen, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
   const titleIn = useInA();
 
   return (
     <View style={styles.screen}>
       <ScrollView
+        onScroll={onScrolled}
+        onScrollBeginDrag={onScrolled}
+        scrollEventThrottle={250}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={refresh} tintColor={colors.ink} />}

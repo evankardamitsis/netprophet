@@ -103,10 +103,11 @@ describe('badge celebrations', () => {
   it('gold also names the Frame Level', () => {
     expect(groupView([b('x', 'many_votes', 3, false)], copy).reward).toBe('Χρυσή Βαθμίδα · Frame Level');
   });
-  it('plays σερί, then quests, then badges one at a time', () => {
+  it('plays σερί, then badges one at a time, then quests', () => {
     const list = [b('b1', 'gentleman', 1, true), q('a', 'daily_kudos_1', badge), b('b2', 'upset', 1, true), c(5, false, null)];
     expect(nextGroup(list).map((x) => x.id)).toEqual(['c']);
-    expect(nextGroup(list.filter((x) => x.id !== 'c')).map((x) => x.id)).toEqual(['a']);
+    expect(nextGroup(list.filter((x) => x.id !== 'c')).map((x) => x.id)).toEqual(['b1']);
+    expect(nextGroup(list.filter((x) => x.id === 'a')).map((x) => x.id)).toEqual(['a']);
     expect(nextGroup(list.filter((x) => x.id.startsWith('b'))).map((x) => x.id)).toEqual(['b1']);
     expect(nextGroup([])).toEqual([]);
   });
@@ -157,9 +158,9 @@ describe('level celebrations', () => {
   it('says the new level in the pill, with no «σερί» beside it', () => {
     expect(groupView([lv('l', 4)], copy)).toEqual({ label: 'LEVEL', streak: 4, unit: '', tier: null, title: 'Ανέβηκες level!', reward: 'Συνέχισε τις σωστές προβλέψεις' });
   });
-  it('plays after the σερί moment and before quests and badges', () => {
+  it('plays first, before the σερί moment, badges and quests', () => {
     const list = [b('b1', 'gentleman', 1, true), q('a', 'daily_kudos_1', badge), lv('l', 3), c(5, false, null)];
-    expect(nextGroup(list).map((x) => x.id)).toEqual(['c']);
-    expect(nextGroup(list.filter((x) => x.id !== 'c')).map((x) => x.id)).toEqual(['l']);
+    expect(nextGroup(list).map((x) => x.id)).toEqual(['l']);
+    expect(nextGroup(list.filter((x) => x.id !== 'l')).map((x) => x.id)).toEqual(['c']);
   });
 });

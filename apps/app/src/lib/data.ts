@@ -29,6 +29,7 @@ import { MOCK_TOKEN, mockLinkView } from './link';
 import { hasMoment } from './unlockLadder';
 import { hydrateNewPlayer, isNewPlayerOn, recordMockVote } from './newPlayer';
 import { track } from './analytics';
+import { onMomentsAction } from './useMoments';
 import { toScoutView, type ScoutView } from './scout';
 import { myMatchOf, type MyMatchView } from './myMatch';
 import { avatarByKey, defaultAvatarFor, playerAvatar, type AvatarLook, type DefaultAvatar } from './avatar';
@@ -144,6 +145,18 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  // a vote, an answer or a confirmation may have earned a celebration: read the queue again (only the queue, the
+  // cards stay as they are) so it plays right after that reveal; the pacer still allows one a visit
+  useEffect(() => {
+    if (!api) return undefined;
+    return onMomentsAction(() => {
+      api
+        .getFeed(30)
+        .then((feed) => setCelebrations(feed.celebrations ?? []))
+        .catch(() => undefined);
+    });
+  }, [api]);
 
   const vote = useCallback(async (matchId: string, side: Side): Promise<CardPct> => {
     if (!api) {
