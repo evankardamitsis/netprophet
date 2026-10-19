@@ -333,7 +333,11 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
   const darkStyle = useAnimatedStyle(() => ({ opacity: 1 - tone.value }));
   const lightStyle = useAnimatedStyle(() => ({ opacity: tone.value }));
   const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value}%` }));
-  const pctStyle = useAnimatedStyle(() => ({ opacity: pctOpacity.value, transform: [{ scale: pctScale.value }] }));
+  const pctStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(tone.value, [0, 1], [colors.paper, colors.ink]),
+    opacity: pctOpacity.value,
+    transform: [{ scale: pctScale.value }],
+  }));
   const tickStyle = useAnimatedStyle(() => ({
     color: interpolateColor(tone.value, [0, 1], [colors.paper, colors.ink]),
     opacity: tickOpacity.value,

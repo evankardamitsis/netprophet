@@ -82,7 +82,7 @@ export const el = {
     categoryWho: { WS: 'Γυναικών', WD: 'Γυναικών', XD: 'Μικτό', mixed: 'Μικτό' } as Record<string, string>,
     /** a match that started: no more votes (founder, 17 Oct) */
     closed: 'Οι ψήφοι έκλεισαν',
-    /** the question on a card you have not voted on yet (founder, 18 Oct: make voting obvious) */
+    /** the question, said once under Σήμερα's title while a card takes a vote (founder, 19 Oct) */
     who: 'Ποιος κερδίζει;',
     /** under an hour before it starts, next to the question */
     soon: { one: 'Ξεκινά σε 1 λεπτό', many: 'Ξεκινά σε {n} λεπτά' },

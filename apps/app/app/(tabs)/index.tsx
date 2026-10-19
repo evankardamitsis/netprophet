@@ -420,27 +420,25 @@ function useInA() {
 function FeedHead({ line, open, ask, onPress }: { line: string; open: boolean; ask: boolean; onPress: () => void }) {
   const t = useCopy();
   const press = usePress(0.97);
-  const body = (
-    <Animated.View style={[styles.feedHead, press.style]}>
-      <FeedLine key={line} line={line} open={open} />
-      {ask ? (
-        <View style={styles.ask}>
-          <Text style={styles.askText}>{t.match.who}</Text>
-          <Text style={styles.hint}>{t.feed.hint}</Text>
-        </View>
-      ) : null}
-    </Animated.View>
-  );
-  if (!ask) return body;
+  // one Pressable throughout (disabled once nothing waits), so the line does not mount again and rise twice
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${line} ${t.match.who} ${t.feed.hint}`}
+      accessibilityRole={ask ? 'button' : 'text'}
+      accessibilityLabel={ask ? `${line} ${t.match.who} ${t.feed.hint}` : line}
+      disabled={!ask}
       onPress={onPress}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
     >
-      {body}
+      <Animated.View style={[styles.feedHead, press.style]}>
+        <FeedLine key={line} line={line} open={open} />
+        {ask ? (
+          <View style={styles.ask}>
+            <Text style={styles.askText}>{t.match.who}</Text>
+            <Text style={styles.hint}>{t.feed.hint}</Text>
+          </View>
+        ) : null}
+      </Animated.View>
     </Pressable>
   );
 }
