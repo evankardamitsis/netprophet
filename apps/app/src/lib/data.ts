@@ -20,7 +20,7 @@ import { mockMatchStats } from '../mock/matchStats';
 import { withMockAds } from '../mock/sponsored';
 import { useCopy } from '../i18n';
 import { useAuth } from './auth';
-import type { Area } from './onboarding';
+import type { Area, Hand } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
 import { clearMe, currentMe, meTicket, publishMe, subscribeMe } from './meStore';
@@ -1567,9 +1567,13 @@ export interface ClaimRow {
   sub: string;
 }
 
-/** The onboarding calls, against the database or (mock mode, the dev guest) the sample data. */
-export function useOnboardingApi() {
-  const api = useApi();
+/**
+ * The onboarding calls, against the database or (mock mode, the dev guest) the sample data. `sample` forces the
+ * sample data (the development preview, /onboarding?preview=1): nothing is read from or written to the server.
+ */
+export function useOnboardingApi(sample = false) {
+  const live = useApi();
+  const api = sample ? null : live;
   const t = useCopy();
   return useMemo(
     () => ({
@@ -1634,6 +1638,69 @@ export function useOnboardingApi() {
     }),
     [api, t],
   );
+}
+
+export interface PlayStyleState {
+  hand: Hand | null;
+  /** «Από τουρνουά πώς πάμε;»: never, few, monthly or trophies */
+  tour: string | null;
+  saving: boolean;
+  failed: boolean;
+  save: (patch: { hand?: Hand; tour?: string }) => Promise<boolean>;
+}
+
+/**
+ * «Πώς παίζεις» in Εγώ › Ρυθμίσεις (founder, 19 Oct: it left the first run): hand and tournament experience from
+ * the account's own profile row, saved with the same update_profile the onboarding used. The guest keeps a sample.
+ */
+export function usePlayStyle(): PlayStyleState {
+  const api = useApi();
+  const [hand, setHand] = useState<Hand | null>(api ? null : 'R');
+  const [tour, setTour] = useState<string | null>(api ? null : 'few');
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!api || !supabase) return undefined;
+    let live = true;
+    supabase
+      .from('my_profile')
+      .select('hand, tournament_experience')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!live || !data) return;
+        setHand(data.hand === 'R' || data.hand === 'L' ? data.hand : null);
+        setTour(data.tournament_experience ?? null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [api]);
+  const save = useCallback(
+    async (patch: { hand?: Hand; tour?: string }) => {
+      const before = { hand, tour };
+      if (patch.hand) setHand(patch.hand);
+      if (patch.tour) setTour(patch.tour);
+      setFailed(false);
+      if (!api) return true;
+      setSaving(true);
+      try {
+        await api.updateProfile({
+          ...(patch.hand ? { hand: patch.hand } : {}),
+          ...(patch.tour ? { tournament_experience: patch.tour } : {}),
+        });
+        return true;
+      } catch {
+        setHand(before.hand);
+        setTour(before.tour);
+        setFailed(true);
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [api, hand, tour],
+  );
+  return { hand, tour, saving, failed, save };
 }
 
 export interface TournamentsState {

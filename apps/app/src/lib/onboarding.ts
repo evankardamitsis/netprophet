@@ -6,25 +6,42 @@ import { fmt } from './votes';
  * screens share. Differs from the prototype in one place: the name comes first, because a real
  * search for your player needs it (the prototype hard-codes «Βαγγέλης Κ»).
  *
- * Short first run (founder, 19 Oct): only what makes the game yours, then straight to the first vote card.
+ * Short first run (founder, 19 Oct): only what makes the game yours (name, your player, your area, your crowd), then
+ * straight to the first vote card.
  * No intro slides and no «Ας ξεκινήσουμε» splash: Σήμερα teaches the vote where it happens («Ποιος κερδίζει;
  * Πάτα τον νικητή»). «Γνώρισε τον Baller σου» comes after the first vote, as it does for older accounts
  * (ballerOffer.ts). Progress lives only on the screen; the server keeps onboarding_state.done.
  */
-export type Step = 'name' | 'claim' | 'play' | 'area' | 'known';
+export type Step = 'name' | 'claim' | 'area' | 'known';
 
 /**
- * The claimed path skips «Πώς παίζεις;»: a roster player already has a hand and a history. Someone who came
- * from an opponent link («Κράτα το ματς στο προφίλ σου») only confirms their player and picks who they know
- * (prototype path ['c', 'k']), then lands in the app.
+ * Four steps for everyone (founder, 19 Oct): «Πώς παίζεις;» (hand and tournaments) left the first run and lives in
+ * Εγώ › Ρυθμίσεις. Someone who came from an opponent link («Κράτα το ματς στο προφίλ σου») only confirms their player
+ * and picks who they know (prototype path ['c', 'k']), then lands in the app.
  */
-export function stepsFor(isNew: boolean, fromLink = false): Step[] {
-  if (fromLink) return ['claim', 'known'];
-  return isNew ? ['name', 'claim', 'play', 'area', 'known'] : ['name', 'claim', 'area', 'known'];
+export function stepsFor(fromLink = false): Step[] {
+  return fromLink ? ['claim', 'known'] : ['name', 'claim', 'area', 'known'];
 }
 
 /** «Ποια είναι η παρέα σου;» never blocks: someone who knows nobody yet goes on with «Αργότερα» */
 export const KNOWN_MIN = 0;
+
+/** «Αργότερα» with nobody picked follows this many of the most followed players around them (founder, 19 Oct) */
+export const AUTO_FOLLOW = 6;
+
+/**
+ * Who «Ποια είναι η παρέα σου;» follows: the people picked, or, with nobody picked, the first AUTO_FOLLOW of the
+ * suggestions. The server already ranks them (your areas, then your region, then everyone, by followers) and leaves
+ * out hidden players and minors, so the area falls back on its own. Your own player (a claim still waiting for staff)
+ * is never one of them.
+ */
+export function autoFollowIds(known: string[], suggested: { id: string }[], own: string | null = null): string[] {
+  if (known.length > 0) return known;
+  return suggested
+    .map((p) => p.id)
+    .filter((id, n, all) => id !== own && all.indexOf(id) === n)
+    .slice(0, AUTO_FOLLOW);
+}
 
 /** after a link, one is enough: the logger is already picked */
 export const KNOWN_MIN_LINK = 1;
@@ -66,4 +83,15 @@ export type SportChoice = 'tennis' | 'padel' | 'both';
 /** The profile keeps one primary sport; «Και τα δύο» starts with tennis and remembers both. */
 export function primarySport(choice: SportChoice): 'tennis' | 'padel' {
   return choice === 'padel' ? 'padel' : 'tennis';
+}
+
+export type Hand = 'R' | 'L';
+
+/** «Πώς παίζεις» in Ρυθμίσεις: «Δεξιόχειρας · Ένα δυο, για την εμπειρία», or a nudge when nothing is set yet. */
+export function playLine(hand: string | null | undefined, tour: string | null | undefined, t: Copy): string {
+  const p = t.onboarding.play;
+  const h = hand === 'R' || hand === 'L' ? p.hands[hand] : null;
+  const x = p.tours.find((o) => o.id === tour)?.name ?? null;
+  const parts = [h, x].filter(Boolean);
+  return parts.length ? parts.join(' · ') : p.unset;
 }

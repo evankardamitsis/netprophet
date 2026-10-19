@@ -50,7 +50,18 @@ export function Dashed({ label, onPress }: { label: string; onPress: () => void 
 const PILL_MS = 380;
 
 /** .jseg: equal options, the chosen one sits on an ink pill that slides (and stretches) between them */
-export function Segmented<T extends string>({ options, value, onChange }: { options: { id: T; label: string }[]; value: T | null; onChange: (v: T) => void }) {
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+  bg = colors.white,
+}: {
+  options: { id: T; label: string }[];
+  value: T | null;
+  onChange: (v: T) => void;
+  /** the track's colour; paper inside a white card */
+  bg?: string;
+}) {
   const [w, setW] = useState(0);
   const x = useSharedValue(0);
   const shown = useSharedValue(0);
@@ -82,7 +93,7 @@ export function Segmented<T extends string>({ options, value, onChange }: { opti
   }));
 
   return (
-    <View style={styles.seg} onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}>
+    <View style={[styles.seg, { backgroundColor: bg }]} onLayout={(e: LayoutChangeEvent) => setW(e.nativeEvent.layout.width)}>
       {cell > 0 ? <Animated.View pointerEvents="none" style={[styles.segPill, { width: cell }, pill]} /> : null}
       {options.map((o) => {
         const on = o.id === value;
