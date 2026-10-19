@@ -425,6 +425,9 @@ export const en: Copy = {
     newPlayerOn: 'New player ✓',
     statsPage: 'Your stats',
     predictionsPage: 'Your predictions',
+    numbers: 'Your numbers',
+    numbersLine: 'Streak, votes, matches and your season',
+    statsLine: 'Your matches, in numbers',
     avatarsDev: 'Avatars (test)',
     direction: { up: 'Going up', same: 'Holding', down: 'Going down' },
     gameLevel: {

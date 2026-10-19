@@ -17,7 +17,8 @@ import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
-import { activeLine, priceLine } from '../../src/lib/pro';
+import { activeLine } from '../../src/lib/pro';
+import { meSections, mePageOf } from '../../src/lib/meSections';
 import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
@@ -40,6 +41,10 @@ const MEET_BALLER_ON_ME_MS = 900;
  * name), the σερί with its freezes, «Το σκορ σου», «Οι ψήφοι σου», «Τα ματς σου», «Οι φίλοι σου» and Ρυθμίσεις
  * with Αποσύνδεση, plus «Τι λένε για σένα» (M2) and the «Αποστολές» row (M3). Avatar, stats flip, Εμφάνιση, freeze purchase and badges, then «Πώς σε βλέπουν» (M3).
  * «Πού κερδίζεις», Απολογισμός and Τουρνουά come with their milestones (M2 to M5).
+ *
+ * Calm pass (founder, 19 Oct): the main page is `meSections` (Baller and name, Level, Αποστολές, «Τα νούμερά σου ›»,
+ * Εμφάνιση, a quiet Pro row, Ρυθμίσεις). «Τα νούμερά σου» is ?page=stats: «Τα στατιστικά σου ›», «Η σεζόν σου ›»,
+ * then «Οι προβλέψεις σου» (badges, σερί, score, votes, friends).
  */
 const STG_MS = 450;
 const STAGGER = 70;
@@ -72,10 +77,15 @@ export default function MeScreen() {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh, refresh]),
   );
-  // «Τα στατιστικά σου» is the same screen with ?page=stats (founder, 14 Oct: Εγώ down to a few rows)
+  // «Τα νούμερά σου» is the same screen with ?page=stats (founder, 14 Oct: Εγώ down to a few rows; 19 Oct: one row)
   const { page } = useLocalSearchParams<{ page?: string }>();
-  const statsPage = page === 'stats';
-  const { state: proState } = usePro();
+  const statsPage = mePageOf(page) === 'numbers';
+  const sections = meSections({
+    levelBar: has('level_bar'),
+    quests: has('daily_quests'),
+    look: has('frames') || has('backgrounds'),
+    proOpen: has('pro_sheet'),
+  });
   const myAvatar = useMyAvatar();
   const avatarRefresh = myAvatar.refresh;
   useFocusEffect(
@@ -99,49 +109,40 @@ export default function MeScreen() {
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>‹ {t.common.back}</Animated.Text>
         </Pressable>
-        {view && !statsPage ? (
-          <>
-            <Section i={next()}>
-              <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} />
-            </Section>
-            {has('level_bar') ? (
-              <Section i={next()}>
-                <GameLevelTile v={view} />
+        {view && !statsPage
+          ? sections.map((s, i) => (
+              <Section key={s} i={i}>
+                {s === 'hero' ? (
+                  <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} />
+                ) : s === 'level' ? (
+                  <GameLevelTile v={view} />
+                ) : s === 'quests' ? (
+                  <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
+                ) : s === 'numbers' ? (
+                  <NavRow title={t.me.numbers} sub={t.me.numbersLine} onPress={() => router.push('/me?page=stats')} />
+                ) : s === 'look' ? (
+                  <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((it) => it.key) ?? []))} />
+                ) : s === 'pro' ? (
+                  <ProRow />
+                ) : (
+                  <Settings />
+                )}
               </Section>
-            ) : null}
-            {has('pro_sheet') && !proState?.pro ? (
-              <Section i={next()}>
-                <ProRow />
-              </Section>
-            ) : null}
-            {has('daily_quests') ? (
-              <Section i={next()}>
-                <QuestsRow done={quests.quests?.daily.filter((q) => q.done).length ?? 0} onPress={() => setQuestsOpen(true)} />
-              </Section>
-            ) : null}
-            <Section i={next()}>
-              <StatsRow />
-            </Section>
-            <Section i={next()}>
-              <PredictionsRow />
-            </Section>
-            <Section i={next()}>
-              <SeasonRow />
-            </Section>
-            {has('frames') || has('backgrounds') ? (
-              <Section i={next()}>
-                <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((i) => i.key) ?? []))} />
-              </Section>
-            ) : null}
-            <Section i={next()}>
-              <Settings />
-            </Section>
-          </>
-        ) : null}
+            ))
+          : null}
         {view && statsPage ? (
           <>
             <Section i={next()}>
-              <Text style={styles.statsTitle}>{t.me.predictionsPage}</Text>
+              <Text style={styles.statsTitle}>{t.me.numbers}</Text>
+            </Section>
+            <Section i={next()}>
+              <NavRow title={t.me.statsPage} sub={t.me.statsLine} onPress={() => router.push('/match-stats?from=me')} />
+            </Section>
+            <Section i={next()}>
+              <NavRow title={t.season.title} sub={t.season.sub} onPress={() => router.push('/season?from=me')} />
+            </Section>
+            <Section i={next()}>
+              <Text style={styles.predictionsKicker}>{greekCaps(t.me.predictionsPage)}</Text>
             </Section>
             {has('badges_shelf') && badges.badges && earned(badges.badges.badges).length > 0 ? (
               <Section i={next()}>
@@ -171,63 +172,34 @@ export default function MeScreen() {
   );
 }
 
-/** «Τα στατιστικά σου ›»: your real matches in numbers (founder, 18 Oct 2026: match statistics, not votes) */
-function StatsRow() {
-  const t = useCopy();
+/**
+ * A white row with a title, a quiet line under it and «›»: «Τα νούμερά σου» on Εγώ, «Τα στατιστικά σου» (/match-stats)
+ * and «Η σεζόν σου» (/season) on «Τα νούμερά σου».
+ */
+function NavRow({ title, sub, onPress }: { title: string; sub?: string; onPress: () => void }) {
   const press = usePress();
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/match-stats?from=me')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.questsRow, press.style]}>
-        <Text style={styles.questsTitle}>{t.me.statsPage}</Text>
-        <Text style={styles.questsCount}>›</Text>
+    <Pressable accessibilityRole="button" accessibilityLabel={sub ? `${title}. ${sub}` : title} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.lookRow, press.style]}>
+        <View style={styles.lookText}>
+          <Text style={styles.lookTitle}>{title}</Text>
+          {sub ? <Text style={styles.lookSub}>{sub}</Text> : null}
+        </View>
+        <Text style={styles.lookMark}>›</Text>
       </Animated.View>
     </Pressable>
   );
 }
 
-/** «Οι προβλέψεις σου ›»: σερί, badges, your score and votes, one tap away */
-function PredictionsRow() {
-  const t = useCopy();
-  const press = usePress();
-  return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/me?page=stats')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.questsRow, press.style]}>
-        <Text style={styles.questsTitle}>{t.me.predictionsPage}</Text>
-        <Text style={styles.questsCount}>›</Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-/** «Η σεζόν σου ›» (Pro, a teaser without): the month in numbers, next to the stats */
-function SeasonRow() {
-  const t = useCopy();
-  const press = usePress();
-  return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/season?from=me')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.questsRow, press.style]}>
-        <Text style={styles.questsTitle}>{t.season.title}</Text>
-        <Text style={styles.questsCount}>›</Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-/** without Pro: one ink row near the top, «Pro» and what it sends you (founder, 14 Oct: Pro high up) */
+/**
+ * «Pro ›», one quiet row after the player's own things (founder, 19 Oct: Pro reachable, not competing). Without Pro
+ * it says what Pro sends you; with Pro, until when it runs. The only Pro entry on Εγώ (it left Ρυθμίσεις).
+ */
 function ProRow() {
   const t = useCopy();
-  const press = usePress();
-  return (
-    <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=me')} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.proCta, press.style]}>
-        <View style={styles.proRowText}>
-          <Text style={styles.proRowTitle}>{t.pro.title}</Text>
-          <Text style={styles.proRowLine}>{t.pro.settingsLine}</Text>
-        </View>
-        <Text style={styles.proRowMark}>›</Text>
-      </Animated.View>
-    </Pressable>
-  );
+  const { state } = usePro();
+  const active = state ? activeLine(state, t) : null;
+  return <NavRow title={t.pro.title} sub={active ?? t.pro.settingsLine} onPress={() => router.push('/pro?from=me')} />;
 }
 
 /** «Αποστολές  1/3 ›»: today's quests done, opens the sheet */
@@ -477,30 +449,22 @@ function BallerStage({
   );
 }
 
+/**
+ * The player's level on the card, when levels are shown. σερί and πόντοι μήνα left the card (19 Oct): the header
+ * shows σερί already, and both are told in full on «Τα νούμερά σου».
+ */
 function Chips({ v }: { v: MeView }) {
   const t = useCopy();
   const { has } = useUnlocks();
+  if (!(PLAYER_LEVEL_SHOWN && has('level_bar') && v.level)) return null;
   return (
     <View style={styles.chips}>
-      {PLAYER_LEVEL_SHOWN && has('level_bar') && v.level ? (
-        <View style={styles.chip}>
-          <Text style={styles.chipBig}>{v.level}</Text>
-          <View>
-            <Text style={styles.chipSmall}>{t.level.label}</Text>
-            <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
-          </View>
-        </View>
-      ) : null}
       <View style={styles.chip}>
-        <Text style={[styles.chipBig, styles.lime]}>{v.streak}</Text>
+        <Text style={styles.chipBig}>{v.level}</Text>
         <View>
-          <Text style={styles.chipSmall}>{t.me.streak}</Text>
-          <Text style={styles.chipSmallBold}>{v.best}</Text>
+          <Text style={styles.chipSmall}>{t.level.label}</Text>
+          <Text style={styles.chipSmallBold}>{`${v.direction.arrow} ${v.direction.word}`}</Text>
         </View>
-      </View>
-      <View style={styles.chip}>
-        <Text style={[styles.chipBig, styles.lime]}>{v.monthPoints}</Text>
-        <Text style={styles.chipSmall}>{t.me.monthPoints}</Text>
       </View>
     </View>
   );
@@ -725,18 +689,15 @@ function Friends({ v }: { v: MeView }) {
   );
 }
 
-/** «Ρυθμίσεις», closed until tapped: Pro, then Αποσύνδεση */
+/** «Ρυθμίσεις», closed until tapped, at the bottom: sounds, blocked people, Αποσύνδεση and deleting the account */
 function Settings() {
   const t = useCopy();
   const { signOut } = useAuth();
-  const { state } = usePro();
   const [open, setOpen] = useState(false);
   const gate = useOnboardingGate();
   const blocks = useBlocks();
-  const proOpen = useUnlocks().has('pro_sheet');
   const newPlayer = useNewPlayer();
   const mockMode = useApi() === null;
-  const active = state ? activeLine(state, t) : null;
   return (
     <View style={styles.card}>
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={() => setOpen((o) => !o)} style={styles.rowBetween}>
@@ -745,15 +706,6 @@ function Settings() {
       </Pressable>
       {open ? (
         <>
-          {proOpen ? (
-            <Pressable accessibilityRole="button" onPress={() => router.push('/pro?from=settings')} style={styles.proRow}>
-              <View style={styles.proText}>
-                <Text style={styles.proTitle}>{t.pro.title}</Text>
-                <Text style={styles.muted}>{t.pro.settingsLine}</Text>
-              </View>
-              <Text style={styles.proPrice}>{active ?? priceLine(t)}</Text>
-            </Pressable>
-          ) : null}
           <SoundsRow />
           {blocks.list.length > 0 ? (
             <View style={styles.blocks}>
@@ -942,11 +894,8 @@ const styles = StyleSheet.create({
   sharePillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.paper },
   ballerTagText: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 26, color: colors.paper },
   statsTitle: { fontFamily: fonts.displayHeavy, fontSize: 48, lineHeight: 52, paddingTop: 6, color: colors.ink },
-  proCta: { minHeight: 64, paddingVertical: 14, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  proRowText: { flex: 1, gap: 2 },
-  proRowTitle: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 22, color: colors.paper },
-  proRowLine: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },
-  proRowMark: { fontFamily: fonts.bodyBold, fontSize: 22, color: colors.paper },
+  // «ΟΙ ΠΡΟΒΛΕΨΕΙΣ ΣΟΥ» over σερί, score and votes on «Τα νούμερά σου»
+  predictionsKicker: { paddingTop: 12, fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.inkSoft },
   streakWord: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
   muted: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
   freezes: { flexDirection: 'row', gap: 8 },
@@ -1020,10 +969,8 @@ const styles = StyleSheet.create({
   scoutRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
   proPill: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 999, backgroundColor: colors.ink },
   proPillText: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.lime },
-  proRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.navLine },
   proText: { flex: 1, minWidth: 0, gap: 2 },
   proTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
-  proPrice: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
 });
 
 /**
