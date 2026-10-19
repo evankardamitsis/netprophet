@@ -405,6 +405,9 @@ export const el = {
       friends: { one: 'φίλος', many: 'φίλοι' },
       none: 'Δεν ξέρω κανέναν ακόμα',
       noneFound: 'Κανείς με αυτό το όνομα.',
+      /** nobody picked: the step is optional (founder, 19 Oct) */
+      later: 'Αργότερα',
+      noteOptional: 'Δεν είναι υποχρεωτικό. Τους βρίσκεις και αργότερα.',
     },
     intro: {
       /** the step pill, «1 από 4» */

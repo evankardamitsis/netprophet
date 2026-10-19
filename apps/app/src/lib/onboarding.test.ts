@@ -1,34 +1,47 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { areasOf, introNumber, knownButton, primarySport, splitName, stepsFor, type Area } from './onboarding';
+import { areasOf, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, splitName, stepsFor, type Area } from './onboarding';
 
 const t = getCopy('el');
 
 describe('stepsFor', () => {
-  it('a new player also answers «Πώς παίζεις;»', () => {
-    expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known', 'baller', 'e1', 'e2', 'e3', 'e4']);
-    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known', 'baller', 'e1', 'e2', 'e3', 'e4']);
+  it('a short first run: only what makes the game yours, then the first vote', () => {
+    expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known']);
+    // a new player also answers «Πώς παίζεις;»
+    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known']);
     // from an opponent link: confirm the player, pick who you know, done
     expect(stepsFor(false, true)).toEqual(['claim', 'known']);
+    expect(stepsFor(true, true)).toEqual(['claim', 'known']);
   });
-});
 
-describe('introNumber', () => {
-  it('numbers the four slides, not the setup steps', () => {
-    expect(introNumber('e1')).toBe(1);
-    expect(introNumber('e4')).toBe(4);
-    expect(introNumber('known')).toBe(0);
+  it('no slides and no Baller in first run (Baller comes after the first vote)', () => {
+    for (const s of [stepsFor(false), stepsFor(true), stepsFor(false, true)]) {
+      expect(s.length).toBeLessThanOrEqual(5);
+      expect(s).not.toContain('baller');
+      expect(s.every((x) => ['name', 'claim', 'play', 'area', 'known'].includes(x))).toBe(true);
+    }
   });
 });
 
 describe('knownButton', () => {
-  it('counts down to three, then continues', () => {
-    expect(knownButton(0, t)).toEqual({ label: 'Διάλεξε 3 ακόμα', ready: false });
-    expect(knownButton(2, t)).toEqual({ label: 'Διάλεξε 1 ακόμα', ready: false });
+  it('never blocks someone who knows nobody yet', () => {
+    expect(KNOWN_MIN).toBe(0);
+    expect(knownButton(0, t)).toEqual({ label: 'Αργότερα', ready: true });
+    expect(knownButton(1, t)).toEqual({ label: 'Συνέχεια · 1 φίλος', ready: true });
     expect(knownButton(3, t)).toEqual({ label: 'Συνέχεια · 3 φίλοι', ready: true });
-    // after a link one is enough
-    expect(knownButton(0, t, 1)).toEqual({ label: 'Διάλεξε 1 ακόμα', ready: false });
-    expect(knownButton(1, t, 1).ready).toBe(true);
+  });
+
+  it('after a link one is enough', () => {
+    expect(knownButton(0, t, KNOWN_MIN_LINK)).toEqual({ label: 'Διάλεξε 1 ακόμα', ready: false });
+    expect(knownButton(1, t, KNOWN_MIN_LINK)).toEqual({ label: 'Συνέχεια · 1 φίλος', ready: true });
+  });
+
+  it('a minimum still counts down', () => {
+    expect(knownButton(1, t, 3)).toEqual({ label: 'Διάλεξε 2 ακόμα', ready: false });
+  });
+
+  it('speaks English too', () => {
+    expect(knownButton(0, getCopy('en'))).toEqual({ label: 'Later', ready: true });
   });
 });
 
