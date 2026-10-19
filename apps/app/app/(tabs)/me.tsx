@@ -466,7 +466,6 @@ function BallerStage({
           onPress={() => router.push('/share-baller')}
           onPressIn={share.onPressIn}
           onPressOut={share.onPressOut}
-          hitSlop={8}
           style={styles.shareHit}
         >
           <Animated.View style={[styles.sharePill, share.style]}>
@@ -937,7 +936,8 @@ const styles = StyleSheet.create({
   stage: { borderRadius: 28, overflow: 'hidden', backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'flex-end' },
   ballerTag: { position: 'absolute', bottom: 14, alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 4, borderRadius: 999, backgroundColor: alpha(colors.ink, 0.75) },
   // «Μοιράσου ›»: quiet, so the screen's blue stays elsewhere
-  shareHit: { position: 'absolute', top: 14, right: 14 },
+  // 44pt to tap around the pill; top 8 keeps the pill where it was (14pt from the edge)
+  shareHit: { position: 'absolute', top: 8, right: 14, minHeight: 44, justifyContent: 'center' },
   sharePill: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1.5, borderColor: alpha(colors.paper, 0.5), backgroundColor: alpha(colors.ink, 0.55) },
   sharePillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.paper },
   ballerTagText: { fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 26, color: colors.paper },

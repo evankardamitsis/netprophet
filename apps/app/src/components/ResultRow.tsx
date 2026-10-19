@@ -40,6 +40,13 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
   const more = showReactions || showThank;
   const [open, setOpen] = useState(false);
   const longPress = onLongPress ? () => onLongPress(item.id) : undefined;
+  const [names, setNames] = useState(false);
+  useEffect(() => {
+    if (!names) return undefined;
+    const id = setTimeout(() => setNames(false), REVEAL_MS);
+    return () => clearTimeout(id);
+  }, [names]);
+  const reveal = () => setNames((o) => !o);
   const meta = [item.score, item.line].filter(Boolean).join(' · ');
   return (
     <Pressable
@@ -55,13 +62,24 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
             {item.calledIt ? <Pill text={item.calledIt} /> : null}
           </View>
         ) : null}
-        <View style={styles.winner}>
-          <Names people={item.winner} style={[styles.winName, { color: fg }]} onLongPress={longPress} />
-          <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
-        </View>
-        <View style={styles.loser}>
-          <Names people={item.loser} style={[styles.loseName, { color: fg }]} onLongPress={longPress} />
-          <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
+        {/* the names are one column, one target (about 60pt tall): a tap shows every first name; the scores sit beside */}
+        <View style={styles.pair}>
+          <Pressable style={styles.namesCol} onPress={reveal} onLongPress={longPress} delayLongPress={450}>
+            <View style={styles.winner}>
+              <Names people={item.winner} open={names} style={[styles.winName, { color: fg }]} />
+            </View>
+            <View style={[styles.loser, styles.dim]}>
+              <Names people={item.loser} open={names} style={[styles.loseName, { color: fg }]} />
+            </View>
+          </Pressable>
+          <View style={styles.scoresCol}>
+            <View style={[styles.winner, styles.scoreLine]}>
+              <Text style={[styles.winScore, { color: hot ? colors.lime : colors.ink }]}>{item.winnerSets}</Text>
+            </View>
+            <View style={[styles.loser, styles.scoreLine, styles.dim]}>
+              <Text style={[styles.loseScore, { color: fg }]}>{item.loserSets}</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.metaRow}>
           <Text style={[styles.sets, { color: soft }]} numberOfLines={2}>
@@ -135,20 +153,14 @@ function Pill({ text }: { text: string }) {
 
 /**
  * «Δεσύπρης Γ. & Μέμμος Η.»: the surname large, as on the feed cards, and the first name's initial;
- * a tap anywhere on the names shows the first names for 4s (founder, 10 Oct; the prototype had it the other way round).
- * The whole name area is the target, 44pt tall (a negative margin keeps the row at its height).
+ * a tap anywhere on the names column shows the first names for 4s (founder, 10 Oct; the prototype had it the other way
+ * round). `open` comes from the card, so both sides open together and the whole column is one 44pt+ target.
  */
-function Names({ people, style, onLongPress }: { people: ResultName[]; style: StyleProp<TextStyle>; onLongPress?: () => void }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return undefined;
-    const id = setTimeout(() => setOpen(false), REVEAL_MS);
-    return () => clearTimeout(id);
-  }, [open]);
+function Names({ people, open, style }: { people: ResultName[]; open: boolean; style: StyleProp<TextStyle> }) {
   // measured as shown collapsed: «Δεσύπρης Γ. & Μέμμος Η.»
   const shown = people.map((p) => `${p.surname} ${p.first.slice(0, 1)}.`).join(' & ');
   return (
-    <Pressable style={styles.nameBox} onPress={() => setOpen((o) => !o)} onLongPress={onLongPress} delayLongPress={450}>
+    <View style={styles.nameBox}>
       <FitText text={shown} style={[styles.names, style]}>
         {people.map((p, i) => (
           <Fragment key={`${p.first}-${p.surname}-${i}`}>
@@ -158,7 +170,7 @@ function Names({ people, style, onLongPress }: { people: ResultName[]; style: St
           </Fragment>
         ))}
       </FitText>
-    </Pressable>
+    </View>
   );
 }
 
@@ -174,14 +186,19 @@ const styles = StyleSheet.create({
   pill: { minHeight: 24, paddingHorizontal: 10, borderRadius: 999, backgroundColor: colors.lime, justifyContent: 'center' },
   pillText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },
   names: {},
-  // 44pt to tap; the negative margin keeps the 28 to 30pt rows as they were
-  nameBox: { flex: 1, minWidth: 0, minHeight: 44, marginVertical: -8, justifyContent: 'center' },
+  nameBox: { flex: 1, minWidth: 0 },
+  // names left (one tap target), scores right; the 2pt gap is the card's old gap between the rows
+  pair: { flexDirection: 'row', gap: 12 },
+  namesCol: { flex: 1, minWidth: 0, gap: 2 },
+  scoresCol: { gap: 2 },
+  scoreLine: { justifyContent: 'flex-end' },
+  dim: { opacity: 0.65 },
   // line heights at least the font size: iOS clips the tonos that rises above the line box
   // compact (founder, 16 Oct): the winner bold, the loser lighter, both one size so the eye reads down the scores
   winner: { minHeight: 30, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   winName: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   winScore: { fontFamily: fonts.displayHeavy, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
-  loser: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, opacity: 0.65 },
+  loser: { minHeight: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   loseName: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   loseScore: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5 },
   // the revealed first name is smaller and lighter (prototype .ns)
