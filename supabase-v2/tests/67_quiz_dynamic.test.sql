@@ -16,7 +16,8 @@ insert into core.follows (user_id, player_id) select u, id from pp, (values (:'u
 -- 1 beat 2 last week; they meet again tomorrow. 3 beat 4 in three sets three days ago.
 select tests.mk_match((select id from pp where g = 1), (select id from pp where g = 2), now() - interval '10 days') as m0 \gset
 select tests.finish_match(:'m0'::uuid, 1);
-select tests.mk_match((select id from pp where g = 1), (select id from pp where g = 2), now() + interval '1 day') as m1 \gset
+-- «tomorrow» counts from the quiz day (it turns at 09:00), not from now: pinned so the test passes at any hour
+select tests.mk_match((select id from pp where g = 1), (select id from pp where g = 2), (((core.quiz_day_key(now()) + 1)::timestamp + interval '18 hours') at time zone 'Europe/Athens')) as m1 \gset
 select tests.mk_match((select id from pp where g = 3), (select id from pp where g = 4), now() - interval '3 days') as m2 \gset
 select tests.as_service();
 select api.admin_set_result(:'m2'::uuid, 1, '[{"w":6,"l":4},{"w":3,"l":6},{"w":7,"l":5}]'::jsonb);
