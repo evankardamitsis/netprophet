@@ -1,25 +1,66 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { areasOf, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, splitName, stepsFor, type Area } from './onboarding';
+import { areasOf, AUTO_FOLLOW, autoFollowIds, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, playLine, primarySport, splitName, stepsFor, type Area } from './onboarding';
 
 const t = getCopy('el');
 
 describe('stepsFor', () => {
-  it('a short first run: only what makes the game yours, then the first vote', () => {
+  it('four steps for everyone, then the first vote', () => {
+    // «Πώς παίζεις;» left the first run (founder, 19 Oct): new players walk the same four steps
+    expect(stepsFor()).toEqual(['name', 'claim', 'area', 'known']);
     expect(stepsFor(false)).toEqual(['name', 'claim', 'area', 'known']);
-    // a new player also answers «Πώς παίζεις;»
-    expect(stepsFor(true)).toEqual(['name', 'claim', 'play', 'area', 'known']);
     // from an opponent link: confirm the player, pick who you know, done
-    expect(stepsFor(false, true)).toEqual(['claim', 'known']);
-    expect(stepsFor(true, true)).toEqual(['claim', 'known']);
+    expect(stepsFor(true)).toEqual(['claim', 'known']);
   });
 
-  it('no slides and no Baller in first run (Baller comes after the first vote)', () => {
-    for (const s of [stepsFor(false), stepsFor(true), stepsFor(false, true)]) {
-      expect(s.length).toBeLessThanOrEqual(5);
+  it('no slides, no Baller and no «Πώς παίζεις;» in first run', () => {
+    for (const s of [stepsFor(false), stepsFor(true)]) {
+      expect(s.length).toBeLessThanOrEqual(4);
       expect(s).not.toContain('baller');
-      expect(s.every((x) => ['name', 'claim', 'play', 'area', 'known'].includes(x))).toBe(true);
+      expect(s).not.toContain('play');
+      expect(s.every((x) => ['name', 'claim', 'area', 'known'].includes(x))).toBe(true);
     }
+  });
+});
+
+describe('autoFollowIds', () => {
+  const pool = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `p${i + 1}` }));
+
+  it('follows exactly who was picked', () => {
+    expect(autoFollowIds(['a', 'b'], pool(10))).toEqual(['a', 'b']);
+  });
+
+  it('nobody picked: the first 6 suggestions, in the server order', () => {
+    expect(AUTO_FOLLOW).toBe(6);
+    expect(autoFollowIds([], pool(30))).toEqual(['p1', 'p2', 'p3', 'p4', 'p5', 'p6']);
+  });
+
+  it('fewer suggestions than 6: all of them, and none is fine too', () => {
+    expect(autoFollowIds([], pool(4))).toEqual(['p1', 'p2', 'p3', 'p4']);
+    expect(autoFollowIds([], [])).toEqual([]);
+  });
+
+  it('never your own player, never twice', () => {
+    expect(autoFollowIds([], [{ id: 'me' }, ...pool(6)], 'me')).toEqual(['p1', 'p2', 'p3', 'p4', 'p5', 'p6']);
+    expect(autoFollowIds([], [{ id: 'p1' }, { id: 'p1' }, { id: 'p2' }])).toEqual(['p1', 'p2']);
+  });
+});
+
+describe('the known step says what «Αργότερα» does', () => {
+  it('names the 6, Greek first, English too', () => {
+    expect(t.onboarding.known.noteOptional).toContain('6 πιο δημοφιλείς της περιοχής σου');
+    expect(getCopy('en').onboarding.known.noteOptional).toContain('6 most popular');
+  });
+});
+
+describe('playLine', () => {
+  it('shows the hand and the tournaments, or asks for them', () => {
+    expect(playLine('R', 'few', t)).toBe('Δεξιόχειρας · Ένα δυο, για την εμπειρία');
+    expect(playLine('L', null, t)).toBe('Αριστερόχειρας');
+    expect(playLine(null, 'trophies', t)).toBe('Έχω κούπες στο σπίτι');
+    expect(playLine(null, null, t)).toBe(t.onboarding.play.unset);
+    expect(playLine('X', 'nope', t)).toBe(t.onboarding.play.unset);
+    expect(playLine('R', 'monthly', getCopy('en'))).toBe('Right-handed · One every month');
   });
 });
 

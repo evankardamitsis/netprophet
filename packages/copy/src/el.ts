@@ -384,6 +384,9 @@ export const el = {
         { id: 'monthly', name: 'Κάθε μήνα είμαι σε ένα', sub: 'Με ξέρουν οι διοργανωτές' },
         { id: 'trophies', name: 'Έχω κούπες στο σπίτι', sub: 'Και τις ξεσκονίζω' },
       ],
+      /** Εγώ › Ρυθμίσεις: the row that keeps hand and tournaments since they left the first run (founder, 19 Oct) */
+      row: 'Πώς παίζεις',
+      unset: 'Πες μας με ποιο χέρι παίζεις και πόσα τουρνουά έχεις',
     },
     area: {
       title: 'Πού παίζεις;',
@@ -394,7 +397,7 @@ export const el = {
     },
     known: {
       title: 'Ποια είναι η παρέα σου;',
-      subtitle: 'Διάλεξε όσους ξέρεις. Θα τους βλέπεις πρώτους στα Αποτελέσματα και στους Αγώνες.',
+      subtitle: 'Διάλεξε όσους ξέρεις. Θα τους βλέπεις πρώτους στα Αποτελέσματα και στα Τουρνουά.',
       note: 'Διάλεξε τουλάχιστον τρεις. Μπορείς να προσθέσεις κι άλλους αργότερα.',
       noteSuggested: 'Δεν πειράζει. Σου βάλαμε τους τρεις πιο γνωστούς της περιοχής. Άλλαξέ τους όπως θες.',
       search: 'Ψάξε όνομα',
@@ -407,7 +410,8 @@ export const el = {
       noneFound: 'Κανείς με αυτό το όνομα.',
       /** nobody picked: the step is optional (founder, 19 Oct) */
       later: 'Αργότερα',
-      noteOptional: 'Δεν είναι υποχρεωτικό. Τους βρίσκεις και αργότερα.',
+      /** nobody picked: the app follows the 6 most followed players of their area (founder, 19 Oct), so say it first */
+      noteOptional: 'Δεν είναι υποχρεωτικό. Αν δεν διαλέξεις κανέναν, θα σου βάλουμε τους 6 πιο δημοφιλείς της περιοχής σου. Τους αλλάζεις όποτε θες.',
     },
     intro: {
       /** the step pill, «1 από 4» */
@@ -462,6 +466,8 @@ export const el = {
   me: {
     /** development builds only: run onboarding again */
     replayOnboarding: 'Δες ξανά το onboarding',
+    /** development builds with the dev guest: walk the onboarding with sample data, nothing is saved */
+    previewOnboarding: 'Δοκιμή onboarding',
     /** dev builds only: the guest plays as a brand new player */
     newPlayer: 'Νέος παίκτης',
     newPlayerOn: 'Νέος παίκτης ✓',

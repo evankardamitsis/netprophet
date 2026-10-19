@@ -4,11 +4,12 @@ import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } fro
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
+import { PlayStyleRow } from '../../src/components/PlayStyleRow';
 import { FitText } from '../../src/components/FitText';
 import { namePlate } from '../../src/components/CardFrame';
 import { FlipCard } from '../../src/components/FlipCard';
 import { useCopy } from '../../src/i18n';
-import { useAuth } from '../../src/lib/auth';
+import { guestAllowed, useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar } from '../../src/lib/data';
@@ -125,7 +126,7 @@ export default function MeScreen() {
                 ) : s === 'pro' ? (
                   <ProRow />
                 ) : (
-                  <Settings />
+                  <Settings onPlaySaved={() => void refresh(true)} />
                 )}
               </Section>
             ))
@@ -689,8 +690,11 @@ function Friends({ v }: { v: MeView }) {
   );
 }
 
-/** «Ρυθμίσεις», closed until tapped, at the bottom: sounds, blocked people, Αποσύνδεση and deleting the account */
-function Settings() {
+/**
+ * «Ρυθμίσεις», closed until tapped, at the bottom: «Πώς παίζεις» (hand and tournaments, out of the first run since
+ * 19 Oct), sounds, blocked people, Αποσύνδεση and deleting the account
+ */
+function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
   const t = useCopy();
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -706,6 +710,7 @@ function Settings() {
       </Pressable>
       {open ? (
         <>
+          <PlayStyleRow onSaved={onPlaySaved} />
           <SoundsRow />
           {blocks.list.length > 0 ? (
             <View style={styles.blocks}>
@@ -723,6 +728,11 @@ function Settings() {
           {__DEV__ ? (
             <Pressable accessibilityRole="button" onPress={gate.replay} style={styles.linkHit}>
               <Text style={styles.signOut}>{t.me.replayOnboarding}</Text>
+            </Pressable>
+          ) : null}
+          {__DEV__ && guestAllowed && mockMode ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push('/onboarding?preview=1')} style={styles.linkHit}>
+              <Text style={styles.signOut}>{t.me.previewOnboarding}</Text>
             </Pressable>
           ) : null}
           {__DEV__ ? (

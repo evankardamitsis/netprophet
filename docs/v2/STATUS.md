@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 18 Oct 2026 (M4 built, Baller live, logos). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct» and «Waiting on the founder» below.
+Last updated: 19 Oct 2026 (four-step onboarding, auto-follow 6, «Πώς παίζεις» in Ρυθμίσεις). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct», «19 Oct» and «Waiting on the founder» below.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
@@ -41,7 +41,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Lessons: on iOS, text clips when its line height is below its font size (accents, digits); any function called inside an animated style must be a worklet.
 
 ## M1 progress (12 Oct): the M1 list is built
-- #18 to #31 merged and live on hosted: Παίκτες, onboarding (name, claim, how you play, area, who you know, 4 slides, «Ας ξεκινήσουμε»), Κατάταξη (`get_ladder`, two scopes; leagues are M3), Εγώ (`get_me_page`), Pro foundations + scouting + «Πού κερδίζεις», the import desk (`/v2/import`, `packages/ingest` = the parse_oop.py port, 54/54 on the TAF fixture), push for results (`core.push_tokens`, `core.send_push` with pg_net under pg_cron), PostHog analytics.
+- #18 to #31 merged and live on hosted: Παίκτες, onboarding (then: name, claim, how you play, area, who you know, 4 slides, «Ας ξεκινήσουμε»; since 19 Oct four steps, see «19 Oct» below), Κατάταξη (`get_ladder`, two scopes; leagues are M3), Εγώ (`get_me_page`), Pro foundations + scouting + «Πού κερδίζεις», the import desk (`/v2/import`, `packages/ingest` = the parse_oop.py port, 54/54 on the TAF fixture), push for results (`core.push_tokens`, `core.send_push` with pg_net under pg_cron), PostHog analytics.
 - Accounts: Expo project `@evankardamitsis/netprophet` (eas init, projectId in app.json). PostHog Cloud EU project «NetProphet» (key in `apps/app/.env.local`, sends only from release builds).
 - Founder answers (12 Oct): «wo» winner is picked by the admin; the organiser's score always overrides; imported players show by name before a claim; «Πάμε» on the last slide; «δεξί χέρι»; no month-end line on Κατάταξη; surface comes per tournament.
 - Before the closed beta: deploy the web app (`apps/app/vercel.json`, a new Vercel project rooted at `apps/app` with the EXPO_PUBLIC_ env values; add its URL to Supabase auth redirect URLs), development builds for push (Apple Developer account for APNs, a Firebase project for Android), the first real import (TAF), a web consent banner for the public launch.
@@ -107,7 +107,15 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - 18 Oct, smart names for held sheet rows (founder: brothers playing together, the same names in wrong categories; migration `20270215000000_ingest_smart_names.sql`, test 124; `packages/ingest` `levelFromDraws`): three rules decide a held name before it reaches staff, and only these: brothers (the same surname twice on a side, exactly two roster players carry it, neither hidden nor a minor), a known pair (exactly one pair of candidates played together as partners), the category (exactly one candidate played this level before). The rule goes into the match's `provenance.smart_names` and the run report (`auto_brothers`, `auto_pair`, `auto_category`). A held name now lists candidates best first with their categories (counts), last match, partners and area, «πιθανό διπλότυπο» on an entry with no matches whose first name starts another's (merge on the card, or «Open in Players»), and a same-surname side gets «Νίκος → 1, Γιώργος → 2» buttons. A bare surname two players carry is no longer remembered as an alias (old ones removed): one staff answer on «ΧΑΜΑΜΗΣ» used to send every later «ΧΑΜΑΜΗΣ» to one brother. «Check again» on Tournaments (`api.admin_rerun_ingest_reviews`) runs the waiting decisions through the rules; the migration does it once. Category: ΑΟΚ wrote «Μ 50+» on a doubles row (ΤΡΙ 20/10, Χαμάμης vs Σαριδάκης); a singles label on a pair row now takes the category of the doubles draw that lists the pair (flag `level_from_draw`, same fingerprint), and an imported match moves to that category in place. Hosted needs `scripts/v2-db-remote.sh push`.
 - 18 Oct, a sheet row keeps its match through an edit (28 matches stuck as «Αναβλήθηκε» in three days; migration `20270216000000_ingest_row_identity.sql`, test 125): a row whose fingerprint is new first looks for the match at the same time with a close category (`core.norm_level`, one edit) and overlapping players (a whole side, or 3 of 4, a surname one letter off being the same person). Everyone the same (a category or name typo, also on a played match): updated in place. One doubles partner changed: updated in place, votes kept. A singles player or a whole side changed: the old copy is voided as `admin_void_match` does and the row makes a new match. Latin look-alike capitals inside Greek words are Greek (`greekLookalikes`, `core.fold_lookalikes`); a typo category («MMEDIUM») snaps to the existing one. «Missing twice» postpones only when no twin took the slot (else the votes move to the twin). `api.admin_fix_stale_twins(p_dry)` fixes the ones already stuck; run it dry first, it is not run by the migration.
 
+## 19 Oct
+- Short first run (#212): no intro slides, no «Ας ξεκινήσουμε» splash, no Baller in onboarding (it is offered after the first vote on Σήμερα).
+- Onboarding is four steps for everyone (`stepsFor` in `apps/app/src/lib/onboarding.ts`): name, «Είσαι ήδη εδώ;», «Πού παίζεις;», «Ποια είναι η παρέα σου;». The opponent link path stays claim then known (one pick needed, the logger picked).
+- «Ποια είναι η παρέα σου;» stays optional; picking nobody («Αργότερα») follows the 6 most followed players of your area (`AUTO_FOLLOW`, `autoFollowIds`; `suggest_players` order: your areas, your region, everyone), and the step says so first. Migration `20270219000000_follow_no_minors.sql` (test 128): `suggest_players` and `follow_players` leave minors out as well as hidden players (they are security definer, so the roster policy did not apply). Hosted needs `scripts/v2-db-remote.sh push`.
+- «Πώς παίζεις;» (hand, tournaments) left onboarding: Εγώ › Ρυθμίσεις › «Πώς παίζεις» shows both and edits them in place (each tap saves through `update_profile`).
+- Founder's walk-through in development: with the dev guest (`EXPO_PUBLIC_DEV_GUEST=1`), Εγώ › Ρυθμίσεις › «Δοκιμή onboarding», or the link `exp://127.0.0.1:8085/--/onboarding?preview=1`, shows every step with sample areas and players, writes nothing to the server and ends on Σήμερα.
+
 ## Waiting on the founder
+- Walk the new onboarding before release (Εγώ › Ρυθμίσεις › «Δοκιμή onboarding» with the dev guest) and check the «Ποια είναι η παρέα σου;» note.
 - Run `node scripts/v1-users-to-resend.mjs` with `V2_SUPABASE_URL` and `V2_SUPABASE_SERVICE_ROLE_KEY` in the root `.env.local`, then again with `--apply`.
 - ΑΟΚ: run the update again and Skip the two old held rows (their fingerprints changed with #167).
 - On a phone: are the Baller sounds heard, does the throw feel right, the podium with real data.
@@ -135,7 +143,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 See `implementation-plan.md` section 9. In short:
 - Feed with match cards, one-tap vote, split, fold, «Μαθαίνεις απόψε».
 - Admin results desk; resolver + points ledger + σερί; result cards return to the top of the feed with the success/fail sequence and points/σερί flying into the header.
-- Αποτελέσματα, Παίκτες search + profile + follow, onboarding (welcome, claim, area, Ποιους ξέρεις, 3 slides).
+- Αποτελέσματα, Παίκτες search + profile + follow, onboarding (welcome, claim, area, Ποιους ξέρεις; the slides and the splash are gone since 19 Oct).
 - Pro fake door («Γίνε μέλος» at 8,99€ → «Είσαι στη λίστα»).
 - Basic admin CSV/Sheet import, push for results, analytics.
 - Exit: closed beta with 50 to 100 roster players on the web build + TestFlight, real matches fed by admins for 2+ weeks.

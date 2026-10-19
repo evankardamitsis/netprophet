@@ -347,6 +347,8 @@ export const en: Copy = {
         { id: 'monthly', name: 'One every month', sub: 'The organisers know me' },
         { id: 'trophies', name: 'I have trophies at home', sub: 'And I dust them' },
       ],
+      row: 'How you play',
+      unset: 'Tell us your hand and how many tournaments you play',
     },
     area: {
       title: 'Where do you play?',
@@ -357,7 +359,7 @@ export const en: Copy = {
     },
     known: {
       title: 'Who do you play with?',
-      subtitle: 'Pick the people you know. You will see them first in Results and Matches.',
+      subtitle: 'Pick the people you know. You will see them first in Results and Tournaments.',
       note: 'Pick at least three. You can add more later.',
       noteSuggested: 'No problem. We picked the three best known in your area. Change them as you like.',
       search: 'Search a name',
@@ -369,7 +371,7 @@ export const en: Copy = {
       none: 'I do not know anyone yet',
       noneFound: 'Nobody by that name.',
       later: 'Later',
-      noteOptional: 'Optional. You can find them later too.',
+      noteOptional: 'Optional. If you pick nobody, we will add the 6 most popular players in your area. Change them any time.',
     },
     intro: {
       of: '{n} of {total}',
@@ -421,6 +423,7 @@ export const en: Copy = {
   },
   me: {
     replayOnboarding: 'Run onboarding again',
+    previewOnboarding: 'Try onboarding',
     newPlayer: 'New player',
     newPlayerOn: 'New player ✓',
     statsPage: 'Your stats',

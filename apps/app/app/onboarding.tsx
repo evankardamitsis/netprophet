@@ -2,19 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { track } from '../src/lib/analytics';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
-import { useAuth } from '../src/lib/auth';
+import { guestAllowed, useAuth } from '../src/lib/auth';
 import type { MatchLinkView } from '@netprophet/db';
 import { nameGender } from '@netprophet/copy';
 import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
 import { mockLinkView, who } from '../src/lib/link';
 import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
 import { usePress, useStgIn } from '../src/lib/motion';
-import { areasOf, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
+import { areasOf, autoFollowIds, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
 import { colors, ease, fonts } from '../src/theme';
@@ -22,28 +22,40 @@ import { useOnboardingGate } from '../src/lib/onboardingGate';
 
 /**
  * Onboarding (prototype V2, after the welcome screen): your name, your player on the roster («Είσαι
- * ήδη εδώ;»), how you play (new players only), where you play, and who you know (optional), then straight
- * to Σήμερα and the first vote (founder, 19 Oct: no slides, no splash, Baller after the first vote).
+ * ήδη εδώ;»), where you play, and who you know (optional), then straight to Σήμερα and the first vote
+ * (founder, 19 Oct: four steps for everyone, no slides, no splash, Baller after the first vote; «Πώς παίζεις;»
+ * moved to Εγώ › Ρυθμίσεις). Picking nobody follows the 6 most followed players of your area (the step says so).
  * No header or tab bar, one blue button per screen.
  * Someone who came from an opponent link confirms the link's player and picks who they know (at least one, the
  * logger already picked), then goes straight in (prototype fromLink).
+ *
+ * Development preview (`/onboarding?preview=1`, dev guest only; Εγώ › Ρυθμίσεις › «Δοκιμή onboarding» or
+ * exp://127.0.0.1:8085/--/onboarding?preview=1): every step with sample areas and players, nothing written to the
+ * server, finishing opens Σήμερα.
  */
 const IN_MS = 400;
 /** 60px titles: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
+/** the preview's name, a sample roster player, so «Είσαι ήδη εδώ;» has someone to show */
+const PREVIEW_NAME = { first: 'Γιάννης', surname: 'Πράτσας' };
 
 export default function OnboardingScreen() {
   const t = useCopy();
   const o = t.onboarding;
   const insets = useSafeAreaInsets();
-  const ob = useOnboardingApi();
+  const params = useLocalSearchParams<{ preview?: string }>();
+  // the founder's walk-through in development: sample data only, nothing saved
+  const preview = __DEV__ && guestAllowed && params.preview === '1';
+  const ob = useOnboardingApi(preview);
   const gate = useOnboardingGate();
   const { session, signOut } = useAuth();
   // «‹ Πίσω» on the first step: back to the welcome screen (founder, 12 Oct), which means signing out
   const toWelcome = () => {
+    if (preview) return router.replace('/');
     void clearPendingLink();
     void signOut();
   };
+  const tr: typeof track = preview ? () => undefined : track;
   const allAreas = useRegionAreas();
   const scroll = useRef<ScrollView>(null);
 
@@ -54,7 +66,7 @@ export default function OnboardingScreen() {
   useEffect(() => {
     let live = true;
     (async () => {
-      const token = await readPendingLink();
+      const token = preview ? null : await readPendingLink();
       let found: { token: string; view: MatchLinkView } | null = null;
       if (token) {
         try {
@@ -70,10 +82,10 @@ export default function OnboardingScreen() {
     return () => {
       live = false;
     };
-  }, [api]);
+  }, [api, preview]);
 
   const [isNew, setIsNew] = useState(false);
-  const steps = stepsFor(isNew, link !== null);
+  const steps = stepsFor(link !== null);
   const [i, setI] = useState(0);
   const step: Step = steps[Math.min(i, steps.length - 1)]!;
 
@@ -90,9 +102,6 @@ export default function OnboardingScreen() {
   const [own, setOwn] = useState<ClaimRow | null>(null);
   // the claim search starts with the name from the first step and can be changed (founder, 12 Oct)
   const [claimQuery, setClaimQuery] = useState('');
-  // play
-  const [hand, setHand] = useState<'R' | 'L' | null>(null);
-  const [tour, setTour] = useState<string | null>(null);
   // area
   const [region, setRegion] = useState<Region | null>(null);
   const [areaIds, setAreaIds] = useState<string[]>([]);
@@ -109,6 +118,10 @@ export default function OnboardingScreen() {
 
   // the name we already know (Google, or a v1 profile) fills the first step
   useEffect(() => {
+    if (preview) {
+      setFirst(PREVIEW_NAME.first);
+      setSurname(PREVIEW_NAME.surname);
+    }
     ob.me()
       .then((me) => {
         if (!me) return;
@@ -122,7 +135,7 @@ export default function OnboardingScreen() {
       })
       .catch(() => undefined);
     ob.rosterSize().then(setRoster).catch(() => undefined);
-  }, [ob]);
+  }, [ob, preview]);
 
   const go = useCallback(
     (to: number) => {
@@ -133,14 +146,14 @@ export default function OnboardingScreen() {
     [],
   );
   useEffect(() => {
-    track('onboarding_step', { step, index: i });
+    tr('onboarding_step', { step, index: i });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   const back = useCallback(() => {
     if (i === 0) return false;
-    // stepping back over «Πώς παίζεις;» to the claim undoes «είμαι καινούριος»
-    if (step === 'play') setIsNew(false);
+    // stepping back from «Πού παίζεις;» to the claim undoes «είμαι καινούριος»
+    if (step === 'area') setIsNew(false);
     go(i - 1);
     return true;
   }, [i, step, go]);
@@ -190,7 +203,7 @@ export default function OnboardingScreen() {
       // already theirs: nothing to claim
       if (own && picked === own.id) return go(i + 1);
       const r = await ob.claim(picked);
-      track('claim_completed', { result: r });
+      tr('claim_completed', { result: r });
       if (r === 'ok') return go(i + 1);
       if (r === 'requested') return setRequested(true);
       setError(r === 'taken' ? o.claim.taken : r === 'other' ? o.claim.otherClaimed : o.claim.failed);
@@ -205,13 +218,13 @@ export default function OnboardingScreen() {
       if (!requested) {
         try {
           const r = api ? await api.claimViaLink(link.token) : null;
-          track('link_claimed', { result: r?.requested ? 'requested' : 'ok' });
+          tr('link_claimed', { result: r?.requested ? 'requested' : 'ok' });
           if (r?.requested) {
             setRequested(true);
             return;
           }
         } catch {
-          track('link_claimed', { result: 'taken' });
+          tr('link_claimed', { result: 'taken' });
           setError(t.link.claimTaken);
           return;
         }
@@ -264,12 +277,6 @@ export default function OnboardingScreen() {
       go(i + 1);
     });
 
-  const playNext = () =>
-    run(async () => {
-      await ob.saveProfile({ hand, tournament_experience: tour });
-      go(i + 1);
-    });
-
   const areaNext = () =>
     run(async () => {
       await ob.saveProfile({ area_ids: areaIds, area_id: areaIds[0] ?? null });
@@ -278,22 +285,27 @@ export default function OnboardingScreen() {
     });
 
   const enterApp = useCallback(() => {
+    if (preview) return router.replace('/');
     gate.open();
     if (!session) router.replace('/');
-  }, [gate, session]);
+  }, [gate, session, preview]);
 
   // the last step: save the setup and open Σήμερα, where the first vote card waits
   const knownDone = () =>
     run(async () => {
-      await ob.follow(known);
       if (link) {
+        await ob.follow(known);
         await gate.save({ via: 'link', claimed: true, age_15: true });
-        track('onboarding_done', { claimed: true, known: known.length });
+        tr('onboarding_done', { claimed: true, known: known.length });
         await clearPendingLink();
         return enterApp();
       }
-      await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null, age_15: true });
-      track('onboarding_done', { claimed: !isNew && picked !== null, known: known.length });
+      // nobody picked: the 6 most followed of their area (the note on this step says so)
+      const pool = known.length === 0 && suggested.length === 0 ? await ob.suggestions().catch(() => []) : suggested;
+      const follow = autoFollowIds(known, pool, isNew ? null : picked);
+      await ob.follow(follow);
+      if (!preview) await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null, age_15: true });
+      tr('onboarding_done', { claimed: !isNew && picked !== null, known: known.length, auto: known.length === 0 ? follow.length : 0 });
       enterApp();
     });
 
@@ -315,7 +327,9 @@ export default function OnboardingScreen() {
 
   const nameReady = first.trim().length > 0 && surname.trim().length > 0 && sport !== null && adult;
   const kb = knownButton(known.length, t, link ? KNOWN_MIN_LINK : KNOWN_MIN);
-  const knownList: (PlayerRow & { followers?: number })[] = found ?? suggested;
+  // never your own player (the one you just claimed) among the people you know
+  const self = isNew ? null : picked;
+  const knownList: (PlayerRow & { followers?: number })[] = (found ?? suggested).filter((p) => p.id !== self);
 
   if (!linkChecked) return <View style={styles.screen} />;
   const lp = link?.view.player;
@@ -399,36 +413,6 @@ export default function OnboardingScreen() {
                   <Dashed label={o.claim.newPlayer} onPress={claimNew} />
                 </>
               )}
-              <Back label={o.back} onPress={back} />
-            </>
-          ) : null}
-
-          {step === 'play' ? (
-            <>
-              <Title text={o.play.title} />
-              <Text style={styles.sub}>{o.play.subtitle}</Text>
-              <Text style={styles.label}>{o.play.hand}</Text>
-              <Segmented
-                options={[
-                  { id: 'R', label: o.play.hands.R },
-                  { id: 'L', label: o.play.hands.L },
-                ]}
-                value={hand}
-                onChange={setHand}
-              />
-              <Text style={styles.label}>{o.play.tour}</Text>
-              <View style={styles.stack}>
-                {o.play.tours.map((x) => (
-                  <View key={x.id} style={styles.row}>
-                    <Chip on={tour === x.id} onPress={() => setTour(x.id)} minHeight={54} center={false}>
-                      <Text style={[styles.chipName, { color: tour === x.id ? colors.paper : colors.ink }]}>{x.name}</Text>
-                      <Text style={[styles.chipSub, { color: tour === x.id ? colors.paper : colors.ink }]}>{x.sub}</Text>
-                    </Chip>
-                  </View>
-                ))}
-              </View>
-              <Err text={error} />
-              <Primary label={o.next} ready={hand !== null && tour !== null} busy={busy} onPress={playNext} />
               <Back label={o.back} onPress={back} />
             </>
           ) : null}
@@ -605,10 +589,6 @@ const styles = StyleSheet.create({
   candidate: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.white, borderWidth: 2, gap: 2 },
   candName: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 38, paddingBottom: 7, marginBottom: -7, color: colors.ink },
   candSub: { fontFamily: fonts.body, fontSize: 13, lineHeight: 17, color: colors.inkSoft },
-  stack: { gap: 8 },
-  row: { flexDirection: 'row' },
-  chipName: { fontFamily: fonts.bodyBold, fontSize: 16 },
-  chipSub: { fontFamily: fonts.bodySemi, fontSize: 12, opacity: 0.75 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   half: { width: '48.5%', flexDirection: 'row' },
   search: {
