@@ -19,6 +19,7 @@ import { mockSeason, mockWinCard } from '../mock/season';
 import { mockMatchStats } from '../mock/matchStats';
 import { withMockAds } from '../mock/sponsored';
 import { useCopy } from '../i18n';
+import { PLAYER_LEVEL_SHOWN } from './levelShown';
 import { useAuth } from './auth';
 import type { Area, Hand } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
@@ -1592,18 +1593,18 @@ export function useOnboardingApi(sample = false) {
           return mockFindPlayers(surname.slice(0, 3)).map((p) => ({
             id: p.id,
             name: `${p.first_name} ${p.surname}`,
-            sub: [p.area_id ? areas[p.area_id] : null, p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null].filter(Boolean).join(' · '),
+            sub: [p.area_id ? areas[p.area_id] : null, PLAYER_LEVEL_SHOWN && p.level_tier != null ? `${t.level.label} ${levelNumber(p.level_tier)}` : null].filter(Boolean).join(' · '),
           }));
         }
         const rows = await api.findMatchingPlayers(first, surname);
-        // the level is on the list row; look the candidates up in one search for their cards
-        const cards = rows.length ? await api.findPlayers(surname, 50) : [];
+        // the level is on the list row (only while players' levels are shown); look the candidates up in one search
+        const cards = rows.length && PLAYER_LEVEL_SHOWN ? await api.findPlayers(surname, 50) : [];
         return rows.map((r) => {
           const c = cards.find((x) => x.id === r.id);
           return {
             id: r.id,
             name: `${r.first_name} ${r.surname}`,
-            sub: [r.area_id ? areas[r.area_id] : null, c?.level_tier != null ? `${t.level.label} ${levelNumber(c.level_tier)}` : null].filter(Boolean).join(' · '),
+            sub: [r.area_id ? areas[r.area_id] : null, PLAYER_LEVEL_SHOWN && c?.level_tier != null ? `${t.level.label} ${levelNumber(c.level_tier)}` : null].filter(Boolean).join(' · '),
           };
         });
       },

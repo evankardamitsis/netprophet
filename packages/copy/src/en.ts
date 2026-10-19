@@ -359,7 +359,7 @@ export const en: Copy = {
     },
     known: {
       title: 'Who do you play with?',
-      subtitle: 'Pick the people you know. You will see them first in Results and Matches.',
+      subtitle: 'Pick the people you know. You will see them first in Results and Tournaments.',
       note: 'Pick at least three. You can add more later.',
       noteSuggested: 'No problem. We picked the three best known in your area. Change them as you like.',
       search: 'Search a name',

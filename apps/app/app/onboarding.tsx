@@ -327,7 +327,9 @@ export default function OnboardingScreen() {
 
   const nameReady = first.trim().length > 0 && surname.trim().length > 0 && sport !== null && adult;
   const kb = knownButton(known.length, t, link ? KNOWN_MIN_LINK : KNOWN_MIN);
-  const knownList: (PlayerRow & { followers?: number })[] = found ?? suggested;
+  // never your own player (the one you just claimed) among the people you know
+  const self = isNew ? null : picked;
+  const knownList: (PlayerRow & { followers?: number })[] = (found ?? suggested).filter((p) => p.id !== self);
 
   if (!linkChecked) return <View style={styles.screen} />;
   const lp = link?.view.player;

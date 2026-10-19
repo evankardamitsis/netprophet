@@ -6,7 +6,7 @@ import { colors, fonts, springEase } from '../theme';
 
 /**
  * The prototype's onboarding controls: the blue primary button (dimmed until ready), «‹ Πίσω»,
- * the segmented control with a sliding ink pill (.jseg), choice chips with a lime dot (.jc) and
+ * the segmented control with a sliding ink pill (.jseg), choice chips with a ✓ (.jc) and
  * the dashed secondary button.
  */
 
@@ -113,7 +113,7 @@ export function Segmented<T extends string>({
   );
 }
 
-/** .jc: a white chip that turns ink with a lime dot when chosen, settling with a small bounce */
+/** .jc: a white chip that turns ink with a paper ✓ when chosen, settling with a small bounce */
 export function Chip({
   on,
   onPress,
@@ -150,7 +150,7 @@ export function Chip({
     <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: on }} onPress={onPress} style={{ flex: 1 }}>
       <Animated.View style={[styles.chip, { minHeight, alignItems: center ? 'center' : 'flex-start', backgroundColor: bg }, box]}>
         <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.chipInk, ink]} />
-        {on ? <View style={styles.chipDot} /> : null}
+        {on ? <Text style={styles.chipTick}>✓</Text> : null}
         <ChipText on={on}>{children}</ChipText>
       </Animated.View>
     </Pressable>
@@ -183,8 +183,8 @@ export function KnownRow({ name, sub, on, onPress, last }: { name: string; sub: 
             </Text>
           ) : null}
         </View>
-        <View style={[styles.knMark, { backgroundColor: on ? colors.lime : 'transparent' }]}>
-          <Text style={styles.knGlyph}>{on ? '✓' : '+'}</Text>
+        <View style={[styles.knMark, { backgroundColor: on ? colors.ink : 'transparent' }]}>
+          <Text style={[styles.knGlyph, on && { color: colors.paper }]}>{on ? '✓' : '+'}</Text>
         </View>
       </Animated.View>
     </Pressable>
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   segText: { fontFamily: fonts.bodyBold, fontSize: 15 },
   chip: { borderRadius: 16, backgroundColor: colors.white, justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 16, overflow: 'hidden' },
   chipInk: { backgroundColor: colors.ink },
-  chipDot: { position: 'absolute', top: 10, right: 10, width: 7, height: 7, borderRadius: 3.5, backgroundColor: colors.lime },
+  chipTick: { position: 'absolute', top: 6, right: 10, fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.paper },
   chipContent: { gap: 2 },
   chipText: { fontFamily: fonts.bodyBold, fontSize: 15, textAlign: 'center' },
   kn: { minHeight: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingVertical: 6 },
