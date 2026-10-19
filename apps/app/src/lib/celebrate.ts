@@ -25,20 +25,20 @@ export interface CelebrationView {
 }
 
 /**
- * which celebrations play together: every queued σερί milestone as ONE first (founder, 18 Oct: σερί 3 and σερί 5
- * from one batch of results played as two moments, the 5 before the 3; now one moment shows the highest with every
- * gift), then a new level, then every queued quest as ONE, then badges, then unlocks, then the month's league result,
- * one by one
+ * which celebration plays next (founder, 18 Oct: level > σερί > badge > the rest; with one moment a visit, the first
+ * one here is the one the visit gets): a new level, then every queued σερί milestone as ONE (σερί 3 and σερί 5 from
+ * one batch of results: one moment shows the highest with every gift), then badges, then every queued quest as ONE,
+ * then unlocks, then the month's league result, one by one
  */
 export function nextGroup(list: Celebration[]): Celebration[] {
-  const streaks = list.filter(isStreak);
-  if (streaks.length > 0) return streaks;
   const level = list.find(isLevel);
   if (level) return [level];
-  const quests = list.filter((c) => c.payload.type === 'quest');
-  if (quests.length > 0) return quests;
+  const streaks = list.filter(isStreak);
+  if (streaks.length > 0) return streaks;
   const badge = list.find((c) => c.payload.type === 'badge');
   if (badge) return [badge];
+  const quests = list.filter((c) => c.payload.type === 'quest');
+  if (quests.length > 0) return quests;
   const unlock = list.find((c) => isUnlock(c) && hasMoment(c.payload.key));
   if (unlock) return [unlock];
   const league = list.find(isLeague);
