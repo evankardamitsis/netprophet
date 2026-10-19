@@ -356,22 +356,42 @@ export function feedLine(count: VoteCount, t: Copy): string {
 
 /**
  * Σήμερα shows today (founder, 14 Oct: «Τι παίζει σήμερα» first, the rest out of the way): matches on a later day go
- * into the folded «Αύριο και μετά». Both run in time order (founder, 18 Oct: "tomorrow's matches are mixed with the
- * day after and wednesday, we need the chronological order to be correct").
+ * into the folded «Αύριο και μετά». Matches sit together by tournament, as on Αποτελέσματα (founder, 19 Oct: "list
+ * everything based on the tournament"), each tournament once: the one whose next match to vote comes first leads, and
+ * inside it the matches run in time order (founder, 18 Oct), the ones still to vote before the ones that started.
+ * Tournaments with nothing left to vote go after the ads and put-off cards. Later days stay day by day (the group key
+ * holds the day there).
  */
-export function splitToday<C extends { kind: string; later?: boolean; startsAt?: string; closed?: boolean }>(cards: C[]): { today: C[]; later: C[] } {
+export function splitToday<C extends { kind: string; later?: boolean; startsAt?: string; closed?: boolean; group?: { key: string } }>(
+  cards: C[],
+): { today: C[]; later: C[] } {
+  const time = (c: C) => c.startsAt ?? '\uffff';
   // in time order; the feed's own order (yours first) only breaks ties
-  const byTime = (list: C[]) =>
-    list
-      .map((c, i) => ({ c, i }))
-      .sort((x, y) => (x.c.startsAt ?? '\uffff').localeCompare(y.c.startsAt ?? '\uffff') || x.i - y.i)
-      .map(({ c }) => c);
-  const todays = cards.filter((c) => !c.later);
-  const open = todays.filter((c) => c.kind === 'match' && !c.closed);
-  const closed = todays.filter((c) => c.kind === 'match' && c.closed);
-  const rest = todays.filter((c) => c.kind !== 'match');
-  // the matches still to vote first, then the rest (ads, put-off), then the ones that already started
-  return { today: [...byTime(open), ...rest, ...byTime(closed)], later: byTime(cards.filter((c) => c.later)) };
+  const byTime = (list: { c: C; i: number }[]) => [...list].sort((x, y) => time(x.c).localeCompare(time(y.c)) || x.i - y.i);
+  type Run = { open: boolean; first: { c: C; i: number }; cards: { c: C; i: number }[] };
+  const byTournament = (list: { c: C; i: number }[]): Run[] => {
+    const runs = new Map<string, { c: C; i: number }[]>();
+    // a match outside a tournament is a run of its own
+    list.forEach((x) => {
+      const key = x.c.group?.key ?? `solo:${x.i}`;
+      runs.set(key, [...(runs.get(key) ?? []), x]);
+    });
+    return [...runs.values()].map((run) => {
+      const open = byTime(run.filter((x) => !x.c.closed));
+      return { open: open.length > 0, first: (open[0] ?? byTime(run)[0])!, cards: [...open, ...byTime(run.filter((x) => x.c.closed))] };
+    });
+  };
+  const ordered = (list: Run[]) =>
+    [...list].sort((x, y) => time(x.first.c).localeCompare(time(y.first.c)) || x.first.i - y.first.i).flatMap((r) => r.cards.map((x) => x.c));
+  const indexed = cards.map((c, i) => ({ c, i }));
+  const todays = indexed.filter((x) => !x.c.later);
+  const runs = byTournament(todays.filter((x) => x.c.kind === 'match'));
+  const rest = todays.filter((x) => x.c.kind !== 'match').map((x) => x.c);
+  const laterRuns = byTournament(indexed.filter((x) => x.c.later));
+  return {
+    today: [...ordered(runs.filter((r) => r.open)), ...rest, ...ordered(runs.filter((r) => !r.open))],
+    later: ordered(laterRuns),
+  };
 }
 
 /**
