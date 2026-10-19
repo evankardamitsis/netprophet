@@ -459,13 +459,13 @@ function GroupHead({ group, category }: { group: NonNullable<CardMatch['group']>
       <View style={styles.groupHead}>
         <Logo path={group.logo} name={group.title} size={24} />
         <Text style={styles.groupTitle}>{group.title}</Text>
+        {group.surface ? <SurfacePill surface={group.surface} /> : null}
       </View>
-      {group.sub || category || group.surface ? (
+      {group.sub || category ? (
         <View style={styles.groupSub}>
           {category ? <Text style={styles.groupCategory}>{category}</Text> : null}
           {group.club && group.sub ? <Logo path={group.club.logo} name={group.club.name} size={16} /> : null}
           {group.sub ? <Text style={[text.meta, styles.groupSubText]}>{group.sub}</Text> : null}
-          {group.surface ? <SurfacePill surface={group.surface} /> : null}
         </View>
       ) : null}
     </View>
