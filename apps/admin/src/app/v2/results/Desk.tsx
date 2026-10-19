@@ -64,7 +64,10 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
   const [tab, setTab] = useState<Tab>(fromYou.length > 0 || fromSheets.length === 0 ? 'you' : 'sheets');
   // find a match by a player's or tournament's name, in the tab you are on (founder, 16 Oct: remove any match)
   const [q, setQ] = useState('');
-  const all = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : tab === 'upcoming' ? upcoming : done;
+  // only the matches players added themselves, outside any tournament (founder, 19 Oct: find and remove them)
+  const [playersOnly, setPlayersOnly] = useState(false);
+  const inTab = tab === 'you' ? fromYou : tab === 'sheets' ? fromSheets : tab === 'upcoming' ? upcoming : done;
+  const all = playersOnly ? inTab.filter((i) => !i.tournament) : inTab;
   const needle = fold(q);
   const list = needle ? all.filter((i) => fold(`${sideName(i, 1)} ${sideName(i, 2)} ${i.tournament ?? ''} ${i.venue ?? ''}`).includes(needle)) : all;
   const p = usePages(list, 8);
@@ -126,6 +129,17 @@ export function Desk({ items, admin }: { items: DeskItem[]; admin: boolean }) {
           aria-label="Find a match"
           style={{ maxWidth: 420 }}
         />
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={playersOnly}
+            onChange={(e) => {
+              setPlayersOnly(e.target.checked);
+              p.setPage(0);
+            }}
+          />
+          Only matches players added (no tournament)
+        </label>
         {list.length === 0 ? (
           <Card>
             <Empty title={needle ? 'No match found' : 'All clear'}>{needle ? 'Try another name, or another tab.' : 'Nothing waiting here.'}</Empty>
