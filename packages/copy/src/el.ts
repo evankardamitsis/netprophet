@@ -466,6 +466,11 @@ export const el = {
     statsPage: 'Τα στατιστικά σου',
     /** the row on Εγώ and the title of the page it opens: σερί, votes, score and badges */
     predictionsPage: 'Οι προβλέψεις σου',
+    /** the one row on Εγώ (and the title of /me?page=stats) that holds the stats, the predictions and the season (19 Oct) */
+    numbers: 'Τα νούμερά σου',
+    numbersLine: 'Σερί, ψήφοι, ματς και η σεζόν σου',
+    /** under «Τα στατιστικά σου» on «Τα νούμερά σου» */
+    statsLine: 'Τα ματς σου, σε νούμερα',
     /** dev builds only: the drawn avatars for review */
     avatarsDev: 'Τα avatar (δοκιμή)',
     direction: { up: 'Ανεβαίνεις', same: 'Μένεις εκεί', down: 'Πέφτεις' },
