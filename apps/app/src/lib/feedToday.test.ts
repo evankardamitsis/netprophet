@@ -106,6 +106,13 @@ describe('categoryCase', () => {
     expect(categoryCase('MEDIUM')).toBe('Medium');
     expect(categoryCase('MEDIUM · Γυναικών')).toBe('Medium · Γυναικών');
     expect(categoryCase('ADVANCED 40+')).toBe('Advanced 40+');
+    expect(categoryCase('ROOKIES 2')).toBe('Rookies 2');
+    expect(categoryCase('MASTER')).toBe('Master');
+  });
+  it('keeps acronyms and short forms in capitals', () => {
+    for (const s of ['ITF', 'ITF 40+', 'ATRP 2.5', 'AT 250 @ PRC ATRP 2.0', 'MED/ADV', 'ADV']) {
+      expect(categoryCase(s)).toBe(s);
+    }
   });
   it('leaves the rest as it is', () => {
     for (const s of ['40+', '-45 · Γυναικών', 'Μ 50+', 'Medium', 'Open', 'Μικτό', 'ΑΝΔΡΩΝ', 'U14', 'A1', 'ΜΕ', 'MD']) {
