@@ -1656,7 +1656,7 @@ export function useOnboardingApi(sample = false) {
         });
       },
       /** 'requested': a roster player is asked for and staff approve it (founder, 18 Oct 2026); 'ok' only when it is theirs */
-      async claim(playerId: string): Promise<'ok' | 'requested' | 'taken' | 'other' | 'failed'> {
+      async claim(playerId: string): Promise<'ok' | 'requested' | 'taken' | 'other' | 'limited' | 'failed'> {
         if (!api) return 'requested';
         try {
           const r = await api.claimPlayer(playerId);
@@ -1665,6 +1665,7 @@ export function useOnboardingApi(sample = false) {
         } catch (err) {
           if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
           if (err instanceof RpcError && err.code.startsWith('already_claimed')) return 'other';
+          if (err instanceof RpcError && err.code === 'rate_limited') return 'limited';
           return 'failed';
         }
       },
@@ -1676,6 +1677,15 @@ export function useOnboardingApi(sample = false) {
           return true;
         } catch {
           return false;
+        }
+      },
+      /** how the account holding a claimed candidate signs in, for the hint under «Είμαι εγώ»; null when unknown */
+      async claimedSignIn(playerId: string): Promise<'google' | 'apple' | 'email' | null> {
+        if (!api) return 'google';
+        try {
+          return await api.claimedSignIn(playerId);
+        } catch {
+          return null;
         }
       },
       async setClaimStatus(status: 'skipped' | 'creation_requested') {

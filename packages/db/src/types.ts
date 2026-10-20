@@ -636,6 +636,10 @@ export type Database = {
         Args: { p_token: string };
         Returns: Json;
       };
+      claimed_sign_in: {
+        Args: { p_player_id: string };
+        Returns: string;
+      };
       cron_auto_rain: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

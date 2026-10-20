@@ -4,14 +4,14 @@ import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { ConfirmationAnswer, LinkKudo, MatchLinkView } from '@netprophet/db';
+import { RpcError, type ConfirmationAnswer, type LinkKudo, type MatchLinkView } from '@netprophet/db';
 import { BouncingLogo } from '../../src/components/BouncingLogo';
 import { Primary } from '../../src/components/OnboardingControls';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useAuth } from '../../src/lib/auth';
 import { useApi, useMatchLink } from '../../src/lib/data';
-import { daysLeft, fixChoices, linkLabel, titleFor, toWhom, who } from '../../src/lib/link';
+import { daysLeft, fixChoices, linkClaimError, linkLabel, titleFor, toWhom, who } from '../../src/lib/link';
 import { clearPendingLink, linkBase, savePendingLink } from '../../src/lib/linkHost';
 import { track } from '../../src/lib/analytics';
 import { usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../src/lib/motion';
@@ -272,9 +272,10 @@ function Join({ view, token, onLater }: { view: MatchLinkView; token: string; on
         await clearPendingLink();
         if (r.requested) setRequested(true);
         else router.replace('/');
-      } catch {
+      } catch (err) {
         track('link_claimed', { result: 'failed' });
-        setError(t.link.claimTaken);
+        // who holds it, this account already has a player, or the day's requests are used up
+        setError(linkClaimError(err instanceof RpcError ? err.code : null, t));
       } finally {
         setBusy(false);
       }
