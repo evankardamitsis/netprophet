@@ -1206,4 +1206,19 @@ export const en: Copy = {
     players: 'Players will show up here.',
     me: 'Your profile will show up here.',
   },
+  tour: {
+    label: 'Tour',
+    steps: {
+      feed: { title: 'Vote who wins', line: 'Tap the player you think wins. Get it right for points and a streak.' },
+      results: { title: 'What happened on court', line: 'Every result. Search for a player or a tournament.' },
+      tournaments: { title: 'Tournaments', line: 'Schedules, draws and your own tournaments.' },
+      ladder: { title: 'The Ladder', line: 'Climb with your crowd. A fresh start every month.' },
+      me: { title: 'You', line: 'Your Baller, your stats, quests and Pro.' },
+    },
+    next: 'Next ›',
+    skip: 'Skip',
+    go: 'Let’s vote',
+    counter: '{n} of {total}',
+    replay: 'Show the tour again',
+  },
 };

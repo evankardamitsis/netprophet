@@ -47,6 +47,7 @@ import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHudActions } from '../../src/lib/hud';
+import { useTour, useTourTarget } from '../../src/lib/tour';
 import { useFadeUpIn, usePress, useStgIn } from '../../src/lib/motion';
 import { colors, fonts, motion, surfaceTints, text, type } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -245,11 +246,14 @@ export default function VoteScreen() {
   const [celebrating, setCelebrating] = useState<CelebrationItem[] | undefined>(undefined);
   const [forYouOpen, setForYouOpen] = useState(false);
   const { claim, pick, acted } = moments;
+  // the first-visit tour: no moment covers it, and it starts only on a calm Σήμερα (below)
+  const tour = useTour();
+  const touring = tour.active;
   useEffect(() => {
-    if (celebrating || !groupKey || forYouOpen || !acted || !focused) return;
+    if (celebrating || !groupKey || forYouOpen || !acted || !focused || touring) return;
     if (claim('celebration')) setCelebrating(group);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupKey, celebrating, forYouOpen, acted, focused, claim]);
+  }, [groupKey, celebrating, forYouOpen, acted, focused, touring, claim]);
   // a step that opens quietly has no moment: mark it seen without showing anything
   const quiet = celebrations.filter((c) => isUnlock(c) && !hasMoment(c.payload.key)).map((c) => c.id).join();
   useEffect(() => {
@@ -337,7 +341,7 @@ export default function VoteScreen() {
   const ballerReady = ballerOffered !== undefined && shouldOfferBaller(baller.met, ballerOffered);
   const forYouReady = forYouDaily.may === true && daily.show && daily.count > 0;
   useEffect(() => {
-    if (!calm || !focused || loading || current || celebrating || forYouOpen) return;
+    if (!calm || !focused || loading || current || celebrating || forYouOpen || touring) return;
     const ready: MomentKind[] = [];
     if (groupKey) ready.push('celebration');
     if (ballerReady) ready.push('baller');
@@ -355,7 +359,18 @@ export default function VoteScreen() {
       setForYouOpen(true);
       markShown();
     }
-  }, [calm, focused, loading, current, celebrating, forYouOpen, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
+  }, [calm, focused, loading, current, celebrating, forYouOpen, touring, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
+  // the tour starts once the feed has loaded and nothing else is in front; it scrolls Σήμερα to the top first
+  const tourReady = focused && !loading && !error && !current && !between && !celebrating && !forYouOpen && safety === null;
+  const { setHome } = tour;
+  useEffect(() => {
+    setHome(tourReady, () => scroller.current?.scrollTo({ y: 0, animated: false }));
+  }, [tourReady, setHome]);
+  useEffect(() => () => setHome(false), [setHome]);
+  // step 1 lights the first card still waiting for a vote, or the head above the feed when it is not on screen
+  const tourCard = useTourTarget('feedCard');
+  const tourHead = useTourTarget('feedHead');
+  const tourCardAt = firstOpen >= 0 ? firstOpen : 0;
   const titleIn = useFadeUpIn(TITLE_IN_MS);
   // the Pro line only once you voted this visit or today, and never above the feed (founder, 19 Oct)
   const votedToday = votedNow.size > 0 || voteCount.voted > 0;
@@ -379,7 +394,7 @@ export default function VoteScreen() {
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={refresh} tintColor={colors.ink} />}
       >
         <View style={styles.feed} onLayout={(e: LayoutChangeEvent) => (feedTop.current = e.nativeEvent.layout.y)}>
-          <Animated.View style={[styles.head, titleIn]}>
+          <Animated.View ref={tourHead} style={[styles.head, titleIn]}>
             <Text style={styles.title}>{feedDay(new Date()) > dayKey(new Date().toISOString()) ? t.feed.titleTomorrow : t.feed.title}</Text>
             {/* «3 ματς περιμένουν την ψήφο σου.» (founder, 18 Oct: make voting obvious); waits for the feed. «Ποιος
                 κερδίζει; Πάτα τον νικητή» is said here once for every card, and a tap takes you to the first vote */}
@@ -420,7 +435,10 @@ export default function VoteScreen() {
               {showLater && i === split.today.length ? <LaterFold count={split.later.length} open onPress={() => setShowLater(false)} /> : null}
               {heads.has(i) && c.kind === 'match' ? <GroupHead group={c.group!} category={cats.head.get(i)} /> : null}
               {/* every card in a wrapper, always: its top is where «Ποιος κερδίζει;» scrolls to */}
-              <View onLayout={(e: LayoutChangeEvent) => cardTops.current.set(c.id, e.nativeEvent.layout.y)}>
+              <View
+                ref={i === tourCardAt ? tourCard : undefined}
+                onLayout={(e: LayoutChangeEvent) => cardTops.current.set(c.id, e.nativeEvent.layout.y)}
+              >
                 {c.kind === 'match' ? (
                   <VoteCard match={c} hideCategory={cats.hide.has(i)} onVote={onVote} onLongPress={onCardLongPress} />
                 ) : c.kind === 'postponed' ? (
