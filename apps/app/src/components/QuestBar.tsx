@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
-import { useHud } from '../lib/hud';
+import { useHudLayers } from '../lib/hud';
 import { alpha, colors, ease, fonts, motion, springEase } from '../theme';
 
 /** prototype: slides in over 500ms, stays, slides out at 1.8s over 400ms */
@@ -17,7 +17,7 @@ const BAR_DELAY = 300;
  * growing from where it was. Give it a new `key` to show it again.
  */
 export function QuestBarLayer() {
-  const { questBar } = useHud();
+  const { questBar } = useHudLayers();
   const insets = useSafeAreaInsets();
   if (!questBar) return null;
   return <QuestBar key={questBar.n} {...questBar} bottom={insets.bottom + 10} />;

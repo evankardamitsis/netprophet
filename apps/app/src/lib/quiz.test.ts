@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, QuizCard } from '@netprophet/db';
-import { cardView, firstUnanswered, noBreak, stripView, verdict, withAnswer, withoutAnswer } from './quiz';
+import { cardView, firstUnanswered, noBreak, quizNeedsRead, stripView, verdict, withAnswer, withoutAnswer } from './quiz';
 
 const el = getCopy('el');
 const nikos = { id: 'p1', first_name: 'Νίκος', surname: 'Ροδίτης', gender: 'm' as const };
@@ -154,5 +154,26 @@ describe('answers', () => {
   });
   it('keeps hyphens in scores together', () => {
     expect(noBreak('6-6 και 5-2, όχι Ν-Β')).toBe('6-⁠6 και 5-⁠2, όχι Ν-Β');
+  });
+});
+
+describe('quizNeedsRead: get_quiz again only when it can have changed', () => {
+  const held = (quiz_day: string, next_at = '2026-10-21T06:00:00Z') => ({ quiz: { quiz_day, next_at } as unknown as GetQuizResult, error: false });
+  // 20 Oct 2026, Athens is UTC+3
+  const at = (iso: string) => new Date(iso);
+  it('same quiz day, nothing played: no read', () => {
+    expect(quizNeedsRead(held('2026-10-20'), false, at('2026-10-20T12:00:00Z'))).toBe(false);
+  });
+  it('before 09:00 Athens it is still the previous day', () => {
+    expect(quizNeedsRead(held('2026-10-19', '2026-10-20T06:00:00Z'), false, at('2026-10-20T05:59:00Z'))).toBe(false);
+  });
+  it('the day turns at 09:00 Athens', () => {
+    expect(quizNeedsRead(held('2026-10-19', '2099-01-01T00:00:00Z'), false, at('2026-10-20T06:00:00Z'))).toBe(true);
+  });
+  it('past next_at, after playing, nothing held or a failed read: read', () => {
+    expect(quizNeedsRead(held('2026-10-20', '2026-10-20T11:00:00Z'), false, at('2026-10-20T12:00:00Z'))).toBe(true);
+    expect(quizNeedsRead(held('2026-10-20'), true, at('2026-10-20T12:00:00Z'))).toBe(true);
+    expect(quizNeedsRead({ quiz: null, error: false }, false, at('2026-10-20T12:00:00Z'))).toBe(true);
+    expect(quizNeedsRead({ ...held('2026-10-20'), error: true }, false, at('2026-10-20T12:00:00Z'))).toBe(true);
   });
 });

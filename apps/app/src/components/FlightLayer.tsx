@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
-import { useHud, type Flight } from '../lib/hud';
+import { useHudLayers, type Flight } from '../lib/hud';
 import { colors, fonts, motion } from '../theme';
 
 /**
@@ -13,7 +13,7 @@ const X_EASE = Easing.bezier(0.45, 0, 0.2, 1);
 const Y_EASE = Easing.bezier(0.2, 0.8, 0.3, 1);
 
 export function FlightLayer() {
-  const { flights } = useHud();
+  const { flights } = useHudLayers();
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {flights.map((f) => (

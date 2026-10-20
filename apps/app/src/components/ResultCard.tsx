@@ -11,7 +11,7 @@ import { useCopy } from '../i18n';
 import { useMyBaller } from '../lib/data';
 import { Baller, type BallerHandle } from './Baller';
 import { resultStrip, type CardResult } from '../lib/feed';
-import { useHud } from '../lib/hud';
+import { useHudActions } from '../lib/hud';
 import { useFadeUpIn, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { colors, ease, fonts, motion } from '../theme';
 
@@ -52,7 +52,7 @@ interface Props {
 
 export function ResultCard({ card, more, delay, onDone, replay = false }: Props) {
   const t = useCopy();
-  const hud = useHud();
+  const hud = useHudActions();
   const self = useRef<View>(null);
   const press = usePress();
   const me = useMyBaller();

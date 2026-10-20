@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react';
-import { useApi } from './data';
+import { useApi, type MeRefresh } from './data';
 import { revealMockUnlocks, useNewPlayer } from './newPlayer';
 import { ALL_STEP_IDS, featureSet, hasFeature } from './unlockLadder';
 
@@ -17,13 +17,14 @@ export interface Unlocks {
   unlocked: string[];
   /**
    * Read the ladder again (after a celebration, on Εγώ, after votes). The dev «Νέος παίκτης» only shows new steps once
-   * their moment is over, so it reveals them only for `{ afterMoment: true }`.
+   * their moment is over, so it reveals them only for `{ afterMoment: true }`. `ifStale`: only when the get_me held is
+   * older than ME_STALE_MS (a screen coming into view); `since`: an action's time (an older read in flight is not reused).
    */
-  refresh(opts?: { afterMoment?: boolean }): Promise<void>;
+  refresh(opts?: { afterMoment?: boolean } & MeRefresh): Promise<void>;
 }
 
 let server: string[] | null = null;
-let refreshMe: () => Promise<void> = async () => undefined;
+let refreshMe: (opts?: MeRefresh) => Promise<void> = async () => undefined;
 const listeners = new Set<() => void>();
 const subscribe = (l: () => void) => {
   listeners.add(l);
@@ -34,7 +35,7 @@ const publish = (ids: string[] | null) => {
   listeners.forEach((l) => l());
 };
 
-export function UnlocksProvider({ serverUnlocked, refresh, children }: { serverUnlocked: string[] | null; refresh: () => Promise<void>; children: ReactNode }) {
+export function UnlocksProvider({ serverUnlocked, refresh, children }: { serverUnlocked: string[] | null; refresh: (opts?: MeRefresh) => Promise<void>; children: ReactNode }) {
   useEffect(() => {
     refreshMe = refresh;
   }, [refresh]);
@@ -59,8 +60,8 @@ export function useUnlocks(): Unlocks {
   const features = useMemo(() => featureSet(unlocked), [unlocked]);
   const has = useCallback((feature: string) => hasFeature(features, feature), [features]);
   const refresh = useCallback(
-    async (opts?: { afterMoment?: boolean }) => {
-      if (api) await refreshMe();
+    async (opts?: { afterMoment?: boolean } & MeRefresh) => {
+      if (api) await refreshMe({ ifStale: opts?.ifStale, since: opts?.since });
       else if (opts?.afterMoment) revealMockUnlocks();
     },
     [api],

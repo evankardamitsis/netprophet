@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './auth';
+import { gateStatus, type OnboardingStatus } from './gateStatus';
+import { loadMe, markMeStale } from './meStore';
 import { api } from './supabase';
 
 /**
@@ -9,7 +11,7 @@ import { api } from './supabase';
  * cached on the device, so later launches open straight to the app instead of waiting for get_me.
  * The welcome screen's «Άλλη φορά» (release builds) marks it done as «skipped» on first sign-in.
  */
-export type OnboardingStatus = 'unknown' | 'needed' | 'done';
+export type { OnboardingStatus } from './gateStatus';
 
 /** set by «Άλλη φορά» on the welcome screen */
 export const SKIP_ONBOARDING_KEY = 'np.skipOnboarding';
@@ -30,7 +32,11 @@ const GateContext = createContext<Gate>({ status: 'done', save: async () => unde
 export function OnboardingGateProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
-  const [status, setStatus] = useState<OnboardingStatus>('unknown');
+  // the answer belongs to one account: on the render a session lands it is already «unknown», so the tabs never
+  // mount for a moment and mount again (that ran every first read of Σήμερα twice on a cold start)
+  const [answer, setAnswer] = useState<{ user: string | null; status: OnboardingStatus }>({ user: null, status: 'done' });
+  const status = gateStatus(answer, userId, api !== null);
+  const setStatus = useCallback((s: OnboardingStatus) => setAnswer({ user: userId, status: s }), [userId]);
 
   useEffect(() => {
     if (!userId || !api) {
@@ -38,7 +44,6 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
       return undefined;
     }
     let live = true;
-    setStatus('unknown');
     (async () => {
       const cached = await AsyncStorage.getItem(doneKey(userId)).catch(() => null);
       if (cached === '1') {
@@ -46,7 +51,9 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const me = await api!.getMe();
+        // the shared get_me: the header and Σήμερα take this same reply instead of asking again
+        const me = await loadMe(() => api!.getMe(), { owner: userId, maxAgeMs: 0 });
+        if (!me) throw new Error('get_me failed');
         const state = (me.profile.onboarding_state ?? {}) as Record<string, unknown>;
         if (state.done === true) {
           await AsyncStorage.setItem(doneKey(userId), '1').catch(() => undefined);
@@ -56,6 +63,7 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
         const skip = await AsyncStorage.getItem(SKIP_ONBOARDING_KEY).catch(() => null);
         if (skip === '1') {
           await api!.updateProfile({ onboarding_state: { ...state, done: true, via: 'skipped', at: new Date().toISOString() } });
+          markMeStale();
           await AsyncStorage.multiSet([[doneKey(userId), '1']]).catch(() => undefined);
           await AsyncStorage.removeItem(SKIP_ONBOARDING_KEY).catch(() => undefined);
           if (live) setStatus('done');
@@ -70,17 +78,18 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
     return () => {
       live = false;
     };
-  }, [userId]);
+  }, [userId, setStatus]);
 
   const save = useCallback(
     async (state: Record<string, unknown>) => {
       if (api) await api.updateProfile({ onboarding_state: { ...state, done: true, at: new Date().toISOString() } });
+      markMeStale();
       if (userId) await AsyncStorage.setItem(doneKey(userId), '1').catch(() => undefined);
     },
     [userId],
   );
-  const open = useCallback(() => setStatus('done'), []);
-  const replay = useCallback(() => setStatus('needed'), []);
+  const open = useCallback(() => setStatus('done'), [setStatus]);
+  const replay = useCallback(() => setStatus('needed'), [setStatus]);
 
   const value = useMemo(() => ({ status, save, open, replay }), [status, save, open, replay]);
   return <GateContext.Provider value={value}>{children}</GateContext.Provider>;

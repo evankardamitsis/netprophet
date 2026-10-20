@@ -23,13 +23,26 @@ export interface Flight {
   delay: number;
 }
 
-interface Hud {
+/**
+ * Three contexts, so a screen only re-renders for what it reads: the actions never change (Σήμερα and the result
+ * cards only call them), the header's numbers change when a card applies, the layers (flights, the quest bar) on
+ * every flight.
+ */
+export interface HudNumbers {
   /** subtract from get_me's points: results not played yet */
   pointsOffset: number;
   /** σερί to show instead of get_me's, while a result is pending */
   streakShown: number | null;
   streakFx: StreakFx;
+}
+
+export interface HudLayers {
   flights: Flight[];
+  /** the slim quest bar after a vote; drawn by the tabs layout over the tab bar (prototype) */
+  questBar: QuestBarNote | null;
+}
+
+export interface HudActions {
   setPending(results: CardResult[]): void;
   /** the feed (where result cards play) is on screen; elsewhere the header shows get_me as it is */
   setOnFeed(on: boolean): void;
@@ -38,8 +51,6 @@ interface Hud {
   /** «+10» to πόντοι, and «+1» to σερί when `withStreak` */
   fly(from: RefObject<View | null>, points: number, withStreak: boolean): void;
   targets: { points: RefObject<View | null>; streak: RefObject<View | null> };
-  /** the slim quest bar after a vote; drawn by the tabs layout over the tab bar (prototype) */
-  questBar: QuestBarNote | null;
   showQuestBar(note: Omit<QuestBarNote, 'n'> | null): void;
 }
 
@@ -52,7 +63,9 @@ export interface QuestBarNote {
   n: number;
 }
 
-const HudContext = createContext<Hud | null>(null);
+const ActionsContext = createContext<HudActions | null>(null);
+const NumbersContext = createContext<HudNumbers | null>(null);
+const LayersContext = createContext<HudLayers | null>(null);
 
 const STAGGER = 70;
 const FLIGHT_LIFE_MS = 1500;
@@ -118,26 +131,40 @@ export function HudProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setFlights((f) => f.filter((x) => !list.some((l) => l.id === x.id))), FLIGHT_LIFE_MS);
   }, []);
 
-  const value = useMemo<Hud>(() => {
-    return {
-      ...hudNumbers(held, pending, applied, onFeed),
-      streakFx,
-      flights,
-      setPending,
-      setOnFeed,
-      apply,
-      fly,
-      targets: { points, streak },
-      questBar,
-      showQuestBar,
-    };
-  }, [held, pending, applied, onFeed, streakFx, flights, setPending, apply, fly, questBar, showQuestBar]);
+  // every action is a stable callback (setOnFeed is a state setter), so this value never changes
+  const actions = useMemo<HudActions>(
+    () => ({ setPending, setOnFeed, apply, fly, targets: { points, streak }, showQuestBar }),
+    [setPending, apply, fly, showQuestBar],
+  );
+  const { pointsOffset, streakShown } = hudNumbers(held, pending, applied, onFeed);
+  const numbers = useMemo<HudNumbers>(() => ({ pointsOffset, streakShown, streakFx }), [pointsOffset, streakShown, streakFx]);
+  const layers = useMemo<HudLayers>(() => ({ flights, questBar }), [flights, questBar]);
 
-  return <HudContext.Provider value={value}>{children}</HudContext.Provider>;
+  return (
+    <ActionsContext.Provider value={actions}>
+      <NumbersContext.Provider value={numbers}>
+        <LayersContext.Provider value={layers}>{children}</LayersContext.Provider>
+      </NumbersContext.Provider>
+    </ActionsContext.Provider>
+  );
 }
 
-export function useHud(): Hud {
-  const ctx = useContext(HudContext);
-  if (!ctx) throw new Error('useHud outside HudProvider');
-  return ctx;
+function need<T>(v: T | null, name: string): T {
+  if (!v) throw new Error(`${name} outside HudProvider`);
+  return v;
+}
+
+/** setPending, apply, fly, showQuestBar…: never changes, so a reader does not re-render on a flight */
+export function useHudActions(): HudActions {
+  return need(useContext(ActionsContext), 'useHudActions');
+}
+
+/** the header's numbers */
+export function useHudNumbers(): HudNumbers {
+  return need(useContext(NumbersContext), 'useHudNumbers');
+}
+
+/** the flights and the quest bar */
+export function useHudLayers(): HudLayers {
+  return need(useContext(LayersContext), 'useHudLayers');
 }

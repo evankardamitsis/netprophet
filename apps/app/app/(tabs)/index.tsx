@@ -47,12 +47,14 @@ import { useUnlocks } from '../../src/lib/unlocks';
 import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
-import { useHud } from '../../src/lib/hud';
+import { useHudActions } from '../../src/lib/hud';
 import { useFadeUpIn, usePress, useStgIn } from '../../src/lib/motion';
 import { colors, fonts, motion, surfaceTints, text, type } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
-import { momentsAct, useMoments } from '../../src/lib/useMoments';
+import { momentsAct, rereadCelebrations, useMoments } from '../../src/lib/useMoments';
+import { currentMe } from '../../src/lib/meStore';
+import { mayHaveCelebrated, voteBurst, type GameSnapshot } from '../../src/lib/postVote';
 import type { MomentKind } from '../../src/lib/moments';
 
 const TITLE_IN_MS = 400;
@@ -91,8 +93,9 @@ export default function VoteScreen() {
   unlocksNow.current = unlocks;
   const quests = useQuests();
   const quiz = useQuiz();
-  // «Οι ερωτήσεις της ημέρας»: read again whenever the feed comes back into view (after playing, or a new day)
-  const quizRefresh = quiz.refresh;
+  // «Οι ερωτήσεις της ημέρας»: read again when the feed comes back into view after playing, or on a new quiz day
+  // (get_quiz is slow; quizNeedsRead)
+  const quizRefresh = quiz.refreshIfNeeded;
   useFocusEffect(
     useCallback(() => {
       void quizRefresh();
@@ -107,35 +110,52 @@ export default function VoteScreen() {
   // vote short of its next tier (never more than one), in the queue
   // votes cast since the feed loaded: the line under the title counts down at once (the cards keep their loaded vote)
   const [votedNow, setVotedNow] = useState<ReadonlySet<string>>(() => new Set());
+  // votes in a row make one burst: a second after the last one, one read of quests, badges and get_me, one note,
+  // and the celebration queue only if that read shows a vote could have queued one (postVote.ts)
+  const afterVotes = useRef<ReturnType<typeof voteBurst<GameSnapshot>> | null>(null);
+  const burstRun = useRef<(before: GameSnapshot) => void>(() => undefined);
+  burstRun.current = (before) => {
+    const since = Date.now();
+    void Promise.all([quests.refresh(), badges.refresh(), unlocksNow.current.refresh({ since })]).then(([after, badgesAfter]) => {
+      const me = currentMe();
+      const now: GameSnapshot = { quests: after, badges: badgesAfter, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
+      if (mayHaveCelebrated(before, now)) rereadCelebrations();
+      // quests and badges that are not open yet say nothing
+      const { has } = unlocksNow.current;
+      const f = after
+        ? feedbackAfterVote(before.quests && gateQuests(before.quests, has), gateQuests(after, has), t, has('badges_shelf') ? { before: before.badges, after: badgesAfter } : undefined)
+        : null;
+      if (f?.kind === 'toast') toast(f.text);
+      else if (f) pushNote({ kind: 'bar', bar: { title: f.title, from: f.from, to: f.to, progress: f.progress, target: f.target } }, QUEST_BAR_MS);
+    });
+  };
+  useEffect(() => {
+    const burst = voteBurst<GameSnapshot>((before) => burstRun.current(before));
+    afterVotes.current = burst;
+    return () => burst.cancel();
+  }, []);
   const onVote = useCallback(
     async (matchId: string, side: Side) => {
-      const before = questsNow.current;
-      const badgesBefore = badgesNow.current;
+      const me = currentMe();
+      const before: GameSnapshot = { quests: questsNow.current, badges: badgesNow.current, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
       const pct = await vote(matchId, side);
       setVotedNow((v) => new Set(v).add(matchId));
-      void Promise.all([quests.refresh(), badges.refresh()]).then(([after, badgesAfter]) => {
-        // quests and badges that are not open yet say nothing
-        const { has } = unlocksNow.current;
-        const f = after
-          ? feedbackAfterVote(before && gateQuests(before, has), gateQuests(after, has), t, has('badges_shelf') ? { before: badgesBefore, after: badgesAfter } : undefined)
-          : null;
-        if (f?.kind === 'toast') toast(f.text);
-        else if (f) pushNote({ kind: 'bar', bar: { title: f.title, from: f.from, to: f.to, progress: f.progress, target: f.target } }, QUEST_BAR_MS);
-      });
-      void unlocksNow.current.refresh();
-      // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come
+      afterVotes.current?.add(() => before);
+      // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come.
+      // The burst above decides whether the celebration queue is read again.
       setTimeout(() => {
-        momentsAct();
+        momentsAct({ reread: false });
         setCalmFrom(Date.now());
       }, VOTE_SETTLE_MS);
       return pct;
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [vote, quests.refresh, badges.refresh, t, toast, pushNote],
+    [vote],
   );
   // «Αναφορά» from a long press on a card
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
-  const hud = useHud();
+  // one function for every card, so the memoised VoteCard does not re-render with each render of the feed
+  const onCardLongPress = useCallback((id: string) => setSafety({ kind: 'match', id }), []);
+  const hud = useHudActions();
   // the bar slides over the tab bar, so the tabs layout draws it (prototype mp); it shows when its turn comes
   const { showQuestBar } = hud;
   const note = notes.active;
@@ -169,8 +189,8 @@ export default function VoteScreen() {
   useFocusEffect(
     useCallback(() => {
       setOnFeed(true);
-      // σερί and πόντοι: read get_me again, the same reply Εγώ and the Ladder read
-      void unlocksNow.current.refresh();
+      // σερί and πόντοι: read get_me again if the one held is stale, the same reply Εγώ and the Ladder read
+      void unlocksNow.current.refresh({ ifStale: true });
       return () => setOnFeed(false);
     }, [setOnFeed]),
   );
@@ -403,7 +423,7 @@ export default function VoteScreen() {
               {/* every card in a wrapper, always: its top is where «Ποιος κερδίζει;» scrolls to */}
               <View onLayout={(e: LayoutChangeEvent) => cardTops.current.set(c.id, e.nativeEvent.layout.y)}>
                 {c.kind === 'match' ? (
-                  <VoteCard match={c} hideCategory={cats.hide.has(i)} onVote={onVote} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+                  <VoteCard match={c} hideCategory={cats.hide.has(i)} onVote={onVote} onLongPress={onCardLongPress} />
                 ) : c.kind === 'postponed' ? (
                   <PostponedCard card={c} />
                 ) : c.kind === 'sponsored' ? (
