@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import type { ResultItem, ResultName } from '../lib/results';
 import { usePopIn, useSlamIn, useStgIn } from '../lib/motion';
 import { useUnlocks } from '../lib/unlocks';
-import { colors, fonts, motion } from '../theme';
+import { colors, fonts, motion, type } from '../theme';
 import { useCopy } from '../i18n';
 import { FitText } from './FitText';
 import { ReactionChips } from './ReactionChips';
@@ -56,6 +56,13 @@ export function ResultRow({ item, index, onLongPress }: { item: ResultItem; inde
       delayLongPress={450}
     >
       <Animated.View style={[styles.card, { backgroundColor: hot ? colors.ink : colors.white }, enter]}>
+        {/* the category and round, as on Σήμερα's cards: who plays in bold, the round quiet beside it */}
+        {item.category || item.round ? (
+          <View style={styles.catRow}>
+            {item.category ? <Text style={[styles.category, { color: fg }]}>{item.category}</Text> : null}
+            {item.round ? <Text style={[styles.round, { color: soft }]}>{item.round}</Text> : null}
+          </View>
+        ) : null}
         {item.tag || item.calledIt || item.review ? (
           <View style={styles.top}>
             {item.review ? <Tag text={item.review} quiet /> : item.tag ? <Tag text={item.tag} /> : <View />}
@@ -176,6 +183,9 @@ function Names({ people, open, style }: { people: ResultName[]; open: boolean; s
 
 const styles = StyleSheet.create({
   card: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, gap: 2 },
+  catRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 8, marginBottom: 2 },
+  category: { fontFamily: fonts.bodyBold, fontSize: type.body.size, lineHeight: type.meta.line },
+  round: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
   top: { minHeight: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 },
   moreHit: { width: 28, height: 28, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },

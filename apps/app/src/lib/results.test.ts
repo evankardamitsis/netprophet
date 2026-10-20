@@ -135,7 +135,9 @@ describe('groupResults', () => {
       ['ΧΘΕΣ', false, 'Φιλικά', ['c']],
       ['ΠΡΟΧΘΕΣ', true, 'Open Γλυφάδας', ['d']],
     ]);
-    expect(groups[0]!.detail).toContain('Προημιτελικά');
+    // the round goes on each card, as on Σήμερα; the head keeps the tournament (and a category all its cards share)
+    expect(groups[0]!.detail).toBeNull();
+    expect(groups[0]!.items[0]!.round).toContain('Προημιτελικά');
     expect(groups[1]!.detail).toBeNull();
     // a tournament shows its logo (or its letter); friendlies show none
     expect(groups[0]!.logo).toEqual({ path: null });
@@ -145,6 +147,18 @@ describe('groupResults', () => {
   it('carries the tournament logo', () => {
     const [g] = groupResults([row({ match_id: 'a', tournament_logo: 'tournaments/t/k1.webp' })], t, NOW);
     expect(g!.logo).toEqual({ path: 'tournaments/t/k1.webp' });
+  });
+});
+
+describe('groupResults category', () => {
+  it('heads a tournament once a day, the category on each card unless all share it', () => {
+    const mixed = groupResults([row({ match_id: 'a', level: '40+' }), row({ match_id: 'b', level: '-45', discipline: 'XD', format: 'doubles' })], t, NOW);
+    expect(mixed).toHaveLength(1);
+    expect(mixed[0]!.category).toBeNull();
+    expect(mixed[0]!.items.map((i) => i.category)).toEqual(['40+', '-45 · Μικτό']);
+    const same = groupResults([row({ match_id: 'a', level: 'MEDIUM' }), row({ match_id: 'b', level: 'MEDIUM' })], t, NOW);
+    expect(same[0]!.category).toBe('Medium');
+    expect(same[0]!.items.map((i) => i.category)).toEqual([null, null]);
   });
 });
 
