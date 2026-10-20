@@ -36,6 +36,26 @@ export function usePress(scaleTo = PRESS_SCALE) {
   };
 }
 
+
+/**
+ * True once an entrance should be over (`delayMs + durationMs`, plus a margin). The entrance hooks then hand back their
+ * final style as a plain style, so React itself draws the end state: on the new architecture an animated update can be
+ * lost when React commits at the same moment, and a lost fade-in left the title, the cards or a tab invisible (20 Oct).
+ */
+export function useSettled(totalMs: number, key: unknown = null): boolean {
+  // settled for this key; a new key (the tab moved) starts a new wait
+  const [settledFor, setSettledFor] = useState<unknown>(undefined);
+  useEffect(() => {
+    const id = setTimeout(() => setSettledFor(key), totalMs + SETTLE_MARGIN_MS);
+    return () => clearTimeout(id);
+  }, [totalMs, key]);
+  return settledFor === key;
+}
+
+const SETTLE_MARGIN_MS = 120;
+const SHOWN = { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] } as const;
+const FULL = { width: '100%' } as const;
+
 /** CSS `pop` (prototype): the animation's timing function applies to every keyframe segment, so all use the spring. */
 export function runPop(scale: SharedValue<number>, opacity: SharedValue<number>, durationMs: number, delayMs = 0) {
   scale.value = 0.4;
@@ -66,7 +86,8 @@ export function usePopIn(durationMs: number, delayMs = 0) {
   useEffect(() => {
     runPop(scale, opacity, durationMs, delayMs);
   }, [scale, opacity, durationMs, delayMs]);
-  return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  return useSettled(delayMs + durationMs) ? SHOWN : style;
 }
 
 /** `stg` once on mount: fade in, rise 14px, scale .985 → 1, on --ease (prototype .45s, staggered by delay). */
@@ -75,10 +96,11 @@ export function useStgIn(durationMs: number, delayMs = 0) {
   useEffect(() => {
     p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
   }, [p, durationMs, delayMs]);
-  return useAnimatedStyle(() => ({
+  const style = useAnimatedStyle(() => ({
     opacity: p.value,
     transform: [{ translateY: (1 - p.value) * 14 }, { scale: 0.985 + 0.015 * p.value }],
   }));
+  return useSettled(delayMs + durationMs) ? SHOWN : style;
 }
 
 /** `slam` once on mount: from 2.4× and invisible to .94 at 70%, settling at 1, every segment on --ease. */
@@ -95,7 +117,8 @@ export function useSlamIn(durationMs: number, delayMs = 0) {
     );
     opacity.value = withDelay(delayMs, withTiming(1, { duration: durationMs * 0.7, easing: ease }));
   }, [scale, opacity, durationMs, delayMs]);
-  return useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  return useSettled(delayMs + durationMs) ? SHOWN : style;
 }
 
 /** `rise` once on mount: fade in from 40px below, on --ease. */
@@ -104,7 +127,8 @@ export function useRiseIn(durationMs: number, delayMs = 0) {
   useEffect(() => {
     p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
   }, [p, durationMs, delayMs]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 40 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 40 }] }));
+  return useSettled(delayMs + durationMs) ? SHOWN : style;
 }
 
 /** `grow` once on mount: width 0 → 100%, on --ease. */
@@ -113,7 +137,8 @@ export function useGrowIn(durationMs: number, delayMs = 0) {
   useEffect(() => {
     p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
   }, [p, durationMs, delayMs]);
-  return useAnimatedStyle(() => ({ width: `${p.value * 100}%` }));
+  const style = useAnimatedStyle(() => ({ width: `${p.value * 100}%` }));
+  return useSettled(delayMs + durationMs) ? FULL : style;
 }
 
 /** `pop` whenever `value` changes after the first render (header numbers). */

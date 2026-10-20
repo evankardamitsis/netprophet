@@ -10,7 +10,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { soonLabel, startsSoon, type CardMatch, type CardPct, type CardSide } from '../lib/feed';
 import { FitText } from './FitText';
-import { PRESS_MS, runJpop, runPop, usePopIn } from '../lib/motion';
+import { PRESS_MS, runJpop, runPop, usePopIn, useSettled } from '../lib/motion';
 import type { Side } from '../lib/votes';
 import { cardSurface, colors, ease, fonts, springEase, text, type } from '../theme';
 import { useCopy } from '../i18n';
@@ -72,8 +72,11 @@ function useEnter(run = true) {
   useEffect(() => {
     if (run) p.value = withTiming(1, { duration: ENTER_MS, easing: cssEase });
   }, [p, run]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 10 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 10 }] }));
+  return useSettled(run ? ENTER_MS : 0) ? SETTLED : style;
 }
+
+const SETTLED = { opacity: 1, transform: [{ translateY: 0 }] } as const;
 
 /** hold a card this long for «Αναφορά» */
 const LONG_PRESS_MS = 450;

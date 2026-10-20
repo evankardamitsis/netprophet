@@ -14,7 +14,7 @@ import { useMyBaller } from '../lib/data';
 import { Baller, type BallerHandle } from './Baller';
 import { resultStrip, type CardResult } from '../lib/feed';
 import { useHud } from '../lib/hud';
-import { runPop, usePopIn, usePress, useStgIn } from '../lib/motion';
+import { runPop, usePopIn, usePress, useSettled, useStgIn } from '../lib/motion';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
@@ -110,10 +110,15 @@ export function ResultCard({ card, more, delay, onDone, replay = false }: Props)
   // the box follows the content's height on the reveal; -1 until the first layout (no animation on mount)
   const height = useSharedValue(-1);
   const shown = useSharedValue(1);
+  // the first layout is remembered on the JS side: reading a shared value from JS is a synchronous call into the UI
+  // runtime, and doing it inside onLayout could deadlock the two threads (the app froze on launch, 20 Oct)
+  const measured = useRef(false);
   const onContent = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
-    if (height.value < 0) height.value = h;
-    else height.value = withTiming(h, { duration: motion.revealDur, easing: ease });
+    if (!measured.current) {
+      measured.current = true;
+      height.value = h;
+    } else height.value = withTiming(h, { duration: motion.revealDur, easing: ease });
   };
   const boxStyle = useAnimatedStyle(() => (height.value < 0 ? {} : { height: height.value }));
   const contentStyle = useAnimatedStyle(() => ({ opacity: shown.value }));
@@ -257,8 +262,11 @@ function useMeIn(delay: number) {
   useEffect(() => {
     p.value = withDelay(delay, withTiming(1, { duration: motion.revealDurShort, easing: Easing.bezier(0.16, 1, 0.3, 1) }));
   }, [p, delay]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
+  return useSettled(delay + motion.revealDurShort) ? ME_SETTLED : style;
 }
+
+const ME_SETTLED = { opacity: 1, transform: [{ translateY: 0 }] } as const;
 
 const styles = StyleSheet.create({
   box: { borderRadius: 24, overflow: 'hidden' },
