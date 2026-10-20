@@ -3,17 +3,26 @@
 -- nothing changes there. The feed's day turns at 23:00 Athens, as on the app's Σήμερα and in get_feed.
 --   * core.feed_day(ts): the feed's day of a moment (from 23:00 Athens it is already tomorrow), the same expression
 --     get_feed uses for its matches;
---   * core.results_day_end(): marks seen every unseen result from an earlier feed day. It is idempotent at any hour,
+--   * core.result_close_day(created_at): the feed day after which a result closes on its own. A result gets 3 hours
+--     of grace: one that arrives in the last 3 hours of its feed day (from 20:00 Athens) stays through that night and
+--     the next day, and closes at the next 23:00; any other closes at the 23:00 of its own day. One expression, used
+--     by both the job and get_feed;
+--   * core.results_day_end(): marks seen every unseen result whose close day is over. It is idempotent at any hour,
 --     so pg_cron (UTC) runs it at 20:00 and at 21:00 UTC: one of them is 23:00 Athens in summer (UTC+3), the other in
 --     winter (UTC+2), and the other run finds nothing left to do;
---   * get_feed returns only results of the current feed day, so yesterday's queue never shows, even before the job
+--   * get_feed hides exactly the results the job would close, so yesterday's queue never shows, even before the job
 --     runs. Nothing else in get_feed changes (body as in 20270220000000_perf_set_based.sql).
 
 create or replace function core.feed_day(ts timestamptz default now())
 returns date language sql immutable parallel safe set search_path = ''
 as $$ select ((ts + interval '1 hour') at time zone 'Europe/Athens')::date $$;
 
-create or replace function core.results_day_end()
+create or replace function core.result_close_day(created_at timestamptz)
+returns date language sql immutable parallel safe set search_path = ''
+as $$ select core.feed_day(created_at + interval '3 hours') $$;
+
+-- p_now only for tests; the cron calls it without
+create or replace function core.results_day_end(p_now timestamptz default now())
 returns int
 language plpgsql security definer set search_path = core, pg_temp
 as $$
@@ -22,12 +31,12 @@ begin
   update core.feed_inbox
      set seen_at = now()
    where kind = 'result' and seen_at is null
-     and core.feed_day(created_at) < core.feed_day(now());
+     and core.feed_day(p_now) > core.result_close_day(created_at);
   get diagnostics v_n = row_count;
   return v_n;
 end;
 $$;
-revoke all on function core.results_day_end() from public;
+revoke all on function core.results_day_end(timestamptz) from public;
 
 do $$
 begin
@@ -68,8 +77,8 @@ begin
                      order by i.created_at)
       from (select * from core.feed_inbox
              where user_id = v_uid and kind = 'result' and seen_at is null
-               -- only the feed day's: what is left from yesterday is marked seen at 23:00 Athens (results_day_end)
-               and core.feed_day(created_at) >= core.feed_day(now())
+               -- not the ones results_day_end closes (their close day is over), even before it runs
+               and core.feed_day(now()) <= core.result_close_day(created_at)
              order by created_at limit v_limit) i), '[]'::jsonb);
 
   v_content := v_content || coalesce((
