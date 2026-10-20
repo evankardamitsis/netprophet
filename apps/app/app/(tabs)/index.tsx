@@ -361,7 +361,7 @@ export default function VoteScreen() {
     }
   }, [calm, focused, loading, current, celebrating, forYouOpen, touring, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
   // the tour starts once the feed has loaded and nothing else is in front; it scrolls Σήμερα to the top first
-  const tourReady = focused && !loading && !current && !between && !celebrating && !forYouOpen && safety === null;
+  const tourReady = focused && !loading && !error && !current && !between && !celebrating && !forYouOpen && safety === null;
   const { setHome } = tour;
   useEffect(() => {
     setHome(tourReady, () => scroller.current?.scrollTo({ y: 0, animated: false }));
