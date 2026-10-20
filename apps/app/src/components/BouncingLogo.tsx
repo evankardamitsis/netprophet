@@ -99,13 +99,18 @@ export function BouncingLogo({ height }: { height: number }) {
     if (reduced) return undefined;
     let timer: ReturnType<typeof setTimeout>;
     let k = 0;
+    // where the ball is, kept on the JS side: reading shared values from JS is a synchronous call into the UI runtime
+    let atUp = 0;
+    let turned = 0;
     const move = (m: Move) => {
       x.value = withTiming(m.x, { duration: m.ms, easing: Easing.inOut(Easing.quad) });
-      y.value = withTiming(m.up, { duration: m.ms, easing: m.up > y.value ? Easing.out(Easing.quad) : Easing.in(Easing.quad) });
+      y.value = withTiming(m.up, { duration: m.ms, easing: m.up > atUp ? Easing.out(Easing.quad) : Easing.in(Easing.quad) });
+      atUp = m.up;
       arcH.value = m.arc ?? 0;
       arcUp.value = 0;
       arcUp.value = withTiming(1, { duration: m.ms, easing: Easing.linear });
-      rot.value = withTiming(rot.value + (m.spin ?? 0), { duration: m.ms, easing: Easing.linear });
+      turned += m.spin ?? 0;
+      rot.value = withTiming(turned, { duration: m.ms, easing: Easing.linear });
       const hit = m.hit === 'wall' ? squashX : m.hit === 'floor' ? squashY : null;
       if (hit) {
         hit.value = withSequence(

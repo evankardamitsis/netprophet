@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, {
@@ -11,7 +11,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { usePopIn, usePress } from '../lib/motion';
+import { usePopIn, usePress, useSettled } from '../lib/motion';
 import { hasNewResults, useResultsSeen } from '../lib/resultsSeen';
 import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts, motion } from '../theme';
@@ -27,6 +27,8 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
  */
 const IN_BAR = ['index', 'results', 'tournaments', 'ladder'];
 const COLOR_MS = 250;
+/** the pill's spring is over well within this; then React draws it in place */
+const PILL_SETTLE_MS = 700;
 
 type Box = { x: number; width: number };
 
@@ -38,6 +40,7 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   const pillX = useSharedValue(0);
   const pillW = useSharedValue(0);
   const pillOn = useSharedValue(0);
+  const placed = useRef(false);
 
   const focusedName = state.routes[state.index]?.name ?? '';
   const focusedBox = boxes[focusedName];
@@ -53,17 +56,26 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
       pillOn.value = withTiming(0, { duration: COLOR_MS });
       return;
     }
-    const first = pillW.value === 0;
+    // the first placement is remembered on the JS side (reading a shared value from JS is a synchronous UI call)
+    const first = !placed.current;
+    placed.current = true;
     pillX.value = first ? focusedBox.x : withSpring(focusedBox.x, motion.spring);
     pillW.value = first ? focusedBox.width : withSpring(focusedBox.width, motion.spring);
     pillOn.value = withTiming(1, { duration: COLOR_MS });
   }, [focusedBox, pillX, pillW, pillOn]);
 
-  const pill = useAnimatedStyle(() => ({
+  const animatedPill = useAnimatedStyle(() => ({
     opacity: pillOn.value,
     width: pillW.value,
     transform: [{ translateX: pillX.value }],
   }));
+  // once the move is over React draws the pill where it belongs, in case the animated update was lost (20 Oct)
+  const settled = useSettled(PILL_SETTLE_MS, `${focusedName}|${focusedBox?.x ?? ''}|${focusedBox?.width ?? ''}`);
+  const pill = settled
+    ? focusedBox
+      ? { opacity: 1, width: focusedBox.width, transform: [{ translateX: focusedBox.x }] }
+      : { opacity: 0 }
+    : animatedPill;
 
   return (
     // the home indicator's strip is part of the bar, but the labels sit just above it, not a thumb's height above
@@ -117,7 +129,8 @@ function TabItem({
   useEffect(() => {
     on.value = withTiming(focused ? 1 : 0, { duration: COLOR_MS });
   }, [focused, on]);
-  const fg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.mist, colors.ink]) }));
+  const animatedFg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.mist, colors.ink]) }));
+  const fg = useSettled(COLOR_MS, focused) ? { color: focused ? colors.ink : colors.mist } : animatedFg;
   return (
     <Pressable
       accessibilityRole="tab"

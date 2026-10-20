@@ -10,6 +10,7 @@ import { celebrationTitleSize, groupView, isLeague, isLevel } from '../lib/celeb
 import { useMyBaller } from '../lib/data';
 import { colors, ease, fonts, motion } from '../theme';
 import { LEVEL_UP_AT } from '../lib/levelUp';
+import { useSettled } from '../lib/motion';
 import { Baller, type BallerHandle, type BallerMove } from './Baller';
 
 /**
@@ -155,8 +156,11 @@ function useMeIn(ms: number, delay: number) {
   useEffect(() => {
     p.value = withDelay(delay, withTiming(1, { duration: ms, easing: ease }));
   }, [p, ms, delay]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
+  return useSettled(delay + ms) ? ME_SETTLED : style;
 }
+
+const ME_SETTLED = { opacity: 1, transform: [{ translateY: 0 }] } as const;
 
 /** slam: from 2.4× down past 1 (0.94 at 70%) and settle */
 function useSlam(ms: number, delay: number) {
