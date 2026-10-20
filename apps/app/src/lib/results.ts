@@ -54,7 +54,9 @@ export interface ResultGroup {
   firstOfDay: boolean;
   /** «Open Γλυφάδας», or «Φιλικά» */
   title: string;
-  /** «Μ 40+ · Απλό · Προημιτελικά»; null when there is nothing to add */
+  /** «Μ 40+ · Γυναικών»: the category, in Σήμερα's bold ink (founder, 20 Oct); null outside a category */
+  category: string | null;
+  /** «Προημιτελικά» (or «Διπλό» for a friendly): the quiet line beside the category; null when there is nothing */
   detail: string | null;
   /** the tournament's logo (its path, null for the letter); null for friendlies, which show none */
   logo: { path: string | null } | null;
@@ -99,12 +101,19 @@ function resultCategory(level: string | null | undefined, discipline: string | n
   return c ? categoryCase(c) : null;
 }
 
-/** «Open Γλυφάδας» and «Μ 40+ · Απλό · Προημιτελικά» apart, for the event heading and the line under it. */
-export function eventParts(row: Pick<ResultRow, 'tournament' | 'round' | 'format' | 'level' | 'discipline'>, t: Copy): { title: string; detail: string | null } {
-  if (!row.tournament) return { title: t.results.friendlies, detail: row.format === 'singles' ? null : t.match.formats[row.format] };
+/**
+ * «Open Γλυφάδας», its category and the round apart, as Σήμερα shows them (founder, 20 Oct: the same hierarchy): the
+ * category says who plays («Μ 40+ · Γυναικών», «-45 · Μικτό») and never singles or doubles, which the row shows.
+ */
+export function eventParts(
+  row: Pick<ResultRow, 'tournament' | 'round' | 'format' | 'level' | 'discipline'>,
+  t: Copy,
+): { title: string; category: string | null; detail: string | null } {
+  if (!row.tournament) return { title: t.results.friendlies, category: null, detail: row.format === 'singles' ? null : t.match.formats[row.format] };
   const round = row.round ? (isRoundKey(row.round) ? t.results.rounds[row.round] : row.round) : null;
-  const detail = [resultCategory(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
-  return { title: row.tournament, detail: detail || null };
+  const who = t.match.categoryWho[row.discipline ?? ''] ?? t.match.categoryWho[row.format] ?? null;
+  const category = categoryCase([row.level, who].filter(Boolean).join(' · ')) || null;
+  return { title: row.tournament, category, detail: round };
 }
 
 const names = (players: FeedPlayer[]): ResultName[] => players.map((p) => ({ first: p.first_name, surname: p.surname }));

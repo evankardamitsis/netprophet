@@ -151,7 +151,13 @@ describe('groupResults', () => {
 describe('eventParts category case', () => {
   it('shows organiser capitals in normal case, acronyms as they are', () => {
     const base = { tournament: 'Open Γλυφάδας', round: null, format: 'singles' as const, discipline: 'singles' };
-    expect(eventParts({ ...base, level: 'MEDIUM' } as never, t).detail).toMatch(/^Medium/);
-    expect(eventParts({ ...base, level: 'ITF' } as never, t).detail).toMatch(/^ITF/);
+    expect(eventParts({ ...base, level: 'MEDIUM' } as never, t).category).toBe('Medium');
+    expect(eventParts({ ...base, level: 'ITF' } as never, t).category).toBe('ITF');
+  });
+  it('says who plays, never singles or doubles, and keeps the round apart (as Σήμερα)', () => {
+    const p = eventParts({ tournament: 'AOK', round: 'quarter', format: 'doubles', level: '-45', discipline: 'XD' } as never, t);
+    expect(p.category).toBe('-45 · Μικτό');
+    expect(p.detail).toBe(t.results.rounds.quarter);
+    expect(eventParts({ tournament: 'AOK', round: null, format: 'singles', level: '40+', discipline: 'MS' } as never, t)).toEqual({ title: 'AOK', category: '40+', detail: null });
   });
 });
