@@ -40,6 +40,10 @@ export interface ResultItem {
   myWin: boolean;
   /** «Σε έλεγχο» in capitals: your own result that staff have not checked yet; null otherwise */
   review: string | null;
+  /** «-45 · Μικτό»: the category on the card, as on Σήμερα; null when the tournament head says it for every card */
+  category: string | null;
+  /** «Προημιτελικά»: the round, quiet beside the category; null when unknown */
+  round: string | null;
 }
 
 /**
@@ -167,6 +171,8 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
       : null,
     myWin: !inReview && isMyWin(row, myPlayerId),
     review: inReview ? greekCaps(t.results.inReview) : null,
+    category: null,
+    round: null,
   };
 }
 
@@ -177,7 +183,8 @@ export function groupResults(rows: ResultRow[], t: Copy, now: Date, myPlayerId: 
   const days = new Set<string>();
   for (const row of rows) {
     const dk = dayKey(row.starts_at);
-    const key = `${dk}|${eventLabel(row, t)}`;
+    // one head per tournament a day, as on Σήμερα (founder, 20 Oct); the category goes on each card
+    const key = `${dk}|${row.tournament ?? ''}|${row.tournament ? '' : row.format}`;
     let g = byKey.get(key);
     if (!g) {
       g = {
@@ -192,7 +199,17 @@ export function groupResults(rows: ResultRow[], t: Copy, now: Date, myPlayerId: 
       byKey.set(key, g);
       groups.push(g);
     }
-    g.items.push(toResultItem(row, t, myPlayerId));
+    const parts = eventParts(row, t);
+    g.items.push({ ...toResultItem(row, t, myPlayerId), category: parts.category, round: parts.detail });
+  }
+  // a category every card of a tournament shares is said once, on its head (as Σήμερα does)
+  for (const g of groups) {
+    if (!g.logo) continue;
+    const cats = new Set(g.items.map((i) => i.category));
+    const only = cats.size === 1 ? [...cats][0]! : null;
+    g.category = only;
+    g.detail = null;
+    if (only !== null) g.items = g.items.map((i) => ({ ...i, category: null }));
   }
   return groups;
 }
