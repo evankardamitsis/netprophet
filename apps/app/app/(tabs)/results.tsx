@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { useLocalSearchParams } from 'expo-router';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Logo } from '../../src/components/Logo';
 import { ResultRow } from '../../src/components/ResultRow';
@@ -22,7 +23,12 @@ const SEARCH_MS = 350;
 
 export default function ResultsScreen() {
   const t = useCopy();
-  const [tournament, setTournament] = useState<string | null>(null);
+  // a reaction push opens Αποτελέσματα on the match's tournament (?tournament=)
+  const params = useLocalSearchParams<{ tournament?: string }>();
+  const [tournament, setTournament] = useState<string | null>(typeof params.tournament === 'string' ? params.tournament : null);
+  useEffect(() => {
+    if (typeof params.tournament === 'string' && params.tournament) setTournament(params.tournament);
+  }, [params.tournament]);
   const [typed, setTyped] = useState('');
   const [query, setQuery] = useState('');
   useEffect(() => {

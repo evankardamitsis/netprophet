@@ -12,7 +12,7 @@ import { useCopy } from '../../src/i18n';
 import { guestAllowed, useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
-import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useReactionPush } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
@@ -691,7 +691,7 @@ function Friends({ v }: { v: MeView }) {
 
 /**
  * «Ρυθμίσεις», closed until tapped, at the bottom: «Πώς παίζεις» (hand and tournaments, out of the first run since
- * 19 Oct), sounds, blocked people, Αποσύνδεση and deleting the account
+ * 19 Oct), sounds, reaction pushes, blocked people, Αποσύνδεση and deleting the account
  */
 function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
   const t = useCopy();
@@ -711,6 +711,7 @@ function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
         <>
           <PlayStyleRow onSaved={onPlaySaved} />
           <SoundsRow />
+          <ReactionsPushRow />
           {blocks.list.length > 0 ? (
             <View style={styles.blocks}>
               <Text style={styles.blocksTitle}>{t.safety.list}</Text>
@@ -765,6 +766,21 @@ function SoundsRow() {
         <Text style={styles.muted}>{t.me.soundsLine}</Text>
       </View>
       <Switch value={on} onValueChange={setOn} trackColor={{ false: colors.navLine, true: colors.ink }} thumbColor={colors.white} accessibilityLabel={t.me.sounds} />
+    </View>
+  );
+}
+
+/** «Αντιδράσεις στα ματς σου»: the push when someone reacts to your match, saved on the account (every device) */
+function ReactionsPushRow() {
+  const t = useCopy();
+  const push = useReactionPush();
+  return (
+    <View style={styles.soundsRow}>
+      <View style={styles.proText}>
+        <Text style={styles.proTitle}>{t.me.reactionsPush}</Text>
+        <Text style={styles.muted}>{t.me.reactionsPushLine}</Text>
+      </View>
+      <Switch value={push.on} onValueChange={(on) => void push.set(on)} trackColor={{ false: colors.navLine, true: colors.ink }} thumbColor={colors.white} accessibilityLabel={t.me.reactionsPush} />
     </View>
   );
 }

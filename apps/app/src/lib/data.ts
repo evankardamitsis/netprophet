@@ -1731,6 +1731,51 @@ export function usePlayStyle(): PlayStyleState {
   return { hand, tour, saving, failed, save };
 }
 
+export interface ReactionPushState {
+  on: boolean;
+  set: (on: boolean) => Promise<void>;
+}
+
+/**
+ * «Αντιδράσεις στα ματς σου» in Εγώ › Ρυθμίσεις (founder, 20 Oct): the push when someone reacts to your match, on
+ * unless switched off. It lives in the account's notification_prefs, which update_profile replaces whole, so the
+ * other keys are read first and sent back with it. The server (core.reaction_notify) is what honours it.
+ */
+export function useReactionPush(): ReactionPushState {
+  const api = useApi();
+  const [prefs, setPrefs] = useState<Record<string, unknown>>({});
+  useEffect(() => {
+    if (!api || !supabase) return undefined;
+    let live = true;
+    supabase
+      .from('my_profile')
+      .select('notification_prefs')
+      .maybeSingle()
+      .then(({ data }) => {
+        const p = data?.notification_prefs;
+        if (live && p && typeof p === 'object' && !Array.isArray(p)) setPrefs(p as Record<string, unknown>);
+      });
+    return () => {
+      live = false;
+    };
+  }, [api]);
+  const set = useCallback(
+    async (on: boolean) => {
+      const before = prefs;
+      const next = { ...prefs, reactions: on };
+      setPrefs(next);
+      if (!api) return;
+      try {
+        await api.updateProfile({ notification_prefs: next });
+      } catch {
+        setPrefs(before);
+      }
+    },
+    [api, prefs],
+  );
+  return { on: prefs.reactions !== false, set };
+}
+
 export interface TournamentsState {
   data: GetTournamentsResult | null;
   loading: boolean;

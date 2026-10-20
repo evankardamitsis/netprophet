@@ -493,6 +493,8 @@ export const en: Copy = {
     settings: 'Settings',
     sounds: 'Sounds',
     soundsLine: 'Little sounds from your Baller. Quiet when your phone is on silent.',
+    reactionsPush: 'Reactions to your matches',
+    reactionsPushLine: 'We tell you when someone reacts to one of your matches. At most one notification per match every 3 hours.',
     error: 'It did not load. Pull down to try again.',
   },
   pro: {
@@ -693,6 +695,10 @@ export const en: Copy = {
   push: {
     one: { title: 'A result is in', body: 'Did you call it? Come and see.' },
     many: { title: '{n} results are in', body: 'How many did you call? Come and see.' },
+    reaction: {
+      one: { title: '{name}: “{reaction}”', body: 'On your match against {opponent} · {tournament}' },
+      many: { title: '{n} people reacted', body: 'On your match against {opponent} · {tournament}' },
+    },
   },
   confirm: {
     title: '{name} logged a match of yours',
