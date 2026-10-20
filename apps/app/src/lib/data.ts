@@ -80,8 +80,8 @@ interface FeedState {
   cards: FeedCard[];
   /** unseen results, oldest first; they play one by one at the top of the feed */
   results: CardResult[];
-  /** the viewer closed a result card: mark it seen and drop it */
-  dismissResult: (id: string) => void;
+  /** the viewer closed a result card, or the summary line of many: mark them seen (one call) and drop them */
+  dismissResult: (id: string | readonly string[]) => void;
   /** σερί milestones waiting to play after the result cards */
   celebrations: Celebration[];
   /** the viewer pressed «Συνέχεια» on a (grouped) celebration: mark all of them seen */
@@ -185,13 +185,16 @@ export function useFeed(onVoteError?: (kind: VoteErrorKind) => void): FeedState 
     }
   }, [api]);
 
-  const dismissResult = useCallback((id: string) => {
+  const dismissResult = useCallback((id: string | readonly string[]) => {
+    const ids: string[] = typeof id === 'string' ? [id] : [...id];
+    if (!ids.length) return;
     setResults((r) => {
-      const card = r.find((x) => x.id === id);
-      if (card) track('result_card_seen', { outcome: card.ok ? 'correct' : 'wrong', points: card.points });
-      return r.filter((x) => x.id !== id);
+      for (const card of r) {
+        if (ids.includes(card.id)) track('result_card_seen', { outcome: card.ok ? 'correct' : 'wrong', points: card.points });
+      }
+      return r.filter((x) => !ids.includes(x.id));
     });
-    api?.markInboxSeen([id]).catch(() => undefined);
+    api?.markInboxSeen(ids).catch(() => undefined);
   }, [api]);
 
   const dismissCelebration = useCallback((ids: string[]) => {
