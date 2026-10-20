@@ -138,6 +138,11 @@ const GROW: Keyframes = {
   to: { transform: [{ scaleX: 1 }] },
 };
 
+const GROW_Y: Keyframes = {
+  from: { transform: [{ scaleY: 0 }] },
+  to: { transform: [{ scaleY: 1 }] },
+};
+
 /** fade in from `dy` px below, one keyframes object per distance */
 const fadeUp = new Map<number, Keyframes>();
 function fadeUpFrom(dy: number): Keyframes {
@@ -181,6 +186,12 @@ export function useRiseIn(durationMs: number, delayMs = 0) {
 export function useGrowIn(durationMs: number, delayMs = 0) {
   const entrance = useEntrance(GROW, durationMs, delayMs);
   return useMemo(() => ({ ...entrance, transformOrigin: 'left' }) as const, [entrance]);
+}
+
+/** `grow` upwards once on mount: a column rises from its foot (the month chart), scaleY from the bottom edge */
+export function useGrowUpIn(durationMs: number, delayMs = 0) {
+  const entrance = useEntrance(GROW_Y, durationMs, delayMs);
+  return useMemo(() => ({ ...entrance, transformOrigin: 'bottom' }) as const, [entrance]);
 }
 
 /** `pop` whenever `value` changes after the first render (header numbers). */
