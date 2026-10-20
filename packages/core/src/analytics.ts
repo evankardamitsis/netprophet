@@ -7,7 +7,8 @@ export interface AnalyticsEvents {
   onboarding_step: { step: string; index: number };
   /** auto: players followed for them when they picked nobody (the 6 most followed of their area) */
   onboarding_done: { claimed: boolean; known: number; auto?: number };
-  claim_completed: { result: 'ok' | 'requested' | 'taken' | 'other' | 'limited' | 'failed' };
+  /** from: onboarding (left out) or «Αυτός είμαι εγώ» on a player's profile later */
+  claim_completed: { result: 'ok' | 'requested' | 'taken' | 'other' | 'limited' | 'failed'; from?: 'profile' };
   vote_cast: { match_id: string; side: 1 | 2 };
   result_card_seen: { outcome: 'correct' | 'wrong' | 'none'; points: number };
   pro_sheet_viewed: { moment: string };
@@ -24,8 +25,8 @@ export interface AnalyticsEvents {
   kudo_given: { source: 'log' | 'results' };
   reaction_set: { key: string | null };
   report_sent: { kind: 'match' | 'player'; reason: string };
-  /** «Δεν είμαι εγώ;» on a profile, «Είμαι εγώ» on a claimed candidate in onboarding */
-  claim_reported: { from: 'profile' | 'onboarding' };
+  /** «Δεν είμαι εγώ;» on a profile, «Είμαι εγώ» on a claimed candidate in onboarding, «Δεν είμαι εγώ» on your own player */
+  claim_reported: { from: 'profile' | 'onboarding' | 'own' };
   user_blocked: { from: 'match' | 'player' };
   /** the Baller share card: sent as a picture, or as text where pictures cannot go (the web) */
   baller_shared: { via: 'image' | 'text' };

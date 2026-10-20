@@ -24,6 +24,7 @@ import { useAuth } from './auth';
 import type { Area, Hand } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
+import type { ClaimOutcome } from './claimLater';
 import { clearMe, currentMe, loadMe, markMeStale, ME_STALE_MS, subscribeMe, type LoadMeOptions } from './meStore';
 import { askForPushOnce } from './push';
 import { MOCK_TOKEN, mockLinkView } from './link';
@@ -1159,22 +1160,61 @@ export function useSafety(target: SafetyTarget | null) {
   return { who, report, block };
 }
 
-/** «Δεν είμαι εγώ;» on a profile an account holds (api.report_claim, 'not_them'); mock mode: always fine */
-export function useClaimReport() {
+/**
+ * «Δεν είμαι εγώ;» on a profile another account holds (api.report_claim, 'not_them'), or «Δεν είμαι εγώ» on your own
+ * player ('not_me_own'); mock mode: always fine
+ */
+export function useClaimReport(reason: 'not_them' | 'not_me_own' = 'not_them') {
   const api = useApi();
   return useCallback(
     async (playerId: string, note: string): Promise<boolean> => {
       if (!api) return true;
       try {
-        await api.reportClaim(playerId, 'not_them', note.trim() || undefined);
-        track('claim_reported', { from: 'profile' });
+        await api.reportClaim(playerId, reason, note.trim() || undefined);
+        track('claim_reported', { from: reason === 'not_me_own' ? 'own' : 'profile' });
         return true;
       } catch {
         return false;
       }
     },
-    [api],
+    [api, reason],
   );
+}
+
+/** api.claim_player: 'requested' (staff approve), 'ok' (a pending player taken at once), or why not */
+async function claimOutcome(api: LiveApi, playerId: string): Promise<ClaimOutcome> {
+  try {
+    const r = await api.claimPlayer(playerId);
+    markMeStale();
+    return r.requested ? 'requested' : 'ok';
+  } catch (err) {
+    if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
+    if (err instanceof RpcError && err.code.startsWith('already_claimed')) return 'other';
+    if (err instanceof RpcError && err.code === 'rate_limited') return 'limited';
+    return 'failed';
+  }
+}
+
+/**
+ * Claims after onboarding: the shared get_me (for «Αυτός είμαι εγώ» and «Δεν είμαι εγώ») and the usual claim_player.
+ * Mock mode has no get_me, so neither link shows there.
+ */
+export function useClaimLater() {
+  const api = useApi();
+  const user = useAuth().session?.user.id ?? null;
+  const me = useSharedMe();
+  const claim = useCallback(
+    async (playerId: string): Promise<ClaimOutcome> => {
+      if (!api) return 'requested';
+      const r = await claimOutcome(api, playerId);
+      track('claim_completed', { result: r, from: 'profile' });
+      // the link goes once get_me says 'requested'
+      if (r === 'requested' || r === 'ok') void readMe(api, user, { maxAgeMs: 0 }).catch(() => undefined);
+      return r;
+    },
+    [api, user],
+  );
+  return { me, claim };
 }
 
 /** Εγώ › «Μπλοκαρισμένοι» */
@@ -1656,18 +1696,8 @@ export function useOnboardingApi(sample = false) {
         });
       },
       /** 'requested': a roster player is asked for and staff approve it (founder, 18 Oct 2026); 'ok' only when it is theirs */
-      async claim(playerId: string): Promise<'ok' | 'requested' | 'taken' | 'other' | 'limited' | 'failed'> {
-        if (!api) return 'requested';
-        try {
-          const r = await api.claimPlayer(playerId);
-          markMeStale();
-          return r.requested ? 'requested' : 'ok';
-        } catch (err) {
-          if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
-          if (err instanceof RpcError && err.code.startsWith('already_claimed')) return 'other';
-          if (err instanceof RpcError && err.code === 'rate_limited') return 'limited';
-          return 'failed';
-        }
+      async claim(playerId: string): Promise<ClaimOutcome> {
+        return api ? claimOutcome(api, playerId) : 'requested';
       },
       /** «Είμαι εγώ» on a candidate another account holds: a report staff check (api.report_claim, 'is_me') */
       async reportIsMe(playerId: string): Promise<boolean> {

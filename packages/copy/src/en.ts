@@ -324,6 +324,7 @@ export const en: Copy = {
     error: 'Did not load. Pull down to try again.',
     notFound: 'This player is no longer shown.',
     followFailed: 'That did not work. Try again.',
+    claimMe: { m: 'This is me', f: 'This is me' },
   },
   onboarding: {
     age: { check: 'I am 15 or older' },
@@ -891,6 +892,12 @@ export const en: Copy = {
       sub: 'If this profile is yours, or you know the account on it is not the person it shows, tell us.',
       note: 'Anything else we should know (optional)',
       sent: 'Got it. We will check.',
+    },
+    claimOwn: {
+      link: 'This is not me',
+      title: 'Wrong player?',
+      sub: 'If this profile is not you, tell us. We will unlink it from your account.',
+      sent: 'We will check. Once we unlink it, you can find the right player.',
     },
   },
   celebrate: {

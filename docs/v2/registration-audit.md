@@ -1,6 +1,6 @@
 # Registration audit (20 Oct 2026)
 
-Every path from install to the first vote, checked in the code and against a local database. Fixes are in migration `20270301000000_registration_audit.sql` and the app; the database cases are in `supabase-v2/tests/100_registration_audit.test.sql` (test names below in quotes).
+Every path from install to the first vote, checked in the code and against a local database. Fixes are in migration `20270301000000_registration_audit.sql` and the app; the database cases are in `supabase-v2/tests/100_registration_audit.test.sql` (test names below in quotes). The four claim follow-ups (rows marked «fixed, follow-up») are in `20270302000000_claim_followups.sql`, tested in `supabase-v2/tests/138_claim_followups.test.sql`.
 
 Verdict: **ok** works as intended, **fixed** was wrong and is fixed in this PR, **open** needs a founder decision or a bigger change (recommendation given).
 
@@ -28,7 +28,7 @@ Verdict: **ok** works as intended, **fixed** was wrong and is fixed in this PR, 
 | Searcher sees the row | Listed with «Έχει ήδη συνδεθεί με άλλο λογαριασμό», never who | ok | "claimed: listed and marked for someone else" |
 | Same person, second email (forgot which account) | Tapping the row now also says how that account signs in, provider only: «Εκείνος ο λογαριασμός μπαίνει με Google. Αν είναι δικός σου, βγες και μπες με Google.» (Apple, or «με κωδικό σε άλλο email»). Under the blue «Είμαι εγώ» there is «Βγες και μπες αλλιώς», which signs out to the welcome screen | fixed | `api.claimed_sign_in`; "claimed: the hint is the provider", "claimed: never any part of the address"; `apps/app/app/onboarding.tsx:489` |
 | Impostor holds it, the real person taps «Είμαι εγώ» | A report for staff («Ταυτότητα»), «Θα το ελέγξουμε και θα σου πούμε». Staff can dismiss (push «Το προφίλ μένει ως έχει», which ends «γράψε μας», now backed by «Γράψε μας» in Ρυθμίσεις), unlink, or give it to the reporter (push «Είσαι εσύ!») | ok | `admin_decide_identity` (20270228000000_identity_followups.sql) |
-| The holder after «Αποσύνδεση» or «Δώσ' το στον αναφέροντα» | Loses the player with no message at all | open | Send a short push («Το προφίλ … αποσυνδέθηκε από τον λογαριασμό σου. Γράψε μας αν έγινε λάθος.») from `api.admin_unclaim` |
+| The holder after «Αποσύνδεση» or «Δώσ' το στον αναφέροντα» | Was told nothing. Now one push from `api.admin_unclaim` (every unlink goes through it): «Το προφίλ αποσυνδέθηκε», «Αποσυνδέσαμε το {name} από τον λογαριασμό σου. Αν νομίζεις ότι έγινε λάθος, γράψε μας από τις Ρυθμίσεις.» (text `claim_released`, editable in admin /v2/notifications); a tap opens Εγώ. The profile goes back to «none». Deleting your own account sends nothing | fixed, follow-up | "released: exactly one push", "released: the holder got one push on give", "released: no push when you delete your own account" |
 | A normal «Εγώ είμαι» on a held player | Refused by the server | ok | "claimed: a normal claim is refused" |
 | Someone else gets the player between the list and the tap | Used to say «γράψε μας». Now the row turns into a held one with «Είμαι εγώ» and the line «Αυτό το προφίλ μόλις συνδέθηκε με άλλο λογαριασμό. Αν είσαι εσύ, πάτα «Είμαι εγώ».» | fixed | `onboarding.tsx:240` |
 | The holder searches their own name | Their own player, not marked | ok | "claimed: the holder sees their own player unmarked" |
@@ -43,7 +43,7 @@ Verdict: **ok** works as intended, **fixed** was wrong and is fixed in this PR, 
 | Same name already on the roster as an active player | Staff see «πιθανό ίδιο με …» and decide | ok | `admin_claim_queue.duplicate` |
 | Staff reject | Player stays pending and hidden, push «Δεν φτιάξαμε το προφίλ» with «γράψε μας» | ok, copy fixed | «Γράψε μας» now exists in Εγώ › Ρυθμίσεις (opens an email to hello@monadlabs.gr) |
 | Staff reject after a sheet already linked official matches to it | Matches stay on a hidden pending player | open | Admin should warn when the new player has matches («Έχει 2 ματς από φύλλο: σίγουρα απόρριψη;») or offer merge instead |
-| A 15 to 17 year old (a minor on the roster, so not listed) taps it | A second, public profile of a minor can be approved; the duplicate hint does not say the match is a minor | open | Show «ανήλικος» on the duplicate in «Αιτήματα παικτών» and make approve refuse when the duplicate is a minor; product call on how 15 to 17 year olds play at all |
+| A 15 to 17 year old (a minor on the roster, so not listed) taps it | The duplicate hint looks at every active player, a minor first. «Αιτήματα παικτών» shows «ανήλικος» and no «Έγκριση»; the server refuses approving ('duplicate_minor'). Staff reject (the usual push, which never mentions a minor); the new player stays pending and hidden. How 15 to 17 year olds play at all is still a product call | fixed, follow-up | "minor: the likely duplicate is the minor", "minor: approving is refused", "minor: neither the minor nor the new player is listed" |
 
 ## 4. Wrong player, changing your mind
 
@@ -51,8 +51,8 @@ Verdict: **ok** works as intended, **fixed** was wrong and is fixed in this PR, 
 |---|---|---|---|
 | Pick A, then pick B before staff decide | A is cancelled, B waits | ok | "pick: the first request is cancelled" |
 | Account already holds a player and asks for another | «Ο λογαριασμός σου έχει ήδη έναν παίκτη.» | ok | `claim_player` 'already_claimed_other' |
-| Approved, and it was the wrong player | No way in the app; «Δεν είμαι εγώ;» on your own profile is refused | open | Add «Δεν είμαι εγώ» on your own player in Εγώ (a report staff act on with «Αποσύνδεση»), or a «Γράψε μας» line there |
-| Claim rejected, or skipped, later wants to try again | No claim entry after onboarding: only onboarding can claim | open | Add «Αυτός είμαι εγώ» on an unclaimed player's profile for accounts without a player or request (same `claim_player`) |
+| Approved, and it was the wrong player | «Δεν είμαι εγώ» under your player in Εγώ and on your own profile: a report ('not_me_own', same limits) staff see in «Ταυτότητα» as «Λάθος παίκτης: ο χρήστης λέει ότι δεν είναι αυτός/αυτή», with «Αποσύνδεση» (the player is free, the profile back to «none») or «Απόρριψη» (push «Το προφίλ μένει ως έχει»). After sending: «Θα το ελέγξουμε. Μόλις το αποσυνδέσουμε, θα μπορείς να βρεις τον σωστό παίκτη.» | fixed, follow-up | "own report: filed on your own player", "own report: the player is free again", "own report: never given to the reporter" |
+| Claim rejected, or skipped, later wants to try again | «Αυτός είμαι εγώ» / «Αυτή είμαι εγώ» (quiet link) on an unclaimed player's profile, for an account with no player and nothing waiting with staff. Same `claim_player` (staff approve, 5 a day, one player per account), same «Το αίτημά σου στάλθηκε…» | fixed, follow-up | "after onboarding: a skipped account asks for a player", "after a reject: they ask for a roster player"; `claimLater.ts` |
 | 5 requests a day | Hit only by tapping back and forth a lot; the message is now «Για σήμερα φτάνει. Ξαναδοκίμασε αύριο.» instead of «Δεν έγινε» | fixed | `data.ts` claim() 'limited', `link.ts` linkClaimError |
 
 ## 5. Changing the name later

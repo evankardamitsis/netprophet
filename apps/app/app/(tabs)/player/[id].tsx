@@ -10,7 +10,8 @@ import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { usePlayer, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { useClaimLater, usePlayer, useTraits, type FollowOutcome, type SafetyTarget } from '../../../src/lib/data';
+import { canClaimHere, claimHereLabel, claimHereToast } from '../../../src/lib/claimLater';
 import { runJpop, useGrowIn, usePopIn, usePress, useRiseIn, useSlamIn, useStgIn } from '../../../src/lib/motion';
 import type { ProfileView } from '../../../src/lib/players';
 import { colors, fonts } from '../../../src/theme';
@@ -30,7 +31,9 @@ export default function PlayerScreen() {
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const back = usePress();
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
-  const [claimReport, setClaimReport] = useState<string | null>(null);
+  const [claimReport, setClaimReport] = useState<{ id: string; own: boolean } | null>(null);
+  const later = useClaimLater();
+  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -45,6 +48,16 @@ export default function PlayerScreen() {
   };
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/players'));
+
+  // «Αυτός είμαι εγώ» after onboarding: the usual claim, staff approve (registration audit, 20 Oct 2026)
+  const onClaim = async () => {
+    if (!profile || claiming) return;
+    setClaiming(true);
+    const r = await later.claim(profile.id);
+    setClaiming(false);
+    setToast((p) => ({ text: claimHereToast(r, t), n: (p?.n ?? 0) + 1 }));
+    if (r === 'taken') void refresh();
+  };
 
   return (
     <View style={styles.screen}>
@@ -68,9 +81,15 @@ export default function PlayerScreen() {
             <Profile key={profile.id} p={profile} onFollow={onFollow} onToast={(text) => setToast((q) => ({ text, n: (q?.n ?? 0) + 1 }))} />
             {!profile.isMe ? (
               <View style={styles.quiet}>
+                {/* nobody holds this player and the account has none: claim it now (staff approve) */}
+                {canClaimHere(profile, later.me) ? (
+                  <Pressable accessibilityRole="button" accessibilityState={{ busy: claiming }} onPress={() => void onClaim()} style={styles.reportHit}>
+                    <Text style={styles.report}>{claimHereLabel(profile.first, profile.gender, t)}</Text>
+                  </Pressable>
+                ) : null}
                 {/* an account holds this player: anyone else can say it may not be them (founder, 20 Oct 2026) */}
                 {profile.claimed ? (
-                  <Pressable accessibilityRole="button" onPress={() => setClaimReport(profile.id)} style={styles.reportHit}>
+                  <Pressable accessibilityRole="button" onPress={() => setClaimReport({ id: profile.id, own: false })} style={styles.reportHit}>
                     <Text style={styles.report}>{t.safety.claim.link}</Text>
                   </Pressable>
                 ) : null}
@@ -78,14 +97,21 @@ export default function PlayerScreen() {
                   <Text style={styles.report}>{t.safety.report}</Text>
                 </Pressable>
               </View>
-            ) : null}
+            ) : (
+              <View style={styles.quiet}>
+                {/* your own player and it is not you: staff unlink it, then you find the right one */}
+                <Pressable accessibilityRole="button" onPress={() => setClaimReport({ id: profile.id, own: true })} style={styles.reportHit}>
+                  <Text style={styles.report}>{t.safety.claimOwn.link}</Text>
+                </Pressable>
+              </View>
+            )}
           </>
         ) : !loading ? (
           <Text style={styles.note}>{notFound ? t.players.notFound : error ? t.players.error : ''}</Text>
         ) : null}
       </ScrollView>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
-      <ClaimReportSheet playerId={claimReport} onClose={(text) => { setClaimReport(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
+      <ClaimReportSheet playerId={claimReport?.id ?? null} own={claimReport?.own ?? false} onClose={(text) => { setClaimReport(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
     </View>
   );

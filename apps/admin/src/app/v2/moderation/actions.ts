@@ -15,11 +15,17 @@ async function staffRpc(): Promise<Rpc> {
   return client.rpc.bind(client) as unknown as Rpc;
 }
 
+/** server refusals staff should read as a sentence */
+function readable(message: string): string {
+  if (message.startsWith('duplicate_minor')) return 'Not approved: the roster has a minor by this name. Reject it instead.';
+  return message;
+}
+
 async function act(fn: string, args: object, ok: (data: unknown) => string): Promise<ActionResult> {
   try {
     const rpc = await staffRpc();
     const { data, error } = await rpc(fn, args);
-    if (error) return { ok: false, message: error.message };
+    if (error) return { ok: false, message: readable(error.message) };
     revalidatePath('/v2/moderation');
     return { ok: true, message: ok(data) };
   } catch (e) {

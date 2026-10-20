@@ -59,11 +59,12 @@ export interface AccountHints {
 
 /**
  * «Ταυτότητα»: «Δεν είμαι εγώ;» on a profile ('not_them'), «Είμαι εγώ» on a claimed candidate in onboarding ('is_me'),
- * or the first official result on a player a user made ('first_official')
+ * «Δεν είμαι εγώ» from the holder on their own player ('not_me_own'), or the first official result on a player a user
+ * made ('first_official')
  */
 export interface IdentityFlag {
   id: string;
-  kind: 'not_them' | 'is_me' | 'first_official';
+  kind: 'not_them' | 'is_me' | 'not_me_own' | 'first_official';
   created_at: string;
   note: string | null;
   player: { id: string; name: string; gender: 'm' | 'f' | null; source: string; status: string; matches: number };
@@ -83,7 +84,9 @@ export interface ClaimRequest {
   account?: AccountHints;
   player: { id: string; first_name: string; surname: string; area_id: string | null; area: string | null; birth_year: number | null; source: string; claimed: boolean; matches: number };
   /** via 'new': a roster player with the same name, and others that look like it */
-  duplicate: { player_id: string; name: string; area_id: string | null; claimed: boolean } | null;
+  duplicate: { player_id: string; name: string; area_id: string | null; claimed: boolean; is_minor?: boolean } | null;
+  /** via 'new': the roster has a minor by this name (15 to 17); approving is refused, reject only */
+  duplicate_minor?: boolean;
   similar: { player_id: string; name: string; claimed: boolean }[];
   /** other people asking for the same player */
   others: number;
@@ -536,13 +539,15 @@ const KIND_TITLE = (f: IdentityFlag) => {
   const pron = f.player.gender === 'f' ? 'αυτή' : 'αυτός';
   if (f.kind === 'first_official') return 'Πρώτο επίσημο αποτέλεσμα σε προφίλ που έφτιαξε χρήστης';
   if (f.kind === 'is_me') return `Αναφορά: λέει ότι είναι ${pron}`;
+  if (f.kind === 'not_me_own') return `Λάθος παίκτης: ο χρήστης λέει ότι δεν είναι ${pron}`;
   return `Αναφορά: δεν είναι ${pron}`;
 };
 
 function IdentityRow({ f, cues }: { f: IdentityFlag; cues: Cues }) {
   const { pending, busy, run, cardClass } = useItemAction(cues);
   const who = (a: AccountHints | null) => (a ? a.name ?? a.display_name ?? a.email ?? 'an account' : 'nobody');
-  const canGive = f.kind !== 'first_official' && f.reporter !== null && !f.reporter.has_player;
+  const own = f.kind === 'not_me_own';
+  const canGive = f.kind !== 'first_official' && !own && f.reporter !== null && !f.reporter.has_player;
   const m = f.match;
   return (
     <div className={cardClass()} aria-busy={pending || undefined}>
@@ -558,7 +563,11 @@ function IdentityRow({ f, cues }: { f: IdentityFlag; cues: Cues }) {
         {f.claimer?.email ? <span className="v2-muted"> ({f.claimer.email})</span> : null}.
       </div>
       <AccountHintsLine a={f.claimer} label="Holder:" />
-      {f.reporter ? (
+      {f.reporter && own ? (
+        <span style={{ fontSize: 14 }}>
+          The holder says this player is not them{f.note ? <span>: «{f.note}»</span> : null}. «Αποσύνδεση» frees the player and lets them claim the right one.
+        </span>
+      ) : f.reporter ? (
         <>
           <span style={{ fontSize: 14 }}>
             Reported by <b>{who(f.reporter)}</b>
@@ -584,11 +593,11 @@ function IdentityRow({ f, cues }: { f: IdentityFlag; cues: Cues }) {
           disabled={pending}
           onClick={() => run('dismiss', f.player.name, 'Closing', () => decideIdentity(f.id, 'dismiss'), f.kind === 'first_official' ? 'Looked at' : 'Report dismissed')}
         >
-          {busy === 'dismiss' ? 'Closing…' : f.kind === 'first_official' ? 'Εντάξει' : 'Απόρριψη αναφοράς'}
+          {busy === 'dismiss' ? 'Closing…' : f.kind === 'first_official' ? 'Εντάξει' : own ? 'Απόρριψη' : 'Απόρριψη αναφοράς'}
         </Secondary>
         <Confirm
           label="Αποσύνδεση"
-          question={`Unlink ${f.player.name} from ${who(f.claimer)}? The account keeps its votes and points.`}
+          question={`Unlink ${f.player.name} from ${who(f.claimer)}? The account keeps its votes and points and gets the «Το προφίλ αποσυνδέθηκε» push.`}
           yes="Yes, unlink"
           working="Unlinking…"
           busy={busy === 'unlink'}
@@ -631,6 +640,7 @@ function NewPlayerRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
         <span className="v2-row" style={{ gap: 6 }}>
           <Badge tone="ink">Νέος παίκτης</Badge>
           {c.duplicate ? <Badge tone="attention">Same name in the roster</Badge> : null}
+          {c.duplicate_minor ? <Badge tone="attention">ανήλικος</Badge> : null}
         </span>
       </div>
       <div style={{ fontSize: 16 }}>
@@ -648,17 +658,25 @@ function NewPlayerRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
             <span key={d.player_id}>
               {n > 0 ? ', ' : ''}
               <b>{d.name}</b>
+              {'is_minor' in d && d.is_minor ? ' (ανήλικος)' : ''}
               {d.claimed ? ' (has an account)' : ''}
             </span>
           ))}
           . If it is the same person, reject: the push asks them to write to us, and we link them to that player.
         </span>
       ) : null}
-      <b style={{ fontSize: 14 }}>Make this player?</b>
+      {c.duplicate_minor ? (
+        <span style={{ fontSize: 14 }}>
+          The roster has a minor (15 to 17) by this name, so this is likely a second profile of a minor. It cannot be approved: reject it. The push never mentions a minor.
+        </span>
+      ) : null}
+      <b style={{ fontSize: 14 }}>{c.duplicate_minor ? 'Reject this request?' : 'Make this player?'}</b>
       <div className="v2-row">
-        <Secondary busy={busy === 'approve'} disabled={pending} onClick={() => run('approve', player, 'Approving', () => reviewClaim(c.user_id, true, 'new'), 'Approved')}>
-          {busy === 'approve' ? 'Approving…' : 'Έγκριση'}
-        </Secondary>
+        {c.duplicate_minor ? null : (
+          <Secondary busy={busy === 'approve'} disabled={pending} onClick={() => run('approve', player, 'Approving', () => reviewClaim(c.user_id, true, 'new'), 'Approved')}>
+            {busy === 'approve' ? 'Approving…' : 'Έγκριση'}
+          </Secondary>
+        )}
         <Confirm
           label="Απόρριψη"
           question={`Reject? ${player} stays hidden and they get a push.`}
