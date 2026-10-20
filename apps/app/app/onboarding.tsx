@@ -339,7 +339,15 @@ export default function OnboardingScreen() {
   const claimNew = () =>
     run(async () => {
       // an account with a player already cannot ask for a new one; in a replay it just walks on
-      if (!own) await ob.setClaimStatus('creation_requested');
+      if (!own) {
+        try {
+          await ob.setClaimStatus('creation_requested');
+        } catch (err) {
+          // 5 requests a day: say so, anything else is the usual «Δεν έγινε»
+          if (err instanceof RpcError && err.code === 'rate_limited') return setError(o.claim.limited);
+          throw err;
+        }
+      }
       setIsNew(true);
       go(i + 1);
     });
