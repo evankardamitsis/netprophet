@@ -60,7 +60,7 @@ describe('ownReportShown', () => {
 describe('the copy', () => {
   it('says «Δεν είμαι εγώ» and what happens next, with no em dash', () => {
     expect(t.safety.claimOwn.link).toBe('Δεν είμαι εγώ');
-    expect(t.safety.claimOwn.sent).toBe('Θα το ελέγξουμε. Μόλις το αποσυνδέσουμε, θα μπορείς να βρεις τον σωστό παίκτη.');
+    expect(t.safety.claimOwn.sent).toBe('Το είδαμε. Θα το ελέγξουμε.');
     for (const s of [...Object.values(t.safety.claimOwn), ...Object.values(t.players.claimMe)]) expect(s).not.toContain('—');
   });
 });
