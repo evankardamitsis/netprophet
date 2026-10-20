@@ -236,6 +236,8 @@ export const en: Copy = {
       title: 'For you',
       confirmOne: 'One match to confirm',
       confirmMany: '{count} matches to confirm',
+      play: 'Play',
+      see: 'See',
       open: 'Open',
       close: 'Close',
       later: 'Later',
@@ -907,6 +909,7 @@ export const en: Copy = {
     right: 'Right. ',
     wrong: 'Not this time. ',
     counted: 'Counted. See what the others said.',
+    countedSoon: 'Counted. You will see what the others said once more have answered.',
     end: {
       title: 'That is it for today.',
       points: 'points',

@@ -258,6 +258,10 @@ export const el = {
       title: 'Για σένα',
       confirmOne: 'Ένα ματς να επιβεβαιώσεις',
       confirmMany: '{count} ματς να επιβεβαιώσεις',
+      /** the closed row's action: the game of the day waits */
+      play: 'Παίξε',
+      /** the closed row's action: only matches to confirm */
+      see: 'Δες',
       open: 'Άνοιξε',
       close: 'Κλείσε',
       /** the once-a-day full screen «Για σένα»: its close button */
@@ -1017,6 +1021,8 @@ export const el = {
     right: 'Σωστά. ',
     wrong: 'Όχι αυτή τη φορά. ',
     counted: 'Μέτρησε. Δες τι είπαν οι άλλοι.',
+    /** no split yet: it shows once five have answered */
+    countedSoon: 'Μέτρησε. Τι είπαν οι άλλοι, θα το δεις μόλις απαντήσουν κι άλλοι.',
     end: {
       title: 'Αυτά για σήμερα.',
       points: 'πόντοι',

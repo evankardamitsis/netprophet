@@ -78,7 +78,9 @@ describe('verdict', () => {
     expect(verdict(who('w', { my_option: 1 }), el)).toBe('Όχι αυτή τη φορά. Η Ιωάννα Τσάκου.');
   });
   it('counts a scenario and says nothing on an opinion', () => {
-    expect(verdict(vote('a', { my_option: 1 }), el)).toBe('Μέτρησε. Δες τι είπαν οι άλλοι.');
+    // the others' answers show once five have answered: until then it says so instead of pointing at nothing
+    expect(verdict(vote('a', { my_option: 1, split: [60, 40] }), el)).toBe('Μέτρησε. Δες τι είπαν οι άλλοι.');
+    expect(verdict(vote('a', { my_option: 1 }), el)).toBe('Μέτρησε. Τι είπαν οι άλλοι, θα το δεις μόλις απαντήσουν κι άλλοι.');
     expect(verdict(vote('o', { family: 'o', my_option: 1 }), el)).toBe('');
   });
   it('asks on a dynamic card and then says nothing, with «αυτή τη βδομάδα» only on the weekly', () => {

@@ -52,7 +52,14 @@ export function DailyFold({ fold, children }: { fold: Fold; children: ReactNode 
               </Text>
             ) : null}
           </View>
-          <Animated.Text style={[styles.glyph, glyph]}>↓</Animated.Text>
+          {/* closed: say what to do (founder, 20 Oct), a paper pill on the ink row; open: the ↑ to fold it back */}
+          {open ? (
+            <Animated.Text style={[styles.glyph, glyph]}>↓</Animated.Text>
+          ) : (
+            <View style={styles.action}>
+              <Text style={styles.actionText}>{`${fold.action} ›`}</Text>
+            </View>
+          )}
         </Animated.View>
       </Pressable>
       {open ? <View style={styles.inside}>{children}</View> : null}
@@ -79,6 +86,9 @@ const styles = StyleSheet.create({
   countText: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.ink },
   preview: { fontFamily: fonts.bodySemi, fontSize: 15, lineHeight: 20, color: colors.mist },
   glyph: { fontFamily: fonts.bodyBold, fontSize: 22, lineHeight: 26, color: colors.paper },
+  // a paper pill on ink: the row's call to act, never blue (voting keeps the screen's weight) and never lime (not earned)
+  action: { minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.paper, alignItems: 'center', justifyContent: 'center' },
+  actionText: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 20, color: colors.ink },
   inside: { gap: 14 },
 });
 

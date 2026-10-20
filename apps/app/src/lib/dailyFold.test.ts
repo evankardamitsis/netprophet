@@ -25,21 +25,21 @@ const quiz = (played: number, total = 6): GetQuizResult => ({
 
 describe('dailyFold', () => {
   it('nothing today: no row', () => {
-    expect(dailyFold(null, 0, el)).toEqual({ show: false, count: 0, preview: '' });
+    expect(dailyFold(null, 0, el)).toEqual({ show: false, count: 0, preview: '', action: 'Δες' });
     expect(dailyFold(quiz(0, 0), 0, el).show).toBe(false);
   });
   it('the game not played counts one', () => {
-    expect(dailyFold(quiz(0), 0, el)).toEqual({ show: true, count: 1, preview: 'Οι ερωτήσεις της ημέρας' });
+    expect(dailyFold(quiz(0), 0, el)).toEqual({ show: true, count: 1, preview: 'Οι ερωτήσεις της ημέρας', action: 'Παίξε' });
     expect(dailyFold(quiz(3), 0, el).count).toBe(1);
   });
   it('every match to confirm counts', () => {
-    expect(dailyFold(quiz(0), 1, el)).toEqual({ show: true, count: 2, preview: 'Οι ερωτήσεις της ημέρας · Ένα ματς να επιβεβαιώσεις' });
-    expect(dailyFold(null, 3, el)).toEqual({ show: true, count: 3, preview: '3 ματς να επιβεβαιώσεις' });
+    expect(dailyFold(quiz(0), 1, el)).toEqual({ show: true, count: 2, preview: 'Οι ερωτήσεις της ημέρας · Ένα ματς να επιβεβαιώσεις', action: 'Παίξε' });
+    expect(dailyFold(null, 3, el)).toEqual({ show: true, count: 3, preview: '3 ματς να επιβεβαιώσεις', action: 'Δες' });
     expect(dailyFold(null, 2, en).preview).toBe('2 matches to confirm');
   });
   it('once nothing waits, the row goes', () => {
     expect(dailyFold(quiz(6), 0, el).show).toBe(false);
     expect(dailyFold(null, 0, el).show).toBe(false);
-    expect(dailyFold(quiz(6), 1, el)).toEqual({ show: true, count: 1, preview: 'Ένα ματς να επιβεβαιώσεις' });
+    expect(dailyFold(quiz(6), 1, el)).toEqual({ show: true, count: 1, preview: 'Ένα ματς να επιβεβαιώσεις', action: 'Δες' });
   });
 });

@@ -44,7 +44,7 @@ export function QuizOption({
       <Animated.View style={press.style}>
         <Animated.View style={[styles.box, { minHeight: tall ? 120 : 72 }, chosen && styles.boxChosen, pop]}>
           <Animated.View style={[styles.fill, fillStyle]} />
-          <Text style={[styles.name, tall ? styles.nameTall : styles.nameShort]}>{label}</Text>
+          <Text style={[styles.name, tall ? styles.nameTall : styles.nameShort, optionSize(label, tall)]}>{label}</Text>
           {mark ? <Mark text={mark} /> : <View />}
         </Animated.View>
       </Animated.View>
@@ -55,6 +55,19 @@ export function QuizOption({
 function Mark({ text }: { text: string }) {
   const pop = usePopIn(450, 120);
   return <Animated.Text style={[styles.mark, pop]}>{text}</Animated.Text>;
+}
+
+/**
+ * A long answer steps down in size so it stays inside its box (founder, 20 Oct: answers overflowed); the display face
+ * runs about 0.44em a letter, so the size follows the longest word and the length.
+ */
+function optionSize(label: string, tall: boolean): { fontSize: number; lineHeight: number } | null {
+  const longest = Math.max(...label.split(/\s+/).map((w) => w.length));
+  const base = tall ? 48 : 32;
+  const byWord = Math.floor(260 / (0.44 * Math.max(longest, 1)));
+  const byLength = label.length > 40 ? 22 : label.length > 24 ? 26 : base;
+  const size = Math.max(18, Math.min(base, byWord, byLength));
+  return size === base ? null : { fontSize: size, lineHeight: Math.round(size * 1.05) };
 }
 
 const styles = StyleSheet.create({
