@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated';
 import { useLocalSearchParams } from 'expo-router';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Logo } from '../../src/components/Logo';
@@ -10,14 +10,19 @@ import { Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useResults, useResultsTournaments, type SafetyTarget } from '../../src/lib/data';
 import { useFadeUpIn, usePress } from '../../src/lib/motion';
-import { colors, fonts, text, type } from '../../src/theme';
+import { bezier, colors, fonts, motion, text, type } from '../../src/theme';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): the scoreboard of the last two weeks, grouped by day and event.
  * Scoreboard, «Ανατροπή», «Το ’πες», reactions and «Πες κάτι στον …». On top, quietly (founder, 17 Oct): a name search
  * and the tournaments as chips; a chip loads all of that tournament's results. The sponsored card comes later.
+ * The search stays at the top while the results scroll (founder, 20 Oct); title and subtitle scroll away. The chips are
+ * hidden behind a quiet «Τουρνουά ↓» beside the search; a chip picks and folds the row, and the toggle then names it.
  */
 const TITLE_IN_MS = 400;
+/** the chips row: 44pt targets plus the gap under the search */
+const CHIPS_H = 50;
+const EASE_CSS = cubicBezier(...bezier);
 /** typing settles this long before the search goes out */
 const SEARCH_MS = 350;
 
@@ -26,9 +31,26 @@ export default function ResultsScreen() {
   // a reaction push opens Αποτελέσματα on the match's tournament (?tournament=)
   const params = useLocalSearchParams<{ tournament?: string }>();
   const [tournament, setTournament] = useState<string | null>(typeof params.tournament === 'string' ? params.tournament : null);
+  // the chips start folded, also when a push picks the tournament: the toggle then shows its name
+  const [chipsOpen, setChipsOpen] = useState(false);
   useEffect(() => {
-    if (typeof params.tournament === 'string' && params.tournament) setTournament(params.tournament);
+    if (typeof params.tournament === 'string' && params.tournament) {
+      setTournament(params.tournament);
+      setChipsOpen(false);
+    }
   }, [params.tournament]);
+  const pick = (id: string | null) => {
+    setTournament(id);
+    setChipsOpen(false);
+  };
+  // the bar is stuck once the title has scrolled away: a hairline appears under it
+  const barY = useRef(0);
+  const [stuck, setStuck] = useState(false);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const now = e.nativeEvent.contentOffset.y > barY.current;
+    if (now !== stuck) setStuck(now);
+  };
+  const reduced = useReducedMotion();
   const [typed, setTyped] = useState('');
   const [query, setQuery] = useState('');
   useEffect(() => {
@@ -38,6 +60,9 @@ export default function ResultsScreen() {
   const { groups, loading, error, refresh } = useResults({ tournament, query });
   const tournaments = useResultsTournaments();
   const filtered = tournament !== null || query.trim().length >= 2;
+  const picked = tournament !== null ? tournaments.find((x) => x.id === tournament)?.name ?? null : null;
+  const toggleLabel = `${picked ?? t.results.tournaments} ${chipsOpen ? '↑' : '↓'}`;
+  const ms = reduced ? 0 : motion.revealDurShort;
   const titleIn = useFadeUpIn(TITLE_IN_MS);
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
@@ -48,33 +73,74 @@ export default function ResultsScreen() {
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[1]}
+        keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         refreshControl={<RefreshControl refreshing={loading && groups.length > 0} onRefresh={refresh} tintColor={colors.ink} />}
       >
-        <View style={styles.list}>
-          <Animated.View style={[styles.head, titleIn]}>
-            <Text style={styles.title}>{t.results.title}</Text>
-            <Text style={styles.subtitle}>{t.results.subtitle}</Text>
-          </Animated.View>
-          <TextInput
-            value={typed}
-            onChangeText={setTyped}
-            placeholder={t.results.search}
-            placeholderTextColor={colors.muted}
-            autoCorrect={false}
-            autoCapitalize="none"
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-            style={styles.search}
-            accessibilityLabel={t.results.search}
-          />
+        <Animated.View style={[styles.head, titleIn]}>
+          <Text style={styles.title}>{t.results.title}</Text>
+          <Text style={styles.subtitle}>{t.results.subtitle}</Text>
+        </Animated.View>
+        <Animated.View
+          onLayout={(e) => { barY.current = e.nativeEvent.layout.y; }}
+          style={[styles.bar, { borderBottomColor: stuck ? colors.navLine : colors.paper, transitionProperty: 'borderBottomColor', transitionDuration: ms }]}
+        >
+          <View style={styles.searchRow}>
+            <TextInput
+              value={typed}
+              onChangeText={setTyped}
+              placeholder={t.results.search}
+              placeholderTextColor={colors.muted}
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              style={styles.search}
+              accessibilityLabel={t.results.search}
+            />
+            {tournaments.length > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: chipsOpen }}
+                accessibilityLabel={picked ?? t.results.tournaments}
+                onPress={() => setChipsOpen((o) => !o)}
+                style={styles.toggle}
+                hitSlop={4}
+              >
+                <Text style={[styles.toggleText, picked !== null && styles.toggleTextOn]} numberOfLines={1}>
+                  {toggleLabel}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
           {tournaments.length > 0 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipsRow}>
-              <Chip label={t.results.all} on={tournament === null} onPress={() => setTournament(null)} />
-              {tournaments.map((x) => (
-                <Chip key={x.id} label={x.name} logo={x.logo ?? null} on={tournament === x.id} onPress={() => setTournament(tournament === x.id ? null : x.id)} />
-              ))}
-            </ScrollView>
+            <Animated.View
+              pointerEvents={chipsOpen ? 'auto' : 'none'}
+              accessibilityElementsHidden={!chipsOpen}
+              importantForAccessibility={chipsOpen ? 'auto' : 'no-hide-descendants'}
+              style={[
+                styles.chipsWrap,
+                {
+                  height: chipsOpen ? CHIPS_H : 0,
+                  opacity: chipsOpen ? 1 : 0,
+                  transitionProperty: ['height', 'opacity'],
+                  transitionDuration: ms,
+                  transitionTimingFunction: EASE_CSS,
+                },
+              ]}
+            >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.chips} style={styles.chipsRow}>
+                <Chip label={t.results.all} on={tournament === null} onPress={() => pick(null)} />
+                {tournaments.map((x) => (
+                  <Chip key={x.id} label={x.name} logo={x.logo ?? null} on={tournament === x.id} onPress={() => pick(tournament === x.id ? null : x.id)} />
+                ))}
+              </ScrollView>
+            </Animated.View>
           ) : null}
+        </Animated.View>
+        <View style={styles.list}>
           {groups.map((g) => (
             <View key={g.key} style={styles.group}>
               {g.firstOfDay ? <Text style={styles.day}>{g.day}</Text> : null}
@@ -124,14 +190,24 @@ function Chip({ label, logo, on, onPress }: { label: string; logo?: string | nul
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
-  // prototype: padding 18px 20px, 84px at the bottom while «+ Ματς» shows
-  scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 84 },
-  list: { gap: 10 },
-  head: { gap: 6 },
+  // prototype: padding 18px 20px, 84px at the bottom while «+ Ματς» shows; each block carries the side padding so the
+  // stuck bar's paper runs edge to edge
+  scroll: { paddingTop: 18, paddingBottom: 84 },
+  list: { gap: 10, paddingHorizontal: 20, paddingTop: 4 },
+  head: { gap: 6, paddingHorizontal: 20, paddingBottom: 4 },
+  // stuck at the top: paper under it, a hairline once the title has gone
+  bar: { paddingHorizontal: 20, paddingVertical: 6, backgroundColor: colors.paper, borderBottomWidth: StyleSheet.hairlineWidth },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // a quiet text toggle: ink when a tournament is picked, inkSoft otherwise (not blue, not lime)
+  toggle: { minHeight: 44, maxWidth: '45%', justifyContent: 'center', paddingHorizontal: 4 },
+  toggleText: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.inkSoft },
+  toggleTextOn: { color: colors.ink },
+  chipsWrap: { overflow: 'hidden' },
   title: { ...text.title },
   subtitle: text.subtitle,
   search: {
-    height: 40,
+    flex: 1,
+    height: 44,
     paddingHorizontal: 16,
     borderRadius: 999,
     borderWidth: 1,
@@ -141,9 +217,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.ink,
   },
-  // the chips run edge to edge under the search
-  // the chips are about 33pt tall in 44pt targets; the negative margin keeps the row where it was
-  chipsRow: { marginHorizontal: -20, marginVertical: -5 },
+  // the chips run edge to edge under the search, in 44pt targets
+  chipsRow: { marginHorizontal: -20, marginTop: 6, flexGrow: 0 },
   chipHit: { minHeight: 44, justifyContent: 'center' },
   chips: { gap: 8, paddingHorizontal: 20 },
   chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: colors.navLine },

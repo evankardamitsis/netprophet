@@ -267,6 +267,7 @@ export const en: Copy = {
     subtitle: 'What happened on court.',
     all: 'All',
     search: 'Find a player',
+    tournaments: 'Tournaments',
     noneFound: 'Nothing here. Try another name or «All».',
     yesterday: 'Yesterday',
     dayBefore: 'Two days ago',

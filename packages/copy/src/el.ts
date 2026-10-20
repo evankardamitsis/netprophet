@@ -297,6 +297,8 @@ export const el = {
     /** the filter on top (founder, 17 Oct): every result, or one tournament's; and a name */
     all: 'Όλα',
     search: 'Ψάξε παίκτη',
+    /** the quiet toggle beside the search (founder, 20 Oct): the chips stay hidden until it is tapped; shows the picked tournament's name */
+    tournaments: 'Τουρνουά',
     noneFound: 'Τίποτα εδώ. Δοκίμασε άλλο όνομα ή «Όλα».',
     yesterday: 'Χθες',
     dayBefore: 'Προχθές',
