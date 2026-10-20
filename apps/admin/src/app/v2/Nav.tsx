@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cache, Suspense } from 'react';
 import { createV2ServerClient } from '@/lib/v2/server';
 import { SignOut } from './SignOut';
 
@@ -8,10 +9,16 @@ type Desk = 'tournaments' | 'results' | 'import' | 'sources' | 'moderation' | 'p
 type Counts = Partial<Record<Desk, number>>;
 type Rpc = (fn: string, args: object) => Promise<{ data: unknown; error: { message: string } | null }>;
 
+/** the desks that can show a badge */
+const COUNTED: ReadonlySet<Desk> = new Set<Desk>(['tournaments', 'results', 'moderation', 'notifications']);
+
 const len = (v: unknown) => (Array.isArray(v) ? v.length : 0);
 
-/** what is waiting on each desk; any problem just means no badge */
-async function waiting(): Promise<Counts> {
+/**
+ * what is waiting on each desk; any problem just means no badge. Cached per request, so every badge shares one
+ * round of RPCs.
+ */
+const waiting = cache(async (): Promise<Counts> => {
   try {
     const client = await createV2ServerClient();
     const rpc = client.rpc.bind(client) as unknown as Rpc;
@@ -40,6 +47,16 @@ async function waiting(): Promise<Counts> {
   } catch {
     return {};
   }
+});
+
+/** one desk's badge: streams in when the counts are ready, so the menu and the page never wait for them */
+async function Count({ desk }: { desk: Desk }) {
+  const n = (await waiting())[desk];
+  return n ? (
+    <span className="v2-nav-count" aria-label={`${n} waiting`}>
+      {n}
+    </span>
+  ) : null;
 }
 
 /**
@@ -47,21 +64,18 @@ async function waiting(): Promise<Counts> {
  * its own line and what is waiting on it, the staff member and «Sign out» at the bottom. On a phone it becomes a
  * row of desks above the page. Styles in v2.css.
  */
-export async function Nav({ here, staff }: { here: Desk; staff: { name: string; role: string } }) {
-  const counts = await waiting();
-  const item = (key: Desk, label: string) => {
-    const n = counts[key];
-    return (
-      <Link key={key} href={`/v2/${key}`} className="v2-nav-item" aria-current={here === key ? 'page' : undefined}>
-        <span>{label}</span>
-        {n ? (
-          <span className="v2-nav-count" aria-label={`${n} waiting`}>
-            {n}
-          </span>
-        ) : null}
-      </Link>
-    );
-  };
+export function Nav({ here, staff }: { here: Desk; staff: { name: string; role: string } }) {
+  // the row keeps its height (min-height 42px, badge 20px) and the label stays put, so a badge arriving moves nothing
+  const item = (key: Desk, label: string) => (
+    <Link key={key} href={`/v2/${key}`} className="v2-nav-item" aria-current={here === key ? 'page' : undefined}>
+      <span>{label}</span>
+      {COUNTED.has(key) ? (
+        <Suspense fallback={null}>
+          <Count desk={key} />
+        </Suspense>
+      ) : null}
+    </Link>
+  );
   return (
     <aside className="v2-nav">
       <div className="v2-brand">
