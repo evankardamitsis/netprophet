@@ -1,4 +1,4 @@
-import type { Copy } from '@netprophet/copy';
+import { nameShapeOk, tidyName, type Copy } from '@netprophet/copy';
 import { fmt } from './votes';
 
 /**
@@ -29,14 +29,16 @@ export function stepCounter(steps: readonly Step[], step: Step, t: Copy): string
   return fmt(t.onboarding.intro.of, { n, total: steps.length });
 }
 
-export type NameMissing = 'name' | 'sport' | 'age';
+export type NameMissing = 'name' | 'nameShape' | 'sport' | 'age';
 
 /**
  * «Συνέχεια» on «Πώς σε λένε;» before the step is ready says what is still missing, one thing at a time and in the
- * order the screen shows them: the name (both parts), what you play, then the 15-and-over tick. Null when ready.
+ * order the screen shows them: the name (both parts), a name that looks real (letters, 2 or more each: the server's
+ * name_shape rule), what you play, then the 15-and-over tick. Null when ready.
  */
 export function nameMissing(v: { first: string; surname: string; sport: SportChoice | null; adult: boolean }): NameMissing | null {
   if (!v.first.trim() || !v.surname.trim()) return 'name';
+  if (!nameShapeOk(tidyName(v.first)) || !nameShapeOk(tidyName(v.surname))) return 'nameShape';
   if (v.sport === null) return 'sport';
   if (!v.adult) return 'age';
   return null;
@@ -54,6 +56,22 @@ export function prefillName(
   const split = splitName(profile.display_name);
   if (split.first || split.surname) return split;
   return apple ?? split;
+}
+
+/** The name as it is saved: each part tidied («ΑΛΚΗΣ» -> «Αλκης»), the display name from the two. */
+export function savedName(first: string, surname: string): { first_name: string; surname: string; display_name: string } {
+  const f = tidyName(first);
+  const s = tidyName(surname);
+  return { first_name: f, surname: s, display_name: `${f} ${s}`.trim() };
+}
+
+/**
+ * The candidate «Ποιος είσαι;» picks by itself: the only one found, unless another account already holds it (that
+ * one needs «Είμαι εγώ», a report staff check). Keeps an earlier pick that is still listed and free.
+ */
+export function autoPick(list: { id: string; claimed?: boolean }[], current: string | null = null): string | null {
+  if (current && list.some((r) => r.id === current && !r.claimed)) return current;
+  return list.length === 1 && !list[0]!.claimed ? list[0]!.id : null;
 }
 
 /** «Ποια είναι η παρέα σου;» never blocks: someone who knows nobody yet goes on with «Αργότερα» */

@@ -65,6 +65,8 @@ export function mockPlayer(id: string, now: Date): PlayerProfile | null {
   return {
     ...card(s),
     is_me: false,
+    // every other sample player has an account, so «Δεν είμαι εγώ;» shows in the preview
+    claimed: true,
     record_year: { w: s.record[0], l: s.record[1] },
     last_matches: [1, 2, 4].map((ago, i) => ({
       match_id: `${id}-m${i}`,

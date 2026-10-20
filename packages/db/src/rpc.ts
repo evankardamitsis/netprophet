@@ -504,6 +504,8 @@ export interface ClaimCandidate {
   surname: string;
   area_id: string | null;
   match_score: number;
+  /** another account already holds this player (never who); not for a normal claim */
+  claimed: boolean;
 }
 
 export interface PlayersHome {
@@ -527,6 +529,8 @@ export interface PlayerMatchLine {
 /** One player's profile (api.get_player). */
 export interface PlayerProfile extends PlayerCard {
   is_me: boolean;
+  /** an account holds this player (never which one): «Δεν είμαι εγώ;» shows to everyone else */
+  claimed: boolean;
   /** «Φέτος»: this Athens year */
   record_year: { w: number; l: number };
   /** «Τελευταία ματς», newest first, at most 5 */

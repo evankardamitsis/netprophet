@@ -378,6 +378,8 @@ export const el = {
         name: 'Γράψε όνομα και επώνυμο',
         sport: 'Διάλεξε τι παίζεις',
         age: 'Τίκαρε ότι είσαι 15 και πάνω',
+        /** letters only, at least 2 each (the server's name_shape rule) */
+        nameShape: 'Γράψε το πραγματικό σου όνομα και επώνυμο, με γράμματα.',
       },
     },
     claim: {
@@ -395,6 +397,11 @@ export const el = {
       /** after «είμαι καινούριος»: staff make the player (founder, 20 Oct 2026) */
       newRequested: 'Θα φτιάξουμε το προφίλ σου και θα σου πούμε μόλις είναι έτοιμο. Μέχρι τότε παίζεις κανονικά.',
       failed: 'Δεν έγινε. Ξαναδοκίμασε.',
+      /** a roster player another account already holds: listed, but not for a normal claim (founder, 20 Oct 2026) */
+      claimedSub: 'Έχει ήδη συνδεθεί με άλλο λογαριασμό',
+      claimedNote: 'Αυτό το προφίλ το έχει ήδη άλλος λογαριασμός. Αν είσαι εσύ, πες μας και θα το ελέγξουμε.',
+      claimedMe: 'Είμαι εγώ',
+      claimedSent: 'Θα το ελέγξουμε και θα σου πούμε. Μέχρι τότε παίζεις κανονικά.',
     },
     play: {
       title: 'Πώς παίζεις;',
@@ -992,6 +999,14 @@ export const el = {
     list: 'Μπλοκαρισμένοι',
     unblock: 'Ξεμπλόκαρε',
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
+    /** «Δεν είμαι εγώ;» on a profile an account holds: the account may not be that person (founder, 20 Oct 2026) */
+    claim: {
+      link: 'Δεν είμαι εγώ;',
+      title: 'Κάτι δεν πάει καλά;',
+      sub: 'Αν το προφίλ είναι δικό σου, ή ξέρεις ότι ο λογαριασμός του δεν είναι του ανθρώπου που δείχνει, πες μας.',
+      note: 'Κάτι ακόμα που πρέπει να ξέρουμε (αν θες)',
+      sent: 'Το είδαμε. Θα το ελέγξουμε.',
+    },
   },
   /** full-screen moments (prototype celOn): σερί milestones for now */
   celebrate: {

@@ -3,7 +3,7 @@ import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import type { FeedPlayer, Side } from '@netprophet/db';
 import { Banner, Toast, useToast, type Tone } from '../feedback';
 import { Badge, Card, Empty, Ghost, PageHeader, Pager, Secondary, Section, Stats, Tabs, usePages } from '../kit';
-import { approvePlayer, closeReport, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, reviewClaim, reviewMatch, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
+import { approvePlayer, closeReport, decideIdentity, decideTrait, linkSuggestion, mergePlayer, resetBallerName, resolveDispute, reviewClaim, reviewMatch, searchPlayers, type ActionResult, type FoundPlayer } from './actions';
 
 export interface Dispute {
   match_id: string;
@@ -40,11 +40,47 @@ export interface PlayerMatch {
  * «Αιτήματα παικτών»: a user asks to be a roster player (from «Ποιος είσαι;» or a match link), or did not find
  * themselves and joins as a new player ('new': the player was made from their profile and waits, unseen)
  */
+/** what staff see about an account (core.account_hints): how it signs in, the name Google or Apple gave, its requests */
+export interface AccountHints {
+  user_id: string;
+  name: string | null;
+  display_name: string | null;
+  email: string | null;
+  joined_at: string | null;
+  /** 'google' | 'apple' | 'email' … */
+  providers: string[];
+  /** the name Google or Apple gave, only when it is not the requested one */
+  provider_name: string | null;
+  /** roster claims this account asked for, ever */
+  requests: number;
+  /** «είμαι καινούριος» requests, ever */
+  new_players: number;
+}
+
+/**
+ * «Ταυτότητα»: «Δεν είμαι εγώ;» on a profile ('not_them'), «Είμαι εγώ» on a claimed candidate in onboarding ('is_me'),
+ * or the first official result on a player a user made ('first_official')
+ */
+export interface IdentityFlag {
+  id: string;
+  kind: 'not_them' | 'is_me' | 'first_official';
+  created_at: string;
+  note: string | null;
+  player: { id: string; name: string; gender: 'm' | 'f' | null; source: string; status: string; matches: number };
+  /** the account holding the player now; null once nobody does */
+  claimer: AccountHints | null;
+  reporter: (AccountHints & { has_player: boolean }) | null;
+  /** open reports on this player */
+  reports: number;
+  match: { id: string; starts_at: string; sides: { side: Side; players: FeedPlayer[] }[]; tournament: string | null; score: string | null } | null;
+}
+
 export interface ClaimRequest {
   user_id: string;
   via: 'app' | 'link' | 'new';
   created_at: string;
   user: { name: string | null; display_name: string | null; area_id: string | null; email: string | null; joined_at: string };
+  account?: AccountHints;
   player: { id: string; first_name: string; surname: string; area_id: string | null; area: string | null; birth_year: number | null; source: string; claimed: boolean; matches: number };
   /** via 'new': a roster player with the same name, and others that look like it */
   duplicate: { player_id: string; name: string; area_id: string | null; claimed: boolean } | null;
@@ -152,7 +188,7 @@ function useItemAction({ onNotice, notify }: Cues) {
   return { pending, busy, run, cardClass };
 }
 
-type Tab = 'matches' | 'claims' | 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
+type Tab = 'matches' | 'claims' | 'identity' | 'reports' | 'disputes' | 'players' | 'traits' | 'tournaments' | 'names';
 
 const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: string }> = {
   claims: {
@@ -160,6 +196,12 @@ const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: 
     title: 'People asking to be a player',
     hint: 'Someone says they are this player, or did not find themselves and joins as «Νέος παίκτης». Approving makes the player theirs (a new player goes live too); rejecting tells them with a push.',
     noun: 'requests',
+  },
+  identity: {
+    label: 'Ταυτότητα',
+    title: 'Is the account that person?',
+    hint: 'Someone says the account on a player is not that person («Δεν είμαι εγώ;», or «Είμαι εγώ» in onboarding), or a player a user made just got its first official result. Nothing is held back meanwhile.',
+    noun: 'items',
   },
   matches: {
     label: 'Ματς παικτών',
@@ -204,21 +246,36 @@ const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: 
     noun: 'names',
   },
 };
-const ORDER: Tab[] = ['matches', 'claims', 'reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
+const ORDER: Tab[] = ['matches', 'claims', 'identity', 'reports', 'disputes', 'players', 'traits', 'tournaments', 'names'];
 /** tabs that wait for a decision; Baller names are only there to look over */
-const WAITING: Tab[] = ['matches', 'claims', 'reports', 'disputes', 'players', 'traits', 'tournaments'];
+const WAITING: Tab[] = ['matches', 'claims', 'identity', 'reports', 'disputes', 'players', 'traits', 'tournaments'];
 
 /**
  * The moderation queue: things only a person can decide. Each item is a question with plain buttons.
  * Player-logged matches and results wait for staff here (founder, 18 Oct 2026); names are live at once.
  */
-export function Queue({ data, tournaments, names, matches, claims }: { data: Moderation; tournaments: TournamentOption[]; names: BallerName[]; matches: PlayerMatch[]; claims: ClaimRequest[] }) {
+export function Queue({
+  data,
+  tournaments,
+  names,
+  matches,
+  claims,
+  identity = [],
+}: {
+  data: Moderation;
+  tournaments: TournamentOption[];
+  names: BallerName[];
+  matches: PlayerMatch[];
+  claims: ClaimRequest[];
+  identity?: IdentityFlag[];
+}) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const { toast, notify } = useToast();
   const traits = data.traits ?? [];
   const counts: Record<Tab, number> = {
     matches: matches.length,
     claims: claims.length,
+    identity: identity.length,
     reports: data.reports.length,
     disputes: data.disputes.length,
     players: data.players.length,
@@ -242,6 +299,8 @@ export function Queue({ data, tournaments, names, matches, claims }: { data: Mod
     body = <Paged key={tab} items={matches} noun={s.noun} grid render={(m) => <PlayerMatchRow key={m.match_id} m={m} cues={cues} />} />;
   } else if (tab === 'claims') {
     body = <Paged key={tab} items={claims} noun={s.noun} grid render={(c) => <ClaimRow key={c.user_id} c={c} cues={cues} />} />;
+  } else if (tab === 'identity') {
+    body = <Paged key={tab} items={identity} noun={s.noun} grid render={(f) => <IdentityRow key={f.id} f={f} cues={cues} />} />;
   } else if (tab === 'reports') {
     body = <Paged key={tab} items={data.reports} noun={s.noun} grid render={(r) => <ReportRow key={r.id} r={r} cues={cues} />} />;
   } else if (tab === 'disputes') {
@@ -264,6 +323,7 @@ export function Queue({ data, tournaments, names, matches, claims }: { data: Mod
           { label: total === 0 ? 'all clear' : 'waiting for you', value: total, ink: true },
           { label: 'player matches', value: counts.matches },
           { label: 'player requests', value: counts.claims },
+          { label: 'identity checks', value: counts.identity },
           { label: 'reports', value: counts.reports },
           { label: 'disputed results', value: counts.disputes },
           { label: 'new players', value: counts.players },
@@ -442,6 +502,115 @@ function PlayerMatchRow({ m, cues }: { m: PlayerMatch; cues: Cues }) {
   );
 }
 
+const PROVIDERS: Record<string, string> = { google: 'Google', apple: 'Apple', email: 'email' };
+
+/**
+ * The hints on every claim, new player and report: how the account signs in, the name Google or Apple gave when it is
+ * not the requested one, and how many requests it has made (more than one stands out)
+ */
+function AccountHintsLine({ a, label }: { a: AccountHints | null | undefined; label?: string }) {
+  if (!a) return null;
+  const total = (a.requests ?? 0) + (a.new_players ?? 0);
+  const signIn = a.providers.length ? a.providers.map((p) => PROVIDERS[p] ?? p).join(' + ') : 'unknown';
+  return (
+    <span className="v2-row" style={{ gap: 6, fontSize: 14, flexWrap: 'wrap' }}>
+      {label ? <b>{label}</b> : null}
+      <span className="v2-muted">signs in with {signIn}</span>
+      {a.provider_name ? (
+        <Badge tone="attention">
+          {PROVIDERS[a.providers.find((p) => p !== 'email') ?? ''] ?? 'Sign-in'} name «{a.provider_name}»
+        </Badge>
+      ) : null}
+      {total > 1 ? (
+        <Badge tone="attention">
+          {plural(a.requests, 'claim')} + {plural(a.new_players, 'new player request')}
+        </Badge>
+      ) : (
+        <span className="v2-muted">{total === 1 ? 'first request' : 'no requests'}</span>
+      )}
+    </span>
+  );
+}
+
+const KIND_TITLE = (f: IdentityFlag) => {
+  const pron = f.player.gender === 'f' ? 'αυτή' : 'αυτός';
+  if (f.kind === 'first_official') return 'Πρώτο επίσημο αποτέλεσμα σε προφίλ που έφτιαξε χρήστης';
+  if (f.kind === 'is_me') return `Αναφορά: λέει ότι είναι ${pron}`;
+  return `Αναφορά: δεν είναι ${pron}`;
+};
+
+function IdentityRow({ f, cues }: { f: IdentityFlag; cues: Cues }) {
+  const { pending, busy, run, cardClass } = useItemAction(cues);
+  const who = (a: AccountHints | null) => (a ? a.name ?? a.display_name ?? a.email ?? 'an account' : 'nobody');
+  const canGive = f.kind !== 'first_official' && f.reporter !== null && !f.reporter.has_player;
+  const m = f.match;
+  return (
+    <div className={cardClass()} aria-busy={pending || undefined}>
+      <div className="v2-row between">
+        <span className="v2-muted">{when(f.created_at)}</span>
+        <span className="v2-row" style={{ gap: 6 }}>
+          <Badge tone="ink">{KIND_TITLE(f)}</Badge>
+          {f.reports > 1 ? <Badge tone="attention">{f.reports} people reported this</Badge> : null}
+        </span>
+      </div>
+      <div style={{ fontSize: 16 }}>
+        <b>{f.player.name}</b> is held by <b>{who(f.claimer)}</b>
+        {f.claimer?.email ? <span className="v2-muted"> ({f.claimer.email})</span> : null}.
+      </div>
+      <AccountHintsLine a={f.claimer} label="Holder:" />
+      {f.reporter ? (
+        <>
+          <span style={{ fontSize: 14 }}>
+            Reported by <b>{who(f.reporter)}</b>
+            {f.reporter.email ? <span className="v2-muted"> ({f.reporter.email})</span> : null}
+            {f.reporter.has_player ? <span className="v2-muted"> · already holds a player</span> : null}
+            {f.note ? <span>: «{f.note}»</span> : null}
+          </span>
+          <AccountHintsLine a={f.reporter} label="Reporter:" />
+        </>
+      ) : null}
+      {m ? (
+        <span style={{ fontSize: 14 }}>
+          {m.sides.map((sd) => sd.players.map((p) => `${p.first_name} ${p.surname}`).join(' / ')).join(' vs ')}
+          {m.score ? ` ${m.score}` : ''} · {m.tournament ?? 'official'} · {when(m.starts_at)}
+        </span>
+      ) : null}
+      <span className="v2-muted">
+        Player made by {f.player.source === 'user' ? 'a user' : 'staff or a sheet'} · {plural(f.player.matches, 'match', 'matches')}
+      </span>
+      <div className="v2-row">
+        <Secondary
+          busy={busy === 'dismiss'}
+          disabled={pending}
+          onClick={() => run('dismiss', f.player.name, 'Closing', () => decideIdentity(f.id, 'dismiss'), f.kind === 'first_official' ? 'Looked at' : 'Report dismissed')}
+        >
+          {busy === 'dismiss' ? 'Closing…' : f.kind === 'first_official' ? 'Εντάξει' : 'Απόρριψη αναφοράς'}
+        </Secondary>
+        <Confirm
+          label="Αποσύνδεση"
+          question={`Unlink ${f.player.name} from ${who(f.claimer)}? The account keeps its votes and points.`}
+          yes="Yes, unlink"
+          working="Unlinking…"
+          busy={busy === 'unlink'}
+          disabled={pending}
+          onYes={() => run('unlink', f.player.name, 'Unlinking', () => decideIdentity(f.id, 'unlink'), 'Unlinked')}
+        />
+        {canGive ? (
+          <Confirm
+            label="Δώσ’ το στον αναφέροντα"
+            question={`Unlink ${f.player.name} from ${who(f.claimer)} and give it to ${who(f.reporter)}? They get the «Είσαι εσύ!» push.`}
+            yes="Yes, give it"
+            working="Giving…"
+            busy={busy === 'give'}
+            disabled={pending}
+            onYes={() => run('give', f.player.name, 'Giving', () => decideIdentity(f.id, 'give'), 'Given to the reporter')}
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function ClaimRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
   if (c.via === 'new') return <NewPlayerRow c={c} cues={cues} />;
   return <RosterClaimRow c={c} cues={cues} />;
@@ -471,6 +640,7 @@ function NewPlayerRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
         {c.player.area ?? c.player.area_id ?? 'no area yet'} · {account || 'no email'} · joined {when(c.user.joined_at)}
         {c.player.matches > 0 ? ` · ${plural(c.player.matches, 'match', 'matches')} already` : ''}
       </span>
+      <AccountHintsLine a={c.account} />
       {looksLike.length > 0 ? (
         <span style={{ fontSize: 14 }}>
           πιθανό ίδιο με{' '}
@@ -525,7 +695,9 @@ function RosterClaimRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
       <span className="v2-muted">
         {facts}
         {c.user.area_id ? ` · they live in ${c.user.area_id}` : ''} · joined {when(c.user.joined_at)}
+        {c.user.email ? ` · ${c.user.email}` : ''}
       </span>
+      <AccountHintsLine a={c.account} />
       <b style={{ fontSize: 14 }}>Is this them?</b>
       <div className="v2-row">
         <Secondary busy={busy === 'approve'} disabled={pending} onClick={() => run('approve', player, 'Approving', () => reviewClaim(c.user_id, true), 'Approved')}>

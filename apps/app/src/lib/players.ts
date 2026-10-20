@@ -49,6 +49,8 @@ export interface ProfileView {
   form: FormDot[];
   isFollowed: boolean;
   isMe: boolean;
+  /** an account holds this player: «Δεν είμαι εγώ;» for everyone else */
+  claimed: boolean;
   /** «Σήμερα 18:00 με Δημήτρη Γκότση» */
   next: string | null;
   last: LastMatchLine[];
@@ -124,6 +126,7 @@ export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Co
     form: p.form,
     isFollowed: p.is_followed,
     isMe: p.is_me,
+    claimed: p.claimed === true,
     next: p.next_match ? nextLine(p.next_match, t, now) : null,
     last: p.last_matches.map((m) => ({
       result: fmt(m.won ? t.players.won : t.players.lost, { score: m.walkover ? t.results.walkover : m.score ?? '' }).trim(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber } from './greek';
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk } from './greek';
 
 describe('greekCaps', () => {
     it('drops accents, which toUpperCase does not', () => {
@@ -120,4 +120,26 @@ describe('levelNumber', () => {
     expect(levelNumber(3.99)).toBe('3,5');
     expect(levelNumber(4.5, 'en')).toBe('4.5');
   });
+});
+
+describe('tidyName and nameShapeOk (the server runs the same rule)', () => {
+    it('title-cases ALL CAPS and all lower case, with a final sigma', () => {
+        expect(tidyName('  ΑΛΚΙΒΙΑΔΗΣ  ')).toBe('Αλκιβιαδης');
+        expect(tidyName('αλκιβιάδης')).toBe('Αλκιβιάδης');
+        expect(tidyName('ΠΑΠΑΔΟΠΟΥΛΟΣ - ΓΚΙΚΑΣ')).toBe('Παπαδοπουλος-Γκικας');
+        expect(tidyName("o'brien")).toBe("O'Brien");
+    });
+
+    it('keeps mixed case and collapses spaces', () => {
+        expect(tidyName('McDonald')).toBe('McDonald');
+        expect(tidyName('Άννα   Μαρία')).toBe('Άννα Μαρία');
+    });
+
+    it('accepts real names', () => {
+        for (const n of ['Αλκιβιάδης', 'Ζωή-Ελένη', 'Chloë', 'Li', "D'Angelo", 'Άννα Μαρία']) expect(nameShapeOk(n)).toBe(true);
+    });
+
+    it('refuses initials, digits, emoji and loose separators', () => {
+        for (const n of ['', 'Α', 'Α.', 'Nikos99', '-Νίκος', 'Νίκος  Π', '😀😀', 'Νίκος-']) expect(nameShapeOk(n)).toBe(false);
+    });
 });
