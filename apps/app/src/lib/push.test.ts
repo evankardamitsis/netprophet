@@ -16,5 +16,6 @@ describe('pushRoute', async () => {
   it('a reaction opens Αποτελέσματα on its tournament', () =>
     expect(pushRoute({ type: 'reaction', match_id: 'm1', tournament_id: 't1' })).toBe('/results?tournament=t1'));
   it('a reaction to a friendly opens Αποτελέσματα', () => expect(pushRoute({ type: 'reaction', match_id: 'm1', tournament_id: null })).toBe('/results'));
+  it('a claim decision opens Εγώ', () => expect(pushRoute({ type: 'claim', player_id: 'p1', decision: 'approved' })).toBe('/me'));
   it('anything else stays put', () => expect(pushRoute({ type: 'other' })).toBeNull());
 });

@@ -71,7 +71,7 @@ export async function askForPushOnce(api: Api): Promise<void> {
   }
 }
 
-/** where a tapped push opens: a schedule alert its tournament, results and reactions the Αποτελέσματα tab, a reminder Σήμερα */
+/** where a tapped push opens: a schedule alert its tournament, results and reactions the Αποτελέσματα tab, a reminder Σήμερα, a claim decision Εγώ */
 export function pushRoute(data: Record<string, unknown> | undefined): string | null {
   if (!data) return null;
   if (data.type === 'schedule' && typeof data.tournament_id === 'string') return `/tournament/${data.tournament_id}`;
@@ -85,6 +85,8 @@ export function pushRoute(data: Record<string, unknown> | undefined): string | n
   if (data.type === 'reminder') return '/';
   // entries close in two days: Τουρνουά, where «Το επόμενο τουρνουά για σένα» lists it
   if (data.type === 'entry') return '/tournaments';
+  // staff decided your roster claim: Εγώ, where the player now shows (or the claim can be asked again)
+  if (data.type === 'claim') return '/me';
   return null;
 }
 
