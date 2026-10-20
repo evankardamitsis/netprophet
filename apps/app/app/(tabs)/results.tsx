@@ -9,7 +9,7 @@ import { Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useResults, useResultsTournaments, type SafetyTarget } from '../../src/lib/data';
 import { useFadeUpIn, usePress } from '../../src/lib/motion';
-import { colors, fonts, text } from '../../src/theme';
+import { colors, fonts, text, type } from '../../src/theme';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): the scoreboard of the last two weeks, grouped by day and event.
@@ -77,7 +77,12 @@ export default function ResultsScreen() {
                   {g.logo ? <Logo path={g.logo.path} name={g.title} size={24} /> : null}
                   <Text style={styles.eventTitle}>{g.title}</Text>
                 </View>
-                {g.detail ? <Text style={text.meta}>{g.detail}</Text> : null}
+                {g.category || g.detail ? (
+                  <View style={styles.eventSub}>
+                    {g.category ? <Text style={styles.eventCategory}>{g.category}</Text> : null}
+                    {g.detail ? <Text style={[text.meta, styles.eventDetail]}>{g.detail}</Text> : null}
+                  </View>
+                ) : null}
               </View>
               {g.items.map((item) => (
                 <ResultRow key={item.id} item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
@@ -146,6 +151,10 @@ const styles = StyleSheet.create({
   day: { ...text.label, marginTop: 10 },
   event: { gap: 2, paddingHorizontal: 4, marginBottom: 2 },
   eventHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  // the category in bold ink and the round quiet beside it, as on Σήμερα's tournament heads
+  eventSub: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', columnGap: 6 },
+  eventCategory: { fontFamily: fonts.bodyBold, fontSize: type.body.size, lineHeight: type.meta.line, color: colors.ink },
+  eventDetail: { flexShrink: 1 },
   eventTitle: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 22, lineHeight: 24, paddingTop: 5, marginTop: -5, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   empty: { paddingTop: 4, paddingHorizontal: 12, fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
 });
