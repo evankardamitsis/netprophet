@@ -7,6 +7,8 @@ import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { usePopIn, usePress } from '../lib/motion';
 import { hasNewResults, useResultsSeen } from '../lib/resultsSeen';
+import { useTourTarget } from '../lib/tour';
+import type { TourTarget } from '../lib/tourSteps';
 import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts, springBezier } from '../theme';
 
@@ -79,6 +81,7 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
           return (
             <TabItem
               key={route.key}
+              tourId={`tab:${route.name}` as TourTarget}
               label={label}
               focused={focused}
               dot={route.name === 'results' && resultsNew}
@@ -102,12 +105,15 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
 }
 
 function TabItem({
+  tourId,
   label,
   focused,
   dot,
   onPress,
   onLayout,
 }: {
+  /** the first-visit tour points at the tab by this id */
+  tourId: TourTarget;
   label: string;
   focused: boolean;
   dot: boolean;
@@ -117,8 +123,10 @@ function TabItem({
   const press = usePress();
   const reduced = useReducedMotion();
   const fg = { color: focused ? colors.ink : colors.mist, transitionProperty: 'color', transitionDuration: reduced ? 0 : COLOR_MS } as const;
+  const tourRef = useTourTarget(tourId);
   return (
     <Pressable
+      ref={tourRef}
       accessibilityRole="tab"
       accessibilityState={{ selected: focused }}
       accessibilityLabel={label}

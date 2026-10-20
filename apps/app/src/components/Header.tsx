@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -6,12 +6,13 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import { useMyBaller, type MeSummary } from '../lib/data';
 import { useHudActions, useHudNumbers, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
+import { useTourTarget } from '../lib/tour';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
 import { Baller, type BallerHandle } from './Baller';
@@ -161,8 +162,18 @@ function Avatar({ initials, sport, points }: { initials: string; sport: string; 
     if (points !== undefined && last.current !== undefined && points > last.current) baller.current?.play('hop');
     last.current = points;
   }, [points]);
+  // the first-visit tour's last step lights the avatar («Εσύ»)
+  const [front, setFront] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setFront(true);
+      return () => setFront(false);
+    }, []),
+  );
+  const tourRef = useTourTarget('avatar', front);
   return (
     <Pressable
+      ref={tourRef}
       accessibilityRole="button"
       accessibilityLabel={t.tabs.me}
       onPress={goMe}

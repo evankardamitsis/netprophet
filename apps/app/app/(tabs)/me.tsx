@@ -12,6 +12,7 @@ import { useCopy } from '../../src/i18n';
 import { guestAllowed, useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
+import { useTour } from '../../src/lib/tour';
 import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useReactionPush } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
@@ -698,6 +699,7 @@ function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const gate = useOnboardingGate();
+  const tour = useTour();
   const blocks = useBlocks();
   const newPlayer = useNewPlayer();
   const mockMode = useApi() === null;
@@ -712,6 +714,17 @@ function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
           <PlayStyleRow onSaved={onPlaySaved} />
           <SoundsRow />
           <ReactionsPushRow />
+          {/* the first-visit tour once more: it starts on Σήμερα as soon as the feed is ready */}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              tour.replay();
+              router.navigate('/');
+            }}
+            style={styles.linkHit}
+          >
+            <Text style={styles.signOut}>{t.tour.replay}</Text>
+          </Pressable>
           {blocks.list.length > 0 ? (
             <View style={styles.blocks}>
               <Text style={styles.blocksTitle}>{t.safety.list}</Text>

@@ -1353,4 +1353,24 @@ export const el = {
     players: 'Οι παίκτες έρχονται εδώ.',
     me: 'Το προφίλ σου έρχεται εδώ.',
   },
+  /** the first-visit tour on Σήμερα (founder, 20 Oct): once per account, replayable from Εγώ › Ρυθμίσεις */
+  tour: {
+    /** the overlay as a whole, for screen readers */
+    label: 'Ξενάγηση',
+    steps: {
+      feed: { title: 'Ψήφισε ποιος κερδίζει', line: 'Πάτα τον παίκτη που πιστεύεις ότι κερδίζει. Αν το βρεις, παίρνεις πόντους και σερί.' },
+      results: { title: 'Τι έγινε στα γήπεδα', line: 'Όλα τα αποτελέσματα. Ψάξε παίκτη ή τουρνουά.' },
+      tournaments: { title: 'Τα τουρνουά', line: 'Πρόγραμμα, κληρώσεις και τα δικά σου τουρνουά.' },
+      ladder: { title: 'Η Κατάταξη', line: 'Ανέβα μαζί με την παρέα σου. Κάθε μήνα από την αρχή.' },
+      me: { title: 'Εσύ', line: 'Ο Baller σου, τα στατιστικά σου, οι αποστολές και το Pro.' },
+    },
+    next: 'Επόμενο ›',
+    skip: 'Παράλειψη',
+    /** the last step's button, the one blue on the tour */
+    go: 'Πάμε να ψηφίσουμε',
+    /** «2 από 5» */
+    counter: '{n} από {total}',
+    /** the row in Εγώ › Ρυθμίσεις */
+    replay: 'Δες ξανά την ξενάγηση',
+  },
 };
