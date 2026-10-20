@@ -2,7 +2,7 @@ import { dayKey } from '@netprophet/core';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
 import { Logo } from '../../src/components/Logo';
@@ -46,8 +46,8 @@ import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote } from '../../src/lib/quests';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHud } from '../../src/lib/hud';
-import { usePress, useStgIn } from '../../src/lib/motion';
-import { colors, ease, fonts, motion, surfaceTints, text, type } from '../../src/theme';
+import { useFadeUpIn, usePress, useStgIn } from '../../src/lib/motion';
+import { colors, fonts, motion, surfaceTints, text, type } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 import { momentsAct, useMoments } from '../../src/lib/useMoments';
@@ -316,7 +316,7 @@ export default function VoteScreen() {
       markShown();
     }
   }, [calm, focused, loading, current, celebrating, forYouOpen, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
-  const titleIn = useInA();
+  const titleIn = useFadeUpIn(TITLE_IN_MS);
   // the Pro line only once you voted this visit or today, and never above the feed (founder, 19 Oct)
   const votedToday = votedNow.size > 0 || voteCount.voted > 0;
   const extras = (
@@ -403,14 +403,6 @@ export default function VoteScreen() {
   );
 }
 
-/** inA: fade in from 12px below on the prototype ease. */
-function useInA() {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withTiming(1, { duration: TITLE_IN_MS, easing: ease });
-  }, [p]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 12 }] }));
-}
 
 
 /**

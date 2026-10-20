@@ -3,7 +3,6 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withRepeat,
   withSequence,
   withTiming,
@@ -14,7 +13,7 @@ import { Intro } from '../src/components/Intro';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
 import { AuthFailure, EMAIL_RE, guestAllowed, useAuth, type AuthErrorKind } from '../src/lib/auth';
-import { usePopIn, usePress } from '../src/lib/motion';
+import { useFadeUpIn, usePopIn, usePress, useRiseIn } from '../src/lib/motion';
 import { SKIP_ONBOARDING_KEY } from '../src/lib/onboardingGate';
 import { fmt } from '../src/lib/votes';
 import { cardSurface, colors, ease, fonts, text } from '../src/theme';
@@ -81,7 +80,7 @@ export default function SignInScreen() {
 
 function Welcome({ onNext, onLater }: { onNext: () => void; onLater: () => void }) {
   const t = useCopy();
-  const card = useInA(500, 12);
+  const card = useFadeUpIn(500);
   const cta = usePopIn(450, 1500);
   return (
     <View style={styles.welcome}>
@@ -156,7 +155,8 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
   const [error, setError] = useState<AuthErrorKind | null>(null);
   const shake = useSharedValue(0);
   const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
-  const enter = useInA(400, 12, step);
+  // inA: each step fades in from 12px below (the key on each step's view plays it again on the code step)
+  const enter = useFadeUpIn(400);
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -194,7 +194,7 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
 
   if (step === 'email') {
     return (
-      <Animated.View style={[styles.form, enter]}>
+      <Animated.View key="email" style={[styles.form, enter]}>
         <Text style={styles.h1}>{t.auth.title}</Text>
         <Text style={styles.lead}>{t.auth.subtitle}</Text>
         <Animated.View style={shakeStyle}>
@@ -228,7 +228,7 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
   }
 
   return (
-    <Animated.View style={[styles.form, enter]}>
+    <Animated.View key="code" style={[styles.form, enter]}>
       <Text style={styles.h1}>{t.auth.codeTitle}</Text>
       <Text style={styles.lead}>{fmt(t.auth.codeSent, { email: cleanEmail })}</Text>
       <Animated.View style={shakeStyle}>
@@ -266,23 +266,9 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
 
 /* ---------- pieces ---------- */
 
-/** inA: fade in from `dy` px below; replays when `key` changes. */
-function useInA(duration: number, dy: number, key?: unknown) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = 0;
-    p.value = withTiming(1, { duration, easing: ease });
-  }, [p, duration, key]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * dy }] }));
-}
-
 /** rise: fade in from 40px below after `delay`. */
 function Rise({ delay, duration, children }: { delay: number; duration: number; children: ReactNode }) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withDelay(delay, withTiming(1, { duration, easing: ease }));
-  }, [p, delay, duration]);
-  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 40 }] }));
+  const style = useRiseIn(duration, delay);
   return <Animated.View style={style}>{children}</Animated.View>;
 }
 

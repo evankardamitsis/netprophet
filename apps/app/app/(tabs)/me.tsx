@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
 import { QuestsSheet } from '../../src/components/QuestsSheet';
@@ -22,9 +22,9 @@ import { activeLine } from '../../src/lib/pro';
 import { meSections, mePageOf } from '../../src/lib/meSections';
 import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
 import { useUnlocks } from '../../src/lib/unlocks';
-import { usePopIn, usePress, useStgIn } from '../../src/lib/motion';
+import { useEntrance, usePopIn, usePress, useStgIn } from '../../src/lib/motion';
 import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
-import { alpha, colors, ease, fonts } from '../../src/theme';
+import { alpha, colors, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
 import { Baller } from '../../src/components/Baller';
 import { CardBackground } from '../../src/components/CardBackground';
@@ -217,22 +217,20 @@ function QuestsRow({ done, onPress }: { done: number; onPress: () => void }) {
   );
 }
 
+const WORN_IN = {
+  from: { opacity: 0, transform: [{ scale: 1.4 }] },
+  to: { opacity: 1, transform: [{ scale: 1 }] },
+};
+
 /** the badge worn on the card, under the name: a lime outline, its name and the tier dots; it slams in late */
 function WornPill({ data }: { data: GetBadgesResult | null }) {
   const t = useCopy();
   const row = data?.badges.find((b) => b.key === data.worn);
-  const scale = useSharedValue(1.4);
-  const opacity = useSharedValue(0);
-  useEffect(() => {
-    scale.value = 1.4;
-    opacity.value = 0;
-    scale.value = withDelay(1200, withTiming(1, { duration: 500, easing: ease }));
-    opacity.value = withDelay(1200, withTiming(1, { duration: 500, easing: ease }));
-  }, [scale, opacity, row?.key]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  // a CSS entrance (lib/motion); the key plays it again when another badge is worn
+  const style = useEntrance(WORN_IN, 500, 1200);
   if (!row || row.tier === 0) return null;
   return (
-    <Animated.View style={[styles.worn, style]} accessibilityLabel={badgeName(row.key, t)}>
+    <Animated.View key={row.key} style={[styles.worn, style]} accessibilityLabel={badgeName(row.key, t)}>
       <Text style={styles.wornText}>{badgeName(row.key, t)}</Text>
       <BadgeDots tier={row.tier} size={7} border={1.5} color={colors.lime} gap={3} />
     </Animated.View>

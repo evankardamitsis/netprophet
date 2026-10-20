@@ -1,13 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  cubicBezier,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withDelay,
   withSequence,
   withTiming,
+  type CSSAnimationTimingFunction,
   type SharedValue,
 } from 'react-native-reanimated';
-import { ease, springEase } from '../theme';
+import type { ViewStyle } from 'react-native';
+import { bezier, springBezier, springEase } from '../theme';
 
 /**
  * The prototype's shared motions (V2.dc.html), so every screen moves the same way.
@@ -37,25 +41,6 @@ export function usePress(scaleTo = PRESS_SCALE) {
 }
 
 
-/**
- * True once an entrance should be over (`delayMs + durationMs`, plus a margin). The entrance hooks then hand back their
- * final style as a plain style, so React itself draws the end state: on the new architecture an animated update can be
- * lost when React commits at the same moment, and a lost fade-in left the title, the cards or a tab invisible (20 Oct).
- */
-export function useSettled(totalMs: number, key: unknown = null): boolean {
-  // settled for this key; a new key (the tab moved) starts a new wait
-  const [settledFor, setSettledFor] = useState<unknown>(undefined);
-  useEffect(() => {
-    const id = setTimeout(() => setSettledFor(key), totalMs + SETTLE_MARGIN_MS);
-    return () => clearTimeout(id);
-  }, [totalMs, key]);
-  return settledFor === key;
-}
-
-const SETTLE_MARGIN_MS = 120;
-const SHOWN = { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] } as const;
-const FULL = { width: '100%' } as const;
-
 /** CSS `pop` (prototype): the animation's timing function applies to every keyframe segment, so all use the spring. */
 export function runPop(scale: SharedValue<number>, opacity: SharedValue<number>, durationMs: number, delayMs = 0) {
   scale.value = 0.4;
@@ -79,66 +64,123 @@ export function runJpop(scale: SharedValue<number>, durationMs: number) {
   );
 }
 
-/** `pop` once on mount (after `delayMs`), like the prototype's `animation: pop … backwards`. */
+/*
+ * Mount entrances are Reanimated CSS animations (20 Oct): keyframes run natively from the style itself, with no shared
+ * value to hand between threads. Shared-value entrances started in an effect froze part-way on some cold launches in
+ * Expo Go on iOS 27 (cards stuck at a third of their opacity, chips stuck small), and Reanimated kept re-applying the
+ * frozen value over a plain fallback style. Fill mode `backwards` shows the first keyframe during the delay; after the
+ * animation the element's own style (the final state) applies. Every timing function applies per keyframe segment,
+ * as in the prototype's CSS.
+ */
+const EASE_CSS = cubicBezier(...bezier);
+const SPRING_CSS = cubicBezier(...springBezier);
+
+/** keyframes of plain view props (opacity, transform), so the style fits a View, a Text or an Image */
+type Keyframes = Record<string, Pick<ViewStyle, 'opacity' | 'transform'>>;
+/** one timing function (the CSS types also allow a list, one per animation) */
+type Timing = Exclude<CSSAnimationTimingFunction, readonly unknown[]>;
+/** a single entrance, typed narrow enough for any Animated style prop */
+export type EntranceStyle = {
+  animationName: Keyframes;
+  animationDuration: number;
+  animationDelay: number;
+  animationFillMode: 'backwards';
+  animationTimingFunction: Timing;
+};
+
+
+type NoEntrance = Record<string, never>;
+const NO_ENTRANCE: NoEntrance = {};
+
+/** A memoised CSS entrance style: `keyframes` over `durationMs` after `delayMs`. */
+export function useEntrance(
+  keyframes: Keyframes,
+  durationMs: number,
+  delayMs = 0,
+  timing: Timing = EASE_CSS,
+): EntranceStyle | NoEntrance {
+  // the system's reduce motion: no entrance, the element's own (final) style at once, as withTiming did
+  const reduced = useReducedMotion();
+  return useMemo(
+    () =>
+      reduced
+        ? NO_ENTRANCE
+        : {
+            animationName: keyframes,
+            animationDuration: durationMs,
+            animationDelay: delayMs,
+            animationFillMode: 'backwards',
+            animationTimingFunction: timing,
+          },
+    [reduced, keyframes, durationMs, delayMs, timing],
+  );
+}
+
+const POP: Keyframes = {
+  '0%': { opacity: 0, transform: [{ scale: 0.4 }] },
+  '60%': { opacity: 1, transform: [{ scale: 1.18 }] },
+  '100%': { opacity: 1, transform: [{ scale: 1 }] },
+};
+
+const STG: Keyframes = {
+  from: { opacity: 0, transform: [{ translateY: 14 }, { scale: 0.985 }] },
+  to: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] },
+};
+
+const SLAM: Keyframes = {
+  '0%': { opacity: 0, transform: [{ scale: 2.4 }] },
+  '70%': { opacity: 1, transform: [{ scale: 0.94 }] },
+  '100%': { opacity: 1, transform: [{ scale: 1 }] },
+};
+
+const GROW: Keyframes = {
+  from: { transform: [{ scaleX: 0 }] },
+  to: { transform: [{ scaleX: 1 }] },
+};
+
+/** fade in from `dy` px below, one keyframes object per distance */
+const fadeUp = new Map<number, Keyframes>();
+function fadeUpFrom(dy: number): Keyframes {
+  let k = fadeUp.get(dy);
+  if (!k) {
+    k = { from: { opacity: 0, transform: [{ translateY: dy }] }, to: { opacity: 1, transform: [{ translateY: 0 }] } };
+    fadeUp.set(dy, k);
+  }
+  return k;
+}
+
+/** `pop` once on mount (after `delayMs`), like the prototype's `animation: pop … backwards`, every segment on --spring. */
 export function usePopIn(durationMs: number, delayMs = 0) {
-  const scale = useSharedValue(0.4);
-  const opacity = useSharedValue(0);
-  useEffect(() => {
-    runPop(scale, opacity, durationMs, delayMs);
-  }, [scale, opacity, durationMs, delayMs]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
-  return useSettled(delayMs + durationMs) ? SHOWN : style;
+  return useEntrance(POP, durationMs, delayMs, SPRING_CSS);
 }
 
 /** `stg` once on mount: fade in, rise 14px, scale .985 → 1, on --ease (prototype .45s, staggered by delay). */
 export function useStgIn(durationMs: number, delayMs = 0) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
-  }, [p, durationMs, delayMs]);
-  const style = useAnimatedStyle(() => ({
-    opacity: p.value,
-    transform: [{ translateY: (1 - p.value) * 14 }, { scale: 0.985 + 0.015 * p.value }],
-  }));
-  return useSettled(delayMs + durationMs) ? SHOWN : style;
+  return useEntrance(STG, durationMs, delayMs);
 }
 
 /** `slam` once on mount: from 2.4× and invisible to .94 at 70%, settling at 1, every segment on --ease. */
 export function useSlamIn(durationMs: number, delayMs = 0) {
-  const scale = useSharedValue(2.4);
-  const opacity = useSharedValue(0);
-  useEffect(() => {
-    scale.value = withDelay(
-      delayMs,
-      withSequence(
-        withTiming(0.94, { duration: durationMs * 0.7, easing: ease }),
-        withTiming(1, { duration: durationMs * 0.3, easing: ease }),
-      ),
-    );
-    opacity.value = withDelay(delayMs, withTiming(1, { duration: durationMs * 0.7, easing: ease }));
-  }, [scale, opacity, durationMs, delayMs]);
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
-  return useSettled(delayMs + durationMs) ? SHOWN : style;
+  return useEntrance(SLAM, durationMs, delayMs);
+}
+
+/** `inA` / `meIn`: fade in from `dy` px below on --ease (titles 12px, the celebration's lines 16px). */
+export function useFadeUpIn(durationMs: number, delayMs = 0, dy = 12) {
+  return useEntrance(fadeUpFrom(dy), durationMs, delayMs);
 }
 
 /** `rise` once on mount: fade in from 40px below, on --ease. */
 export function useRiseIn(durationMs: number, delayMs = 0) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
-  }, [p, durationMs, delayMs]);
-  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 40 }] }));
-  return useSettled(delayMs + durationMs) ? SHOWN : style;
+  return useFadeUpIn(durationMs, delayMs, 40);
 }
 
-/** `grow` once on mount: width 0 → 100%, on --ease. */
+/**
+ * `grow` once on mount: 0 → full width, on --ease. Drawn as scaleX from the left edge (the element keeps its full
+ * width), so the end state is the element's own layout.
+ */
 export function useGrowIn(durationMs: number, delayMs = 0) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withDelay(delayMs, withTiming(1, { duration: durationMs, easing: ease }));
-  }, [p, durationMs, delayMs]);
-  const style = useAnimatedStyle(() => ({ width: `${p.value * 100}%` }));
-  return useSettled(delayMs + durationMs) ? FULL : style;
+  const entrance = useEntrance(GROW, durationMs, delayMs);
+  return useMemo(() => ({ ...entrance, transformOrigin: 'left' }) as const, [entrance]);
 }
 
 /** `pop` whenever `value` changes after the first render (header numbers). */

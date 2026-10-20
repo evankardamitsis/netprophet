@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -13,11 +13,11 @@ import { nameGender } from '@netprophet/copy';
 import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
 import { mockLinkView, who } from '../src/lib/link';
 import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
-import { usePress, useStgIn } from '../src/lib/motion';
+import { useFadeUpIn, usePress, useStgIn } from '../src/lib/motion';
 import { areasOf, autoFollowIds, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
-import { colors, ease, fonts } from '../src/theme';
+import { colors, fonts } from '../src/theme';
 import { useOnboardingGate } from '../src/lib/onboardingGate';
 
 /**
@@ -504,11 +504,7 @@ function AgeCheck({ on, onPress }: { on: boolean; onPress: () => void }) {
 
 /** inA: each step fades in from 12px below */
 function StepIn({ children, duration = IN_MS }: { children: React.ReactNode; duration?: number }) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withTiming(1, { duration, easing: ease });
-  }, [p, duration]);
-  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 12 }] }));
+  const style = useFadeUpIn(duration);
   return <Animated.View style={[styles.step, style]}>{children}</Animated.View>;
 }
 

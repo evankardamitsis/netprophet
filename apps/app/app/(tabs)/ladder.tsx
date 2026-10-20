@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { router, useFocusEffect } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import type { Ladder, LadderRow, LadderScope } from '@netprophet/db';
@@ -9,10 +9,10 @@ import { useCopy } from '../../src/i18n';
 import { useBallers, useLadder } from '../../src/lib/data';
 import { Baller } from '../../src/components/Baller';
 import { boardItems, motivation, nextLine, pickScope, podiumOf, pointRules, rowName, scopeLabel, scopeTabs } from '../../src/lib/ladder';
-import { usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
+import { useFadeUpIn, usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { fmt } from '../../src/lib/votes';
-import { alpha, colors, ease, fonts, text } from '../../src/theme';
+import { alpha, colors, fonts, text } from '../../src/theme';
 
 /**
  * Κατάταξη (prototype V2, isRank): this month's points among the people you know or all of Attica.
@@ -43,7 +43,7 @@ export default function LadderScreen() {
       seen.current = true;
     }, [refresh]),
   );
-  const titleIn = useInA(IN_MS);
+  const titleIn = useFadeUpIn(IN_MS);
   useEffect(() => {
     if (ladder) setHasLeague(ladder.has_league);
   }, [ladder]);
@@ -217,7 +217,7 @@ function HowPoints() {
 
 function InfoRows() {
   const t = useCopy();
-  const style = useInA(300);
+  const style = useFadeUpIn(300);
   return (
     <Animated.View style={[styles.infoRows, style]}>
       {pointRules(t).map((r) => (
@@ -230,14 +230,6 @@ function InfoRows() {
   );
 }
 
-/** inA: fade in from 12px below on the prototype ease. */
-function useInA(duration: number) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withTiming(1, { duration, easing: ease });
-  }, [p, duration]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 12 }] }));
-}
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
