@@ -43,15 +43,15 @@ describe('the shared layout', () => {
     expect(LOGO_URL).toBe('https://www.netprophetapp.com/email/logo@2x.png');
   });
   it('signs off with the publisher, the links, the contact and why', () => {
-    for (const s of ['NetProphet · από τη Monad Labs', 'https://www.netprophetapp.com/privacy', 'https://www.netprophetapp.com/support', 'mailto:hello@monadlabs.gr', 'Γιατί.'])
+    for (const s of ['https://www.netprophetapp.com/privacy', 'https://www.netprophetapp.com/support', 'mailto:hello@monadlabs.gr', 'Γιατί.'])
       expect(e.html).toContain(s);
-    expect(e.text).toContain('NetProphet · από τη Monad Labs');
+    expect(e.text).not.toContain('Monad Labs');
     expect(e.text).toContain('Επικοινωνία: hello@monadlabs.gr');
     expect(e.text.trim().endsWith('Γιατί.')).toBe(true);
   });
   it('uses English links for English emails', () => {
     const en = renderEmail({ lang: 'en', subject: 's', bodyHtml: '', bodyText: '', why: 'w' });
-    expect(en.html).toContain('NetProphet · by Monad Labs');
+    expect(en.html).not.toContain('Monad Labs');
     expect(en.html).toContain('https://www.netprophetapp.com/en/privacy');
   });
   it('has no dashes the copy rules forbid, and no lime', () => {

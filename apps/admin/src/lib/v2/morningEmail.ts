@@ -19,7 +19,7 @@ export interface Digest {
   clubs_no_surface?: { club: string; matches: number; tournaments: string[] }[];
 }
 
-const ADMIN_URL = 'https://netprophet-admin-v2.vercel.app/v2';
+const ADMIN_URL = 'https://admin.netprophetapp.com/v2';
 export const athensHour = () =>
   Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
 const many = (n: number, one: string, more: string) => `${n} ${n === 1 ? one : more}`;
