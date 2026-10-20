@@ -282,7 +282,7 @@ export default function AddMatch() {
         ) : ready(form) && !open ? (
           <Primary label={form.mode === 'played' ? a.submitPlayed : a.submitSoon} busy={busy} onPress={() => void onSubmit()} />
         ) : null}
-        {error ? <Text style={styles.error}>{error === 'duplicate' ? a.errors.duplicate : error === 'name_required' ? a.errors.nameRequired : a.errors.failed}</Text> : null}
+        {error ? <Text style={styles.error}>{error === 'duplicate' ? a.errors.duplicate : error === 'name_required' ? a.errors.nameRequired : error === 'rate_limited' ? a.errors.rateLimited : a.errors.failed}</Text> : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );

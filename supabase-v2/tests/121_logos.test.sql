@@ -43,7 +43,7 @@ select lives_ok($$insert into storage.objects (bucket_id, name, owner) values ('
 select tests.login(:'u'::uuid);
 select is(tests.rowcount($q$delete from storage.objects where bucket_id = 'logos'$q$), 0, 'a player cannot delete a logo');
 select tests.as_anon();
-select is((select count(*)::int from storage.objects where bucket_id = 'logos'), 1, 'anyone can read logos');
+select is((select count(*)::int from storage.objects where bucket_id = 'logos'), 0, 'nobody lists the logos bucket (files are served by public URL)');
 select throws_ok($$insert into storage.objects (bucket_id, name) values ('logos', 'clubs/x/anon.png')$$, '42501', null, 'anon cannot upload');
 
 -- the admin rpc
