@@ -134,6 +134,7 @@ export const en: Copy = {
     first: 'First name',
     surname: 'Surname',
     addNew: '+ Add {name}',
+    nameShape: 'Type their real first name and surname, in letters.',
     won: { one: 'I won', many: 'We won' },
     lost: { one: 'I lost', many: 'We lost' },
     submitPlayed: 'Log it',
@@ -175,6 +176,7 @@ export const en: Copy = {
     errors: {
       duplicate: 'This match is already in.',
       nameRequired: 'Add a first name and surname, for you and anyone you add.',
+      nameShape: "A name doesn't look real. Use letters for yours and for anyone you add.",
       rateLimited: 'That is plenty for today. Add the rest tomorrow.',
       failed: 'It did not go in. Try again.',
     },

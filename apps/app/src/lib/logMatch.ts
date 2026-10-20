@@ -1,4 +1,4 @@
-import type { Copy } from '@netprophet/copy';
+import { nameShapeOk, tidyName, type Copy } from '@netprophet/copy';
 import { addDays, dayKey } from '@netprophet/core';
 import type { LogMatchInput, LogPerson, MatchFormat } from '@netprophet/db';
 import { fmt } from './votes';
@@ -14,6 +14,19 @@ export type Mode = 'played' | 'soon';
 export type PickedPerson =
   | { kind: 'player'; id: string; first: string; surname: string; sub: string }
   | { kind: 'new'; first: string; surname: string };
+
+/**
+ * A name typed for someone we do not have, as it is sent: each part tidied like onboarding («ΜΑΡΙΑ» -> «Μαρια»).
+ * 'empty' while a part is blank, 'shape' when a part is not letters with at least 2 of them (the server's name_shape
+ * rule, core.log_person in 20270228000000_identity_followups.sql).
+ */
+export function typedPerson(first: string, surname: string): { ok: true; first: string; surname: string } | { ok: false; why: 'empty' | 'shape' } {
+  const f = tidyName(first);
+  const s = tidyName(surname);
+  if (!f || !s) return { ok: false, why: 'empty' };
+  if (!nameShapeOk(f) || !nameShapeOk(s)) return { ok: false, why: 'shape' };
+  return { ok: true, first: f, surname: s };
+}
 
 export type TournamentChoice = { kind: 'friendly' } | { kind: 'tournament'; id: string; name: string } | { kind: 'other'; name: string };
 

@@ -145,6 +145,8 @@ export const el = {
     first: 'Όνομα',
     surname: 'Επώνυμο',
     addNew: '+ Πρόσθεσε {name}',
+    /** a typed name without the shape (letters only, at least 2 each: the server's name_shape rule) */
+    nameShape: 'Γράψε το πραγματικό όνομα και επώνυμο, με γράμματα.',
     won: { one: 'Κέρδισα', many: 'Κερδίσαμε' },
     lost: { one: 'Έχασα', many: 'Χάσαμε' },
     submitPlayed: 'Βάλ’ το',
@@ -189,6 +191,8 @@ export const el = {
     errors: {
       duplicate: 'Αυτό το ματς υπάρχει ήδη.',
       nameRequired: 'Βάλε όνομα και επώνυμο, για σένα και για όποιον προσθέτεις.',
+      /** the server's name_shape: a typed name, or your own profile name */
+      nameShape: 'Ένα όνομα δεν μοιάζει αληθινό. Γράψε με γράμματα το δικό σου και όποιου προσθέτεις.',
       rateLimited: 'Φτάνουν για σήμερα. Τα υπόλοιπα αύριο.',
       failed: 'Δεν μπήκε. Ξαναδοκίμασε.',
     },

@@ -78,7 +78,7 @@ select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles
                             core.athens_day() - 2)::jsonb) ->> 'match_id' as m5 \gset
 select tests.logout();
 select id as typo from core.players where surname = 'Παπαδοπουλος' \gset
-select id as maria from core.players where surname = 'καρρα' \gset
+select id as maria from core.players where surname = 'Καρρα' \gset
 select tests.login(:'adm'::uuid);
 select is((select p -> 'similar' -> 0 ->> 'player_id' from jsonb_array_elements(api.admin_moderation() -> 'players') p where p ->> 'player_id' = :'typo'),
           :'real', 'the queue suggests the roster player it looks like');
