@@ -276,6 +276,16 @@ export const el = {
     wonPair: '{winner} κέρδισαν',
     next: 'Επόμενο ›',
     done: 'Εντάξει',
+    /** many results at once (founder, 20 Oct): the first plays, the rest fold into «Και 13 ακόμα: 11 σωστά, +155» */
+    summary: {
+      more: 'Και {n} ακόμα',
+      allRight: 'όλα σωστά',
+      oneRight: '1 σωστό',
+      someRight: '{n} σωστά',
+      noneRight: 'κανένα σωστό αυτή τη φορά',
+      points: '+{points}',
+      seen: 'Τα είδα',
+    },
   },
   results: {
     title: 'Αποτελέσματα',

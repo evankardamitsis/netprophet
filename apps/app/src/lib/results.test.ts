@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { FeedPlayer, ResultRow } from '@netprophet/db';
-import { dayLabel, eventLabel, groupResults, toResultItem } from './results';
+import { dayLabel, eventLabel, eventParts, groupResults, toResultItem } from './results';
 
 const t = getCopy('el');
 // Saturday 10 Oct 2026, 15:00 Athens (UTC+3)
@@ -145,5 +145,13 @@ describe('groupResults', () => {
   it('carries the tournament logo', () => {
     const [g] = groupResults([row({ match_id: 'a', tournament_logo: 'tournaments/t/k1.webp' })], t, NOW);
     expect(g!.logo).toEqual({ path: 'tournaments/t/k1.webp' });
+  });
+});
+
+describe('eventParts category case', () => {
+  it('shows organiser capitals in normal case, acronyms as they are', () => {
+    const base = { tournament: 'Open Γλυφάδας', round: null, format: 'singles' as const, discipline: 'singles' };
+    expect(eventParts({ ...base, level: 'MEDIUM' } as never, t).detail).toMatch(/^Medium/);
+    expect(eventParts({ ...base, level: 'ITF' } as never, t).detail).toMatch(/^ITF/);
   });
 });

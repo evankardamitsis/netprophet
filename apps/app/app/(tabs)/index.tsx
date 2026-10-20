@@ -13,6 +13,7 @@ import { useForYouDaily } from '../../src/lib/forYouDaily';
 import { PostponedCard } from '../../src/components/PostponedCard';
 import { QuizStrip } from '../../src/components/QuizStrip';
 import { ResultCard, ResultStrip } from '../../src/components/ResultCard';
+import { ResultSummary } from '../../src/components/ResultSummary';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
@@ -36,6 +37,7 @@ import {
   type SeenResults,
 } from '../../src/lib/feed';
 import { useToastQueue } from '../../src/lib/toastQueue';
+import { foldResults, idsOnFirstDone } from '../../src/lib/resultsSummary';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import { ProNudge } from '../../src/components/ProNudge';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -186,17 +188,33 @@ export default function VoteScreen() {
 
   // results played this visit fold into strips; a tap opens one again (founder, 19 Oct)
   const [seen, setSeen] = useState<SeenResults>({ list: [], open: null });
+  // more than 3 queued (founder, 20 Oct): the first plays as a card, the rest wait in one line under it; once seen,
+  // that line stays as a strip with the others
+  const { first, folded } = foldResults(results);
+  const [seenBatch, setSeenBatch] = useState<CardResult[]>([]);
+  const foldedNow = useRef(folded);
+  foldedNow.current = folded;
+  const onBatchSeen = useCallback(
+    (rows: CardResult[]) => {
+      setSeenBatch((b) => [...b, ...rows.filter((r) => !b.some((x) => x.id === r.id))]);
+      dismissResult(rows.map((r) => r.id));
+    },
+    [dismissResult],
+  );
   const onResultDone = useCallback(
     (card: CardResult) => {
       setSeen((s) => seenAdd(s, card));
       setBetween(true);
       setPlayed((n) => n + 1);
-      dismissResult(card.id);
+      // the summary line was in view: its results leave the queue with this card, so the celebrations can play
+      const rest = foldedNow.current;
+      if (rest.length) setSeenBatch((b) => [...b, ...rest.filter((r) => !b.some((x) => x.id === r.id))]);
+      dismissResult(idsOnFirstDone(card, rest));
       setTimeout(() => setBetween(false), NEXT_RESULT_GAP);
     },
     [dismissResult],
   );
-  const current = !between ? results[0] : undefined;
+  const current = !between ? first : undefined;
   // celebrations wait until every result card has played and the player did something this visit (moments.ts);
   // the group order is nextGroup's; every queued quest together as one. One a visit: the rest stay unseen on the
   // server and come back next visit.
@@ -366,10 +384,16 @@ export default function VoteScreen() {
             <ResultCard
               key={current.id}
               card={current}
-              more={results.length > 1}
+              more={results.length > 1 && folded.length === 0}
               delay={played === 0 ? FIRST_RESULT_DELAY : 0}
               onDone={onResultDone}
             />
+          ) : null}
+          {/* one place, one instance: the live line folds into its strip without mounting again */}
+          {folded.length > 0 ? (
+            <ResultSummary key="summary" rows={folded} onSeen={() => onBatchSeen(folded)} />
+          ) : seenBatch.length > 0 ? (
+            <ResultSummary key="summary" rows={seenBatch} />
           ) : null}
           {shown.map((c, i) => (
             <Fragment key={c.id}>

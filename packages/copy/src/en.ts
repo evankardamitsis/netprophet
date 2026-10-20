@@ -250,6 +250,15 @@ export const en: Copy = {
     wonPair: '{winner} won',
     next: 'Next ›',
     done: 'OK',
+    summary: {
+      more: 'And {n} more',
+      allRight: 'all right',
+      oneRight: '1 right',
+      someRight: '{n} right',
+      noneRight: 'none right this time',
+      points: '+{points}',
+      seen: 'Seen them',
+    },
   },
   results: {
     title: 'Results',

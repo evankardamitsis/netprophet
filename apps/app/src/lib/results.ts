@@ -3,6 +3,7 @@ import { greekCaps, withArticleAccusative, type Copy } from '@netprophet/copy';
 import type { FeedPlayer, Reactions, ResultRow, Side } from '@netprophet/db';
 import { fmt } from './votes';
 import { categoryLabel } from './category';
+import { categoryCase } from './feed';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): finished matches grouped by day and event, newest first.
@@ -89,14 +90,20 @@ export function eventLabel(row: Pick<ResultRow, 'tournament' | 'round' | 'format
     return row.format === 'singles' ? t.results.friendlies : `${t.results.friendlies} · ${t.match.formats[row.format]}`;
   }
   const round = row.round ? (isRoundKey(row.round) ? t.results.rounds[row.round] : row.round) : null;
-  return [row.tournament, categoryLabel(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
+  return [row.tournament, resultCategory(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
+}
+
+/** «Medium · Απλό», not «MEDIUM · Απλό»: organiser capitals in normal case, acronyms like ITF kept (categoryCase) */
+function resultCategory(level: string | null | undefined, discipline: string | null | undefined, t: Copy): string | null {
+  const c = categoryLabel(level, discipline, t);
+  return c ? categoryCase(c) : null;
 }
 
 /** «Open Γλυφάδας» and «Μ 40+ · Απλό · Προημιτελικά» apart, for the event heading and the line under it. */
 export function eventParts(row: Pick<ResultRow, 'tournament' | 'round' | 'format' | 'level' | 'discipline'>, t: Copy): { title: string; detail: string | null } {
   if (!row.tournament) return { title: t.results.friendlies, detail: row.format === 'singles' ? null : t.match.formats[row.format] };
   const round = row.round ? (isRoundKey(row.round) ? t.results.rounds[row.round] : row.round) : null;
-  const detail = [categoryLabel(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
+  const detail = [resultCategory(row.level, row.discipline, t), round].filter(Boolean).join(' · ');
   return { title: row.tournament, detail: detail || null };
 }
 
