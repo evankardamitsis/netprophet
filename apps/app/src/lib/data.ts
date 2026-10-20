@@ -1159,6 +1159,24 @@ export function useSafety(target: SafetyTarget | null) {
   return { who, report, block };
 }
 
+/** «Δεν είμαι εγώ;» on a profile an account holds (api.report_claim, 'not_them'); mock mode: always fine */
+export function useClaimReport() {
+  const api = useApi();
+  return useCallback(
+    async (playerId: string, note: string): Promise<boolean> => {
+      if (!api) return true;
+      try {
+        await api.reportClaim(playerId, 'not_them', note.trim() || undefined);
+        track('claim_reported', { from: 'profile' });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [api],
+  );
+}
+
 /** Εγώ › «Μπλοκαρισμένοι» */
 export function useBlocks() {
   const api = useApi();
@@ -1584,8 +1602,10 @@ export function useRegionAreas(): Area[] {
 export interface ClaimRow {
   id: string;
   name: string;
-  /** «Γλυφάδα · level 4» */
+  /** «Γλυφάδα · level 4», or «Έχει ήδη συνδεθεί με άλλο λογαριασμό» */
   sub: string;
+  /** another account already holds this player: «Είμαι εγώ» files a report instead of a claim */
+  claimed?: boolean;
 }
 
 /**
@@ -1627,6 +1647,7 @@ export function useOnboardingApi(sample = false) {
         const cards = rows.length && PLAYER_LEVEL_SHOWN ? await api.findPlayers(surname, 50) : [];
         return rows.map((r) => {
           const c = cards.find((x) => x.id === r.id);
+          if (r.claimed) return { id: r.id, name: `${r.first_name} ${r.surname}`, sub: t.onboarding.claim.claimedSub, claimed: true };
           return {
             id: r.id,
             name: `${r.first_name} ${r.surname}`,
@@ -1645,6 +1666,16 @@ export function useOnboardingApi(sample = false) {
           if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
           if (err instanceof RpcError && err.code.startsWith('already_claimed')) return 'other';
           return 'failed';
+        }
+      },
+      /** «Είμαι εγώ» on a candidate another account holds: a report staff check (api.report_claim, 'is_me') */
+      async reportIsMe(playerId: string): Promise<boolean> {
+        if (!api) return true;
+        try {
+          await api.reportClaim(playerId, 'is_me');
+          return true;
+        } catch {
+          return false;
         }
       },
       async setClaimStatus(status: 'skipped' | 'creation_requested') {

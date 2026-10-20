@@ -8,6 +8,8 @@ import {
   KNOWN_MIN,
   KNOWN_MIN_LINK,
   nameMissing,
+  savedName,
+  autoPick,
   playLine,
   prefillName,
   primarySport,
@@ -107,8 +109,9 @@ describe('nameMissing', () => {
       name: 'Γράψε όνομα και επώνυμο',
       sport: 'Διάλεξε τι παίζεις',
       age: 'Τίκαρε ότι είσαι 15 και πάνω',
+      nameShape: 'Γράψε το πραγματικό σου όνομα και επώνυμο, με γράμματα.',
     });
-    expect(Object.keys(getCopy('en').onboarding.name.missing)).toEqual(['name', 'sport', 'age']);
+    expect(Object.keys(getCopy('en').onboarding.name.missing)).toEqual(['name', 'sport', 'age', 'nameShape']);
   });
 });
 
@@ -188,5 +191,36 @@ describe('primarySport', () => {
   it('«Και τα δύο» starts with tennis', () => {
     expect(primarySport('both')).toBe('tennis');
     expect(primarySport('padel')).toBe('padel');
+  });
+});
+
+describe('nameMissing: the name shape', () => {
+  const ready = { first: 'Νίκος', surname: 'Ροδίτης', sport: 'tennis' as const, adult: true };
+  it('asks for a real name after an initial, digits or a symbol', () => {
+    expect(nameMissing({ ...ready, surname: 'Ρ.' })).toBe('nameShape');
+    expect(nameMissing({ ...ready, first: 'Ν' })).toBe('nameShape');
+    expect(nameMissing({ ...ready, first: 'nikos99' })).toBe('nameShape');
+  });
+  it('is fine with capitals, hyphens and loose spaces it tidies', () => {
+    expect(nameMissing({ ...ready, first: 'ΝΙΚΟΣ', surname: ' Ροδίτης - Πάνου ' })).toBeNull();
+  });
+});
+
+describe('savedName', () => {
+  it('tidies each part and builds the display name', () => {
+    expect(savedName('  ΑΛΚΙΒΙΑΔΗΣ ', 'πλακιάς')).toEqual({ first_name: 'Αλκιβιαδης', surname: 'Πλακιάς', display_name: 'Αλκιβιαδης Πλακιάς' });
+    expect(savedName('McDonald', 'Ο ΜΑΚ')).toEqual({ first_name: 'McDonald', surname: 'Ο Μακ', display_name: 'McDonald Ο Μακ' });
+  });
+});
+
+describe('autoPick', () => {
+  it('picks the only candidate, never one another account holds', () => {
+    expect(autoPick([{ id: 'a' }])).toBe('a');
+    expect(autoPick([{ id: 'a', claimed: true }])).toBeNull();
+    expect(autoPick([{ id: 'a' }, { id: 'b' }])).toBeNull();
+  });
+  it('keeps an earlier pick that is still there and free', () => {
+    expect(autoPick([{ id: 'a' }, { id: 'b' }], 'b')).toBe('b');
+    expect(autoPick([{ id: 'a' }, { id: 'b', claimed: true }], 'b')).toBeNull();
   });
 });

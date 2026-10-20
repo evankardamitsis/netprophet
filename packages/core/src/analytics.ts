@@ -24,6 +24,8 @@ export interface AnalyticsEvents {
   kudo_given: { source: 'log' | 'results' };
   reaction_set: { key: string | null };
   report_sent: { kind: 'match' | 'player'; reason: string };
+  /** «Δεν είμαι εγώ;» on a profile, «Είμαι εγώ» on a claimed candidate in onboarding */
+  claim_reported: { from: 'profile' | 'onboarding' };
   user_blocked: { from: 'match' | 'player' };
   /** the Baller share card: sent as a picture, or as text where pictures cannot go (the web) */
   baller_shared: { via: 'image' | 'text' };

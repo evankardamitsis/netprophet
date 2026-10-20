@@ -63,6 +63,20 @@ export async function reviewClaim(userId: string, approve: boolean, via: 'app' |
   );
 }
 
+/**
+ * «Ταυτότητα»: a report or a first official result. dismiss: «Απόρριψη αναφοράς» / «Εντάξει»; unlink: «Αποσύνδεση»
+ * (the account lets go of the player); give: «Δώσ’ το στον αναφέροντα» (unlink, then the reporter's claim approved)
+ */
+export async function decideIdentity(flagId: string, action: 'dismiss' | 'unlink' | 'give'): Promise<ActionResult> {
+  return act('admin_decide_identity', { p_flag: flagId, p_action: action }, () =>
+    action === 'dismiss'
+      ? 'Closed. Nothing changed.'
+      : action === 'unlink'
+        ? 'Unlinked. The account keeps its votes and points; the player is free again.'
+        : 'Done. The reporter holds the player now and got the push.',
+  );
+}
+
 export async function approvePlayer(playerId: string, first: string, surname: string): Promise<ActionResult> {
   return act('admin_decide_player', { p_player_id: playerId, p_action: 'approve', p_first: first, p_surname: surname }, () => 'Approved.');
 }

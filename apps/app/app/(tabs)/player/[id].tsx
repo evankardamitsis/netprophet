@@ -6,6 +6,7 @@ import { greekCaps } from '@netprophet/copy';
 import { PlayerTraits } from '../../../src/components/PlayerTraits';
 import { FitText } from '../../../src/components/FitText';
 import { FormDots } from '../../../src/components/PlayerListRow';
+import { ClaimReportSheet } from '../../../src/components/ClaimReportSheet';
 import { SafetySheet } from '../../../src/components/SafetySheet';
 import { TOAST_MS, Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
@@ -29,6 +30,7 @@ export default function PlayerScreen() {
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const back = usePress();
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
+  const [claimReport, setClaimReport] = useState<string | null>(null);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -65,9 +67,17 @@ export default function PlayerScreen() {
           <>
             <Profile key={profile.id} p={profile} onFollow={onFollow} onToast={(text) => setToast((q) => ({ text, n: (q?.n ?? 0) + 1 }))} />
             {!profile.isMe ? (
-              <Pressable accessibilityRole="button" onPress={() => setSafety({ kind: 'player', id: profile.id })} style={styles.reportHit}>
-                <Text style={styles.report}>{t.safety.report}</Text>
-              </Pressable>
+              <View style={styles.quiet}>
+                {/* an account holds this player: anyone else can say it may not be them (founder, 20 Oct 2026) */}
+                {profile.claimed ? (
+                  <Pressable accessibilityRole="button" onPress={() => setClaimReport(profile.id)} style={styles.reportHit}>
+                    <Text style={styles.report}>{t.safety.claim.link}</Text>
+                  </Pressable>
+                ) : null}
+                <Pressable accessibilityRole="button" onPress={() => setSafety({ kind: 'player', id: profile.id })} style={styles.reportHit}>
+                  <Text style={styles.report}>{t.safety.report}</Text>
+                </Pressable>
+              </View>
             ) : null}
           </>
         ) : !loading ? (
@@ -75,6 +85,7 @@ export default function PlayerScreen() {
         ) : null}
       </ScrollView>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
+      <ClaimReportSheet playerId={claimReport} onClose={(text) => { setClaimReport(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
       <SafetySheet target={safety} onClose={(text) => { setSafety(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
     </View>
   );
@@ -191,7 +202,8 @@ const FIRST_PAD = 14;
 const SUR_PAD = 8;
 
 const styles = StyleSheet.create({
-  reportHit: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', marginTop: 8 },
+  quiet: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 8 },
+  reportHit: { minHeight: 44, alignSelf: 'center', justifyContent: 'center' },
   report: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 14, gap: 12 },

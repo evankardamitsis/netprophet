@@ -17,6 +17,7 @@ import { useFadeUpIn, usePress, useStgIn } from '../src/lib/motion';
 import {
   areasOf,
   autoFollowIds,
+  autoPick,
   knownButton,
   KNOWN_MIN,
   KNOWN_MIN_LINK,
@@ -24,6 +25,7 @@ import {
   prefillName,
   primarySport,
   REGIONS,
+  savedName,
   splitName,
   stepCounter,
   stepsFor,
@@ -119,6 +121,9 @@ export default function OnboardingScreen() {
   const [candidates, setCandidates] = useState<ClaimRow[] | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [own, setOwn] = useState<ClaimRow | null>(null);
+  // a candidate another account holds, tapped: «Είμαι εγώ» reports it to staff; `reported` once it went
+  const [claimedPick, setClaimedPick] = useState<ClaimRow | null>(null);
+  const [reported, setReported] = useState(false);
   // the claim search starts with the name from the first step and can be changed (founder, 12 Oct)
   const [claimQuery, setClaimQuery] = useState('');
   // area
@@ -199,11 +204,16 @@ export default function OnboardingScreen() {
 
   const nameNext = () =>
     run(async () => {
-      const f = first.trim();
-      const s = surname.trim();
-      await ob.saveProfile({ first_name: f, surname: s, display_name: `${f} ${s}`.trim(), primary_sport: primarySport(sport ?? 'tennis') });
+      // tidied as the server keeps it («ΑΛΚΗΣ» -> «Αλκης»), so the screen shows what was saved
+      const n = savedName(first, surname);
+      const f = n.first_name;
+      const s = n.surname;
+      setFirst(f);
+      setSurname(s);
+      await ob.saveProfile({ ...n, primary_sport: primarySport(sport ?? 'tennis') });
       setCandidates(null);
       setPicked(null);
+      setClaimedPick(null);
       setClaimQuery(`${f} ${s}`.trim());
       go(i + 1);
       if (own) {
@@ -213,7 +223,7 @@ export default function OnboardingScreen() {
       }
       const rows = await ob.candidates(f, s).catch(() => []);
       setCandidates(rows);
-      setPicked(rows.length === 1 ? rows[0]!.id : null);
+      setPicked(autoPick(rows));
     });
 
   const claimMe = () =>
@@ -281,12 +291,34 @@ export default function OnboardingScreen() {
         .then((rows) => {
           const list = own ? [own, ...rows.filter((r) => r.id !== own.id)] : rows;
           setCandidates(list);
-          setPicked((p) => (p && list.some((r) => r.id === p) ? p : list.length === 1 ? list[0]!.id : null));
+          setPicked((p) => autoPick(list, p));
         })
         .catch(() => setCandidates([]));
     }, 300);
     return () => clearTimeout(id);
   }, [claimQuery, step, link, ob, own]);
+
+  // «Είμαι εγώ» on a player another account holds: staff check it with both accounts in front of them; meanwhile
+  // the first run goes on as usual
+  const reportIsMe = () =>
+    run(async () => {
+      if (!claimedPick) return;
+      const ok = await ob.reportIsMe(claimedPick.id);
+      if (!ok) return setError(o.claim.failed);
+      tr('claim_reported', { from: 'onboarding' });
+      setReported(true);
+    });
+
+  const pickCandidate = (c: ClaimRow) => {
+    setError(null);
+    if (c.claimed) {
+      setPicked(null);
+      setClaimedPick(c);
+      return;
+    }
+    setClaimedPick(null);
+    setPicked(c.id);
+  };
 
   const claimNew = () =>
     run(async () => {
@@ -375,7 +407,7 @@ export default function OnboardingScreen() {
               <Text style={styles.sub}>{o.name.subtitle}</Text>
               <Field value={first} onChange={setFirst} placeholder={o.name.first} autoComplete="given-name" />
               <Field value={surname} onChange={setSurname} placeholder={o.name.surname} autoComplete="family-name" />
-              <Missing text={shownMissing === 'name' ? o.name.missing.name : null} />
+              <Missing text={shownMissing === 'name' ? o.name.missing.name : shownMissing === 'nameShape' ? o.name.missing.nameShape : null} />
               <Text style={styles.label}>{o.name.sport}</Text>
               <Segmented
                 options={[
@@ -426,11 +458,22 @@ export default function OnboardingScreen() {
                 <Text style={styles.note}>{o.claim.none}</Text>
               ) : (
                 candidates.map((c, n) => (
-                  <Candidate key={c.id} row={c} index={n} on={picked === c.id} onPress={() => setPicked(c.id)} />
+                  <Candidate key={c.id} row={c} index={n} on={picked === c.id || claimedPick?.id === c.id} onPress={() => pickCandidate(c)} />
                 ))
               )}
               <Err text={error} />
-              {requested ? (
+              {reported ? (
+                <>
+                  <Text style={styles.note}>{o.claim.claimedSent}</Text>
+                  <Primary label={t.common.continue} ready busy={busy} onPress={() => go(i + 1)} />
+                </>
+              ) : claimedPick && !requested ? (
+                <>
+                  <Text style={styles.note}>{o.claim.claimedNote}</Text>
+                  <Primary label={o.claim.claimedMe} ready busy={busy} onPress={reportIsMe} />
+                  <Back label={o.back} onPress={() => setClaimedPick(null)} />
+                </>
+              ) : requested ? (
                 <>
                   <Text style={styles.note}>{o.claim.requested}</Text>
                   <Primary label={t.common.continue} ready busy={busy} onPress={() => go(i + 1)} />
@@ -441,7 +484,7 @@ export default function OnboardingScreen() {
                   <Dashed label={o.claim.newPlayer} onPress={claimNew} />
                 </>
               )}
-              <Back label={o.back} onPress={back} />
+              {claimedPick && !reported && !requested ? null : <Back label={o.back} onPress={back} />}
             </>
           ) : null}
 

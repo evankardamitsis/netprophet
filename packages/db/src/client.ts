@@ -168,6 +168,9 @@ export function rpc(client: NetprophetClient) {
     suggestTrait: (playerId: string, label: string) => call<PlayerTraits>(client, 'suggest_trait', { p_player: playerId, p_label: label }),
     getMyTraits: () => call<MyTraits>(client, 'get_my_traits', {}),
     getMyKudos: () => call<ReceivedKudo[]>(client, 'get_my_kudos', {}),
+    /** «Δεν είμαι εγώ;» on a profile ('not_them') or «Είμαι εγώ» on a claimed candidate in onboarding ('is_me') */
+    reportClaim: (playerId: string, reason: 'not_them' | 'is_me' = 'not_them', note?: string) =>
+      call<{ reported: boolean; replayed: boolean }>(client, 'report_claim', { p_player_id: playerId, p_reason: reason, ...(note ? { p_note: note } : {}) }),
     report: (type: 'match' | 'player', id: string, reason: ReportReason, note?: string) =>
       call<{ reported: boolean }>(client, 'report', { p_entity_type: type, p_entity_id: id, p_reason: reason, ...(note ? { p_note: note } : {}) }),
     block: (by: { playerId: string } | { matchId: string }) =>

@@ -30,6 +30,7 @@ const card = (over: Partial<PlayerCard> = {}): PlayerCard => ({
 const profile = (over: Partial<PlayerProfile> = {}): PlayerProfile => ({
   ...card(),
   is_me: false,
+  claimed: false,
   record_year: { w: 1, l: 6 },
   last_matches: [],
   next_match: null,

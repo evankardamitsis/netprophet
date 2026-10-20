@@ -384,6 +384,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Json;
       };
+      admin_decide_identity: {
+        Args: { p_flag: string; p_action: string };
+        Returns: Json;
+      };
       admin_decide_player: {
         Args: { p_player_id: string; p_action: string; p_target?: string; p_first?: string; p_surname?: string };
         Returns: Json;
@@ -422,6 +426,10 @@ export type Database = {
       };
       admin_grant_pro: {
         Args: { p_user_id: string; p_days?: number };
+        Returns: Json;
+      };
+      admin_identity_queue: {
+        Args: Record<PropertyKey, never>;
         Returns: Json;
       };
       admin_import_matches: {
@@ -642,7 +650,7 @@ export type Database = {
       };
       find_matching_players: {
         Args: { p_name: string; p_surname: string };
-        Returns: { id: string; first_name: string; surname: string; area_id: string; match_score: number }[];
+        Returns: { id: string; first_name: string; surname: string; area_id: string; match_score: number; claimed: boolean }[];
       };
       find_my_matches: {
         Args: { p_people: string[]; p_date: string; p_format: string };
@@ -838,6 +846,10 @@ export type Database = {
       };
       report: {
         Args: { p_entity_type: string; p_entity_id: string; p_reason: string; p_note?: string };
+        Returns: Json;
+      };
+      report_claim: {
+        Args: { p_player_id: string; p_note?: string; p_reason?: string };
         Returns: Json;
       };
       resolve_match: {

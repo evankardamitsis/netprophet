@@ -39,7 +39,7 @@ select is((api.claim_player('11000000-0000-0000-0000-000000000001') ->> 'replaye
 select throws_ok($$select api.claim_player('11000000-0000-0000-0000-000000000003')$$, '23505', null, 'one account cannot claim two players');
 select tests.login(:'b'::uuid);
 select throws_ok($$select api.claim_player('11000000-0000-0000-0000-000000000001')$$, '23505', null, 'a claimed player cannot be claimed by someone else');
-select is((select count(*)::int from api.find_matching_players('Christos', 'Papadakis') where id = '11000000-0000-0000-0000-000000000001'), 0, 'claimed players leave the claim lookup');
+select is((select claimed from api.find_matching_players('Christos', 'Papadakis') where id = '11000000-0000-0000-0000-000000000001'), true, 'claimed players stay in the claim lookup, marked claimed (20270227000000_identity_checks)');
 
 -- follows
 select lives_ok($$select api.follow_player('11000000-0000-0000-0000-000000000003', 'friend', 'card')$$, 'follow a player');

@@ -158,3 +158,29 @@ export function levelNumber(level: number, locale: 'el' | 'en' = 'el'): string {
     const text = String(Math.floor(level * 2) / 2);
     return locale === 'el' ? text.replace('.', ',') : text;
 }
+
+/**
+ * The letters a person's name may have: Greek and Latin (accents and diaeresis included). Spelled out rather than
+ * \p{L}, so the server (core.name_letters in 20270227000000_identity_checks.sql) checks exactly the same set.
+ */
+const NAME_LETTER = 'A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u024F\\u0386\\u0388-\\u03FF\\u1F00-\\u1FFF';
+const NAME_SHAPE = new RegExp(`^[${NAME_LETTER}]+(?:[ '’-][${NAME_LETTER}]+)*$`);
+const NOT_LETTER = new RegExp(`[^${NAME_LETTER}]`, 'g');
+
+/**
+ * A first name or a surname as typed, tidied: trimmed, one space between words, none round a hyphen or apostrophe.
+ * ALL CAPS or all lower case becomes proper case per word part («ΑΛΚΙΒΙΑΔΗΣ» -> «Αλκιβιαδης», «αλκιβιάδης» ->
+ * «Αλκιβιάδης»; capitals carry no accents, so none are invented). Mixed case stays as typed («McDonald»).
+ */
+export function tidyName(raw: string): string {
+    const s = raw.normalize('NFC').replace(/\s+/g, ' ').trim().replace(/ *(['’-]) */g, '$1');
+    if (s.replace(NOT_LETTER, '') === '') return s;
+    if (s !== s.toUpperCase() && s !== s.toLowerCase()) return s;
+    const titled = s.replace(/[^ '’-]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    return titled.replace(/σ(?=$|[ '’-])/g, 'ς');
+}
+
+/** Letters, with an inner hyphen, apostrophe or single space, and at least 2 letters (the server's name_shape rule). */
+export function nameShapeOk(name: string): boolean {
+    return NAME_SHAPE.test(name) && name.replace(NOT_LETTER, '').length >= 2;
+}

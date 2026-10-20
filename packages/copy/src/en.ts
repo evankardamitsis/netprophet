@@ -338,6 +338,7 @@ export const en: Copy = {
         name: 'Type your first name and surname',
         sport: 'Pick what you play',
         age: 'Tick that you are 15 or over',
+        nameShape: 'Type your real first name and surname, in letters.',
       },
     },
     claim: {
@@ -352,6 +353,10 @@ export const en: Copy = {
       requested: 'Request sent. You can play while we check it; we will tell you once it is approved.',
       newRequested: 'We will make your profile and tell you once it is ready. Until then, play as usual.',
       failed: 'That did not work. Try again.',
+      claimedSub: 'Already linked to another account',
+      claimedNote: 'Another account already has this profile. If it is you, tell us and we will check.',
+      claimedMe: 'That is me',
+      claimedSent: 'We will check and let you know. Until then, play as usual.',
     },
     play: {
       title: 'How do you play?',
@@ -870,6 +875,13 @@ export const en: Copy = {
     list: 'Blocked',
     unblock: 'Unblock',
     failed: 'That did not work. Try again.',
+    claim: {
+      link: 'Not me?',
+      title: 'Something wrong?',
+      sub: 'If this profile is yours, or you know the account on it is not the person it shows, tell us.',
+      note: 'Anything else we should know (optional)',
+      sent: 'Got it. We will check.',
+    },
   },
   celebrate: {
     label: 'Streak',
