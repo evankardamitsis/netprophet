@@ -19,8 +19,12 @@ import { alpha, bezier, colors, fonts, motion, springBezier, type } from '../the
  * system's reduce motion nothing moves: the hole jumps, the card only fades.
  */
 const SCRIM = 0.78;
-/** wider than any screen, so the border covers everything around the hole */
-const B = 3000;
+/**
+ * The border reaches this many screen sizes out from the hole, so it covers everything around it even mid-slide
+ * (the spring overshoots). Sized from the screen, not a fixed huge number: iOS does not draw a layer past its
+ * texture limit (a 3000pt border at 3x left the scrim blank on an iPhone).
+ */
+const REACH = 1.25;
 const PAD = 8;
 const FEED_RADIUS = 24;
 const GAP = 14;
@@ -126,7 +130,9 @@ function TourLayer({ step }: { step: TourStepId }) {
   const fadeIn = useFadeIn(motion.revealDurShort);
   const radius = hole ? (shown === 'feed' ? FEED_RADIUS : hole.height / 2) : 0;
   const slide = placed && !reduced ? motion.revealDur : 0;
-  const holeStyle: CSSTransitionProperties & { left: number; top: number; width: number; height: number; borderRadius: number } = {
+  const B = Math.ceil(Math.max(size.width, size.height, dims.width, dims.height) * REACH);
+  const holeStyle: CSSTransitionProperties & { left: number; top: number; width: number; height: number; borderRadius: number; borderWidth: number } = {
+    borderWidth: B,
     left: (hole?.x ?? size.width / 2) - B,
     top: (hole?.y ?? size.height / 2) - B,
     width: (hole?.width ?? 0) + 2 * B,
@@ -228,7 +234,7 @@ function Card({ step, onHeight }: { step: TourStepId; onHeight: (h: number) => v
 const styles = StyleSheet.create({
   root: { zIndex: 50 },
   clip: { overflow: 'hidden' },
-  hole: { position: 'absolute', borderWidth: B, borderColor: alpha(colors.ink, SCRIM) },
+  hole: { position: 'absolute', borderColor: alpha(colors.ink, SCRIM) },
   ring: { borderWidth: 2, borderColor: colors.paper },
   cardWrap: { position: 'absolute', left: 0, right: 0, paddingHorizontal: MARGIN, alignItems: 'center' },
   card: {

@@ -75,13 +75,16 @@ const TourContext = createContext<Tour>({
 /** Σήμερα's entrances settle for this long before the tour dims the screen */
 const SETTLE_MS = motion.revealDur;
 
-/** sample mode (no backend) has no get_me: it plays as an account that finished onboarding (the device mirror still counts) */
+/**
+ * Sample mode (no backend) and the development guest («Άλλη φορά», no session) have no get_me of their own: they play
+ * as an account that finished onboarding (the device mirror still counts, and nothing is written to a server).
+ */
 const SAMPLE_PROFILE: Record<string, unknown> = { done: true };
 
 export function TourProvider({ profile: read, children }: { profile: Record<string, unknown> | null; children: ReactNode }) {
-  const profile = read ?? (api ? null : SAMPLE_PROFILE);
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
+  const profile = read ?? (api && userId ? null : SAMPLE_PROFILE);
   const { has } = useUnlocks();
   const measurers = useRef(new Map<TourTarget, Measure>());
   const [state, setState] = useState<TourState>(TOUR_IDLE);
@@ -133,7 +136,7 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
       // update_profile replaces onboarding_state whole: merge onto the copy we hold, and only one that says
       // onboarding is done (a copy from before it would lose `done`)
       const state = (currentMe()?.profile.onboarding_state ?? profile) as Record<string, unknown> | null;
-      if (!api || !state || state.done !== true) return;
+      if (!api || !userId || !state || state.done !== true) return;
       api
         .updateProfile({ onboarding_state: withTourMark(state, mark, new Date().toISOString()) })
         .then(() => markMeStale())
