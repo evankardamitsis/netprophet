@@ -1,13 +1,13 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { View } from 'react-native';
 import type { CardResult } from './feed';
-import { hudNumbers } from './hudNumbers';
+import { NOTHING_HELD, hudNumbers, pinBatch, type HeldBack } from './hudNumbers';
 
 /**
  * The header's numbers while result cards play (prototype rqApply / fly):
- * the server has already counted every result, so until a card plays the header shows the values from before it.
- * A card then flies «+10» (and «+1» to σερί) up to the header and applies itself; the header counts up,
- * or σερί falls (broken) or frosts (a freeze saved it).
+ * the server has already counted every result, so until the first card of a batch plays the header shows the values
+ * from before it (hudNumbers.ts). A card then flies «+10» (and «+1» to σερί) up to the header and applies itself;
+ * for the held card the header counts up, or σερί falls (broken) or frosts (a freeze saved it).
  */
 export type StreakFx = 'fall' | 'frost' | null;
 
@@ -69,6 +69,9 @@ function measure(ref: RefObject<View | null>): Promise<{ x: number; y: number; w
 export function HudProvider({ children }: { children: ReactNode }) {
   const [pending, setPendingState] = useState<CardResult[]>([]);
   const [applied, setApplied] = useState<Set<string>>(() => new Set());
+  const [held, setHeld] = useState<HeldBack>(NOTHING_HELD);
+  const heldRef = useRef(held);
+  heldRef.current = held;
   const [streakFx, setStreakFx] = useState<StreakFx>(null);
   const [onFeed, setOnFeed] = useState(true);
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -79,11 +82,14 @@ export function HudProvider({ children }: { children: ReactNode }) {
 
   const setPending = useCallback((results: CardResult[]) => {
     setPendingState(results);
+    setHeld((prev) => pinBatch(prev, results));
     setApplied((prev) => new Set([...prev].filter((id) => results.some((r) => r.id === id))));
   }, []);
 
   const apply = useCallback((card: CardResult) => {
     setApplied((prev) => new Set(prev).add(card.id));
+    // only the held card moves the header; cards 2..N are already in it, so σερί neither falls nor frosts for them
+    if (heldRef.current.first?.id !== card.id) return;
     if (!card.ok) {
       setStreakFx(card.frozen ? 'frost' : card.streakBefore > 0 ? 'fall' : null);
       setTimeout(() => setStreakFx(null), FX_MS);
@@ -114,7 +120,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Hud>(() => {
     return {
-      ...hudNumbers(pending, applied, onFeed),
+      ...hudNumbers(held, pending, applied, onFeed),
       streakFx,
       flights,
       setPending,
@@ -125,7 +131,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
       questBar,
       showQuestBar,
     };
-  }, [pending, applied, onFeed, streakFx, flights, setPending, apply, fly, questBar, showQuestBar]);
+  }, [held, pending, applied, onFeed, streakFx, flights, setPending, apply, fly, questBar, showQuestBar]);
 
   return <HudContext.Provider value={value}>{children}</HudContext.Provider>;
 }
