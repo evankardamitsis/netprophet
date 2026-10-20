@@ -897,7 +897,7 @@ export const en: Copy = {
       link: 'This is not me',
       title: 'Wrong player?',
       sub: 'If this profile is not you, tell us. We will unlink it from your account.',
-      sent: 'We will check. Once we unlink it, you can find the right player.',
+      sent: 'Got it. We will check.',
     },
   },
   celebrate: {
