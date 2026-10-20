@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 19 Oct 2026 (four-step onboarding, auto-follow 6, «Πώς παίζεις» in Ρυθμίσεις). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct», «19 Oct» and «Waiting on the founder» below.
+Last updated: 20 Oct 2026 (a push when someone reacts to your match). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct», «19 Oct», «20 Oct» and «Waiting on the founder» below.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
