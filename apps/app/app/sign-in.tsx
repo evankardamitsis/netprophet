@@ -8,11 +8,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { BouncingLogo } from '../src/components/BouncingLogo';
 import { Intro } from '../src/components/Intro';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../src/i18n';
-import { AuthFailure, EMAIL_RE, guestAllowed, useAuth, type AuthErrorKind } from '../src/lib/auth';
+import { AuthFailure, EMAIL_RE, guestAllowed, useAppleAvailable, useAuth, type AuthErrorKind } from '../src/lib/auth';
+import { CODE_LEN, codeDigits, shouldAutoSubmit } from '../src/lib/authErrors';
 import { useFadeUpIn, usePopIn, usePress, useRiseIn } from '../src/lib/motion';
 import { SKIP_ONBOARDING_KEY } from '../src/lib/onboardingGate';
 import { fmt } from '../src/lib/votes';
@@ -22,14 +24,13 @@ import { cardSurface, colors, ease, fonts, text } from '../src/theme';
 const HERO_LOGO_H = 30;
 
 type Step = 'intro' | 'welcome' | 'email' | 'code';
-/** «Άλλη φορά»: after the email code, go straight to the feed and skip claim, area and Ποιους ξέρεις */
-export { SKIP_ONBOARDING_KEY };
-const CODE_LEN = 6;
 /** prototype .sw: a 1em box (70px), words slide by 110% */
 const SWAP_H = 70;
 const SWAP_SHIFT = SWAP_H * 1.1;
 /** bottom padding on phones without a home indicator */
 const BOTTOM_MIN = 12;
+/** the outline buttons' height; Apple's own button matches it */
+const BUTTON_H = 52;
 /** «Άλλη φορά» is a 44pt tap area with 14px text, so it can sit this far into the home-indicator inset */
 const LATER_SLACK = 14;
 /**
@@ -39,8 +40,8 @@ const LATER_SLACK = 14;
 const ACCENT_PAD = 10;
 
 /**
- * Signed-out flow. First the intro (founder, 12 Oct: the big logo with the balls bouncing around and «Πάμε»), then
- * the welcome card, prototype V2's first screen, copied as is.
+ * Signed-out flow. First the intro (founder, 12 Oct: the big logo with the balls bouncing around; 20 Oct: no button of
+ * its own, it moves on by itself or on a tap), then the welcome card, prototype V2's first screen, with the one «Πάμε».
  * Email and code are not in the prototype; they use its claim screen («Είσαι ήδη εδώ;») styles.
  */
 export default function SignInScreen() {
@@ -62,11 +63,15 @@ export default function SignInScreen() {
               AsyncStorage.removeItem(SKIP_ONBOARDING_KEY).catch(() => undefined);
               setStep('email');
             }}
-            onLater={() => {
-              AsyncStorage.setItem(SKIP_ONBOARDING_KEY, '1').catch(() => undefined);
-              if (guestAllowed) enterAsGuest();
-              else setStep('email');
-            }}
+            // development only (founder, 20 Oct): a real player always signs in and walks the onboarding
+            onLater={
+              guestAllowed
+                ? () => {
+                    AsyncStorage.setItem(SKIP_ONBOARDING_KEY, '1').catch(() => undefined);
+                    enterAsGuest();
+                  }
+                : null
+            }
           />
         ) : (
           <Auth step={step as 'email' | 'code'} setStep={setStep} />
@@ -78,7 +83,7 @@ export default function SignInScreen() {
 
 /* ---------- welcome (prototype isWelcome) ---------- */
 
-function Welcome({ onNext, onLater }: { onNext: () => void; onLater: () => void }) {
+function Welcome({ onNext, onLater }: { onNext: () => void; onLater: (() => void) | null }) {
   const t = useCopy();
   const card = useFadeUpIn(500);
   const cta = usePopIn(450, 1500);
@@ -109,7 +114,7 @@ function Welcome({ onNext, onLater }: { onNext: () => void; onLater: () => void 
           {t.welcome.cta}
         </Button>
       </Animated.View>
-      <Later onPress={onLater}>{t.welcome.later}</Later>
+      {onLater ? <Later onPress={onLater}>{t.welcome.later}</Later> : null}
     </View>
   );
 }
@@ -149,6 +154,7 @@ function Swap({ words }: { words: readonly string[] }) {
 function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) => void }) {
   const t = useCopy();
   const auth = useAuth();
+  const apple = useAppleAvailable();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -187,9 +193,10 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
     });
   const verify = (value: string) => run(() => auth.verifyCode(cleanEmail, value));
   const onCode = (v: string) => {
-    const digits = v.replace(/\D/g, '').slice(0, CODE_LEN);
+    // iOS offers the code from Mail above the keyboard (oneTimeCode); six digits go in by themselves
+    const digits = codeDigits(v);
     setCode(digits);
-    if (digits.length === CODE_LEN && !busy) void verify(digits);
+    if (shouldAutoSubmit(digits, busy)) void verify(digits);
   };
 
   if (step === 'email') {
@@ -219,6 +226,16 @@ function Auth({ step, setStep }: { step: 'email' | 'code'; setStep: (s: Step) =>
         <Button kind="hero" onPress={send} disabled={busy || !EMAIL_RE.test(cleanEmail)} busy={busy}>
           {t.auth.sendCode}
         </Button>
+        {apple ? (
+          // Apple's own button (HIG), black on paper, as tall as ours (App Store guideline 4.8)
+          <AppleAuthentication.AppleAuthenticationButton
+            buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+            cornerRadius={16}
+            style={[styles.apple, busy && styles.disabled]}
+            onPress={() => !busy && void run(auth.signInWithApple)}
+          />
+        ) : null}
         <Button kind="outline" onPress={() => run(auth.signInWithGoogle)} disabled={busy}>
           {t.auth.google}
         </Button>
@@ -383,7 +400,7 @@ const styles = StyleSheet.create({
   hero60: { minHeight: 60, borderRadius: 18, backgroundColor: colors.blue, alignItems: 'center', justifyContent: 'center' },
   heroText: { fontFamily: fonts.bodyBold, fontSize: 19, color: colors.white },
   outline: {
-    minHeight: 52,
+    minHeight: BUTTON_H,
     borderRadius: 16,
     borderWidth: 2,
     borderColor: colors.ink,
@@ -392,6 +409,7 @@ const styles = StyleSheet.create({
   },
   outlineText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   disabled: { opacity: 0.4 },
+  apple: { height: BUTTON_H, width: '100%' },
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
   laterHit: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   later: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.inkSoft, textDecorationLine: 'underline' },

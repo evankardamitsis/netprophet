@@ -334,6 +334,11 @@ export const en: Copy = {
       surname: 'Surname',
       sport: 'What do you play?',
       sports: { tennis: 'Tennis', padel: 'Padel', both: 'Both' },
+      missing: {
+        name: 'Type your first name and surname',
+        sport: 'Pick what you play',
+        age: 'Tick that you are 15 or over',
+      },
     },
     claim: {
       title: 'Are you already here?',
@@ -344,7 +349,7 @@ export const en: Copy = {
       newPlayer: 'I cannot find myself, I am new',
       taken: 'Someone else already has this player. If it is you, write to us.',
       otherClaimed: 'Your account already has a player.',
-      requested: 'Your request is in. We will look at it soon.',
+      requested: 'Request sent. You can play while we check it; we will tell you once it is approved.',
       failed: 'That did not work. Try again.',
     },
     play: {
@@ -383,7 +388,7 @@ export const en: Copy = {
       none: 'I do not know anyone yet',
       noneFound: 'Nobody by that name.',
       later: 'Later',
-      noteOptional: 'Optional. If you pick nobody, we will add the 6 most popular players in your area. Change them any time.',
+      subtitleAuto: 'Pick the people you know, you will see them first. If you pick nobody, we add the 6 most popular players in your area.',
     },
     intro: {
       of: '{n} of {total}',

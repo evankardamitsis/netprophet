@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useFrameCallback, useReducedMotion, useSharedValue, type SharedValue } from 'react-native-reanimated';
@@ -5,16 +6,16 @@ import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCopy } from '../i18n';
 import { useStgIn } from '../lib/motion';
 import { colors } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
-import { Primary } from './OnboardingControls';
 
 /** the big lockup in the middle */
 const LOGO_H = 56;
-/** the balls' ground: this far above the bottom edge (over the button and its padding) */
-const GROUND_ABOVE_CTA = 104;
+/** the balls' ground: this far above the bottom edge (the home indicator's inset comes on top) */
+const GROUND_ABOVE = 24;
+/** the screen moves on to the welcome card by itself after this long (founder, 20 Oct: one «Πάμε», on the card) */
+export const INTRO_MS = 1400;
 
 /**
  * Each sport's ball moves like itself (founder, 14 Oct: "do something similar for better balls on the first
@@ -90,19 +91,41 @@ function tick() {
 
 /**
  * The first screen (founder, 12 Oct): the NetProphet lockup large in the middle with its ball hopping over the
- * net, the four sports' balls bouncing around it each in its own way (gravity, the walls and a ground above the
- * button), and «Πάμε» to begin, which opens the welcome card. The balls answer the finger: a touch pushes the
- * near ones away, a ball can be grabbed and thrown, a tap on one pops it up, a swipe through one knocks it along.
+ * net and the four sports' balls bouncing around it each in its own way (gravity, the walls and the ground). No
+ * button (founder, 20 Oct: the welcome card's «Πάμε» is the only one): after INTRO_MS, or on a tap anywhere, it opens
+ * the welcome card; with reduce motion on it opens it straight away. Until then the balls answer the finger: a touch
+ * pushes the near ones away, a ball can be grabbed and thrown, a swipe through one knocks it along.
  */
 export function Intro({ onStart }: { onStart: () => void }) {
-  const t = useCopy();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
+  const reduced = useReducedMotion();
   const logo = useStgIn(700, 150);
-  const cta = useStgIn(500, 700);
   const touch = useTouch();
-  // the whole screen behind the logo and «Πάμε» takes the finger; the button keeps its own touches
-  const finger = Gesture.Pan()
+  // once only: the timer and a tap can both ask
+  const started = useRef(false);
+  // the latest onStart without restarting the timer when the parent renders again
+  const next = useRef(onStart);
+  next.current = onStart;
+  const start = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
+    next.current();
+  }, []);
+  useEffect(() => {
+    if (reduced) {
+      start();
+      return undefined;
+    }
+    const id = setTimeout(start, INTRO_MS);
+    return () => clearTimeout(id);
+  }, [reduced, start]);
+  // a tap anywhere moves on; a drag or a throw stays a game with the balls
+  const tap = Gesture.Tap().onEnd(() => {
+    scheduleOnRN(start);
+  });
+  // the whole screen behind the logo takes the finger
+  const pan = Gesture.Pan()
     .minDistance(0)
     .onBegin((e) => {
       touch.x.value = e.x;
@@ -122,6 +145,7 @@ export function Intro({ onStart }: { onStart: () => void }) {
     .onFinalize(() => {
       touch.down.value = 0;
     });
+  const finger = Gesture.Simultaneous(pan, tap);
   return (
     <View style={styles.screen}>
       <StatusBar style="light" />
@@ -129,14 +153,10 @@ export function Intro({ onStart }: { onStart: () => void }) {
         <View style={StyleSheet.absoluteFill} />
       </GestureDetector>
       {FLYERS.map((f, i) => (
-        // the ground is just above «Πάμε», so the balls land on it rather than behind the button
-        <Flyer key={f.kind} {...f} index={i} touch={touch} width={width} floor={height - insets.bottom - GROUND_ABOVE_CTA} />
+        <Flyer key={f.kind} {...f} index={i} touch={touch} width={width} floor={height - insets.bottom - GROUND_ABOVE} />
       ))}
       <Animated.View pointerEvents="none" style={[styles.middle, logo]}>
         <BouncingLogo height={LOGO_H} />
-      </Animated.View>
-      <Animated.View pointerEvents="box-none" style={[styles.bottom, { paddingBottom: insets.bottom + 20 }, cta]}>
-        <Primary label={t.welcome.cta} onPress={onStart} tall />
       </Animated.View>
     </View>
   );
@@ -287,5 +307,4 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.ink, overflow: 'hidden' },
   flyer: { position: 'absolute', left: 0, top: 0 },
   middle: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  bottom: { paddingHorizontal: 20 },
 });

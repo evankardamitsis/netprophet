@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { areasOf, AUTO_FOLLOW, autoFollowIds, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, playLine, primarySport, splitName, stepsFor, type Area } from './onboarding';
+import {
+  areasOf,
+  AUTO_FOLLOW,
+  autoFollowIds,
+  knownButton,
+  KNOWN_MIN,
+  KNOWN_MIN_LINK,
+  nameMissing,
+  playLine,
+  prefillName,
+  primarySport,
+  splitName,
+  stepCounter,
+  stepsFor,
+  type Area,
+} from './onboarding';
 
 const t = getCopy('el');
 
@@ -47,9 +62,70 @@ describe('autoFollowIds', () => {
 });
 
 describe('the known step says what «Αργότερα» does', () => {
-  it('names the 6, Greek first, English too', () => {
-    expect(t.onboarding.known.noteOptional).toContain('6 πιο δημοφιλείς της περιοχής σου');
-    expect(getCopy('en').onboarding.known.noteOptional).toContain('6 most popular');
+  it('names the 6 in its one line, Greek first, English too', () => {
+    expect(t.onboarding.known.subtitleAuto).toBe(
+      'Διάλεξε όσους ξέρεις, θα τους βλέπεις πρώτους. Αν δεν διαλέξεις, σου βάζουμε τους 6 πιο δημοφιλείς της περιοχής σου.',
+    );
+    expect(getCopy('en').onboarding.known.subtitleAuto).toContain('6 most popular');
+  });
+});
+
+describe('stepCounter', () => {
+  it('«1 από 4» to «4 από 4» on the usual path', () => {
+    const steps = stepsFor(false);
+    expect(steps.map((s) => stepCounter(steps, s, t))).toEqual(['1 από 4', '2 από 4', '3 από 4', '4 από 4']);
+  });
+
+  it('the link path has two steps', () => {
+    const steps = stepsFor(true);
+    expect(stepCounter(steps, 'claim', t)).toBe('1 από 2');
+    expect(stepCounter(steps, 'known', t)).toBe('2 από 2');
+  });
+
+  it('English: «1 of 4»', () => {
+    expect(stepCounter(stepsFor(false), 'name', getCopy('en'))).toBe('1 of 4');
+  });
+});
+
+describe('nameMissing', () => {
+  const ready = { first: 'Νίκος', surname: 'Ροδίτης', sport: 'tennis' as const, adult: true };
+
+  it('null when the step is ready', () => {
+    expect(nameMissing(ready)).toBeNull();
+  });
+
+  it('one thing at a time, in the order of the screen: name, sport, age', () => {
+    expect(nameMissing({ first: '', surname: '', sport: null, adult: false })).toBe('name');
+    expect(nameMissing({ ...ready, surname: '  ', sport: null, adult: false })).toBe('name');
+    expect(nameMissing({ ...ready, first: '' })).toBe('name');
+    expect(nameMissing({ ...ready, sport: null, adult: false })).toBe('sport');
+    expect(nameMissing({ ...ready, adult: false })).toBe('age');
+  });
+
+  it('every message is there, Greek first', () => {
+    expect(t.onboarding.name.missing).toEqual({
+      name: 'Γράψε όνομα και επώνυμο',
+      sport: 'Διάλεξε τι παίζεις',
+      age: 'Τίκαρε ότι είσαι 15 και πάνω',
+    });
+    expect(Object.keys(getCopy('en').onboarding.name.missing)).toEqual(['name', 'sport', 'age']);
+  });
+});
+
+describe('prefillName', () => {
+  const apple = { first: 'Ελένη', surname: 'Παππά' };
+
+  it('the profile own parts first', () => {
+    expect(prefillName({ first_name: 'Νίκος', surname: 'Ροδίτης', display_name: 'x' }, apple)).toEqual({ first: 'Νίκος', surname: 'Ροδίτης' });
+  });
+
+  it('then the display name (Google)', () => {
+    expect(prefillName({ display_name: 'Βαγγέλης Καρδαμίτσης' }, apple)).toEqual({ first: 'Βαγγέλης', surname: 'Καρδαμίτσης' });
+  });
+
+  it('then the name Apple gave on the first sign-in, never the neutral «Παίκτης 1234»', () => {
+    expect(prefillName({ display_name: 'Παίκτης 4821' }, apple)).toEqual(apple);
+    expect(prefillName({ display_name: 'Παίκτης 4821' })).toEqual({ first: '', surname: '' });
   });
 });
 

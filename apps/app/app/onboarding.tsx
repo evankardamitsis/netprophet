@@ -7,14 +7,31 @@ import { StatusBar } from 'expo-status-bar';
 import { track } from '../src/lib/analytics';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
-import { guestAllowed, useAuth } from '../src/lib/auth';
+import { clearAppleName, guestAllowed, readAppleName, useAuth } from '../src/lib/auth';
 import type { MatchLinkView } from '@netprophet/db';
 import { nameGender } from '@netprophet/copy';
 import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
 import { mockLinkView, who } from '../src/lib/link';
 import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
 import { useFadeUpIn, usePress, useStgIn } from '../src/lib/motion';
-import { areasOf, autoFollowIds, knownButton, KNOWN_MIN, KNOWN_MIN_LINK, primarySport, REGIONS, splitName, stepsFor, type Region, type SportChoice, type Step } from '../src/lib/onboarding';
+import {
+  areasOf,
+  autoFollowIds,
+  knownButton,
+  KNOWN_MIN,
+  KNOWN_MIN_LINK,
+  nameMissing,
+  prefillName,
+  primarySport,
+  REGIONS,
+  splitName,
+  stepCounter,
+  stepsFor,
+  type NameMissing,
+  type Region,
+  type SportChoice,
+  type Step,
+} from '../src/lib/onboarding';
 import type { PlayerRow } from '../src/lib/players';
 import { fmt } from '../src/lib/votes';
 import { colors, fonts } from '../src/theme';
@@ -95,6 +112,8 @@ export default function OnboardingScreen() {
   const [sport, setSport] = useState<SportChoice | null>(null);
   // sign-up is for 15 and over (founder, 12 Oct 2026; the Greek age of digital consent)
   const [adult, setAdult] = useState(false);
+  // «Συνέχεια» pressed before the step is ready: the first thing missing, said next to it
+  const [missing, setMissing] = useState<NameMissing | null>(null);
   // claim
   const [roster, setRoster] = useState('');
   const [candidates, setCandidates] = useState<ClaimRow[] | null>(null);
@@ -116,17 +135,17 @@ export default function OnboardingScreen() {
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // the name we already know (Google, or a v1 profile) fills the first step
+  // the name we already know (Google, Apple's first sign-in, or a v1 profile) fills the first step
   useEffect(() => {
     if (preview) {
       setFirst(PREVIEW_NAME.first);
       setSurname(PREVIEW_NAME.surname);
     }
-    ob.me()
-      .then((me) => {
+    Promise.all([ob.me(), readAppleName()])
+      .then(([me, apple]) => {
         if (!me) return;
         const p = me.profile;
-        const split = p.first_name || p.surname ? { first: p.first_name ?? '', surname: p.surname ?? '' } : splitName(p.display_name);
+        const split = prefillName(p, apple);
         setFirst(split.first);
         setSurname(split.surname);
         if (p.primary_sport === 'padel') setSport('padel');
@@ -296,6 +315,7 @@ export default function OnboardingScreen() {
       if (link) {
         await ob.follow(known);
         await gate.save({ via: 'link', claimed: true, age_15: true });
+        clearAppleName();
         tr('onboarding_done', { claimed: true, known: known.length });
         await clearPendingLink();
         return enterApp();
@@ -305,6 +325,7 @@ export default function OnboardingScreen() {
       const follow = autoFollowIds(known, pool, isNew ? null : picked);
       await ob.follow(follow);
       if (!preview) await gate.save({ via: 'flow', region, sports: sport ?? 'tennis', claimed: !isNew && picked !== null, age_15: true });
+      clearAppleName();
       tr('onboarding_done', { claimed: !isNew && picked !== null, known: known.length, auto: known.length === 0 ? follow.length : 0 });
       enterApp();
     });
@@ -325,7 +346,11 @@ export default function OnboardingScreen() {
   const toggleKnown = (id: string) => setKnown((k) => (k.includes(id) ? k.filter((x) => x !== id) : k.concat(id)));
   const toggleArea = (id: string) => setAreaIds((a) => (a.includes(id) ? a.filter((x) => x !== id) : a.concat(id)));
 
-  const nameReady = first.trim().length > 0 && surname.trim().length > 0 && sport !== null && adult;
+  const nameNow = nameMissing({ first, surname, sport, adult });
+  const nameReady = nameNow === null;
+  // said once «Συνέχεια» was pressed, and gone as soon as that one is filled in
+  const shownMissing = missing !== null && nameNow === missing ? missing : null;
+  const count = stepCounter(steps, step, t);
   const kb = knownButton(known.length, t, link ? KNOWN_MIN_LINK : KNOWN_MIN);
   // never your own player (the one you just claimed) among the people you know
   const self = isNew ? null : picked;
@@ -346,10 +371,11 @@ export default function OnboardingScreen() {
         <StepIn key={step}>
           {step === 'name' ? (
             <>
-              <Title text={o.name.title} />
+              <Title text={o.name.title} count={count} />
               <Text style={styles.sub}>{o.name.subtitle}</Text>
               <Field value={first} onChange={setFirst} placeholder={o.name.first} autoComplete="given-name" />
               <Field value={surname} onChange={setSurname} placeholder={o.name.surname} autoComplete="family-name" />
+              <Missing text={shownMissing === 'name' ? o.name.missing.name : null} />
               <Text style={styles.label}>{o.name.sport}</Text>
               <Segmented
                 options={[
@@ -360,16 +386,18 @@ export default function OnboardingScreen() {
                 value={sport}
                 onChange={setSport}
               />
+              <Missing text={shownMissing === 'sport' ? o.name.missing.sport : null} />
               <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
+              <Missing text={shownMissing === 'age' ? o.name.missing.age : null} />
               <Err text={error} />
-              <Primary label={o.next} ready={nameReady} busy={busy} onPress={nameNext} />
+              <Primary label={o.next} ready={nameReady} busy={busy} onPress={nameNext} onNotReady={() => setMissing(nameNow)} />
               <Back label={o.back} onPress={toWelcome} />
             </>
           ) : null}
 
           {step === 'claim' && link && lp ? (
             <>
-              <Title text={nameGender(lp.first_name, lp.gender) === 'f' ? t.link.claimTitleF : t.link.claimTitle} />
+              <Title text={nameGender(lp.first_name, lp.gender) === 'f' ? t.link.claimTitleF : t.link.claimTitle} count={count} />
               <Text style={styles.sub}>{t.link.claimSub}</Text>
               <Candidate row={{ id: lp.id, name: `${lp.first_name} ${lp.surname}`, sub: link.view.tournament ?? '' }} index={0} on onPress={() => undefined} />
               <AgeCheck on={adult} onPress={() => setAdult((a) => !a)} />
@@ -383,7 +411,7 @@ export default function OnboardingScreen() {
 
           {step === 'claim' && !link ? (
             <>
-              <Title text={o.claim.title} />
+              <Title text={o.claim.title} count={count} />
               <Text style={styles.sub}>{fmt(o.claim.subtitle, { n: roster || '1.500' })}</Text>
               <TextInput
                 value={claimQuery}
@@ -419,7 +447,7 @@ export default function OnboardingScreen() {
 
           {step === 'area' ? (
             <>
-              <Title text={o.area.title} />
+              <Title text={o.area.title} count={count} />
               <Text style={styles.sub}>{o.area.subtitle}</Text>
               <Segmented
                 options={REGIONS.map((r) => ({ id: r, label: o.area.regions[r] }))}
@@ -452,11 +480,16 @@ export default function OnboardingScreen() {
 
           {step === 'known' ? (
             <>
-              <Title text={o.known.title} />
-              <Text style={styles.sub}>{o.known.subtitle}</Text>
-              <Text style={styles.note}>
-                {link?.view.logged_by ? fmt(t.link.knownNote, { who: who(link.view.logged_by) }) : o.known.noteOptional}
-              </Text>
+              <Title text={o.known.title} count={count} />
+              {link ? (
+                <>
+                  <Text style={styles.sub}>{o.known.subtitle}</Text>
+                  {link.view.logged_by ? <Text style={styles.note}>{fmt(t.link.knownNote, { who: who(link.view.logged_by) })}</Text> : null}
+                </>
+              ) : (
+                // one line (founder, 20 Oct): who to pick and what happens if nobody is picked
+                <Text style={styles.sub}>{o.known.subtitleAuto}</Text>
+              )}
               <TextInput
                 value={query}
                 onChangeText={setQuery}
@@ -508,8 +541,23 @@ function StepIn({ children, duration = IN_MS }: { children: React.ReactNode; dur
   return <Animated.View style={[styles.step, style]}>{children}</Animated.View>;
 }
 
-function Title({ text }: { text: string }) {
-  return <Text style={styles.title}>{text}</Text>;
+/** the step's title with «1 από 4» small above it */
+function Title({ text, count }: { text: string; count: string }) {
+  return (
+    <View>
+      <Text style={styles.count}>{count}</Text>
+      <Text style={styles.title}>{text}</Text>
+    </View>
+  );
+}
+
+/** what «Συνέχεια» still needs, right under its field (inkSoft bold: there is no warning colour in the tokens) */
+function Missing({ text }: { text: string | null }) {
+  return text ? (
+    <Text style={styles.missing} accessibilityLiveRegion="polite">
+      {text}
+    </Text>
+  ) : null;
 }
 
 function Err({ text }: { text: string | null }) {
@@ -566,6 +614,8 @@ const styles = StyleSheet.create({
     paddingTop: ACCENT_PAD,
     marginTop: -ACCENT_PAD,
   },
+  count: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 18, color: colors.inkSoft, marginBottom: 4 },
+  missing: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft, marginTop: -4 },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20.25, color: colors.inkSoft },
   label: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft },
   note: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },

@@ -23,6 +23,39 @@ export function stepsFor(fromLink = false): Step[] {
   return fromLink ? ['claim', 'known'] : ['name', 'claim', 'area', 'known'];
 }
 
+/** «1 από 4» above each step's title: where this step sits in the path it belongs to (the link path has two). */
+export function stepCounter(steps: readonly Step[], step: Step, t: Copy): string {
+  const n = Math.max(0, steps.indexOf(step)) + 1;
+  return fmt(t.onboarding.intro.of, { n, total: steps.length });
+}
+
+export type NameMissing = 'name' | 'sport' | 'age';
+
+/**
+ * «Συνέχεια» on «Πώς σε λένε;» before the step is ready says what is still missing, one thing at a time and in the
+ * order the screen shows them: the name (both parts), what you play, then the 15-and-over tick. Null when ready.
+ */
+export function nameMissing(v: { first: string; surname: string; sport: SportChoice | null; adult: boolean }): NameMissing | null {
+  if (!v.first.trim() || !v.surname.trim()) return 'name';
+  if (v.sport === null) return 'sport';
+  if (!v.adult) return 'age';
+  return null;
+}
+
+/**
+ * The name the first step starts with: the profile's own parts, else its display name (Google), else what Sign in with
+ * Apple handed over on the first sign-in (the server never sees that one in time).
+ */
+export function prefillName(
+  profile: { first_name?: string | null; surname?: string | null; display_name?: string | null },
+  apple: { first: string; surname: string } | null = null,
+): { first: string; surname: string } {
+  if (profile.first_name || profile.surname) return { first: profile.first_name ?? '', surname: profile.surname ?? '' };
+  const split = splitName(profile.display_name);
+  if (split.first || split.surname) return split;
+  return apple ?? split;
+}
+
 /** «Ποια είναι η παρέα σου;» never blocks: someone who knows nobody yet goes on with «Αργότερα» */
 export const KNOWN_MIN = 0;
 

@@ -21,3 +21,29 @@ export function authErrorKind(err: { status?: number; code?: string; message?: s
 }
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** the email code is six digits */
+export const CODE_LEN = 6;
+
+/** What the code field keeps from what was typed or pasted (or what iOS fills in from Mail): digits only, at most six. */
+export function codeDigits(input: string): string {
+  return input.replace(/\D/g, '').slice(0, CODE_LEN);
+}
+
+/** The code goes in by itself once all six digits are there; «Μπες» stays for a manual try. Never twice at once. */
+export function shouldAutoSubmit(digits: string, busy: boolean): boolean {
+  return !busy && digits.length === CODE_LEN && /^\d+$/.test(digits);
+}
+
+/**
+ * Sign in with Apple hands over the name only on the very first sign-in, and only to the app (the identity token has
+ * no name). Kept so the first onboarding step can start filled in. Null when Apple sent nothing usable.
+ */
+export function appleName(full: { givenName?: string | null; familyName?: string | null } | null | undefined): { first: string; surname: string } | null {
+  const first = (full?.givenName ?? '').trim();
+  const surname = (full?.familyName ?? '').trim();
+  if (!first && !surname) return null;
+  // never an email as a name (the same rule as the server's handle_new_user)
+  if (first.includes('@') || surname.includes('@')) return null;
+  return { first, surname };
+}
