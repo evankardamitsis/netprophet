@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import { PlayerListRow } from '../../src/components/PlayerListRow';
 import { useCopy } from '../../src/i18n';
 import { usePlayerSearch, usePlayersHome } from '../../src/lib/data';
+import { useFadeUpIn } from '../../src/lib/motion';
 import { fmt } from '../../src/lib/votes';
-import { colors, ease, fonts, text } from '../../src/theme';
+import { colors, fonts, text } from '../../src/theme';
 
 /**
  * Παίκτες (prototype V2, isPlayers): search the roster, and before searching your friends and who plays
@@ -25,7 +26,7 @@ export default function PlayersScreen() {
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const search = usePlayerSearch(query);
-  const titleIn = useInA();
+  const titleIn = useFadeUpIn(TITLE_IN_MS);
 
   const rows = search.rows ?? home.rows;
   const label =
@@ -84,14 +85,6 @@ export default function PlayersScreen() {
   );
 }
 
-/** inA: fade in from 12px below on the prototype ease. */
-function useInA() {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withTiming(1, { duration: TITLE_IN_MS, easing: ease });
-  }, [p]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 12 }] }));
-}
 
 const styles = StyleSheet.create({
   backHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },

@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
@@ -14,7 +12,7 @@ import { useMyBaller } from '../lib/data';
 import { Baller, type BallerHandle } from './Baller';
 import { resultStrip, type CardResult } from '../lib/feed';
 import { useHud } from '../lib/hud';
-import { runPop, usePopIn, usePress, useSettled, useStgIn } from '../lib/motion';
+import { useFadeUpIn, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
@@ -60,21 +58,16 @@ export function ResultCard({ card, more, delay, onDone, replay = false }: Props)
   const me = useMyBaller();
   const baller = useRef<BallerHandle>(null);
 
-  // entrance: pop (right) or rvshake (wrong)
-  const scale = useSharedValue(card.ok ? 0.4 : 1);
-  const opacity = useSharedValue(card.ok ? 0 : 1);
+  // entrance: pop (right, a CSS animation like every mount entrance) or rvshake (wrong); only one applies
+  const pop = usePopIn(CARD_MS);
   const shake = useSharedValue(0);
   useEffect(() => {
-    if (card.ok) runPop(scale, opacity, CARD_MS);
-    else {
-      const s = (v: number, f: number) => withTiming(v, { duration: CARD_MS * f, easing: ease });
-      shake.value = withSequence(s(-9, 0.18), s(8, 0.2), s(-5, 0.2), s(3, 0.2), s(0, 0.22));
-    }
-  }, [card.ok, scale, opacity, shake]);
-  const cardStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ scale: scale.value }, { translateX: shake.value }],
-  }));
+    if (card.ok) return;
+    const s = (v: number, f: number) => withTiming(v, { duration: CARD_MS * f, easing: ease });
+    shake.value = withSequence(s(-9, 0.18), s(8, 0.2), s(-5, 0.2), s(3, 0.2), s(0, 0.22));
+  }, [card.ok, shake]);
+  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
+  const cardStyle = card.ok ? pop : shakeStyle;
 
   // the header's moment
   useEffect(() => {
@@ -102,7 +95,8 @@ export function ResultCard({ card, more, delay, onDone, replay = false }: Props)
 
   const glyph = usePopIn(GLYPH_MS, GLYPH_DELAY);
   const pill = usePopIn(PILL_MS, PILL_DELAY);
-  const win = useMeIn(WIN_DELAY);
+  // meIn: rise 16px and fade in over the short reveal (560ms)
+  const win = useFadeUpIn(motion.revealDurShort, WIN_DELAY, 16);
 
   // compact first; opened again from its strip, it shows full at once
   const [full, setFull] = useState(replay);
@@ -256,17 +250,6 @@ export function ResultStrip({ card, onPress }: { card: CardResult; onPress: (car
   );
 }
 
-/** meIn: rise 16px and fade in over the short reveal (560ms) after `delay`. */
-function useMeIn(delay: number) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withDelay(delay, withTiming(1, { duration: motion.revealDurShort, easing: Easing.bezier(0.16, 1, 0.3, 1) }));
-  }, [p, delay]);
-  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
-  return useSettled(delay + motion.revealDurShort) ? ME_SETTLED : style;
-}
-
-const ME_SETTLED = { opacity: 1, transform: [{ translateY: 0 }] } as const;
 
 const styles = StyleSheet.create({
   box: { borderRadius: 24, overflow: 'hidden' },

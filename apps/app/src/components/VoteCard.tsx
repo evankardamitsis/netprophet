@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  cubicBezier,
   Easing,
   interpolateColor,
   useAnimatedStyle,
@@ -10,7 +11,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { soonLabel, startsSoon, type CardMatch, type CardPct, type CardSide } from '../lib/feed';
 import { FitText } from './FitText';
-import { PRESS_MS, runJpop, runPop, usePopIn, useSettled } from '../lib/motion';
+import { PRESS_MS, runJpop, runPop, useEntrance, usePopIn } from '../lib/motion';
 import type { Side } from '../lib/votes';
 import { cardSurface, colors, ease, fonts, springEase, text, type } from '../theme';
 import { useCopy } from '../i18n';
@@ -53,7 +54,6 @@ const EDGE_PRESSED = 1;
 const FADED_OPACITY = 0.72;
 
 const cssEase = Easing.bezier(0.25, 0.1, 0.25, 1);
-const foldEase = Easing.bezier(0.4, 0, 0.2, 1);
 
 function haptic(kind: 'tap' | 'fold' | 'error') {
   if (Platform.OS === 'web') return;
@@ -66,17 +66,23 @@ function haptic(kind: 'tap' | 'fold' | 'error') {
   run.catch(() => undefined);
 }
 
-/** fcIn: fade in from 10px below. `run` false keeps it still (a card that folds in place does not re-enter). */
+/**
+ * fcIn: fade in from 10px below on CSS `ease`. `run` false keeps it still (a card that folds in place does not re-enter).
+ * A CSS animation (lib/motion), not a shared value: those froze part-way on some cold launches (20 Oct).
+ */
 function useEnter(run = true) {
-  const p = useSharedValue(run ? 0 : 1);
-  useEffect(() => {
-    if (run) p.value = withTiming(1, { duration: ENTER_MS, easing: cssEase });
-  }, [p, run]);
-  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 10 }] }));
-  return useSettled(run ? ENTER_MS : 0) ? SETTLED : style;
+  const enter = useEntrance(ENTER, ENTER_MS, 0, 'ease');
+  return run ? enter : NO_ENTER;
 }
 
-const SETTLED = { opacity: 1, transform: [{ translateY: 0 }] } as const;
+const ENTER = {
+  from: { opacity: 0, transform: [{ translateY: 10 }] },
+  to: { opacity: 1, transform: [{ translateY: 0 }] },
+};
+/** a card that folded in place: from the third it faded to as it folded, back to full */
+const FOLD_IN = { from: { opacity: 0.35 }, to: { opacity: 1 } };
+const FOLD_EASE = cubicBezier(0.4, 0, 0.2, 1);
+const NO_ENTER = {} as const;
 
 /** hold a card this long for «Αναφορά» */
 const LONG_PRESS_MS = 450;
@@ -437,11 +443,8 @@ function FoldedCard({
   hideCategory: boolean;
 }) {
   const enter = useEnter(fresh);
-  const op = useSharedValue(fresh ? 1 : 0.35);
-  useEffect(() => {
-    if (!fresh) op.value = withTiming(1, { duration: FOLD_MS, easing: foldEase });
-  }, [op, fresh]);
-  const fold = useAnimatedStyle(() => ({ opacity: op.value }));
+  const foldIn = useEntrance(FOLD_IN, FOLD_MS, 0, FOLD_EASE);
+  const fold = fresh ? NO_ENTER : foldIn;
   return (
     <Animated.View style={[styles.done, enter, fold]}>
       <Meta match={match} hideCategory={hideCategory} style={styles.doneMeta} />

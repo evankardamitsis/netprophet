@@ -1,20 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import Animated, {
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
+import Animated, { cubicBezier, useReducedMotion, type CSSTransitionProperties } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
-import { usePopIn, usePress, useSettled } from '../lib/motion';
+import { usePopIn, usePress } from '../lib/motion';
 import { hasNewResults, useResultsSeen } from '../lib/resultsSeen';
 import { useUnlocks } from '../lib/unlocks';
-import { colors, fonts, motion } from '../theme';
+import { colors, fonts, springBezier } from '../theme';
 
 type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
@@ -27,8 +21,12 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
  */
 const IN_BAR = ['index', 'results', 'tournaments', 'ladder'];
 const COLOR_MS = 250;
-/** the pill's spring is over well within this; then React draws it in place */
-const PILL_SETTLE_MS = 700;
+/**
+ * The pill slides on the prototype's --spring curve. Pill and label colour are Reanimated CSS transitions on plain
+ * style values (20 Oct): React always holds the end state, and nothing rides on a shared value that could be lost.
+ */
+const PILL_MS = 500;
+const SPRING_CSS = cubicBezier(...springBezier);
 
 type Box = { x: number; width: number };
 
@@ -37,10 +35,11 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   const { has } = useUnlocks();
   const results = useResultsSeen();
   const [boxes, setBoxes] = useState<Record<string, Box>>({});
-  const pillX = useSharedValue(0);
-  const pillW = useSharedValue(0);
-  const pillOn = useSharedValue(0);
-  const placed = useRef(false);
+  // where the pill was last: on a screen outside the bar (a player's profile, Εγώ) it fades there
+  const [lastBox, setLastBox] = useState<Box | null>(null);
+  // the first placement is drawn in place; only later moves slide
+  const [placed, setPlaced] = useState(false);
+  const reduced = useReducedMotion();
 
   const focusedName = state.routes[state.index]?.name ?? '';
   const focusedBox = boxes[focusedName];
@@ -51,31 +50,22 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   }, [onResults, resultsAt, markSeen]);
   const resultsNew = !onResults && hasNewResults(resultsAt, results.seenAt);
   useEffect(() => {
-    if (!focusedBox) {
-      // a screen outside the bar (a player's profile, Εγώ): the pill fades where it was
-      pillOn.value = withTiming(0, { duration: COLOR_MS });
-      return;
-    }
-    // the first placement is remembered on the JS side (reading a shared value from JS is a synchronous UI call)
-    const first = !placed.current;
-    placed.current = true;
-    pillX.value = first ? focusedBox.x : withSpring(focusedBox.x, motion.spring);
-    pillW.value = first ? focusedBox.width : withSpring(focusedBox.width, motion.spring);
-    pillOn.value = withTiming(1, { duration: COLOR_MS });
-  }, [focusedBox, pillX, pillW, pillOn]);
-
-  const animatedPill = useAnimatedStyle(() => ({
-    opacity: pillOn.value,
-    width: pillW.value,
-    transform: [{ translateX: pillX.value }],
-  }));
-  // once the move is over React draws the pill where it belongs, in case the animated update was lost (20 Oct)
-  const settled = useSettled(PILL_SETTLE_MS, `${focusedName}|${focusedBox?.x ?? ''}|${focusedBox?.width ?? ''}`);
-  const pill = settled
-    ? focusedBox
-      ? { opacity: 1, width: focusedBox.width, transform: [{ translateX: focusedBox.x }] }
-      : { opacity: 0 }
-    : animatedPill;
+    if (!focusedBox) return undefined;
+    setLastBox(focusedBox);
+    // one frame after the first placement, so that placement itself does not slide in
+    const id = requestAnimationFrame(() => setPlaced(true));
+    return () => cancelAnimationFrame(id);
+  }, [focusedBox]);
+  const box = focusedBox ?? lastBox;
+  const pill: CSSTransitionProperties & Pick<ViewStyle, 'opacity' | 'left' | 'width'> = {
+    opacity: focusedBox ? 1 : 0,
+    left: box?.x ?? 0,
+    width: box?.width ?? 0,
+    transitionProperty: ['left', 'width', 'opacity'],
+    // the first placement is drawn in place, and with the system's reduce motion every move is
+    transitionDuration: placed && !reduced ? [PILL_MS, PILL_MS, COLOR_MS] : 0,
+    transitionTimingFunction: [SPRING_CSS, SPRING_CSS, 'linear'],
+  };
 
   return (
     // the home indicator's strip is part of the bar, but the labels sit just above it, not a thumb's height above
@@ -125,12 +115,8 @@ function TabItem({
   onLayout: (e: LayoutChangeEvent) => void;
 }) {
   const press = usePress();
-  const on = useSharedValue(focused ? 1 : 0);
-  useEffect(() => {
-    on.value = withTiming(focused ? 1 : 0, { duration: COLOR_MS });
-  }, [focused, on]);
-  const animatedFg = useAnimatedStyle(() => ({ color: interpolateColor(on.value, [0, 1], [colors.mist, colors.ink]) }));
-  const fg = useSettled(COLOR_MS, focused) ? { color: focused ? colors.ink : colors.mist } : animatedFg;
+  const reduced = useReducedMotion();
+  const fg = { color: focused ? colors.ink : colors.mist, transitionProperty: 'color', transitionDuration: reduced ? 0 : COLOR_MS } as const;
   return (
     <Pressable
       accessibilityRole="tab"

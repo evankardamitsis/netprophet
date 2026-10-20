@@ -1,10 +1,10 @@
 import { memo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import Animated from 'react-native-reanimated';
+import { useFadeUpIn } from '../lib/motion';
 import type { CardPostponed, CardSide } from '../lib/feed';
 import { FitText } from './FitText';
-import { cardSurface, colors, ease, fonts } from '../theme';
+import { cardSurface, colors, fonts } from '../theme';
 
 /**
  * A match that was put off: the match card's frame, muted. No vote buttons, no lime (nothing happened yet).
@@ -13,11 +13,7 @@ import { cardSurface, colors, ease, fonts } from '../theme';
 const ENTER_MS = 400;
 
 export const PostponedCard = memo(function PostponedCard({ card }: { card: CardPostponed }) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withTiming(1, { duration: ENTER_MS, easing: ease });
-  }, [p]);
-  const enter = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 10 }] }));
+  const enter = useFadeUpIn(ENTER_MS, 0, 10);
   return (
     <Animated.View style={[styles.card, enter]}>
       <View style={styles.head}>

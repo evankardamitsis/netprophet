@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -8,9 +8,9 @@ import { useCopy } from '../i18n';
 import { router } from 'expo-router';
 import { celebrationTitleSize, groupView, isLeague, isLevel } from '../lib/celebrate';
 import { useMyBaller } from '../lib/data';
-import { colors, ease, fonts, motion } from '../theme';
+import { colors, fonts, motion } from '../theme';
 import { LEVEL_UP_AT } from '../lib/levelUp';
-import { useSettled } from '../lib/motion';
+import { useEntrance, useFadeUpIn, useSlamIn } from '../lib/motion';
 import { Baller, type BallerHandle, type BallerMove } from './Baller';
 
 /**
@@ -28,6 +28,7 @@ const BALLER = 150;
 const JUMPS_AT = [1100, 2300];
 /** «Συνέχεια» comes in here (3.5s); a new level's own move (lib/levelUp) is over by then */
 const CTA_AT = motion.celebration;
+const DIM_IN = { from: { opacity: 0 }, to: { opacity: 1 } };
 
 export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDone: () => void }) {
   const t = useCopy();
@@ -36,18 +37,17 @@ export function Celebration({ items, onDone }: { items: CelebrationItem[]; onDon
   const league = items[0] && isLeague(items[0]) ? items[0].payload.month : null;
   const titleSize = celebrationTitleSize(v.title);
   const { width, height } = useWindowDimensions();
-  const dim = useSharedValue(0);
   const count = useCountTo(v.streak ?? 0, COUNT_MS);
   useEffect(() => {
-    dim.value = withTiming(1, { duration: DIM_MS, easing: Easing.linear });
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
-  }, [dim]);
-  const dimStyle = useAnimatedStyle(() => ({ opacity: dim.value }));
-  const label = useMeIn(500, 500);
-  const pill = useSlam(600, 800);
-  const title = useSlam(600, 1000);
-  const reward = useMeIn(600, 2900);
-  const cta = useMeIn(500, CTA_AT);
+  }, []);
+  const dimStyle = useEntrance(DIM_IN, DIM_MS, 0, 'linear');
+  // meIn: up from 16px and in; slam: from 2.4x down past 1 (0.94 at 70%) and settle
+  const label = useFadeUpIn(500, 500, 16);
+  const pill = useSlamIn(600, 800);
+  const title = useSlamIn(600, 1000);
+  const reward = useFadeUpIn(600, 2900, 16);
+  const cta = useFadeUpIn(500, CTA_AT, 16);
   const me = useMyBaller();
   const baller = useRef<BallerHandle>(null);
   // a new level has its own move (founder, 18 Oct); every other moment jumps twice
@@ -148,29 +148,6 @@ function useCountTo(n: number, ms: number): number {
     return () => cancelAnimationFrame(raf);
   }, [n, ms]);
   return shown;
-}
-
-/** meIn: up from 16px and in */
-function useMeIn(ms: number, delay: number) {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withDelay(delay, withTiming(1, { duration: ms, easing: ease }));
-  }, [p, ms, delay]);
-  const style = useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 16 }] }));
-  return useSettled(delay + ms) ? ME_SETTLED : style;
-}
-
-const ME_SETTLED = { opacity: 1, transform: [{ translateY: 0 }] } as const;
-
-/** slam: from 2.4× down past 1 (0.94 at 70%) and settle */
-function useSlam(ms: number, delay: number) {
-  const s = useSharedValue(2.4);
-  const o = useSharedValue(0);
-  useEffect(() => {
-    s.value = withDelay(delay, withSequence(withTiming(0.94, { duration: ms * 0.7, easing: ease }), withTiming(1, { duration: ms * 0.3, easing: ease })));
-    o.value = withDelay(delay, withTiming(1, { duration: ms * 0.7, easing: ease }));
-  }, [s, o, ms, delay]);
-  return useAnimatedStyle(() => ({ opacity: o.value, transform: [{ scale: s.value }] }));
 }
 
 /** a stable pseudo-random in [0, 1) per piece */

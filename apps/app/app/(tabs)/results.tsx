@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Logo } from '../../src/components/Logo';
 import { ResultRow } from '../../src/components/ResultRow';
@@ -8,8 +8,8 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useResults, useResultsTournaments, type SafetyTarget } from '../../src/lib/data';
-import { usePress } from '../../src/lib/motion';
-import { colors, ease, fonts, text } from '../../src/theme';
+import { useFadeUpIn, usePress } from '../../src/lib/motion';
+import { colors, fonts, text } from '../../src/theme';
 
 /**
  * Αποτελέσματα (prototype V2, isRes): the scoreboard of the last two weeks, grouped by day and event.
@@ -32,7 +32,7 @@ export default function ResultsScreen() {
   const { groups, loading, error, refresh } = useResults({ tournament, query });
   const tournaments = useResultsTournaments();
   const filtered = tournament !== null || query.trim().length >= 2;
-  const titleIn = useInA();
+  const titleIn = useFadeUpIn(TITLE_IN_MS);
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
   let index = 0;
@@ -110,14 +110,6 @@ function Chip({ label, logo, on, onPress }: { label: string; logo?: string | nul
   );
 }
 
-/** inA: fade in from 12px below on the prototype ease. */
-function useInA() {
-  const p = useSharedValue(0);
-  useEffect(() => {
-    p.value = withTiming(1, { duration: TITLE_IN_MS, easing: ease });
-  }, [p]);
-  return useAnimatedStyle(() => ({ opacity: p.value, transform: [{ translateY: (1 - p.value) * 12 }] }));
-}
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
