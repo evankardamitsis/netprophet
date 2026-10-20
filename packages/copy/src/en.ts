@@ -1209,10 +1209,10 @@ export const en: Copy = {
   tour: {
     label: 'Tour',
     steps: {
-      feed: { title: 'Vote who wins', line: 'Tap the player you think wins. Get it right for points and a streak.' },
-      results: { title: 'What happened on court', line: 'Every result. Search for a player or a tournament.' },
-      tournaments: { title: 'Tournaments', line: 'Schedules, draws and your own tournaments.' },
-      ladder: { title: 'The Ladder', line: 'Climb with your crowd. A fresh start every month.' },
+      feed: { title: 'Vote the winner', line: 'Tap the player you think will win. Get it right and you earn points and start your streak.' },
+      results: { title: 'What happened on court', line: 'Every result. Search by player or tournament.' },
+      tournaments: { title: 'Tournaments', line: 'Brackets, schedules, draws and your entries.' },
+      ladder: { title: 'The Ladder', line: 'Can you be first in your crowd? A monthly ladder.' },
       me: { title: 'You', line: 'Your Baller, your stats, quests and Pro.' },
     },
     next: 'Next ›',
