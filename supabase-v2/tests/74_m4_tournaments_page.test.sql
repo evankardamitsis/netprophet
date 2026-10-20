@@ -38,7 +38,7 @@ select is((select i ->> 'state' from jsonb_array_elements(:'list'::jsonb -> 'ite
 select is((select (i ->> 'in_it')::boolean from jsonb_array_elements(:'list'::jsonb -> 'items') i where i ->> 'id' = :'t'), true, 'I am in it');
 select is(:'list'::jsonb -> 'mine', 'null'::jsonb, 'free: no «Το πρόγραμμά σου»');
 select is(jsonb_array_length(:'one'::jsonb -> 'draws'), 1, 'the draw');
-select is(:'one'::jsonb -> 'masked', '["ΑΝΗΛΙΚΟΣ ΜΙΚΡΟΣ"]'::jsonb, 'a minor''s name is masked');
+select is(:'one'::jsonb -> 'masked', '["#1"]'::jsonb, 'a minor''s name is masked: only its placeholder is listed');
 select is((select count(*)::int from jsonb_array_elements(:'one'::jsonb -> 'days') d, jsonb_array_elements(d -> 'matches')), 1,
           'the minor''s match is left out of the schedule');
 select is(:'one'::jsonb ->> 'me', :'me', 'the page knows which player is me');

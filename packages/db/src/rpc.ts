@@ -1055,7 +1055,7 @@ export interface GetTournamentResult {
   /** your player id, when you have claimed one */
   me: string | null;
   draws: TournamentDraw[];
-  /** raw names in the draws that belong to hidden players or minors */
+  /** placeholders (#1, #2, ...) that stand in the draws for hidden players and minors; their names never reach the app */
   masked: string[];
   days: { date: string; matches: TournamentMatch[] }[];
 }
