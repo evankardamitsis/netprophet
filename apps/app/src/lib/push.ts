@@ -71,13 +71,16 @@ export async function askForPushOnce(api: Api): Promise<void> {
   }
 }
 
-/** where a tapped push opens: a schedule alert its tournament, results the Αποτελέσματα tab, a reminder Σήμερα */
+/** where a tapped push opens: a schedule alert its tournament, results and reactions the Αποτελέσματα tab, a reminder Σήμερα */
 export function pushRoute(data: Record<string, unknown> | undefined): string | null {
   if (!data) return null;
   if (data.type === 'schedule' && typeof data.tournament_id === 'string') return `/tournament/${data.tournament_id}`;
   if (data.type === 'draw' && typeof data.tournament_id === 'string')
     return `/tournament/${data.tournament_id}${typeof data.tab === 'string' ? `?draw=${encodeURIComponent(data.tab)}` : ''}`;
   if (data.type === 'results') return '/results';
+  // someone reacted to your match: Αποτελέσματα, on its tournament when it has one
+  if (data.type === 'reaction')
+    return typeof data.tournament_id === 'string' ? `/results?tournament=${encodeURIComponent(data.tournament_id)}` : '/results';
   // a match reminder: Σήμερα, where «Το ματς σου» leads
   if (data.type === 'reminder') return '/';
   // entries close in two days: Τουρνουά, where «Το επόμενο τουρνουά για σένα» lists it

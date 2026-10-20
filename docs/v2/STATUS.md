@@ -115,6 +115,9 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Founder's walk-through in development: with the dev guest (`EXPO_PUBLIC_DEV_GUEST=1`), Εγώ › Ρυθμίσεις › «Δοκιμή onboarding», or the link `exp://127.0.0.1:8085/--/onboarding?preview=1`, shows every step with sample areas and players, writes nothing to the server and ends on Σήμερα.
 - iOS 27 requires the UIScene life cycle: an app without a scene manifest stops at launch (EXC_BREAKPOINT in UIKit). The Expo SDK 57 templates do not adopt scenes yet, so the local config plugin `apps/app/plugins/withSceneLifecycle.js` (in app.json) adds `UIApplicationSceneManifest` with Expo's `EXExpoAppSceneDelegate` and makes `AppDelegate` an `ExpoReactNativeFactoryProvider` that no longer creates its own window. Keep it until the Expo template does this itself, then drop it. If Xcode's script phases pick an old Node, put `export NODE_BINARY=<node 22 path>` in `apps/app/ios/.xcode.env.local`.
 
+## 20 Oct
+- A push when someone reacts to your match (migration `20270223000000_reaction_push.sql`, test 132): `api.react` calls `core.reaction_notify` for a brand new reaction only. Every player of the match with an account hears, except the reactor, hidden players, minors, deleted accounts, anyone blocked either way and anyone who switched it off (Εγώ › Ρυθμίσεις › «Αντιδράσεις στα ματς σου», `notification_prefs.reactions`, on by default). At most one push per person per match every 3 hours: the first goes at once, later ones wait on one outbox job that becomes «3 άτομα αντέδρασαν»; the same person counts once per match. Texts `reaction_one` / `reaction_many` in `core.notification_texts`. A tap opens Αποτελέσματα on the match's tournament (`/results?tournament=`). No in-app inbox exists yet; the rows sit in `core.notifications`. Hosted needs `scripts/v2-db-remote.sh push`.
+
 ## Waiting on the founder
 - Walk the new onboarding before release (Εγώ › Ρυθμίσεις › «Δοκιμή onboarding» with the dev guest) and check the «Ποια είναι η παρέα σου;» note.
 - Run `node scripts/v1-users-to-resend.mjs` with `V2_SUPABASE_URL` and `V2_SUPABASE_SERVICE_ROLE_KEY` in the root `.env.local`, then again with `--apply`.
@@ -122,6 +125,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - On a phone: are the Baller sounds heard, does the throw feel right, the podium with real data.
 - Apply the names accent pass on /v2/names.
 - Confirm: the reaction pairs on results, σερί 10 gives a frame and no extra freeze, the unlock backup vote counts, «Ανέβηκες level!». Greek lines in Baller are drafts.
+- Read and approve the two reaction texts in admin /v2/notifications (`reaction_one`, `reaction_many`); they send as written until edited.
 - Store approvals (Apple, Google), then EAS builds, TestFlight, push.
 - Before launch: development builds for push, Android testing, the web consent banner, clear the demo matches (`tools/demo/clear_demo.sql`), the full v1 results import at cutover.
 

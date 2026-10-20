@@ -546,6 +546,9 @@ export const el = {
     /** Baller's sounds (founder, 17 Oct) */
     sounds: 'Ήχοι',
     soundsLine: 'Μικροί ήχοι από τον Baller σου. Σωπαίνουν όταν το κινητό είναι στο αθόρυβο.',
+    /** the push when someone reacts to your match (founder, 20 Oct); saved on the account, on unless switched off */
+    reactionsPush: 'Αντιδράσεις στα ματς σου',
+    reactionsPushLine: 'Σου λέμε όταν κάποιος αντιδρά σε ματς σου. Το πολύ μία ειδοποίηση ανά ματς κάθε 3 ώρες.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
   },
   pro: {
@@ -779,6 +782,11 @@ export const el = {
   push: {
     one: { title: 'Βγήκε αποτέλεσμα', body: 'Το ’πες; Μπες να δεις.' },
     many: { title: 'Βγήκαν {n} αποτελέσματα', body: 'Πόσα το ’πες; Μπες να δεις.' },
+    /** someone reacted to your match (core.reaction_notify; the founder edits the live text in admin /v2/notifications) */
+    reaction: {
+      one: { title: '{name}: «{reaction}»', body: 'Στο ματς σου με {opponent} · {tournament}' },
+      many: { title: '{n} άτομα αντέδρασαν', body: 'Στο ματς σου με {opponent} · {tournament}' },
+    },
   },
   confirm: {
     /** «Ο Βαγγέλης Καρδαμίτσης πέρασε ένα ματς σας» ({name} carries the article) */
