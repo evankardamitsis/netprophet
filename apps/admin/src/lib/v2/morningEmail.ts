@@ -1,4 +1,6 @@
 /** the 08:30 staff email (api.admin_morning_digest → Resend), built as plain sentences */
+import { block, esc, renderEmail } from './emailLayout';
+
 export interface Digest {
   date: string;
   recipients: string[];
@@ -20,7 +22,6 @@ export interface Digest {
 const ADMIN_URL = 'https://netprophet-admin-v2.vercel.app/v2';
 export const athensHour = () =>
   Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Athens', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const many = (n: number, one: string, more: string) => `${n} ${n === 1 ? one : more}`;
 
 /** the email: what needs you first, then what happened; plain sentences, one link per thing to do */
@@ -63,16 +64,20 @@ export function morningEmail(d: Digest): { subject: string; html: string; text: 
   }
   if (!d.last_runs) news.push('The sheets were not read in the last day. The automatic updates may be stuck.');
   const subject = todo.length ? `NetProphet: ${many(todo.length, 'thing needs', 'things need')} you today` : 'NetProphet: all quiet this morning';
-  const block = (title: string, lines: string[]) =>
-    lines.length ? `<h3 style="margin:20px 0 8px;font:700 16px system-ui">${esc(title)}</h3><ul style="margin:0;padding-left:18px;font:15px/1.5 system-ui">${lines.map((l) => `<li>${esc(l).replace(/(https:\/\/\S+)/g, '<a href="$1">open</a>')}</li>`).join('')}</ul>` : '';
-  const html = `<div style="max-width:560px;color:#0F2019">
-<p style="font:700 20px system-ui;margin:0 0 4px">Good morning</p>
-<p style="font:15px system-ui;margin:0;color:#3F4E46">${todo.length ? 'Here is what needs you today.' : 'Nothing needs you today.'}</p>
-${block('Needs you', todo)}${block('Good to know', news)}${block('Today', today)}
-<p style="font:13px system-ui;color:#7C8A82;margin-top:24px">Sent every morning at 08:30 by the NetProphet admin.</p></div>`;
-  const text = [todo.length ? 'Needs you:' : 'Nothing needs you today.', ...todo.map((l) => `- ${l}`), news.length ? '\nGood to know:' : '', ...news.map((l) => `- ${l}`), '\nToday:', ...today.map((l) => `- ${l}`)]
+  const linked = (l: string) => esc(l).replace(/(https:\/\/\S+)/g, (url) => block.link(url, 'open'));
+  const section = (title: string, lines: string[]) => (lines.length ? block.subheading(title) + block.list(lines.map(linked)) : '');
+  const lead = todo.length ? 'Here is what needs you today.' : 'Nothing needs you today.';
+  const bodyText = [todo.length ? 'Needs you:' : 'Nothing needs you today.', ...todo.map((l) => `- ${l}`), news.length ? '\nGood to know:' : '', ...news.map((l) => `- ${l}`), '\nToday:', ...today.map((l) => `- ${l}`)]
     .filter((l) => l !== '')
     .join('\n');
+  const { html, text } = renderEmail({
+    lang: 'en',
+    subject,
+    preheader: esc(lead),
+    bodyHtml: [block.heading('Good morning'), block.note(esc(lead)), section('Needs you', todo), section('Good to know', news), section('Today', today)].join('\n'),
+    bodyText,
+    why: 'Sent every morning at 08:30 by the NetProphet admin, because the morning email is on for your staff account.',
+  });
   return { subject, html, text };
 }
 

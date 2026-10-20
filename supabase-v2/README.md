@@ -46,6 +46,8 @@ The suite needs `seed.sql`, so it runs on the local stack only; the real project
 
 Login is by a 6-digit email code, so `templates/confirmation.html` and `templates/magic_link.html` carry `{{ .Token }}` (Supabase's defaults send a link). The script copies them into `.supabase-v2/templates` because the CLI rejects template paths that resolve through the symlink. The hosted project needs the same templates: Authentication > Email Templates, or `supabase --workdir .supabase-v2 config push`.
 
+The templates are generated from the shared email layout in `apps/admin/src/lib/v2/emailLayout.ts` (logo header, footer with Monad Labs, links and contact; the Team invite and the 08:30 staff email use it too). Do not edit the HTML by hand: change the layout, then `UPDATE_EMAIL_TEMPLATES=1 pnpm --filter @netprophet/admin test emailTemplates` rewrites them and the previews in `docs/v2/emails/`. The logos are PNGs served by apps/site at `https://www.netprophetapp.com/email/`. To put them on the hosted project: `scripts/v2-email-templates-push.sh` (subjects and templates only).
+
 ## Layout
 
 ```
