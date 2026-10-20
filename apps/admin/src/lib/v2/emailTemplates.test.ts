@@ -40,10 +40,10 @@ describe('the shared layout', () => {
     expect(e.html).toContain('max-width:600px');
     expect(e.html).toContain(`src="${LOGO_URL}" width="176" height="33" alt="NetProphet"`);
     expect(e.html).toContain(`src="${LOGO_SMALL_URL}" width="112" height="21" alt="NetProphet"`);
-    expect(LOGO_URL).toBe('https://netprophetapp.com/email/logo@2x.png');
+    expect(LOGO_URL).toBe('https://www.netprophetapp.com/email/logo@2x.png');
   });
   it('signs off with the publisher, the links, the contact and why', () => {
-    for (const s of ['NetProphet · από τη Monad Labs', 'https://netprophetapp.com/privacy', 'https://netprophetapp.com/support', 'mailto:hello@monadlabs.gr', 'Γιατί.'])
+    for (const s of ['NetProphet · από τη Monad Labs', 'https://www.netprophetapp.com/privacy', 'https://www.netprophetapp.com/support', 'mailto:hello@monadlabs.gr', 'Γιατί.'])
       expect(e.html).toContain(s);
     expect(e.text).toContain('NetProphet · από τη Monad Labs');
     expect(e.text).toContain('Επικοινωνία: hello@monadlabs.gr');
@@ -52,7 +52,7 @@ describe('the shared layout', () => {
   it('uses English links for English emails', () => {
     const en = renderEmail({ lang: 'en', subject: 's', bodyHtml: '', bodyText: '', why: 'w' });
     expect(en.html).toContain('NetProphet · by Monad Labs');
-    expect(en.html).toContain('https://netprophetapp.com/en/privacy');
+    expect(en.html).toContain('https://www.netprophetapp.com/en/privacy');
   });
   it('has no dashes the copy rules forbid, and no lime', () => {
     const all = [...kinds.map((k) => authEmail(k).html), inviteEmail({ role: 'admin', inviter: 'A' }).html, e.html].join('');

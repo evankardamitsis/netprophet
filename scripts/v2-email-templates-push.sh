@@ -43,4 +43,4 @@ for k in ('mailer_subjects_magic_link', 'mailer_subjects_confirmation'):
     print(f'  {k}: {d.get(k)}')
 for k in ('mailer_templates_magic_link_content', 'mailer_templates_confirmation_content'):
     v = d.get(k) or ''
-    print(f'  {k}: {len(v)} chars, logo', 'yes' if 'netprophetapp.com/email/logo@2x.png' in v else 'NO')"
+    print(f'  {k}: {len(v)} chars, logo', 'yes' if 'www.netprophetapp.com/email/logo@2x.png' in v else 'NO')"

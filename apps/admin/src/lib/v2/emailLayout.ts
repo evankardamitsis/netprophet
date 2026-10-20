@@ -4,13 +4,14 @@
  *
  * Email-client safe on purpose: tables, inline styles, bgcolor attributes, 600px wide, hosted PNG logos with their
  * background baked in (Gmail and Outlook block SVG and data URIs, and a transparent logo vanishes in dark mode).
- * The logos are served by apps/site from netprophetapp.com/email/.
+ * The logos are served by apps/site from www.netprophetapp.com/email/.
  */
 import { colors } from '@netprophet/tokens';
 
 export type EmailLang = 'el' | 'en';
 
-export const SITE_URL = 'https://netprophetapp.com';
+/** the canonical host: netprophetapp.com answers with a redirect to www, which some image proxies skip */
+export const SITE_URL = 'https://www.netprophetapp.com';
 export const CONTACT_EMAIL = 'hello@monadlabs.gr';
 /** on ink, 176 x 33 shown, 352 x 66 file */
 export const LOGO_URL = `${SITE_URL}/email/logo@2x.png`;
