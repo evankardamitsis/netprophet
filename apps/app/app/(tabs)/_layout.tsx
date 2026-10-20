@@ -11,11 +11,14 @@ import { TourOverlay } from '../../src/components/TourOverlay';
 import { HudProvider } from '../../src/lib/hud';
 import { TourProvider } from '../../src/lib/tour';
 import { UnlocksProvider } from '../../src/lib/unlocks';
+import { useClearSeenPushes } from '../../src/lib/useClearSeenPushes';
 
 export default function TabsLayout() {
   const t = useCopy();
   const { session } = useAuth();
   const { me, raw, refresh } = useMe(session?.user.email);
+  // seen results: their pushes leave the notification centre (launch, back to the front, the inbox emptied)
+  useClearSeenPushes(raw?.inbox_unseen, refresh);
   return (
     <HudProvider>
       <UnlocksProvider serverUnlocked={raw?.unlocks ?? null} refresh={refresh}>

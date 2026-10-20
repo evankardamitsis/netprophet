@@ -4,6 +4,7 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Device from 'expo-device';
 import type { rpc } from '@netprophet/db';
 import { track } from './analytics';
+import { resultPushIds } from './pushClear';
 
 /**
  * Push for results (M1). The app asks once, right after your first vote, when «Μαθαίνεις απόψε» makes the
@@ -71,6 +72,22 @@ export async function askForPushOnce(api: Api): Promise<void> {
   }
 }
 
+/**
+ * You have seen your results: the «Βγήκαν αποτελέσματα» pushes leave the notification centre and the app icon has no
+ * number. Other pushes (a claim decision, a reaction) stay. A no-op on the web and the simulator.
+ */
+export async function clearSeenResultPushes(): Promise<void> {
+  const Notifications = notifications();
+  if (!Notifications) return;
+  try {
+    const presented = await Notifications.getPresentedNotificationsAsync();
+    await Promise.all(resultPushIds(presented).map((id) => Notifications.dismissNotificationAsync(id)));
+    await Notifications.setBadgeCountAsync(0);
+  } catch {
+    // nothing lost: they go next time
+  }
+}
+
 /** where a tapped push opens: a schedule alert its tournament, results and reactions the Αποτελέσματα tab, a reminder Σήμερα, a claim decision Εγώ */
 export function pushRoute(data: Record<string, unknown> | undefined): string | null {
   if (!data) return null;
@@ -97,6 +114,8 @@ export function listenForPushTaps(open: (route: string) => void): () => void {
   const go = (data: Record<string, unknown> | undefined) => {
     const route = pushRoute(data);
     if (route) open(route);
+    // opened from «Βγήκαν αποτελέσματα»: the other result pushes of the day go too
+    if (data?.type === 'results') void clearSeenResultPushes();
   };
   void Notifications.getLastNotificationResponseAsync()
     .then((r) => go(r?.notification.request.content.data as Record<string, unknown> | undefined))

@@ -24,6 +24,20 @@ export function activeLine(state: ProState, t: Copy): string | null {
   return fmt(t.pro.activeUntil, { date: `${d.getDate()}/${d.getMonth() + 1}` });
 }
 
+/**
+ * Εγώ with Pro: where it comes from and until when, «Συνδρομή · μέχρι 12/11» or «Δώρο από την ομάδα»; null without
+ * Pro. The plan (founding or not) is not in get_pro, so it is not said.
+ */
+export function proStatusLine(state: ProState, t: Copy): string | null {
+  if (!state.pro) return null;
+  const source = state.current ? t.pro.sources[state.current.source] ?? null : null;
+  const end = state.current?.ends_at;
+  const d = end ? new Date(end) : null;
+  const until = d ? fmt(t.pro.until, { date: `${d.getDate()}/${d.getMonth() + 1}` }) : null;
+  const parts = [source, until].filter((x): x is string => !!x);
+  return parts.length > 0 ? parts.join(' · ') : t.pro.active;
+}
+
 /** «49,99€» from euros */
 export function euro(n: number): string {
   const cents = Math.round(n * 100);

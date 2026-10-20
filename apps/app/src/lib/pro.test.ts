@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { activeLine, planCards, priceLine, proPrice, trialLine } from './pro';
+import { activeLine, planCards, priceLine, proPrice, proStatusLine, trialLine } from './pro';
 
 const t = getCopy('el');
 
@@ -46,5 +46,24 @@ describe('trialLine', () => {
   it('names the founding year', () => {
     const card = planCards([{ product_id: 'pro_founding', price: 49.99, period: 'year' }], t)[0]!;
     expect(trialLine(card, t, new Date(2026, 9, 28))).toContain('49,99€ τον πρώτο χρόνο');
+  });
+});
+
+describe('proStatusLine', () => {
+  const at = (source: 'subscription' | 'promo' | 'trial', ends_at: string | null) => ({
+    pro: true,
+    current: { source, starts_at: '2026-10-01T00:00:00Z', ends_at },
+    waitlisted: false,
+  });
+  it('nothing without Pro', () => {
+    expect(proStatusLine({ pro: false, current: null, waitlisted: false }, t)).toBeNull();
+  });
+  it('where it comes from and until when', () => {
+    expect(proStatusLine(at('subscription', '2026-11-12T10:00:00Z'), t)).toBe('Συνδρομή · μέχρι 12/11');
+    expect(proStatusLine(at('trial', '2026-10-27T10:00:00Z'), t)).toBe('Δωρεάν εβδομάδα · μέχρι 27/10');
+    expect(proStatusLine(at('promo', null), t)).toBe('Δώρο από την ομάδα');
+  });
+  it('Pro with no row read yet still says it is on', () => {
+    expect(proStatusLine({ pro: true, current: null, waitlisted: false }, t)).toBe('Ενεργό');
   });
 });

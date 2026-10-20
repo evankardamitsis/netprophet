@@ -54,6 +54,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 import { momentsAct, rereadCelebrations, useMoments } from '../../src/lib/useMoments';
 import { currentMe } from '../../src/lib/meStore';
+import { clearSeenResultPushes } from '../../src/lib/push';
+import { markResultsSeen } from '../../src/lib/resultsSeen';
 import { mayHaveCelebrated, voteBurst, type GameSnapshot } from '../../src/lib/postVote';
 import type { MomentKind } from '../../src/lib/moments';
 
@@ -237,6 +239,23 @@ export default function VoteScreen() {
     },
     [dismissResult],
   );
+  // every result card played: the «Βγήκαν αποτελέσματα» pushes leave the notification centre and the dot on
+  // «Αποτελέσματα» goes dark (founder, 20 Oct: "if I see it, remove the notification"). A fresh read with no card
+  // waiting clears the pushes too.
+  const hadResults = useRef(false);
+  useEffect(() => {
+    if (loading) return;
+    if (results.length > 0) {
+      hadResults.current = true;
+      return;
+    }
+    if (hadResults.current) {
+      hadResults.current = false;
+      const at = currentMe()?.results_at;
+      if (at) markResultsSeen(at);
+    }
+    void clearSeenResultPushes();
+  }, [loading, results.length]);
   const current = !between ? results[0] : undefined;
   // celebrations wait until every result card has played and the player did something this visit (moments.ts);
   // the group order is nextGroup's; every queued quest together as one. One a visit: the rest stay unseen on the

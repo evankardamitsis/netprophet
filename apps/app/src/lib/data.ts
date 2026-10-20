@@ -524,9 +524,11 @@ export interface MeSummary {
   initials: string;
   /** the sport the header's ball shows (founder, 14 Oct: the account button is the sport's ball) */
   sport: string;
+  /** Pro (get_me.pro): the header's «PRO» over the avatar */
+  pro: boolean;
 }
 
-const MOCK_ME: MeSummary = { streak: 5, points: 340, initials: 'ΒΚ', sport: 'tennis' };
+const MOCK_ME: MeSummary = { streak: 5, points: 340, initials: 'ΒΚ', sport: 'tennis', pro: false };
 
 function meInitials(raw: MeResult, email: string | undefined): string {
   const p = raw.profile;
@@ -558,7 +560,7 @@ export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | n
   }, [api, user]);
   if (!api) return { me: MOCK_ME, raw: null, refresh };
   return {
-    me: raw ? { streak: raw.game.streak, points: raw.game.total_points, initials: meInitials(raw, email), sport: raw.profile.primary_sport } : null,
+    me: raw ? { streak: raw.game.streak, points: raw.game.total_points, initials: meInitials(raw, email), sport: raw.profile.primary_sport, pro: raw.pro === true } : null,
     raw,
     refresh,
   };
