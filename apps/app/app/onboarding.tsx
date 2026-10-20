@@ -8,10 +8,10 @@ import { track } from '../src/lib/analytics';
 import { Back, Chip, Dashed, KnownRow, Primary, Segmented } from '../src/components/OnboardingControls';
 import { useCopy } from '../src/i18n';
 import { clearAppleName, guestAllowed, readAppleName, useAuth } from '../src/lib/auth';
-import type { MatchLinkView } from '@netprophet/db';
+import { RpcError, type MatchLinkView } from '@netprophet/db';
 import { nameGender } from '@netprophet/copy';
 import { useApi, useOnboardingApi, useRegionAreas, type ClaimRow } from '../src/lib/data';
-import { mockLinkView, who } from '../src/lib/link';
+import { linkClaimError, mockLinkView, who } from '../src/lib/link';
 import { clearPendingLink, readPendingLink } from '../src/lib/linkHost';
 import { useFadeUpIn, usePress, useStgIn } from '../src/lib/motion';
 import {
@@ -124,6 +124,8 @@ export default function OnboardingScreen() {
   // a candidate another account holds, tapped: «Είμαι εγώ» reports it to staff; `reported` once it went
   const [claimedPick, setClaimedPick] = useState<ClaimRow | null>(null);
   const [reported, setReported] = useState(false);
+  // how the account holding that candidate signs in (provider only), so its owner can sign in with that one instead
+  const [claimedVia, setClaimedVia] = useState<'google' | 'apple' | 'email' | null>(null);
   // the claim search starts with the name from the first step and can be changed (founder, 12 Oct)
   const [claimQuery, setClaimQuery] = useState('');
   // area
@@ -235,7 +237,17 @@ export default function OnboardingScreen() {
       tr('claim_completed', { result: r });
       if (r === 'ok') return go(i + 1);
       if (r === 'requested') return setRequested(true);
-      setError(r === 'taken' ? o.claim.taken : r === 'other' ? o.claim.otherClaimed : o.claim.failed);
+      if (r === 'taken') {
+        // another account got it a moment ago: the row turns into a claimed one, with «Είμαι εγώ»
+        const row = candidates?.find((c) => c.id === picked);
+        if (row) {
+          const held = { ...row, sub: o.claim.claimedSub, claimed: true };
+          setCandidates((list) => (list ?? []).map((c) => (c.id === row.id ? held : c)));
+          pickCandidate(held);
+        }
+        return setError(o.claim.taken);
+      }
+      setError(r === 'other' ? o.claim.otherClaimed : r === 'limited' ? o.claim.limited : o.claim.failed);
     });
 
   // from a link: the link's player becomes theirs, and the logger tops «Ποιους ξέρεις», already picked
@@ -252,9 +264,9 @@ export default function OnboardingScreen() {
             setRequested(true);
             return;
           }
-        } catch {
+        } catch (err) {
           tr('link_claimed', { result: 'taken' });
-          setError(t.link.claimTaken);
+          setError(linkClaimError(err instanceof RpcError ? err.code : null, t));
           return;
         }
       }
@@ -314,6 +326,10 @@ export default function OnboardingScreen() {
     if (c.claimed) {
       setPicked(null);
       setClaimedPick(c);
+      setClaimedVia(null);
+      ob.claimedSignIn(c.id)
+        .then(setClaimedVia)
+        .catch(() => undefined);
       return;
     }
     setClaimedPick(null);
@@ -323,7 +339,15 @@ export default function OnboardingScreen() {
   const claimNew = () =>
     run(async () => {
       // an account with a player already cannot ask for a new one; in a replay it just walks on
-      if (!own) await ob.setClaimStatus('creation_requested');
+      if (!own) {
+        try {
+          await ob.setClaimStatus('creation_requested');
+        } catch (err) {
+          // 5 requests a day: say so, anything else is the usual «Δεν έγινε»
+          if (err instanceof RpcError && err.code === 'rate_limited') return setError(o.claim.limited);
+          throw err;
+        }
+      }
       setIsNew(true);
       go(i + 1);
     });
@@ -470,7 +494,10 @@ export default function OnboardingScreen() {
               ) : claimedPick && !requested ? (
                 <>
                   <Text style={styles.note}>{o.claim.claimedNote}</Text>
+                  {claimedVia ? <Text style={styles.note}>{o.claim.claimedVia[claimedVia]}</Text> : null}
                   <Primary label={o.claim.claimedMe} ready busy={busy} onPress={reportIsMe} />
+                  {/* the owner who used another account before: out, and in with that one */}
+                  <Dashed label={o.claim.claimedSwitch} onPress={toWelcome} />
                   <Back label={o.back} onPress={() => setClaimedPick(null)} />
                 </>
               ) : requested ? (

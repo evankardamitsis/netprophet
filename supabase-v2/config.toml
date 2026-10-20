@@ -32,7 +32,7 @@ enable_signup = true
 # login is by one-time code, no passwords
 enable_confirmations = true
 otp_length = 6
-otp_expiry = 600
+otp_expiry = 3600   # the emails say «Ισχύει για μία ώρα»; hosted has 3600 (scripts/v2-project-settings.sh)
 
 # Login is by a 6-digit code, so both emails carry {{ .Token }} instead of a link. Greek copy: founder review.
 [auth.email.template.confirmation]

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { BadgeDots, GrowBar } from '../../src/components/BadgeParts';
@@ -694,6 +694,9 @@ function Friends({ v }: { v: MeView }) {
  * «Ρυθμίσεις», closed until tapped, at the bottom: «Πώς παίζεις» (hand and tournaments, out of the first run since
  * 19 Oct), sounds, reaction pushes, blocked people, Αποσύνδεση and deleting the account
  */
+/** the address «Γράψε μας» opens (the one the delete error already names) */
+const CONTACT_EMAIL = 'hello@monadlabs.gr';
+
 function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
   const t = useCopy();
   const { signOut } = useAuth();
@@ -758,6 +761,10 @@ function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
               <Text style={styles.signOut}>{newPlayer.on ? t.me.newPlayerOn : t.me.newPlayer}</Text>
             </Pressable>
           ) : null}
+          {/* every «γράψε μας» in the app (a claim, a new player, a failed delete) lands here */}
+          <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(`mailto:${CONTACT_EMAIL}`).catch(() => undefined)} style={styles.linkHit}>
+            <Text style={styles.signOut}>{t.me.contact}</Text>
+          </Pressable>
           <Pressable accessibilityRole="button" onPress={() => void signOut()} style={styles.linkHit}>
             <Text style={styles.signOut}>{t.auth.signOut}</Text>
           </Pressable>

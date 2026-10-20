@@ -390,22 +390,32 @@ export const el = {
       title: 'Είσαι ήδη εδώ;',
       search: 'Γράψε το όνομά σου',
       /** {n} is the roster size, «1.632» */
-      subtitle: 'Έχουμε {n} παίκτες από όλη την Αττική. Βρήκαμε αυτούς με το όνομά σου.',
+      subtitle: 'Έχουμε {n} παίκτες από όλη την Αττική. Μήπως είσαι εσύ παρακάτω;',
       none: 'Δεν βρήκαμε κανέναν με αυτό το όνομα.',
       me: 'Εγώ είμαι',
       newPlayer: 'Δεν με βρίσκω, είμαι καινούριος',
-      taken: 'Αυτόν τον παίκτη τον έχει ήδη κάποιος άλλος. Αν είσαι εσύ, γράψε μας.',
+      /** someone else got this player a moment ago: the row turns into a claimed one, with «Είμαι εγώ» */
+      taken: 'Αυτό το προφίλ μόλις συνδέθηκε με άλλο λογαριασμό. Αν είσαι εσύ, πάτα «Είμαι εγώ».',
       otherClaimed: 'Ο λογαριασμός σου έχει ήδη έναν παίκτη.',
       /** a roster player is asked for, staff approve (founder, 18 Oct 2026) */
       requested: 'Το αίτημά σου στάλθηκε. Μέχρι να το εγκρίνουμε παίζεις κανονικά, θα σου πούμε μόλις γίνει.',
       /** after «είμαι καινούριος»: staff make the player (founder, 20 Oct 2026) */
       newRequested: 'Θα φτιάξουμε το προφίλ σου και θα σου πούμε μόλις είναι έτοιμο. Μέχρι τότε παίζεις κανονικά.',
       failed: 'Δεν έγινε. Ξαναδοκίμασε.',
+      /** 5 requests a day (security_pass_2) */
+      limited: 'Για σήμερα φτάνει. Ξαναδοκίμασε αύριο.',
       /** a roster player another account already holds: listed, but not for a normal claim (founder, 20 Oct 2026) */
       claimedSub: 'Έχει ήδη συνδεθεί με άλλο λογαριασμό',
       claimedNote: 'Αυτό το προφίλ το έχει ήδη άλλος λογαριασμός. Αν είσαι εσύ, πες μας και θα το ελέγξουμε.',
       claimedMe: 'Είμαι εγώ',
       claimedSent: 'Θα το ελέγξουμε και θα σου πούμε. Μέχρι τότε παίζεις κανονικά.',
+      /** how the account holding it signs in (the provider only, never the address), so the owner can use that one */
+      claimedVia: {
+        google: 'Εκείνος ο λογαριασμός μπαίνει με Google. Αν είναι δικός σου, βγες και μπες με Google.',
+        apple: 'Εκείνος ο λογαριασμός μπαίνει με Apple. Αν είναι δικός σου, βγες και μπες με Apple.',
+        email: 'Εκείνος ο λογαριασμός μπαίνει με κωδικό σε άλλο email. Αν είναι δικός σου, βγες και μπες με εκείνο.',
+      },
+      claimedSwitch: 'Βγες και μπες αλλιώς',
     },
     play: {
       title: 'Πώς παίζεις;',
@@ -575,6 +585,8 @@ export const el = {
       all: 'Δες όλους τους παίκτες ›',
     },
     settings: 'Ρυθμίσεις',
+    /** Ρυθμίσεις: an email to us, so every «γράψε μας» (claims, new players) has somewhere to go */
+    contact: 'Γράψε μας',
     /** Baller's sounds (founder, 17 Oct) */
     sounds: 'Ήχοι',
     soundsLine: 'Μικροί ήχοι από τον Baller σου. Σωπαίνουν όταν το κινητό είναι στο αθόρυβο.',
@@ -925,7 +937,7 @@ export const el = {
     claimTitleF: 'Αυτή είσαι;',
     claimSub: 'Από το ματς που σου έστειλαν. Το κρατάμε στο προφίλ σου.',
     claimYes: 'Ναι, εγώ είμαι',
-    claimTaken: 'Αυτός ο παίκτης έχει ήδη προφίλ.',
+    claimTaken: 'Αυτό το προφίλ το έχει ήδη άλλος λογαριασμός.',
     claimRequested: 'Το αίτημά σου στάλθηκε. Θα το δούμε σύντομα.',
     claimNo: 'Δεν είμαι εγώ',
     /** Ποιους ξέρεις after a link: one is enough, the logger is already picked */

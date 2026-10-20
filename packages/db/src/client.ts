@@ -171,6 +171,8 @@ export function rpc(client: NetprophetClient) {
     /** «Δεν είμαι εγώ;» on a profile ('not_them') or «Είμαι εγώ» on a claimed candidate in onboarding ('is_me') */
     reportClaim: (playerId: string, reason: 'not_them' | 'is_me' = 'not_them', note?: string) =>
       call<{ reported: boolean; replayed: boolean }>(client, 'report_claim', { p_player_id: playerId, p_reason: reason, ...(note ? { p_note: note } : {}) }),
+    /** a claimed candidate in onboarding: how the account holding it signs in, the provider only (never the address) */
+    claimedSignIn: (playerId: string) => call<'google' | 'apple' | 'email' | null>(client, 'claimed_sign_in', { p_player_id: playerId }),
     report: (type: 'match' | 'player', id: string, reason: ReportReason, note?: string) =>
       call<{ reported: boolean }>(client, 'report', { p_entity_type: type, p_entity_id: id, p_reason: reason, ...(note ? { p_note: note } : {}) }),
     block: (by: { playerId: string } | { matchId: string }) =>

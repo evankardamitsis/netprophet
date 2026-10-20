@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { MatchLink } from '@netprophet/db';
 import { copy } from '../i18n';
-import { daysLeft, fixChoices, linkLabel, linkUrl, mockLinkView, shareMessage, titleFor, toWhom, who, whoShort } from './link';
+import { daysLeft, fixChoices, linkClaimError, linkLabel, linkUrl, mockLinkView, shareMessage, titleFor, toWhom, who, whoShort } from './link';
 
 const BASE = 'https://netprophet.gr';
 
@@ -36,5 +36,16 @@ describe('opponent link', () => {
     const l = (first_name: string, token: string): MatchLink => ({ player_id: token, first_name, surname: 'Χ', gender: null, token });
     expect(shareMessage([l('Γιώργος', 'a')], 'T', 'B', BASE)).toBe('T\nB\nhttps://netprophet.gr/m/a');
     expect(shareMessage([l('Γιώργος', 'a'), l('Νίκος', 'b')], 'T', 'B', BASE)).toBe('T\nB\nΓιώργος: https://netprophet.gr/m/a\nΝίκος: https://netprophet.gr/m/b');
+  });
+});
+
+describe('linkClaimError', () => {
+  const t = copy;
+  it('says who holds it, or why not', () => {
+    expect(linkClaimError('player_already_claimed', t)).toBe(t.link.claimTaken);
+    expect(linkClaimError('already_claimed_other', t)).toBe(t.onboarding.claim.otherClaimed);
+    expect(linkClaimError('rate_limited', t)).toBe(t.onboarding.claim.limited);
+    expect(linkClaimError('player_hidden', t)).toBe(t.onboarding.claim.failed);
+    expect(linkClaimError(undefined, t)).toBe(t.onboarding.claim.failed);
   });
 });

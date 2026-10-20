@@ -88,3 +88,14 @@ export function mockLinkView(): MatchLinkView {
     expires_at: new Date(Date.now() + 7 * 86_400_000).toISOString(),
   };
 }
+
+/**
+ * What «Κράτα το ματς στο προφίλ σου» says when claim_via_link refuses: someone else holds the player, this account
+ * already has one, or the day's requests are used up. Anything else is a plain «try again».
+ */
+export function linkClaimError(code: string | null | undefined, t: Copy): string {
+  if (code === 'player_already_claimed') return t.link.claimTaken;
+  if (code?.startsWith('already_claimed')) return t.onboarding.claim.otherClaimed;
+  if (code === 'rate_limited') return t.onboarding.claim.limited;
+  return t.onboarding.claim.failed;
+}
