@@ -42,6 +42,8 @@ export interface Tour {
   /** the tour covers the screen: the moments pacer and everything else waits */
   active: boolean;
   step: TourStepId | null;
+  /** the steps of this run (the Ladder only once unlocked) */
+  steps: TourStepId[];
   /** 0-based */
   index: number;
   total: number;
@@ -55,10 +57,12 @@ export interface Tour {
 }
 
 const noop = () => undefined;
+const NO_STEPS: TourStepId[] = [];
 const RegistryContext = createContext<Registry>({ register: noop, measure: async () => null });
 const TourContext = createContext<Tour>({
   active: false,
   step: null,
+  steps: [],
   index: 0,
   total: 0,
   last: false,
@@ -71,7 +75,11 @@ const TourContext = createContext<Tour>({
 /** Σήμερα's entrances settle for this long before the tour dims the screen */
 const SETTLE_MS = motion.revealDur;
 
-export function TourProvider({ profile, children }: { profile: Record<string, unknown> | null; children: ReactNode }) {
+/** sample mode (no backend) has no get_me: it plays as an account that finished onboarding (the device mirror still counts) */
+const SAMPLE_PROFILE: Record<string, unknown> = { done: true };
+
+export function TourProvider({ profile: read, children }: { profile: Record<string, unknown> | null; children: ReactNode }) {
+  const profile = read ?? (api ? null : SAMPLE_PROFILE);
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
   const { has } = useUnlocks();
@@ -176,6 +184,7 @@ export function TourProvider({ profile, children }: { profile: Record<string, un
     () => ({
       active: running !== null,
       step: currentStep(state),
+      steps: running?.steps ?? NO_STEPS,
       index: running?.index ?? 0,
       total: running?.steps.length ?? 0,
       last: running !== null && running.index === running.steps.length - 1,

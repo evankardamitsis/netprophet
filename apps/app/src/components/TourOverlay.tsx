@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, BackHandler, Pressable, StyleSheet, Text, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { AccessibilityInfo, BackHandler, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { cubicBezier, useReducedMotion, type CSSTransitionProperties } from 'react-native-reanimated';
 import { useCopy } from '../i18n';
@@ -64,7 +64,9 @@ function TourLayer({ step }: { step: TourStepId }) {
   const [size, setSize] = useState({ width: 0, height: 0 });
   /** the cut-out in the overlay's own coordinates; null: nothing to light (the card sits in the middle) */
   const [hole, setHole] = useState<Rect | null>(null);
-  const [measured, setMeasured] = useState(false);
+  /** the step the cut-out stands on now: the card changes with it, not before the new place is measured */
+  const [shown, setShown] = useState<TourStepId | null>(null);
+  const measured = shown !== null;
   // the first placement is drawn in place; later steps slide
   const [placed, setPlaced] = useState(false);
   const [cardH, setCardH] = useState(CARD_H);
@@ -92,7 +94,7 @@ function TourLayer({ step }: { step: TourStepId }) {
       }
       if (!live) return;
       setHole(target ? spotlight(target, step === 'feed' ? PAD : PAD / 2, bounds) : null);
-      setMeasured(true);
+      setShown(step);
     };
     // two frames: Σήμερα's scroll to the top has landed
     raf = requestAnimationFrame(() => {
@@ -110,15 +112,10 @@ function TourLayer({ step }: { step: TourStepId }) {
     return () => cancelAnimationFrame(id);
   }, [measured, placed]);
 
-  const copy = t.tour.steps[step];
-  const counter = fmt(t.tour.counter, { n: tour.index + 1, total: tour.total });
-  useEffect(() => {
-    AccessibilityInfo.announceForAccessibility(`${counter}. ${copy.title}. ${copy.line}`);
-  }, [counter, copy]);
-
   // Android's back skips the tour rather than leaving the app under it
   const { skip } = tour;
   useEffect(() => {
+    if (Platform.OS !== 'android') return undefined;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       skip();
       return true;
@@ -127,7 +124,7 @@ function TourLayer({ step }: { step: TourStepId }) {
   }, [skip]);
 
   const fadeIn = useFadeIn(motion.revealDurShort);
-  const radius = hole ? (step === 'feed' ? FEED_RADIUS : hole.height / 2) : 0;
+  const radius = hole ? (shown === 'feed' ? FEED_RADIUS : hole.height / 2) : 0;
   const slide = placed && !reduced ? motion.revealDur : 0;
   const holeStyle: CSSTransitionProperties & { left: number; top: number; width: number; height: number; borderRadius: number } = {
     left: (hole?.x ?? size.width / 2) - B,
@@ -151,11 +148,13 @@ function TourLayer({ step }: { step: TourStepId }) {
       onLayout={(e: LayoutChangeEvent) => setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
       style={[StyleSheet.absoluteFill, styles.root, fadeIn]}
     >
-      <Animated.View pointerEvents="none" style={[styles.hole, holeStyle]}>
-        {hole ? <Ring key={step} radius={radius} /> : null}
-      </Animated.View>
+      {/* the cut-out is clipped in a layer of its own: its border reaches far past the screen, and on the web a
+          clipping parent of the card would scroll that overflow when a button takes focus */}
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.clip]}>
+        <Animated.View style={[styles.hole, holeStyle]}>{hole ? <Ring key={shown ?? step} radius={radius} /> : null}</Animated.View>
+      </View>
       <View style={[styles.cardWrap, { top: cardTop }]} pointerEvents="box-none">
-        {measured ? <Card key={step} step={step} counter={counter} onHeight={setCardH} /> : null}
+        {shown ? <Card key={shown} step={shown} onHeight={setCardH} /> : null}
       </View>
     </Animated.View>
   );
@@ -167,10 +166,18 @@ function Ring({ radius }: { radius: number }) {
   return <Animated.View style={[StyleSheet.absoluteFill, styles.ring, { borderRadius: radius }, pop]} />;
 }
 
-function Card({ step, counter, onHeight }: { step: TourStepId; counter: string; onHeight: (h: number) => void }) {
+function Card({ step, onHeight }: { step: TourStepId; onHeight: (h: number) => void }) {
   const t = useCopy();
   const tour = useTour();
   const copy = t.tour.steps[step];
+  // the card's own step, so the count and the button never run ahead of the cut-out
+  const index = Math.max(0, tour.steps.indexOf(step));
+  const total = tour.steps.length;
+  const last = index === total - 1;
+  const counter = fmt(t.tour.counter, { n: index + 1, total });
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(`${counter}. ${copy.title}. ${copy.line}`);
+  }, [counter, copy]);
   const rise = useFadeIn(motion.revealDurShort, motion.stagger);
   const press = usePress();
   const skipPress = usePress(0.97);
@@ -182,8 +189,8 @@ function Card({ step, counter, onHeight }: { step: TourStepId; counter: string; 
     >
       <View style={styles.counterRow}>
         <View style={styles.dots}>
-          {Array.from({ length: tour.total }, (_, i) => (
-            <View key={i} style={[styles.dot, i === tour.index && styles.dotOn]} />
+          {Array.from({ length: total }, (_, i) => (
+            <View key={i} style={[styles.dot, i === index && styles.dotOn]} />
           ))}
         </View>
         <Text style={styles.counter}>{counter}</Text>
@@ -193,7 +200,7 @@ function Card({ step, counter, onHeight }: { step: TourStepId; counter: string; 
       </Text>
       <Text style={styles.line}>{copy.line}</Text>
       <View style={styles.actions}>
-        {tour.last ? (
+        {last ? (
           <View />
         ) : (
           <Pressable accessibilityRole="button" onPress={tour.skip} onPressIn={skipPress.onPressIn} onPressOut={skipPress.onPressOut} style={styles.skipHit}>
@@ -209,8 +216,8 @@ function Card({ step, counter, onHeight }: { step: TourStepId; counter: string; 
           onPressIn={press.onPressIn}
           onPressOut={press.onPressOut}
         >
-          <Animated.View style={[styles.button, tour.last && styles.buttonGo, press.style]}>
-            <Text style={[styles.buttonText, tour.last && styles.buttonGoText]}>{tour.last ? t.tour.go : t.tour.next}</Text>
+          <Animated.View style={[styles.button, last && styles.buttonGo, press.style]}>
+            <Text style={[styles.buttonText, last && styles.buttonGoText]}>{last ? t.tour.go : t.tour.next}</Text>
           </Animated.View>
         </Pressable>
       </View>
@@ -219,7 +226,8 @@ function Card({ step, counter, onHeight }: { step: TourStepId; counter: string; 
 }
 
 const styles = StyleSheet.create({
-  root: { zIndex: 50, overflow: 'hidden' },
+  root: { zIndex: 50 },
+  clip: { overflow: 'hidden' },
   hole: { position: 'absolute', borderWidth: B, borderColor: alpha(colors.ink, SCRIM) },
   ring: { borderWidth: 2, borderColor: colors.paper },
   cardWrap: { position: 'absolute', left: 0, right: 0, paddingHorizontal: MARGIN, alignItems: 'center' },
