@@ -119,3 +119,4 @@ apps/admin/.env.sentry-build-plugin
 .supabase-v2/
 supabase-v2/.temp/
 supabase-v2/.branches/
+.revenuecat-webhook-secret.local
