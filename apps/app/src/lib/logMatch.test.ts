@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { emptyForm, otherDays, peopleDone, peopleLabel, quickDays, ready, shortDay, toInput, topLine, type LogForm } from './logMatch';
+import { emptyForm, otherDays, peopleDone, peopleLabel, quickDays, ready, shortDay, toInput, topLine, typedPerson, type LogForm } from './logMatch';
 
 const t = getCopy('el');
 const now = new Date('2026-10-12T09:00:00Z');
@@ -52,5 +52,20 @@ describe('ready and the input', () => {
   });
   it('the summary line', () => {
     expect(topLine(base, now, t)).toBe('Σήμερα · Φιλικό · Μονό');
+  });
+});
+
+describe('a typed name (the server name_shape rule)', () => {
+  it('tidies casing like onboarding', () => {
+    expect(typedPerson(' ΜΑΡΙΑ ', 'καρρα')).toEqual({ ok: true, first: 'Μαρια', surname: 'Καρρα' });
+    expect(typedPerson('Ζωή-Ελένη', 'McDonald')).toEqual({ ok: true, first: 'Ζωή-Ελένη', surname: 'McDonald' });
+  });
+  it('waits while a part is blank', () => {
+    expect(typedPerson('Νίκος', '  ')).toEqual({ ok: false, why: 'empty' });
+  });
+  it('refuses what is not a name', () => {
+    for (const [f, s] of [['Α', 'Παππάς'], ['Νίκος', 'x1'], ['Ε.', 'Παππάς'], ['😀😀', 'Παππάς']] as const) {
+      expect(typedPerson(f, s)).toEqual({ ok: false, why: 'shape' });
+    }
   });
 });

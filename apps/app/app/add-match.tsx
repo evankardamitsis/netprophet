@@ -29,6 +29,7 @@ import {
   toInput,
   topDone,
   topLine,
+  typedPerson,
   type LogForm,
   type Mode,
   type PickedPerson,
@@ -282,7 +283,7 @@ export default function AddMatch() {
         ) : ready(form) && !open ? (
           <Primary label={form.mode === 'played' ? a.submitPlayed : a.submitSoon} busy={busy} onPress={() => void onSubmit()} />
         ) : null}
-        {error ? <Text style={styles.error}>{error === 'duplicate' ? a.errors.duplicate : error === 'name_required' ? a.errors.nameRequired : error === 'rate_limited' ? a.errors.rateLimited : a.errors.failed}</Text> : null}
+        {error ? <Text style={styles.error}>{error === 'duplicate' ? a.errors.duplicate : error === 'name_required' ? a.errors.nameRequired : error === 'name_shape' ? a.errors.nameShape : error === 'rate_limited' ? a.errors.rateLimited : a.errors.failed}</Text> : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -340,9 +341,10 @@ function People({ label, data, exclude, onPick }: { label: string; data: ReturnT
     onPick({ kind: 'player', id: p.id, first: p.first_name, surname: p.surname, sub: '' });
     setQ('');
   };
+  const typed = typedPerson(first, surname);
   const addNew = () => {
-    if (!first.trim() || !surname.trim()) return;
-    onPick({ kind: 'new', first: first.trim(), surname: surname.trim() });
+    if (!typed.ok) return;
+    onPick({ kind: 'new', first: typed.first, surname: typed.surname });
     setQ('');
     setFirst('');
     setSurname('');
@@ -364,10 +366,14 @@ function People({ label, data, exclude, onPick }: { label: string; data: ReturnT
             <TextInput value={first} onChangeText={setFirst} placeholder={a.first} placeholderTextColor={colors.inkSoft} style={[styles.input, styles.half]} />
             <TextInput value={surname} onChangeText={setSurname} placeholder={a.surname} placeholderTextColor={colors.inkSoft} style={[styles.input, styles.half]} />
           </View>
-          {first.trim() && surname.trim() ? (
+          {typed.ok ? (
             <Pressable accessibilityRole="button" onPress={addNew} style={styles.changeHit}>
-              <Text style={styles.addNew}>{fmt(a.addNew, { name: `${first.trim()} ${surname.trim()}` })}</Text>
+              <Text style={styles.addNew}>{fmt(a.addNew, { name: `${typed.first} ${typed.surname}` })}</Text>
             </Pressable>
+          ) : typed.why === 'shape' ? (
+            <Text style={styles.note} accessibilityLiveRegion="polite">
+              {a.nameShape}
+            </Text>
           ) : null}
         </View>
       ) : null}

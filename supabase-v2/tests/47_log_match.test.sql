@@ -31,7 +31,7 @@ select ok(not exists (select 1 from core.outbox where kind = 'resolve_match' and
 
 select tests.login(:'u'::uuid);
 select throws_ok(format($$select api.log_match(%L)$$, :'played'), '23505', 'duplicate_match', 'the same match twice is refused');
-select throws_ok(format($$select api.log_match('{"mode": "played", "date": "%s", "format": "doubles", "partner": {"player_id": "%s"}, "opponents": [{"new": {"first": "Α", "surname": "Β"}}], "result": {"won": true, "sets": "2-0"}}')$$,
+select throws_ok(format($$select api.log_match('{"mode": "played", "date": "%s", "format": "doubles", "partner": {"player_id": "%s"}, "opponents": [{"new": {"first": "Άλφα", "surname": "Βήτα"}}], "result": {"won": true, "sets": "2-0"}}')$$,
                  core.athens_day(), :'o'), '22023', 'wrong_opponents', 'doubles needs two opponents');
 
 -- an upcoming match against a new name

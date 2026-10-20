@@ -13,7 +13,7 @@ update core.players set claimed_by_user_id = :'w'::uuid where id = :'o'::uuid;
 select tests.login(:'u'::uuid);
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"player_id": "%s"}], "result": {"won": true, "sets": "2-0"}}',
                             core.athens_day(), :'o')::jsonb) ->> 'match_id' as m1 \gset
-select api.log_match(format('{"mode": "soon", "date": "%s", "format": "doubles", "partner": {"new": {"first": "Συν", "surname": "Εργάτης"}}, "opponents": [{"new": {"first": "Α", "surname": "Ένας"}}, {"new": {"first": "Β", "surname": "Δύο"}}]}',
+select api.log_match(format('{"mode": "soon", "date": "%s", "format": "doubles", "partner": {"new": {"first": "Συν", "surname": "Εργάτης"}}, "opponents": [{"new": {"first": "Άλφα", "surname": "Ένας"}}, {"new": {"first": "Βήτα", "surname": "Δύο"}}]}',
                             core.athens_day() + 1)::jsonb) ->> 'match_id' as m2 \gset
 select tests.logout();
 -- staff check every match a player logs
