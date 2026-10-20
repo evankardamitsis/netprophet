@@ -41,9 +41,18 @@ const afterAction = debounce(() => actionListeners.forEach((l) => l()), REFETCH_
  * moment may come, and the celebration queue is read again a second after the last one, so what that action earned
  * plays right after its reveal, this visit.
  */
-export function momentsAct() {
+export function momentsAct(opts: { reread?: boolean } = {}) {
   set(onAction(state));
-  afterAction.call();
+  if (opts.reread !== false) afterAction.call();
+}
+
+/**
+ * Read the celebration queue again now (a vote burst whose reads show it may have queued one; votes pass
+ * `reread: false` to momentsAct and decide here, so a vote that earned nothing does not reload the feed).
+ */
+export function rereadCelebrations() {
+  afterAction.cancel();
+  actionListeners.forEach((l) => l());
 }
 
 /** run `l` (debounced) after every action; returns the unsubscribe */

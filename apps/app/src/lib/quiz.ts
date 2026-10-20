@@ -1,3 +1,4 @@
+import { quizDayKey } from '@netprophet/core';
 import { capitalizeFirst, renderQuizQuestion, renderQuizText, type Copy } from '@netprophet/copy';
 import type { AnswerCardResult, GetQuizResult, QuizCard } from '@netprophet/db';
 import { fmt } from './votes';
@@ -141,4 +142,17 @@ export function withoutAnswer(quiz: GetQuizResult, cardId: string): GetQuizResul
     answered: Math.max(0, quiz.answered - 1),
     cards: quiz.cards.map((c) => (c.id === cardId ? { ...c, my_option: null, split: null } : c)),
   };
+}
+
+/**
+ * Whether Σήμερα reads get_quiz again when it comes into view (get_quiz is slow): only when there is nothing to show
+ * (none yet, or the last read failed), the quiz day turned (09:00 Athens) or the server says the set is over, or the
+ * player answered since the last read.
+ */
+export function quizNeedsRead(state: { quiz: GetQuizResult | null; error: boolean }, played: boolean, now: Date): boolean {
+  const { quiz, error } = state;
+  if (!quiz || error || played) return true;
+  if (quiz.quiz_day !== quizDayKey(now.toISOString())) return true;
+  const next = quiz.next_at ? Date.parse(quiz.next_at) : NaN;
+  return Number.isFinite(next) && now.getTime() >= next;
 }

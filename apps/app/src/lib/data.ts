@@ -9,7 +9,7 @@ import { mockLook } from '../mock/look';
 import { withWorn } from './look';
 import { mockQuests } from '../mock/quests';
 import { mockAnswer, mockQuiz } from '../mock/quiz';
-import { withAnswer, withoutAnswer } from './quiz';
+import { quizNeedsRead, withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
 import { mockTournament, mockTournaments, mockUpcoming } from '../mock/tournaments';
 import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
@@ -24,7 +24,7 @@ import { useAuth } from './auth';
 import type { Area, Hand } from './onboarding';
 import { thousands, toPlayerRow, toProfile, type PlayerRow, type ProfileView } from './players';
 import { toMeView, type MeView } from './me';
-import { clearMe, currentMe, meTicket, publishMe, subscribeMe } from './meStore';
+import { clearMe, currentMe, loadMe, markMeStale, ME_STALE_MS, subscribeMe, type LoadMeOptions } from './meStore';
 import { askForPushOnce } from './push';
 import { MOCK_TOKEN, mockLinkView } from './link';
 import { hasMoment } from './unlockLadder';
@@ -65,6 +65,30 @@ export function useApi() {
 }
 
 export type { VoteErrorKind } from './feed';
+
+type LiveApi = NonNullable<typeof liveApi>;
+
+/** get_me through the shared store: one request on the wire at a time, and a fresh reply reused (meStore.ts) */
+function readMe(api: LiveApi, user: string | null, opts: Omit<LoadMeOptions, 'owner'> = {}) {
+  return loadMe(() => api.getMe(), { ...opts, owner: user });
+}
+
+/** the shared get_me (null while loading, and in mock mode); read on mount if the one held is stale */
+function useSharedMe(): MeResult | null {
+  const api = useApi();
+  const user = useAuth().session?.user.id ?? null;
+  const raw = useSyncExternalStore(subscribeMe, currentMe, currentMe);
+  useEffect(() => {
+    if (api) void readMe(api, user);
+  }, [api, user]);
+  return api ? raw : null;
+}
+
+/** how a screen asks for get_me again: `ifStale` only when it is older than ME_STALE_MS; `since` an action's time */
+export interface MeRefresh {
+  ifStale?: boolean;
+  since?: number;
+}
 
 let areaCache: Record<string, string> | null = null;
 
@@ -273,6 +297,8 @@ interface QuizStore {
 let quizStore: QuizStore = { quiz: null, loading: false, error: false };
 let quizMode: 'live' | 'mock' | null = null;
 let quizFlight: Promise<GetQuizResult | null> | null = null;
+/** an answer went through since the last read: the next look reads the set again */
+let quizPlayed = false;
 const quizListeners = new Set<() => void>();
 const quizSubscribe = (l: () => void) => {
   quizListeners.add(l);
@@ -288,6 +314,8 @@ export interface QuizState {
   loading: boolean;
   error: boolean;
   refresh: () => Promise<GetQuizResult | null>;
+  /** read again only when it is needed (quizNeedsRead): a new quiz day, an answer since, nothing held */
+  refreshIfNeeded: () => Promise<GetQuizResult | null>;
   /** optimistic: the pick shows at once; on an error it is taken back and `onError` says why. Null when it failed. */
   answer: (cardId: string, option: number) => Promise<AnswerCardResult | null>;
 }
@@ -309,6 +337,7 @@ export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
     // the strip and the game screen can both ask at once: one request
     quizFlight ??= (async () => {
       setQuizStore({ loading: true });
+      quizPlayed = false;
       try {
         const quiz = await api.getQuiz();
         setQuizStore({ quiz, loading: false, error: false });
@@ -334,6 +363,7 @@ export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
       setQuizStore({ quiz: withAnswer(before, cardId, option) });
       try {
         const res = api ? await api.answerCard(cardId, option) : mockAnswer(cardId, option);
+        quizPlayed = true;
         if (quizStore.quiz) setQuizStore({ quiz: withAnswer(quizStore.quiz, cardId, option, res) });
         return res;
       } catch (err) {
@@ -347,7 +377,12 @@ export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
     [api, refresh],
   );
 
-  return { quiz: store.quiz, loading: store.loading, error: store.error, refresh, answer };
+  const refreshIfNeeded = useCallback(async (): Promise<GetQuizResult | null> => {
+    if (quizMode === (api ? 'live' : 'mock') && !quizFlight && !quizNeedsRead(quizStore, quizPlayed, new Date())) return quizStore.quiz;
+    return refresh();
+  }, [api, refresh]);
+
+  return { quiz: store.quiz, loading: store.loading, error: store.error, refresh, refreshIfNeeded, answer };
 }
 
 /**
@@ -500,23 +535,26 @@ function meInitials(raw: MeResult, email: string | undefined): string {
 }
 
 /** Streak and total points for the header. Null while loading in live mode. */
-export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: () => Promise<void> } {
+export function useMe(email?: string): { me: MeSummary | null; raw: MeResult | null; refresh: (opts?: MeRefresh) => Promise<void> } {
   const api = useApi();
+  const user = useAuth().session?.user.id ?? null;
   // the one get_me the header and Εγώ share, so both always show the same σερί
   const raw = useSyncExternalStore(subscribeMe, currentMe, currentMe);
-  const refresh = useCallback(async () => {
-    if (!api) return;
-    const ticket = meTicket();
-    try {
-      publishMe(await api.getMe(), ticket);
-    } catch {
-      // the header keeps the last value; the feed shows its own error
-    }
-  }, [api]);
+  // a failed read keeps the last value in the header; the feed shows its own error
+  const refresh = useCallback(
+    async (opts: MeRefresh = {}) => {
+      if (!api) return;
+      await readMe(api, user, { maxAgeMs: opts.ifStale ? ME_STALE_MS : 0, since: opts.since });
+    },
+    [api, user],
+  );
   useEffect(() => {
-    if (!api) clearMe();
-    void refresh();
-  }, [api, refresh]);
+    if (!api) {
+      clearMe();
+      return;
+    }
+    void readMe(api, user);
+  }, [api, user]);
   if (!api) return { me: MOCK_ME, raw: null, refresh };
   return {
     me: raw ? { streak: raw.game.streak, points: raw.game.total_points, initials: meInitials(raw, email), sport: raw.profile.primary_sport } : null,
@@ -583,33 +621,11 @@ export function useResults(filter: ResultsFilter = { tournament: null, query: ''
   return { groups, loading, error, refresh };
 }
 
-/** your claimed player's id (null without one), asked once per account; the guest's sample player in mock mode */
-let myPlayerCache: { user: string; id: string | null } | null = null;
+/** your claimed player's id (null without one), from the shared get_me; the guest's sample player in mock mode */
 export function useMyPlayerId(): string | null {
   const api = useApi();
-  const user = useAuth().session?.user.id ?? '';
-  const cached = myPlayerCache && myPlayerCache.user === user ? myPlayerCache.id : null;
-  const [id, setId] = useState<string | null>(() => (api ? cached : MOCK_ME_PLAYER));
-  useEffect(() => {
-    if (!api) {
-      setId(MOCK_ME_PLAYER);
-      return;
-    }
-    if (myPlayerCache && myPlayerCache.user === user) {
-      setId(myPlayerCache.id);
-      return;
-    }
-    api
-      .getMe()
-      .then((me) => {
-        const found = me.player?.id ?? null;
-        // only a claimed player is kept: someone without one may claim later in the session
-        if (found) myPlayerCache = { user, id: found };
-        setId(found);
-      })
-      .catch(() => undefined);
-  }, [api, user]);
-  return id;
+  const me = useSharedMe();
+  return api ? me?.player?.id ?? null : MOCK_ME_PLAYER;
 }
 
 export interface SeasonState {
@@ -790,6 +806,7 @@ export function useMePage(): MePageState {
   const [error, setError] = useState(false);
 
   /** `quiet` reads again without the pull-to-refresh spinner (on focus) */
+  const user = useAuth().session?.user.id ?? null;
   const refresh = useCallback(async (quiet?: boolean) => {
     if (quiet !== true) setLoading(true);
     try {
@@ -798,10 +815,10 @@ export function useMePage(): MePageState {
         const m = mockMe(now);
         setView(toMeView(m.me, m.page, m.player, await areasFor(false), t, now));
       } else {
-        const ticket = meTicket();
-        const [me, page, areas] = await Promise.all([api.getMe(), api.getMePage(), areasFor(true)]);
-        // the header reads the same reply, so Εγώ and the header never disagree on σερί or πόντοι
-        publishMe(me, ticket);
+        // the shared get_me (a read on focus takes it if it is fresh): the header reads the same reply, so Εγώ and
+        // the header never disagree on σερί or πόντοι
+        const [me, page, areas] = await Promise.all([readMe(api, user, { maxAgeMs: quiet ? ME_STALE_MS : 0 }), api.getMePage(), areasFor(true)]);
+        if (!me) throw new Error('get_me failed');
         const player = me.player ? await api.getPlayer(me.player.id).catch(() => null) : null;
         setView(toMeView(me, page, player, areas, t, now));
       }
@@ -811,7 +828,7 @@ export function useMePage(): MePageState {
     } finally {
       setLoading(false);
     }
-  }, [api, t]);
+  }, [api, t, user]);
 
   useEffect(() => {
     void refresh();
@@ -1578,17 +1595,23 @@ export interface ClaimRow {
 export function useOnboardingApi(sample = false) {
   const live = useApi();
   const api = sample ? null : live;
+  const user = useAuth().session?.user.id ?? null;
   const t = useCopy();
   return useMemo(
     () => ({
       async me() {
-        return api ? api.getMe() : null;
+        if (!api) return null;
+        const me = await readMe(api, user, { maxAgeMs: 0 });
+        if (!me) throw new Error('get_me failed');
+        return me;
       },
       async rosterSize(): Promise<string> {
         return thousands(api ? (await api.getPlayersHome(1)).total_players : mockPlayersHome().total_players);
       },
       async saveProfile(patch: Record<string, unknown>) {
         if (api) await api.updateProfile(patch);
+        // the header's initials and the gate read the profile from get_me
+        markMeStale();
       },
       async candidates(first: string, surname: string): Promise<ClaimRow[]> {
         const areas = await areasFor(api !== null);
@@ -1616,6 +1639,7 @@ export function useOnboardingApi(sample = false) {
         if (!api) return 'requested';
         try {
           const r = await api.claimPlayer(playerId);
+          markMeStale();
           return r.requested ? 'requested' : 'ok';
         } catch (err) {
           if (err instanceof RpcError && err.code === 'player_already_claimed') return 'taken';
@@ -1640,7 +1664,7 @@ export function useOnboardingApi(sample = false) {
         if (api && ids.length) await api.followPlayers(ids);
       },
     }),
-    [api, t],
+    [api, t, user],
   );
 }
 
@@ -1819,24 +1843,30 @@ export function useTournament(id: string): TournamentState {
 export function useMyMatch(): { match: MyMatchView | null; refresh: () => Promise<void> } {
   const t = useCopy();
   const api = useApi();
+  const user = useAuth().session?.user.id ?? null;
+  // your player comes from the shared get_me; only their profile is asked for here
+  const me = useSharedMe();
+  const loaded = me !== null;
+  const playerId = me?.player?.id ?? null;
   const [match, setMatch] = useState<MyMatchView | null>(null);
-  const refresh = useCallback(async () => {
+  const load = useCallback(async () => {
     const now = new Date();
-    try {
-      if (!api) {
-        setMatch(myMatchOf(mockMe(now).player, t, now));
-        return;
-      }
-      const me = await api.getMe();
-      const player = me.player ? await api.getPlayer(me.player.id).catch(() => null) : null;
-      setMatch(myMatchOf(player, t, now));
-    } catch {
-      // the card stays as it was; the feed shows its own error
+    if (!api) {
+      setMatch(myMatchOf(mockMe(now).player, t, now));
+      return;
     }
-  }, [api, t]);
+    // get_me not in yet: the card stays as it is
+    if (!loaded) return;
+    const player = playerId ? await api.getPlayer(playerId).catch(() => null) : null;
+    setMatch(myMatchOf(player, t, now));
+  }, [api, t, loaded, playerId]);
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    void load().catch(() => undefined);
+  }, [load]);
+  const refresh = useCallback(async () => {
+    if (api) await readMe(api, user, { maxAgeMs: ME_STALE_MS });
+    await load().catch(() => undefined);
+  }, [api, user, load]);
   return { match, refresh };
 }
 
@@ -1854,25 +1884,20 @@ export function useMyAvatar(): {
   refresh: () => Promise<void>;
 } {
   const api = useApi();
-  const [me, setMe] = useState<MeResult | null>(null);
-  const [picked, setPicked] = useState<string | null>(null);
+  const user = useAuth().session?.user.id ?? null;
+  // the shared get_me (the header, the result cards and the celebrations all draw your Baller from it)
+  const me = useSharedMe();
+  /** a pick saved here, shown until the shared get_me carries it; undefined: none */
+  const [chosen, setChosen] = useState<string | null | undefined>(undefined);
+  const picked = chosen !== undefined ? chosen : me?.profile.avatar ?? null;
   const [mockPick, setMockPick] = useState<string | null>(null);
   const refresh = useCallback(async () => {
     if (!api) {
       setMockPick(MOCK_AVATAR);
       return;
     }
-    try {
-      const m = await api.getMe();
-      setMe(m);
-      setPicked(m.profile.avatar ?? null);
-    } catch {
-      // keeps the last one
-    }
-  }, [api]);
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    await readMe(api, user, { maxAgeMs: ME_STALE_MS });
+  }, [api, user]);
   const pick = useCallback(
     async (key: string | null) => {
       if (!api) {
@@ -1880,17 +1905,20 @@ export function useMyAvatar(): {
         setMockPick(key);
         return true;
       }
-      const before = picked;
-      setPicked(key);
+      setChosen(key);
       try {
         await api.setAvatar(key);
+        markMeStale();
+        const fresh = await readMe(api, user, { maxAgeMs: 0, since: Date.now() });
+        // the shared reply now carries it (else the pick stays shown here)
+        if ((fresh?.profile.avatar ?? null) === key) setChosen(undefined);
         return true;
       } catch {
-        setPicked(before);
+        setChosen(undefined);
         return false;
       }
     },
-    [api, picked],
+    [api, user],
   );
   if (!api) return { avatar: avatarByKey(mockPick) ?? defaultAvatarFor('mock-me', 'm'), picked: mockPick, pick, refresh };
   if (!me) return { avatar: null, picked, pick, refresh };

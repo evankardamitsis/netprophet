@@ -17,7 +17,10 @@ import { colors } from "../src/theme";
 import { initSounds } from "../src/lib/sound";
 import { Loading } from "../src/components/Loading";
 
-/** the animated logo stays at least this long on a cold start, so its hop is seen and the screen never flickers */
+/**
+ * the animated logo stays at least this long on a cold start, so its hop is seen and the screen never flickers. It
+ * only covers the app: the session, the onboarding gate and Σήμερα's first reads start under it.
+ */
 const LOADING_MIN_MS = 900;
 
 export default function RootLayout() {
@@ -42,7 +45,7 @@ export default function RootLayout() {
     return () => clearTimeout(id);
   }, []);
   // A font failure falls back to the system font instead of blocking the app.
-  if ((!loaded && !error) || !minDone) return <Loading />;
+  const fontsReady = loaded || error !== null;
 
   return (
     <GestureHandlerRootView style={styles.root}>
@@ -50,14 +53,19 @@ export default function RootLayout() {
       <View style={styles.page}>
         <View style={styles.column}>
           <SafeAreaProvider>
+            {/* mounted at once: the session restores and the gate reads during the logo; the screens wait for the
+                fonts (only text needs them) */}
             <AuthProvider>
-              <OnboardingGateProvider>
-                <Routes />
-              </OnboardingGateProvider>
+              <OnboardingGateProvider>{fontsReady ? <Routes /> : null}</OnboardingGateProvider>
             </AuthProvider>
           </SafeAreaProvider>
         </View>
       </View>
+      {!fontsReady || !minDone ? (
+        <View style={StyleSheet.absoluteFill}>
+          <Loading />
+        </View>
+      ) : null}
     </GestureHandlerRootView>
   );
 }

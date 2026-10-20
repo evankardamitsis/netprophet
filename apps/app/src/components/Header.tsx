@@ -10,7 +10,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import { useMyBaller, type MeSummary } from '../lib/data';
-import { useHud, type StreakFx } from '../lib/hud';
+import { useHudActions, useHudNumbers, type StreakFx } from '../lib/hud';
 import { useCountUp, usePopOnChange, usePress } from '../lib/motion';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
@@ -31,15 +31,16 @@ const LOGO_H = 22;
 export function Header({ me }: { me: MeSummary | null }) {
   const t = useCopy();
   const insets = useSafeAreaInsets();
-  const hud = useHud();
+  const hud = useHudNumbers();
+  const { targets } = useHudActions();
   const points = me ? me.points - hud.pointsOffset : undefined;
   const streak = me ? hud.streakShown ?? me.streak : undefined;
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
       <BouncingLogo height={LOGO_H} />
       <View style={styles.right}>
-        <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={hud.targets.streak} fx={hud.streakFx} pill />
-        <Stat value={points} label={t.header.points} onPress={goNumbers} target={hud.targets.points} countUp />
+        <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={targets.streak} fx={hud.streakFx} pill />
+        <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
         <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} />
       </View>
     </View>

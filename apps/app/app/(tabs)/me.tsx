@@ -73,8 +73,9 @@ export default function MeScreen() {
       // σερί, πόντοι and level: the newest get_me, shared with the header (it updates too)
       if (meSeen.current) void refresh(true);
       meSeen.current = true;
-      // a vote or a moment may have opened something since last time
-      void unlocks.refresh({ afterMoment: true });
+      // a vote or a moment may have opened something since last time (both read get_me themselves; a stale one is
+      // read again here, and the one Εγώ asks for above is shared)
+      void unlocks.refresh({ afterMoment: true, ifStale: true });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh, refresh]),
   );
