@@ -256,9 +256,8 @@ export const en: Copy = {
       allRight: 'all right',
       oneRight: '1 right',
       someRight: '{n} right',
-      noneRight: 'none right this time',
+      noneRight: 'none right',
       points: '+{points}',
-      seen: 'Seen them',
     },
   },
   results: {
