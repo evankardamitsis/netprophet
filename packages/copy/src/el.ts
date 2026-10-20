@@ -535,6 +535,10 @@ export const el = {
     },
     matches: {
       title: 'Τα ματς σου',
+      /** a line of «Τα ματς σου»: the partner in doubles (a label, so the name stays in the nominative) */
+      with: 'Παρτενέρ: {name}',
+      /** the other side, in full */
+      vs: 'Απέναντι: {names}',
       win: 'Ν',
       loss: 'Η',
       next: 'Επόμενο ματς',
