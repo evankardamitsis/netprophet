@@ -19,12 +19,12 @@ import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
-import { activeLine } from '../../src/lib/pro';
+import { proStatusLine } from '../../src/lib/pro';
 import { meSections, mePageOf } from '../../src/lib/meSections';
 import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { useEntrance, usePopIn, usePress, useStgIn } from '../../src/lib/motion';
-import type { BadgeRow, GetBadgesResult } from '@netprophet/db';
+import type { BadgeRow, GetBadgesResult, ProState } from '@netprophet/db';
 import { alpha, colors, fonts } from '../../src/theme';
 import { Lit } from '../../src/components/Lit';
 import { Baller } from '../../src/components/Baller';
@@ -60,6 +60,7 @@ export default function MeScreen() {
   const t = useCopy();
   const { view, loading, error, refresh } = useMePage();
   const meSeen = useRef(false);
+  const proSeen = useRef(false);
   const quests = useQuests();
   const badges = useBadges();
   const look = useLook();
@@ -68,6 +69,9 @@ export default function MeScreen() {
   const [questsOpen, setQuestsOpen] = useState(false);
   const unlocks = useUnlocks();
   const { has } = unlocks;
+  // one get_pro for the page: the tag by your name and the status row
+  const pro = usePro();
+  const isPro = pro.state?.pro === true;
   useFocusEffect(
     useCallback(() => {
       void quests.refresh();
@@ -80,8 +84,10 @@ export default function MeScreen() {
       // a vote or a moment may have opened something since last time (both read get_me themselves; a stale one is
       // read again here, and the one Εγώ asks for above is shared)
       void unlocks.refresh({ afterMoment: true, ifStale: true });
+      if (proSeen.current) void pro.refresh();
+      proSeen.current = true;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh, refresh]),
+    }, [quests.refresh, badges.refresh, look.refresh, myLevel.refresh, unlocks.refresh, refresh, pro.refresh]),
   );
   // «Τα νούμερά σου» is the same screen with ?page=stats (founder, 14 Oct: Εγώ down to a few rows; 19 Oct: one row)
   const { page } = useLocalSearchParams<{ page?: string }>();
@@ -90,7 +96,8 @@ export default function MeScreen() {
     levelBar: has('level_bar'),
     quests: has('daily_quests'),
     look: has('frames') || has('backgrounds'),
-    proOpen: has('pro_sheet'),
+    // with Pro the status row is always there, whatever has opened
+    proOpen: has('pro_sheet') || isPro,
   });
   const myAvatar = useMyAvatar();
   const avatarRefresh = myAvatar.refresh;
@@ -120,7 +127,7 @@ export default function MeScreen() {
               <Section key={s} i={i}>
                 {s === 'hero' ? (
                   <>
-                    <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} />
+                    <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} pro={isPro} />
                     <NotMeRow />
                   </>
                 ) : s === 'level' ? (
@@ -132,7 +139,7 @@ export default function MeScreen() {
                 ) : s === 'look' ? (
                   <LookRow isNew={hasNewLook(look.look, seen ?? new Set(look.look?.items.map((it) => it.key) ?? []))} />
                 ) : s === 'pro' ? (
-                  <ProRow />
+                  <ProRow state={pro.state} />
                 ) : (
                   <Settings onPlaySaved={() => void refresh(true)} />
                 )}
@@ -202,13 +209,15 @@ function NavRow({ title, sub, onPress }: { title: string; sub?: string; onPress:
 
 /**
  * «Pro ›», one quiet row after the player's own things (founder, 19 Oct: Pro reachable, not competing). Without Pro
- * it says what Pro sends you; with Pro, until when it runs. The only Pro entry on Εγώ (it left Ρυθμίσεις).
+ * it says what Pro sends you; with Pro, «Είσαι Pro» with where it comes from and until when (founder, 20 Oct). The only
+ * Pro entry on Εγώ (it left Ρυθμίσεις).
  */
-function ProRow() {
+function ProRow({ state }: { state: ProState | null }) {
   const t = useCopy();
-  const { state } = usePro();
-  const active = state ? activeLine(state, t) : null;
-  return <NavRow title={t.pro.title} sub={active ?? t.pro.settingsLine} onPress={() => router.push('/pro?from=me')} />;
+  const status = state ? proStatusLine(state, t) : null;
+  // with Pro: a calm status, «Είσαι Pro» and where it comes from and until when; the Pro screen says the rest
+  if (status) return <NavRow title={t.pro.youAre} sub={status} onPress={() => router.push('/pro?from=me')} />;
+  return <NavRow title={t.pro.title} sub={t.pro.settingsLine} onPress={() => router.push('/pro?from=me')} />;
 }
 
 /** «Αποστολές  1/3 ›»: today's quests done, opens the sheet */
@@ -377,6 +386,7 @@ function HeroCard({
   kit,
   gear,
   effect,
+  pro,
 }: {
   v: MeView;
   badges: GetBadgesResult | null;
@@ -387,6 +397,7 @@ function HeroCard({
   kit: string;
   gear: string | null;
   effect: string | null;
+  pro: boolean;
 }) {
   const t = useCopy();
   const { has } = useUnlocks();
@@ -401,7 +412,7 @@ function HeroCard({
       flipped={flipped}
       front={
         <>
-          <Name v={v} frame={frame} />
+          <Name v={v} frame={frame} pro={pro} />
           {v.isNew && PLAYER_LEVEL_SHOWN ? <NewTop /> : <Chips v={v} />}
           {canFlip ? (
             <Pressable accessibilityRole="button" onPress={() => setFlipped(true)} onPressIn={flip.onPressIn} onPressOut={flip.onPressOut} style={styles.flipHit}>
@@ -574,12 +585,22 @@ function StatsBack({ level, onBack }: { level: LevelBack | null; onBack: () => v
   );
 }
 
-function Name({ v, frame }: { v: MeView; frame: string | null }) {
+/** your name; with Pro a small «PRO» tag beside the first name, in Pro's lime outline (as on the level card), in the
+ * name's own colour on a frame's plate */
+function Name({ v, frame, pro }: { v: MeView; frame: string | null; pro: boolean }) {
+  const t = useCopy();
   const plate = namePlate(frame);
   return (
     <View style={styles.nameBox}>
       <View style={plate?.box}>
-        <Text style={[styles.first, plate ? { color: plate.color } : null]}>{v.first}</Text>
+        <View style={styles.firstRow}>
+          <Text style={[styles.first, plate ? { color: plate.color } : null]}>{v.first}</Text>
+          {pro ? (
+            <View style={[styles.nameTag, plate ? { borderColor: plate.color } : null]} accessibilityLabel={t.pro.youAre}>
+              <Text style={[styles.nameTagText, plate ? { color: plate.color } : null]}>{t.pro.badge}</Text>
+            </View>
+          ) : null}
+        </View>
         <FitText text={v.surname} style={[styles.surname, plate ? { color: plate.color } : null]} />
       </View>
       {v.sub ? <Text style={styles.heroSub}>{v.sub}</Text> : null}
@@ -904,6 +925,9 @@ const styles = StyleSheet.create({
   newTop: { gap: 6 },
   newTitle: { fontFamily: fonts.displayHeavy, fontSize: 36, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   nameBox: { gap: 2 },
+  firstRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  nameTag: { paddingHorizontal: 7, paddingVertical: 1, borderRadius: 999, borderWidth: 1.5, borderColor: colors.lime },
+  nameTagText: { fontFamily: fonts.bodyBold, fontSize: 10, lineHeight: 13, letterSpacing: 0.8, color: colors.lime },
   first: { fontFamily: fonts.display, fontSize: 24, lineHeight: 26, paddingBottom: 5, marginBottom: -5, color: colors.paper },
   surname: { fontFamily: fonts.displayHeavy, fontSize: 52, lineHeight: 52, paddingBottom: 10, marginBottom: -10, color: colors.paper, paddingTop: ACCENT_PAD, marginTop: -ACCENT_PAD },
   heroSub: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.mist },

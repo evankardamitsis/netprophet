@@ -20,6 +20,8 @@ import { Baller, type BallerHandle } from './Baller';
 /** the account disc and the sport ball at its corner */
 const AVATAR = 34;
 const BADGE = 14;
+/** the «PRO» tag's height over the disc */
+const PRO_TAG_H = 12;
 /** the lockup's height; its ball hops over the net every few seconds (as on sign-in) */
 const LOGO_H = 22;
 
@@ -42,7 +44,7 @@ export function Header({ me }: { me: MeSummary | null }) {
       <View style={styles.right}>
         <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={targets.streak} fx={hud.streakFx} pill />
         <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
-        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} />
+        <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />
       </View>
     </View>
   );
@@ -149,9 +151,10 @@ function useStreakFx(fx: StreakFx) {
 /**
  * The account button (founder, 14 Oct: "if no initials there noone knows its the account"): your Baller on a paper
  * disc (founder, 17 Oct: Baller lives in the top bar), your initials until it loads, with your sport's ball as a small
- * crisp badge at its corner, so it reads as you and as your game. Baller hops when points land.
+ * crisp badge at its corner, so it reads as you and as your game. Baller hops when points land. With Pro a tiny «PRO»
+ * sits on the disc's top edge (founder, 20 Oct), cut out in ink like the ball, inside the 44pt hit box so nothing moves.
  */
-function Avatar({ initials, sport, points }: { initials: string; sport: string; points: number | undefined }) {
+function Avatar({ initials, sport, points, pro }: { initials: string; sport: string; points: number | undefined; pro: boolean }) {
   const t = useCopy();
   const kind: BallKind = (BALLS as string[]).includes(sport) ? (sport as BallKind) : 'tennis';
   const press = usePress();
@@ -175,7 +178,7 @@ function Avatar({ initials, sport, points }: { initials: string; sport: string; 
     <Pressable
       ref={tourRef}
       accessibilityRole="button"
-      accessibilityLabel={t.tabs.me}
+      accessibilityLabel={pro ? `${t.tabs.me}. ${t.pro.title}` : t.tabs.me}
       onPress={goMe}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
@@ -197,6 +200,11 @@ function Avatar({ initials, sport, points }: { initials: string; sport: string; 
             <Shade size={BADGE} strength={0.55} />
           </View>
         </View>
+        {pro ? (
+          <View style={styles.proTag} pointerEvents="none">
+            <Text style={styles.proTagText}>{t.pro.badge}</Text>
+          </View>
+        ) : null}
       </Animated.View>
     </Pressable>
   );
@@ -246,4 +254,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeBall: { width: BADGE, height: BADGE },
+  // «PRO» on the disc's top edge: ink cut-out, lime letters (Pro's colours across the app), centred over the avatar
+  proTag: {
+    position: 'absolute',
+    top: -PRO_TAG_H / 2 - 1,
+    alignSelf: 'center',
+    height: PRO_TAG_H,
+    paddingHorizontal: 4,
+    borderRadius: 999,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  proTagText: { fontFamily: fonts.bodyBold, fontSize: 8, lineHeight: 10, letterSpacing: 0.6, color: colors.lime },
 });

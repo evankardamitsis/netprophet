@@ -41,9 +41,11 @@ export function RecentMatches({ v }: { v: MeView }) {
             {v.nextMatchId && proOpen ? (
               <Pressable accessibilityRole="button" onPress={scout} style={styles.scoutRow}>
                 <Text style={styles.link}>{t.scout.open}</Text>
-                <View style={styles.proPill}>
-                  <Text style={styles.proPillText}>{t.pro.title}</Text>
-                </View>
+                {state?.pro ? null : (
+                  <View style={styles.proPill}>
+                    <Text style={styles.proPillText}>{t.pro.title}</Text>
+                  </View>
+                )}
               </Pressable>
             ) : null}
           </View>

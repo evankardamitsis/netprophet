@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { usePopIn, usePress } from '../lib/motion';
+import { clearSeenResultPushes } from '../lib/push';
 import { hasNewResults, useResultsSeen } from '../lib/resultsSeen';
 import { useTourTarget } from '../lib/tour';
 import type { TourTarget } from '../lib/tourSteps';
@@ -49,6 +50,8 @@ export function TabBar({ state, descriptors, navigation, resultsAt }: TabBarProp
   const { markSeen } = results;
   useEffect(() => {
     if (onResults && resultsAt) markSeen(resultsAt);
+    // on «Αποτελέσματα» the day's results are in front of you: their pushes go
+    if (onResults) void clearSeenResultPushes();
   }, [onResults, resultsAt, markSeen]);
   const resultsNew = !onResults && hasNewResults(resultsAt, results.seenAt);
   useEffect(() => {

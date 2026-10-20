@@ -611,6 +611,19 @@ export const el = {
     active: 'Ενεργό',
     /** {date} is «12 Νοε» */
     activeUntil: 'Ενεργό μέχρι {date}',
+    /** the tag over the header's avatar and next to your name on Εγώ (founder, 20 Oct: "if I'm on Pro I need to see it") */
+    badge: 'PRO',
+    /** Εγώ, with Pro: the calm status row in place of the offer */
+    youAre: 'Είσαι Pro',
+    /** «Συνδρομή · μέχρι 12/11» */
+    until: 'μέχρι {date}',
+    sources: {
+      subscription: 'Συνδρομή',
+      trial: 'Δωρεάν εβδομάδα',
+      promo: 'Δώρο από την ομάδα',
+      gift: 'Δώρο',
+      migration: 'Από την πρώτη έκδοση',
+    },
     failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     /** the row in Εγώ › Ρυθμίσεις */
     settingsLine: 'Ειδοποιήσεις για τουρνουά, κληρώσεις και τα ματς σου',
