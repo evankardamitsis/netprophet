@@ -2,11 +2,14 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { Platform } from 'react-native';
 import { resetAnalytics } from './analytics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import type { Session } from '@netprophet/db';
-import { AuthFailure, EMAIL_RE, authErrorKind } from './authErrors';
-import { supabase } from './supabase';
+import { AuthFailure, EMAIL_RE, appleName, authErrorKind } from './authErrors';
+import { markMeStale } from './meStore';
+import { api, supabase } from './supabase';
 
 export { AuthFailure, EMAIL_RE, type AuthErrorKind } from './authErrors';
 
@@ -25,6 +28,8 @@ interface AuthState {
   sendCode(email: string): Promise<void>;
   verifyCode(email: string, code: string): Promise<void>;
   signInWithGoogle(): Promise<void>;
+  /** iOS only (App Store guideline 4.8): the native Sign in with Apple sheet, then Supabase with its identity token */
+  signInWithApple(): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -36,6 +41,39 @@ const GUEST_KEY = 'np.devGuest';
  * so «Άλλη φορά» and its sample data are off unless a developer turns them on. See AuthState.guest.
  */
 export const guestAllowed = __DEV__ && process.env.EXPO_PUBLIC_DEV_GUEST === '1';
+
+/** the name Sign in with Apple gave on the first sign-in, until onboarding has used it */
+const APPLE_NAME_KEY = 'np.appleName';
+
+/** The name Apple handed over (first sign-in only), for the first onboarding step. Null when there is none. */
+export async function readAppleName(): Promise<{ first: string; surname: string } | null> {
+  try {
+    const raw = await AsyncStorage.getItem(APPLE_NAME_KEY);
+    return raw ? appleName(JSON.parse(raw) as { givenName?: string; familyName?: string }) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearAppleName(): void {
+  AsyncStorage.removeItem(APPLE_NAME_KEY).catch(() => undefined);
+}
+
+/** Sign in with Apple shows only on iOS, where the system supports it (never Android or web). */
+export function useAppleAvailable(): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return undefined;
+    let live = true;
+    AppleAuthentication.isAvailableAsync()
+      .then((v) => live && setOn(v))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, []);
+  return on;
+}
 
 function fail(err: { status?: number; code?: string; message: string }): never {
   throw new AuthFailure(authErrorKind(err), err.message);
@@ -104,8 +142,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const exchanged = await supabase.auth.exchangeCodeForSession(authCode);
         if (exchanged.error) fail(exchanged.error);
       },
+      async signInWithApple() {
+        if (!supabase || Platform.OS !== 'ios') return;
+        // Apple gets the SHA-256 of the nonce, Supabase the nonce itself, and checks one against the other
+        const raw = Crypto.randomUUID();
+        const hashed = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, raw);
+        let credential: AppleAuthentication.AppleAuthenticationCredential;
+        try {
+          credential = await AppleAuthentication.signInAsync({
+            requestedScopes: [AppleAuthentication.AppleAuthenticationScope.FULL_NAME, AppleAuthentication.AppleAuthenticationScope.EMAIL],
+            nonce: hashed,
+          });
+        } catch (err) {
+          // closed the sheet: nothing to say, as with Google
+          if ((err as { code?: string }).code === 'ERR_REQUEST_CANCELED') return;
+          fail({ message: (err as Error).message ?? 'apple sign-in failed' });
+        }
+        if (!credential.identityToken) fail({ message: 'no identity token from apple' });
+        // the name comes only now, on the first sign-in, and never in the token: keep it before the session lands
+        const name = appleName(credential.fullName);
+        if (name) await AsyncStorage.setItem(APPLE_NAME_KEY, JSON.stringify({ givenName: name.first, familyName: name.surname })).catch(() => undefined);
+        const { error } = await supabase.auth.signInWithIdToken({ provider: 'apple', token: credential.identityToken, nonce: raw });
+        if (error) fail(error);
+        if (!name || !api) return;
+        // best effort: a profile with no name of its own takes Apple's (onboarding also reads the kept one)
+        try {
+          const me = await api.getMe();
+          const p = me?.profile;
+          if (p && !p.first_name && !p.surname) {
+            await api.updateProfile({ first_name: name.first, surname: name.surname, display_name: `${name.first} ${name.surname}`.trim() });
+            markMeStale();
+          }
+        } catch {
+          // the onboarding prefill still has the kept name
+        }
+      },
       async signOut() {
         resetAnalytics();
+        clearAppleName();
         AsyncStorage.removeItem(GUEST_KEY).catch(() => undefined);
         setGuest(false);
         await supabase?.auth.signOut();

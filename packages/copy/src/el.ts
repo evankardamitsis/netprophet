@@ -373,6 +373,12 @@ export const el = {
       surname: 'Επώνυμο',
       sport: 'Τι παίζεις;',
       sports: { tennis: 'Τένις', padel: 'Padel', both: 'Και τα δύο' },
+      /** «Συνέχεια» before the step is ready: the first thing still missing, next to the button */
+      missing: {
+        name: 'Γράψε όνομα και επώνυμο',
+        sport: 'Διάλεξε τι παίζεις',
+        age: 'Τίκαρε ότι είσαι 15 και πάνω',
+      },
     },
     claim: {
       title: 'Είσαι ήδη εδώ;',
@@ -385,7 +391,7 @@ export const el = {
       taken: 'Αυτόν τον παίκτη τον έχει ήδη κάποιος άλλος. Αν είσαι εσύ, γράψε μας.',
       otherClaimed: 'Ο λογαριασμός σου έχει ήδη έναν παίκτη.',
       /** a roster player is asked for, staff approve (founder, 18 Oct 2026) */
-      requested: 'Το αίτημά σου στάλθηκε. Θα το δούμε σύντομα.',
+      requested: 'Το αίτημά σου στάλθηκε. Μέχρι να το εγκρίνουμε παίζεις κανονικά, θα σου πούμε μόλις γίνει.',
       failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     },
     play: {
@@ -426,8 +432,11 @@ export const el = {
       noneFound: 'Κανείς με αυτό το όνομα.',
       /** nobody picked: the step is optional (founder, 19 Oct) */
       later: 'Αργότερα',
-      /** nobody picked: the app follows the 6 most followed players of their area (founder, 19 Oct), so say it first */
-      noteOptional: 'Δεν είναι υποχρεωτικό. Αν δεν διαλέξεις κανέναν, θα σου βάλουμε τους 6 πιο δημοφιλείς της περιοχής σου. Τους αλλάζεις όποτε θες.',
+      /**
+       * the usual path, one line (founder, 20 Oct): picking nobody follows the 6 most followed players of their area
+       * (19 Oct), so say it up front. The link path keeps `subtitle` and its own note.
+       */
+      subtitleAuto: 'Διάλεξε όσους ξέρεις, θα τους βλέπεις πρώτους. Αν δεν διαλέξεις, σου βάζουμε τους 6 πιο δημοφιλείς της περιοχής σου.',
     },
     intro: {
       /** the step pill, «1 από 4» */

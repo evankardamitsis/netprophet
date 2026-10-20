@@ -247,6 +247,9 @@ importers:
       expo:
         specifier: ~57.0.27
         version: 57.0.27(@babel/core@7.28.0)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(expo-router@57.0.25)(react-dom@19.2.3)(react-native-web@0.21.4)(react-native-worklets@0.10.1)(react-native@0.86.3)(react@19.2.3)(typescript@5.8.3)
+      expo-apple-authentication:
+        specifier: ~57.0.2
+        version: 57.0.2(expo@57.0.27)(react-native@0.86.3)(react@19.2.3)
       expo-application:
         specifier: ~57.0.3
         version: 57.0.3(expo@57.0.27)
@@ -256,6 +259,9 @@ importers:
       expo-constants:
         specifier: ~57.0.21
         version: 57.0.21(expo@57.0.27)(react-native@0.86.3)
+      expo-crypto:
+        specifier: ~57.0.4
+        version: 57.0.4(expo@57.0.27)
       expo-device:
         specifier: ~57.0.2
         version: 57.0.2(expo@57.0.27)
@@ -13087,6 +13093,18 @@ packages:
       jest-util: 29.7.0
     dev: true
 
+  /expo-apple-authentication@57.0.2(expo@57.0.27)(react-native@0.86.3)(react@19.2.3):
+    resolution: {integrity: sha512-00KnlyRceRKski+ljZz8q8JhJZ4D3ZScU+Y0RqS6ElJ8GaCWfd7Qh5tMr47yIU/dKDrOnkzkFUM+6vyHS5HI7Q==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+    dependencies:
+      expo: 57.0.27(@babel/core@7.28.0)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(expo-router@57.0.25)(react-dom@19.2.3)(react-native-web@0.21.4)(react-native-worklets@0.10.1)(react-native@0.86.3)(react@19.2.3)(typescript@5.8.3)
+      react: 19.2.3
+      react-native: 0.86.3(@babel/core@7.28.0)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
+    dev: false
+
   /expo-application@5.3.1(expo@49.0.23):
     resolution: {integrity: sha512-HR2+K+Hm33vLw/TfbFaHrvUbRRNRco8R+3QaCKy7eJC2LFfT05kZ15ynGaKfB5DJ/oqPV3mxXVR/EfwmE++hoA==}
     peerDependencies:
@@ -13171,6 +13189,14 @@ packages:
       react-native: 0.86.3(@babel/core@7.28.0)(@react-native/metro-config@0.87.1)(@types/react@19.2.18)(react@19.2.3)
     transitivePeerDependencies:
       - supports-color
+
+  /expo-crypto@57.0.4(expo@57.0.27):
+    resolution: {integrity: sha512-LqMMs/N6wvwZyw4deVmcl3AgXgqMwCVQ9WyWf2eaWyrk99TXSKk5da3QspiLOOjnn5Qv9f8C50cDNuoyLThpdw==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 57.0.27(@babel/core@7.28.0)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(expo-router@57.0.25)(react-dom@19.2.3)(react-native-web@0.21.4)(react-native-worklets@0.10.1)(react-native@0.86.3)(react@19.2.3)(typescript@5.8.3)
+    dev: false
 
   /expo-device@57.0.2(expo@57.0.27):
     resolution: {integrity: sha512-1A0/FICR3CgrH43FeiDQP3l5eHDmiMoh4EjXfhfoHHkMgdBQdyD0kwDWskiGZlQ3E0Nd0LHkCFH6vJ1ofm/jow==}

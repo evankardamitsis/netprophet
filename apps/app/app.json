@@ -12,6 +12,7 @@
     "ios": {
       "bundleIdentifier": "gr.monadlabs.netprophet",
       "supportsTablet": false,
+      "usesAppleSignIn": true,
       "config": { "usesNonExemptEncryption": false }
     },
     "android": {
@@ -37,6 +38,7 @@
         }
       ],
       "expo-sharing",
+      "expo-apple-authentication",
       "./plugins/withSceneLifecycle"
     ],
     "experiments": {

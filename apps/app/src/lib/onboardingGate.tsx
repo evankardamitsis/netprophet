@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from './auth';
+import { guestAllowed, useAuth } from './auth';
 import { gateStatus, type OnboardingStatus } from './gateStatus';
 import { loadMe, markMeStale } from './meStore';
 import { api } from './supabase';
@@ -9,11 +9,12 @@ import { api } from './supabase';
  * Whether the signed-in account still has to go through onboarding. The answer is the profile's
  * onboarding_state.done (accounts from before onboarding are marked done on the server). It is
  * cached on the device, so later launches open straight to the app instead of waiting for get_me.
- * The welcome screen's «Άλλη φορά» (release builds) marks it done as «skipped» on first sign-in.
+ * Nobody skips it (founder, 20 Oct): «Άλλη φορά» is a development button only, so its key counts only in development
+ * and any value left on a device from before is cleared.
  */
 export type { OnboardingStatus } from './gateStatus';
 
-/** set by «Άλλη φορά» on the welcome screen */
+/** set by «Άλλη φορά» on the welcome screen (development builds with EXPO_PUBLIC_DEV_GUEST=1 only) */
 export const SKIP_ONBOARDING_KEY = 'np.skipOnboarding';
 const doneKey = (userId: string) => `np.onboarded.${userId}`;
 
@@ -60,7 +61,8 @@ export function OnboardingGateProvider({ children }: { children: ReactNode }) {
           if (live) setStatus('done');
           return;
         }
-        const skip = await AsyncStorage.getItem(SKIP_ONBOARDING_KEY).catch(() => null);
+        const skip = guestAllowed ? await AsyncStorage.getItem(SKIP_ONBOARDING_KEY).catch(() => null) : null;
+        if (!guestAllowed) await AsyncStorage.removeItem(SKIP_ONBOARDING_KEY).catch(() => undefined);
         if (skip === '1') {
           await api!.updateProfile({ onboarding_state: { ...state, done: true, via: 'skipped', at: new Date().toISOString() } });
           markMeStale();

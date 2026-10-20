@@ -10,13 +10,35 @@ import { colors, fonts, springEase } from '../theme';
  * the dashed secondary button.
  */
 
-export function Primary({ label, onPress, ready = true, busy = false, tall = false }: { label: string; onPress: () => void; ready?: boolean; busy?: boolean; tall?: boolean }) {
+/**
+ * The one blue button. Not ready, it stays dim; with `onNotReady` a press still lands and says what is missing
+ * (founder, 20 Oct) instead of doing nothing.
+ */
+export function Primary({
+  label,
+  onPress,
+  onNotReady,
+  ready = true,
+  busy = false,
+  tall = false,
+}: {
+  label: string;
+  onPress: () => void;
+  onNotReady?: () => void;
+  ready?: boolean;
+  busy?: boolean;
+  tall?: boolean;
+}) {
   const press = usePress();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: !ready || busy }}
-      onPress={() => ready && !busy && onPress()}
+      onPress={() => {
+        if (busy) return;
+        if (ready) onPress();
+        else onNotReady?.();
+      }}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
     >

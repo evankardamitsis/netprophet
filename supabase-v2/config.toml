@@ -50,7 +50,9 @@ secret = "env(GOOGLE_CLIENT_SECRET)"
 
 [auth.external.apple]
 enabled = true
-client_id = "env(APPLE_CLIENT_ID)"
+# the native iOS flow (signInWithIdToken) checks the token's audience against the bundle id; no secret needed for it.
+# The secret is only for the web OAuth flow, which v2 does not use.
+client_id = "gr.monadlabs.netprophet"
 secret = "env(APPLE_CLIENT_SECRET)"
 
 [storage]
