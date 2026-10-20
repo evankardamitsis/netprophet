@@ -10,6 +10,8 @@ export type DailyFold = {
   count: number;
   /** the closed row's second line */
   preview: string;
+  /** the closed row's action (founder, 20 Oct: say what to do, or they skip it): «Παίξε» while the game waits, else «Δες» */
+  action: string;
 };
 
 /**
@@ -25,5 +27,5 @@ export function dailyFold(quiz: GetQuizResult | null, confirmations: number, t: 
   if (quizOpen && strip) parts.push(strip.head);
   if (confirmations === 1) parts.push(t.feed.daily.confirmOne);
   else if (confirmations > 1) parts.push(fmt(t.feed.daily.confirmMany, { count: confirmations }));
-  return { show: count > 0, count, preview: parts.join(' · ') };
+  return { show: count > 0, count, preview: parts.join(' · '), action: quizOpen ? t.feed.daily.play : t.feed.daily.see };
 }

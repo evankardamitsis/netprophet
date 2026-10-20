@@ -58,7 +58,8 @@ export function verdict(card: QuizCard, t: Copy): string {
     const fact = card.content.reveal ?? `{p${r + 1}.o}.`;
     return (card.my_option - 1 === r ? t.quiz.right : t.quiz.wrong) + capitalizeFirst(renderQuizText(fact, card.content.players));
   }
-  if (card.family !== 'q') return q.counted;
+  // the others' answers show (as % on the options) once five have answered; before that, say when they will
+  if (card.family !== 'q') return card.split && card.split.length > 0 ? q.counted : q.countedSoon;
   const right = card.content.right;
   if (right === undefined || right === null) return '';
   const fact = capitalizeFirst(renderQuizText(`{p${right + 1}.o}.`, card.content.players));
