@@ -21,6 +21,8 @@ const SAMPLE: Vars = {
   category: 'Μ 40+',
   day: 'Πέμ',
   date: '22/10',
+  name: 'Νίκος Παππάς',
+  reaction: 'Μπράβο',
 };
 
 /** what each {placeholder} becomes, in a few words */
@@ -33,6 +35,8 @@ const MEANS: Record<string, string> = {
   category: 'κατηγορία',
   day: 'μέρα',
   date: 'ημερομηνία',
+  name: 'όνομα παίκτη',
+  reaction: 'η αντίδραση',
 };
 
 function problemWords(p: TextProblem): string {
