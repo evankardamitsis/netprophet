@@ -392,6 +392,8 @@ export const el = {
       otherClaimed: 'Ο λογαριασμός σου έχει ήδη έναν παίκτη.',
       /** a roster player is asked for, staff approve (founder, 18 Oct 2026) */
       requested: 'Το αίτημά σου στάλθηκε. Μέχρι να το εγκρίνουμε παίζεις κανονικά, θα σου πούμε μόλις γίνει.',
+      /** after «είμαι καινούριος»: staff make the player (founder, 20 Oct 2026) */
+      newRequested: 'Θα φτιάξουμε το προφίλ σου και θα σου πούμε μόλις είναι έτοιμο. Μέχρι τότε παίζεις κανονικά.',
       failed: 'Δεν έγινε. Ξαναδοκίμασε.',
     },
     play: {

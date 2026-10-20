@@ -350,6 +350,7 @@ export const en: Copy = {
       taken: 'Someone else already has this player. If it is you, write to us.',
       otherClaimed: 'Your account already has a player.',
       requested: 'Request sent. You can play while we check it; we will tell you once it is approved.',
+      newRequested: 'We will make your profile and tell you once it is ready. Until then, play as usual.',
       failed: 'That did not work. Try again.',
     },
     play: {

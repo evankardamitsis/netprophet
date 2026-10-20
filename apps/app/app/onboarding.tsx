@@ -449,6 +449,8 @@ export default function OnboardingScreen() {
             <>
               <Title text={o.area.title} count={count} />
               <Text style={styles.sub}>{o.area.subtitle}</Text>
+              {/* «είμαι καινούριος» sent a new player to staff (founder, 20 Oct 2026): say so on the next screen */}
+              {isNew && !own ? <Text style={styles.note}>{o.claim.newRequested}</Text> : null}
               <Segmented
                 options={REGIONS.map((r) => ({ id: r, label: o.area.regions[r] }))}
                 value={region}

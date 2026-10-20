@@ -51,9 +51,15 @@ export async function reviewMatch(matchId: string, approve: boolean): Promise<Ac
 }
 
 /** «Αιτήματα παικτών»: someone asks to be a roster player; approving makes the player theirs */
-export async function reviewClaim(userId: string, approve: boolean): Promise<ActionResult> {
+export async function reviewClaim(userId: string, approve: boolean, via: 'app' | 'link' | 'new' = 'app'): Promise<ActionResult> {
   return act('admin_review_claim', { p_user: userId, p_approve: approve }, () =>
-    approve ? 'Approved. The player is theirs now.' : 'Rejected. They can ask again or start as a new player.',
+    via === 'new'
+      ? approve
+        ? 'Approved. The new player is live and theirs.'
+        : 'Rejected. The player stays hidden; they can pick a roster player instead.'
+      : approve
+        ? 'Approved. The player is theirs now.'
+        : 'Rejected. They can ask again or start as a new player.',
   );
 }
 

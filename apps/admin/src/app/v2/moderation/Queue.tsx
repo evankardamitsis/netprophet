@@ -36,13 +36,19 @@ export interface PlayerMatch {
   votes: number;
 }
 
-/** «Αιτήματα παικτών»: a user asks to be a roster player (from «Ποιος είσαι;» or a match link) */
+/**
+ * «Αιτήματα παικτών»: a user asks to be a roster player (from «Ποιος είσαι;» or a match link), or did not find
+ * themselves and joins as a new player ('new': the player was made from their profile and waits, unseen)
+ */
 export interface ClaimRequest {
   user_id: string;
-  via: 'app' | 'link';
+  via: 'app' | 'link' | 'new';
   created_at: string;
-  user: { name: string | null; display_name: string | null; area_id: string | null; joined_at: string };
-  player: { id: string; first_name: string; surname: string; area_id: string | null; birth_year: number | null; source: string; claimed: boolean; matches: number };
+  user: { name: string | null; display_name: string | null; area_id: string | null; email: string | null; joined_at: string };
+  player: { id: string; first_name: string; surname: string; area_id: string | null; area: string | null; birth_year: number | null; source: string; claimed: boolean; matches: number };
+  /** via 'new': a roster player with the same name, and others that look like it */
+  duplicate: { player_id: string; name: string; area_id: string | null; claimed: boolean } | null;
+  similar: { player_id: string; name: string; claimed: boolean }[];
   /** other people asking for the same player */
   others: number;
 }
@@ -152,7 +158,7 @@ const SECTIONS: Record<Tab, { label: string; title: string; hint: string; noun: 
   claims: {
     label: 'Αιτήματα παικτών',
     title: 'People asking to be a player',
-    hint: 'Someone says they are this player. Approving makes the player theirs: their matches, level and page.',
+    hint: 'Someone says they are this player, or did not find themselves and joins as «Νέος παίκτης». Approving makes the player theirs (a new player goes live too); rejecting tells them with a push.',
     noun: 'requests',
   },
   matches: {
@@ -437,6 +443,67 @@ function PlayerMatchRow({ m, cues }: { m: PlayerMatch; cues: Cues }) {
 }
 
 function ClaimRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
+  if (c.via === 'new') return <NewPlayerRow c={c} cues={cues} />;
+  return <RosterClaimRow c={c} cues={cues} />;
+}
+
+/** «Δεν με βρίσκω, είμαι καινούριος»: a pending player made from their profile; approve makes it live and theirs */
+function NewPlayerRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
+  const { pending, busy, run, cardClass } = useItemAction(cues);
+  const player = `${c.player.first_name} ${c.player.surname}`;
+  const account = [c.user.display_name && c.user.display_name !== player ? c.user.display_name : null, c.user.email].filter(Boolean).join(' · ');
+  const looksLike = c.duplicate ? [c.duplicate] : c.similar;
+  return (
+    <div className={cardClass()} aria-busy={pending || undefined}>
+      <div className="v2-row between">
+        <span className="v2-muted">
+          {when(c.created_at)} · from «Ποιος είσαι;»
+        </span>
+        <span className="v2-row" style={{ gap: 6 }}>
+          <Badge tone="ink">Νέος παίκτης</Badge>
+          {c.duplicate ? <Badge tone="attention">Same name in the roster</Badge> : null}
+        </span>
+      </div>
+      <div style={{ fontSize: 16 }}>
+        <b>{player}</b> did not find themselves and joins as a new player.
+      </div>
+      <span className="v2-muted">
+        {c.player.area ?? c.player.area_id ?? 'no area yet'} · {account || 'no email'} · joined {when(c.user.joined_at)}
+        {c.player.matches > 0 ? ` · ${plural(c.player.matches, 'match', 'matches')} already` : ''}
+      </span>
+      {looksLike.length > 0 ? (
+        <span style={{ fontSize: 14 }}>
+          πιθανό ίδιο με{' '}
+          {looksLike.map((d, n) => (
+            <span key={d.player_id}>
+              {n > 0 ? ', ' : ''}
+              <b>{d.name}</b>
+              {d.claimed ? ' (has an account)' : ''}
+            </span>
+          ))}
+          . If it is the same person, reject: the push asks them to write to us, and we link them to that player.
+        </span>
+      ) : null}
+      <b style={{ fontSize: 14 }}>Make this player?</b>
+      <div className="v2-row">
+        <Secondary busy={busy === 'approve'} disabled={pending} onClick={() => run('approve', player, 'Approving', () => reviewClaim(c.user_id, true, 'new'), 'Approved')}>
+          {busy === 'approve' ? 'Approving…' : 'Έγκριση'}
+        </Secondary>
+        <Confirm
+          label="Απόρριψη"
+          question={`Reject? ${player} stays hidden and they get a push.`}
+          yes="Yes, reject"
+          working="Rejecting…"
+          busy={busy === 'reject'}
+          disabled={pending}
+          onYes={() => run('reject', player, 'Rejecting', () => reviewClaim(c.user_id, false, 'new'), 'Rejected')}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RosterClaimRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
   const { pending, busy, run, cardClass } = useItemAction(cues);
   const who = c.user.name ?? c.user.display_name ?? 'Someone';
   const player = `${c.player.first_name} ${c.player.surname}`;
