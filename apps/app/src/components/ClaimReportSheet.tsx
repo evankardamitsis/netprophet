@@ -15,11 +15,13 @@ const NOTE_MAX = 200;
  * «Δεν είμαι εγώ;» (founder, 20 Oct 2026): on a profile an account holds, anyone else can say the account may not be
  * that person. One confirm step with an optional short note, then «Το είδαμε. Θα το ελέγξουμε.»; staff check it with
  * both accounts in front of them. Built like SafetySheet. `onClose` gets the toast to show.
+ * `own`: «Δεν είμαι εγώ» on your own player (the wrong one was approved); staff unlink it and you find the right one.
  */
-export function ClaimReportSheet({ playerId, onClose }: { playerId: string | null; onClose: (toast?: string) => void }) {
+export function ClaimReportSheet({ playerId, own = false, onClose }: { playerId: string | null; own?: boolean; onClose: (toast?: string) => void }) {
   const t = useCopy();
   const s = t.safety;
-  const report = useClaimReport();
+  const words = own ? s.claimOwn : s.claim;
+  const report = useClaimReport(own ? 'not_me_own' : 'not_them');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const p = useSharedValue(0);
@@ -41,7 +43,7 @@ export function ClaimReportSheet({ playerId, onClose }: { playerId: string | nul
     setBusy(true);
     const ok = await report(playerId, note);
     setBusy(false);
-    close(ok ? s.claim.sent : s.failed);
+    close(ok ? words.sent : s.failed);
   };
 
   return (
@@ -49,8 +51,8 @@ export function ClaimReportSheet({ playerId, onClose }: { playerId: string | nul
       <Animated.View style={[styles.back, back]}>
         <Pressable accessibilityLabel={s.cancel} style={styles.fill} onPress={() => close()} />
         <Animated.View style={[styles.sheet, sheet]}>
-          <Text style={styles.title}>{s.claim.title}</Text>
-          <Text style={styles.sub}>{s.claim.sub}</Text>
+          <Text style={styles.title}>{words.title}</Text>
+          <Text style={styles.sub}>{words.sub}</Text>
           <TextInput
             value={note}
             onChangeText={setNote}

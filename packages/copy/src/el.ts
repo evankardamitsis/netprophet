@@ -364,6 +364,8 @@ export const el = {
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
     notFound: 'Αυτός ο παίκτης δεν φαίνεται πια.',
     followFailed: 'Δεν έγινε. Ξαναδοκίμασε.',
+    /** an unclaimed player's profile, for an account with no player and no open request: the usual claim, staff approve */
+    claimMe: { m: 'Αυτός είμαι εγώ', f: 'Αυτή είμαι εγώ' },
   },
   onboarding: {
     /** sign-up is for 15 and over */
@@ -1022,6 +1024,13 @@ export const el = {
       sub: 'Αν το προφίλ είναι δικό σου, ή ξέρεις ότι ο λογαριασμός του δεν είναι του ανθρώπου που δείχνει, πες μας.',
       note: 'Κάτι ακόμα που πρέπει να ξέρουμε (αν θες)',
       sent: 'Το είδαμε. Θα το ελέγξουμε.',
+    },
+    /** «Δεν είμαι εγώ» on your own player (Εγώ, your profile): staff unlink it, then you find the right one */
+    claimOwn: {
+      link: 'Δεν είμαι εγώ',
+      title: 'Λάθος παίκτης;',
+      sub: 'Αν αυτό το προφίλ δεν είσαι εσύ, πες μας. Θα το αποσυνδέσουμε από τον λογαριασμό σου.',
+      sent: 'Θα το ελέγξουμε. Μόλις το αποσυνδέσουμε, θα μπορείς να βρεις τον σωστό παίκτη.',
     },
   },
   /** full-screen moments (prototype celOn): σερί milestones for now */

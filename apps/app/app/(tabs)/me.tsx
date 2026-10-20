@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, Switch, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -13,7 +13,7 @@ import { guestAllowed, useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
-import { useApi, useBaller, useBadges, useBlocks, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useReactionPush } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useReactionPush } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
@@ -34,6 +34,9 @@ import { PLAYER_LEVEL_SHOWN } from '../../src/lib/levelShown';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BALLER_OFFERED_KEY, shouldOfferBaller } from '../../src/lib/ballerOffer';
 import { useMoments } from '../../src/lib/useMoments';
+import { ownReportShown } from '../../src/lib/claimLater';
+import { ClaimReportSheet } from '../../src/components/ClaimReportSheet';
+import { TOAST_MS, Toast } from '../../src/components/Toast';
 
 /** opening Εγώ is the player's own calm moment to meet Baller: it comes this long after the page settles */
 const MEET_BALLER_ON_ME_MS = 900;
@@ -116,7 +119,10 @@ export default function MeScreen() {
           ? sections.map((s, i) => (
               <Section key={s} i={i}>
                 {s === 'hero' ? (
-                  <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} />
+                  <>
+                    <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} />
+                    <NotMeRow />
+                  </>
                 ) : s === 'level' ? (
                   <GameLevelTile v={view} />
                 ) : s === 'quests' ? (
@@ -302,6 +308,33 @@ function NextBadge({ b }: { b: BadgeRow }) {
 function Section({ i, children }: { i: number; children: ReactNode }) {
   const enter = useStgIn(STG_MS, 50 + Math.min(i, 6) * STAGGER);
   return <Animated.View style={enter}>{children}</Animated.View>;
+}
+
+/**
+ * «Δεν είμαι εγώ» under your player (registration audit, 20 Oct 2026): the wrong player was approved. A quiet link to a
+ * report staff act on with «Αποσύνδεση»; then the account can find the right player.
+ */
+function NotMeRow() {
+  const t = useCopy();
+  const { me } = useClaimLater();
+  const [open, setOpen] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
+  useEffect(() => {
+    if (!toast) return undefined;
+    const tid = setTimeout(() => setToast(null), TOAST_MS);
+    return () => clearTimeout(tid);
+  }, [toast]);
+  if (!ownReportShown(me) || !me?.player) return null;
+  const id = me.player.id;
+  return (
+    <>
+      <Pressable accessibilityRole="button" onPress={() => setOpen(id)} style={styles.notMeHit}>
+        <Text style={styles.notMe}>{t.safety.claimOwn.link}</Text>
+      </Pressable>
+      <ClaimReportSheet playerId={open} own onClose={(text) => { setOpen(null); if (text) setToast((p) => ({ text, n: (p?.n ?? 0) + 1 })); }} />
+      {toast ? <Toast key={toast.n} text={toast.text} /> : null}
+    </>
+  );
 }
 
 /** «Εμφάνιση  Κορνίζες, φόντα, ρούχα και ρακέτα  [Νέο] ›» */
@@ -981,6 +1014,8 @@ const styles = StyleSheet.create({
   nextBox: { gap: 4 },
   nextText: { fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
   linkHit: { minHeight: 44, alignSelf: 'flex-start', justifyContent: 'center' },
+  notMeHit: { minHeight: 44, alignSelf: 'center', justifyContent: 'center' },
+  notMe: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.inkSoft, textDecorationLine: 'underline' },
   deleteLink: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.inkSoft },
   deleteBox: { gap: 8, padding: 14, borderRadius: 18, borderWidth: 2, borderColor: colors.ink },
   deleteTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: colors.ink },
