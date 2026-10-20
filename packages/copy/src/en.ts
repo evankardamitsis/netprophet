@@ -175,6 +175,7 @@ export const en: Copy = {
     errors: {
       duplicate: 'This match is already in.',
       nameRequired: 'Add a first name and surname, for you and anyone you add.',
+      rateLimited: 'That is plenty for today. Add the rest tomorrow.',
       failed: 'It did not go in. Try again.',
     },
   },

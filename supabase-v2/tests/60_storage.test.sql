@@ -25,7 +25,7 @@ select is(tests.rowcount($q$update storage.objects set name = name where bucket_
 select is(tests.rowcount($q$delete from storage.objects where bucket_id = 'avatars' and name like '%/b.png'$q$), 0, 'A cannot delete B''s file');
 select is(tests.rowcount($q$update storage.objects set metadata = '{"v":2}' where bucket_id = 'avatars' and name = (auth.uid())::text || '/a.png'$q$), 1, 'A can update their own file');
 select is(tests.rowcount($q$delete from storage.objects where bucket_id = 'avatars' and name = (auth.uid())::text || '/a.png'$q$), 1, 'A can delete their own file');
-select cmp_ok((select count(*)::int from storage.objects where bucket_id = 'avatars'), '>=', 1, 'avatars are publicly readable (B''s file is visible to A)');
+select is((select count(*)::int from storage.objects where bucket_id = 'avatars' and name like '%/b.png'), 0, 'nobody lists another user''s avatars (files are served by public URL)');
 
 -- athlete photos (folder = player id): the claimed account or staff
 select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('athlete-photos', %L, auth.uid())$$, :'p' || '/photo.jpg'), 'the claimed player can upload their photo');
@@ -36,7 +36,7 @@ select tests.login(:'adm'::uuid);
 select lives_ok(format($$insert into storage.objects (bucket_id, name, owner) values ('athlete-photos', %L, auth.uid())$$, :'p' || '/admin.jpg'), 'an admin can upload for any player');
 select tests.as_anon();
 select throws_ok(format($$insert into storage.objects (bucket_id, name) values ('athlete-photos', %L)$$, :'p' || '/anon.jpg'), '42501', null, 'anon cannot upload');
-select cmp_ok((select count(*)::int from storage.objects where bucket_id = 'athlete-photos'), '>=', 1, 'anon can read athlete photos');
+select is((select count(*)::int from storage.objects where bucket_id = 'athlete-photos'), 0, 'anon lists no athlete photos (files are served by public URL)');
 
 select * from finish();
 rollback;

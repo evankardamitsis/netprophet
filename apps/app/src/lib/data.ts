@@ -1164,7 +1164,7 @@ const MOCK_TOURNAMENTS: PublicTournament[] = [
   { id: 'kypello-voulas', name: 'Κύπελλο Βούλας', venue: null, area_id: 'voula', starts_on: null, ends_on: null },
 ];
 
-export type LogError = 'duplicate' | 'name_required' | 'failed';
+export type LogError = 'duplicate' | 'name_required' | 'rate_limited' | 'failed';
 
 export interface LogMatchData {
   tournaments: PublicTournament[];
@@ -1222,7 +1222,7 @@ export function useLogMatch(): LogMatchData {
         return { ok: true as const, matchId: r.match_id, inReview: r.review === 'pending' };
       } catch (err) {
         const code = err instanceof RpcError ? err.code : '';
-        return { ok: false as const, error: code === 'duplicate_match' ? 'duplicate' : code === 'name_required' ? 'name_required' : 'failed' } as const;
+        return { ok: false as const, error: code === 'duplicate_match' ? 'duplicate' : code === 'name_required' ? 'name_required' : code === 'rate_limited' ? 'rate_limited' : 'failed' } as const;
       }
     },
     [api],
