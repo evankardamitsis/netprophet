@@ -192,7 +192,8 @@ end;
 $$;
 revoke all on function core.own_player(uuid) from public;
 
--- the waiting new player with exactly this name (either order), when there is one and only one
+-- the waiting new player with exactly this name (either order), when there is one and only one and the roster has
+-- no active player of that name
 create or replace function core.new_player_by_name(p_first text, p_surname text)
 returns uuid
 language sql stable security definer set search_path = core, extensions, pg_temp
@@ -205,6 +206,8 @@ as $$
      and p.search_norm in (core.normalize_search(btrim(p_first) || ' ' || btrim(p_surname)),
                            core.normalize_search(btrim(p_surname) || ' ' || btrim(p_first)))
      and exists (select 1 from core.claim_requests q where q.player_id = p.id and q.via = 'new' and q.status = 'pending')
+     -- an established roster player with that name keeps their matches; staff see the duplicate on the request
+     and not exists (select 1 from core.players a where a.status = 'active' and a.search_norm = p.search_norm)
 $$;
 revoke all on function core.new_player_by_name(text, text) from public;
 
@@ -420,7 +423,8 @@ end;
 $$;
 
 -- the moderation queue (20261202000000_m3_traits): a new player someone joined as waits under «Αιτήματα παικτών»,
--- never under «New players» (it would get a second set of buttons there)
+-- never under «New players» (it would get a second set of buttons there). After a reject it shows there only if they
+-- logged a match with it meanwhile (it stays theirs and pending, like any logger's own player)
 create or replace function api.admin_moderation()
 returns jsonb
 language plpgsql stable security definer set search_path = core, extensions, pg_temp
@@ -462,7 +466,8 @@ begin
              order by p.created_at)
         from core.players p
        where p.status = 'pending'
-         and not exists (select 1 from core.claim_requests cr where cr.player_id = p.id and cr.via = 'new')), '[]'::jsonb),
+         and not exists (select 1 from core.claim_requests cr
+                          where cr.player_id = p.id and cr.via = 'new' and (cr.status = 'pending' or p.hidden))), '[]'::jsonb),
     'tournaments', coalesce((
       select jsonb_agg(jsonb_build_object('text', x.text, 'matches', x.n, 'last', x.last) order by x.last desc)
         from (select m.provenance ->> 'tournament_suggestion' as text, count(*)::int as n, max(m.starts_at) as last

@@ -481,7 +481,7 @@ function NewPlayerRow({ c, cues }: { c: ClaimRequest; cues: Cues }) {
               {d.claimed ? ' (has an account)' : ''}
             </span>
           ))}
-          . If it is the same person, reject and tell them to pick that player under «Ποιος είσαι;».
+          . If it is the same person, reject: the push asks them to write to us, and we link them to that player.
         </span>
       ) : null}
       <b style={{ fontSize: 14 }}>Make this player?</b>

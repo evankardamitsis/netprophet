@@ -2,7 +2,7 @@
 -- the onboarding name plus a request staff decide in «Αιτήματα παικτών»; replays, the area step and logging a match
 -- reuse it; approve makes it live and theirs with the claim push, reject hides it with its own push.
 begin;
-select plan(43);
+select plan(45);
 
 select tests.create_user('np-adm@test.local', 'editor') as adm \gset
 select tests.create_user('np-u@test.local') as u \gset
@@ -75,6 +75,8 @@ select tests.login(:'adm'::uuid);
 select is((select q -> 'duplicate' ->> 'name' from jsonb_array_elements(api.admin_claim_queue()) q where q ->> 'user_id' = :'w'),
           'Στέλιος Δυοφορίδης', 'staff see «πιθανό ίδιο με …»');
 select tests.logout();
+select is(core.ingest_person('{"first": "Στέλιος", "surname": "Δυοφορίδης"}'::jsonb) ->> 'player_id', :'dup',
+          'a sheet row with a roster name stays with the roster player, not the waiting one');
 
 -- a name typed later is checked again
 select tests.login(:'w'::uuid);
@@ -116,6 +118,10 @@ select results_eq(format($$select status, hidden, claimed_by_user_id from core.p
                   $$values ('pending'::text, true, null::uuid)$$, 'the player stays pending and hidden');
 select is((select claim_status from core.profiles where user_id = :'w'::uuid), 'none', 'the profile goes back to none');
 select is(pg_temp.job(:'w'::uuid) -> 'message' ->> 'title', 'Δεν φτιάξαμε το προφίλ', 'the reject push');
+select tests.login(:'adm'::uuid);
+select is((select count(*)::int from jsonb_array_elements(api.admin_moderation() -> 'players') p where p ->> 'player_id' = :'wp'),
+          0, 'a rejected new player does not come back under «New players»');
+select tests.logout();
 select is(pg_temp.job(:'w'::uuid) -> 'message' ->> 'body',
           'Δεν φτιάξαμε το προφίλ Γιώργης Παπαδοπουλάκης. Αν είσαι ήδη στο ρόστερ, γράψε μας και θα σε βρούμε.',
           'naming the profile');
