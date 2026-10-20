@@ -28,9 +28,8 @@ export function RecentMatches({ v }: { v: MeView }) {
               <Text style={[styles.letterText, { color: m.win ? colors.ink : colors.lime }]}>{m.win ? t.me.matches.win : t.me.matches.loss}</Text>
             </View>
             <View style={styles.matchText}>
-              <Text style={styles.matchAgainst} numberOfLines={1}>
-                {m.against}
-              </Text>
+              <Text style={styles.matchAgainst}>{m.against}</Text>
+              {m.with ? <Text style={styles.muted}>{m.with}</Text> : null}
               <Text style={styles.muted}>{[m.score, m.when].filter(Boolean).join(' · ')}</Text>
             </View>
           </View>

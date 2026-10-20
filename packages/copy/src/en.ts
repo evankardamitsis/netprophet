@@ -479,6 +479,8 @@ export const en: Copy = {
     },
     matches: {
       title: 'Your matches',
+      with: 'Partner: {name}',
+      vs: 'Against {names}',
       win: 'W',
       loss: 'L',
       next: 'Next match',

@@ -6,6 +6,8 @@ import { initials } from './feed';
 import { toProfile } from './players';
 import { fmt } from './votes';
 
+const fullName = (p: { first_name: string; surname: string }) => `${p.first_name} ${p.surname}`.trim();
+
 /**
  * Εγώ (prototype V2, isMeScr): the words and numbers of your own page, from get_me, get_me_page and
  * your player's profile. An account without a player (or a player without a level yet) is «new»:
@@ -30,7 +32,8 @@ export interface MeView {
   progress: { matches: number; votes: number; matchesLabel: string; votesLabel: string; cta: string };
   stats: { value: string; label: string }[];
   votes: { title: string; sub: string };
-  last: { win: boolean; score: string; when: string; against: string }[];
+  /** `with`: «Με τον Χ. Καραγιανίδη» in doubles (null in singles); `against`: the other side, full names */
+  last: { win: boolean; score: string; when: string; against: string; with: string | null }[];
   next: string | null;
   /** your next match, for «Ο αντίπαλος πριν το ματς» */
   nextMatchId: string | null;
@@ -124,7 +127,9 @@ export function toMeView(
       win: x.won,
       score: x.walkover ? t.results.walkover : x.score ?? '',
       when: profile?.last[i]?.when ?? '',
-      against: (profile?.last[i]?.against ?? '').replace(/^·\s*/, ''),
+      // two lines, never cut (founder, 20 Oct: the opponents' names were truncated): who with, then who against
+      with: x.partner.length > 0 ? fmt(t.me.matches.with, { name: x.partner.map(fullName).join(' & ') }) : null,
+      against: fmt(t.me.matches.vs, { names: x.opponents.map(fullName).join(' & ') }),
     })),
     next: profile?.next ?? null,
     nextMatchId: player?.next_match?.match_id ?? null,
