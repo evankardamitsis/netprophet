@@ -277,15 +277,14 @@ export const el = {
     wonPair: '{winner} κέρδισαν',
     next: 'Επόμενο ›',
     done: 'Εντάξει',
-    /** many results at once (founder, 20 Oct): the first plays, the rest fold into «Και 13 ακόμα: 11 σωστά, +155» */
+    /** results one by one (founder, 20 Oct); with 2 or more behind a card, «Και 13 ακόμα: 11 σωστά ›» takes them all at once */
     summary: {
       more: 'Και {n} ακόμα',
       allRight: 'όλα σωστά',
       oneRight: '1 σωστό',
       someRight: '{n} σωστά',
-      noneRight: 'κανένα σωστό αυτή τη φορά',
+      noneRight: 'κανένα σωστό',
       points: '+{points}',
-      seen: 'Τα είδα',
     },
   },
   results: {

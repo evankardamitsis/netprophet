@@ -13,6 +13,7 @@ import { Baller, type BallerHandle } from './Baller';
 import { resultStrip, type CardResult } from '../lib/feed';
 import { useHudActions } from '../lib/hud';
 import { useFadeUpIn, usePopIn, usePress, useStgIn } from '../lib/motion';
+import { showSkip, skipLine, skipStrip } from '../lib/resultsSummary';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
@@ -27,6 +28,8 @@ import { colors, ease, fonts, motion } from '../theme';
  * It comes compact (founder, 19 Oct: the first vote shows on the first screen): ✓, the winner on up to 2 lines, the
  * score, the pill and a small «Επόμενο ›», about a third of the full card. A tap opens the full card in place, height
  * and opacity on the reveal (700ms), with your Baller; a tap folds it again. The header moment plays once either way.
+ * With 2 or more results behind it (founder, 20 Oct), a quieter line under the button, «Και 13 ακόμα: 11 σωστά ›»,
+ * takes the card and all of them at once (`onSkip`): no blue, no lime, a 44pt target.
  */
 const FLY_AT = 350;
 const APPLY_OK_AT = 1080;
@@ -48,13 +51,18 @@ interface Props {
   onDone: (card: CardResult) => void;
   /** opened again from its strip: no header moment, no haptics, no Baller play */
   replay?: boolean;
+  /** the results waiting behind this one; 2 or more bring «Και 13 ακόμα: 11 σωστά ›» */
+  rest?: readonly CardResult[];
+  /** «Και 13 ακόμα» tapped: this card and the rest leave the queue together */
+  onSkip?: (card: CardResult) => void;
 }
 
-export function ResultCard({ card, more, delay, onDone, replay = false }: Props) {
+export function ResultCard({ card, more, delay, onDone, replay = false, rest = [], onSkip }: Props) {
   const t = useCopy();
   const hud = useHudActions();
   const self = useRef<View>(null);
   const press = usePress();
+  const skipPress = usePress(0.97);
   const me = useMyBaller();
   const baller = useRef<BallerHandle>(null);
 
@@ -141,6 +149,20 @@ export function ResultCard({ card, more, delay, onDone, replay = false }: Props)
     </Pressable>
   );
   const strip = resultStrip(card, t);
+  const skip =
+    onSkip && !replay && showSkip(rest) ? (
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => onSkip(card)}
+        onPressIn={skipPress.onPressIn}
+        onPressOut={skipPress.onPressOut}
+        style={styles.skipHit}
+      >
+        <Animated.Text style={[styles.skip, skipPress.style]} numberOfLines={1}>
+          {`${skipLine(rest, t)} ›`}
+        </Animated.Text>
+      </Pressable>
+    ) : null;
 
   return (
     <Animated.View
@@ -187,6 +209,7 @@ export function ResultCard({ card, more, delay, onDone, replay = false }: Props)
                 </Animated.View>
               ) : null}
               {button(false)}
+              {skip}
             </View>
           ) : (
             <View style={styles.compact}>
@@ -209,6 +232,7 @@ export function ResultCard({ card, more, delay, onDone, replay = false }: Props)
                 ) : null}
                 {button(true)}
               </View>
+              {skip ? <View style={styles.cSkip}>{skip}</View> : null}
             </View>
           )}
         </Animated.View>
@@ -250,6 +274,32 @@ export function ResultStrip({ card, onPress }: { card: CardResult; onPress: (car
   );
 }
 
+/**
+ * What «Και 13 ακόμα» left behind (founder, 20 Oct): one calm strip in the card's place, «✓ 11 σωστά · +155». The
+ * points are already in the header, so nothing flies; lime only on the ✓ and the points.
+ */
+export function SkippedStrip({ rows }: { rows: readonly CardResult[] }) {
+  const t = useCopy();
+  const enter = useStgIn(motion.revealDurShort);
+  const s = skipStrip(rows, t);
+  return (
+    <Animated.View
+      accessible
+      accessibilityLabel={[s.tick ? '✓' : '', s.text, s.points ?? ''].filter(Boolean).join(' · ')}
+      style={[styles.strip, s.tick ? styles.stripOk : styles.stripMiss, enter]}
+    >
+      {s.tick ? <Text style={styles.stripTick}>✓</Text> : null}
+      <Text style={styles.stripText} numberOfLines={1}>
+        {s.text}
+      </Text>
+      {s.points ? (
+        <Text style={styles.stripPill} numberOfLines={1}>
+          {`· ${s.points}`}
+        </Text>
+      ) : null}
+    </Animated.View>
+  );
+}
 
 const styles = StyleSheet.create({
   box: { borderRadius: 24, overflow: 'hidden' },
@@ -293,5 +343,10 @@ const styles = StyleSheet.create({
   stripNameMiss: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20 },
   stripPill: { flexShrink: 0, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
   stripPillMiss: { color: colors.mist },
+  stripText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
+  // «Και 13 ακόμα: 11 σωστά ›»: quieter than «Επόμενο ›» (mist, smaller), the whole row a 44pt target
+  skipHit: { minHeight: 44, alignSelf: 'stretch', justifyContent: 'center', paddingHorizontal: 2 },
+  skip: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 18, color: colors.mist },
+  cSkip: { paddingLeft: 32 },
   stripGlyph: { marginLeft: 'auto', fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
 });
