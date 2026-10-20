@@ -23,9 +23,8 @@ const FONT = 'Helvetica,Arial,sans-serif';
 export const esc = (s: string) =>
   s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
-const footerCopy: Record<EmailLang, { by: string; privacy: string; support: string; contact: string; privacyUrl: string; supportUrl: string }> = {
+const footerCopy: Record<EmailLang, { privacy: string; support: string; contact: string; privacyUrl: string; supportUrl: string }> = {
   el: {
-    by: 'NetProphet · από τη Monad Labs',
     privacy: 'Απόρρητο',
     support: 'Υποστήριξη',
     contact: 'Επικοινωνία',
@@ -33,7 +32,6 @@ const footerCopy: Record<EmailLang, { by: string; privacy: string; support: stri
     supportUrl: `${SITE_URL}/support`,
   },
   en: {
-    by: 'NetProphet · by Monad Labs',
     privacy: 'Privacy',
     support: 'Support',
     contact: 'Contact',
@@ -86,7 +84,6 @@ function footerHtml(lang: EmailLang, why: string): string {
     `<p style="margin:0 0 ${last ? 0 : 6}px;font-family:${FONT};font-size:13px;line-height:19px;color:${colors.inkSoft}">${html}</p>`;
   return [
     `<a href="${SITE_URL}" style="text-decoration:none"><img src="${LOGO_SMALL_URL}" width="112" height="21" alt="NetProphet" style="display:block;border:0;outline:none;width:112px;height:21px;margin:0 0 14px"></a>`,
-    line(`<strong style="color:${colors.ink}">${esc(f.by)}</strong>`),
     line(`${a(SITE_URL, 'netprophetapp.com')} &middot; ${a(f.privacyUrl, f.privacy)} &middot; ${a(f.supportUrl, f.support)}`),
     line(`${esc(f.contact)}: ${a(`mailto:${CONTACT_EMAIL}`, CONTACT_EMAIL)}`),
     `<p style="margin:14px 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${colors.inkSoft}">${esc(why)}</p>`,
@@ -97,7 +94,7 @@ function footerText(lang: EmailLang, why: string): string {
   const f = footerCopy[lang];
   return [
     '--',
-    f.by,
+    'NetProphet',
     `${SITE_URL} · ${f.privacy}: ${f.privacyUrl} · ${f.support}: ${f.supportUrl}`,
     `${f.contact}: ${CONTACT_EMAIL}`,
     '',

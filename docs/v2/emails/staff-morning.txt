@@ -1,17 +1,17 @@
 Needs you:
-- 3 decisions on the Tournaments page (2 names to match, 1 walkover): https://netprophet-admin-v2.vercel.app/v2/tournaments
-- Athens Open: 2 matches have no result 2 days on. Enter it, mark it rained off, or say it didn’t happen: https://netprophet-admin-v2.vercel.app/v2/results
-- 3 matches need a result from you: https://netprophet-admin-v2.vercel.app/v2/results
+- 3 decisions on the Tournaments page (2 names to match, 1 walkover): https://admin.netprophetapp.com/v2/tournaments
+- Athens Open: 2 matches have no result 2 days on. Enter it, mark it rained off, or say it didn’t happen: https://admin.netprophetapp.com/v2/results
+- 3 matches need a result from you: https://admin.netprophetapp.com/v2/results
 
 Good to know:
 - 1 match was postponed in the last day (rain or a moved day); they come back when the organiser puts them on a new day
-- Athens Open: 2 new players added to the roster (Νίκος Παππάς, Ελένη Δήμου). Check the spelling on https://netprophet-admin-v2.vercel.app/v2/players
+- Athens Open: 2 new players added to the roster (Νίκος Παππάς, Ελένη Δήμου). Check the spelling on https://admin.netprophetapp.com/v2/players
 
 Today:
 - Athens Open: 14 matches
 
 --
-NetProphet · by Monad Labs
+NetProphet
 https://www.netprophetapp.com · Privacy: https://www.netprophetapp.com/en/privacy · Support: https://www.netprophetapp.com/en/support
 Contact: hello@monadlabs.gr
 
