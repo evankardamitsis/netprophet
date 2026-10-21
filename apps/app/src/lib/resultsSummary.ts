@@ -72,3 +72,8 @@ export function skipIds(card: Row, rest: readonly Row[]): string[] {
 export function cardTap(full: boolean): 'open' | 'next' {
   return full ? 'next' : 'open';
 }
+
+/** once any card of this run of the deck was opened full, every following card enters full (and a tap never collapses it) */
+export function deckFull(openedInRun: boolean, cardOpened: boolean): boolean {
+  return openedInRun || cardOpened;
+}

@@ -6,7 +6,7 @@ import { useCopy } from '../i18n';
 import type { CardResult } from '../lib/feed';
 import { useHudActions } from '../lib/hud';
 import { usePress, useStgIn } from '../lib/motion';
-import { restAfter, restLine, showSkip, takeAll } from '../lib/resultsSummary';
+import { deckFull, restAfter, restLine, showSkip, takeAll } from '../lib/resultsSummary';
 import { bezier, colors, fonts, motion } from '../theme';
 import { ResultCard } from './ResultCard';
 
@@ -48,6 +48,8 @@ export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Pr
   /** the rest as it was when «Πάρε τους πόντους» was tapped */
   const takenRest = useRef<CardResult[]>([]);
   const played = useRef(0);
+  /** a card was opened full in this run of the deck: the next ones enter full (reset when the deck ends) */
+  const openRun = useRef(false);
   const applied = useRef(new Set<string>());
   const height = useRef(0);
   // the block folds in two frames: its height is pinned first, so the transition to 0 has a number to start from
@@ -107,7 +109,10 @@ export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Pr
 
   // a fresh block (new results after the last one left) waits like the first card of a visit
   useEffect(() => {
-    if (results.length === 0 && !leaving) played.current = 0;
+    if (results.length === 0 && !leaving) {
+      played.current = 0;
+      openRun.current = false;
+    }
   }, [results.length, leaving]);
 
   if (!card) return null;
@@ -146,6 +151,10 @@ export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Pr
           onDone={onNext}
           onApplied={(c) => applied.current.add(c.id)}
           stop={leaving?.taken === true}
+          startFull={deckFull(openRun.current, false)}
+          onOpened={() => {
+            openRun.current = deckFull(openRun.current, true);
+          }}
         />
       </Animated.View>
       {skip ? <TakeRow ref={row} line={restLine(rest, t)} action={t.result.summary.take} onPress={onTakeAll} disabled={leaving !== null} /> : null}

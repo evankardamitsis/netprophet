@@ -1,6 +1,6 @@
 import { getCopy } from '@netprophet/copy';
 import { describe, expect, it } from 'vitest';
-import { cardTap, restAfter, restLine, showSkip, skipIds, summaryCounts, takeAll, takenToast } from './resultsSummary';
+import { cardTap, deckFull, restAfter, restLine, showSkip, skipIds, summaryCounts, takeAll, takenToast } from './resultsSummary';
 
 const el = getCopy('el');
 const en = getCopy('en');
@@ -82,5 +82,16 @@ describe('cardTap', () => {
   it('opens the full view first, then goes to the next result', () => {
     expect(cardTap(false)).toBe('open');
     expect(cardTap(true)).toBe('next');
+  });
+});
+
+describe('deckFull', () => {
+  it('stays compact until a card was opened, then every next card enters full', () => {
+    expect(deckFull(false, false)).toBe(false);
+    expect(deckFull(false, true)).toBe(true);
+    expect(deckFull(true, false)).toBe(true);
+  });
+  it('a tap on a full card advances, never collapses', () => {
+    expect(cardTap(deckFull(true, false))).toBe('next');
   });
 });

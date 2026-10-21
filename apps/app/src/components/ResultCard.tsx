@@ -27,7 +27,7 @@ import { colors, ease, fonts, motion } from '../theme';
  * The ✓ and the «+10 · σερί 2» pill are its only lime (founder, 19 Oct: no «Το 'πες!» chip).
  * It comes compact (founder, 19 Oct: the first vote shows on the first screen): ✓, the winner on up to 2 lines, the
  * score, the pill and a small «Επόμενο ›», about a third of the full card. A tap opens the full card in place, height
- * and opacity on the reveal (700ms), with your Baller; a tap on the open card goes to the next result. The header moment plays once either way.
+ * and opacity on the reveal (700ms), with your Baller; a tap on the open card goes to the next result, and once one card was opened every next one enters open. The header moment plays once either way.
  */
 const FLY_AT = 350;
 const APPLY_OK_AT = 1080;
@@ -51,9 +51,13 @@ interface Props {
   onApplied?: (card: CardResult) => void;
   /** leaving (or taken with the rest): a moment not played yet stays unplayed, so nothing flies twice */
   stop?: boolean;
+  /** the deck already has a full card open this run: this one enters full too (founder, 21 Oct) */
+  startFull?: boolean;
+  /** the full view opened on this card by a tap */
+  onOpened?: () => void;
 }
 
-export function ResultCard({ card, more, delay, onDone, onApplied, stop = false }: Props) {
+export function ResultCard({ card, more, delay, onDone, onApplied, stop = false, startFull = false, onOpened }: Props) {
   const t = useCopy();
   const hud = useHudActions();
   const self = useRef<View>(null);
@@ -107,8 +111,9 @@ export function ResultCard({ card, more, delay, onDone, onApplied, stop = false 
   const win = useFadeUpIn(motion.revealDurShort, WIN_DELAY, 16);
 
   // compact first; a tap opens it in place
-  const [full, setFull] = useState(false);
-  const opened = useRef(false);
+  const [full, setFull] = useState(startFull);
+  // a card that enters full has no opening to play: the header moment already plays its Baller
+  const opened = useRef(startFull);
   // the box follows the content's height on the reveal; -1 until the first layout (no animation on mount)
   const height = useSharedValue(-1);
   const shown = useSharedValue(1);
@@ -133,6 +138,7 @@ export function ResultCard({ card, more, delay, onDone, onApplied, stop = false 
     shown.value = 0;
     shown.value = withTiming(1, { duration: motion.revealDur, easing: ease });
     setFull(true);
+    onOpened?.();
   };
   // your Baller plays its moment when the full card first opens from a compact one
   useEffect(() => {
