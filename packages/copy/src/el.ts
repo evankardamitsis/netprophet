@@ -1493,9 +1493,11 @@ export const el = {
       masked: '–',
       /** «Μοιράσου» on the Πρόγραμμα tab: the day's schedule as a picture */
       share: {
-        action: 'Μοιράσου',
+        action: 'Μοιράσου το πρόγραμμα της ημέρας ›',
         making: 'Ετοιμάζεται…',
         failed: 'Δεν έφυγε. Ξαναδοκίμασε.',
+        /** on the picture, above the list */
+        cardTitle: 'Πρόγραμμα αγώνων',
         title: 'Πρόγραμμα {day}',
         more: '+{n} ακόμα',
         message: '{name} · {day}\nΠρόγραμμα στο NetProphet: {url}',

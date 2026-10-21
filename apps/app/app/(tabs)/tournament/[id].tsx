@@ -17,7 +17,7 @@ import { BracketTree } from '../../../src/components/BracketTree';
 import { RoundRobin } from '../../../src/components/RoundRobin';
 import { track } from '../../../src/lib/analytics';
 import { useEntrance, usePress, useStgIn } from '../../../src/lib/motion';
-import { SCHEDULE_RATIO, scheduleMessage, shareView } from '../../../src/lib/scheduleShare';
+import { SCHEDULE_RATIO, scheduleMessage, shareView, shortName } from '../../../src/lib/scheduleShare';
 import { shareCard } from '../../../src/lib/shareCard';
 import { fmt } from '../../../src/lib/votes';
 import {
@@ -320,7 +320,7 @@ function Schedule({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const press = usePress();
-  const view = shareView(rows, t.tournaments.detail.masked);
+  const view = shareView(rows, t.tournaments.detail.masked, d.name);
   // «Μοιράσου»: the day as a picture through the share sheet (the words and the link on the web)
   const share = async () => {
     if (!day || busy) return;
@@ -342,16 +342,10 @@ function Schedule({
             <Pill key={ch.key} label={ch.label} on={ch.key === day} onPress={() => onDay(ch.key)} />
           ))}
         </ScrollView>
-        {rows.length > 0 ? (
-          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void share()} onPressIn={press.onPressIn} onPressOut={press.onPressOut} hitSlop={8} style={styles.shareHit}>
-            <Animated.Text style={[styles.share, busy && styles.shareBusy, press.style]}>{busy ? sh.making : sh.action}</Animated.Text>
-          </Pressable>
-        ) : null}
       </View>
-      {failed ? <Text style={styles.shareFailed}>{sh.failed}</Text> : null}
       {Platform.OS !== 'web' && day && rows.length > 0 ? (
         <View pointerEvents="none" style={styles.offscreen}>
-          <ScheduleCard ref={card} width={360} name={d.name} day={dayLong(day, t)} venue={d.venue} view={view} moreLabel={view.more > 0 ? fmt(sh.more, { n: view.more }) : null} />
+          <ScheduleCard ref={card} width={360} name={d.name} day={dayLong(day, t)} venue={d.venue} view={view} moreLabel={view.more > 0 ? fmt(sh.more, { n: view.more }) : null} listTitle={sh.cardTitle} />
         </View>
       ) : null}
       {courts.length > 0 ? <NowNext courts={courts} onPick={onFocus} /> : null}
@@ -371,6 +365,12 @@ function Schedule({
           />
         ))}
         {rows.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noMatchesDay}</Text> : null}
+        {rows.length > 0 ? (
+          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void share()} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.shareHit}>
+            <Animated.Text style={[styles.share, busy && styles.shareBusy, press.style]}>{busy ? sh.making : sh.action}</Animated.Text>
+          </Pressable>
+        ) : null}
+        {failed ? <Text style={styles.shareFailed}>{sh.failed}</Text> : null}
       </View>
     </View>
   );
@@ -483,7 +483,7 @@ function MatchRow({
                 {s.people.map((p, j) => (
                   <HoldName key={p.id} tournamentId={tournamentId} playerId={p.id} ctx={{ match: row.id }} onTap={() => router.push(`/player/${p.id}`)}>
                     {j > 0 ? ' & ' : ''}
-                    {p.surname} {p.first.slice(0, 1)}.
+                    {shortName(p)}
                   </HoldName>
                 ))}
               </Text>
@@ -548,10 +548,10 @@ const styles = StyleSheet.create({
   dayBar: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dayScroll: { flex: 1 },
   // quiet: a word, not a button (the screen's blue stays free)
-  shareHit: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  shareHit: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   share: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.inkSoft },
   shareBusy: { opacity: 0.5 },
-  shareFailed: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft, textAlign: 'right' },
+  shareFailed: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft, textAlign: 'center' },
   // drawn off the screen so it can be captured at its own size
   offscreen: { position: 'absolute', left: -2000, top: 0 },
   // 44pt to tap around the 40pt pill; the negative margin keeps the rows where they were
@@ -582,13 +582,13 @@ const styles = StyleSheet.create({
   sideName: { flexShrink: 1 },
   label: { ...text.label },
   // «Οι δικοί σου σήμερα»
-  yours: { gap: 8 },
+  yours: { gap: 6, paddingVertical: 10, paddingLeft: 14, borderRadius: 18, backgroundColor: colors.sand },
   yoursChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.white, maxWidth: 300 },
   yoursTime: { fontFamily: fonts.displayHeavy, fontSize: 16, lineHeight: 20, color: colors.ink, fontVariant: ['tabular-nums'] },
   yoursName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
   yoursAgainst: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
   // «Τώρα / Μετά»
-  court: { width: 236, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.white, gap: 4 },
+  court: { width: 236, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.sand, gap: 4 },
   courtOne: { width: '100%' },
   courtName: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: colors.inkSoft },
   courtLine: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 24 },
