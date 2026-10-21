@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Banner, Toast, useToast, type Tone } from "../feedback";
 import { Badge, Card, Empty, Ghost, PageHeader, SearchInput, Secondary, Section, SkeletonRows, Table, Tabs } from "../kit";
@@ -90,7 +91,15 @@ export function Roster() {
 
   return (
     <>
-      <PageHeader title="Players" intent="Everyone who can appear in a match. Fix a name, hide someone, or merge two entries for the same person." />
+      <PageHeader
+        title="Players"
+        intent="Everyone who can appear in a match. Fix a name, hide someone, or merge two entries for the same person."
+        actions={
+          <Link href="/v2/players/duplicates" className="v2-btn secondary">
+            Διπλοί παίκτες ›
+          </Link>
+        }
+      />
       {notice ? <Banner {...notice} /> : null}
       {editing ? <Editor key={editing.player_id} p={editing} done={done} onClose={() => setEditing(null)} onWorking={setNotice} /> : null}
       <Section

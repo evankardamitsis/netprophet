@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk, nameKey, sameNamedPerson } from './greek';
+import nameVectors from '../../core/test-vectors/name-keys.json';
 
 describe('greekCaps', () => {
     it('drops accents, which toUpperCase does not', () => {
@@ -168,5 +169,17 @@ describe('nameKey and sameNamedPerson (a sheet name against a roster name)', () 
         expect(sameNamedPerson('ΜΠΑΡΟΥΝΑΣ ΑΝΤΩΝΙΟΣ', 'Μπαρούνας', 'Αντώνης')).toBe(true);
         expect(sameNamedPerson('ΛΑΜΠΡΟΠΟΥΛΟΣ ΝΙΚΟΛΑΟΣ', 'Λαμπρόπουλος', 'Νίκος')).toBe(true);
         expect(sameNamedPerson('ΡΟΔΙΤΗΣ ΓΙΑΝΝΗΣ', 'Ροδίτης', 'Νίκος', true)).toBe(true);
+    });
+});
+
+/** the shared vectors: core.name_key and core.same_named_person run the same file (supabase-v2/tests/141_player_dedupe) */
+describe('name-keys vectors (the database runs the same cases)', () => {
+    const group = (fn: string) => nameVectors.groups.find((g) => g.fn === fn)?.cases ?? [];
+    it.each(group('nameKey').map((c) => [c.name, c] as const))('nameKey: %s', (_n, c) => {
+        expect(nameKey(c.input as string)).toBe(c.expected);
+    });
+    it.each(group('sameNamedPerson').map((c) => [c.name, c] as const))('sameNamedPerson: %s', (_n, c) => {
+        const i = c.input as { sheet: string; surname: string; first: string; anyFirst: boolean };
+        expect(sameNamedPerson(i.sheet, i.surname, i.first, i.anyFirst)).toBe(c.expected);
     });
 });

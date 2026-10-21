@@ -70,14 +70,15 @@ select tests.logout();
 select is((select status from core.matches where id = :'m3'::uuid), 'void', 'void: the match is gone');
 select ok(exists (select 1 from core.notifications where user_id = :'u'::uuid and type = 'moderation'), 'the logger hears the decision');
 
--- pending players: a typo of a roster player is merged into them, a new person is approved with the spelling fixed
+-- pending players: a typo of a roster player is merged into them (the same name without accents is the roster player
+-- itself since 20270307000000_player_dedupe, so the typo doubles a letter), a new person is approved with the spelling fixed
 select tests.login(:'u'::uuid);
-select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"new": {"first": "Νεστορας", "surname": "Παπαδοπουλος"}}], "result": {"won": true, "sets": "2-0"}, "tournament_suggestion": "Κύπελλο Άνοιξης"}',
+select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"new": {"first": "Νεστορας", "surname": "Παπαδοπουλλος"}}], "result": {"won": true, "sets": "2-0"}, "tournament_suggestion": "Κύπελλο Άνοιξης"}',
                             core.athens_day() - 1)::jsonb) ->> 'match_id' as m4 \gset
 select api.log_match(format('{"mode": "played", "date": "%s", "format": "singles", "opponents": [{"new": {"first": "μαρια", "surname": "καρρα"}}], "result": {"won": true, "sets": "2-0"}}',
                             core.athens_day() - 2)::jsonb) ->> 'match_id' as m5 \gset
 select tests.logout();
-select id as typo from core.players where surname = 'Παπαδοπουλος' \gset
+select id as typo from core.players where surname = 'Παπαδοπουλλος' \gset
 select id as maria from core.players where surname = 'Καρρα' \gset
 select tests.login(:'adm'::uuid);
 select is((select p -> 'similar' -> 0 ->> 'player_id' from jsonb_array_elements(api.admin_moderation() -> 'players') p where p ->> 'player_id' = :'typo'),
