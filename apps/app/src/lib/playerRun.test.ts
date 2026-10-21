@@ -121,6 +121,12 @@ describe('who the held name is, under two ids', () => {
     expect(entryOfMatch(d.days[0]!.matches[0]!, me, entries)!.tab).toBe('MD -40');
     expect(entryOfMatch(d.days[1]!.matches[0]!, me, entries)!.tab).toBe('Μ 40+');
   });
+  it('an age group written «40» on the schedule is still the «40+» entry', () => {
+    const d = tour();
+    const me = identityOf(d, 'me')!;
+    const bare = { ...d.days[1]!.matches[0]!, level: '40' };
+    expect(entryOfMatch(bare, me, entriesOf(d, me, t))!.tab).toBe('Μ 40+');
+  });
   it('nowhere in it: no identity', () => expect(identityOf(tour(), 'zzz')).toBeNull());
 });
 

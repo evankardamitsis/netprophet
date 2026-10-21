@@ -31,8 +31,9 @@ const sideOf = (m: TournamentMatch, n: 1 | 2): Person[] => m.sides.find((s) => s
 const allMatches = (d: GetTournamentResult) => d.days.flatMap((x) => x.matches);
 const rawKey = (s: string) => nameKey(s);
 const isByeRaw = (raw: string | null) => !!raw && ['BYE', 'ΒΥΕ'].includes(nameKey(raw));
-/** «-40», «65 +» and «Μ 40+» compare alike: no spaces, no gender letter in front */
-const levelKey = (s: string | null | undefined) => nameKey(s ?? '').replace(/\s+/g, '').replace(/^(Μ|Γ|W|M|Α|Ε)(?=[-+\d])/, '');
+/** «-40», «65 +» and «Μ 40+» compare alike: no spaces, no gender letter in front; «60» and «60+» are one age group */
+const levelKey = (s: string | null | undefined) =>
+  nameKey(s ?? '').replace(/\s+/g, '').replace(/^(Μ|Γ|W|M|Α|Ε)(?=[-+\d])/, '').replace(/^(\d\d)$/, '$1+');
 
 export function identityOf(d: GetTournamentResult, playerId: string): Identity | null {
   for (const m of allMatches(d))
