@@ -14,7 +14,7 @@ grant select on vec to public;
 
 select plan(
   (select count(*)::int from vec v, jsonb_array_elements(v.doc -> 'groups') g, jsonb_array_elements(g -> 'cases') c)
-  + 64);
+  + 66);
 
 -- ── the shared vectors ──
 select is(core.name_key(c ->> 'input'), c ->> 'expected', 'nameKey: ' || (c ->> 'name'))
@@ -84,6 +84,7 @@ select ok((select coalesce(v ->> 'player_id', '') <> :'har' from r where k = 'cu
 select is((select v ->> 'player_id' from r where k = 'double'), :'bril', 'a doubled letter and a cut name');
 select is((select v ->> 'player_id' from r where k = 'nt'), :'matz', 'ΝΤ for Τ and the formal first name');
 select is((select v ->> 'how' from r where k = 'claimed'), 'review', 'an account holder on a looser key goes to staff');
+select is((select v -> 'candidates' -> 0 ->> 'id' from r where k = 'claimed'), :'barou', '... with that player first on the card');
 select is((select v ->> 'player_id' from r where k = 'claimed_k'), :'seper', 'an account holder on the same key links');
 select ok((select coalesce(v ->> 'player_id', '') <> :'geo' from r where k = 'woman'), 'never across genders (Αντωνία is not Αντώνης)');
 select is((select v ->> 'how' from r where k = 'minor_cut'), 'review', 'a minor on a looser key goes to staff');
@@ -198,6 +199,13 @@ select core.merge_player(:'full_row'::uuid, :'cut_row'::uuid, :'staff'::uuid) as
 select ok((select is_minor from core.players where id = :'cut_row'::uuid), 'a minor stays a minor after a merge');
 select is((select first_name from core.players where id = :'cut_row'::uuid), 'Ελένη', 'the cut first name is filled in');
 select is((select how from core.player_merges where src_id = :'full_row'::uuid), 'manual', 'the old merge paths write the audit trail too');
+
+-- a row without a first name leaves no bare-surname alias behind
+select tests.mk_player('Θεμιστοκλής', 'Ξανθάκης') as xan \gset
+insert into core.players (first_name, surname, source) values ('', 'ΞΑΝΘΑΚΗΣ', 'import') returning id as xan_bare \gset
+select core.merge_player(:'xan_bare'::uuid, :'xan'::uuid, :'staff'::uuid) as x \gset
+select is((select count(*)::int from core.player_aliases where alias_norm = core.normalize_search('ΞΑΝΘΑΚΗΣ')), 0,
+          'merging a surname-only row adds no surname alias');
 
 -- one refusal does not stop the batch
 select tests.mk_player('Τάσος', 'Ίδιος') as same_a \gset

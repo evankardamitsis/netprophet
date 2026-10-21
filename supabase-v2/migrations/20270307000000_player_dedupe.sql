@@ -178,7 +178,12 @@ begin
       select * into v_pl from core.players where id = v_ids[1];
       -- an account holder, a hidden player or a minor only on the same key: staff look at the rest
       if v_pl.claimed_by_user_id is not null or v_pl.hidden or v_pl.is_minor then
-        return jsonb_build_object('how', 'review', 'candidates', core.ingest_candidates(p));
+        -- the player the name fits leads the card, whatever the scores say
+        return jsonb_build_object('how', 'review', 'candidates',
+          jsonb_build_array(jsonb_build_object('id', v_pl.id, 'first_name', v_pl.first_name, 'surname', v_pl.surname,
+                                               'area_id', v_pl.area_id, 'score', 1))
+          || coalesce((select jsonb_agg(c) from jsonb_array_elements(core.ingest_candidates(p)) c
+                        where (c ->> 'id')::uuid <> v_pl.id), '[]'::jsonb));
       end if;
       return jsonb_build_object('how', 'match', 'rule', 'name_in_tournament', 'player_id', v_pl.id, 'candidates', '[]'::jsonb);
     end if;
@@ -458,13 +463,13 @@ begin
      and exists (select 1 from core.trait_votes u where u.voter_user_id = t.voter_user_id and u.player_id = p_dst and u.trait_id = t.trait_id);
   update core.trait_votes set player_id = p_dst where player_id = p_src;
   update core.player_aliases set player_id = p_dst where player_id = p_src;
-  insert into core.player_aliases (alias_norm, player_id, created_by)
-  values (core.normalize_search(v_s.first_name || ' ' || v_s.surname), p_dst, p_by)
-  on conflict (alias_norm) do nothing;
-  -- the sheet's order too («ΣΕΠΕΡΗΣ ΧΑΡ»): the next import finds the survivor at once
-  insert into core.player_aliases (alias_norm, player_id, created_by)
-  values (core.normalize_search(v_s.surname || ' ' || v_s.first_name), p_dst, p_by)
-  on conflict (alias_norm) do nothing;
+  -- the old spelling, in both orders («ΣΕΠΕΡΗΣ ΧΑΡ»), finds the survivor at the next import; a surname alone never
+  -- becomes an alias (it would send every later row with that surname to one player)
+  if btrim(v_s.first_name) <> '' then
+    insert into core.player_aliases (alias_norm, player_id, created_by)
+    values (core.normalize_search(v_s.first_name || ' ' || v_s.surname), p_dst, p_by), (core.normalize_search(v_s.surname || ' ' || v_s.first_name), p_dst, p_by)
+    on conflict (alias_norm) do nothing;
+  end if;
 
   -- draw entries and the open review cards name players inside their jsonb; a uuid is unique, so its text is too
   perform set_config('np.player_merge', 'on', true);
