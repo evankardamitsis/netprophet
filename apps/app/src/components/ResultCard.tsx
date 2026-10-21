@@ -12,8 +12,7 @@ import { useMyBaller } from '../lib/data';
 import { Baller, type BallerHandle } from './Baller';
 import { resultStrip, type CardResult } from '../lib/feed';
 import { useHudActions } from '../lib/hud';
-import { useFadeUpIn, usePopIn, usePress, useStgIn } from '../lib/motion';
-import { showSkip, skipLine, skipStrip } from '../lib/resultsSummary';
+import { useFadeUpIn, usePopIn, usePress } from '../lib/motion';
 import { colors, ease, fonts, motion } from '../theme';
 
 /**
@@ -22,14 +21,12 @@ import { colors, ease, fonts, motion } from '../theme';
  * wrong call  lighter card shakes; the header applies at 250ms (σερί falls, or frosts when a freeze saved it)
  * Your Baller is on the card (founder, 17 Oct): it jumps with your win effect when you called it, sighs when not.
  * `delay` holds the whole sequence back (the first card of a batch waits 450ms, the next ones 0).
- * Once played it folds into a one-line strip (ResultStrip, founder, 19 Oct); a tap opens it again as a `replay`: the
- * card shows as it was, without flying points to the header or applying them a second time.
+ * Once played it leaves (ResultsDeck plays its exit) and nothing of it stays on Σήμερα (founder, 21 Oct): the day's
+ * results live on «Αποτελέσματα».
  * The ✓ and the «+10 · σερί 2» pill are its only lime (founder, 19 Oct: no «Το 'πες!» chip).
  * It comes compact (founder, 19 Oct: the first vote shows on the first screen): ✓, the winner on up to 2 lines, the
  * score, the pill and a small «Επόμενο ›», about a third of the full card. A tap opens the full card in place, height
  * and opacity on the reveal (700ms), with your Baller; a tap folds it again. The header moment plays once either way.
- * With 2 or more results behind it (founder, 20 Oct), a quieter line under the button, «Και 13 ακόμα: 11 σωστά ›»,
- * takes the card and all of them at once (`onSkip`): no blue, no lime, a 44pt target.
  */
 const FLY_AT = 350;
 const APPLY_OK_AT = 1080;
@@ -49,20 +46,17 @@ interface Props {
   more: boolean;
   delay: number;
   onDone: (card: CardResult) => void;
-  /** opened again from its strip: no header moment, no haptics, no Baller play */
-  replay?: boolean;
-  /** the results waiting behind this one; 2 or more bring «Και 13 ακόμα: 11 σωστά ›» */
-  rest?: readonly CardResult[];
-  /** «Και 13 ακόμα» tapped: this card and the rest leave the queue together */
-  onSkip?: (card: CardResult) => void;
+  /** its points and σερί reached the header */
+  onApplied?: (card: CardResult) => void;
+  /** leaving (or taken with the rest): a moment not played yet stays unplayed, so nothing flies twice */
+  stop?: boolean;
 }
 
-export function ResultCard({ card, more, delay, onDone, replay = false, rest = [], onSkip }: Props) {
+export function ResultCard({ card, more, delay, onDone, onApplied, stop = false }: Props) {
   const t = useCopy();
   const hud = useHudActions();
   const self = useRef<View>(null);
   const press = usePress();
-  const skipPress = usePress(0.97);
   const me = useMyBaller();
   const baller = useRef<BallerHandle>(null);
 
@@ -78,18 +72,23 @@ export function ResultCard({ card, more, delay, onDone, replay = false, rest = [
   const cardStyle = card.ok ? pop : shakeStyle;
 
   // the header's moment
+  const stopped = useRef(stop);
+  stopped.current = stop;
+  const appliedNow = useRef(onApplied);
+  appliedNow.current = onApplied;
   useEffect(() => {
-    if (replay) return undefined;
     const timers: ReturnType<typeof setTimeout>[] = [];
     timers.push(setTimeout(() => baller.current?.play(card.ok ? 'jump' : 'sigh'), delay + (card.ok ? FLY_AT : APPLY_WRONG_AT)));
     if (card.ok) {
-      timers.push(setTimeout(() => hud.fly(self, card.points, true), delay + FLY_AT));
+      timers.push(setTimeout(() => !stopped.current && hud.fly(self, card.points, true), delay + FLY_AT));
       timers.push(setTimeout(() => apply(), delay + APPLY_OK_AT));
     } else {
       timers.push(setTimeout(() => apply(), delay + APPLY_WRONG_AT));
     }
     function apply() {
+      if (stopped.current) return;
       hud.apply(card);
+      appliedNow.current?.(card);
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(
           card.ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning,
@@ -106,9 +105,9 @@ export function ResultCard({ card, more, delay, onDone, replay = false, rest = [
   // meIn: rise 16px and fade in over the short reveal (560ms)
   const win = useFadeUpIn(motion.revealDurShort, WIN_DELAY, 16);
 
-  // compact first; opened again from its strip, it shows full at once
-  const [full, setFull] = useState(replay);
-  const opened = useRef(replay);
+  // compact first; a tap opens it in place
+  const [full, setFull] = useState(false);
+  const opened = useRef(false);
   // the box follows the content's height on the reveal; -1 until the first layout (no animation on mount)
   const height = useSharedValue(-1);
   const shown = useSharedValue(1);
@@ -140,6 +139,7 @@ export function ResultCard({ card, more, delay, onDone, replay = false, rest = [
   const button = (small: boolean) => (
     <Pressable
       accessibilityRole="button"
+      disabled={stop}
       onPress={() => onDone(card)}
       onPressIn={press.onPressIn}
       onPressOut={press.onPressOut}
@@ -149,20 +149,6 @@ export function ResultCard({ card, more, delay, onDone, replay = false, rest = [
     </Pressable>
   );
   const strip = resultStrip(card, t);
-  const skip =
-    onSkip && !replay && showSkip(rest) ? (
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => onSkip(card)}
-        onPressIn={skipPress.onPressIn}
-        onPressOut={skipPress.onPressOut}
-        style={styles.skipHit}
-      >
-        <Animated.Text style={[styles.skip, skipPress.style]} numberOfLines={1}>
-          {`${skipLine(rest, t)} ›`}
-        </Animated.Text>
-      </Pressable>
-    ) : null;
 
   return (
     <Animated.View
@@ -209,7 +195,6 @@ export function ResultCard({ card, more, delay, onDone, replay = false, rest = [
                 </Animated.View>
               ) : null}
               {button(false)}
-              {skip}
             </View>
           ) : (
             <View style={styles.compact}>
@@ -232,71 +217,10 @@ export function ResultCard({ card, more, delay, onDone, replay = false, rest = [
                 ) : null}
                 {button(true)}
               </View>
-              {skip ? <View style={styles.cSkip}>{skip}</View> : null}
             </View>
           )}
         </Animated.View>
       </Pressable>
-    </Animated.View>
-  );
-}
-
-/**
- * A played result as one line (founder, 19 Oct): «✓ Δρουλιάς · +10 · σερί 2» for a right call, «Δρουλιάς κέρδισε» for a
- * miss. A tap opens the card again.
- */
-export function ResultStrip({ card, onPress }: { card: CardResult; onPress: (card: CardResult) => void }) {
-  const t = useCopy();
-  const press = usePress(0.97);
-  const enter = useStgIn(motion.revealDurShort);
-  const s = resultStrip(card, t);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={[s.tick ? '✓' : '', s.name, s.pill ?? ''].filter(Boolean).join(' · ')}
-      onPress={() => onPress(card)}
-      onPressIn={press.onPressIn}
-      onPressOut={press.onPressOut}
-    >
-      <Animated.View style={[styles.strip, card.ok ? styles.stripOk : styles.stripMiss, enter, press.style]}>
-        {s.tick ? <Text style={styles.stripTick}>✓</Text> : null}
-        <Text style={[styles.stripName, !card.ok && styles.stripNameMiss]} numberOfLines={1}>
-          {s.name}
-        </Text>
-        {s.pill ? (
-          <Text style={[styles.stripPill, !card.ok && styles.stripPillMiss]} numberOfLines={1}>
-            {`· ${s.pill}`}
-          </Text>
-        ) : null}
-        <Text style={styles.stripGlyph}>↓</Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
-/**
- * What «Και 13 ακόμα» left behind (founder, 20 Oct): one calm strip in the card's place, «✓ 11 σωστά · +155». The
- * points are already in the header, so nothing flies; lime only on the ✓ and the points.
- */
-export function SkippedStrip({ rows }: { rows: readonly CardResult[] }) {
-  const t = useCopy();
-  const enter = useStgIn(motion.revealDurShort);
-  const s = skipStrip(rows, t);
-  return (
-    <Animated.View
-      accessible
-      accessibilityLabel={[s.tick ? '✓' : '', s.text, s.points ?? ''].filter(Boolean).join(' · ')}
-      style={[styles.strip, s.tick ? styles.stripOk : styles.stripMiss, enter]}
-    >
-      {s.tick ? <Text style={styles.stripTick}>✓</Text> : null}
-      <Text style={styles.stripText} numberOfLines={1}>
-        {s.text}
-      </Text>
-      {s.points ? (
-        <Text style={styles.stripPill} numberOfLines={1}>
-          {`· ${s.points}`}
-        </Text>
-      ) : null}
     </Animated.View>
   );
 }
@@ -335,18 +259,4 @@ const styles = StyleSheet.create({
   cFoot: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 32 },
   cPill: { paddingVertical: 2, paddingHorizontal: 12 },
   cBtnHit: { minHeight: 40, marginLeft: 'auto', justifyContent: 'center', paddingHorizontal: 2 },
-  strip: { minHeight: 48, borderRadius: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stripOk: { backgroundColor: colors.ink },
-  stripMiss: { backgroundColor: colors.inkRaised },
-  stripTick: { fontFamily: fonts.bodyBold, fontSize: 17, color: colors.lime },
-  stripName: { flexShrink: 1, fontFamily: fonts.displayHeavy, fontSize: 20, lineHeight: 24, color: colors.paper },
-  stripNameMiss: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20 },
-  stripPill: { flexShrink: 0, fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
-  stripPillMiss: { color: colors.mist },
-  stripText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.paper },
-  // «Και 13 ακόμα: 11 σωστά ›»: quieter than «Επόμενο ›» (mist, smaller), the whole row a 44pt target
-  skipHit: { minHeight: 44, alignSelf: 'stretch', justifyContent: 'center', paddingHorizontal: 2 },
-  skip: { fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 18, color: colors.mist },
-  cSkip: { paddingLeft: 32 },
-  stripGlyph: { marginLeft: 'auto', fontFamily: fonts.bodyBold, fontSize: 15, color: colors.mist },
 });

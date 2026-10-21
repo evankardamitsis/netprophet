@@ -9,6 +9,7 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { Toast } from '../../src/components/Toast';
 import { useCopy } from '../../src/i18n';
 import { useResults, useResultsTournaments, type SafetyTarget } from '../../src/lib/data';
+import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useFadeUpIn, usePress } from '../../src/lib/motion';
 import { bezier, colors, fonts, motion, text, type } from '../../src/theme';
 
@@ -27,6 +28,9 @@ const EASE_CSS = cubicBezier(...bezier);
 const SEARCH_MS = 350;
 
 export default function ResultsScreen() {
+  // a tap on the open tab (or two) scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useTabScrollTop(scrollRef);
   const t = useCopy();
   // a reaction push opens Αποτελέσματα on the match's tournament (?tournament=)
   const params = useLocalSearchParams<{ tournament?: string }>();
@@ -71,6 +75,7 @@ export default function ResultsScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[1]}

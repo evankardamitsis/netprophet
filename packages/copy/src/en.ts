@@ -257,11 +257,12 @@ export const en: Copy = {
     done: 'OK',
     summary: {
       more: 'And {n} more',
-      allRight: 'all right',
-      oneRight: '1 right',
-      someRight: '{n} right',
-      noneRight: 'none right',
-      points: '+{points}',
+      right: '{n} ✓',
+      wrongOne: '1 missed',
+      wrongMany: '{n} missed',
+      take: 'Take the points',
+      taken: '+{points} points · streak {streak}',
+      takenNone: 'All seen · streak {streak}',
     },
   },
   results: {
@@ -1168,6 +1169,7 @@ export const en: Copy = {
   },
   tournaments: {
     title: 'Your tournaments',
+    subtitle: 'See draws and match schedules',
     meCount: '{count} ›',
     feedLink: 'Your tournaments · {count} ›',
     backMe: '‹ Me',

@@ -514,26 +514,6 @@ export function resultStrip(card: CardResult, t: Copy): { tick: boolean; name: s
   return { tick: false, name: fmt(pair ? t.result.wonPair : t.result.won, { winner: card.winnerSurname }), pill: card.pill };
 }
 
-/**
- * The results played this visit, as strips: one is added once its moment is over, in the order they played, never twice.
- * `open` is the strip opened again with a tap (null: all folded); a strip that leaves the list cannot stay open.
- */
-export interface SeenResults {
-  list: CardResult[];
-  open: string | null;
-}
-
-export function seenAdd(s: SeenResults, card: CardResult): SeenResults {
-  if (s.list.some((c) => c.id === card.id)) return { ...s, open: s.open === card.id ? null : s.open };
-  return { list: [...s.list, card], open: s.open };
-}
-
-/** tap a strip: it opens (any other one folds); tap «Εντάξει» on it: it folds again */
-export function seenToggle(s: SeenResults, id: string): SeenResults {
-  if (!s.list.some((c) => c.id === id)) return s;
-  return { ...s, open: s.open === id ? null : id };
-}
-
 function movedOf(head: string, tail: string, wasDay: string, t: Copy): NonNullable<CardMatch['moved']> {
   return { chip: t.match.postponed.newDay, was: `(${fmt(t.match.postponed.was, { when: wasDay })})`, head, tail };
 }

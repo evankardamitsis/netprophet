@@ -7,6 +7,7 @@ import type { Ladder, LadderRow, LadderScope } from '@netprophet/db';
 import { Segmented } from '../../src/components/OnboardingControls';
 import { useCopy } from '../../src/i18n';
 import { useBallers, useLadder } from '../../src/lib/data';
+import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { Baller } from '../../src/components/Baller';
 import { boardItems, motivation, nextLine, pickScope, podiumOf, pointRules, rowName, scopeLabel, scopeTabs } from '../../src/lib/ladder';
 import { useFadeUpIn, usePopIn, usePress, useSlamIn, useStgIn } from '../../src/lib/motion';
@@ -27,6 +28,9 @@ const ROW_MS = 400;
 const ACCENT_PAD = 10;
 
 export default function LadderScreen() {
+  // a tap on the open tab (or two) scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useTabScrollTop(scrollRef);
   const t = useCopy();
   const l = t.ladder;
   // «Όλη η Αττική» opens with the stats area; «Κατηγορία» is there once you are in a group (every response says so)
@@ -52,6 +56,7 @@ export default function LadderScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && ladder !== null} onRefresh={refresh} tintColor={colors.ink} />}

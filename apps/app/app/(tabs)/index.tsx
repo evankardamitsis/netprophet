@@ -1,7 +1,7 @@
 import { dayKey } from '@netprophet/core';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { AppState, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
@@ -12,7 +12,7 @@ import { DailyFold, ForYouSheet } from '../../src/components/DailyFold';
 import { useForYouDaily } from '../../src/lib/forYouDaily';
 import { PostponedCard } from '../../src/components/PostponedCard';
 import { QuizStrip } from '../../src/components/QuizStrip';
-import { ResultCard, ResultStrip, SkippedStrip } from '../../src/components/ResultCard';
+import { ResultsDeck } from '../../src/components/ResultsDeck';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
 import { SafetySheet } from '../../src/components/SafetySheet';
@@ -28,15 +28,12 @@ import {
   laterOpenByDefault,
   openToVote,
   runCategories,
-  seenAdd,
-  seenToggle,
   splitToday,
   type CardMatch,
   type CardResult,
-  type SeenResults,
 } from '../../src/lib/feed';
 import { useToastQueue } from '../../src/lib/toastQueue';
-import { addSkipped, restAfter, skipIds } from '../../src/lib/resultsSummary';
+import { skipIds, takenToast } from '../../src/lib/resultsSummary';
 import { MyMatchCard } from '../../src/components/MyMatchCard';
 import { ProNudge } from '../../src/components/ProNudge';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -45,9 +42,11 @@ import { hasMoment, gateQuests } from '../../src/lib/unlockLadder';
 import { useUnlocks } from '../../src/lib/unlocks';
 import { dailyFold } from '../../src/lib/dailyFold';
 import { feedbackAfterVote } from '../../src/lib/quests';
+import { quizStaleIn } from '../../src/lib/quiz';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHudActions } from '../../src/lib/hud';
 import { useTour, useTourTarget } from '../../src/lib/tour';
+import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useFadeUpIn, usePress, useStgIn } from '../../src/lib/motion';
 import { colors, fonts, motion, surfaceTints, text, type } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -61,9 +60,8 @@ import type { MomentKind } from '../../src/lib/moments';
 
 const TITLE_IN_MS = 400;
 /** the tournaments link sits after this many cards */
-/** prototype rqStart / rqNext: the first result waits 450ms, the next one comes 140ms after the last closes */
+/** prototype rqStart: the first result waits 450ms; the next one comes in as the last one's exit ends (ResultsDeck) */
 const FIRST_RESULT_DELAY = 450;
-const NEXT_RESULT_GAP = 140;
 /** a vote counts for the pacer once its reveal has played, so no moment covers the split (prototype reveal ~900ms) */
 const VOTE_SETTLE_MS = 1400;
 /** after a vote, Baller or «Για σένα» wait for this long without scrolling (founder, 18 Oct: when it makes sense) */
@@ -103,6 +101,22 @@ export default function VoteScreen() {
       void quizRefresh();
     }, [quizRefresh]),
   );
+  // a phone left open on Σήμερα gets no focus event: read again when the app comes back to the front, and when the held
+  // set runs out while you look (founder, 21 Oct: yesterday's finished quiz hid today's «Για σένα» all day)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') void quizRefresh();
+    });
+    return () => sub.remove();
+  }, [quizRefresh]);
+  const heldQuiz = quiz.quiz;
+  useEffect(() => {
+    const ms = quizStaleIn(heldQuiz, new Date());
+    // setTimeout holds 32 bits; a set that ends days away is read again on focus or foreground instead
+    if (ms === null || ms > 2 ** 31 - 1) return undefined;
+    const id = setTimeout(() => void quizRefresh(), ms + 1000);
+    return () => clearTimeout(id);
+  }, [heldQuiz, quizRefresh]);
   const questsNow = useRef(quests.quests);
   questsNow.current = quests.quests;
   const badges = useBadges();
@@ -179,8 +193,6 @@ export default function VoteScreen() {
   const onScrolled = useCallback(() => {
     lastScrollAt.current = Date.now();
   }, []);
-  const [between, setBetween] = useState(false);
-  const [played, setPlayed] = useState(0);
 
   useEffect(() => {
     hud.setPending(results);
@@ -208,37 +220,14 @@ export default function VoteScreen() {
     void unlocksNow.current.refresh();
   }, [resultIds]);
 
-  // results played this visit fold into strips; a tap opens one again (founder, 19 Oct)
-  const [seen, setSeen] = useState<SeenResults>({ list: [], open: null });
-  // one by one, every queue length (founder, 20 Oct); «Και 13 ακόμα: 11 σωστά ›» on the card takes it and the rest at
-  // once and leaves one strip in their place for the visit
-  const rest = restAfter(results);
-  const restNow = useRef(rest);
-  restNow.current = rest;
-  const [skipped, setSkipped] = useState<CardResult[]>([]);
-  const onResultDone = useCallback(
-    (card: CardResult) => {
-      setSeen((s) => seenAdd(s, card));
-      setBetween(true);
-      setPlayed((n) => n + 1);
-      dismissResult(card.id);
-      setTimeout(() => setBetween(false), NEXT_RESULT_GAP);
-    },
-    [dismissResult],
-  );
-  // one mark_inbox_seen call for all of them; their points are already in the header (only the first card of a batch
-  // is held back, and it leaves the queue here too), so nothing flies and nothing is counted twice. The queue is
-  // empty after this, so the celebrations waiting behind it can play.
-  const onSkipRest = useCallback(
-    (card: CardResult) => {
-      const rows = restNow.current.filter((r) => r.id !== card.id);
-      setSeen((s) => seenAdd(s, card));
-      setSkipped((b) => addSkipped(b, rows));
-      setPlayed((n) => n + 1);
-      dismissResult(skipIds(card, rows));
-    },
-    [dismissResult],
-  );
+  // the day's results play one by one in one block at the top (ResultsDeck, founder, 21 Oct); a played card leaves
+  // and nothing of it stays on Σήμερα
+  const onResultDone = useCallback((card: CardResult) => dismissResult(card.id), [dismissResult]);
+  // «Πάρε τους πόντους»: the toast says what came in, at once (the points fly from the row); once the block has left,
+  // one mark_inbox_seen call for the card and every result behind it. Their points are already counted on the server,
+  // so the header lands on get_me's numbers; the queue is empty after this, so the celebrations behind it can play.
+  const onTake = useCallback((taken: { points: number; streak: number }) => toast(takenToast(taken, t)), [toast, t]);
+  const onTaken = useCallback((card: CardResult, rest: CardResult[]) => dismissResult(skipIds(card, rest)), [dismissResult]);
   // every result card played: the «Βγήκαν αποτελέσματα» pushes leave the notification centre and the dot on
   // «Αποτελέσματα» goes dark (founder, 20 Oct: "if I see it, remove the notification"). A fresh read with no card
   // waiting clears the pushes too.
@@ -256,11 +245,11 @@ export default function VoteScreen() {
     }
     void clearSeenResultPushes();
   }, [loading, results.length]);
-  const current = !between ? results[0] : undefined;
+  const current = results[0];
   // celebrations wait until every result card has played and the player did something this visit (moments.ts);
   // the group order is nextGroup's; every queued quest together as one. One a visit: the rest stay unseen on the
   // server and come back next visit.
-  const group = results.length === 0 && !between ? nextGroup(celebrations) : [];
+  const group = results.length === 0 ? nextGroup(celebrations) : [];
   const groupKey = group.map((c) => c.id).join();
   const [celebrating, setCelebrating] = useState<CelebrationItem[] | undefined>(undefined);
   const [forYouOpen, setForYouOpen] = useState(false);
@@ -287,6 +276,12 @@ export default function VoteScreen() {
     if (list.some(isUnlock)) void unlocks.refresh({ afterMoment: true });
   };
 
+  // a pull reads the quiz again too, so «Για σένα» is never stuck on an old set
+  const quizRead = quiz.refresh;
+  const onPull = useCallback(() => {
+    void quizRead();
+    return refresh();
+  }, [quizRead, refresh]);
   const empty = !loading && cards.length === 0;
   const split = splitToday(cards);
   const showLater = laterChoice ?? laterOpenByDefault(split.today);
@@ -298,6 +293,8 @@ export default function VoteScreen() {
   const slot = foldSlot(shown, split.today.length);
   const firstOpen = firstOpenIndex(shown, votedNow);
   const scroller = useRef<ScrollView>(null);
+  // a tap on Σήμερα while on it (or two) scrolls back to the top
+  useTabScrollTop(scroller);
   const feedTop = useRef(0);
   const cardTops = useRef(new Map<string, number>());
   const firstOpenId = firstOpen >= 0 ? shown[firstOpen]!.id : null;
@@ -380,7 +377,7 @@ export default function VoteScreen() {
     }
   }, [calm, focused, loading, current, celebrating, forYouOpen, touring, groupKey, ballerReady, forYouReady, pick, claim, markShown]);
   // the tour starts once the feed has loaded and nothing else is in front; it scrolls Σήμερα to the top first
-  const tourReady = focused && !loading && !error && !current && !between && !celebrating && !forYouOpen && safety === null;
+  const tourReady = focused && !loading && !error && !current && !celebrating && !forYouOpen && safety === null;
   const { setHome } = tour;
   useEffect(() => {
     setHome(tourReady, () => scroller.current?.scrollTo({ y: 0, animated: false }));
@@ -410,7 +407,7 @@ export default function VoteScreen() {
         scrollEventThrottle={250}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={refresh} tintColor={colors.ink} />}
+        refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={onPull} tintColor={colors.ink} />}
       >
         <View style={styles.feed} onLayout={(e: LayoutChangeEvent) => (feedTop.current = e.nativeEvent.layout.y)}>
           <Animated.View ref={tourHead} style={[styles.head, titleIn]}>
@@ -428,26 +425,8 @@ export default function VoteScreen() {
               />
             )}
           </Animated.View>
+          <ResultsDeck results={results} firstDelay={FIRST_RESULT_DELAY} onDone={onResultDone} onTake={onTake} onTaken={onTaken} />
           {myMatch.match ? <MyMatchCard match={myMatch.match} pro={proState?.pro ?? false} /> : null}
-          {seen.list.map((r) =>
-            seen.open === r.id ? (
-              <ResultCard key={`seen-${r.id}`} card={r} more={false} delay={0} replay onDone={(c) => setSeen((s) => seenToggle(s, c.id))} />
-            ) : (
-              <ResultStrip key={`seen-${r.id}`} card={r} onPress={(c) => setSeen((s) => seenToggle(s, c.id))} />
-            ),
-          )}
-          {current ? (
-            <ResultCard
-              key={current.id}
-              card={current}
-              more={results.length > 1}
-              delay={played === 0 ? FIRST_RESULT_DELAY : 0}
-              onDone={onResultDone}
-              rest={rest}
-              onSkip={onSkipRest}
-            />
-          ) : null}
-          {skipped.length > 0 ? <SkippedStrip rows={skipped} /> : null}
           {shown.map((c, i) => (
             <Fragment key={c.id}>
               {i === slot ? extras : null}

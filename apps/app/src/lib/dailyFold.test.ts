@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, QuizCard } from '@netprophet/db';
 import { dailyFold } from './dailyFold';
+import { QUIZ_FLIGHT_MS, quizFlightStuck, quizNeedsRead, quizStaleIn } from './quiz';
 
 const el = getCopy('el');
 const en = getCopy('en');
@@ -41,5 +42,32 @@ describe('dailyFold', () => {
     expect(dailyFold(quiz(6), 0, el).show).toBe(false);
     expect(dailyFold(null, 0, el).show).toBe(false);
     expect(dailyFold(quiz(6), 1, el)).toEqual({ show: true, count: 1, preview: 'Ένα ματς να επιβεβαιώσεις', action: 'Δες' });
+  });
+});
+
+describe('a phone left on Σήμερα overnight (founder, 21 Oct)', () => {
+  // yesterday's 12 cards, all played; today's 12, none played (what get_quiz returned for the founder)
+  const yesterday: GetQuizResult = { ...quiz(12, 12), quiz_day: '2026-10-20', pro: true, next_at: '2026-10-21T06:00:00Z' };
+  const today: GetQuizResult = { ...quiz(0, 12), quiz_day: '2026-10-21', pro: true, next_at: '2026-10-22T06:00:00Z' };
+  const morning = new Date('2026-10-21T07:30:00Z');
+
+  it('the held set from yesterday is finished, so «Για σένα» hides: that was the bug', () => {
+    expect(dailyFold(yesterday, 0, el).show).toBe(false);
+  });
+
+  it('it is stale once the day turns, and Σήμερα knows when, with no focus event', () => {
+    expect(quizNeedsRead({ quiz: yesterday, error: false }, false, morning)).toBe(true);
+    expect(quizStaleIn(yesterday, new Date('2026-10-21T05:00:00Z'))).toBe(60 * 60 * 1000);
+    expect(quizStaleIn(yesterday, morning)).toBe(0);
+    expect(quizStaleIn(null, morning)).toBeNull();
+  });
+
+  it('read again, the new set shows with «Παίξε»', () => {
+    expect(dailyFold(today, 0, el)).toMatchObject({ show: true, count: 1, action: 'Παίξε' });
+  });
+
+  it('a read stuck in a frozen socket stops blocking new ones', () => {
+    expect(quizFlightStuck(0, QUIZ_FLIGHT_MS - 1)).toBe(false);
+    expect(quizFlightStuck(0, QUIZ_FLIGHT_MS)).toBe(true);
   });
 });

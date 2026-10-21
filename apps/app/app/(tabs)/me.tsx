@@ -10,6 +10,7 @@ import { namePlate } from '../../src/components/CardFrame';
 import { FlipCard } from '../../src/components/FlipCard';
 import { useCopy } from '../../src/i18n';
 import { guestAllowed, useAuth } from '../../src/lib/auth';
+import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
@@ -57,6 +58,9 @@ const STAGGER = 70;
 const ACCENT_PAD = 10;
 
 export default function MeScreen() {
+  // a tap on the open tab (or two) scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useTabScrollTop(scrollRef, 'me');
   const t = useCopy();
   const { view, loading, error, refresh } = useMePage();
   const meSeen = useRef(false);
@@ -115,6 +119,7 @@ export default function MeScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && view !== null} onRefresh={refresh} tintColor={colors.ink} />}

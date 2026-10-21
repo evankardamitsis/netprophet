@@ -88,38 +88,79 @@ export async function clearSeenResultPushes(): Promise<void> {
   }
 }
 
-/** where a tapped push opens: a schedule alert its tournament, results and reactions the Αποτελέσματα tab, a reminder Σήμερα, a claim decision Εγώ */
-export function pushRoute(data: Record<string, unknown> | undefined): string | null {
-  if (!data) return null;
-  if (data.type === 'schedule' && typeof data.tournament_id === 'string') return `/tournament/${data.tournament_id}`;
-  if (data.type === 'draw' && typeof data.tournament_id === 'string')
-    return `/tournament/${data.tournament_id}${typeof data.tab === 'string' ? `?draw=${encodeURIComponent(data.tab)}` : ''}`;
-  if (data.type === 'results') return '/results';
-  // someone reacted to your match: Αποτελέσματα, on its tournament when it has one
-  if (data.type === 'reaction')
-    return typeof data.tournament_id === 'string' ? `/results?tournament=${encodeURIComponent(data.tournament_id)}` : '/results';
-  // a match reminder: Σήμερα, where «Το ματς σου» leads
-  if (data.type === 'reminder') return '/';
-  // entries close in two days: Τουρνουά, where «Το επόμενο τουρνουά για σένα» lists it
-  if (data.type === 'entry') return '/tournaments';
-  // staff decided your roster claim: Εγώ, where the player now shows (or the claim can be asked again)
-  if (data.type === 'claim') return '/me';
-  return null;
+/**
+ * A route a push carries itself (`data.url`, e.g. the Pro pushes): an app path only, «/results» or
+ * «/tournament/abc?draw=M», never another site («//x.com», «https:», «javascript:») nor a path with a backslash.
+ */
+export function safeAppPath(url: unknown): string | null {
+  if (typeof url !== 'string') return null;
+  const u = url.trim();
+  if (!u.startsWith('/') || u.startsWith('//') || u.includes('\\') || /^\/[^?#]*:/.test(u)) return null;
+  return u;
 }
 
-/** open the right screen when a push is tapped (also the one that launched the app); returns the unsubscribe */
+const id = (v: unknown): string | null => (typeof v === 'string' && v.length > 0 ? v : null);
+
+/**
+ * Where a tapped push opens (founder, 21 Oct: "the dedicated place"). `data.url` first, so a new kind of push can
+ * carry its own place; else by `data.type`:
+ * results          Αποτελέσματα
+ * reaction         Αποτελέσματα on the match's tournament (a friendly: Αποτελέσματα)
+ * claim            Εγώ, where the player now shows (or the claim can be asked again)
+ * draw             the tournament, on that draw
+ * schedule, entry  the tournament (entry with no tournament: Τουρνουά)
+ * reminder         your match's tournament (a friendly: Σήμερα, where «Το ματς σου» leads)
+ * Anything else stays where the app opens.
+ */
+export function pushRoute(data: Record<string, unknown> | undefined | null): string | null {
+  if (!data) return null;
+  const own = safeAppPath(data.url);
+  if (own) return own;
+  const tournament = id(data.tournament_id);
+  switch (data.type) {
+    case 'results':
+      return '/results';
+    case 'reaction':
+      return tournament ? `/results?tournament=${encodeURIComponent(tournament)}` : '/results';
+    case 'claim':
+      return '/me';
+    case 'draw':
+      if (!tournament) return '/tournaments';
+      return `/tournament/${encodeURIComponent(tournament)}${typeof data.tab === 'string' ? `?draw=${encodeURIComponent(data.tab)}` : ''}`;
+    case 'schedule':
+    case 'entry':
+      return tournament ? `/tournament/${encodeURIComponent(tournament)}` : '/tournaments';
+    case 'reminder':
+      return tournament ? `/tournament/${encodeURIComponent(tournament)}` : '/';
+    default:
+      return null;
+  }
+}
+
+/** taps already handled: the launch tap is read again on every subscribe, and must open its screen once */
+const handled = new Set<string>();
+
+/**
+ * A push was tapped (also the one that launched the app): `open` gets its route once. The caller holds the route
+ * until the screens are mounted (a cold start opens on the logo and the sign-in check). Returns the unsubscribe.
+ */
 export function listenForPushTaps(open: (route: string) => void): () => void {
   const Notifications = notifications();
   if (!Notifications) return () => undefined;
-  const go = (data: Record<string, unknown> | undefined) => {
+  const go = (r: { notification: { request: { identifier: string; content: { data?: unknown } } } } | null | undefined) => {
+    if (!r) return;
+    const key = r.notification.request.identifier;
+    if (handled.has(key)) return;
+    handled.add(key);
+    const data = r.notification.request.content.data as Record<string, unknown> | undefined;
     const route = pushRoute(data);
     if (route) open(route);
     // opened from «Βγήκαν αποτελέσματα»: the other result pushes of the day go too
     if (data?.type === 'results') void clearSeenResultPushes();
   };
   void Notifications.getLastNotificationResponseAsync()
-    .then((r) => go(r?.notification.request.content.data as Record<string, unknown> | undefined))
+    .then(go)
     .catch(() => undefined);
-  const sub = Notifications.addNotificationResponseReceivedListener((r) => go(r.notification.request.content.data as Record<string, unknown> | undefined));
+  const sub = Notifications.addNotificationResponseReceivedListener(go);
   return () => sub.remove();
 }
