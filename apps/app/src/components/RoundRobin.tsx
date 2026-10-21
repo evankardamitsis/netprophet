@@ -3,6 +3,8 @@ import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useCopy } from '../i18n';
 import { useStgIn } from '../lib/motion';
+import { HoldName } from '../lib/playerHold';
+import { YoursDot } from './YoursDot';
 import type { GroupMatchView, GroupTeamView, GroupView } from '../lib/tournaments';
 import { colors, fonts } from '../theme';
 
@@ -14,34 +16,55 @@ import { colors, fonts } from '../theme';
 const REVEAL_MS = 600;
 const STAGGER = 70;
 
-export function RoundRobin({ groups }: { groups: GroupView[] }) {
+interface Marks {
+  /** «δικοί σου»: a dot and bold ink */
+  yours?: Set<string>;
+  /** one player's path: groups and matches without them step back («mine» marks theirs) */
+  focus?: boolean;
+  tournamentId?: string | null;
+}
+
+export function RoundRobin({ groups, yours, focus = false, tournamentId }: { groups: GroupView[] } & Marks) {
+  const marks: Marks = { yours, focus, tournamentId };
   return (
     <View style={styles.stack}>
       {groups.map((g, i) => (
-        <GroupCard key={`${g.name}-${i}`} g={g} i={i} />
+        <GroupCard key={`${g.name}-${i}`} g={g} i={i} marks={marks} />
       ))}
     </View>
   );
 }
 
-function Names({ team, style }: { team: GroupTeamView; style: StyleProp<TextStyle> }) {
+const ours = (team: GroupTeamView, yours: Set<string> | undefined) => !!yours && team.parts.some((p) => p.playerId !== null && yours.has(p.playerId));
+
+function Names({ team, style, marks }: { team: GroupTeamView; style: StyleProp<TextStyle>; marks: Marks }) {
+  const dot = ours(team, marks.yours);
   return (
-    <Text style={style} numberOfLines={1}>
-      {team.parts.map((p, j) => (
-        <Text key={`${p.text}-${j}`} onPress={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined} suppressHighlighting>
-          {j > 0 ? ' / ' : ''}
-          {p.text}
-        </Text>
-      ))}
-    </Text>
+    <View style={styles.namesRow}>
+      {dot ? <YoursDot /> : null}
+      <Text style={[styles.grow, style, dot && styles.nameMine]} numberOfLines={1}>
+        {team.parts.map((p, j) => (
+          <HoldName
+            key={`${p.text}-${j}`}
+            tournamentId={marks.tournamentId ?? null}
+            playerId={p.playerId}
+            onTap={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined}
+          >
+            {j > 0 ? ' / ' : ''}
+            {p.text}
+          </HoldName>
+        ))}
+      </Text>
+    </View>
   );
 }
 
-function GroupCard({ g, i }: { g: GroupView; i: number }) {
+function GroupCard({ g, i, marks }: { g: GroupView; i: number; marks: Marks }) {
   const d = useCopy().tournaments.detail;
   const enter = useStgIn(REVEAL_MS, Math.min(i, 8) * STAGGER);
+  const away = marks.focus && !g.rows.some((r) => r.team.mine);
   return (
-    <Animated.View style={[styles.card, enter]}>
+    <Animated.View style={[styles.card, away && styles.dim, enter]}>
       <Text style={styles.head}>{g.name}</Text>
       <View style={styles.tableHead}>
         <Text style={[styles.th, styles.place]}>#</Text>
@@ -51,7 +74,7 @@ function GroupCard({ g, i }: { g: GroupView; i: number }) {
       {g.rows.map((r) => (
         <View key={r.team.pos} style={[styles.row, r.team.mine && styles.mine]}>
           <Text style={[styles.cell, styles.place]}>{r.place}</Text>
-          <Names team={r.team} style={[styles.name, styles.grow, r.team.mine && styles.nameMine]} />
+          <Names team={r.team} marks={marks} style={[styles.name, r.team.mine && styles.nameMine]} />
           {r.champion ? (
             <View style={styles.chip}>
               <Text style={styles.chipText}>✓</Text>
@@ -62,23 +85,23 @@ function GroupCard({ g, i }: { g: GroupView; i: number }) {
       ))}
       <View style={styles.rule} />
       {g.matches.map((m) => (
-        <MatchLine key={m.key} m={m} />
+        <MatchLine key={m.key} m={m} marks={marks} />
       ))}
     </Animated.View>
   );
 }
 
-function MatchLine({ m }: { m: GroupMatchView }) {
+function MatchLine({ m, marks }: { m: GroupMatchView; marks: Marks }) {
   const t = useCopy();
   const d = t.tournaments.detail;
   const score = m.sets.length > 0 ? m.sets.map((s) => `${s[0]}-${s[1]}`).join('  ') : m.walkover ? t.results.walkover : null;
   return (
-    <View style={[styles.match, m.mine && styles.mine]}>
+    <View style={[styles.match, m.mine && styles.mine, marks.focus && !m.mine && styles.dim]}>
       <View style={styles.sideLine}>
-        <Names team={m.a} style={[m.winner === 1 ? styles.nameWin : styles.name, styles.grow, m.winner === 2 && styles.lost]} />
+        <Names team={m.a} marks={marks} style={[m.winner === 1 ? styles.nameWin : styles.name, m.winner === 2 && styles.lost]} />
       </View>
       <View style={styles.sideLine}>
-        <Names team={m.b} style={[m.winner === 2 ? styles.nameWin : styles.name, styles.grow, m.winner === 1 && styles.lost]} />
+        <Names team={m.b} marks={marks} style={[m.winner === 2 ? styles.nameWin : styles.name, m.winner === 1 && styles.lost]} />
       </View>
       <Text style={[styles.score, !m.played && styles.soon]}>{m.played ? score ?? '' : d.notPlayed}</Text>
     </View>
@@ -98,6 +121,8 @@ const styles = StyleSheet.create({
   place: { width: 16 },
   wins: { width: 40, textAlign: 'right' },
   grow: { flex: 1, minWidth: 0 },
+  namesRow: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dim: { opacity: 0.32 },
   name: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.ink },
   nameMine: { fontFamily: fonts.bodyBold },
   nameWin: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },

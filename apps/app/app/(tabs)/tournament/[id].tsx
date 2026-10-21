@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { YoursDot } from '../../../src/components/YoursDot';
+import { useFollowedIds } from '../../../src/lib/myPeople';
+import { HoldName, useHoldHint } from '../../../src/lib/playerHold';
+import { nowNext, openingDay, yoursSet, yoursToday, type CourtNowNext, type YoursRow } from '../../../src/lib/tournamentToday';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
 import { ScheduleCard } from '../../../src/components/ScheduleCard';
@@ -12,7 +16,7 @@ import { followToast, toggleFollow } from '../../../src/lib/follow';
 import { BracketTree } from '../../../src/components/BracketTree';
 import { RoundRobin } from '../../../src/components/RoundRobin';
 import { track } from '../../../src/lib/analytics';
-import { usePress, useStgIn } from '../../../src/lib/motion';
+import { useEntrance, usePress, useStgIn } from '../../../src/lib/motion';
 import { SCHEDULE_RATIO, scheduleMessage, shareView } from '../../../src/lib/scheduleShare';
 import { shareCard } from '../../../src/lib/shareCard';
 import { fmt } from '../../../src/lib/votes';
@@ -21,7 +25,6 @@ import {
   dayLong,
   groupViews,
   dayChips,
-  defaultDay,
   defaultSegment,
   scheduleRows,
   segmentsOf,
@@ -30,7 +33,7 @@ import {
   type ScheduleRow,
   type Segment,
 } from '../../../src/lib/tournaments';
-import { colors, fonts, text } from '../../../src/theme';
+import { colors, fonts, motion, text } from '../../../src/theme';
 
 /**
  * One tournament (prototype V2, «Τα τουρνουά σου» opened): «Πρόγραμμα» (the matches of a day, by time, mine marked)
@@ -51,10 +54,13 @@ export default function TournamentScreen() {
   const today = todayKey();
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const say = (text: string) => setToast((p) => ({ text, n: (p?.n ?? 0) + 1 }));
+  const scroller = useRef<ScrollView>(null);
+  const hint = useHoldHint(data !== null && (data.days.length > 0 || data.draws.length > 0));
 
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scroller}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && data !== null} onRefresh={refresh} tintColor={colors.ink} />}
@@ -62,13 +68,32 @@ export default function TournamentScreen() {
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>{c.detail.back}</Animated.Text>
         </Pressable>
-        {data ? <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} onToast={say} /> : null}
+        {data ? (
+          <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} onToast={say} scrollTo={(y) => scroller.current?.scrollTo({ y, animated: true })} />
+        ) : null}
         {!data && notFound ? <Text style={styles.empty}>{c.detail.notFound}</Text> : null}
         {!data && !loading && error && !notFound ? <Text style={styles.empty}>{c.detail.error}</Text> : null}
       </ScrollView>
       {toast ? <Toast key={toast.n} text={toast.text} /> : null}
+      {hint && !toast ? <Toast hint ms={HINT_MS} text={c.focus.hint} /> : null}
     </View>
   );
+}
+
+/** the hint is a sentence to read: it stays longer than a toast */
+const HINT_MS = 4200;
+/** how far above a match the page stops when it scrolls to it */
+const SCROLL_PAD = 96;
+
+/** the clock, read again each minute: what plays «now» moves on its own */
+function useMinute(on: boolean): Date {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    if (!on) return undefined;
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, [on]);
+  return now;
 }
 
 function Reveal({ i, children }: { i: number; children: ReactNode }) {
@@ -76,14 +101,44 @@ function Reveal({ i, children }: { i: number; children: ReactNode }) {
   return <Animated.View style={enter}>{children}</Animated.View>;
 }
 
-function Body({ d, today, openDraw, openDay, onToast }: { d: GetTournamentResult; today: string; openDraw?: string; openDay?: string; onToast: (text: string) => void }) {
+/** a match to scroll to and flash; `n` replays the flash when the same match is asked again */
+interface Focus {
+  id: string;
+  n: number;
+}
+
+function Body({
+  d,
+  today,
+  openDraw,
+  openDay,
+  onToast,
+  scrollTo,
+}: {
+  d: GetTournamentResult;
+  today: string;
+  openDraw?: string;
+  openDay?: string;
+  onToast: (text: string) => void;
+  scrollTo: (y: number) => void;
+}) {
   const t = useCopy();
   const segments = segmentsOf(d);
-  const [picked, setPicked] = useState<Segment | null>(
-    openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : openDay && d.days.some((x) => x.date === openDay) ? 'schedule' : null,
-  );
+  const askedDay = openDay && d.days.some((x) => x.date === openDay) ? openDay : null;
+  const [picked, setPicked] = useState<Segment | null>(openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : askedDay ? 'schedule' : null);
   const seg = picked && segments.includes(picked) ? picked : defaultSegment(d, today);
   const sub = subLine(d, t);
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : openingDay(d.days, today, askedDay);
+  const follows = useFollowedIds();
+  const yours = useMemo(() => yoursSet(d.me, follows), [d.me, follows]);
+  const todays = useMemo(() => yoursToday(d.days.find((x) => x.date === today)?.matches ?? [], yours, t), [d.days, today, yours, t]);
+  const [focus, setFocus] = useState<Focus | null>(null);
+  const goTo = (matchId: string, onDay: string) => {
+    setPicked('schedule');
+    setPickedDay(onDay);
+    setFocus((f) => ({ id: matchId, n: (f?.n ?? 0) + 1 }));
+  };
   return (
     <>
       <Reveal i={0}>
@@ -98,6 +153,11 @@ function Body({ d, today, openDraw, openDay, onToast }: { d: GetTournamentResult
           <Text style={styles.sub}>{sub}</Text>
         </Reveal>
       ) : null}
+      {todays.length > 0 ? (
+        <Reveal i={2}>
+          <YoursToday rows={todays} onPick={(matchId) => goTo(matchId, today)} />
+        </Reveal>
+      ) : null}
       {segments.length > 1 ? (
         <Reveal i={2}>
           <View style={styles.seg}>
@@ -110,8 +170,19 @@ function Body({ d, today, openDraw, openDay, onToast }: { d: GetTournamentResult
         </Reveal>
       ) : null}
       {segments.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : null}
-      {segments.length > 0 && seg === 'schedule' ? <Schedule d={d} today={today} openDay={openDay} /> : null}
-      {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={openDraw} /> : null}
+      {segments.length > 0 && seg === 'schedule' ? (
+        <Schedule
+          d={d}
+          today={today}
+          day={day}
+          onDay={setPickedDay}
+          yours={yours}
+          focus={focus}
+          onFocus={(matchId) => day && goTo(matchId, day)}
+          scrollTo={scrollTo}
+        />
+      ) : null}
+      {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={openDraw} yours={yours} /> : null}
     </>
   );
 }
@@ -153,6 +224,39 @@ function FollowPill({ d, onToast }: { d: GetTournamentResult; onToast: (text: st
   );
 }
 
+/** «Οι δικοί σου σήμερα»: one slim line of chips, only when any of them play today; a tap goes to the match */
+function YoursToday({ rows, onPick }: { rows: YoursRow[]; onPick: (matchId: string) => void }) {
+  const f = useCopy().tournaments.focus;
+  return (
+    <View style={styles.yours}>
+      <Text style={styles.label}>{f.yoursToday}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
+        {rows.map((r) => (
+          <YoursChip key={r.matchId} row={r} onPress={() => onPick(r.matchId)} />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function YoursChip({ row, onPress }: { row: YoursRow; onPress: () => void }) {
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.yoursChip, press.style]}>
+        <Text style={styles.yoursTime}>{row.time}</Text>
+        <YoursDot />
+        <Text style={styles.yoursName} numberOfLines={1}>
+          {row.name}
+        </Text>
+        <Text style={styles.yoursAgainst} numberOfLines={1}>
+          {row.against}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 /** a pill in a row of choices: ink when picked */
 function Pill({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   const press = usePress();
@@ -167,12 +271,50 @@ function Pill({ label, on, onPress }: { label: string; on: boolean; onPress: () 
 
 /* ================= Πρόγραμμα ================= */
 
-function Schedule({ d, today, openDay }: { d: GetTournamentResult; today: string; openDay?: string }) {
+function Schedule({
+  d,
+  today,
+  day,
+  onDay,
+  yours,
+  focus,
+  onFocus,
+  scrollTo,
+}: {
+  d: GetTournamentResult;
+  today: string;
+  day: string | null;
+  onDay: (day: string) => void;
+  yours: Set<string>;
+  focus: Focus | null;
+  onFocus: (matchId: string) => void;
+  scrollTo: (y: number) => void;
+}) {
   const t = useCopy();
   const chips = dayChips(d.days, today, t);
-  const [pickedDay, setPickedDay] = useState<string | null>(openDay ?? null);
-  const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : defaultDay(d.days, today) ?? d.days[0]?.date ?? null;
-  const rows = scheduleRows(d.days.find((x) => x.date === day)?.matches ?? [], d.me, t);
+  const matches = useMemo(() => d.days.find((x) => x.date === day)?.matches ?? [], [d.days, day]);
+  const rows = scheduleRows(matches, d.me, t);
+  const isToday = day === today;
+  const now = useMinute(isToday);
+  const courts = isToday ? nowNext(matches, now, t) : [];
+  // where each match sits in the page: the block's y, the list's y in it, the row's y in the list
+  const at = useRef({ block: 0, list: 0, rows: new Map<string, number>() });
+  const pending = useRef<string | null>(null);
+  const tryScroll = () => {
+    const id = pending.current;
+    const y = id ? at.current.rows.get(id) : undefined;
+    if (id && y !== undefined) {
+      pending.current = null;
+      scrollTo(Math.max(0, at.current.block + at.current.list + y - SCROLL_PAD));
+    }
+  };
+  useEffect(() => {
+    if (!focus) return;
+    pending.current = focus.id;
+    tryScroll();
+    // tryScroll reads refs only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus]);
   const sh = t.tournaments.detail.share;
   const card = useRef<View>(null);
   const [busy, setBusy] = useState(false);
@@ -193,11 +335,11 @@ function Schedule({ d, today, openDay }: { d: GetTournamentResult; today: string
     setBusy(false);
   };
   return (
-    <View style={styles.block}>
+    <View style={styles.block} onLayout={(e) => (at.current.block = e.nativeEvent.layout.y)}>
       <View style={styles.dayBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll} contentContainerStyle={styles.pillRow}>
           {chips.map((ch) => (
-            <Pill key={ch.key} label={ch.label} on={ch.key === day} onPress={() => setPickedDay(ch.key)} />
+            <Pill key={ch.key} label={ch.label} on={ch.key === day} onPress={() => onDay(ch.key)} />
           ))}
         </ScrollView>
         {rows.length > 0 ? (
@@ -212,9 +354,21 @@ function Schedule({ d, today, openDay }: { d: GetTournamentResult; today: string
           <ScheduleCard ref={card} width={360} name={d.name} day={dayLong(day, t)} venue={d.venue} view={view} moreLabel={view.more > 0 ? fmt(sh.more, { n: view.more }) : null} />
         </View>
       ) : null}
-      <View key={day ?? 'none'} style={styles.list}>
+      {courts.length > 0 ? <NowNext courts={courts} onPick={onFocus} /> : null}
+      <View key={day ?? 'none'} style={styles.list} onLayout={(e) => (at.current.list = e.nativeEvent.layout.y)}>
         {rows.map((r, i) => (
-          <MatchRow key={r.id} row={r} i={i} />
+          <MatchRow
+            key={r.id}
+            row={r}
+            i={i}
+            tournamentId={d.id}
+            yours={yours}
+            flash={focus?.id === r.id ? focus.n : 0}
+            onY={(y) => {
+              at.current.rows.set(r.id, y);
+              if (pending.current === r.id) tryScroll();
+            }}
+          />
         ))}
         {rows.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noMatchesDay}</Text> : null}
       </View>
@@ -222,7 +376,72 @@ function Schedule({ d, today, openDay }: { d: GetTournamentResult; today: string
   );
 }
 
-function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
+/** «Τώρα / Μετά» by court, above today's schedule: slim, one small card per court, sideways */
+function NowNext({ courts, onPick }: { courts: CourtNowNext[]; onPick: (matchId: string) => void }) {
+  const f = useCopy().tournaments.focus;
+  const one = courts.length === 1;
+  return (
+    <ScrollView horizontal={!one} showsHorizontalScrollIndicator={false} contentContainerStyle={one ? undefined : styles.pillRow}>
+      {courts.map((c, i) => (
+        <Reveal key={c.key} i={i}>
+          <View style={[styles.court, one && styles.courtOne]}>
+            {c.court ? (
+              <Text style={styles.courtName} numberOfLines={1}>
+                {c.court}
+              </Text>
+            ) : null}
+            {c.now ? (
+              <Pressable accessibilityRole="button" onPress={() => onPick(c.now!.matchId)} style={styles.courtLine}>
+                <Text style={styles.courtNow}>{f.now}</Text>
+                <Text style={styles.courtPair} numberOfLines={1}>
+                  {c.now.pair}
+                </Text>
+              </Pressable>
+            ) : null}
+            {c.next ? (
+              <Pressable accessibilityRole="button" onPress={() => onPick(c.next!.matchId)} style={styles.courtLine}>
+                <Text style={styles.courtNext}>{f.next}</Text>
+                <Text style={styles.courtPairSoft} numberOfLines={1}>
+                  {c.next.time} · {c.next.pair}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </Reveal>
+      ))}
+    </ScrollView>
+  );
+}
+
+const FLASH = {
+  '0%': { opacity: 0 },
+  '25%': { opacity: 1 },
+  '70%': { opacity: 1 },
+  '100%': { opacity: 0 },
+} as const;
+
+/** a ring that shows for a moment around the match the page scrolled to */
+function Flash({ onInk }: { onInk: boolean }) {
+  const style = useEntrance(FLASH, motion.revealDur + 200, 0);
+  return <Animated.View pointerEvents="none" style={[styles.flash, onInk && styles.flashOnInk, style]} />;
+}
+
+function MatchRow({
+  row,
+  i,
+  tournamentId,
+  yours,
+  flash,
+  onY,
+}: {
+  row: ScheduleRow;
+  i: number;
+  tournamentId: string;
+  yours: Set<string>;
+  /** above 0: flash now (a new number flashes again) */
+  flash: number;
+  onY: (y: number) => void;
+}) {
   const detail = useCopy().tournaments.detail;
   const dash = detail.masked;
   const postponedChip = detail.postponed;
@@ -230,7 +449,8 @@ function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
   const fg = row.mine ? colors.paper : colors.ink;
   const soft = row.mine ? colors.mist : colors.inkSoft;
   return (
-    <Animated.View style={[styles.matchCard, row.mine && styles.matchMine, enter]}>
+    <Animated.View style={[styles.matchCard, row.mine && styles.matchMine, enter]} onLayout={(e) => onY(e.nativeEvent.layout.y)}>
+      {flash > 0 ? <Flash key={flash} onInk={row.mine} /> : null}
       <View style={styles.timeCol}>
         <Text style={[row.postponed ? styles.timeOff : styles.time, { color: row.postponed ? soft : fg }]}>{row.time}</Text>
         {row.movedFrom ? <Text style={[styles.movedFrom, { color: soft }]}>{row.movedFrom}</Text> : null}
@@ -252,17 +472,24 @@ function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
             <Text style={[styles.place, { color: soft }]}>{row.place}</Text>
           </View>
         ) : null}
-        {row.sides.map((s, k) => (
-          <Text key={k} style={[s.winner ? styles.nameWin : styles.name, { color: fg }]} numberOfLines={1}>
-            {s.people.length === 0 ? dash : null}
-            {s.people.map((p, j) => (
-              <Text key={p.id} onPress={() => router.push(`/player/${p.id}`)} suppressHighlighting>
-                {j > 0 ? ' & ' : ''}
-                {p.surname} {p.first.slice(0, 1)}.
+        {row.sides.map((s, k) => {
+          // «δικοί σου»: a dot by the line, and the heavy weight while the match has no winner yet
+          const ours = s.people.some((p) => yours.has(p.id));
+          return (
+            <View key={k} style={styles.sideRow}>
+              {ours ? <YoursDot onInk={row.mine} /> : null}
+              <Text style={[styles.sideName, s.winner || (ours && !row.score) ? styles.nameWin : styles.name, { color: fg }]} numberOfLines={1}>
+                {s.people.length === 0 ? dash : null}
+                {s.people.map((p, j) => (
+                  <HoldName key={p.id} tournamentId={tournamentId} playerId={p.id} ctx={{ match: row.id }} onTap={() => router.push(`/player/${p.id}`)}>
+                    {j > 0 ? ' & ' : ''}
+                    {p.surname} {p.first.slice(0, 1)}.
+                  </HoldName>
+                ))}
               </Text>
-            ))}
-          </Text>
-        ))}
+            </View>
+          );
+        })}
         {row.score ? <Text style={[styles.score, { color: soft }]}>{row.score}</Text> : null}
       </View>
     </Animated.View>
@@ -270,7 +497,7 @@ function MatchRow({ row, i }: { row: ScheduleRow; i: number }) {
 }
 /* ================= Ταμπλό ================= */
 
-function Bracket({ d, openDraw }: { d: GetTournamentResult; openDraw?: string }) {
+function Bracket({ d, openDraw, yours }: { d: GetTournamentResult; openDraw?: string; yours: Set<string> }) {
   const t = useCopy();
   const [pickedTab, setPickedTab] = useState<string | null>(openDraw ?? null);
   const draw = d.draws.find((x) => x.tab === pickedTab) ?? d.draws[0]!;
@@ -287,11 +514,11 @@ function Bracket({ d, openDraw }: { d: GetTournamentResult; openDraw?: string })
         </ScrollView>
       ) : null}
       {robin ? (
-        groups.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : <RoundRobin key={draw.tab} groups={groups} />
+        groups.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : <RoundRobin key={draw.tab} groups={groups} yours={yours} tournamentId={d.id} />
       ) : rounds.length === 0 ? (
         <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text>
       ) : (
-        <BracketTree key={draw.tab} rounds={rounds} me={d.me} />
+        <BracketTree key={draw.tab} rounds={rounds} me={d.me} yours={yours} tournamentId={d.id} tab={draw.tab} />
       )}
     </View>
   );
@@ -351,4 +578,24 @@ const styles = StyleSheet.create({
   name: { fontFamily: fonts.display, fontSize: 26, lineHeight: 30, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   nameWin: { fontFamily: fonts.displayHeavy, fontSize: 26, lineHeight: 30, paddingBottom: 5, marginBottom: -5, color: colors.ink },
   score: { marginTop: 2, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17 },
+  sideRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  sideName: { flexShrink: 1 },
+  label: { ...text.label },
+  // «Οι δικοί σου σήμερα»
+  yours: { gap: 8 },
+  yoursChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.white, maxWidth: 300 },
+  yoursTime: { fontFamily: fonts.displayHeavy, fontSize: 16, lineHeight: 20, color: colors.ink, fontVariant: ['tabular-nums'] },
+  yoursName: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  yoursAgainst: { flexShrink: 1, fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
+  // «Τώρα / Μετά»
+  court: { width: 236, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18, backgroundColor: colors.white, gap: 4 },
+  courtOne: { width: '100%' },
+  courtName: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: colors.inkSoft },
+  courtLine: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 24 },
+  courtNow: { flexShrink: 0, paddingHorizontal: 8, paddingVertical: 1, borderRadius: 999, overflow: 'hidden', backgroundColor: colors.ink, color: colors.paper, fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 16 },
+  courtNext: { flexShrink: 0, paddingHorizontal: 8, paddingVertical: 1, borderRadius: 999, overflow: 'hidden', borderWidth: 1, borderColor: colors.mist, color: colors.inkSoft, fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14 },
+  courtPair: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.ink },
+  courtPairSoft: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 18, color: colors.inkSoft },
+  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24, borderWidth: 2.5, borderColor: colors.ink, opacity: 0 },
+  flashOnInk: { borderColor: colors.paper },
 });

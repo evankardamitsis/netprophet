@@ -10,6 +10,8 @@ import { PLAYER_LEVEL_SHOWN } from './levelShown';
 
 /** One player on a card. */
 export interface CardPerson {
+  /** the roster player, for a hold on the name («Η πορεία στο τουρνουά») */
+  id?: string;
   surname: string;
   first: string;
   /** avatar letters, «ΝΡ» */
@@ -61,6 +63,8 @@ export interface CardMatch {
   club?: ClubMark;
   /** on a later day than today (Athens): Σήμερα folds these under «Αύριο και μετά» */
   later?: boolean;
+  /** its tournament: a hold on a name opens the player's run in it */
+  tournamentId?: string;
   /** when it starts: the order of «Αύριο και μετά», and «Ξεκινά σε 40 λεπτά» on an idle card in its last hour */
   startsAt?: string;
   /** «40+», «Μ 50+ · Γυναικών», «Μικτό»: shown as its own tag, bigger than the meta line */
@@ -208,6 +212,7 @@ export function when(startsAt: string | null, now: Date, t: Copy): { label: stri
 
 function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): CardSide {
   const people = players.map((p) => ({
+    id: p.id,
     surname: p.surname,
     first: p.first_name,
     initials: initials(p.first_name, p.surname),
@@ -292,6 +297,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     place: card.tournament ? undefined : place ?? undefined,
     later,
     startsAt: card.starts_at ?? undefined,
+    tournamentId: card.tournament?.id,
     // «Αύριο και μετά» too sits by tournament (founder, 19 Oct), each tournament once; every card says its own day
     group: card.tournament
       ? {
@@ -553,14 +559,14 @@ function mockSide(p: MockPlayer, t: Copy, p2?: MockPlayer): CardSide {
   if (p2) {
     const lv = PLAYER_LEVEL_SHOWN ? `${t.level.label} ${p.level} & ${p2.level}` : null;
     return {
-      people: [p, p2].map((x) => ({ surname: x.surname, first: x.firstName, initials: initials(x.firstName, x.surname), look: mockLook(x) })),
+      people: [p, p2].map((x) => ({ id: x.id, surname: x.surname, first: x.firstName, initials: initials(x.firstName, x.surname), look: mockLook(x) })),
       sub: lv,
       level: lv,
       area: null,
     };
   }
   return {
-    people: [{ surname: p.surname, first: p.firstName, initials: initials(p.firstName, p.surname), look: mockLook(p) }],
+    people: [{ id: p.id, surname: p.surname, first: p.firstName, initials: initials(p.firstName, p.surname), look: mockLook(p) }],
     sub: PLAYER_LEVEL_SHOWN ? fmt(t.match.levelArea, { level: p.level, area: p.area }) : p.area,
     level: PLAYER_LEVEL_SHOWN ? `${t.level.label} ${p.level}` : null,
     area: p.area,
@@ -585,6 +591,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     place: placeLine(m, t) ?? undefined,
     startsAt: soonAt ? soonAt.toISOString() : undefined,
     category: m.category ? categoryCase(m.category) : undefined,
+    tournamentId: m.tournamentId,
   };
 }
 

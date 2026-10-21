@@ -3,6 +3,9 @@ import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-n
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useCopy } from '../i18n';
+import { HoldName } from '../lib/playerHold';
+import type { PathContext } from '../lib/tournamentToday';
+import { YoursDot } from './YoursDot';
 import { CARD_H, CONN_W, HEADER_H, layoutBracket, startRound, championOf } from '../lib/bracket';
 import { useStgIn } from '../lib/motion';
 import type { BracketMatch, SideView } from '../lib/tournaments';
@@ -18,7 +21,31 @@ const STAGGER = 70;
 const PAGE_PAD = 20;
 const CHAMP_W = 150;
 
-export function BracketTree({ rounds, me }: { rounds: { name: string; matches: BracketMatch[] }[]; me: string | null }) {
+/** what a card and its names know beyond the match: whose they are, and the tournament for a hold on a name */
+interface Marks {
+  me: string | null;
+  /** «δικοί σου»: their names get a dot and bold ink */
+  yours?: Set<string>;
+  /** a player's path (match keys): those cards stand out, the rest step back */
+  lit?: Set<string> | null;
+  /** the slot they move to if they win the match the sheet is about («Αν κερδίσει»): drawn dashed */
+  maybe?: string | null;
+  tournamentId?: string | null;
+  /** the draw's tab, so a hold on a name knows its slot */
+  tab?: string | null;
+}
+
+export function BracketTree({
+  rounds,
+  me,
+  yours,
+  lit,
+  maybe,
+  tournamentId,
+  tab,
+  focusKey,
+}: { rounds: { name: string; matches: BracketMatch[] }[]; /** start on the column of this match (a player's path) */ focusKey?: string | null } & Marks) {
+  const marks: Marks = { me, yours, lit, maybe, tournamentId, tab };
   const { width: screen } = useWindowDimensions();
   const scroller = useRef<ScrollView>(null);
   const placed = useRef(false);
@@ -26,7 +53,8 @@ export function BracketTree({ rounds, me }: { rounds: { name: string; matches: B
   const champion = championOf(rounds);
   const layout = layoutBracket(rounds.map((r) => r.matches.length), colW, champion ? CHAMP_W : 0);
   const step = colW + CONN_W;
-  const first = startRound(rounds);
+  const focused = focusKey ? rounds.findIndex((r) => r.matches.some((m) => m.key === focusKey)) : -1;
+  const first = focused >= 0 ? focused : startRound(rounds);
   // start on the earliest round still to play; once the content has a size (and again if it grows, until placed)
   const onSize = (w: number) => {
     if (placed.current || w <= 0) return;
@@ -54,7 +82,7 @@ export function BracketTree({ rounds, me }: { rounds: { name: string; matches: B
               .filter((c) => c.round === ri)
               .map((c) => (
                 <View key={r.matches[c.index]!.key} style={{ position: 'absolute', left: 0, top: HEADER_H + c.y, width: c.w, height: c.h }}>
-                  <Card m={r.matches[c.index]!} me={me} />
+                  <Card m={r.matches[c.index]!} marks={marks} />
                 </View>
               ))}
           </Column>
@@ -64,7 +92,7 @@ export function BracketTree({ rounds, me }: { rounds: { name: string; matches: B
         ))}
         {champion && layout.champion ? (
           <Column x={layout.champion.x} w={CHAMP_W} i={rounds.length} height={HEADER_H + layout.height}>
-            <Champion side={champion} top={HEADER_H + layout.champion.cy - CARD_H / 2} />
+            <Champion side={champion} top={HEADER_H + layout.champion.cy - CARD_H / 2} marks={marks} />
           </Column>
         ) : null}
       </View>
@@ -78,13 +106,17 @@ function Column({ x, w, i, height, children }: { x: number; w: number; i: number
 }
 
 const mineIn = (s: SideView, me: string | null) => me !== null && s.parts.some((p) => p.playerId === me);
+const yoursIn = (s: SideView, yours: Set<string> | undefined) => !!yours && s.parts.some((p) => p.playerId !== null && yours.has(p.playerId));
 
-function Card({ m, me }: { m: BracketMatch; me: string | null }) {
-  const mine = mineIn(m.sides[0], me) || mineIn(m.sides[1], me);
+function Card({ m, marks }: { m: BracketMatch; marks: Marks }) {
+  const { me, lit } = marks;
+  const onPath = !!lit && lit.has(m.key);
+  const ahead = marks.maybe === m.key;
+  const mine = lit ? onPath : mineIn(m.sides[0], me) || mineIn(m.sides[1], me);
   return (
-    <View style={[styles.card, mine && styles.cardMine, m.note ? styles.cardWithNote : null]}>
-      <Row side={m.sides[0]} n={1} m={m} me={me} />
-      <Row side={m.sides[1]} n={2} m={m} me={me} />
+    <View style={[styles.card, mine && styles.cardMine, ahead && styles.cardAhead, lit && !onPath && !ahead && styles.cardDim, m.note ? styles.cardWithNote : null]}>
+      <Row side={m.sides[0]} n={1} m={m} marks={marks} />
+      <Row side={m.sides[1]} n={2} m={m} marks={marks} />
       {m.note ? (
         <View style={styles.noteBox} pointerEvents="none">
           <Text style={styles.note} numberOfLines={2}>
@@ -96,7 +128,26 @@ function Card({ m, me }: { m: BracketMatch; me: string | null }) {
   );
 }
 
-function Row({ side, n, m, me }: { side: SideView; n: 1 | 2; m: BracketMatch; me: string | null }) {
+/** the names of one side: a tap opens the profile, a hold the player's run in this tournament */
+function Names({ side, tournamentId, ctx = null }: { side: SideView; tournamentId?: string | null; ctx?: PathContext }) {
+  return side.parts.map((p, j) => (
+    <HoldName
+      key={`${p.text}-${j}`}
+      tournamentId={tournamentId ?? null}
+      playerId={p.playerId}
+      ctx={ctx}
+      onTap={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined}
+    >
+      {j > 0 ? ' / ' : ''}
+      {p.text}
+    </HoldName>
+  ));
+}
+
+function Row({ side, n, m, marks }: { side: SideView; n: 1 | 2; m: BracketMatch; marks: Marks }) {
+  const { me, yours, tournamentId, tab } = marks;
+  const [round, slot] = m.key.split('-').map(Number);
+  const ctx: PathContext = tab && round && slot ? { tab, round, slot } : null;
   const d = useCopy().tournaments.detail;
   if (side.bye) {
     return (
@@ -108,17 +159,14 @@ function Row({ side, n, m, me }: { side: SideView; n: 1 | 2; m: BracketMatch; me
   const won = m.winner === n;
   const lost = m.winner !== null && !won;
   const mineRow = mineIn(side, me);
-  const nameStyle = [styles.name, won && styles.nameWin, lost && styles.nameLost, mineRow && !lost && styles.nameMine];
+  const ours = yoursIn(side, yours);
+  const nameStyle = [styles.name, won && styles.nameWin, lost && styles.nameLost, (mineRow || ours) && !lost && styles.nameMine];
   return (
     <View style={styles.row}>
       <Text style={styles.seed}>{side.seed ?? ''}</Text>
+      {ours ? <YoursDot /> : null}
       <Text style={nameStyle} numberOfLines={1}>
-        {side.parts.map((p, j) => (
-          <Text key={`${p.text}-${j}`} onPress={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined} suppressHighlighting>
-            {j > 0 ? ' / ' : ''}
-            {p.text}
-          </Text>
-        ))}
+        <Names side={side} tournamentId={tournamentId} ctx={ctx} />
       </Text>
       {won ? (
         <View style={styles.chip}>
@@ -136,7 +184,7 @@ function Row({ side, n, m, me }: { side: SideView; n: 1 | 2; m: BracketMatch; me
   );
 }
 
-function Champion({ side, top }: { side: SideView; top: number }) {
+function Champion({ side, top, marks }: { side: SideView; top: number; marks: Marks }) {
   const c = useCopy().tournaments.detail;
   return (
     <View style={[styles.champ, { top }]}>
@@ -146,12 +194,7 @@ function Champion({ side, top }: { side: SideView; top: number }) {
           <Text style={styles.chipText}>✓</Text>
         </View>
         <Text style={styles.champName} numberOfLines={2}>
-          {side.parts.map((p, j) => (
-            <Text key={`${p.text}-${j}`} onPress={p.playerId ? () => router.push(`/player/${p.playerId}`) : undefined} suppressHighlighting>
-              {j > 0 ? ' / ' : ''}
-              {p.text}
-            </Text>
-          ))}
+          <Names side={side} tournamentId={marks.tournamentId} />
         </Text>
       </View>
     </View>
@@ -166,6 +209,9 @@ const styles = StyleSheet.create({
   line: { position: 'absolute', backgroundColor: colors.stone },
   card: { height: CARD_H, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: colors.mist, backgroundColor: colors.white, paddingHorizontal: 10, paddingTop: 6, overflow: 'hidden' },
   cardMine: { borderWidth: 1.5, borderColor: colors.ink },
+  // a player's path is lit: the other matches step back
+  cardDim: { opacity: 0.32 },
+  cardAhead: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.ink },
   row: { height: ROW_H, flexDirection: 'row', alignItems: 'center', gap: 6 },
   seed: { width: 14, fontFamily: fonts.bodySemi, fontSize: 10, color: colors.muted, textAlign: 'right' },
   name: { flex: 1, minWidth: 0, fontFamily: fonts.bodySemi, fontSize: 13, color: colors.ink },
