@@ -184,3 +184,44 @@ export function tidyName(raw: string): string {
 export function nameShapeOk(name: string): boolean {
     return NAME_SHAPE.test(name) && name.replace(NOT_LETTER, '').length >= 2;
 }
+
+/* ================= one person under two spellings ================= */
+
+/** Latin capitals that look like Greek ones, as some sheets and rosters type them («KAKKABHΣ») */
+const LOOKALIKE: Record<string, string> = {
+    A: 'Α', B: 'Β', E: 'Ε', H: 'Η', I: 'Ι', K: 'Κ', M: 'Μ', N: 'Ν', O: 'Ο', P: 'Ρ', T: 'Τ', X: 'Χ', Y: 'Υ', Z: 'Ζ',
+};
+
+/**
+ * A name folded for comparing, never for showing: capitals, no accents, no dots, one space, and Latin lookalikes read
+ * as Greek when the name has any Greek letter. «Καραγιανίδης Χάρης» and «ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ.» fold to
+ * «ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡΗΣ» and «ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ».
+ */
+export function nameKey(text: string): string {
+    const caps = greekCaps(text.normalize('NFC')).replace(/[.·,]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!/[Α-Ω]/.test(caps)) return caps;
+    return caps.replace(/[A-Z]/g, (c) => LOOKALIKE[c] ?? c);
+}
+
+/**
+ * The same person, written once by a sheet («ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ», surname first, the first name cut short or missing)
+ * and once by the roster (surname, first name): the surname is the same (a doubled letter aside: «ΜΠΡΙΛΛΑΚΗΣ» is
+ * «Μπριλάκης»), and the first names agree where both are given: one starts with the other («ΧΑΡ», «Χάρης») or they
+ * share their first four letters («Αντώνης», «ΑΝΤΩΝΙΟΣ»; «Νίκος», «ΝΙΚΟΛΑΟΣ»). `anyFirst` leaves first names out,
+ * for an opponent already pinned down by the match.
+ */
+export function sameNamedPerson(sheet: string, surname: string, firstName: string, anyFirst = false): boolean {
+    // spelled as it sounds: «ΤΖΙΩΤΖΙΟΣ» is «Τζιότζιος», «ΜΠΡΙΛΛΑΚΗΣ» is «Μπριλάκης»
+    const single = (s: string) =>
+        s.replace(/ΕΙ|ΟΙ|Η|Υ/g, 'Ι').replace(/ΑΙ/g, 'Ε').replace(/Ω/g, 'Ο').replace(/ΝΤ/g, 'Τ').replace(/ΜΠ/g, 'Π').replace(/(.)\1+/g, '$1');
+    const raw = single(nameKey(sheet));
+    const sur = single(nameKey(surname));
+    if (!sur || !raw) return false;
+    if (raw !== sur && !raw.startsWith(`${sur} `)) return false;
+    const first = raw.slice(sur.length).trim();
+    const known = single(nameKey(firstName));
+    if (anyFirst || !first || !known) return true;
+    const a = first.split(' ')[0]!;
+    const b = known.split(' ')[0]!;
+    return a.startsWith(b) || b.startsWith(a) || (a.length >= 4 && b.length >= 4 && a.slice(0, 4) === b.slice(0, 4));
+}

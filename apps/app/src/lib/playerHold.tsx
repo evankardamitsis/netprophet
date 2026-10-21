@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Platform, Text, type StyleProp, type TextStyle } from 'react-native';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Platform, StyleSheet, Text, type StyleProp, type TextStyle } from 'react-native';
+import { colors } from '../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
@@ -11,11 +12,44 @@ import type { PathContext } from './tournamentToday';
  */
 export const HOLD_MS = 350;
 
+/** how long the held name shows it was the one held, before the screen opens over it */
+export const HOLD_SHOW_MS = 160;
+/** the held name lets go of its highlight after this (the screen covers it by then) */
+const HELD_CLEAR_MS = 900;
+
+/** where on the screen the name was held (page coordinates): the screen grows out of there */
+export type HoldPoint = { x: number; y: number };
+
 /** `ctx`: the match the name was held on, so «Αν κερδίσει» speaks of that match */
-export function openPlayerPath(tournamentId: string, playerId: string, ctx: PathContext = null) {
+export function openPlayerPath(tournamentId: string, playerId: string, ctx: PathContext = null, point?: HoldPoint) {
   if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
   const at = !ctx ? {} : 'match' in ctx ? { match: ctx.match } : { slot: `${ctx.round}|${ctx.slot}|${ctx.tab}` };
-  router.push({ pathname: '/tournament-player', params: { tournament: tournamentId, player: playerId, ...at } });
+  const from = point ? { x: String(Math.round(point.x)), y: String(Math.round(point.y)) } : {};
+  setTimeout(() => router.push({ pathname: '/tournament-player', params: { tournament: tournamentId, player: playerId, ...at, ...from } }), HOLD_SHOW_MS);
+}
+
+/** the point of a touch, when the event has one */
+export function pointOf(e: unknown): HoldPoint | undefined {
+  const n = (e as { nativeEvent?: { pageX?: number; pageY?: number } } | null)?.nativeEvent;
+  return n && typeof n.pageX === 'number' && typeof n.pageY === 'number' ? { x: n.pageX, y: n.pageY } : undefined;
+}
+
+/** true from the moment a hold fires until the screen has opened over it: the held name stands out */
+export function useHeldFlag(): [boolean, () => void] {
+  const [held, setHeld] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const mark = useCallback(() => {
+    setHeld(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setHeld(false), HELD_CLEAR_MS);
+  }, []);
+  return [held, mark];
 }
 
 /** the route params back to a context */
@@ -33,9 +67,10 @@ export function contextOf(match?: string, slot?: string): PathContext {
  * fallback where the timer cannot start, and a tap that does not also fire after a hold. A scroll cancels the touch,
  * and with it the timer.
  */
-export function useHold(onHold: (() => void) | undefined, onTap?: () => void, ms = HOLD_MS) {
+export function useHold(onHold: ((at?: HoldPoint) => void) | undefined, onTap?: () => void, ms = HOLD_MS, onTouch?: (down: boolean) => void) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fired = useRef(false);
+  const point = useRef<HoldPoint | undefined>(undefined);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -46,14 +81,17 @@ export function useHold(onHold: (() => void) | undefined, onTap?: () => void, ms
   const fire = () => {
     if (fired.current) return;
     fired.current = true;
-    onHold();
+    onHold(point.current);
   };
-  const start = () => {
+  const start = (e?: unknown) => {
     fired.current = false;
+    point.current = pointOf(e);
+    onTouch?.(true);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(fire, ms);
   };
   const stop = () => {
+    onTouch?.(false);
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
   };
@@ -96,13 +134,33 @@ export function HoldName({
   style?: StyleProp<TextStyle>;
   children: ReactNode;
 }) {
-  const hold = useHold(tournamentId && playerId ? () => openPlayerPath(tournamentId, playerId, ctx) : undefined, onTap);
+  const [held, markHeld] = useHeldFlag();
+  const [down, setDown] = useState(false);
+  const can = !!(tournamentId && playerId);
+  const hold = useHold(
+    can
+      ? (at) => {
+          markHeld();
+          openPlayerPath(tournamentId!, playerId!, ctx, at);
+        }
+      : undefined,
+    onTap,
+    HOLD_MS,
+    can ? setDown : undefined,
+  );
+  // a nested Text takes no transform: the name under the finger is underlined, and once the hold fires it turns ink
+  // with paper letters, so it is plain which name opened the screen
   return (
-    <Text {...hold} style={style} suppressHighlighting>
+    <Text {...hold} style={[style, down && !held && holdStyles.down, held && holdStyles.held]} suppressHighlighting>
       {children}
     </Text>
   );
 }
+
+const holdStyles = StyleSheet.create({
+  down: { textDecorationLine: 'underline', textDecorationColor: colors.ink },
+  held: { backgroundColor: colors.ink, color: colors.paper, textDecorationLine: 'none' },
+});
 
 /* ================= the hint, once per device ================= */
 

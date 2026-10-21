@@ -109,7 +109,9 @@ const mineIn = (s: SideView, me: string | null) => me !== null && s.parts.some((
 const yoursIn = (s: SideView, yours: Set<string> | undefined) => !!yours && s.parts.some((p) => p.playerId !== null && yours.has(p.playerId));
 
 function Card({ m, marks }: { m: BracketMatch; marks: Marks }) {
-  const { me, lit } = marks;
+  // an empty path lights nothing and dims nothing (it used to dim every card: build 12)
+  const lit = marks.lit && marks.lit.size > 0 ? marks.lit : null;
+  const { me } = marks;
   const onPath = !!lit && lit.has(m.key);
   const ahead = marks.maybe === m.key;
   const mine = lit ? onPath : mineIn(m.sides[0], me) || mineIn(m.sides[1], me);

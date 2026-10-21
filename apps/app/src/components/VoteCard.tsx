@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import Animated, {
   cubicBezier,
   Easing,
@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  type CSSTransitionProperties,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { soonLabel, startsSoon, type CardMatch, type CardPct, type CardSide } from '../lib/feed';
@@ -19,7 +20,7 @@ import { Lit } from './Lit';
 import { Avatar as DrawnAvatar } from './Avatar';
 import type { AvatarLook } from '../lib/avatar';
 import { Logo } from './Logo';
-import { HOLD_MS, openPlayerPath } from '../lib/playerHold';
+import { HOLD_MS, openPlayerPath, pointOf, type HoldPoint } from '../lib/playerHold';
 
 /**
  * Feed match card. Design A light (founder, 19 Oct) replaced the dark ink tiles of design B: voting stays the prominent
@@ -86,14 +87,56 @@ const FOLD_EASE = cubicBezier(0.4, 0, 0.2, 1);
 const NO_ENTER = {} as const;
 
 /**
- * Hold a name (a side) for the player's run in the card's tournament (founder, 21 Oct), in the context of this match;
- * in doubles the first of the pair with a roster id (their run is the pair's run). Undefined: nothing to open.
+ * Hold a name for the player's run in the card's tournament (founder, 21 Oct), in the context of this match. In
+ * doubles each name is its own hold (the pair's run, titled with the name held); a name without a roster id falls
+ * back to their partner's. Undefined: nothing to open.
  */
-function holdFor(match: CardMatch, data: CardSide): (() => void) | undefined {
-  const p = data.people.find((x) => x.id);
+type HoldPerson = (i: number, at?: HoldPoint) => void;
+function holdFor(match: CardMatch, data: CardSide): HoldPerson | undefined {
   const tournamentId = match.tournamentId;
-  return tournamentId && p?.id ? () => openPlayerPath(tournamentId, p.id!, { match: match.id }) : undefined;
+  if (!tournamentId || !data.people.some((x) => x.id)) return undefined;
+  return (i, at) => {
+    const p = data.people[i]?.id ? data.people[i]! : data.people.find((x) => x.id)!;
+    openPlayerPath(tournamentId, p.id!, { match: match.id }, at);
+  };
 }
+
+/** the name being held on a card: its side and its place in the pair */
+type Held = { side: Side; i: number } | null;
+
+/** how long the held name stands out (the screen opens over it after HOLD_SHOW_MS) */
+const HELD_MS = 900;
+
+/** which name on the card is held, and the hold of a side wrapped to mark it first */
+function useHeldName(): [Held, (side: Side, hold: HoldPerson | undefined) => HoldPerson | undefined] {
+  const [held, setHeld] = useState<Held>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const wrap = useCallback(
+    (side: Side, hold: HoldPerson | undefined): HoldPerson | undefined =>
+      hold
+        ? (i, at) => {
+            setHeld({ side, i });
+            if (timer.current) clearTimeout(timer.current);
+            timer.current = setTimeout(() => setHeld(null), HELD_MS);
+            hold(i, at);
+          }
+        : undefined,
+    [],
+  );
+  return [held, wrap];
+}
+
+/** a soft change of opacity and size (the held name and the rest of the card), a CSS transition */
+function heldFx(opacity: number, scale = 1): CSSTransitionProperties & Pick<ViewStyle, 'opacity' | 'transform'> {
+  return { opacity, transform: [{ scale }], transitionProperty: ['opacity', 'transform'], transitionDuration: PRESS_MS, transitionTimingFunction: 'ease-out' };
+}
+const HELD_DIM = 0.4;
 
 /** hold a card this long for «Αναφορά» */
 const LONG_PRESS_MS = 450;
@@ -115,6 +158,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress, hid
   const [split, setSplit] = useState<CardPct | undefined>(match.split);
   const enter = useEnter();
   const tappedAt = useRef(0);
+  const [held, holdOf] = useHeldName();
 
   const vote = useCallback(
     (side: Side) => {
@@ -162,7 +206,9 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress, hid
   return (
     <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS}>
       <Animated.View style={[styles.card, enter]}>
-        <Meta match={match} hideCategory={hideCategory} soonAt={phase === 'idle' ? match.startsAt : undefined} />
+        <Animated.View style={heldFx(held ? HELD_DIM : 1)}>
+          <Meta match={match} hideCategory={hideCategory} soonAt={phase === 'idle' ? match.startsAt : undefined} />
+        </Animated.View>
         <View style={styles.grid}>
           {(['a', 'b'] as const).map((s) => (
             <Tile
@@ -176,7 +222,8 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress, hid
               disabled={phase !== 'idle'}
               pct={revealed ? (s === 'a' ? split.pctA : split.pctB) : null}
               onPress={vote}
-              onHold={holdFor(match, match[s])}
+              onHold={holdOf(s, holdFor(match, match[s]))}
+              held={held}
             />
           ))}
         </View>
@@ -193,10 +240,13 @@ function ClosedCard({ match, hideCategory, onLongPress }: { match: CardMatch; hi
   const t = useCopy();
   const enter = useEnter();
   const none = () => undefined;
+  const [held, holdOf] = useHeldName();
   return (
     <Pressable onLongPress={onLongPress} delayLongPress={LONG_PRESS_MS} accessibilityLabel={`${match.meta}. ${t.match.closed}`}>
       <Animated.View style={[styles.card, enter]}>
-        <Meta match={match} hideCategory={hideCategory} />
+        <Animated.View style={heldFx(held ? HELD_DIM : 1)}>
+          <Meta match={match} hideCategory={hideCategory} />
+        </Animated.View>
         <View style={styles.grid}>
           {(['a', 'b'] as const).map((s) => (
             <Tile
@@ -210,7 +260,8 @@ function ClosedCard({ match, hideCategory, onLongPress }: { match: CardMatch; hi
               disabled
               pct={match.split ? (s === 'a' ? match.split.pctA : match.split.pctB) : null}
               onPress={none}
-              onHold={holdFor(match, match[s])}
+              onHold={holdOf(s, holdFor(match, match[s]))}
+              held={held}
             />
           ))}
         </View>
@@ -303,8 +354,10 @@ interface TileProps {
   /** null until the split is known */
   pct: number | null;
   onPress: (side: Side) => void;
-  /** a hold on the side: the player's run in the tournament */
-  onHold?: () => void;
+  /** a hold on a name: that player's run in the tournament (`i`: their place in the pair) */
+  onHold?: HoldPerson;
+  /** the name held on this card, if any: it stands out, the rest dims */
+  held: Held;
 }
 
 /**
@@ -312,7 +365,7 @@ interface TileProps {
  * edge, so it reads as pressable; a touch takes it down and the edge shrinks. Once the other side is picked it steps
  * back to a lighter border; once the split shows, the lime fill grows behind ink text. A closed card lies flat.
  */
-function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress, onHold }: TileProps) {
+function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress, onHold, held }: TileProps) {
   // the key lies flat once it is no longer a button: a closed card, the side not picked, or your side once the split shows
   const down = flat || faded || (picked && pct !== null);
   const press = useSharedValue(0);
@@ -355,6 +408,16 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
   const pctStyle = useAnimatedStyle(() => ({ opacity: pctOpacity.value, transform: [{ scale: pctScale.value }] }));
   const tickStyle = useAnimatedStyle(() => ({ opacity: tickOpacity.value, transform: [{ scale: tickScale.value }] }));
   const names = data.people.map((p) => `${p.first} ${p.surname}`).join(' & ');
+  const tap = disabled ? undefined : () => onPress(side);
+  const pressIn = () => {
+    if (!disabled) press.value = withTiming(1, { duration: PRESS_MS, easing: springEase });
+  };
+  const pressOut = () => {
+    press.value = withTiming(0, { duration: PRESS_MS, easing: springEase });
+  };
+  // in a pair each name is its own hold (founder, 21 Oct: a hold opened the first of the pair, whichever was pressed)
+  const perName = data.people.length > 1 && !!onHold;
+  const heldHere = held && held.side === side ? held.i : null;
 
   return (
     <Pressable
@@ -364,22 +427,24 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
       accessibilityState={{ selected: picked, disabled }}
       // a side that can no longer be voted still takes a hold on the name
       disabled={disabled && !onHold}
-      onPress={disabled ? undefined : () => onPress(side)}
-      onLongPress={onHold}
+      onPress={tap}
+      onLongPress={onHold && !perName ? (e) => onHold(0, pointOf(e)) : undefined}
       delayLongPress={HOLD_MS}
-      onPressIn={() => {
-        if (!disabled) press.value = withTiming(1, { duration: PRESS_MS, easing: springEase });
-      }}
-      onPressOut={() => {
-        press.value = withTiming(0, { duration: PRESS_MS, easing: springEase });
-      }}
+      onPressIn={pressIn}
+      onPressOut={pressOut}
     >
       <View style={[styles.tile, flat && styles.tileFlat]}>
         {flat ? null : <Animated.View style={[styles.edge, edgeStyle]} pointerEvents="none" />}
         <Animated.View style={[styles.face, faceStyle]}>
           <Animated.View style={[styles.fill, fillStyle]} pointerEvents="none" />
           <View style={styles.layer}>
-            <TileText data={data} doubles={doubles} />
+            <TileText
+              data={data}
+              doubles={doubles}
+              held={heldHere}
+              dimmed={held !== null}
+              perName={perName ? { onHold: onHold!, onTap: tap, onPressIn: pressIn, onPressOut: pressOut } : null}
+            />
           </View>
           {/* always mounted: Reanimated (web) does not animate a view that appears mid-flight */}
           <Animated.Text style={[styles.tick, tickStyle]} pointerEvents="none">
@@ -395,20 +460,55 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
 }
 
 /** the names and facts of one side, in ink on the white key */
-function TileText({ data, doubles }: { data: CardSide; doubles: boolean }) {
+function TileText({
+  data,
+  doubles,
+  held = null,
+  dimmed = false,
+  perName = null,
+}: {
+  data: CardSide;
+  doubles: boolean;
+  /** the name held on this side (its place), which grows a little and is underlined in ink */
+  held?: number | null;
+  /** a name on the card is held: everything else dims */
+  dimmed?: boolean;
+  /** each name its own press: a tap still votes, a hold opens that player */
+  perName?: { onHold: HoldPerson; onTap?: () => void; onPressIn: () => void; onPressOut: () => void } | null;
+}) {
   return (
     <>
-      {data.people.map((p, i) => (
-        <View key={i} style={[styles.person, i === 0 && styles.personFirst]}>
-          <Avatar initials={p.initials} look={p.look ?? null} />
-          <View style={styles.names}>
-            <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
-            <Text numberOfLines={1} style={styles.fn}>
-              {p.first}
-            </Text>
-          </View>
-        </View>
-      ))}
+      {data.people.map((p, i) => {
+        const on = held === i;
+        const row = (
+          <Animated.View style={[styles.person, i === 0 && styles.personFirst, heldFx(dimmed && !on ? HELD_DIM : 1)]}>
+            <Avatar initials={p.initials} look={p.look ?? null} />
+            <Animated.View style={[styles.names, heldFx(1, on ? 1.06 : 1)]}>
+              <FitText text={p.surname} style={[styles.sn, doubles && styles.snDbl]} />
+              <Text numberOfLines={1} style={styles.fn}>
+                {p.first}
+              </Text>
+              <View style={[styles.heldLine, on && styles.heldLineOn]} pointerEvents="none" />
+            </Animated.View>
+          </Animated.View>
+        );
+        return perName ? (
+          <Pressable
+            key={i}
+            accessibilityRole="button"
+            accessibilityLabel={`${p.first} ${p.surname}`}
+            onPress={perName.onTap}
+            onPressIn={perName.onPressIn}
+            onPressOut={perName.onPressOut}
+            onLongPress={(e) => perName.onHold(i, pointOf(e))}
+            delayLongPress={HOLD_MS}
+          >
+            {row}
+          </Pressable>
+        ) : (
+          <View key={i}>{row}</View>
+        );
+      })}
       {data.level || data.area ? (
         <View style={styles.facts}>
           {data.level ? (
@@ -463,12 +563,15 @@ function FoldedCard({
   const enter = useEnter(fresh);
   const foldIn = useEntrance(FOLD_IN, FOLD_MS, 0, FOLD_EASE);
   const fold = fresh ? NO_ENTER : foldIn;
+  const [held, holdOf] = useHeldName();
   return (
     <Animated.View style={[styles.done, enter, fold]}>
-      <Meta match={match} hideCategory={hideCategory} style={styles.doneMeta} />
+      <Animated.View style={heldFx(held ? HELD_DIM : 1)}>
+        <Meta match={match} hideCategory={hideCategory} style={styles.doneMeta} />
+      </Animated.View>
       <View style={styles.row}>
-        <Half data={match.a} pct={split.pctA} on={pick === 'a'} edge="left" onHold={holdFor(match, match.a)} />
-        <Half data={match.b} pct={split.pctB} on={pick === 'b'} edge="right" onHold={holdFor(match, match.b)} />
+        <Half data={match.a} pct={split.pctA} on={pick === 'a'} edge="left" onHold={holdOf('a', holdFor(match, match.a))} held={held && held.side === 'a' ? held.i : null} dimmed={held !== null} />
+        <Half data={match.b} pct={split.pctB} on={pick === 'b'} edge="right" onHold={holdOf('b', holdFor(match, match.b))} held={held && held.side === 'b' ? held.i : null} dimmed={held !== null} />
       </View>
     </Animated.View>
   );
@@ -477,22 +580,50 @@ function FoldedCard({
 /**
  * One half of the folded row. The lime sits only behind the half you picked, as wide as your share within that half
  * (founder, 19 Oct: a 100% / 0% split lit the whole row, as if both were picked); the other half stays paper.
+ * In a pair each name takes its own hold.
  */
-function Half({ data, pct, on, edge, onHold }: { data: CardSide; pct: number; on: boolean; edge: 'left' | 'right'; onHold?: () => void }) {
+function Half({
+  data,
+  pct,
+  on,
+  edge,
+  onHold,
+  held,
+  dimmed,
+}: {
+  data: CardSide;
+  pct: number;
+  on: boolean;
+  edge: 'left' | 'right';
+  onHold?: HoldPerson;
+  held: number | null;
+  dimmed: boolean;
+}) {
   const fg = on ? colors.ink : colors.inkSoft;
+  const perName = data.people.length > 1 && !!onHold;
   return (
-    <Pressable style={styles.half} onLongPress={onHold} delayLongPress={HOLD_MS} disabled={!onHold}>
+    <Pressable style={styles.half} onLongPress={onHold && !perName ? (e) => onHold(0, pointOf(e)) : undefined} delayLongPress={HOLD_MS} disabled={!onHold}>
       {on ? <View style={[styles.rowFill, edge === 'left' ? styles.rowFillLeft : styles.rowFillRight, { width: `${pct}%` }]} /> : null}
       <Text style={[styles.rowTick, { color: fg }]}>{on ? '✓' : ''}</Text>
       <View style={styles.halfNames}>
-        {data.people.map((p, i) => (
-          <View key={i}>
-            <FitText text={p.surname} style={[styles.rowSn, { color: fg }, i > 0 && styles.rowSnNext]} />
-            <Text numberOfLines={1} style={styles.rowFn}>
-              {p.first}
-            </Text>
-          </View>
-        ))}
+        {data.people.map((p, i) => {
+          const name = (
+            <Animated.View style={heldFx(dimmed && held !== i ? HELD_DIM : 1, held === i ? 1.06 : 1)}>
+              <FitText text={p.surname} style={[styles.rowSn, { color: fg }, i > 0 && styles.rowSnNext]} />
+              <Text numberOfLines={1} style={styles.rowFn}>
+                {p.first}
+              </Text>
+              <View style={[styles.heldLine, held === i && styles.heldLineOn]} pointerEvents="none" />
+            </Animated.View>
+          );
+          return perName ? (
+            <Pressable key={i} accessibilityRole="button" accessibilityLabel={`${p.first} ${p.surname}`} onLongPress={(e) => onHold!(i, pointOf(e))} delayLongPress={HOLD_MS}>
+              {name}
+            </Pressable>
+          ) : (
+            <View key={i}>{name}</View>
+          );
+        })}
       </View>
       <Text style={[styles.rowPct, { color: fg }, on ? styles.rowPctOn : null]}>{`${pct}%`}</Text>
     </Pressable>
@@ -536,6 +667,9 @@ const styles = StyleSheet.create({
   layer: { padding: TILE_PAD, gap: 8 },
   layerOver: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   person: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  // the ink line under a held name; always there, shown only while held
+  heldLine: { position: 'absolute', left: 0, right: 0, bottom: -3, height: 2, borderRadius: 1, backgroundColor: colors.ink, opacity: 0 },
+  heldLineOn: { opacity: 1 },
   // room for the ✓ in the corner, on every tile so both sides lay out alike
   personFirst: { paddingRight: 14 },
   names: { flex: 1, minWidth: 0 },

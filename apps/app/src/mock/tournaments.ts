@@ -14,6 +14,17 @@ const GIO = P('gio', 'Γιώργος', 'Δεσύπρης');
 const ALE = P('ale', 'Γιάννης', 'Πράτσας');
 const PAV = P('pav', 'Ηλίας', 'Μέμμος');
 const STE = P('ste', 'Δημήτρης', 'Γκότσης');
+const TSI = P('tsi', 'Κώστας', 'Τσιάμης');
+const KON = P('kon', 'Θάνος', 'Κοντός');
+
+/** a doubles match of the sample tournament («MD 40+», «MASTER») */
+function pairMatch(id: string, day: string, hour: number, minute: number, a: FeedPlayer[], b: FeedPlayer[], win: 1 | 2 | null, sets: SetScore[], level = '40+'): TournamentMatch {
+  return {
+    ...match(id, day, hour, minute, a[0]!, b[0]!, win, sets, level),
+    format: 'doubles', discipline: 'MD',
+    sides: [{ side: 1, players: a }, { side: 2, players: b }],
+  };
+}
 
 /** an Athens day at a given clock time, as an instant (Athens is UTC+3 in summer, UTC+2 in winter) */
 function at(day: string, hour: number, minute: number): string {
@@ -38,8 +49,8 @@ function match(id: string, day: string, hour: number, minute: number, a: FeedPla
 export function mockTournaments(pro: boolean, now: Date = new Date()): GetTournamentsResult {
   const today = dayKey(now.toISOString());
   const mine = [
-    { ...match('tm-1', today, 18, 30, ME, NIK, null, []), tournament_id: 'tour-open', tournament: 'Open Γλυφάδας' },
-    { ...match('tm-2', addDays(today, 2), 10, 0, ME, GIO, null, [], 'Μ 40+'), tournament_id: 'tour-open', tournament: 'Open Γλυφάδας' },
+    { ...match('tm-1', today, 18, 30, ME, STE, null, []), tournament_id: 'tour-open', tournament: 'Open Γλυφάδας' },
+    { ...pairMatch('tm-d3', addDays(today, 2), 10, 0, [ME, PAV], [GIO, STE], null, [], 'MASTER'), tournament_id: 'tour-open', tournament: 'Open Γλυφάδας' },
   ];
   return {
     pro,
@@ -124,21 +135,32 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
   const ent = (pos: number, raw: string, seed: number | null, pid: string | null) => ({
     pos, raw, seed, bye: raw === 'ΒΥΕ', players: raw === 'ΒΥΕ' ? [] : [{ raw, player_id: pid }],
   });
+  // the schedule and the draws agree on who plays whom (founder, 21 Oct): Μ 40+ R1 and the semis, MD 40+ (me with
+  // Ροδίτης; the sheet has him under another id, as live) and MD MASTER (me with Μέμμος)
   const days = id === 'tour-open'
     ? [
+        {
+          date: addDays(today, -1),
+          matches: [
+            match('tm-r1', addDays(today, -1), 17, 0, ME, P('unk', 'Παίκτης', 'Άγνωστος'), 1, [{ w: 6, l: 1 }, { w: 6, l: 0 }]),
+            pairMatch('tm-d1', addDays(today, -1), 19, 0, [ME, NIK], [TSI, KON], 1, [{ w: 6, l: 3 }, { w: 6, l: 2 }]),
+          ],
+        },
         {
           date: today,
           matches: [
             match('tm-0', today, 10, 0, GIO, ALE, 1, [{ w: 6, l: 4 }, { w: 6, l: 3 }]),
             match('tm-0b', today, 11, 30, PAV, STE, 2, [{ w: 6, l: 7, tb: [7, 4] }, { w: 6, l: 2 }, { w: 10, l: 8, stb: true }]),
-            match('tm-1', today, 18, 30, ME, NIK, null, []),
+            match('tm-semi', today, 17, 0, NIK, GIO, null, []),
+            match('tm-1', today, 18, 30, ME, STE, null, []),
+            pairMatch('tm-d2', today, 20, 0, [GIO, ALE], [PAV, STE], null, []),
           ],
         },
         {
           date: addDays(today, 2),
           matches: [
-            { ...match('tm-2', addDays(today, 2), 10, 0, ME, GIO, null, []), moved_from: at(addDays(today, -1), 18, 30) },
-            { ...match('tm-3', addDays(today, 2), 12, 0, ALE, PAV, null, []), starts_at: null, postponed: true },
+            { ...pairMatch('tm-d3', addDays(today, 2), 10, 0, [ME, PAV], [GIO, STE], null, [], 'MASTER'), moved_from: at(addDays(today, -1), 18, 30) },
+            { ...pairMatch('tm-3', addDays(today, 2), 12, 0, [NIK, ALE], [TSI, KON], null, [], 'MASTER'), starts_at: null, postponed: true },
           ],
         },
       ]
@@ -158,14 +180,31 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
               [
                 bm(1, 1, 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ', 'ΒΥΕ', { bye: true }),
                 bm(1, 2, 'ΠΡΑΤΣΑΣ ΓΙΑΝΝΗΣ', 'ΔΕΣΥΠΡΗΣ ΓΙΩΡΓΟΣ', { winner: 2, scoreRaw: '64 63' }),
-                bm(1, 3, 'ΜΕΜΜΟΣ ΗΛΙΑΣ', 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', { winner: 1, scoreRaw: '67(4) 62 10-8' }),
+                bm(1, 3, 'ΜΕΜΜΟΣ ΗΛΙΑΣ', 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', { winner: 2, scoreRaw: '67(4) 62 10-8' }),
                 bm(1, 4, 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓΓΕΛΗΣ', 'ΑΓΝΩΣΤΟΣ ΠΑΙΚΤΗΣ', { winner: 1, scoreRaw: '61 60' }),
               ],
               [
-                bm(2, 1, 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ', 'ΔΕΣΥΠΡΗΣ ΓΙΩΡΓΟΣ', { when: 'ΣΑΒ 18.30', deadline: addDays(today, 1) }),
-                bm(2, 2, 'ΜΕΜΜΟΣ ΗΛΙΑΣ', 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓΓΕΛΗΣ', { deadline: addDays(today, 1) }),
+                bm(2, 1, 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ', 'ΔΕΣΥΠΡΗΣ ΓΙΩΡΓΟΣ', { when: 'ΣΗΜΕΡΑ 17.00', deadline: today }),
+                bm(2, 2, 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓΓΕΛΗΣ', { when: 'ΣΗΜΕΡΑ 18.30', deadline: today }),
               ],
               [bm(3, 1, null, null, { deadline: addDays(today, 3) })],
+            ],
+          },
+          {
+            tab: 'MD 40+', title: 'MD 40+ MAIN DRAW (4)', discipline: 'MD', level: '40+', format: 'knockout', size: 4, updated_at: now.toISOString(),
+            entrants: [
+              // Ροδίτης is «nik» on the schedule and «nik-sheet» here: the same person under two roster rows, as live
+              { pos: 1, raw: 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓ/ΡΟΔΙΤΗΣ ΝΙΚ', seed: 1, bye: false, players: [{ raw: 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓ', player_id: 'me' }, { raw: 'ΡΟΔΙΤΗΣ ΝΙΚ', player_id: 'nik-sheet' }] },
+              { pos: 2, raw: 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ/ΚΟΝΤΟΣ ΘΑΝΟΣ', seed: null, bye: false, players: [{ raw: 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ', player_id: null }, { raw: 'ΚΟΝΤΟΣ ΘΑΝΟΣ', player_id: null }] },
+              { pos: 3, raw: 'ΔΕΣΥΠΡΗΣ ΓΙΩΡ/ΠΡΑΤΣΑΣ ΓΙΑΝ', seed: null, bye: false, players: [{ raw: 'ΔΕΣΥΠΡΗΣ ΓΙΩΡ', player_id: 'gio' }, { raw: 'ΠΡΑΤΣΑΣ ΓΙΑΝ', player_id: 'ale' }] },
+              { pos: 4, raw: 'ΜΕΜΜΟΣ ΗΛ/ΓΚΟΤΣΗΣ ΔΗΜ', seed: 2, bye: false, players: [{ raw: 'ΜΕΜΜΟΣ ΗΛ', player_id: 'pav' }, { raw: 'ΓΚΟΤΣΗΣ ΔΗΜ', player_id: 'ste' }] },
+            ],
+            rounds: [
+              [
+                bm(1, 1, 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓ/ΡΟΔΙΤΗΣ ΝΙΚ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ/ΚΟΝΤΟΣ ΘΑΝΟΣ', { winner: 1, scoreRaw: '63 62' }),
+                bm(1, 2, 'ΔΕΣΥΠΡΗΣ ΓΙΩΡ/ΠΡΑΤΣΑΣ ΓΙΑΝ', 'ΜΕΜΜΟΣ ΗΛ/ΓΚΟΤΣΗΣ ΔΗΜ', { when: 'ΣΗΜΕΡΑ 20.00', deadline: today }),
+              ],
+              [bm(2, 1, 'ΚΑΡΔΑΜΙΤΣΗΣ ΒΑΓ/ΡΟΔΙΤΗΣ ΝΙΚ', null, { deadline: addDays(today, 3) })],
             ],
           },
           knockout('Μ 50+', SIXTEEN, [8, 3, 0, 0], today, ['ΠΑΠΑΔΟΠΟΥΛΟΣ ΑΝΤΩΝΗΣ', 'ΛΑΜΠΡΙΝΟΣ ΣΤΑΘΗΣ', 'ΓΚΟΤΣΗΣ ΔΗΜΗΤΡΗΣ', 'ΒΑΣΙΛΕΙΟΥ ΠΕΤΡΟΣ', 'ΤΣΙΑΜΗΣ ΚΩΣΤΑΣ'], { 'ΡΟΔΙΤΗΣ ΝΙΚΟΣ': 1, 'ΜΕΜΜΟΣ ΗΛΙΑΣ': 2 }),
@@ -182,6 +221,9 @@ export function mockTournament(id: string, now: Date = new Date()): GetTournamen
                   gm(3, 1, 2, [[4, 6], [6, 7]]),
                   gm(2, 4, 1, [[6, 2], [6, 1]]),
                   gm(3, 4, 1, [[7, 5], [6, 4]]),
+                  // still to play (the schedule has them in two days, one of them put off)
+                  { a: 2, b: 3, scoreRaw: '', sets: [], winner: null, walkover: false },
+                  { a: 1, b: 4, scoreRaw: '', sets: [], winner: null, walkover: false },
                 ],
                 standings: [{ pos: 1, won: 2, played: 2 }, { pos: 2, won: 1, played: 2 }, { pos: 3, won: 1, played: 2 }, { pos: 4, won: 0, played: 2 }],
               },

@@ -1444,6 +1444,22 @@ export const el = {
         quarter: 'Έφυγε στα προημιτελικά',
         roundN: 'Έφυγε στον {n}ο γύρο',
       },
+      /** a pair's title: «Καρδαμίτσης Βαγγέλης & Μέμμος Ηλίας» */
+      pairTitle: '{name} & {partner}',
+      /** a pill for one of their categories: «MD 40+ · με Μέμμο»; singles shows the category alone */
+      entryPill: '{category} · με {partner}',
+      /** the row that opens the path screen */
+      openPath: 'Η πορεία στο ταμπλό',
+      /** from the path screen to the whole draw, his path lit */
+      wholeDraw: 'Όλο το ταμπλό',
+      /** a step of the path */
+      byeStep: 'Πέρασε χωρίς ματς',
+      ifWinsStep: 'Αν κερδίσει',
+      notYet: 'θα φανεί',
+      /** the path of a round robin draw */
+      groupStep: '{group}',
+      /** no draw for this player (the sheet is not out, or their name is not in it) */
+      noRun: 'Το ταμπλό του δεν βγήκε ακόμα.',
     },
     detail: {
       back: '‹ Τουρνουά',

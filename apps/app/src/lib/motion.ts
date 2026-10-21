@@ -194,6 +194,55 @@ export function useGrowUpIn(durationMs: number, delayMs = 0) {
   return useMemo(() => ({ ...entrance, transformOrigin: 'bottom' }) as const, [entrance]);
 }
 
+/** `grow` downwards once on mount: a line drawn from its top (a player's path, round by round) */
+export function useGrowDownIn(durationMs: number, delayMs = 0) {
+  const entrance = useEntrance(GROW_Y, durationMs, delayMs);
+  return useMemo(() => ({ ...entrance, transformOrigin: 'top' }) as const, [entrance]);
+}
+
+const PULSE: Keyframes = {
+  from: { opacity: 1, transform: [{ scale: 1 }] },
+  to: { opacity: 0.55, transform: [{ scale: 1.06 }] },
+};
+const NO_PULSE = {} as const;
+
+/**
+ * A gentle breath, for what may come (the slot a player reaches if they win): a CSS animation that runs on its own,
+ * back and forth, after `delayMs`. Still with reduce motion.
+ */
+export function usePulse(periodMs: number, delayMs = 0) {
+  const reduced = useReducedMotion();
+  return useMemo(
+    () =>
+      reduced
+        ? NO_PULSE
+        : ({
+            animationName: PULSE,
+            animationDuration: periodMs,
+            animationDelay: delayMs,
+            animationIterationCount: 'infinite',
+            animationDirection: 'alternate',
+            animationTimingFunction: EASE_CSS,
+          } as const),
+    [reduced, periodMs, delayMs],
+  );
+}
+
+/**
+ * A screen that grows out of the point it was opened from (a held name): from `scale` at that point to its own place,
+ * fading in. `dx`, `dy` are the point's offset from the screen's centre; 0, 0 grows from the centre.
+ */
+export function useGrowFrom(dx: number, dy: number, durationMs: number, scale = 0.6) {
+  const keyframes = useMemo<Keyframes>(
+    () => ({
+      from: { opacity: 0, transform: [{ translateX: dx * (1 - scale) }, { translateY: dy * (1 - scale) }, { scale }] },
+      to: { opacity: 1, transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 1 }] },
+    }),
+    [dx, dy, scale],
+  );
+  return useEntrance(keyframes, durationMs, 0, SPRING_CSS);
+}
+
 /** `pop` whenever `value` changes after the first render (header numbers). */
 export function usePopOnChange(value: unknown, durationMs: number) {
   const scale = useSharedValue(1);
