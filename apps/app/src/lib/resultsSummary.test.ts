@@ -1,6 +1,6 @@
 import { getCopy } from '@netprophet/copy';
 import { describe, expect, it } from 'vitest';
-import { restAfter, restLine, showSkip, skipIds, summaryCounts, takeAll, takenToast } from './resultsSummary';
+import { cardTap, restAfter, restLine, showSkip, skipIds, summaryCounts, takeAll, takenToast } from './resultsSummary';
 
 const el = getCopy('el');
 const en = getCopy('en');
@@ -75,5 +75,12 @@ describe('skipIds', () => {
     const q = queue(5);
     expect(skipIds(q[0]!, restAfter(q))).toEqual(['c1', 'c2', 'c3', 'c4', 'c5']);
     expect(skipIds(q[0]!, [q[0]!, q[1]!])).toEqual(['c1', 'c2']);
+  });
+});
+
+describe('cardTap', () => {
+  it('opens the full view first, then goes to the next result', () => {
+    expect(cardTap(false)).toBe('open');
+    expect(cardTap(true)).toBe('next');
   });
 });

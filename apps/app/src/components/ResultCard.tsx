@@ -9,6 +9,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { useCopy } from '../i18n';
 import { useMyBaller } from '../lib/data';
+import { cardTap } from '../lib/resultsSummary';
 import { Baller, type BallerHandle } from './Baller';
 import { resultStrip, type CardResult } from '../lib/feed';
 import { useHudActions } from '../lib/hud';
@@ -26,7 +27,7 @@ import { colors, ease, fonts, motion } from '../theme';
  * The ✓ and the «+10 · σερί 2» pill are its only lime (founder, 19 Oct: no «Το 'πες!» chip).
  * It comes compact (founder, 19 Oct: the first vote shows on the first screen): ✓, the winner on up to 2 lines, the
  * score, the pill and a small «Επόμενο ›», about a third of the full card. A tap opens the full card in place, height
- * and opacity on the reveal (700ms), with your Baller; a tap folds it again. The header moment plays once either way.
+ * and opacity on the reveal (700ms), with your Baller; a tap on the open card goes to the next result. The header moment plays once either way.
  */
 const FLY_AT = 350;
 const APPLY_OK_AT = 1080;
@@ -123,10 +124,15 @@ export function ResultCard({ card, more, delay, onDone, onApplied, stop = false 
   };
   const boxStyle = useAnimatedStyle(() => (height.value < 0 ? {} : { height: height.value }));
   const contentStyle = useAnimatedStyle(() => ({ opacity: shown.value }));
-  const toggle = () => {
+  const tap = () => {
+    // open first; a tap on the open card goes to the next result, like «Επόμενο ›»
+    if (cardTap(full) === 'next') {
+      if (!stop) onDone(card);
+      return;
+    }
     shown.value = 0;
     shown.value = withTiming(1, { duration: motion.revealDur, easing: ease });
-    setFull((f) => !f);
+    setFull(true);
   };
   // your Baller plays its moment when the full card first opens from a compact one
   useEffect(() => {
@@ -160,7 +166,7 @@ export function ResultCard({ card, more, delay, onDone, onApplied, stop = false 
         accessibilityRole="button"
         accessibilityState={{ expanded: full }}
         accessibilityLabel={[strip.tick ? '✓' : '', strip.name, card.sets, card.pill ?? ''].filter(Boolean).join(' · ')}
-        onPress={toggle}
+        onPress={tap}
       >
         <Animated.View onLayout={onContent} style={contentStyle}>
           {full ? (
