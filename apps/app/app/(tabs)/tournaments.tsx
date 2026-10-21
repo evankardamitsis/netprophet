@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useRef, type ReactNode } from 'react';
 import { Linking, RefreshControl, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router } from 'expo-router';
@@ -7,6 +7,7 @@ import type { GetTournamentsResult, TournamentItem, UpcomingTournamentsResult } 
 import { Logo } from '../../src/components/Logo';
 import { useCopy } from '../../src/i18n';
 import { useTournaments, useUpcomingTournaments } from '../../src/lib/data';
+import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { usePress, useStgIn } from '../../src/lib/motion';
 import { nextFooter, nextRow, type NextRow } from '../../src/lib/nextTournament';
 import { blocksOf, boldLine, chipOf, mineHeadline, mineRows, sectionsOf, subLine, todayKey, type TournamentSection } from '../../src/lib/tournaments';
@@ -24,6 +25,9 @@ const STG_MS = 600;
 const STAGGER = 70;
 
 export default function TournamentsScreen() {
+  // a tap on the open tab (or two) scrolls back to the top
+  const scrollRef = useRef<ScrollView>(null);
+  useTabScrollTop(scrollRef);
   const t = useCopy();
   const c = t.tournaments;
   const { data, loading, error, refresh: refreshList } = useTournaments();
@@ -42,14 +46,19 @@ export default function TournamentsScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && data !== null} onRefresh={refresh} tintColor={colors.ink} />}
       >
         <Reveal i={next()}>
-          <View style={styles.head}>
-            <Text style={styles.title}>{c.title}</Text>
-            <AddMatch />
+          <View style={styles.headBlock}>
+            <View style={styles.head}>
+              <Text style={styles.title}>{c.title}</Text>
+              <AddMatch />
+            </View>
+            {/* what this tab is for, as on Αποτελέσματα and the Ladder (founder, 21 Oct) */}
+            <Text style={styles.subtitle}>{c.subtitle}</Text>
           </View>
         </Reveal>
         <SearchLink i={next()} />
@@ -305,6 +314,8 @@ const styles = StyleSheet.create({
   searchHit: { alignSelf: 'flex-start', minHeight: 44, marginTop: -10, marginBottom: -6, justifyContent: 'center' },
   searchText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.inkSoft, textDecorationLine: 'underline' },
   title: { ...text.title, flexShrink: 1 },
+  headBlock: { gap: 6 },
+  subtitle: text.subtitle,
   proCard: { padding: 18, borderRadius: 24, backgroundColor: colors.ink, gap: 10 },
   proHead: { fontFamily: fonts.displayHeavy, fontSize: 34, lineHeight: 36, paddingBottom: 7, marginBottom: -7, color: colors.lime },
   proLabel: { fontFamily: fonts.bodyBold, fontSize: 13, letterSpacing: 0.78, color: colors.mist },

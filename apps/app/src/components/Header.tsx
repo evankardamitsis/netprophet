@@ -6,7 +6,8 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, usePathname } from 'expo-router';
+import { requestScrollTop } from '../lib/scrollTop';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCopy } from '../i18n';
 import { useMyBaller, type MeSummary } from '../lib/data';
@@ -51,7 +52,6 @@ export function Header({ me }: { me: MeSummary | null }) {
 }
 
 /** the avatar opens Εγώ; σερί and πόντοι open «Οι προβλέψεις σου», where both are told in full */
-const goMe = () => router.push('/me');
 const goNumbers = () => router.push('/me?page=stats');
 
 function Stat({
@@ -174,6 +174,9 @@ function Avatar({ initials, sport, points, pro }: { initials: string; sport: str
     }, []),
   );
   const tourRef = useTourTarget('avatar', front);
+  // on Εγώ already, the avatar is its tab: a tap scrolls back to the top (founder, 21 Oct)
+  const path = usePathname();
+  const goMe = () => (path === '/me' ? requestScrollTop('me') : router.push('/me'));
   return (
     <Pressable
       ref={tourRef}

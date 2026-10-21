@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { categoryCase, firstOpenIndex, foldSlot, resultStrip, runCategories, seenAdd, seenToggle, type CardResult, type SeenResults } from './feed';
+import { categoryCase, firstOpenIndex, foldSlot, resultStrip, runCategories, type CardResult } from './feed';
 
 const t = getCopy('el');
 
@@ -151,32 +151,5 @@ describe('resultStrip', () => {
   });
   it('a doubles miss uses the plural', () => {
     expect(resultStrip(result({ ok: false, pill: null, winnerSurname: 'Δρουλιάς & Πράτσας' }), t).name).toBe('Δρουλιάς & Πράτσας κέρδισαν');
-  });
-});
-
-describe('seen results (collapse state)', () => {
-  const empty: SeenResults = { list: [], open: null };
-  it('adds a played result once, in order', () => {
-    let s = seenAdd(empty, result({ id: 'a' }));
-    s = seenAdd(s, result({ id: 'b' }));
-    s = seenAdd(s, result({ id: 'a' }));
-    expect(s.list.map((c) => c.id)).toEqual(['a', 'b']);
-  });
-  it('a tap opens one strip, another tap folds it; opening another folds the first', () => {
-    let s = seenAdd(seenAdd(empty, result({ id: 'a' })), result({ id: 'b' }));
-    s = seenToggle(s, 'a');
-    expect(s.open).toBe('a');
-    s = seenToggle(s, 'b');
-    expect(s.open).toBe('b');
-    s = seenToggle(s, 'b');
-    expect(s.open).toBeNull();
-  });
-  it('closing a reopened card through seenAdd folds it again', () => {
-    let s = seenToggle(seenAdd(empty, result({ id: 'a' })), 'a');
-    s = seenAdd(s, result({ id: 'a' }));
-    expect(s.open).toBeNull();
-  });
-  it('ignores a tap on a strip that is not there', () => {
-    expect(seenToggle(empty, 'x')).toBe(empty);
   });
 });

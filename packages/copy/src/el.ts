@@ -285,14 +285,17 @@ export const el = {
     wonPair: '{winner} κέρδισαν',
     next: 'Επόμενο ›',
     done: 'Εντάξει',
-    /** results one by one (founder, 20 Oct); with 2 or more behind a card, «Και 13 ακόμα: 11 σωστά ›» takes them all at once */
+    /** results one by one (founder, 20 Oct); with 2 or more behind a card, «Πάρε τους πόντους» takes them all at once */
     summary: {
       more: 'Και {n} ακόμα',
-      allRight: 'όλα σωστά',
-      oneRight: '1 σωστό',
-      someRight: '{n} σωστά',
-      noneRight: 'κανένα σωστό',
-      points: '+{points}',
+      /** the row under the card (founder, 21 Oct): «Και 13 ακόμα: 11 ✓ · 2 χαμένα» and one action */
+      right: '{n} ✓',
+      wrongOne: '1 χαμένο',
+      wrongMany: '{n} χαμένα',
+      take: 'Πάρε τους πόντους',
+      /** the toast once they are taken: «+155 πόντοι · σερί 7»; with no point in them, «Τα είδες όλα · σερί 0» */
+      taken: '+{points} πόντοι · σερί {streak}',
+      takenNone: 'Τα είδες όλα · σερί {streak}',
     },
   },
   results: {
@@ -1321,6 +1324,8 @@ export const el = {
   },
   tournaments: {
     title: 'Τα τουρνουά σου',
+    /** under the title (founder, 21 Oct) */
+    subtitle: 'Δες ταμπλό και πρόγραμμα αγώνων',
     /** Εγώ: «2 ›», in blue, at the end of the row */
     meCount: '{count} ›',
     /** the feed's link after the fifth card */

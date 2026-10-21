@@ -9,7 +9,7 @@ import { mockLook } from '../mock/look';
 import { withWorn } from './look';
 import { mockQuests } from '../mock/quests';
 import { mockAnswer, mockQuiz } from '../mock/quiz';
-import { quizNeedsRead, withAnswer, withoutAnswer } from './quiz';
+import { quizFlightStuck, quizNeedsRead, withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
 import { mockTournament, mockTournaments, mockUpcoming } from '../mock/tournaments';
 import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
@@ -298,6 +298,9 @@ interface QuizStore {
 let quizStore: QuizStore = { quiz: null, loading: false, error: false };
 let quizMode: 'live' | 'mock' | null = null;
 let quizFlight: Promise<GetQuizResult | null> | null = null;
+/** when the read in flight started: one stuck in a frozen background socket must not block every later read */
+let quizFlightAt = 0;
+let quizFlightN = 0;
 /** an answer went through since the last read: the next look reads the set again */
 let quizPlayed = false;
 const quizListeners = new Set<() => void>();
@@ -335,21 +338,28 @@ export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
       setQuizStore({ quiz: api ? null : mockQuiz(), loading: false, error: false });
     }
     if (!api) return mockQuiz();
-    // the strip and the game screen can both ask at once: one request
-    quizFlight ??= (async () => {
-      setQuizStore({ loading: true });
-      quizPlayed = false;
-      try {
-        const quiz = await api.getQuiz();
-        setQuizStore({ quiz, loading: false, error: false });
-        return quiz;
-      } catch {
-        setQuizStore({ loading: false, error: true });
-        return null;
-      } finally {
-        quizFlight = null;
-      }
-    })();
+    // the strip and the game screen can both ask at once: one request (unless the one in flight is stuck)
+    if (quizFlight && quizFlightStuck(quizFlightAt, Date.now())) quizFlight = null;
+    if (!quizFlight) {
+      quizFlightAt = Date.now();
+      const n = ++quizFlightN;
+      // a newer read took over from this one (it was stuck): only the newest one writes
+      const mine = () => quizFlightN === n;
+      quizFlight = (async () => {
+        setQuizStore({ loading: true });
+        quizPlayed = false;
+        try {
+          const quiz = await api.getQuiz();
+          if (mine()) setQuizStore({ quiz, loading: false, error: false });
+          return quiz;
+        } catch {
+          if (mine()) setQuizStore({ loading: false, error: true });
+          return null;
+        } finally {
+          if (mine()) quizFlight = null;
+        }
+      })();
+    }
     return quizFlight;
   }, [api]);
 
@@ -380,6 +390,7 @@ export function useQuiz(onError?: (kind: QuizErrorKind) => void): QuizState {
 
   const refreshIfNeeded = useCallback(async (): Promise<GetQuizResult | null> => {
     if (quizMode === (api ? 'live' : 'mock') && !quizFlight && !quizNeedsRead(quizStore, quizPlayed, new Date())) return quizStore.quiz;
+    if (quizFlight && !quizFlightStuck(quizFlightAt, Date.now())) return quizFlight;
     return refresh();
   }, [api, refresh]);
 

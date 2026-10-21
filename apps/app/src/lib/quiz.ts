@@ -157,3 +157,22 @@ export function quizNeedsRead(state: { quiz: GetQuizResult | null; error: boolea
   const next = quiz.next_at ? Date.parse(quiz.next_at) : NaN;
   return Number.isFinite(next) && now.getTime() >= next;
 }
+
+/**
+ * How long until the held quiz is over (its next_at), so Σήμερα can read again right then. A phone left open on Σήμερα
+ * overnight never gets a focus event: without this (and the read when the app comes back to the front) it kept
+ * yesterday's finished set, and «Για σένα» stayed hidden all day (founder, 21 Oct). Null: nothing to wait for.
+ */
+export function quizStaleIn(quiz: GetQuizResult | null, now: Date): number | null {
+  const next = quiz?.next_at ? Date.parse(quiz.next_at) : NaN;
+  if (!Number.isFinite(next)) return null;
+  return Math.max(0, next - now.getTime());
+}
+
+/** a get_quiz read in flight longer than this is given up (a socket the phone froze in the background never settles) */
+export const QUIZ_FLIGHT_MS = 15_000;
+
+/** a read in flight since `startedAt` no longer blocks a new one */
+export function quizFlightStuck(startedAt: number, now: number): boolean {
+  return now - startedAt >= QUIZ_FLIGHT_MS;
+}

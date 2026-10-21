@@ -211,6 +211,8 @@ export const motion = {
   celebration: 3500,
   /** short reveal (text and chips) */
   revealDurShort: 560,
+  /** a card or block leaving the screen (fade, slide, shrink): quicker than a reveal, so the next one is not kept waiting */
+  exitDur: 420,
   ease: 'cubic-bezier(.16,1,.3,1)',
   /** overshooting curve the prototype calls --spring: pops, presses, chosen buttons */
   springCurve: 'cubic-bezier(.2,1.4,.4,1)',

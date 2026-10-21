@@ -1,6 +1,6 @@
 import { getCopy } from '@netprophet/copy';
 import { describe, expect, it } from 'vitest';
-import { addSkipped, restAfter, showSkip, skipIds, skipLine, skipStrip, summaryCounts } from './resultsSummary';
+import { restAfter, restLine, showSkip, skipIds, summaryCounts, takeAll, takenToast } from './resultsSummary';
 
 const el = getCopy('el');
 const en = getCopy('en');
@@ -30,33 +30,43 @@ describe('summaryCounts', () => {
   });
 });
 
-describe('skipLine', () => {
+describe('restLine', () => {
   it('reads the founder example in el and en', () => {
-    expect(skipLine(thirteen, el)).toBe('Και 13 ακόμα: 11 σωστά');
-    expect(skipLine(thirteen, en)).toBe('And 13 more: 11 right');
+    expect(restLine(thirteen, el)).toBe('Και 13 ακόμα: 11 ✓ · 2 χαμένα');
+    expect(restLine(thirteen, en)).toBe('And 13 more: 11 ✓ · 2 missed');
   });
 
-  it('all right, one right, none right', () => {
-    expect(skipLine([r('a', true), r('b', true), r('c', true)], el)).toBe('Και 3 ακόμα: όλα σωστά');
-    expect(skipLine([r('a', true), r('b', false), r('c', false)], el)).toBe('Και 3 ακόμα: 1 σωστό');
-    expect(skipLine([r('a', false), r('b', false)], el)).toBe('Και 2 ακόμα: κανένα σωστό');
-    expect(skipLine([r('a', true), r('b', true)], en)).toBe('And 2 more: all right');
-    expect(skipLine([r('a', false), r('b', false)], en)).toBe('And 2 more: none right');
+  it('leaves out a part with nothing in it, one miss is singular', () => {
+    expect(restLine([r('a', true), r('b', true), r('c', true)], el)).toBe('Και 3 ακόμα: 3 ✓');
+    expect(restLine([r('a', true), r('b', true), r('c', false)], el)).toBe('Και 3 ακόμα: 2 ✓ · 1 χαμένο');
+    expect(restLine([r('a', false), r('b', false)], el)).toBe('Και 2 ακόμα: 2 χαμένα');
+    expect(restLine([r('a', false), r('b', true)], en)).toBe('And 2 more: 1 ✓ · 1 missed');
   });
 });
 
-describe('skipStrip', () => {
-  it('confirms what the line said, points apart for the lime', () => {
-    expect(skipStrip(thirteen, el)).toEqual({ tick: true, text: '11 σωστά', points: '+155' });
-    expect(skipStrip(thirteen, en)).toEqual({ tick: true, text: '11 right', points: '+155' });
+describe('takeAll («Πάρε τους πόντους»)', () => {
+  const s = (id: string, ok: boolean, points: number, streak: number) => ({ id, ok, points, streak });
+  const card = s('c', true, 10, 3);
+  const rest = [s('a', true, 15, 4), s('b', false, 0, 0), s('d', true, 10, 1)];
+
+  it('the points behind the card, σερί where the last result leaves it', () => {
+    expect(takeAll(card, rest, true)).toEqual({ points: 25, streak: 1, allRight: false });
   });
 
-  it('none right: no tick, no points', () => {
-    expect(skipStrip([r('a', false), r('b', false)], el)).toEqual({ tick: false, text: 'κανένα σωστό', points: null });
+  it('the card on screen counts too while its own moment has not landed', () => {
+    expect(takeAll(card, rest, false)).toEqual({ points: 35, streak: 1, allRight: false });
   });
 
-  it('shows the points only when there are some', () => {
-    expect(skipStrip([r('a', true, 0), r('b', false)], el).points).toBeNull();
+  it('«+1» to σερί only when every one was right', () => {
+    expect(takeAll(card, [s('a', true, 15, 4), s('d', true, 10, 5)], true)).toEqual({ points: 25, streak: 5, allRight: true });
+  });
+});
+
+describe('takenToast', () => {
+  it('says the points and σερί, or that they were seen', () => {
+    expect(takenToast({ points: 155, streak: 7 }, el)).toBe('+155 πόντοι · σερί 7');
+    expect(takenToast({ points: 155, streak: 7 }, en)).toBe('+155 points · streak 7');
+    expect(takenToast({ points: 0, streak: 0 }, el)).toBe('Τα είδες όλα · σερί 0');
   });
 });
 
@@ -65,13 +75,5 @@ describe('skipIds', () => {
     const q = queue(5);
     expect(skipIds(q[0]!, restAfter(q))).toEqual(['c1', 'c2', 'c3', 'c4', 'c5']);
     expect(skipIds(q[0]!, [q[0]!, q[1]!])).toEqual(['c1', 'c2']);
-  });
-});
-
-describe('addSkipped', () => {
-  it('batches add up, each result once', () => {
-    const a = [r('a', true), r('b', false)];
-    expect(addSkipped([], a)).toEqual(a);
-    expect(addSkipped(a, [r('b', false), r('c', true)]).map((x) => x.id)).toEqual(['a', 'b', 'c']);
   });
 });
