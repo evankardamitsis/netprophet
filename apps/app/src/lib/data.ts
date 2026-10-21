@@ -1816,7 +1816,7 @@ export function usePlayStyle(): PlayStyleState {
 }
 
 /** the push switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs */
-export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders';
+export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders' | 'followed';
 
 export interface PushPrefsState {
   on: (key: PushPrefKey) => boolean;
@@ -1826,7 +1826,8 @@ export interface PushPrefsState {
 /**
  * The push switches in Εγώ › Ρυθμίσεις, saved on the account (every device), each on unless switched off:
  * «Αντιδράσεις στα ματς σου» ('reactions', founder 20 Oct) and, for Pro, «Τα τουρνουά σου» ('tournaments': the draw,
- * your schedule and its changes, entry deadlines) and «Πριν το ματς σου» ('reminders'). They live in
+ * your schedule and its changes, entry deadlines) and «Πριν το ματς σου» ('reminders'), and for everyone «Τουρνουά
+ * που ακολουθείς» ('followed', 21 Oct: the draw, tomorrow's schedule, the final). They live in
  * notification_prefs, which update_profile replaces whole, so one shared copy is read first and sent back with every
  * change. The server (core.reaction_notify, core.push_wants) is what honours them.
  */

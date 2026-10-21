@@ -598,6 +598,9 @@ export const el = {
     /** the push when someone reacts to your match (founder, 20 Oct); saved on the account, on unless switched off */
     reactionsPush: 'Αντιδράσεις στα ματς σου',
     reactionsPushLine: 'Σου λέμε όταν κάποιος αντιδρά σε ματς σου. Το πολύ μία ειδοποίηση ανά ματς κάθε 3 ώρες.',
+    /** for everyone (21 Oct): the tournaments you follow */
+    followedPush: 'Τουρνουά που ακολουθείς',
+    followedPushLine: 'Η κλήρωση, το αυριανό πρόγραμμα και ο τελικός. Ποτέ από τις 23:00 ως τις 08:00.',
     /** Pro pushes (21 Oct), saved on the account, on unless switched off; never 23:00 to 08:00 */
     tournamentsPush: 'Τα τουρνουά σου',
     tournamentsPushLine: 'Η κλήρωση μόλις βγει, η μέρα και η ώρα σου, κάθε αλλαγή και οι δηλώσεις που κλείνουν. Ποτέ από τις 23:00 ως τις 08:00.',
@@ -1383,6 +1386,8 @@ export const el = {
     chipDone: 'τελείωσε',
     chipSoon: 'σύντομα',
     chipIn: 'παίζεις',
+    /** a tournament you follow */
+    chipFollowing: 'ακολουθείς',
     /** «Γήπεδα Γλυφάδας · 17/10 έως 18/10» */
     sub: '{venue} · {from} έως {to}',
     subDates: '{from} έως {to}',
@@ -1396,6 +1401,13 @@ export const el = {
     weekdaysOn: ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'],
     detail: {
       back: '‹ Τουρνουά',
+      /** the follow pill in the header (21 Oct: free for everyone) */
+      follow: 'Ακολούθησε',
+      following: '✓ Ακολουθείς',
+      followedToast: 'Θα σου πούμε για κλήρωση, πρόγραμμα και τελικό.',
+      unfollowedToast: 'Δεν ακολουθείς πια',
+      followFailed: 'Δεν έγινε. Δοκίμασε ξανά.',
+      followTooMany: 'Ακολουθείς ήδη 100 τουρνουά. Άφησε κάποιο πρώτα.',
       schedule: 'Πρόγραμμα',
       bracket: 'Ταμπλό',
       postponed: 'Αναβλήθηκε',

@@ -422,7 +422,8 @@ union all select 'results', api.get_results(), tests.old_get_results()
 union all select 'results_t', api.get_results(14, 60, '00000000-0000-0000-0000-0000000020a1'), tests.old_get_results(14, 60, '00000000-0000-0000-0000-0000000020a1')
 union all select 'results_q', api.get_results(14, 60, null, 'φιλος'), tests.old_get_results(14, 60, null, 'φιλος')
 union all select 'results_3', api.get_results(14, 3), tests.old_get_results(14, 3)
-union all select 'tournament', api.get_tournament('00000000-0000-0000-0000-0000000020a1'), tests.old_get_tournament('00000000-0000-0000-0000-0000000020a1');
+-- (followed and followers came later, 20270305000000_tournament_follow)
+union all select 'tournament', api.get_tournament('00000000-0000-0000-0000-0000000020a1') - 'followed' - 'followers', tests.old_get_tournament('00000000-0000-0000-0000-0000000020a1');
 select tests.login(:'fr'::uuid);
 insert into cmp select 'feed_fr', api.get_feed(20), tests.old_get_feed(20);
 select tests.logout();

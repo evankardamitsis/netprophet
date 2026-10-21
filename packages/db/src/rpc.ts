@@ -943,6 +943,8 @@ export interface TournamentItem {
   /** matches today */
   today: number;
   in_it: boolean;
+  /** you follow it (20270305000000_tournament_follow); missing on servers before 21 Oct 2026 */
+  followed?: boolean;
 }
 
 /** api.get_tournaments. `mine` is null unless you have Pro (and a claimed player). */
@@ -1058,10 +1060,19 @@ export interface GetTournamentResult {
   state: TournamentState;
   /** your player id, when you have claimed one */
   me: string | null;
+  /** you follow it, and how many do (20270305000000_tournament_follow); missing on servers before 21 Oct 2026 */
+  followed?: boolean;
+  followers?: number;
   draws: TournamentDraw[];
   /** placeholders (#1, #2, ...) that stand in the draws for hidden players and minors; their names never reach the app */
   masked: string[];
   days: { date: string; matches: TournamentMatch[] }[];
+}
+
+/** api.follow_tournament */
+export interface FollowTournamentResult {
+  followed: boolean;
+  followers: number;
 }
 
 /** claim_player / claim_via_link: a roster player is asked for (`requested`, staff approve); a pending player from a link is taken (`claimed`) */

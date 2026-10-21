@@ -25,6 +25,24 @@ describe('list', () => {
     expect(chipOf(item({}), '2026-10-13', t).text).toBe('σε 4 μέρες');
     expect(chipOf(item({}), '2026-10-16', t).text).toBe('αύριο');
   });
+  it('chip: followed says «ακολουθείς», never lime; playing in it wins', () => {
+    expect(chipOf(item({ followed: true, state: 'ongoing' }), '2026-10-13', t)).toEqual({ text: 'ακολουθείς', hot: false });
+    expect(chipOf(item({ followed: true, in_it: true }), '2026-10-13', t)).toEqual({ text: 'παίζεις', hot: true });
+  });
+  it('followed ones go at the top with «Τα δικά σου» while live; a finished one stays in «Τελείωσαν»', () => {
+    const items = [
+      item({ id: 'on', state: 'ongoing' }),
+      item({ id: 'onFollowed', state: 'ongoing', followed: true }),
+      item({ id: 'soonMine', state: 'upcoming', in_it: true }),
+      item({ id: 'soonFollowed', state: 'upcoming', followed: true }),
+      item({ id: 'doneFollowed', state: 'done', followed: true }),
+    ];
+    expect(sectionsOf(items, t).map((x) => [x.title, x.items.map((i) => i.id)])).toEqual([
+      ['Τα δικά σου', ['onFollowed', 'soonMine', 'soonFollowed']],
+      ['Τώρα', ['on']],
+      ['Τελείωσαν', ['doneFollowed']],
+    ]);
+  });
   it('sub and bold lines leave out what is missing', () => {
     expect(subLine(item({}), t)).toBe('Γήπεδα Γλυφάδας · 17/10 έως 18/10');
     expect(subLine(item({ venue: null, starts_on: null, ends_on: null }), t)).toBe('');
