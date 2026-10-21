@@ -37,6 +37,8 @@ select is((select count(*)::int from core.notifications where user_id = :'late':
 update core.tournament_draws set draw = draw || '{"flags": []}'::jsonb where tournament_id = :'t'::uuid;
 select is((select count(*)::int from core.notifications where user_id = :'pro'::uuid and type = 'draw'), 1, 'a later run: not again');
 
+-- a run between 23:00 and 08:00 Athens waits for 08:00 (20270304000000_pro_notifications): due now, whatever the hour
+update core.outbox set run_after = now() where done_at is null and run_after > now();
 select core.take_push_batch(200) as b \gset
 select is(jsonb_array_length(:'b'::jsonb), 1, 'one push');
 select ok(jsonb_path_exists(:'b'::jsonb, '$[*] ? (@.data.type == "draw" && @.title == "Βγήκε η κλήρωση")'), 'typed, with its own title');

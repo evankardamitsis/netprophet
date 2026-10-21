@@ -13,7 +13,7 @@ import { guestAllowed, useAuth } from '../../src/lib/auth';
 import { useOnboardingGate } from '../../src/lib/onboardingGate';
 import { useSoundsOn } from '../../src/lib/sound';
 import { useTour } from '../../src/lib/tour';
-import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, useReactionPush } from '../../src/lib/data';
+import { useApi, useBaller, useBadges, useBlocks, useClaimLater, useLook, useMyLevel, useMePage, usePro, useQuests, useMyAvatar, usePushPrefs, type PushPrefKey } from '../../src/lib/data';
 import { hasNewLook, levelBackOf, type LevelBack } from '../../src/lib/look';
 import { useLookSeen } from '../../src/lib/lookSeen';
 import { greekCaps } from '@netprophet/copy';
@@ -141,7 +141,7 @@ export default function MeScreen() {
                 ) : s === 'pro' ? (
                   <ProRow state={pro.state} />
                 ) : (
-                  <Settings onPlaySaved={() => void refresh(true)} />
+                  <Settings pro={isPro} onPlaySaved={() => void refresh(true)} />
                 )}
               </Section>
             ))
@@ -746,12 +746,12 @@ function Friends({ v }: { v: MeView }) {
 
 /**
  * «Ρυθμίσεις», closed until tapped, at the bottom: «Πώς παίζεις» (hand and tournaments, out of the first run since
- * 19 Oct), sounds, reaction pushes, blocked people, Αποσύνδεση and deleting the account
+ * 19 Oct), sounds, the push switches, blocked people, Αποσύνδεση and deleting the account
  */
 /** the address «Γράψε μας» opens (the one the delete error already names) */
 const CONTACT_EMAIL = 'hello@monadlabs.gr';
 
-function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
+function Settings({ pro, onPlaySaved }: { pro: boolean; onPlaySaved: () => void }) {
   const t = useCopy();
   const { signOut } = useAuth();
   const [open, setOpen] = useState(false);
@@ -770,7 +770,7 @@ function Settings({ onPlaySaved }: { onPlaySaved: () => void }) {
         <>
           <PlayStyleRow onSaved={onPlaySaved} />
           <SoundsRow />
-          <ReactionsPushRow />
+          <PushRows pro={pro} />
           {/* the first-visit tour once more: it starts on Σήμερα as soon as the feed is ready */}
           <Pressable
             accessibilityRole="button"
@@ -844,18 +844,40 @@ function SoundsRow() {
   );
 }
 
-/** «Αντιδράσεις στα ματς σου»: the push when someone reacts to your match, saved on the account (every device) */
-function ReactionsPushRow() {
+/**
+ * The push switches, saved on the account (every device): «Αντιδράσεις στα ματς σου» for everyone, and with Pro
+ * «Τα τουρνουά σου» (the draw, your schedule and its changes, entry deadlines) and «Πριν το ματς σου» (reminders)
+ */
+function PushRows({ pro }: { pro: boolean }) {
   const t = useCopy();
-  const push = useReactionPush();
+  const prefs = usePushPrefs();
+  const rows: { key: PushPrefKey; title: string; line: string }[] = [
+    ...(pro
+      ? [
+          { key: 'tournaments' as const, title: t.me.tournamentsPush, line: t.me.tournamentsPushLine },
+          { key: 'reminders' as const, title: t.me.remindersPush, line: t.me.remindersPushLine },
+        ]
+      : []),
+    { key: 'reactions', title: t.me.reactionsPush, line: t.me.reactionsPushLine },
+  ];
   return (
-    <View style={styles.soundsRow}>
-      <View style={styles.proText}>
-        <Text style={styles.proTitle}>{t.me.reactionsPush}</Text>
-        <Text style={styles.muted}>{t.me.reactionsPushLine}</Text>
-      </View>
-      <Switch value={push.on} onValueChange={(on) => void push.set(on)} trackColor={{ false: colors.navLine, true: colors.ink }} thumbColor={colors.white} accessibilityLabel={t.me.reactionsPush} />
-    </View>
+    <>
+      {rows.map((r) => (
+        <View key={r.key} style={styles.soundsRow}>
+          <View style={styles.proText}>
+            <Text style={styles.proTitle}>{r.title}</Text>
+            <Text style={styles.muted}>{r.line}</Text>
+          </View>
+          <Switch
+            value={prefs.on(r.key)}
+            onValueChange={(on) => void prefs.set(r.key, on)}
+            trackColor={{ false: colors.navLine, true: colors.ink }}
+            thumbColor={colors.white}
+            accessibilityLabel={r.title}
+          />
+        </View>
+      ))}
+    </>
   );
 }
 

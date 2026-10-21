@@ -1804,17 +1804,22 @@ export function usePlayStyle(): PlayStyleState {
   return { hand, tour, saving, failed, save };
 }
 
-export interface ReactionPushState {
-  on: boolean;
-  set: (on: boolean) => Promise<void>;
+/** the push switches in Εγώ › Ρυθμίσεις: keys of the account's notification_prefs */
+export type PushPrefKey = 'reactions' | 'tournaments' | 'reminders';
+
+export interface PushPrefsState {
+  on: (key: PushPrefKey) => boolean;
+  set: (key: PushPrefKey, on: boolean) => Promise<void>;
 }
 
 /**
- * «Αντιδράσεις στα ματς σου» in Εγώ › Ρυθμίσεις (founder, 20 Oct): the push when someone reacts to your match, on
- * unless switched off. It lives in the account's notification_prefs, which update_profile replaces whole, so the
- * other keys are read first and sent back with it. The server (core.reaction_notify) is what honours it.
+ * The push switches in Εγώ › Ρυθμίσεις, saved on the account (every device), each on unless switched off:
+ * «Αντιδράσεις στα ματς σου» ('reactions', founder 20 Oct) and, for Pro, «Τα τουρνουά σου» ('tournaments': the draw,
+ * your schedule and its changes, entry deadlines) and «Πριν το ματς σου» ('reminders'). They live in
+ * notification_prefs, which update_profile replaces whole, so one shared copy is read first and sent back with every
+ * change. The server (core.reaction_notify, core.push_wants) is what honours them.
  */
-export function useReactionPush(): ReactionPushState {
+export function usePushPrefs(): PushPrefsState {
   const api = useApi();
   const [prefs, setPrefs] = useState<Record<string, unknown>>({});
   useEffect(() => {
@@ -1833,9 +1838,9 @@ export function useReactionPush(): ReactionPushState {
     };
   }, [api]);
   const set = useCallback(
-    async (on: boolean) => {
+    async (key: PushPrefKey, on: boolean) => {
       const before = prefs;
-      const next = { ...prefs, reactions: on };
+      const next = { ...prefs, [key]: on };
       setPrefs(next);
       if (!api) return;
       try {
@@ -1846,7 +1851,8 @@ export function useReactionPush(): ReactionPushState {
     },
     [api, prefs],
   );
-  return { on: prefs.reactions !== false, set };
+  const on = useCallback((key: PushPrefKey) => prefs[key] !== false, [prefs]);
+  return { on, set };
 }
 
 export interface TournamentsState {
