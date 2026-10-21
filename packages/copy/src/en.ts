@@ -520,6 +520,10 @@ export const en: Copy = {
     soundsLine: 'Little sounds from your Baller. Quiet when your phone is on silent.',
     reactionsPush: 'Reactions to your matches',
     reactionsPushLine: 'We tell you when someone reacts to one of your matches. At most one notification per match every 3 hours.',
+    tournamentsPush: 'Your tournaments',
+    tournamentsPushLine: 'The draw as soon as it is out, your day and time, every change and entries about to close. Never from 23:00 to 08:00.',
+    remindersPush: 'Before your match',
+    remindersPushLine: 'The evening before and two hours before, with your opponent. Never from 23:00 to 08:00.',
     error: 'It did not load. Pull down to try again.',
   },
   pro: {

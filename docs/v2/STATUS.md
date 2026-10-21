@@ -136,6 +136,7 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
 - Order: foundations (is_pro, get_pro, waitlist, staff grant, Pro screen) → scouting → πού κερδίζεις → τα στατιστικά σου → web checkout + webhook → tournaments.
 - Blocked on the founder: a payment provider account (merchant of record or Stripe, an accountant's call for Greek receipts), the web app's domain for checkout, and `parse_oop.py` + the TAF sheet for tournaments.
 - Until checkout is live «Γίνε μέλος» puts you on the list (`entitlements.source = 'waitlist'`), which grants nothing.
+- Pro pushes, audited 21 Oct (`20270304000000_pro_notifications.sql`): the draw (`core.draw_alert`, when the draw sheet is stored), your schedule new / moved / postponed (`core.schedule_alert`, from the sheet ingest), reminders the evening before and two hours before (`core.match_reminders`, pg_cron every 10 min) and entry deadlines (`core.entry_reminders`) all go out for real through the outbox and `core.send_push`, Pro only. Each carries `data.url` (tournament, tournament on its draw, «Ο αντίπαλος πριν το ματς»). Quiet hours 23:00 to 08:00 Athens. Switches in Ρυθμίσεις for Pro: «Τα τουρνουά σου», «Πριν το ματς σου». There is no "follow a tournament": «Τα τουρνουά σου» means the tournaments of your claimed player, plus entry deadlines near you.
 
 ## At cutover (M7), not before
 - `netprophet-admin` was deleted on 17 Oct, so `netprophet-admin-v2` stays the admin's project; drop its placeholder `NEXT_PUBLIC_SUPABASE_ANON_KEY`.

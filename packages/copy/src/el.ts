@@ -595,6 +595,11 @@ export const el = {
     /** the push when someone reacts to your match (founder, 20 Oct); saved on the account, on unless switched off */
     reactionsPush: 'Αντιδράσεις στα ματς σου',
     reactionsPushLine: 'Σου λέμε όταν κάποιος αντιδρά σε ματς σου. Το πολύ μία ειδοποίηση ανά ματς κάθε 3 ώρες.',
+    /** Pro pushes (21 Oct), saved on the account, on unless switched off; never 23:00 to 08:00 */
+    tournamentsPush: 'Τα τουρνουά σου',
+    tournamentsPushLine: 'Η κλήρωση μόλις βγει, η μέρα και η ώρα σου, κάθε αλλαγή και οι δηλώσεις που κλείνουν. Ποτέ από τις 23:00 ως τις 08:00.',
+    remindersPush: 'Πριν το ματς σου',
+    remindersPushLine: 'Το βράδυ πριν και δύο ώρες πριν, με τον αντίπαλο. Ποτέ από τις 23:00 ως τις 08:00.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
   },
   pro: {

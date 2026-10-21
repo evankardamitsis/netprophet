@@ -17,6 +17,9 @@ select core.ingest_run(:'t'::uuid, jsonb_build_array(jsonb_build_object('fingerp
   'discipline', 'MS', 'level', 'OPEN', 'side1', jsonb_build_array(jsonb_build_object('player_id', :'pp')),
   'side2', jsonb_build_array(jsonb_build_object('player_id', :'fp')), 'result', null)), 'cron', null);
 set constraints core.schedule_alert_on_participant immediate;   -- as at the end of the run's transaction
+-- between 23:00 and 08:00 Athens a push waits for 08:00 and a newer one for the match takes its place
+-- (20270304000000_pro_notifications, tested there): here each one is due at once, whatever the hour
+update core.outbox set run_after = now() where done_at is null and run_after > now();
 
 select is((select count(*)::int from core.notifications where user_id = :'pro'::uuid and type = 'schedule'), 1, 'Pro: the new match');
 select is((select count(*)::int from core.notifications where user_id = :'free'::uuid and type = 'schedule'), 0, 'free: nothing');
@@ -24,10 +27,12 @@ select ok((select payload ->> 'body' from core.notifications where user_id = :'p
           'the body names the tournament and the opponent');
 
 update core.matches set starts_at = starts_at + interval '1 day' where source_ref = 'al-1';
+update core.outbox set run_after = now() where done_at is null and run_after > now();
 select is((select count(*)::int from core.notifications where user_id = :'pro'::uuid and type = 'schedule'), 2, 'a new time: a second alert');
 update core.matches set postponed_at = now() where source_ref = 'al-1';
 select ok(exists (select 1 from core.notifications where user_id = :'pro'::uuid and payload ->> 'title' = 'Αναβλήθηκε το ματς σου'), 'postponed: told');
 
+update core.outbox set run_after = now() where done_at is null and run_after > now();
 select core.take_push_batch(200) as b \gset
 select is(jsonb_array_length(:'b'::jsonb), 3, 'three typed pushes, one by one');
 select ok(jsonb_path_exists(:'b'::jsonb, '$[*] ? (@.data.type == "schedule" && @.to == "ExponentPushToken[pro]")'), 'to the Pro device');
