@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1034712362394",
+    "project_id": "netprophet-466714",
+    "storage_bucket": "netprophet-466714.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034712362394:android:24fc8ac2c56d8674a01e23",
+        "android_client_info": {
+          "package_name": "gr.monadlabs.netprophet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1034712362394-6erg2f6ov1m7inuhjcjeq373rfbs86bu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvlUjo9HXahAvTgoz7FLMwW6ZiK-4WbHA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1034712362394-6erg2f6ov1m7inuhjcjeq373rfbs86bu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
