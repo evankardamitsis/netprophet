@@ -67,3 +67,8 @@ export function takenToast(taken: { points: number; streak: number }, t: Copy): 
 export function skipIds(card: Row, rest: readonly Row[]): string[] {
   return [card.id, ...rest.map((r) => r.id).filter((id) => id !== card.id)];
 }
+
+/** a tap on the card: the first one opens the full view, a tap while it is open sends the card off (same as «Επόμενο ›») */
+export function cardTap(full: boolean): 'open' | 'next' {
+  return full ? 'next' : 'open';
+}
