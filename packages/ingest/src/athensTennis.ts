@@ -1,4 +1,4 @@
-import type { Discipline } from './category';
+import { normalizeCategory, type Discipline } from './category';
 import { sheetKey, type SheetPerson } from './names';
 import type { SheetMatch } from './oop';
 import type { SheetSet } from './score';
@@ -261,7 +261,7 @@ function toMatch(date: string, club: string, r: RowParts, known: Map<string, { f
     time: r.time,
     venue,
     discipline: cat.discipline,
-    level: cat.level,
+    level: normalizeCategory(cat.level),
     categoryRaw: r.categoryRaw.trim(),
     side1: side1.map((p) => `${p.surname} ${p.first}`.trim()).join(' / '),
     side2: side2.map((p) => `${p.surname} ${p.first}`.trim()).join(' / '),

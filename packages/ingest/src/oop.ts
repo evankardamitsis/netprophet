@@ -1,4 +1,4 @@
-import { parseCategory, type Discipline } from './category';
+import { parseCategory, parseCategoryRaw, type Discipline } from './category';
 import { parseSheetSide, type SheetPerson } from './names';
 import { parseScore, type ScoreStatus, type SheetSet } from './score';
 
@@ -164,7 +164,7 @@ export function parseSheet(tabs: TabInput[], seasonStartYear: number): SheetMatc
         setsWon: `${score.won[0]}-${score.won[1]}`,
         winner: score.winner,
         status: score.status,
-        fingerprint: [day.date, discipline, cat.level, ...[k1, k2].sort()].join('|'),
+        fingerprint: [day.date, discipline, parseCategoryRaw(g('c')).level, ...[k1, k2].sort()].join('|'),
         flags: [...f],
         dk: JSON.stringify([discipline, cat.level, [k1, k2].sort(), scoreRaw.toLowerCase()]),
       });

@@ -1,0 +1,242 @@
+[
+ {
+  "in": "60",
+  "out": "60+"
+ },
+ {
+  "in": "60+",
+  "out": "60+"
+ },
+ {
+  "in": "60 +",
+  "out": "60+"
+ },
+ {
+  "in": " 60 ",
+  "out": "60+"
+ },
+ {
+  "in": "65 ",
+  "out": "65+"
+ },
+ {
+  "in": "65",
+  "out": "65+"
+ },
+ {
+  "in": "35",
+  "out": "35+"
+ },
+ {
+  "in": "85",
+  "out": "85+"
+ },
+ {
+  "in": "40",
+  "out": "40+"
+ },
+ {
+  "in": "45 +",
+  "out": "45+"
+ },
+ {
+  "in": "30",
+  "out": "30"
+ },
+ {
+  "in": "37",
+  "out": "37"
+ },
+ {
+  "in": "90",
+  "out": "90"
+ },
+ {
+  "in": "-40",
+  "out": "-40"
+ },
+ {
+  "in": "40-",
+  "out": "-40"
+ },
+ {
+  "in": "40 -",
+  "out": "-40"
+ },
+ {
+  "in": "- 40",
+  "out": "-40"
+ },
+ {
+  "in": "U40",
+  "out": "-40"
+ },
+ {
+  "in": "u 40",
+  "out": "-40"
+ },
+ {
+  "in": "U-45",
+  "out": "-45"
+ },
+ {
+  "in": "−40",
+  "out": "-40"
+ },
+ {
+  "in": "40–",
+  "out": "-40"
+ },
+ {
+  "in": "40-54",
+  "out": "40-54"
+ },
+ {
+  "in": "40 - 54",
+  "out": "40-54"
+ },
+ {
+  "in": "40–54",
+  "out": "40-54"
+ },
+ {
+  "in": "MASTER",
+  "out": "MASTER"
+ },
+ {
+  "in": "Master",
+  "out": "MASTER"
+ },
+ {
+  "in": "ΜASTER",
+  "out": "MASTER"
+ },
+ {
+  "in": "MASTERS",
+  "out": "MASTERS"
+ },
+ {
+  "in": "MEDIUM",
+  "out": "MEDIUM"
+ },
+ {
+  "in": "medium",
+  "out": "MEDIUM"
+ },
+ {
+  "in": "ΜEDIUM",
+  "out": "MEDIUM"
+ },
+ {
+  "in": "MMEDIUM",
+  "out": "MEDIUM"
+ },
+ {
+  "in": "MED",
+  "out": "MEDIUM"
+ },
+ {
+  "in": "OPEN",
+  "out": "OPEN"
+ },
+ {
+  "in": "ΟΡΕΝ",
+  "out": "OPEN"
+ },
+ {
+  "in": "Open",
+  "out": "OPEN"
+ },
+ {
+  "in": "OΡEN",
+  "out": "OPEN"
+ },
+ {
+  "in": "ROOKIE",
+  "out": "ROOKIES"
+ },
+ {
+  "in": "ROOKIES",
+  "out": "ROOKIES"
+ },
+ {
+  "in": "ROOK 2",
+  "out": "ROOKIES 2"
+ },
+ {
+  "in": "ROOKIE 2",
+  "out": "ROOKIES 2"
+ },
+ {
+  "in": "ROOKIES2",
+  "out": "ROOKIES 2"
+ },
+ {
+  "in": "ROOKIES 2",
+  "out": "ROOKIES 2"
+ },
+ {
+  "in": "RΟΟKIES 3",
+  "out": "ROOKIES 3"
+ },
+ {
+  "in": "MED/ADV",
+  "out": "MED/ADV"
+ },
+ {
+  "in": "MED / ADV",
+  "out": "MED/ADV"
+ },
+ {
+  "in": "MED ADV",
+  "out": "MED/ADV"
+ },
+ {
+  "in": "MED  /ADV",
+  "out": "MED/ADV"
+ },
+ {
+  "in": "ADV",
+  "out": "ADV"
+ },
+ {
+  "in": "ΑΝΔΡΩΝ",
+  "out": "ΑΝΔΡΩΝ"
+ },
+ {
+  "in": "ANΔΡΩN",
+  "out": "ΑΝΔΡΩΝ"
+ },
+ {
+  "in": "ΕΛΕΥΘΕΡΟ",
+  "out": "ΕΛΕΥΘΕΡΟ"
+ },
+ {
+  "in": "E\u039b\u0395\u03a5\u0398\u0395\u03a1O",
+  "out": "ΕΛΕΥΘΕΡΟ"
+ },
+ {
+  "in": "Regular Season 2026–27",
+  "out": "Regular Season 2026–27"
+ },
+ {
+  "in": "Atrp 5-5.5",
+  "out": "Atrp 5-5.5"
+ },
+ {
+  "in": "AT 250 @ PRC ATRP 2.5",
+  "out": "AT 250 @ PRC ATRP 2.5"
+ },
+ {
+  "in": "W45+",
+  "out": "W45+"
+ },
+ {
+  "in": "BINJAKU",
+  "out": "BINJAKU"
+ },
+ {
+  "in": "",
+  "out": ""
+ }
+]
