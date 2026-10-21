@@ -1,16 +1,22 @@
-import { useState, type ReactNode } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRef, useState, type ReactNode } from 'react';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
+import { ScheduleCard } from '../../../src/components/ScheduleCard';
 import { Logo } from '../../../src/components/Logo';
 import { useCopy } from '../../../src/i18n';
 import { useTournament } from '../../../src/lib/data';
 import { BracketTree } from '../../../src/components/BracketTree';
 import { RoundRobin } from '../../../src/components/RoundRobin';
+import { track } from '../../../src/lib/analytics';
 import { usePress, useStgIn } from '../../../src/lib/motion';
+import { SCHEDULE_RATIO, scheduleMessage, shareView } from '../../../src/lib/scheduleShare';
+import { shareCard } from '../../../src/lib/shareCard';
+import { fmt } from '../../../src/lib/votes';
 import {
   bracketRounds,
+  dayLong,
   groupViews,
   dayChips,
   defaultDay,
@@ -122,13 +128,45 @@ function Schedule({ d, today }: { d: GetTournamentResult; today: string }) {
   const [pickedDay, setPickedDay] = useState<string | null>(null);
   const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : defaultDay(d.days, today) ?? d.days[0]?.date ?? null;
   const rows = scheduleRows(d.days.find((x) => x.date === day)?.matches ?? [], d.me, t);
+  const sh = t.tournaments.detail.share;
+  const card = useRef<View>(null);
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const press = usePress();
+  const view = shareView(rows, t.tournaments.detail.masked);
+  // «Μοιράσου»: the day as a picture through the share sheet (the words and the link on the web)
+  const share = async () => {
+    if (!day || busy) return;
+    setBusy(true);
+    setFailed(false);
+    try {
+      const via = await shareCard(card, scheduleMessage(t, d.name, day), fmt(sh.title, { day: dayLong(day, t) }), SCHEDULE_RATIO);
+      track('schedule_shared', { via, matches: rows.length });
+    } catch {
+      setFailed(true);
+    }
+    setBusy(false);
+  };
   return (
     <View style={styles.block}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
-        {chips.map((ch) => (
-          <Pill key={ch.key} label={ch.label} on={ch.key === day} onPress={() => setPickedDay(ch.key)} />
-        ))}
-      </ScrollView>
+      <View style={styles.dayBar}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll} contentContainerStyle={styles.pillRow}>
+          {chips.map((ch) => (
+            <Pill key={ch.key} label={ch.label} on={ch.key === day} onPress={() => setPickedDay(ch.key)} />
+          ))}
+        </ScrollView>
+        {rows.length > 0 ? (
+          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void share()} onPressIn={press.onPressIn} onPressOut={press.onPressOut} hitSlop={8} style={styles.shareHit}>
+            <Animated.Text style={[styles.share, busy && styles.shareBusy, press.style]}>{busy ? sh.making : sh.action}</Animated.Text>
+          </Pressable>
+        ) : null}
+      </View>
+      {failed ? <Text style={styles.shareFailed}>{sh.failed}</Text> : null}
+      {Platform.OS !== 'web' && day && rows.length > 0 ? (
+        <View pointerEvents="none" style={styles.offscreen}>
+          <ScheduleCard ref={card} width={360} name={d.name} day={dayLong(day, t)} venue={d.venue} view={view} moreLabel={view.more > 0 ? fmt(sh.more, { n: view.more }) : null} />
+        </View>
+      ) : null}
       <View key={day ?? 'none'} style={styles.list}>
         {rows.map((r, i) => (
           <MatchRow key={r.id} row={r} i={i} />
@@ -229,6 +267,15 @@ const styles = StyleSheet.create({
   segTextOn: { color: colors.paper },
   block: { gap: 12 },
   pillRow: { gap: 8, paddingRight: 20 },
+  dayBar: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dayScroll: { flex: 1 },
+  // quiet: a word, not a button (the screen's blue stays free)
+  shareHit: { minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' },
+  share: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 18, color: colors.inkSoft },
+  shareBusy: { opacity: 0.5 },
+  shareFailed: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 17, color: colors.inkSoft, textAlign: 'right' },
+  // drawn off the screen so it can be captured at its own size
+  offscreen: { position: 'absolute', left: -2000, top: 0 },
   // 44pt to tap around the 40pt pill; the negative margin keeps the rows where they were
   pillHit: { minHeight: 44, marginVertical: -2, justifyContent: 'center' },
   pill: { minHeight: 40, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },

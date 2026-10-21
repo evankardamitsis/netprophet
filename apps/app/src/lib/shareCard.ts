@@ -11,15 +11,15 @@ const OUT_W = 1080;
  * Sends a 4:5 card as a picture through the phone's share sheet (as «Μοιράσου τον Baller σου» does). On the web,
  * where a picture cannot go, the words and the link go instead. Says how it went out; throws when it did not.
  */
-export async function shareCard(card: RefObject<View | null>, message: string, title: string): Promise<'image' | 'text'> {
+export async function shareCard(card: RefObject<View | null>, message: string, title: string, ratio: number = CARD_RATIO): Promise<'image' | 'text'> {
   if (Platform.OS === 'web') {
     if (typeof navigator !== 'undefined' && navigator.share) await navigator.share({ text: message });
     else await navigator.clipboard.writeText(message);
     return 'text';
   }
   if (card.current && (await Sharing.isAvailableAsync())) {
-    const ratio = PixelRatio.get();
-    const uri = await captureRef(card, { format: 'png', quality: 1, result: 'tmpfile', width: OUT_W / ratio, height: (OUT_W * CARD_RATIO) / ratio });
+    const px = PixelRatio.get();
+    const uri = await captureRef(card, { format: 'png', quality: 1, result: 'tmpfile', width: OUT_W / px, height: (OUT_W * ratio) / px });
     await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png', dialogTitle: title });
     return 'image';
   }

@@ -37,6 +37,7 @@ export interface AnalyticsEvents {
   match_stats_viewed: { pro: boolean; from: string };
   /** a share card of your own win: sent, or the Pro lock shown instead */
   win_card_shared: { via: 'image' | 'text'; free: boolean };
+  schedule_shared: { via: 'image' | 'text'; matches: number };
   win_card_locked: { from: string };
 }
 
