@@ -672,6 +672,10 @@ export type Database = {
         Args: { p_player_ids: string[]; p_source?: string };
         Returns: number;
       };
+      follow_tournament: {
+        Args: { p_id: string; p_on?: boolean };
+        Returns: Json;
+      };
       get_badges: {
         Args: Record<PropertyKey, never>;
         Returns: Json;

@@ -1,12 +1,14 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
 import { ScheduleCard } from '../../../src/components/ScheduleCard';
 import { Logo } from '../../../src/components/Logo';
+import { Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useTournament } from '../../../src/lib/data';
+import { useApi, useTournament } from '../../../src/lib/data';
+import { followToast, toggleFollow } from '../../../src/lib/follow';
 import { BracketTree } from '../../../src/components/BracketTree';
 import { RoundRobin } from '../../../src/components/RoundRobin';
 import { track } from '../../../src/lib/analytics';
@@ -41,12 +43,14 @@ const STAGGER = 70;
 export default function TournamentScreen() {
   const t = useCopy();
   const c = t.tournaments;
-  // ?draw=<tab>: a «Βγήκε η κλήρωση» push opens straight on that draw
-  const { id, draw } = useLocalSearchParams<{ id: string; draw?: string }>();
+  // ?draw=<tab>: a «Βγήκε η κλήρωση» push opens straight on that draw; ?day=YYYY-MM-DD: «το αυριανό πρόγραμμα» on that day
+  const { id, draw, day } = useLocalSearchParams<{ id: string; draw?: string; day?: string }>();
   const { data, loading, error, notFound, refresh } = useTournament(String(id));
   const back = usePress();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/tournaments'));
   const today = todayKey();
+  const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
+  const say = (text: string) => setToast((p) => ({ text, n: (p?.n ?? 0) + 1 }));
 
   return (
     <View style={styles.screen}>
@@ -58,10 +62,11 @@ export default function TournamentScreen() {
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>{c.detail.back}</Animated.Text>
         </Pressable>
-        {data ? <Body key={data.id} d={data} today={today} openDraw={draw} /> : null}
+        {data ? <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} onToast={say} /> : null}
         {!data && notFound ? <Text style={styles.empty}>{c.detail.notFound}</Text> : null}
         {!data && !loading && error && !notFound ? <Text style={styles.empty}>{c.detail.error}</Text> : null}
       </ScrollView>
+      {toast ? <Toast key={toast.n} text={toast.text} /> : null}
     </View>
   );
 }
@@ -71,10 +76,12 @@ function Reveal({ i, children }: { i: number; children: ReactNode }) {
   return <Animated.View style={enter}>{children}</Animated.View>;
 }
 
-function Body({ d, today, openDraw }: { d: GetTournamentResult; today: string; openDraw?: string }) {
+function Body({ d, today, openDraw, openDay, onToast }: { d: GetTournamentResult; today: string; openDraw?: string; openDay?: string; onToast: (text: string) => void }) {
   const t = useCopy();
   const segments = segmentsOf(d);
-  const [picked, setPicked] = useState<Segment | null>(openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : null);
+  const [picked, setPicked] = useState<Segment | null>(
+    openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : openDay && d.days.some((x) => x.date === openDay) ? 'schedule' : null,
+  );
   const seg = picked && segments.includes(picked) ? picked : defaultSegment(d, today);
   const sub = subLine(d, t);
   return (
@@ -83,6 +90,7 @@ function Body({ d, today, openDraw }: { d: GetTournamentResult; today: string; o
         <View style={styles.titleRow}>
           <Logo path={d.logo} name={d.name} size={36} />
           <Text style={styles.title}>{d.name}</Text>
+          <FollowPill d={d} onToast={onToast} />
         </View>
       </Reveal>
       {sub ? (
@@ -102,9 +110,46 @@ function Body({ d, today, openDraw }: { d: GetTournamentResult; today: string; o
         </Reveal>
       ) : null}
       {segments.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : null}
-      {segments.length > 0 && seg === 'schedule' ? <Schedule d={d} today={today} /> : null}
+      {segments.length > 0 && seg === 'schedule' ? <Schedule d={d} today={today} openDay={openDay} /> : null}
       {segments.length > 0 && seg === 'bracket' ? <Bracket d={d} openDraw={openDraw} /> : null}
     </>
+  );
+}
+
+/**
+ * «Ακολούθησε» / «✓ Ακολουθείς» at the right end of the header (founder, 21 Oct: free for everyone): text, not an
+ * icon; white to follow, ink once you do, never blue (the screen's actions are all ink). It flips at once and goes
+ * back if the server says no; the toast says what changed.
+ */
+function FollowPill({ d, onToast }: { d: GetTournamentResult; onToast: (text: string) => void }) {
+  const t = useCopy();
+  const c = t.tournaments.detail;
+  const api = useApi();
+  const press = usePress();
+  const [on, setOn] = useState(d.followed === true);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setOn(d.followed === true), [d.followed]);
+  const tap = async () => {
+    if (busy) return;
+    setBusy(true);
+    const out = await toggleFollow({ on, set: setOn, call: api ? (next) => api.followTournament(d.id, next) : null });
+    setBusy(false);
+    onToast(followToast(out, t));
+  };
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected: on, busy }}
+      accessibilityLabel={on ? c.following : c.follow}
+      onPress={() => void tap()}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
+      style={styles.followHit}
+    >
+      <Animated.View style={[styles.follow, on && styles.followOn, press.style]}>
+        <Text style={[styles.followText, on && styles.followTextOn]}>{on ? c.following : c.follow}</Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -122,10 +167,10 @@ function Pill({ label, on, onPress }: { label: string; on: boolean; onPress: () 
 
 /* ================= Πρόγραμμα ================= */
 
-function Schedule({ d, today }: { d: GetTournamentResult; today: string }) {
+function Schedule({ d, today, openDay }: { d: GetTournamentResult; today: string; openDay?: string }) {
   const t = useCopy();
   const chips = dayChips(d.days, today, t);
-  const [pickedDay, setPickedDay] = useState<string | null>(null);
+  const [pickedDay, setPickedDay] = useState<string | null>(openDay ?? null);
   const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : defaultDay(d.days, today) ?? d.days[0]?.date ?? null;
   const rows = scheduleRows(d.days.find((x) => x.date === day)?.matches ?? [], d.me, t);
   const sh = t.tournaments.detail.share;
@@ -259,6 +304,12 @@ const styles = StyleSheet.create({
   back: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   title: { ...text.title, flexShrink: 1 },
+  // the follow pill keeps to the right end; 44pt to tap around the 36pt pill
+  followHit: { marginLeft: 'auto', flexShrink: 0, minHeight: 44, justifyContent: 'center' },
+  follow: { minHeight: 36, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+  followOn: { backgroundColor: colors.ink },
+  followText: { fontFamily: fonts.bodyBold, fontSize: 14, color: colors.ink },
+  followTextOn: { color: colors.paper },
   sub: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
   seg: { flexDirection: 'row', gap: 6, padding: 5, borderRadius: 18, backgroundColor: colors.white },
   segBtn: { flex: 1, minHeight: 48, paddingHorizontal: 4, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

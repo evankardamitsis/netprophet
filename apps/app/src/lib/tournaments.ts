@@ -52,6 +52,8 @@ export interface Chip {
 export function chipOf(item: TournamentItem, today: string, t: Copy): Chip {
   const c = t.tournaments;
   if (item.in_it) return { text: c.chipIn, hot: true };
+  // following is your choice, not something earned: never lime
+  if (item.followed) return { text: c.chipFollowing, hot: false };
   if (item.state === 'ongoing') return { text: c.chipOngoing, hot: false };
   if (item.state === 'done') return { text: c.chipDone, hot: false };
   if (!item.starts_on) return { text: c.chipSoon, hot: false };
@@ -84,13 +86,14 @@ export interface TournamentSection {
 }
 
 /**
- * «Τα δικά σου» first (the ones you play in that are on or coming), then «Τώρα», «Έρχονται», «Τελείωσαν» without
- * them; only the sections that have something. A finished one you played in stays in «Τελείωσαν», so the top of the
- * screen is what is live for you (founder, 19 Oct: your own things first).
+ * «Τα δικά σου» first (the ones you play in or follow that are on or coming), then «Τώρα», «Έρχονται», «Τελείωσαν»
+ * without them; only the sections that have something. A finished one you played in or followed stays in
+ * «Τελείωσαν», so the top of the screen is what is live for you (founder, 19 Oct: your own things first; 21 Oct: the
+ * ones you follow go there too).
  */
 export function sectionsOf(items: TournamentItem[], t: Copy): TournamentSection[] {
   const s = t.tournaments.sections;
-  const own = (i: TournamentItem) => i.in_it && i.state !== 'done';
+  const own = (i: TournamentItem) => (i.in_it || i.followed === true) && i.state !== 'done';
   const mine = (['ongoing', 'upcoming'] as const).flatMap((key) => items.filter((i) => own(i) && i.state === key));
   return [
     { key: 'mine' as const, title: s.mine, items: mine },

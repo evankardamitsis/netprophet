@@ -13,6 +13,7 @@ import type {
   GetQuestsResult,
   GetQuizResult,
   GetTournamentResult,
+  FollowTournamentResult,
   GetTournamentsResult,
   UpcomingTournamentsResult,
   AnswerCardResult,
@@ -185,6 +186,8 @@ export function rpc(client: NetprophetClient) {
     getTournaments: () => call<GetTournamentsResult>(client, 'get_tournaments', {}),
     upcomingTournaments: () => call<UpcomingTournamentsResult>(client, 'upcoming_tournaments', {}),
     getTournament: (id: string) => call<GetTournamentResult>(client, 'get_tournament', { p_id: id }),
+    /** follow a tournament (on) or stop (off): free for everyone, at most 100 ('too_many') */
+    followTournament: (id: string, on: boolean) => call<FollowTournamentResult>(client, 'follow_tournament', { p_id: id, p_on: on }),
     listTournaments: () => call<PublicTournament[]>(client, 'list_tournaments', {}),
     findMyMatches: (people: string[], date: string, format: MatchFormat) =>
       call<MyMatchCandidate[]>(client, 'find_my_matches', { p_people: people, p_date: date, p_format: format }),

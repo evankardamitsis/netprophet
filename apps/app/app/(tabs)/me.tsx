@@ -851,7 +851,8 @@ function SoundsRow() {
 
 /**
  * The push switches, saved on the account (every device): «Αντιδράσεις στα ματς σου» for everyone, and with Pro
- * «Τα τουρνουά σου» (the draw, your schedule and its changes, entry deadlines) and «Πριν το ματς σου» (reminders)
+ * «Τα τουρνουά σου» (the draw, your schedule and its changes, entry deadlines) and «Πριν το ματς σου» (reminders);
+ * for everyone too «Τουρνουά που ακολουθείς» (the draw, tomorrow's schedule and the final of the ones you follow)
  */
 function PushRows({ pro }: { pro: boolean }) {
   const t = useCopy();
@@ -863,6 +864,7 @@ function PushRows({ pro }: { pro: boolean }) {
           { key: 'reminders' as const, title: t.me.remindersPush, line: t.me.remindersPushLine },
         ]
       : []),
+    { key: 'followed', title: t.me.followedPush, line: t.me.followedPushLine },
     { key: 'reactions', title: t.me.reactionsPush, line: t.me.reactionsPushLine },
   ];
   return (
