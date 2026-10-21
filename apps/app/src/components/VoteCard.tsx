@@ -19,6 +19,7 @@ import { Lit } from './Lit';
 import { Avatar as DrawnAvatar } from './Avatar';
 import type { AvatarLook } from '../lib/avatar';
 import { Logo } from './Logo';
+import { HOLD_MS, openPlayerPath } from '../lib/playerHold';
 
 /**
  * Feed match card. Design A light (founder, 19 Oct) replaced the dark ink tiles of design B: voting stays the prominent
@@ -83,6 +84,16 @@ const ENTER = {
 const FOLD_IN = { from: { opacity: 0.35 }, to: { opacity: 1 } };
 const FOLD_EASE = cubicBezier(0.4, 0, 0.2, 1);
 const NO_ENTER = {} as const;
+
+/**
+ * Hold a name (a side) for the player's run in the card's tournament (founder, 21 Oct), in the context of this match;
+ * in doubles the first of the pair with a roster id (their run is the pair's run). Undefined: nothing to open.
+ */
+function holdFor(match: CardMatch, data: CardSide): (() => void) | undefined {
+  const p = data.people.find((x) => x.id);
+  const tournamentId = match.tournamentId;
+  return tournamentId && p?.id ? () => openPlayerPath(tournamentId, p.id!, { match: match.id }) : undefined;
+}
 
 /** hold a card this long for «Αναφορά» */
 const LONG_PRESS_MS = 450;
@@ -165,6 +176,7 @@ export const VoteCard = memo(function VoteCard({ match, onVote, onLongPress, hid
               disabled={phase !== 'idle'}
               pct={revealed ? (s === 'a' ? split.pctA : split.pctB) : null}
               onPress={vote}
+              onHold={holdFor(match, match[s])}
             />
           ))}
         </View>
@@ -198,6 +210,7 @@ function ClosedCard({ match, hideCategory, onLongPress }: { match: CardMatch; hi
               disabled
               pct={match.split ? (s === 'a' ? match.split.pctA : match.split.pctB) : null}
               onPress={none}
+              onHold={holdFor(match, match[s])}
             />
           ))}
         </View>
@@ -290,6 +303,8 @@ interface TileProps {
   /** null until the split is known */
   pct: number | null;
   onPress: (side: Side) => void;
+  /** a hold on the side: the player's run in the tournament */
+  onHold?: () => void;
 }
 
 /**
@@ -297,7 +312,7 @@ interface TileProps {
  * edge, so it reads as pressable; a touch takes it down and the edge shrinks. Once the other side is picked it steps
  * back to a lighter border; once the split shows, the lime fill grows behind ink text. A closed card lies flat.
  */
-function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress }: TileProps) {
+function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress, onHold }: TileProps) {
   // the key lies flat once it is no longer a button: a closed card, the side not picked, or your side once the split shows
   const down = flat || faded || (picked && pct !== null);
   const press = useSharedValue(0);
@@ -347,10 +362,13 @@ function Tile({ side, data, doubles, picked, faded, flat, disabled, pct, onPress
       accessibilityRole="button"
       accessibilityLabel={names}
       accessibilityState={{ selected: picked, disabled }}
-      disabled={disabled}
-      onPress={() => onPress(side)}
+      // a side that can no longer be voted still takes a hold on the name
+      disabled={disabled && !onHold}
+      onPress={disabled ? undefined : () => onPress(side)}
+      onLongPress={onHold}
+      delayLongPress={HOLD_MS}
       onPressIn={() => {
-        press.value = withTiming(1, { duration: PRESS_MS, easing: springEase });
+        if (!disabled) press.value = withTiming(1, { duration: PRESS_MS, easing: springEase });
       }}
       onPressOut={() => {
         press.value = withTiming(0, { duration: PRESS_MS, easing: springEase });
@@ -449,8 +467,8 @@ function FoldedCard({
     <Animated.View style={[styles.done, enter, fold]}>
       <Meta match={match} hideCategory={hideCategory} style={styles.doneMeta} />
       <View style={styles.row}>
-        <Half data={match.a} pct={split.pctA} on={pick === 'a'} edge="left" />
-        <Half data={match.b} pct={split.pctB} on={pick === 'b'} edge="right" />
+        <Half data={match.a} pct={split.pctA} on={pick === 'a'} edge="left" onHold={holdFor(match, match.a)} />
+        <Half data={match.b} pct={split.pctB} on={pick === 'b'} edge="right" onHold={holdFor(match, match.b)} />
       </View>
     </Animated.View>
   );
@@ -460,10 +478,10 @@ function FoldedCard({
  * One half of the folded row. The lime sits only behind the half you picked, as wide as your share within that half
  * (founder, 19 Oct: a 100% / 0% split lit the whole row, as if both were picked); the other half stays paper.
  */
-function Half({ data, pct, on, edge }: { data: CardSide; pct: number; on: boolean; edge: 'left' | 'right' }) {
+function Half({ data, pct, on, edge, onHold }: { data: CardSide; pct: number; on: boolean; edge: 'left' | 'right'; onHold?: () => void }) {
   const fg = on ? colors.ink : colors.inkSoft;
   return (
-    <View style={styles.half}>
+    <Pressable style={styles.half} onLongPress={onHold} delayLongPress={HOLD_MS} disabled={!onHold}>
       {on ? <View style={[styles.rowFill, edge === 'left' ? styles.rowFillLeft : styles.rowFillRight, { width: `${pct}%` }]} /> : null}
       <Text style={[styles.rowTick, { color: fg }]}>{on ? '✓' : ''}</Text>
       <View style={styles.halfNames}>
@@ -477,7 +495,7 @@ function Half({ data, pct, on, edge }: { data: CardSide; pct: number; on: boolea
         ))}
       </View>
       <Text style={[styles.rowPct, { color: fg }, on ? styles.rowPctOn : null]}>{`${pct}%`}</Text>
-    </View>
+    </Pressable>
   );
 }
 

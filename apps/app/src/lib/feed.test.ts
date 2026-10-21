@@ -85,9 +85,10 @@ describe('fromFeedCard', () => {
     expect(c.group?.logo).toBeNull();
     expect(c.place).toBeUndefined();
     expect(c.doubles).toBe(false);
-    expect(c.a).toEqual({ people: [{ surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ', look: null }], sub: 'Γλυφάδα', level: null, area: 'Γλυφάδα' }); // players' levels are hidden (14 Oct)
+    expect(c.tournamentId).toBe('t'); // a hold on a name opens the run in this tournament
+    expect(c.a).toEqual({ people: [{ id: 'p', surname: 'Πράτσας', first: 'Νίκος', initials: 'ΝΠ', look: null }], sub: 'Γλυφάδα', level: null, area: 'Γλυφάδα' }); // players' levels are hidden (14 Oct)
     // unknown area and no level: no sub line
-    expect(c.b).toEqual({ people: [{ surname: 'Βλάχος', first: 'Γιώργος', initials: 'ΓΒ', look: null }], sub: null, level: null, area: null });
+    expect(c.b).toEqual({ people: [{ id: 'p', surname: 'Βλάχος', first: 'Γιώργος', initials: 'ΓΒ', look: null }], sub: null, level: null, area: null });
     expect(c.myVote).toBeUndefined();
   });
 

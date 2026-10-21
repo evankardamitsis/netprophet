@@ -1399,6 +1399,52 @@ export const el = {
     weekdaysShort: ['Κυρ', 'Δευ', 'Τρι', 'Τετ', 'Πεμ', 'Παρ', 'Σαβ'],
     /** full weekdays in the accusative, Sunday first: «Παίζεις Σάββατο» */
     weekdaysOn: ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'],
+    /** the tournament page: today first, your people, a player's run in it (21 Oct) */
+    focus: {
+      /** the strip above today's schedule, by court */
+      now: 'Τώρα',
+      next: 'Μετά',
+      /** «Ροδίτης με Δεσύπρη»: who plays who, surnames only */
+      pair: '{a} με {b}',
+      /** a match with no time in the order of play */
+      noTime: 'χωρίς ώρα ακόμα',
+      /** a match with no time that follows another on the same court */
+      after: 'μετά το {match}',
+      /** the row at the top when your people play today */
+      yoursToday: 'Οι δικοί σου σήμερα',
+      /** «18:30 · με Ροδίτη» */
+      against: 'με {name}',
+      /** the hint, once per device */
+      hint: 'Κράτα πατημένο ένα όνομα για την πορεία του στο τουρνουά',
+      /** the full screen of one player in this tournament */
+      close: '‹',
+      closeLabel: 'Κλείσε',
+      played: 'Ως τώρα',
+      nextMatch: 'Το επόμενο ματς',
+      nothingYet: 'Δεν έχει παίξει ακόμα σε αυτό το τουρνουά.',
+      noNext: 'Κανένα ματς ακόμα στο πρόγραμμα.',
+      drawTitle: 'Η πορεία στο ταμπλό',
+      /** «Σήμερα 18:30», «Αύριο 10:00», «Σαβ 24/10 10:00» */
+      when: '{day} {time}',
+      playingNow: 'Παίζει τώρα',
+      notFound: 'Δεν βρήκαμε αυτόν τον παίκτη σε αυτό το τουρνουά.',
+      /** «Αν κερδίσει» (founder, 21 Oct): who waits in the next round, from the match the name was held on */
+      ifWinsMatch: 'Αν κερδίσει αυτό το ματς ({round}): {who}',
+      /** with no match to go by, the player's upcoming one */
+      ifWinsNext: 'Αν κερδίσει: {who}',
+      /** the match was played and won: the next one */
+      nextIs: 'Επόμενος: {who}',
+      /** both still to play each other: «ΡΟΔΙΤΗΣ ΝΙΚΟΣ ή ΜΕΜΜΟΣ ΗΛΙΑΣ» */
+      either: '{a} ή {b}',
+      playsFinal: 'Παίζει τον τελικό',
+      title: 'Πήρε τον τίτλο',
+      out: {
+        final: 'Έχασε στον τελικό',
+        semi: 'Έφυγε στα ημιτελικά',
+        quarter: 'Έφυγε στα προημιτελικά',
+        roundN: 'Έφυγε στον {n}ο γύρο',
+      },
+    },
     detail: {
       back: '‹ Τουρνουά',
       /** the follow pill in the header (21 Oct: free for everyone) */

@@ -154,6 +154,10 @@ function Routes() {
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
           <Stack.Screen name="match-stats" />
+          <Stack.Screen
+            name="tournament-player"
+            options={{ presentation: "fullScreenModal", animation: "slide_from_bottom" }}
+          />
         </Stack.Protected>
         <Stack.Protected
           guard={signedIn && (onboarding || (__DEV__ && (guest || !isLive)))}

@@ -3,6 +3,8 @@ import type { FeedPlayer, FeedPostponedCard } from '@netprophet/db';
 import type { Side } from '../lib/votes';
 
 export interface MockPlayer {
+  /** the sample tournament's player id, so a hold on the name opens their run in it */
+  id?: string;
   firstName: string;
   surname: string;
   level: number;
@@ -14,6 +16,8 @@ export interface MockMatch {
   day: 'today' | 'tomorrow';
   time: string;
   event: string;
+  /** the sample tournament it belongs to */
+  tournamentId?: string;
   round?: 'round16' | 'quarter' | 'semi' | 'final';
   a: MockPlayer;
   b: MockPlayer;
@@ -42,9 +46,10 @@ export const MOCK_MATCHES: MockMatch[] = [
     day: 'today',
     time: '18:00',
     event: 'Open Γλυφάδας',
+    tournamentId: 'tour-open',
     round: 'semi',
-    a: { firstName: 'Νίκος', surname: 'Πράτσας', level: 4, area: 'Γλυφάδα' },
-    b: { firstName: 'Γιώργος', surname: 'Κωνσταντινίδης', level: 4, area: 'Βούλα' },
+    a: { id: 'ale', firstName: 'Νίκος', surname: 'Πράτσας', level: 4, area: 'Γλυφάδα' },
+    b: { id: 'gio', firstName: 'Γιώργος', surname: 'Κωνσταντινίδης', level: 4, area: 'Βούλα' },
     votes: { a: 69, b: 31 },
   },
   {

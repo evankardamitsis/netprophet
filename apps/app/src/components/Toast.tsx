@@ -5,11 +5,12 @@ import { bezier, colors, fonts } from '../theme';
 /** Prototype toast: 2.2s, in over the first 12%, out after 85%. Give it a new `key` to show it again. */
 export const TOAST_MS = 2200;
 
-export function Toast({ text }: { text: string }) {
+/** `ms`: a longer stay for a line that needs reading; `hint`: paper text, since lime is for what happened */
+export function Toast({ text, ms = TOAST_MS, hint = false }: { text: string; ms?: number; hint?: boolean }) {
   return (
     <View style={styles.wrap} pointerEvents="none">
-      <Animated.View style={[styles.toast, SHOW]} accessibilityLiveRegion="polite">
-        <Text style={styles.text}>{text}</Text>
+      <Animated.View style={[styles.toast, SHOW, ms !== TOAST_MS && { animationDuration: ms }]} accessibilityLiveRegion="polite">
+        <Text style={[styles.text, hint && styles.hintText]}>{text}</Text>
       </Animated.View>
     </View>
   );
@@ -31,6 +32,7 @@ const SHOW = {
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', top: 10, left: 0, right: 0, alignItems: 'center' },
   toast: {
+    maxWidth: '90%',
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 999,
@@ -41,5 +43,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
-  text: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime },
+  text: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.lime, textAlign: 'center' },
+  hintText: { color: colors.paper },
 });
