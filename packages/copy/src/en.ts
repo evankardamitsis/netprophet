@@ -1294,9 +1294,10 @@ export const en: Copy = {
       notPlayed: 'Not played yet',
       masked: '–',
       share: {
-        action: 'Share',
+        action: "Share the day's schedule ›",
         making: 'Getting it ready…',
         failed: 'It did not go. Try again.',
+        cardTitle: 'Match schedule',
         title: 'Schedule {day}',
         more: '+{n} more',
         message: '{name} · {day}\nSchedule on NetProphet: {url}',
