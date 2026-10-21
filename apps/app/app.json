@@ -13,10 +13,13 @@
       "bundleIdentifier": "gr.monadlabs.netprophet",
       "supportsTablet": false,
       "usesAppleSignIn": true,
-      "config": { "usesNonExemptEncryption": false }
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
-      "package": "gr.monadlabs.netprophet"
+      "package": "gr.monadlabs.netprophet",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
