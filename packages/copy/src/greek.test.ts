@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk } from './greek';
+    accusativeName, accusativeWord, displayName, greekCaps, matchesLoosely, nameGender, stripAccents, transliterate, withArticleAccusative, levelNumber, tidyName, nameShapeOk, nameKey, sameNamedPerson } from './greek';
 
 describe('greekCaps', () => {
     it('drops accents, which toUpperCase does not', () => {
@@ -141,5 +141,32 @@ describe('tidyName and nameShapeOk (the server runs the same rule)', () => {
 
     it('refuses initials, digits, emoji and loose separators', () => {
         for (const n of ['', 'Α', 'Α.', 'Nikos99', '-Νίκος', 'Νίκος  Π', '😀😀', 'Νίκος-']) expect(nameShapeOk(n)).toBe(false);
+    });
+});
+
+describe('nameKey and sameNamedPerson (a sheet name against a roster name)', () => {
+    it('folds case, accents, dots and Latin lookalikes', () => {
+        expect(nameKey('Καραγιανίδης  Χάρης')).toBe('ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡΗΣ');
+        expect(nameKey('ΓΙΑΝΝΟΠΟΥΛΟΣ Λ.')).toBe('ΓΙΑΝΝΟΠΟΥΛΟΣ Λ');
+        expect(nameKey('KAKKABHΣ')).toBe('ΚΑΚΚΑΒΗΣ');
+        expect(nameKey('Smith')).toBe('SMITH');
+    });
+
+    it('matches a cut first name, a missing one, and nothing else', () => {
+        expect(sameNamedPerson('ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ', 'Καραγιανίδης', 'Χάρης')).toBe(true);
+        expect(sameNamedPerson('ΑΝΑΣΤΑΣΙΟΥ', 'Αναστασίου', 'Πέτρος')).toBe(true);
+        expect(sameNamedPerson('ΓΚΙΝΗ ΜΑΡΙΑ', 'Γκίνη', '')).toBe(true);
+        expect(sameNamedPerson('ΚΑΚΚΑΒΗΣ ΚΩΝ', 'KAKKABHΣ', 'Κωνσταντίνος')).toBe(true);
+        expect(sameNamedPerson('ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ', 'Καραγιανίδης', 'Νίκος')).toBe(false);
+        expect(sameNamedPerson('ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ', 'Καραγιάννης', 'Χάρης')).toBe(false);
+    });
+
+    it('takes a doubled letter and a longer form of the first name', () => {
+        expect(sameNamedPerson('ΜΠΡΙΛΛΑΚΗΣ ΒΑΣΙΛΗΣ', 'Μπριλάκης', 'Βασίλης')).toBe(true);
+        expect(sameNamedPerson('ΤΖΙΩΤΖΙΟΣ ΒΑΣΙΛΗΣ', 'Τζιότζιος', 'Βασίλης')).toBe(true);
+        expect(sameNamedPerson('ΜΑΝΤΖΑΒΙΝΟΣ ΔΗΜΗΤΡΗΣ', 'Ματζαβίνος', 'Δημήτρης')).toBe(true);
+        expect(sameNamedPerson('ΜΠΑΡΟΥΝΑΣ ΑΝΤΩΝΙΟΣ', 'Μπαρούνας', 'Αντώνης')).toBe(true);
+        expect(sameNamedPerson('ΛΑΜΠΡΟΠΟΥΛΟΣ ΝΙΚΟΛΑΟΣ', 'Λαμπρόπουλος', 'Νίκος')).toBe(true);
+        expect(sameNamedPerson('ΡΟΔΙΤΗΣ ΓΙΑΝΝΗΣ', 'Ροδίτης', 'Νίκος', true)).toBe(true);
     });
 });
