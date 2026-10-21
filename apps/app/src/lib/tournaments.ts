@@ -186,6 +186,11 @@ export function dayShort(iso: string, t: Copy): string {
   return `${t.tournaments.weekdaysShort[weekdayOf(day)]} ${ddmm(day)}`;
 }
 
+/** «Σάββατο 25/10», the full weekday and the date of a day key */
+export function dayLong(day: string, t: Copy): string {
+  return `${t.tournaments.weekdaysOn[weekdayOf(day)]} ${ddmm(day)}`;
+}
+
 /** «Τρι 13/10 18:30» */
 export function dayTimeShort(iso: string, t: Copy): string {
   return `${dayShort(iso, t)} ${timeOf(iso)}`;

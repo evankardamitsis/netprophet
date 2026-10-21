@@ -1417,6 +1417,15 @@ export const el = {
       wins: 'Νίκες',
       notPlayed: 'Δεν έχει παίξει',
       masked: '–',
+      /** «Μοιράσου» on the Πρόγραμμα tab: the day's schedule as a picture */
+      share: {
+        action: 'Μοιράσου',
+        making: 'Ετοιμάζεται…',
+        failed: 'Δεν έφυγε. Ξαναδοκίμασε.',
+        title: 'Πρόγραμμα {day}',
+        more: '+{n} ακόμα',
+        message: '{name} · {day}\nΠρόγραμμα στο NetProphet: {url}',
+      },
       /** «(3)», the seed */
       seed: '({n})',
       disciplines: { MS: 'Απλό', WS: 'Απλό γυναικών', MD: 'Διπλό', WD: 'Διπλό γυναικών', XD: 'Μικτό' } as Record<string, string>,
