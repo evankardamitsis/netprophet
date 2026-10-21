@@ -1,0 +1,51 @@
+{
+  "suite": "name-keys",
+  "version": 1,
+  "notes": "One person under two spellings. nameKey and sameNamedPerson live in packages/copy/src/greek.ts; core.name_key and core.same_named_person are the SQL side (migration 20270307000000_player_dedupe.sql). Both run these cases.",
+  "groups": [
+    {
+      "fn": "nameKey",
+      "cases": [
+        { "name": "accents and case off, one space", "input": "Καραγιανίδης  Χάρης", "expected": "ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡΗΣ" },
+        { "name": "a dot after an initial", "input": "ΓΙΑΝΝΟΠΟΥΛΟΣ Λ.", "expected": "ΓΙΑΝΝΟΠΟΥΛΟΣ Λ" },
+        { "name": "Latin look-alike capitals in a Greek name", "input": "KAKKABHΣ", "expected": "ΚΑΚΚΑΒΗΣ" },
+        { "name": "one Latin letter inside a Greek word", "input": "ΖΑΝNΗΣ", "expected": "ΖΑΝΝΗΣ" },
+        { "name": "a Latin name stays Latin", "input": "Smith", "expected": "SMITH" },
+        { "name": "accented Latin", "input": "José Núñez", "expected": "JOSE NUNEZ" },
+        { "name": "a comma between surname and first name", "input": "Παππάς, Γιώργος", "expected": "ΠΑΠΠΑΣ ΓΙΩΡΓΟΣ" },
+        { "name": "a middle dot", "input": "Ψαλλίδας·Νίκος", "expected": "ΨΑΛΛΙΔΑΣ ΝΙΚΟΣ" },
+        { "name": "final sigma and a hyphen", "input": "Ρουσσάκη-Πετρή Ευαγγελία", "expected": "ΡΟΥΣΣΑΚΗ-ΠΕΤΡΗ ΕΥΑΓΓΕΛΙΑ" },
+        { "name": "diaeresis with an accent", "input": "Ταΐρης Προΰπης", "expected": "ΤΑΙΡΗΣ ΠΡΟΥΠΗΣ" },
+        { "name": "a decomposed accent", "input": "Ά́ννα", "expected": "ΑΝΝΑ" },
+        { "name": "spaces at the ends", "input": "  ΑΒΒΑΣ   ", "expected": "ΑΒΒΑΣ" },
+        { "name": "empty", "input": "", "expected": "" },
+        { "name": "the whole name decides: Latin S has no Greek twin", "input": "NIKOS Παπάς", "expected": "ΝΙΚΟS ΠΑΠΑΣ" }
+      ]
+    },
+    {
+      "fn": "sameNamedPerson",
+      "cases": [
+        { "name": "a cut first name", "input": { "sheet": "ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ", "surname": "Καραγιανίδης", "first": "Χάρης", "anyFirst": false }, "expected": true },
+        { "name": "no first name on the sheet", "input": { "sheet": "ΑΝΑΣΤΑΣΙΟΥ", "surname": "Αναστασίου", "first": "Πέτρος", "anyFirst": false }, "expected": true },
+        { "name": "no first name in the roster", "input": { "sheet": "ΓΚΙΝΗ ΜΑΡΙΑ", "surname": "Γκίνη", "first": "", "anyFirst": false }, "expected": true },
+        { "name": "Latin look-alikes in the roster", "input": { "sheet": "ΚΑΚΚΑΒΗΣ ΚΩΝ", "surname": "KAKKABHΣ", "first": "Κωνσταντίνος", "anyFirst": false }, "expected": true },
+        { "name": "another first name", "input": { "sheet": "ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ", "surname": "Καραγιανίδης", "first": "Νίκος", "anyFirst": false }, "expected": false },
+        { "name": "another surname", "input": { "sheet": "ΚΑΡΑΓΙΑΝΙΔΗΣ ΧΑΡ", "surname": "Καραγιάννης", "first": "Χάρης", "anyFirst": false }, "expected": false },
+        { "name": "a doubled letter", "input": { "sheet": "ΜΠΡΙΛΛΑΚΗΣ ΒΑΣΙΛΗΣ", "surname": "Μπριλάκης", "first": "Βασίλης", "anyFirst": false }, "expected": true },
+        { "name": "omega and omicron", "input": { "sheet": "ΤΖΙΩΤΖΙΟΣ ΒΑΣΙΛΗΣ", "surname": "Τζιότζιος", "first": "Βασίλης", "anyFirst": false }, "expected": true },
+        { "name": "ντ written as τ", "input": { "sheet": "ΜΑΝΤΖΑΒΙΝΟΣ ΔΗΜΗΤΡΗΣ", "surname": "Ματζαβίνος", "first": "Δημήτρης", "anyFirst": false }, "expected": true },
+        { "name": "the longer form of a first name", "input": { "sheet": "ΜΠΑΡΟΥΝΑΣ ΑΝΤΩΝΙΟΣ", "surname": "Μπαρούνας", "first": "Αντώνης", "anyFirst": false }, "expected": true },
+        { "name": "the formal and the everyday name", "input": { "sheet": "ΛΑΜΠΡΟΠΟΥΛΟΣ ΝΙΚΟΛΑΟΣ", "surname": "Λαμπρόπουλος", "first": "Νίκος", "anyFirst": false }, "expected": true },
+        { "name": "first names left out", "input": { "sheet": "ΡΟΔΙΤΗΣ ΓΙΑΝΝΗΣ", "surname": "Ροδίτης", "first": "Νίκος", "anyFirst": true }, "expected": true },
+        { "name": "an initial that fits", "input": { "sheet": "ΠΑΠΑΣ Γ", "surname": "Παππάς", "first": "Γιώργος", "anyFirst": false }, "expected": true },
+        { "name": "an initial that does not", "input": { "sheet": "ΠΑΠΑΣ Ν", "surname": "Παππάς", "first": "Γιώργος", "anyFirst": false }, "expected": false },
+        { "name": "the feminine surname is another person", "input": { "sheet": "ΠΑΠΑΔΟΠΟΥΛΟΥ ΜΑΡΙΑ", "surname": "Παπαδόπουλος", "first": "Μάριος", "anyFirst": false }, "expected": false },
+        { "name": "αι and ε, ει and ι", "input": { "sheet": "ΚΑΙΣΑΡΙΔΗΣ ΗΛΙΑΣ", "surname": "Κεσαρίδης", "first": "Ηλίας", "anyFirst": false }, "expected": true },
+        { "name": "the same four letters", "input": { "sheet": "ΑΝΤΩΝΙΟΥ ΑΝΤΩΝΗΣ", "surname": "Αντωνίου", "first": "Αντώνιος", "anyFirst": false }, "expected": true },
+        { "name": "a surname that only starts the same", "input": { "sheet": "ΠΑΠΑΔΑΚΗΣ ΝΙΚΟΣ", "surname": "Παπα", "first": "Νίκος", "anyFirst": false }, "expected": false },
+        { "name": "an empty sheet name", "input": { "sheet": "", "surname": "Παππάς", "first": "Γιώργος", "anyFirst": false }, "expected": false },
+        { "name": "an empty roster surname", "input": { "sheet": "ΠΑΠΑΣ ΓΙΩΡΓΟΣ", "surname": "", "first": "Γιώργος", "anyFirst": false }, "expected": false }
+      ]
+    }
+  ]
+}

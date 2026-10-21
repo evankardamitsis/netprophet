@@ -137,6 +137,8 @@
 .v2-card.busy { position: relative; overflow: hidden; }
 .v2-card.busy::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--np-inkRaised); }
 .v2-card.busy::before { content: ''; position: absolute; bottom: 0; width: 40%; height: 4px; background: var(--np-lime); animation: v2Slide 1.1s ease-in-out infinite; z-index: 1; }
+.v2-progress { height: 8px; border-radius: var(--np-radius-pill); background: var(--np-silver); overflow: hidden; }
+.v2-progress > span { display: block; height: 100%; background: var(--np-ink); transition: width .3s var(--np-ease); }
 .v2-card.leaving { opacity: .35; transition: opacity .6s; pointer-events: none; }
 .v2-card.paused { opacity: .7; }
 .v2-enter { animation: v2In .35s var(--np-ease) both; }

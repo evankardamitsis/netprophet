@@ -408,8 +408,20 @@ export type Database = {
         Args: { p_days?: number };
         Returns: Json;
       };
+      admin_dismiss_duplicate: {
+        Args: { p_a: string; p_b: string };
+        Returns: Json;
+      };
       admin_dismiss_name: {
         Args: { p_player_id: string };
+        Returns: Json;
+      };
+      admin_duplicate_pairs: {
+        Args: { p_confidence?: string };
+        Returns: Json;
+      };
+      admin_duplicates: {
+        Args: { p_confidence?: string; p_limit?: number; p_offset?: number };
         Returns: Json;
       };
       admin_fix_stale_twins: {
@@ -466,6 +478,10 @@ export type Database = {
       };
       admin_match_review_queue: {
         Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_merge_duplicates: {
+        Args: { p_pairs: Json; p_confidence?: string };
         Returns: Json;
       };
       admin_moderation: {
