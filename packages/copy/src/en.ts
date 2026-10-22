@@ -1427,10 +1427,10 @@ export const en: Copy = {
   tour: {
     label: 'Tour',
     steps: {
-      vote: { title: 'Vote today', line: 'Tap the name of who you think wins. That is it.' },
-      streak: { title: 'Your streak', line: 'Every right call in a row grows your streak. Your points sit next to it.' },
-      tournaments: { title: 'Tournaments today', line: 'Open one to see the Draw and the Schedule. Hold a name to see their run.' },
-      results: { title: 'What happened', line: 'Here are the results, and your points fly in as you open them.' },
+      vote: { title: 'Vote today', line: 'Tap the name of who you believe will win. Not sure? Hold their name to see more.' },
+      streak: { title: 'Your streak', line: 'Every correct vote in a row grows your streak. Your points sit next to it.' },
+      tournaments: { title: 'Tournaments today', line: 'Open one to see the Draw and the Schedule. Hold a name to see the player’s path on the Draw.' },
+      results: { title: 'What happened', line: 'Here are the results, and how your streak is going day by day.' },
       ladder: { title: 'The Ladder', line: 'Can you finish first among your crowd? See where you stand.' },
       me: { title: 'Me', line: 'Your player card, your Baller and Pro, all here.' },
     },
