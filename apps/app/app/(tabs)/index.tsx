@@ -28,7 +28,6 @@ import { openToVote, type CardResult } from '../../src/lib/feed';
 import { homeTournaments, quizCard, resultsLine, voteList, yoursNow } from '../../src/lib/home';
 import { useFollowedIds } from '../../src/lib/myPeople';
 import { yoursSet } from '../../src/lib/tournamentToday';
-import { flushVotes } from '../../src/lib/voteLock';
 import { useToastQueue } from '../../src/lib/toastQueue';
 import { skipIds, takenToast } from '../../src/lib/resultsSummary';
 import type { Celebration as CelebrationItem } from '@netprophet/db';
@@ -53,7 +52,7 @@ import type { MomentKind } from '../../src/lib/moments';
 
 /**
  * Τουρνουά, the home (mockup D, founder 22 Oct), top to bottom: the results card (only while results wait; it opens
- * the results one by one, as Σήμερα played them), «Οι δικοί σου», the quiz, «Ψήφισε σήμερα» (tap a name, lib/voteLock),
+ * the results one by one, as Σήμερα played them), «Οι δικοί σου», the quiz, «Ψήφισε σήμερα» (tap a name to vote),
  * Pro, «Τουρνουά σήμερα». Everything under the layout is Σήμερα's machinery as it was: the header's held numbers while
  * results wait, the vote burst (quests, badges, celebrations), the moments pacer (Baller, «Για σένα»), the tour.
  */
@@ -84,6 +83,8 @@ export default function HomeScreen() {
   const followed = useFollowedIds();
   // the results card opens the deck; a results push lands here with ?results=1 and opens it at once
   const [deckOpen, setDeckOpen] = useState(false);
+  // a tap on the card opens the results in the full view and they stay full (founder, 22 Oct); a push opens them as before
+  const [deckFull, setDeckFull] = useState(false);
   const params = useLocalSearchParams<{ results?: string }>();
   // «Περισσότερα ›» under the three votes
   const [moreVotes, setMoreVotes] = useState(false);
@@ -105,8 +106,6 @@ export default function HomeScreen() {
   useEffect(() => {
     const sub = AppState.addEventListener('change', (s) => {
       if (s === 'active') void quizRefresh();
-      // a vote still in its lock-in goes now: a timer may never fire in the background
-      else flushVotes();
     });
     return () => sub.remove();
   }, [quizRefresh]);
@@ -248,7 +247,10 @@ export default function HomeScreen() {
   }, [loading, results.length]);
   // every result played: the card and the deck are gone
   useEffect(() => {
-    if (results.length === 0) setDeckOpen(false);
+    if (results.length === 0) {
+      setDeckOpen(false);
+      setDeckFull(false);
+    }
   }, [results.length]);
   // opened from a results push
   const wantResults = params.results === '1';
@@ -373,7 +375,10 @@ export default function HomeScreen() {
     if (!mine) return;
     const card = cards.find((c) => c.kind === 'match' && c.id === mine.matchId);
     const tid = (card?.kind === 'match' ? card.tournamentId : undefined) ?? tournaments.data?.mine?.find((m) => m.match_id === mine.matchId)?.tournament_id;
-    if (tid) router.push(`/tournament/${tid}`);
+    const me = meNow?.player?.id;
+    // your own match opens your run in that tournament, from this match (not the day's schedule)
+    if (tid && me) router.push({ pathname: '/tournament-player', params: { tournament: tid, player: me, match: mine.matchId } });
+    else if (tid) router.push(`/tournament/${tid}`);
     else router.push(proState?.pro ? `/scout/${mine.matchId}` : '/pro?from=scout');
   };
   let n = 0;
@@ -392,10 +397,13 @@ export default function HomeScreen() {
       >
         {/* results: a card while they wait; a tap plays them one by one, as before (ResultsDeck) */}
         {deckOpen ? (
-          <ResultsDeck results={results} firstDelay={FIRST_RESULT_DELAY} onDone={onResultDone} onTake={onTake} onTaken={onTaken} />
+          <ResultsDeck openFull={deckFull} results={results} firstDelay={FIRST_RESULT_DELAY} onDone={onResultDone} onTake={onTake} onTaken={onTaken} />
         ) : resultsView ? (
           <Reveal i={next()}>
-            <ResultsCard view={resultsView} onOpen={() => setDeckOpen(true)} />
+            <ResultsCard view={resultsView} onOpen={() => {
+              setDeckFull(true);
+              setDeckOpen(true);
+            }} />
           </Reveal>
         ) : null}
 
@@ -416,7 +424,11 @@ export default function HomeScreen() {
                 />
               ))}
               {people.map((r) => (
-                <YoursRow key={r.matchId} row={r} onPress={r.tournamentId ? () => router.push(`/tournament/${r.tournamentId}`) : undefined} />
+                <YoursRow key={r.matchId} row={r} onPress={
+                    r.tournamentId
+                      ? () => router.push(r.playerId ? { pathname: '/tournament-player', params: { tournament: r.tournamentId!, player: r.playerId, match: r.matchId } } : `/tournament/${r.tournamentId}`)
+                      : undefined
+                  } />
               ))}
             </YoursBlock>
           </Reveal>

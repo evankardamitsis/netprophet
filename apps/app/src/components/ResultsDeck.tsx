@@ -38,9 +38,11 @@ interface Props {
   onTake: (taken: { points: number; streak: number }) => void;
   /** the block left after «Πάρε τους πόντους»: mark the card and every result behind it seen (one call) */
   onTaken: (card: CardResult, rest: CardResult[]) => void;
+  /** the deck was opened from the home's results card: the first card enters full, and so does every one after it */
+  openFull?: boolean;
 }
 
-export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Props) {
+export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken, openFull = false }: Props) {
   const t = useCopy();
   const hud = useHudActions();
   const reduced = useReducedMotion();
@@ -49,7 +51,7 @@ export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Pr
   const takenRest = useRef<CardResult[]>([]);
   const played = useRef(0);
   /** a card was opened full in this run of the deck: the next ones enter full (reset when the deck ends) */
-  const openRun = useRef(false);
+  const openRun = useRef(openFull);
   const applied = useRef(new Set<string>());
   const height = useRef(0);
   // the block folds in two frames: its height is pinned first, so the transition to 0 has a number to start from
@@ -111,9 +113,9 @@ export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Pr
   useEffect(() => {
     if (results.length === 0 && !leaving) {
       played.current = 0;
-      openRun.current = false;
+      openRun.current = openFull;
     }
-  }, [results.length, leaving]);
+  }, [results.length, leaving, openFull]);
 
   if (!card) return null;
   const goingAll = leaving?.all === true;

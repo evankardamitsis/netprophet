@@ -12,12 +12,12 @@ import { usePopIn, usePress, useStgIn } from '../lib/motion';
 import { useOfferShown, useProOffer } from '../lib/purchase';
 import { hasTime, timeOf } from '../lib/tournaments';
 import { fmt } from '../lib/votes';
-import { cardSurface, colors, fonts, motion, text } from '../theme';
+import { cardSurface, colors, fonts, motion, surfaceTints, text } from '../theme';
 import { Logo } from './Logo';
 
 /**
  * The cards of the home, Τουρνουά (mockup D, founder 22 Oct). Each is one idea; the screen (app/(tabs)/index.tsx)
- * decides which show and in what order. Blue is only the results card's «Πάρε τους ›»: the one primary action.
+ * decides which show and in what order. Blue is only the results card's «Δες τα ›»: the one primary action.
  */
 
 const ENTER_MS = motion.revealDur;
@@ -278,7 +278,7 @@ export function QuietLink({ label, onPress }: { label: string; onPress: () => vo
   );
 }
 
-/** «+ Ματς»: log a match you played; an ink pill (blue is the results' action) */
+/** «+ Ματς»: log a match you played; a lime pill (blue is the results' action) */
 export function AddMatchPill() {
   const t = useCopy();
   const press = usePress();
@@ -314,7 +314,8 @@ const styles = StyleSheet.create({
   live: { paddingVertical: 2, paddingHorizontal: 6, borderRadius: 6, backgroundColor: colors.ink },
   liveText: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 14, letterSpacing: 0.4, color: colors.lime },
   // quiz
-  quiz: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 18, backgroundColor: cardSurface },
+  // a cool tint (the hard-court surface's), so the quiz stands out from the white cards; ink text on it is above 10:1
+  quiz: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 18, backgroundColor: surfaceTints.hard.bg },
   quizNum: { width: 52, height: 52, borderRadius: 14, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   quizNumText: { fontFamily: fonts.displayHeavy, fontSize: 28, lineHeight: 30, paddingTop: 4, color: colors.paper },
   quizTitle: { ...text.heading, fontSize: 22, lineHeight: 24 },
@@ -336,13 +337,13 @@ const styles = StyleSheet.create({
   tName: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
   tNameText: { ...text.heading, fontSize: 22, lineHeight: 24, flexShrink: 1 },
   tag: { paddingVertical: 2, paddingHorizontal: 8, borderRadius: 6, backgroundColor: colors.sand },
-  tagInk: { backgroundColor: colors.ink },
+  tagInk: { backgroundColor: colors.lime },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, lineHeight: 16, color: colors.inkSoft },
-  tagTextInk: { color: colors.paper },
+  tagTextInk: { color: colors.ink },
   tLive: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tLiveText: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.ink },
   quietHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   quiet: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  add: { flexShrink: 0, minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
-  addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
+  add: { flexShrink: 0, minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.lime, alignItems: 'center', justifyContent: 'center' },
+  addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
 });

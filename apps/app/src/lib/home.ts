@@ -101,6 +101,8 @@ export function rowTime(m: Pick<CardMatch, 'startsAt' | 'day'>, t: Copy, now: Da
 export interface YoursNow {
   matchId: string;
   tournamentId: string | null;
+  /** the roster id of the one of yours playing, to open their run */
+  playerId: string | null;
   /** «Λιάκος Γ.» */
   name: string;
   /** «με Παππά · Open Γλυφάδας» */
@@ -134,6 +136,7 @@ export function yoursNow(cards: readonly FeedCard[], yours: ReadonlySet<string>,
     out.push({
       matchId: c.id,
       tournamentId: c.tournamentId ?? null,
+      playerId: mine.people.find((p) => p.id !== undefined && yours.has(p.id))?.id ?? null,
       name: sideLabel(mine.people),
       line: c.group ? fmt(t.home.yours.line, { against, tournament: c.group.title }) : against,
       time: playing ? null : rowTime(c, t, now) || null,
@@ -143,7 +146,7 @@ export function yoursNow(cards: readonly FeedCard[], yours: ReadonlySet<string>,
   }
   return out
     .sort((a, b) => Number(b.now) - Number(a.now) || a.at - b.at)
-    .map((r): YoursNow => ({ matchId: r.matchId, tournamentId: r.tournamentId, name: r.name, line: r.line, time: r.time, now: r.now }));
+    .map((r): YoursNow => ({ matchId: r.matchId, tournamentId: r.tournamentId, playerId: r.playerId, name: r.name, line: r.line, time: r.time, now: r.now }));
 }
 
 /* ================= the quiz card ================= */

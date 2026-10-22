@@ -155,7 +155,15 @@ function Body({
       ) : null}
       {todays.length > 0 ? (
         <Reveal i={2}>
-          <YoursToday rows={todays} onPick={(matchId) => goTo(matchId, today)} />
+          <YoursToday
+            rows={todays}
+            onPick={(matchId) => {
+              const r = todays.find((x) => x.matchId === matchId);
+              // their match opens their run from it, not the day's schedule
+              if (r) router.push({ pathname: '/tournament-player', params: { tournament: d.id, player: r.playerId, match: matchId } });
+              else goTo(matchId, today);
+            }}
+          />
         </Reveal>
       ) : null}
       {segments.length > 1 ? (
