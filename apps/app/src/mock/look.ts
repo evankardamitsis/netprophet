@@ -2,13 +2,11 @@ import type { GetLookResult, LookCategory, LookItem, LookKind } from '@netprophe
 
 /** [category, key, name, kind, price, earn rule], in the server's order (mirrors supabase-v2 m3_look) */
 const ROWS: [LookCategory, string, string, string, LookKind, number | null, string | null][] = [
-  ['frame', 'frame_friends', 'Φίλοι', 'Friends', 'earned', null, 'Το κερδίζεις όταν φέρεις έναν φίλο'],
   ['frame', 'frame_level', 'Level', 'Level', 'earned', null, 'Το κερδίζεις με ένα badge σε χρυσή βαθμίδα'],
   ['frame', 'frame_month_top', 'Κορυφή μήνα', 'Top of the month', 'earned', null, 'Το κερδίζεις στην πρώτη τριάδα της Κατάταξης'],
   ['frame', 'frame_seven', 'Επτά', 'Seven', 'earned', null, 'Το κερδίζεις με 7 σωστές στη σειρά'],
   ['frame', 'frame_ten', 'Δέκα', 'Ten', 'earned', null, 'Το κερδίζεις με 10 σωστές στη σειρά'],
   ['frame', 'frame_week', 'Της εβδομάδας', 'Of the week', 'earned', null, 'Το κερδίζεις με την εβδομαδιαία αποστολή'],
-  ['frame', 'frame_founding', 'Πρώτη γενιά', 'Founding', 'earned', null, 'Για όσους ήταν από την αρχή'],
   ['frame', 'frame_gold', 'Χρυσό', 'Gold', 'buy', 1.99, null],
   ['frame', 'frame_grass', 'Γρασίδι', 'Grass', 'buy', 1.99, null],
   ['frame', 'frame_retro', 'Ρετρό', 'Retro', 'buy', 1.99, null],
