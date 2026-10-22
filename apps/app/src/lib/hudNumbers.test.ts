@@ -6,13 +6,13 @@ const r = (id: string, points: number, streakBefore: number): PendingResult => (
 // a launch with 14 unseen results, 170 points between them
 const POINTS = [10, 15, 15, 15, 0, 15, 15, 15, 15, 15, 15, 15, 0, 10];
 const batch = POINTS.map((p, i) => r(`c${i + 1}`, p, i + 2));
-const none = { pointsOffset: 0, streakShown: null };
+const none = { streakShown: null };
 
 describe('hudNumbers', () => {
-  it('holds back only the first card of a batch, never all of them', () => {
+  it('holds back σερί only for the first card of a batch, never all of them', () => {
     expect(POINTS.reduce((a, b) => a + b, 0)).toBe(170);
     const held = pinBatch(NOTHING_HELD, batch);
-    expect(hudNumbers(held, batch, new Set(), true)).toEqual({ pointsOffset: 10, streakShown: 2 });
+    expect(hudNumbers(held, batch, new Set(), true)).toEqual({ streakShown: 2 });
   });
 
   it('the first card played: nothing held back', () => {
@@ -36,14 +36,14 @@ describe('hudNumbers', () => {
     expect(hudNumbers(held, batch, new Set(), false)).toEqual(none);
   });
 
-  it('a fresh batch on relaunch with the same 14 holds back 10, never 170', () => {
+  it('a fresh batch on relaunch with the same 14 holds back σερί 2', () => {
     // a session: all 14 played and dismissed
     let held = pinBatch(NOTHING_HELD, batch);
     for (let i = 1; i <= batch.length; i++) held = pinBatch(held, batch.slice(i));
     expect(hudNumbers(held, [], new Set(), true)).toEqual(none);
     // relaunch: the provider starts again from nothing held
     const again = pinBatch(NOTHING_HELD, batch);
-    expect(hudNumbers(again, batch, new Set(), true)).toEqual({ pointsOffset: 10, streakShown: 2 });
+    expect(hudNumbers(again, batch, new Set(), true)).toEqual({ streakShown: 2 });
   });
 
   it('get_feed comes back the same: the pin stays', () => {
@@ -57,13 +57,13 @@ describe('hudNumbers', () => {
     const next = [...batch.slice(1), r('c15', 15, 16)];
     held = pinBatch(held, next);
     expect(held.first?.id).toBe('c15');
-    expect(hudNumbers(held, next, new Set(), true)).toEqual({ pointsOffset: 15, streakShown: 16 });
+    expect(hudNumbers(held, next, new Set(), true)).toEqual({ streakShown: 16 });
   });
 
   it('the feed mounts empty before get_feed answers: nothing held, then the batch pins', () => {
     const empty = pinBatch(NOTHING_HELD, []);
     expect(hudNumbers(empty, [], new Set(), true)).toEqual(none);
     const held = pinBatch(empty, batch);
-    expect(hudNumbers(held, batch, new Set(), true)).toEqual({ pointsOffset: 10, streakShown: 2 });
+    expect(hudNumbers(held, batch, new Set(), true)).toEqual({ streakShown: 2 });
   });
 });

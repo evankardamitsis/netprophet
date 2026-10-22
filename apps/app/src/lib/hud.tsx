@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 import type { View } from 'react-native';
 import type { CardResult } from './feed';
 import { NOTHING_HELD, hudNumbers, pinBatch, type HeldBack } from './hudNumbers';
+import { NOTHING_HELD_POINTS, claim, land, landClaimed, pointsOffset as heldPointsOffset, syncQueue, type HeldPoints } from './hudPoints';
+import { motion } from '../theme';
 
 /**
  * The header's numbers while result cards play (prototype rqApply / fly):
@@ -29,7 +31,7 @@ export interface Flight {
  * every flight.
  */
 export interface HudNumbers {
-  /** subtract from get_me's points: results not played yet */
+  /** subtract from get_me's points: right calls whose flight has not landed yet */
   pointsOffset: number;
   /** σερί to show instead of get_me's, while a result is pending */
   streakShown: number | null;
@@ -48,6 +50,8 @@ export interface HudActions {
   setOnFeed(on: boolean): void;
   /** the card's moment: its points and σερί reach the header */
   apply(card: CardResult): void;
+  /** «Πάρε τους πόντους»: one flight for everything taken; the header counts the sum up when it lands */
+  takeAll(from: RefObject<View | null>, ids: string[], points: number, withStreak: boolean): void;
   /** «+10» to πόντοι, and «+1» to σερί when `withStreak` */
   fly(from: RefObject<View | null>, points: number, withStreak: boolean): void;
   targets: { points: RefObject<View | null>; streak: RefObject<View | null> };
@@ -70,6 +74,8 @@ const LayersContext = createContext<HudLayers | null>(null);
 const STAGGER = 70;
 const FLIGHT_LIFE_MS = 1500;
 const FX_MS = 1600;
+/** after a flight's last frame */
+const LAND_SLACK_MS = 30;
 
 function measure(ref: RefObject<View | null>): Promise<{ x: number; y: number; w: number; h: number } | null> {
   return new Promise((resolve) => {
@@ -83,6 +89,7 @@ export function HudProvider({ children }: { children: ReactNode }) {
   const [pending, setPendingState] = useState<CardResult[]>([]);
   const [applied, setApplied] = useState<Set<string>>(() => new Set());
   const [held, setHeld] = useState<HeldBack>(NOTHING_HELD);
+  const [heldPoints, setHeldPoints] = useState<HeldPoints>(NOTHING_HELD_POINTS);
   const heldRef = useRef(held);
   heldRef.current = held;
   const [streakFx, setStreakFx] = useState<StreakFx>(null);
@@ -96,11 +103,14 @@ export function HudProvider({ children }: { children: ReactNode }) {
   const setPending = useCallback((results: CardResult[]) => {
     setPendingState(results);
     setHeld((prev) => pinBatch(prev, results));
+    setHeldPoints((prev) => syncQueue(prev, results));
     setApplied((prev) => new Set([...prev].filter((id) => results.some((r) => r.id === id))));
   }, []);
 
   const apply = useCallback((card: CardResult) => {
     setApplied((prev) => new Set(prev).add(card.id));
+    // the card's points join the header; it counts up by exactly these
+    setHeldPoints((prev) => land(prev, card.id));
     // only the held card moves the header; cards 2..N are already in it, so σερί neither falls nor frosts for them
     if (heldRef.current.first?.id !== card.id) return;
     if (!card.ok) {
@@ -131,12 +141,23 @@ export function HudProvider({ children }: { children: ReactNode }) {
     setTimeout(() => setFlights((f) => f.filter((x) => !list.some((l) => l.id === x.id))), FLIGHT_LIFE_MS);
   }, []);
 
+  const takeAll = useCallback(
+    (from: RefObject<View | null>, ids: string[], pts: number, withStreak: boolean) => {
+      setHeldPoints((prev) => claim(prev, ids));
+      if (pts > 0) void fly(from, pts, withStreak);
+      // the flight lasts one reveal; the header counts the whole sum up when it lands, never before
+      setTimeout(() => setHeldPoints((prev) => landClaimed(prev)), (pts > 0 ? motion.revealDur : 0) + LAND_SLACK_MS);
+    },
+    [fly],
+  );
+
   // every action is a stable callback (setOnFeed is a state setter), so this value never changes
   const actions = useMemo<HudActions>(
-    () => ({ setPending, setOnFeed, apply, fly, targets: { points, streak }, showQuestBar }),
-    [setPending, apply, fly, showQuestBar],
+    () => ({ setPending, setOnFeed, apply, fly, takeAll, targets: { points, streak }, showQuestBar }),
+    [setPending, apply, fly, takeAll, showQuestBar],
   );
-  const { pointsOffset, streakShown } = hudNumbers(held, pending, applied, onFeed);
+  const { streakShown } = hudNumbers(held, pending, applied, onFeed);
+  const pointsOffset = heldPointsOffset(heldPoints, onFeed);
   const numbers = useMemo<HudNumbers>(() => ({ pointsOffset, streakShown, streakFx }), [pointsOffset, streakShown, streakFx]);
   const layers = useMemo<HudLayers>(() => ({ flights, questBar }), [flights, questBar]);
 

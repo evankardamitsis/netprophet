@@ -95,7 +95,7 @@ export function ResultsDeck({ results, firstDelay, onDone, onTake, onTaken }: Pr
     const behind = restAfter(results).filter((r) => r.id !== card.id);
     const taken = takeAll(card, behind, applied.current.has(card.id));
     takenRest.current = behind;
-    if (taken.points > 0) void hud.fly(row, taken.points, taken.allRight);
+    hud.takeAll(row, [card, ...behind].map((r) => r.id), taken.points, taken.allRight);
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
     onTake(taken);
     finish.current = () => {

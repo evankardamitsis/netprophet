@@ -1,8 +1,7 @@
 /**
- * What the header shows while result cards wait to play. The server has already counted every result. The header
- * holds back only the first card of each fetched batch: its points, and the σερί from before it, until it plays.
- * Cards 2..N count as already in the header: they still fly their badge, but nothing moves when they play, so the
- * number never dips (14 unseen results showed 310 on launch, 480 on the other tabs).
+ * What the header shows for σερί while result cards wait to play (πόντοι: hudPoints.ts, held back card by card).
+ * The server has already counted every result. The header holds back only the first card of each fetched batch: the
+ * σερί from before it, until it plays. Cards 2..N count as already in σερί: nothing moves when they play.
  * That holds only on the feed, where the cards play: on any other screen the header shows get_me as it is, the same
  * σερί Εγώ and the Ladder show (founder, 18 Oct: «σερί 3» in the header over «σερί 5» on Εγώ).
  */
@@ -44,7 +43,7 @@ export function hudNumbers(
   pending: readonly PendingResult[],
   applied: ReadonlySet<string>,
   onFeed: boolean,
-): { pointsOffset: number; streakShown: number | null } {
-  if (!onFeed || !held.first || !isHeld(held, pending, applied)) return { pointsOffset: 0, streakShown: null };
-  return { pointsOffset: held.first.points, streakShown: held.first.streakBefore };
+): { streakShown: number | null } {
+  if (!onFeed || !held.first || !isHeld(held, pending, applied)) return { streakShown: null };
+  return { streakShown: held.first.streakBefore };
 }
