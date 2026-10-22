@@ -179,7 +179,7 @@ run(resolutionVectors, {
       };
       return {
         vote,
-        match: matchOf({ id: x.matchId, status: x.matchStatus, winnerSide: x.winnerSide }),
+        match: matchOf({ id: x.matchId, status: x.matchStatus, winnerSide: x.winnerSide, startsAt: x.startsAt }),
         resolvedAt: x.resolvedAt,
         crowd: { votesForWinner: x.votesForWinner, totalVotes: x.totalVotes },
       };

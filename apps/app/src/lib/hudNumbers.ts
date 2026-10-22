@@ -1,49 +1,34 @@
 /**
  * What the header shows for σερί while result cards wait to play (πόντοι: hudPoints.ts, held back card by card).
- * The server has already counted every result. The header holds back only the first card of each fetched batch: the
- * σερί from before it, until it plays. Cards 2..N count as already in σερί: nothing moves when they play.
+ * The server has already counted every result.
+ *
+ * σερί goes card by card, as the spec has it (each card plays its own change: +1, a fall to 0, a frost). The header
+ * shows the σερί from before the card at the head of the queue until that card plays, then the σερί the card left.
+ * A card says «+15 · σερί 3», the «+1» flies, and the header reads 3, not the σερί of the last card behind it
+ * (founder, 22 Oct: «isn't it supposed to show the correct voting streak?»: the header read 2 under a card saying 3).
+ * Once the queue is empty (played, or «Πάρε τους πόντους») it is get_me's again, the number the last card left.
+ *
  * That holds only on the feed, where the cards play: on any other screen the header shows get_me as it is, the same
  * σερί Εγώ and the Ladder show (founder, 18 Oct: «σερί 3» in the header over «σερί 5» on Εγώ).
  */
 export interface PendingResult {
   id: string;
-  points: number;
+  /** σερί before this card and after it */
   streakBefore: number;
+  streak: number;
 }
 
-/** the card the header holds back, pinned once per fetched batch */
-export interface HeldBack {
-  /** every result id seen since the app started; a list made only of these is the same batch */
-  seen: readonly string[];
-  first: PendingResult | null;
-}
-
-export const NOTHING_HELD: HeldBack = { seen: [], first: null };
-
-/**
- * The pending list changed. If it is made only of ids already seen (a card was dismissed, or get_feed came back the
- * same), the pin stays. A list with a new id is a new batch: pin its first card not seen before, so a card the header
- * already counts is never held back again.
- */
-export function pinBatch(prev: HeldBack, pending: readonly PendingResult[]): HeldBack {
-  const seen = new Set(prev.seen);
-  const fresh = pending.filter((r) => !seen.has(r.id));
-  if (!fresh.length) return prev;
-  return { seen: [...prev.seen, ...fresh.map((r) => r.id)], first: fresh[0]! };
-}
-
-/** the pinned card is waiting: still queued and not played yet (a card leaves the queue only after it played) */
-export function isHeld(held: HeldBack, pending: readonly PendingResult[], applied: ReadonlySet<string>): boolean {
-  const first = held.first;
-  return first !== null && !applied.has(first.id) && pending.some((r) => r.id === first.id);
+/** σερί at the head of the queue (oldest first): before the card until it plays, then what it left */
+export function streakAtHead(pending: readonly PendingResult[], applied: ReadonlySet<string>): number | null {
+  const head = pending[0];
+  if (!head) return null;
+  return applied.has(head.id) ? head.streak : head.streakBefore;
 }
 
 export function hudNumbers(
-  held: HeldBack,
   pending: readonly PendingResult[],
   applied: ReadonlySet<string>,
   onFeed: boolean,
 ): { streakShown: number | null } {
-  if (!onFeed || !held.first || !isHeld(held, pending, applied)) return { streakShown: null };
-  return { streakShown: held.first.streakBefore };
+  return { streakShown: onFeed ? streakAtHead(pending, applied) : null };
 }

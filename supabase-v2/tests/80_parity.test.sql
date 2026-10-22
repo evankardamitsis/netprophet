@@ -242,7 +242,9 @@ begin
         insert into core.match_results (match_id, winner_side, sets)
         values (m, v_winner, '[{"w":6,"l":3},{"w":6,"l":4}]'::jsonb);
       end if;
-      update core.matches set status = x ->> 'matchStatus' where id = m;
+      -- startsAt is optional in the vectors; results that come in together count in match order
+      update core.matches set status = x ->> 'matchStatus', starts_at = coalesce((x ->> 'startsAt')::timestamptz, starts_at)
+       where id = m;
 
       -- the crowd: this vote is one of totalVotes; votesForWinner of them backed the winner
       if v_winner is not null then
