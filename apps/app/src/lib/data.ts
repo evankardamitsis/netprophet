@@ -38,7 +38,7 @@ import { myMatchOf, type MyMatchView } from './myMatch';
 import { avatarByKey, defaultAvatarFor, playerAvatar, type AvatarLook, type DefaultAvatar } from './avatar';
 import { applyTraitVote, cleanLabel, mockMyTraits, mockPlayerTraits, traitErrorKind, type TraitErrorKind } from './traits';
 import { winLossRows, type WinLossRow } from './winLoss';
-import { when } from './feed';
+import { roundLabel, when } from './feed';
 import { groupResults, type ResultGroup } from './results';
 import { api as liveApi, supabase } from './supabase';
 import {
@@ -857,6 +857,8 @@ export type ScoutError = 'pro_required' | 'not_your_match' | 'match_over' | 'fai
 export interface ScoutState {
   /** «Σήμερα 18:00» */
   when: string | null;
+  /** «Open Γλυφάδας · Μ 40+ · Ημιτελικός»; null for a friendly (then there is no «Στο τουρνουά ως εδώ») */
+  event: string | null;
   opponents: ScoutView[];
   loading: boolean;
   error: ScoutError | null;
@@ -867,7 +869,7 @@ export interface ScoutState {
 export function useScout(matchId: string): ScoutState {
   const t = useCopy();
   const api = useApi();
-  const [state, setState] = useState<Omit<ScoutState, 'refresh'>>({ when: null, opponents: [], loading: true, error: null });
+  const [state, setState] = useState<Omit<ScoutState, 'refresh'>>({ when: null, event: null, opponents: [], loading: true, error: null });
 
   const refresh = useCallback(async () => {
     setState((s) => ({ ...s, loading: true }));
@@ -876,14 +878,15 @@ export function useScout(matchId: string): ScoutState {
       const [scout, areas] = await Promise.all([api ? api.getScout(matchId) : mockScout(matchId, now), areasFor(api !== null)]);
       setState({
         when: scout.starts_at ? when(scout.starts_at, now, t).label ?? null : null,
-        opponents: scout.opponents.map((p) => toScoutView(p, areas, t)),
+        event: scout.tournament ? [scout.tournament, scout.level ?? null, roundLabel(scout.round ?? null, t)].filter(Boolean).join(' · ') : null,
+        opponents: scout.opponents.map((p) => toScoutView(p, areas, t, now)),
         loading: false,
         error: null,
       });
     } catch (err) {
       const code = err instanceof RpcError ? err.code : '';
       const error: ScoutError = code === 'pro_required' || code === 'not_your_match' || code === 'match_over' ? code : 'failed';
-      setState({ when: null, opponents: [], loading: false, error });
+      setState({ when: null, event: null, opponents: [], loading: false, error });
     }
   }, [api, matchId, t]);
 

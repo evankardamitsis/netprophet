@@ -102,7 +102,7 @@ export type StatBlock =
   | { kind: 'months'; key: 'months'; title: string; note: string; bars: MonthBar[] }
   | { kind: 'people'; key: 'partners' | 'opponents'; title: string; note: string; rows: PersonRow[] }
   | { kind: 'bestWins'; key: 'best_wins'; title: string; note: string; wins: BestWin[] }
-  | { kind: 'tournaments'; key: 'tournaments'; title: string; rows: TournamentRow[]; more: string | null };
+  | { kind: 'tournaments'; key: 'tournaments'; title: string; rows: TournamentRow[]; more: string | null; champion: string };
 
 export type BlockKey = StatBlock['key'];
 
@@ -416,6 +416,7 @@ export function statBlocks(m: MatchStatsMore, format: StatsFormat, t: Copy): Sta
         champion: x.last_won && isFinalRound(x.last_round),
       })),
       more: rest > 0 ? plural(s.tour.more, rest) : null,
+      champion: s.tour.champion,
     });
   }
   return out;

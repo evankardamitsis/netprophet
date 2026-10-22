@@ -646,11 +646,74 @@ export interface ScoutPlayer extends PlayerCard {
   /** sets decided in a tie-break */
   tiebreaks: WinLoss;
   /** you against them, from your side */
-  h2h: WinLoss & { last: { won: boolean; score: string | null; starts_at: string } | null };
+  h2h: WinLoss & {
+    last: { won: boolean; score: string | null; starts_at: string } | null;
+    /** every meeting, newest first; won is yours, the games stay winner first */
+    meetings: ScoutMeeting[];
+  };
   /** players you both played: your record and theirs against each */
   common: (PlayerRef & { me: WinLoss; them: WinLoss })[];
   /** their record against the players you follow */
   known: WinLoss;
+  /** the last ten results, oldest first */
+  form10: ('W' | 'L')[];
+  /** the numbers of «Τα στατιστικά σου», for them, all time (more is always there) */
+  singles: MatchStatsPart;
+  doubles: MatchStatsPart;
+  /** every result, newest first (up to 60); history_count is the full number */
+  history: ScoutMatch[];
+  history_count: number;
+  /** this tournament so far (the same event), oldest first */
+  path: ScoutPathRow[];
+  /** «Πώς παίζει» with the counts, most voted first */
+  traits: { id: string; label_el: { m: string; f: string }; label_en: string; count: number }[];
+}
+
+/** one match of theirs (won is theirs; sets winner first) */
+export interface ScoutMatch {
+  match_id: string;
+  starts_at: string | null;
+  format: 'singles' | 'doubles' | 'mixed';
+  won: boolean;
+  sets: SetScore[];
+  score: string | null;
+  retired: boolean;
+  walkover: boolean;
+  tournament: string | null;
+  round: string | null;
+  /** the category, «Μ 40+» */
+  level: string | null;
+  discipline: string | null;
+  surface: string | null;
+  partner: StatsPerson[];
+  opponents: StatsPerson[];
+}
+
+/** a meeting between you (won is yours) */
+export interface ScoutMeeting {
+  match_id: string;
+  starts_at: string | null;
+  format: 'singles' | 'doubles' | 'mixed';
+  won: boolean;
+  sets: SetScore[];
+  score: string | null;
+  retired: boolean;
+  walkover: boolean;
+  tournament: string | null;
+  round: string | null;
+}
+
+/** a result of theirs earlier in this tournament (won is theirs) */
+export interface ScoutPathRow {
+  match_id: string;
+  starts_at: string | null;
+  round: string | null;
+  won: boolean;
+  sets: SetScore[];
+  score: string | null;
+  retired: boolean;
+  walkover: boolean;
+  opponents: StatsPerson[];
 }
 
 export type WinLossKey =
@@ -747,6 +810,10 @@ export interface Scout {
   match_id: string;
   starts_at: string | null;
   format: 'singles' | 'doubles' | 'mixed';
+  /** the tournament, round and category of this match; null for a friendly */
+  tournament?: string | null;
+  round?: string | null;
+  level?: string | null;
   partner: PlayerRef[];
   opponents: ScoutPlayer[];
 }

@@ -858,6 +858,40 @@ export const el = {
     notYours: 'Αυτό δεν είναι δικό σου ματς.',
     over: 'Αυτό το ματς έχει παιχτεί.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
+    /** founder, 22 Oct 2026: everything we know about them, more than the free card */
+    last10: 'Τελευταία 10',
+    meetings: { one: '1 ματς μεταξύ σας', many: '{n} ματς μεταξύ σας' },
+    /** their numbers, one format at a time */
+    numbers: 'Σε νούμερα',
+    noNumbers: 'Δεν έχει ματς εδώ ακόμα.',
+    path: 'Στο τουρνουά ως εδώ',
+    pathNone: 'Εδώ ξεκινάει το τουρνουά για αυτό το ματς.',
+    traits: 'Πώς παίζει',
+    traitsNone: 'Δεν έχει ψήφους ακόμα.',
+    history: 'Όλα τα ματς',
+    historyMore: 'Δες κι άλλα ›',
+    historyCap: 'Τα {shown} πιο πρόσφατα από {n}.',
+    withPartner: 'με {names}',
+    /** «Τα στατιστικά σου» blocks, said about them, not you */
+    voice: {
+      sections: { months: 'Η χρονιά', bestWins: 'Οι καλύτερες νίκες', tournaments: 'Τα τουρνουά' },
+      notes: {
+        rounds: 'Πόσο μακριά φτάνει: νίκες και ήττες σε κάθε γύρο.',
+        months: 'Οι μήνες που έπαιξε. Πάνω οι νίκες, κάτω οι ήττες.',
+        opponents: 'Αυτούς βρίσκει πιο συχνά απέναντι.',
+        partners: 'Με ποιον παίζει και πώς τα πάνε μαζί.',
+        bestWins: 'Απέναντι στους πιο δυνατούς αντιπάλους.',
+      },
+      rows: {
+        comebacksNote: 'Νίκες αφού έχασε το πρώτο σετ',
+        holding: 'Κράτησε το προβάδισμα',
+        holdingNote: 'Νίκες αφού πήρε το πρώτο σετ',
+        straightWonNote: 'Χωρίς να χάσει σετ',
+        straightLostNote: 'Χωρίς να πάρει σετ',
+        retiredNote: 'Νίκες: σταμάτησε ο αντίπαλος. Ήττες: σταμάτησε στη μέση.',
+      },
+      champion: 'Το πήρε!',
+    },
   },
   /** «Τα στατιστικά σου»: your real matches in numbers, never votes (founder, 18 Oct 2026) */
   matchStats: {
