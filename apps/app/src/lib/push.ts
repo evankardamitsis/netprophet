@@ -99,12 +99,15 @@ export function safeAppPath(url: unknown): string | null {
   return u;
 }
 
+/** the home opens its results deck on this (Τουρνουά, mockup D) */
+export const HOME_RESULTS = '/?results=1';
+
 const id = (v: unknown): string | null => (typeof v === 'string' && v.length > 0 ? v : null);
 
 /**
  * Where a tapped push opens (founder, 21 Oct: "the dedicated place"). `data.url` first, so a new kind of push can
  * carry its own place; else by `data.type`:
- * results          Αποτελέσματα
+ * results          the home, with the results card open (mockup D, 22 Oct: «Πάρε τους πόντους» lives there)
  * reaction         Αποτελέσματα on the match's tournament (a friendly: Αποτελέσματα)
  * claim            Εγώ, where the player now shows (or the claim can be asked again)
  * draw             the tournament, on that draw
@@ -119,7 +122,7 @@ export function pushRoute(data: Record<string, unknown> | undefined | null): str
   const tournament = id(data.tournament_id);
   switch (data.type) {
     case 'results':
-      return '/results';
+      return HOME_RESULTS;
     case 'reaction':
       return tournament ? `/results?tournament=${encodeURIComponent(tournament)}` : '/results';
     case 'claim':

@@ -32,9 +32,9 @@ describe('steps', () => {
     expect(['feed', 'results', 'tournaments', 'ladder', 'me'].map((s) => targetOf(s as never))).toEqual([
       'feedCard',
       'tab:results',
-      'tab:tournaments',
+      'tab:index',
       'tab:ladder',
-      'avatar',
+      'tab:me',
     ]);
   });
 });

@@ -11,8 +11,11 @@
  */
 export type TourStepId = 'feed' | 'results' | 'tournaments' | 'ladder' | 'me';
 
-/** what each step points at: the first open vote card (or the feed's head), a tab, the header avatar */
-export type TourTarget = 'feedCard' | 'feedHead' | 'tab:results' | 'tab:tournaments' | 'tab:ladder' | 'avatar';
+/**
+ * what each step points at: the first open vote row (or «Ψήφισε σήμερα» above it), a tab, the header avatar. Since
+ * mockup D (22 Oct) Τουρνουά is the home tab (`index`) and Εγώ is a tab of its own.
+ */
+export type TourTarget = 'feedCard' | 'feedHead' | 'tab:index' | 'tab:results' | 'tab:ladder' | 'tab:me' | 'avatar';
 
 export const TOUR_STEPS: readonly TourStepId[] = ['feed', 'results', 'tournaments', 'ladder', 'me'];
 
@@ -27,8 +30,11 @@ export function targetOf(step: TourStepId): TourTarget {
   switch (step) {
     case 'feed':
       return 'feedCard';
+    // the home tab is labelled Τουρνουά
+    case 'tournaments':
+      return 'tab:index';
     case 'me':
-      return 'avatar';
+      return 'tab:me';
     default:
       return `tab:${step}`;
   }

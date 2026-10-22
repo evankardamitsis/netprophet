@@ -16,6 +16,8 @@ export interface MyMatchView {
   who: string;
   category: string | null;
   today: boolean;
+  /** when it starts: the home's Pro card says «Ο αντίπαλός σου στις 18:00» */
+  startsAt: string;
 }
 
 export function myMatchOf(player: PlayerProfile | null, t: Copy, now: Date): MyMatchView | null {
@@ -25,5 +27,5 @@ export function myMatchOf(player: PlayerProfile | null, t: Copy, now: Date): MyM
   const today = dayKey(now.toISOString());
   const tomorrow = dayKey(new Date(now.getTime() + 86_400_000).toISOString());
   if (day !== today && day !== tomorrow) return null;
-  return { matchId: m.match_id, line: nextLine(m, t, now), ...nextParts(m, t, now), today: day === today };
+  return { matchId: m.match_id, line: nextLine(m, t, now), ...nextParts(m, t, now), today: day === today, startsAt: m.starts_at };
 }
