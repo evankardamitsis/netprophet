@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Not used at cutover (no v1 matches are imported, founder 22 Oct 2026); kept with the import.
 # After import_roster_matches.sql (-v sample=0) on the local stack: writes the v1 tournaments, events, matches,
 # participants and results as one transaction of plain INSERT ... ON CONFLICT DO NOTHING, ready for
 #   supabase --workdir .supabase-v2 db query --linked -f <out>

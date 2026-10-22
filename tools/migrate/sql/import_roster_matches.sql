@@ -1,4 +1,6 @@
 -- v1 roster, tournaments, matches and results into v2 core (supabase-v2/migration-from-v1.md).
+-- NOT USED AT CUTOVER: the founder decided on 22 Oct 2026 not to import v1 tournaments, matches or results. Kept,
+-- fixed and tested (tools/migrate/test) in case that changes.
 -- Input: schema v1 staged by tools/migrate/stage_v1.py. Users, profiles and claims are not part of this run.
 -- Matches: by default only a test sample (the most recent finished ones with a result, -v sample=20); pass
 -- -v sample=0 for all of them at cutover. Tournaments follow the matches that are imported.
