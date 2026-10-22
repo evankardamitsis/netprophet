@@ -225,7 +225,8 @@ export function homeTournaments(items: readonly TournamentItem[], cards: readonl
   const areas = new Set(areaIds);
   const tagOf = (i: TournamentItem): TournamentTag => (i.in_it ? 'playing' : i.followed ? 'following' : i.area_id && areas.has(i.area_id) ? 'near' : null);
   const order: TournamentTag[] = ['playing', 'following', 'near', null];
-  const live = items.filter((i) => i.state === 'ongoing' || i.today > 0);
+  // a done tournament is only its draws: it is never «today»
+  const live = items.filter((i) => i.state !== 'done' && (i.state === 'ongoing' || i.today > 0));
   return live
     .map((i) => ({ i, tag: tagOf(i) }))
     .sort((x, y) => order.indexOf(x.tag) - order.indexOf(y.tag) || y.i.today - x.i.today)

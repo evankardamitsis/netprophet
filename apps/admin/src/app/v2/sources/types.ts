@@ -64,6 +64,8 @@ export interface SourceTournament {
   draw_url: string | null;
   draws: number;
   ongoing: boolean;
+  /** marked finished: the app shows only its draws (missing before 20270313000000) */
+  finished?: boolean;
   season_start_year: number | null;
   last_run_at: string | null;
   matches: number;

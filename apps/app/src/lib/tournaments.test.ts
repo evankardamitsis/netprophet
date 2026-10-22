@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { DrawMatchRow, GetTournamentResult, TournamentDraw, TournamentItem, TournamentMatch } from '@netprophet/db';
-import { allPairs, blocksOf, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, mineHeadline, mineRows, openCount, roundName, scheduleRows, sectionsOf, subLine } from './tournaments';
+import { allPairs, blocksOf, boldLine, bracketRounds, groupFinished, groupViews, orderStandings, chipOf, dayChips, defaultDay, defaultSegment, segmentsOf, mineHeadline, mineRows, openCount, roundName, scheduleRows, scheduleWindow, sectionsOf, subLine } from './tournaments';
 
 const t = getCopy('el');
 
@@ -84,6 +84,23 @@ describe('schedule', () => {
     expect(defaultDay(days, '2026-10-13')).toBe('2026-10-14');
     expect(defaultDay(days, '2026-10-20')).toBe('2026-10-20');
     expect(defaultDay([], '2026-10-13')).toBeNull();
+  });
+  it('the schedule keeps the last week (today minus 7) on, and none once the tournament is done', () => {
+    const wide: GetTournamentResult['days'] = ['2026-10-10', '2026-10-14', '2026-10-15', '2026-10-22', '2026-10-30'].map((date) => ({ date, matches: [match({})] }));
+    const d = { state: 'ongoing' as const, days: wide };
+    expect(scheduleWindow(d, '2026-10-22').days.map((x) => x.date)).toEqual(['2026-10-15', '2026-10-22', '2026-10-30']);
+    // the strip shows nothing older either
+    expect(dayChips(scheduleWindow(d, '2026-10-22').days, '2026-10-22', t).map((c) => c.key)).not.toContain('2026-10-14');
+    // nothing to cut: the same object
+    const fine = { state: 'ongoing' as const, days: wide.slice(2) };
+    expect(scheduleWindow(fine, '2026-10-22')).toBe(fine);
+    // done: draws only
+    expect(scheduleWindow({ state: 'done' as const, days: wide }, '2026-10-22').days).toEqual([]);
+    expect(segmentsOf({ days: [], draws: [{}] as TournamentDraw[] })).toEqual(['bracket']);
+  });
+  it('the list does not count today\'s matches of a done tournament', () => {
+    expect(boldLine({ draws: 2, today: 5, state: 'done' }, t)).toBe('2 ταμπλό');
+    expect(boldLine({ draws: 2, today: 5, state: 'ongoing' }, t)).toContain('σήμερα');
   });
   it('segment: Πρόγραμμα when there are matches today, else Ταμπλό', () => {
     const draws = [{}] as TournamentDraw[];

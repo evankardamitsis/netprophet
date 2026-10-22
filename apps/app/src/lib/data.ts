@@ -12,6 +12,7 @@ import { mockAnswer, mockQuiz } from '../mock/quiz';
 import { quizFlightStuck, quizNeedsRead, withAnswer, withoutAnswer } from './quiz';
 import { mockScout } from '../mock/scout';
 import { mockTournament, mockTournaments, mockUpcoming } from '../mock/tournaments';
+import { scheduleWindow, todayKey } from './tournaments';
 import { MOCK_MATCHES, mockPostponed } from '../mock/matches';
 import { MOCK_AREAS, mockFindPlayers, mockPlayer, mockPlayersHome } from '../mock/players';
 import { MOCK_ME_PLAYER, mockResults } from '../mock/results';
@@ -1946,20 +1947,23 @@ export interface TournamentState {
 /** One tournament with its draws and its schedule by day. */
 export function useTournament(id: string): TournamentState {
   const api = useApi();
-  const [data, setData] = useState<GetTournamentResult | null>(api ? null : mockTournament(id));
+  const [data, setData] = useState<GetTournamentResult | null>(() => {
+    const d = api ? null : mockTournament(id);
+    return d ? scheduleWindow(d, todayKey()) : d;
+  });
   const [loading, setLoading] = useState(api !== null);
   const [error, setError] = useState(false);
   const [notFound, setNotFound] = useState(!api && mockTournament(id) === null);
   const refresh = useCallback(async () => {
     if (!api) {
       const d = mockTournament(id);
-      setData(d);
+      setData(d ? scheduleWindow(d, todayKey()) : d);
       setNotFound(d === null);
       return;
     }
     setLoading(true);
     try {
-      setData(await api.getTournament(id));
+      setData(scheduleWindow(await api.getTournament(id), todayKey()));
       setError(false);
       setNotFound(false);
     } catch (e) {

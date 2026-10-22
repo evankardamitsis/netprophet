@@ -192,6 +192,10 @@ describe('homeTournaments', () => {
     expect(list[3]!.count).toBe('9 ματς σήμερα');
     expect(tagLabel('near', t)).toBe('Κοντά σου');
   });
+  it('a done tournament is never listed, even with matches counted today', () => {
+    const list = homeTournaments([item('done', { state: 'done', today: 5 }), item('on', { today: 1 })], [], [], NOW, t);
+    expect(list.map((x) => x.id)).toEqual(['on']);
+  });
   it('the live line from the feed: playing now, else the next start', () => {
     const cards: FeedCard[] = [
       match('1', { ...at('2026-10-22T14:30:00Z'), closed: true, tournamentId: 'g' }),

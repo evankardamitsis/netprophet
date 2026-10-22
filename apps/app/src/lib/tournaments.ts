@@ -71,10 +71,11 @@ export function subLine(item: Pick<TournamentItem, 'venue' | 'starts_on' | 'ends
 }
 
 /** «3 ταμπλό · 12 ματς σήμερα»; null when there is nothing to say */
-export function boldLine(item: Pick<TournamentItem, 'draws' | 'today'>, t: Copy): string | null {
+export function boldLine(item: Pick<TournamentItem, 'draws' | 'today'> & Partial<Pick<TournamentItem, 'state'>>, t: Copy): string | null {
   const parts = [
     item.draws > 0 ? fmt(t.tournaments.draws, { n: item.draws }) : null,
-    item.today > 0 ? fmt(t.tournaments.today, { n: item.today }) : null,
+    // a done tournament has no schedule to count
+    item.today > 0 && item.state !== 'done' ? fmt(t.tournaments.today, { n: item.today }) : null,
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(' · ') : null;
 }
@@ -168,6 +169,19 @@ export function mineHeadline(mine: NonNullable<GetTournamentsResult['mine']>, to
 }
 
 /* ================= one tournament: Πρόγραμμα ================= */
+
+/** how many days back the app keeps a tournament's schedule (founder, 22 Oct) */
+export const SCHEDULE_DAYS_BACK = 7;
+
+/**
+ * What the app shows of a tournament's schedule: only the last week (today minus 7, Athens days) on, and none at all
+ * once the tournament is done, so a finished one is only its draws. The server already sends it this way
+ * (20270313000000_week_window_finished); this keeps the sample data and older servers the same.
+ */
+export function scheduleWindow<T extends Pick<GetTournamentResult, 'days' | 'state'>>(d: T, today: string): T {
+  const days = d.state === 'done' ? [] : d.days.filter((x) => daysBetween(today, x.date) >= -SCHEDULE_DAYS_BACK);
+  return days.length === d.days.length ? d : { ...d, days };
+}
 
 export type Segment = 'schedule' | 'bracket';
 
