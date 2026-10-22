@@ -2,8 +2,10 @@ import { useMemo, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
+import { ProLine } from '../../src/components/ProEntries';
 import { Block, CloseButton, EntryPills, MiniPath } from '../../src/components/PlayerRun';
 import { useCopy } from '../../src/i18n';
+import { useMyMatch } from '../../src/lib/data';
 import { useGrowFrom, usePress, useStgIn } from '../../src/lib/motion';
 import { ifWinsLine, matchesOfEntry, summaryOf, titleOf } from '../../src/lib/playerRun';
 import type { NextMatch, PathMatch } from '../../src/lib/tournamentToday';
@@ -55,6 +57,7 @@ function Body({ p, state }: { p: PlayerParams; state: ReturnType<typeof usePlaye
   const f = t.tournaments.focus;
   const { data: d, me, entries, entry, run } = state;
   const summary = useMemo(() => (d && me ? summaryOf(me, matchesOfEntry(d, me, entries, entry), run, new Date(), t) : null), [d, me, entries, entry, run, t]);
+  const myMatch = useMyMatch();
   const wins = useMemo(() => (run ? ifWinsLine(run, t) : null), [run, t]);
   if (!d || !me || !summary) return null;
   let i = 0;
@@ -83,6 +86,11 @@ function Body({ p, state }: { p: PlayerParams; state: ReturnType<typeof usePlaye
             <Block label={f.nextMatch}>{summary.next ? <Next n={summary.next} /> : <Text style={styles.empty}>{f.noNext}</Text>}</Block>
           </Reveal>
         )}
+        {summary.next?.matchId && summary.next.matchId === myMatch.match?.matchId ? (
+          <Reveal i={i++}>
+            <ProLine moment="tournament_player" label={t.pro.entries.opponent} />
+          </Reveal>
+        ) : null}
         {run && run.steps.length > 0 ? (
           <Reveal i={i++}>
             <PathButton label={f.openPath} onPress={() => router.push({ pathname: '/tournament-path', params: carry(p, entry) })}>

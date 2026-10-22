@@ -49,4 +49,14 @@ describe('mePageOf', () => {
     expect(mePageOf('')).toBe('main');
     expect(mePageOf('other')).toBe('main');
   });
+
+  it('without Pro the card sits right under the hero and the quiet row is gone', () => {
+    expect(meSections({ ...all, proCard: true })).toEqual(['hero', 'proCard', 'level', 'quests', 'numbers', 'look', 'settings']);
+    expect(meSections({ ...none, proCard: true })).toEqual(['hero', 'proCard', 'numbers', 'settings']);
+  });
+
+  it('with Pro there is no card, only the status row', () => {
+    expect(meSections({ ...all, proCard: false })).toContain('pro');
+    expect(meSections({ ...all, proCard: false })).not.toContain('proCard');
+  });
 });

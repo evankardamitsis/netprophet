@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanima
 import { router, useLocalSearchParams } from 'expo-router';
 import { greekCaps } from '@netprophet/copy';
 import { PlayerTraits } from '../../../src/components/PlayerTraits';
+import { ProTeaser } from '../../../src/components/ProEntries';
 import { FitText } from '../../../src/components/FitText';
 import { LastMatchRow } from '../../../src/components/LastMatchRow';
 import { FormDots } from '../../../src/components/PlayerListRow';
@@ -169,6 +170,8 @@ function Profile({ p, onFollow, onToast }: { p: ProfileView; onFollow: () => voi
           p.last.map((m, i) => <LastMatchRow key={m.key} m={m} first={i === 0} />)
         )}
       </Animated.View>
+
+      {p.isMe ? null : <ProTeaser />}
 
       {p.isMe ? null : <PlayerTraits state={traits} first={p.first} onToast={onToast} />}
     </>

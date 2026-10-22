@@ -9,6 +9,8 @@ import type { HomeTournament, QuizCardView, ResultsLine, YoursNow } from '../lib
 import { tagLabel } from '../lib/home';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
+import { showsTrial } from '../lib/proEntries';
+import { useProEntry } from '../lib/proEntry';
 import { useOfferShown, useProOffer } from '../lib/purchase';
 import { hasTime, timeOf } from '../lib/tournaments';
 import { fmt } from '../lib/votes';
@@ -193,25 +195,27 @@ export function QuizCard({ view, onPress }: { view: QuizCardView; onPress: () =>
 
 /**
  * The dark Pro card, about what is near (ProNudge's moments): your match soon, «Ο αντίπαλός σου στις 18:00»; else
- * your stats. Pro sees the feature itself and opens it; never a buy prompt. Without Pro it shows only when the server
- * says an offer may show now (not in the first days, one a day; it counts the showing), the free week only if there is
- * one. It sells information, never points, ranking or outcomes.
+ * your stats. Pro sees the feature itself and opens it. Everyone without Pro sees it (founder, 22 Oct: it was hidden;
+ * the "after a vote" and the server's one-a-day gates are gone), resting for the day once tapped; the free week is said
+ * only if the server says there is one. `pro` is null while get_pro loads: nothing shows. It sells information, never
+ * points, ranking or outcomes.
  */
-export function ProCard({ pro, myMatch }: { pro: boolean; myMatch: MyMatchView | null }) {
+export function ProCard({ pro, myMatch }: { pro: boolean | null; myMatch: MyMatchView | null }) {
   const t = useCopy();
   const p = t.home.pro;
   const { offer } = useProOffer();
   const shown = useOfferShown();
   const counted = useRef(false);
+  const entry = useProEntry('home', pro);
   const moment: ProOfferMoment = myMatch ? 'before_match' : 'me';
-  const canSell = !pro && offer !== null && offer.can_offer && !offer.pro;
+  const canSell = pro === false && offer !== null && offer.can_offer && !offer.pro;
   useEffect(() => {
     if (canSell && !counted.current) {
       counted.current = true;
       shown(moment);
     }
   }, [canSell, moment, shown]);
-  if (!pro && !canSell) return null;
+  if (pro === null || (pro === false && !entry.show)) return null;
   const title = !myMatch
     ? p.statsTitle
     : hasTime(myMatch.startsAt)
@@ -222,7 +226,7 @@ export function ProCard({ pro, myMatch }: { pro: boolean; myMatch: MyMatchView |
   const line = myMatch ? p.opponentLine : p.statsLine;
   const cta = myMatch ? (pro ? p.opponentOpen : p.opponentBuy) : pro ? p.statsOpen : p.statsBuy;
   const open = () => {
-    if (!pro) router.push(`/pro?from=${moment}`);
+    if (!pro) entry.open();
     else if (myMatch) router.push(`/scout/${myMatch.matchId}`);
     else router.push('/match-stats');
   };
@@ -233,7 +237,7 @@ export function ProCard({ pro, myMatch }: { pro: boolean; myMatch: MyMatchView |
           <View style={styles.proTag}>
             <Text style={styles.proTagText}>{p.tag}</Text>
           </View>
-          {!pro && offer?.trial_available ? <Text style={styles.proTrial}>{p.trial}</Text> : null}
+          {showsTrial(pro, offer?.trial_available) ? <Text style={styles.proTrial}>{p.trial}</Text> : null}
         </View>
         <Text style={styles.proTitle}>{title}</Text>
         <Text style={styles.proLine}>{line}</Text>

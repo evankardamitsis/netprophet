@@ -766,6 +766,24 @@ export const el = {
       quiz: 'Θέλεις άλλες έξι; Μια εβδομάδα Pro δωρεάν ›',
       me: 'Μια εβδομάδα Pro δωρεάν ›',
     },
+    /** Pro made visible where it helps, never advantage (founder, 22 Oct): Εγώ's card, the locked teaser, the quiet lines */
+    entries: {
+      /** Εγώ, the card for players without Pro */
+      meTag: 'PRO',
+      meTrial: '7 μέρες δωρεάν',
+      meBenefits: ['Δες τον αντίπαλό σου', 'Ειδοποιήσεις για κλήρωση και ώρα', 'Τα στατιστικά σου'],
+      meCta: 'Δες το Pro ›',
+      /** the player card: what Pro adds, locked */
+      teaserTag: 'Με Pro',
+      teaserRows: ['Όλα τα ματς', 'Κόντρα σας', 'Ανά επιφάνεια'],
+      teaserLabel: 'Με Pro: όλα τα ματς, κόντρα σας, ανά επιφάνεια',
+      /** the quiet lines at the moment Pro helps */
+      opponent: 'Δες τον αντίπαλό σου με Pro ›',
+      result: 'Δες πώς πας φέτος: τα στατιστικά σου με Pro ›',
+      follow: 'Μάθε πρώτος την κλήρωση και την ώρα σου με Pro ›',
+      /** the header's small entry */
+      headerLabel: 'Pro',
+    },
   },
   /** Pro «Η σεζόν σου» (17 Oct 2026, drafts for the founder): the month recap and a card for every win */
   season: {
