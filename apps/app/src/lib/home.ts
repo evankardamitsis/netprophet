@@ -132,16 +132,21 @@ export function groupVotes(matches: readonly CardMatch[], ranks: ReadonlyMap<str
 export const voteRows = (groups: readonly VoteGroup[]) => groups.reduce((n, g) => n + g.rows.length, 0);
 
 /**
- * The first `limit` rows, a group at a time: a group shown keeps its heading and at least its first row (never a heading
- * alone), and the rows after the limit wait for «Περισσότερα ›».
+ * The first `limit` rows you can still vote on (not voted, not closed), in group and time order; a group shown keeps its
+ * heading and only those rows (never a heading alone). The voted ones wait for «Περισσότερα ›», in their time slot. When
+ * every row is voted, the first `limit` rows show.
  */
 export function topVotes(groups: readonly VoteGroup[], limit: number = VOTE_TOP): VoteGroup[] {
+  const castable = (m: CardMatch) => m.myVote === undefined && !m.closed;
+  const any = groups.some((g) => g.rows.some(castable));
   const out: VoteGroup[] = [];
   let left = limit;
   for (const g of groups) {
     if (left <= 0) break;
-    out.push({ ...g, rows: g.rows.slice(0, left) });
-    left -= g.rows.length;
+    const rows = (any ? g.rows.filter(castable) : g.rows).slice(0, left);
+    if (rows.length === 0) continue;
+    out.push({ ...g, rows });
+    left -= rows.length;
   }
   return out;
 }

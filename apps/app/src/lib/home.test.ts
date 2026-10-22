@@ -154,6 +154,19 @@ describe('topVotes', () => {
   it('exactly the limit ends with no next heading', () => {
     expect(ids(topVotes([grp('A', 1), grp('B', 2), grp('C', 1)], 3))).toEqual([['A0'], ['B0', 'B1']]);
   });
+  it('shows the votes still to cast first, skipping voted rows, which wait for «Περισσότερα ›»', () => {
+    const g = grp('A', 3);
+    g.rows[0] = match('A0', { myVote: 'a' });
+    g.rows[1] = match('A1', { closed: true });
+    const out = topVotes([g, grp('B', 4)], 3);
+    expect(ids(out)).toEqual([['A2'], ['B0', 'B1']]);
+    expect(out[0]!.count).toBe(3);
+  });
+  it('every row voted: the first rows show as before', () => {
+    const g = grp('A', 4);
+    g.rows = g.rows.map((r) => ({ ...r, myVote: 'b' as const }));
+    expect(ids(topVotes([g], 3))).toEqual([['A0', 'A1', 'A2']]);
+  });
   it('counts the rows', () => {
     expect(voteRows([grp('A', 1), grp('B', 2)])).toBe(3);
   });
