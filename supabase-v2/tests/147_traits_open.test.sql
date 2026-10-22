@@ -20,8 +20,10 @@ select is((select (t ->> 'count')::int from jsonb_array_elements(api.vote_trait(
 select is((select (t ->> 'count')::int from jsonb_array_elements(api.vote_trait(:'pb'::uuid, :'fair'::uuid, true) -> 'traits') t
             where t.value ->> 'id' = :'fair'), 1, 'a second tap on the same phrase is still one vote');
 select is((select count(*)::int from core.trait_votes where voter_user_id = :'n'::uuid), 1, 'one row per person, phrase and player');
-select is((select (t ->> 'count')::int from jsonb_array_elements(api.vote_trait(:'pb'::uuid, :'fair'::uuid, false) -> 'traits') t
-            where t.value ->> 'id' = :'fair'), 0, 'tap again to take it back');
+-- with no votes left the phrase may fall out of the top eight (ties order by id), so count the rows
+select api.vote_trait(:'pb'::uuid, :'fair'::uuid, false) is not null as untapped \gset
+select is((select count(*)::int from core.trait_votes where voter_user_id = :'n'::uuid and player_id = :'pb'::uuid), 0,
+          'tap again to take it back');
 select is((select count(*)::int from jsonb_array_elements(api.suggest_trait(:'pb'::uuid, 'Ανοιχτό παιχνίδι') -> 'traits') t
             where (t ->> 'pending')::boolean), 1, 'adding your own phrase is open too, and waits for staff');
 select tests.logout();
