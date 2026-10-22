@@ -43,6 +43,42 @@ export function pairLine(m: TournamentMatch, t: Copy): string {
   return fmt(t.tournaments.focus.pair, { a: surnames(sideOf(m, 1)), b: surnamesAcc(sideOf(m, 2)) });
 }
 
+/** a piece of a line that shows names: a name with a roster id can be held (its run opens), the rest is plain text */
+export interface NameSeg {
+  text: string;
+  id?: string | null;
+}
+
+/** the template cut at its «{key}» holes, each hole filled by the pieces given for it (unknown holes stay as text) */
+export function segmentsOf(template: string, parts: Record<string, NameSeg[]>): NameSeg[] {
+  const out: NameSeg[] = [];
+  for (const piece of template.split(/(\{\w+\})/)) {
+    if (!piece) continue;
+    const key = /^\{(\w+)\}$/.exec(piece)?.[1];
+    if (key && parts[key]) out.push(...parts[key]!);
+    else out.push({ text: piece });
+  }
+  return out;
+}
+
+/** a side as pieces: «Ροδίτης & Πράτσας», surnames (the accusative after «με»), each with its roster id */
+export function sideSegs(ps: Person[], accusative = false): NameSeg[] {
+  return ps.flatMap((p, i): NameSeg[] => [
+    ...(i > 0 ? [{ text: ' & ' }] : []),
+    { text: accusative ? accusativeWord(p.surname, nameGender(p.first_name)) : p.surname, id: p.id },
+  ]);
+}
+
+/** «Ροδίτης με Δεσύπρη» as pieces: the same text as `pairLine`, the names holdable */
+export function pairSegments(m: TournamentMatch, t: Copy): NameSeg[] {
+  return segmentsOf(t.tournaments.focus.pair, { a: sideSegs(sideOf(m, 1)), b: sideSegs(sideOf(m, 2), true) });
+}
+
+/** «με Δεσύπρη» as pieces, for the people across (undefined when nobody is across yet) */
+export function againstSegs(others: Person[], t: Copy): NameSeg[] | undefined {
+  return others.length > 0 ? segmentsOf(t.tournaments.focus.against, { name: sideSegs(others, true) }) : undefined;
+}
+
 /** NaN without a real time (none, or the import's 00:00 for a row with no time) */
 const startMs = (m: TournamentMatch) => (hasTime(m.starts_at) ? Date.parse(m.starts_at!) : NaN);
 const resolved = (m: TournamentMatch) => m.winner_side !== null;
@@ -53,9 +89,9 @@ export interface CourtNowNext {
   key: string;
   /** «Γήπεδο 1»; null when the schedule names no court (then there is one row for the day) */
   court: string | null;
-  now: { matchId: string; pair: string } | null;
+  now: { matchId: string; pair: string; segs: NameSeg[] } | null;
   /** `time` is «18:30», «μετά το …», or the day («Σήμερα») when the match has no time */
-  next: { matchId: string; pair: string; time: string } | null;
+  next: { matchId: string; pair: string; segs: NameSeg[]; time: string } | null;
 }
 
 /** a match's place in its court's order, when the source gives one (the schedule's row number) */
@@ -86,7 +122,7 @@ export function nowNext(matches: Ordered[], now: Date, t: Copy): CourtNowNext[] 
     const current = playing[playing.length - 1] ?? null;
     let next: CourtNowNext['next'] = null;
     const upcoming = timed.find((m) => startMs(m) > nowMs);
-    if (upcoming) next = { matchId: upcoming.match_id, pair: pairLine(upcoming, t), time: timeOf(upcoming.starts_at!) };
+    if (upcoming) next = { matchId: upcoming.match_id, pair: pairLine(upcoming, t), segs: pairSegments(upcoming, t), time: timeOf(upcoming.starts_at!) };
     else {
       const untimed = ms.filter((m) => Number.isNaN(startMs(m))).sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity))[0];
       if (untimed) {
@@ -95,10 +131,10 @@ export function nowNext(matches: Ordered[], now: Date, t: Copy): CourtNowNext[] 
               .filter((x) => x !== untimed && x.order != null && x.order < untimed.order! && `${(x.club ?? '').trim()}|${(x.court ?? '').trim()}` === key)
               .sort((a, b) => b.order! - a.order!)[0]
           : undefined;
-        next = { matchId: untimed.match_id, pair: pairLine(untimed, t), time: before ? fmt(f.after, { match: pairLine(before, t) }) : dayLabel(dayKey(now.toISOString()), dayKey(now.toISOString()), t) };
+        next = { matchId: untimed.match_id, pair: pairLine(untimed, t), segs: pairSegments(untimed, t), time: before ? fmt(f.after, { match: pairLine(before, t) }) : dayLabel(dayKey(now.toISOString()), dayKey(now.toISOString()), t) };
       }
     }
-    if (current || next) out.push({ key, court, now: current ? { matchId: current.match_id, pair: pairLine(current, t) } : null, next });
+    if (current || next) out.push({ key, court, now: current ? { matchId: current.match_id, pair: pairLine(current, t), segs: pairSegments(current, t) } : null, next });
   }
   return out.sort((a, b) => (a.court ?? '').localeCompare(b.court ?? '', 'el', { numeric: true }));
 }
@@ -157,6 +193,8 @@ export interface PathMatch {
   meta: string | null;
   /** «με Δεσύπρη» */
   against: string;
+  /** the same, as pieces, when the schedule knows who (the names can be held) */
+  againstSegs?: NameSeg[];
   /** «6-4, 6-3», winner first */
   score: string | null;
   won: boolean;
@@ -169,6 +207,8 @@ export interface NextMatch {
   /** «Γήπεδο 1 · Γήπεδα Γλυφάδας» when known */
   place: string | null;
   against: string;
+  /** the same, as pieces, when the schedule knows who (the names can be held) */
+  againstSegs?: NameSeg[];
   /** started within the last 90 minutes */
   now: boolean;
 }

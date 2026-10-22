@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import type { CardMatch, CardSide } from './feed';
-import type { PathContext } from './tournamentToday';
+import type { NameSeg, PathContext } from './tournamentToday';
 
 /**
  * Press and hold a player's name (Πρόγραμμα, Ταμπλό, Σήμερα's cards) for their run in that tournament, full screen
@@ -170,6 +170,36 @@ export function HoldName({
     <Text {...hold} style={[style, down && !held && holdStyles.down, held && holdStyles.held]} suppressHighlighting>
       {children}
     </Text>
+  );
+}
+
+/**
+ * A line that shows names, as pieces (see `segmentsOf`): the pieces with a roster id are held names (the same hold, the
+ * same haptic, the same screen as everywhere), the rest plain text. Goes inside a Text.
+ */
+export function HoldSegs({
+  tournamentId,
+  segs,
+  ctx = null,
+  onTap,
+}: {
+  tournamentId: string | null;
+  segs: NameSeg[];
+  ctx?: PathContext;
+  onTap?: () => void;
+}) {
+  return (
+    <>
+      {segs.map((s, i) =>
+        s.id ? (
+          <HoldName key={i} tournamentId={tournamentId} playerId={s.id} ctx={ctx} onTap={onTap}>
+            {s.text}
+          </HoldName>
+        ) : (
+          s.text
+        ),
+      )}
+    </>
   );
 }
 

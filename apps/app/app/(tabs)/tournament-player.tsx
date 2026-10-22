@@ -1,22 +1,24 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ProLine } from '../../src/components/ProEntries';
-import { Block, CloseButton, EntryPills, MiniPath } from '../../src/components/PlayerRun';
+import { Block, CloseButton, MiniPath } from '../../src/components/PlayerRun';
 import { useCopy } from '../../src/i18n';
 import { useMyMatch } from '../../src/lib/data';
 import { useGrowFrom, usePress, useStgIn } from '../../src/lib/motion';
-import { ifWinsLine, matchesOfEntry, summaryOf, titleOf } from '../../src/lib/playerRun';
+import { HoldSegs } from '../../src/lib/playerHold';
+import { sectionsOf, titleOf, type RunSection } from '../../src/lib/playerRun';
 import type { NextMatch, PathMatch } from '../../src/lib/tournamentToday';
 import { carry, usePlayerRun, type PlayerParams } from '../../src/lib/usePlayerRun';
 import { colors, fonts, motion, text } from '../../src/theme';
 
 /**
  * One player in one tournament (founder, 21 Oct; split in three after build 12): opened by holding their name on
- * Πρόγραμμα, Ταμπλό or a card on Σήμερα, it grows out of the name held. Their name (and partner's in doubles) on top,
- * pills for their other categories and pairs, «Αν κερδίσει», the next match, the button to their path in the draw,
- * and what they did so far. «‹» closes it.
+ * Πρόγραμμα, Ταμπλό, a card on Σήμερα, a result and anywhere else a name shows in a tournament, it grows out of the
+ * name held. Their name on top, then a section for each category and pair they play here (founder, 22 Oct): the
+ * held match's first and open, the others as headers that open on a tap. In a section «Αν κερδίσει», the next match,
+ * the button to the path in the draw, and what they did so far. «‹» closes it.
  */
 /** the tab bar keeps this screen mounted, so a new hold (other name, other point) builds it again: the params are its key */
 export default function TournamentPlayerScreen() {
@@ -54,77 +56,113 @@ function Reveal({ i, children }: { i: number; children: ReactNode }) {
 
 function Body({ p, state }: { p: PlayerParams; state: ReturnType<typeof usePlayerRun> }) {
   const t = useCopy();
-  const f = t.tournaments.focus;
-  const { data: d, me, entries, entry, run } = state;
-  const summary = useMemo(() => (d && me ? summaryOf(me, matchesOfEntry(d, me, entries, entry), run, new Date(), t) : null), [d, me, entries, entry, run, t]);
-  const myMatch = useMyMatch();
-  const wins = useMemo(() => (run ? ifWinsLine(run, t) : null), [run, t]);
-  if (!d || !me || !summary) return null;
-  let i = 0;
+  const { data: d, me, entries, ctx } = state;
+  const sections = useMemo(() => (d && me ? sectionsOf(d, me, entries, ctx, new Date(), t) : []), [d, me, entries, ctx, t]);
+  if (!d || !me) return null;
   return (
     <>
-      <Reveal i={i++}>
-        <Text style={styles.title}>{titleOf(me, entry, t)}</Text>
+      <Reveal i={0}>
+        <Text style={styles.title}>{titleOf(me, null, t)}</Text>
         <Text style={styles.sub}>{d.name}</Text>
       </Reveal>
-      <Reveal i={i++}>
-        <EntryPills entries={entries} picked={entry} onPick={state.pick} />
-      </Reveal>
-      {/* a new pill builds the rest again, so it enters again */}
-      <View key={entry?.key ?? 'none'} style={styles.stack}>
-        {wins ? (
-          <Reveal i={i++}>
-            <View style={styles.ifWins}>
-              <Text style={styles.ifWinsLine}>{wins.line}</Text>
-              {wins.when ? <Text style={styles.ifWinsWhen}>{wins.when}</Text> : null}
-            </View>
-          </Reveal>
-        ) : null}
-        {/* a next match known only from the draw says what «Αν κερδίσει» already said: once is enough */}
-        {wins && summary.next && summary.next.matchId === null ? null : (
-          <Reveal i={i++}>
-            <Block label={f.nextMatch}>{summary.next ? <Next n={summary.next} /> : <Text style={styles.empty}>{f.noNext}</Text>}</Block>
-          </Reveal>
-        )}
-        {summary.next?.matchId && summary.next.matchId === myMatch.match?.matchId ? (
-          <Reveal i={i++}>
-            <ProLine moment="tournament_player" label={t.pro.entries.opponent} />
-          </Reveal>
-        ) : null}
-        {run && run.steps.length > 0 ? (
-          <Reveal i={i++}>
-            <PathButton label={f.openPath} onPress={() => router.push({ pathname: '/tournament-path', params: carry(p, entry) })}>
-              <MiniPath run={run} />
-            </PathButton>
-          </Reveal>
-        ) : null}
-        <Reveal i={i++}>
-          <Block label={f.played}>
-            {summary.previous.length > 0 ? (
-              <View style={styles.list}>
-                {summary.previous.map((m, k) => (
-                  <Played key={m.matchId} p={m} k={k} />
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.empty}>{f.nothingYet}</Text>
-            )}
-          </Block>
-        </Reveal>
+      <View style={styles.sections}>
+        {sections.map((s, i) => (
+          <Section key={s.entry?.key ?? 'none'} p={p} s={s} first={i === 0} i={i + 1} only={sections.length === 1} />
+        ))}
       </View>
     </>
   );
 }
 
-/** the screen's one primary action: to the path, with a glance at it */
-function PathButton({ label, onPress, children }: { label: string; onPress: () => void; children: ReactNode }) {
+/** a category or pair: the first (the held match's) is open, the others open on a tap and close on another */
+function Section({ p, s, first, only, i }: { p: PlayerParams; s: RunSection; first: boolean; only: boolean; i: number }) {
+  const [open, setOpen] = useState(first);
+  const enter = useStgIn(motion.revealDur, Math.min(i, 8) * motion.stagger);
+  return (
+    <Animated.View style={enter}>
+      <Animated.View layout={LinearTransition.duration(motion.revealDurShort)} style={styles.section}>
+        {s.entry && !only ? <SectionHeader label={s.entry.label} open={open} onPress={() => setOpen((o) => !o)} /> : s.entry ? <Text style={styles.onlyLabel}>{s.entry.label}</Text> : null}
+        {open ? <SectionBody p={p} s={s} primary={first} /> : null}
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+/** «MD 40+ · με Μέμμο ↓»: a tap opens what is under it */
+function SectionHeader({ label, open, onPress }: { label: string; open: boolean; onPress: () => void }) {
+  const press = usePress();
+  return (
+    <Pressable accessibilityRole="button" accessibilityState={{ expanded: open }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Animated.View style={[styles.header, open && styles.headerOn, press.style]}>
+        <Text style={[styles.headerLabel, open && styles.headerLabelOn]} numberOfLines={1}>
+          {label}
+        </Text>
+        <Text style={[styles.headerGlyph, open && styles.headerLabelOn]}>{open ? '↑' : '↓'}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+function SectionBody({ p, s, primary }: { p: PlayerParams; s: RunSection; primary: boolean }) {
+  const t = useCopy();
+  const f = t.tournaments.focus;
+  const myMatch = useMyMatch();
+  const { run, next, previous, wins, entry } = s;
+  let i = 0;
+  return (
+    <View style={styles.stack}>
+      {wins ? (
+        <Reveal i={i++}>
+          <View style={styles.ifWins}>
+            <Text style={styles.ifWinsLine}>{wins.line}</Text>
+            {wins.when ? <Text style={styles.ifWinsWhen}>{wins.when}</Text> : null}
+          </View>
+        </Reveal>
+      ) : null}
+      {/* a next match known only from the draw says what «Αν κερδίσει» already said: once is enough */}
+      {wins && next && next.matchId === null ? null : (
+        <Reveal i={i++}>
+          <Block label={f.nextMatch}>{next ? <Next n={next} tournamentId={p.tournament} /> : <Text style={styles.empty}>{f.noNext}</Text>}</Block>
+        </Reveal>
+      )}
+      {next?.matchId && next.matchId === myMatch.match?.matchId ? (
+        <Reveal i={i++}>
+          <ProLine moment="tournament_player" label={t.pro.entries.opponent} />
+        </Reveal>
+      ) : null}
+      {run && run.steps.length > 0 ? (
+        <Reveal i={i++}>
+          <PathButton label={f.openPath} primary={primary} onPress={() => router.push({ pathname: '/tournament-path', params: carry(p, entry) })}>
+            {primary ? <MiniPath run={run} /> : null}
+          </PathButton>
+        </Reveal>
+      ) : null}
+      <Reveal i={i++}>
+        <Block label={f.played}>
+          {previous.length > 0 ? (
+            <View style={styles.list}>
+              {previous.map((m, k) => (
+                <Played key={m.matchId} p={m} k={k} tournamentId={p.tournament} />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.empty}>{f.nothingYet}</Text>
+          )}
+        </Block>
+      </Reveal>
+    </View>
+  );
+}
+
+/** the way to the path in the draw, with a glance at it; blue on the held section (one primary action on the screen), quiet on the others */
+function PathButton({ label, primary, onPress, children }: { label: string; primary: boolean; onPress: () => void; children: ReactNode }) {
   const press = usePress();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
-      <Animated.View style={[styles.pathBtn, press.style]}>
+      <Animated.View style={[styles.pathBtn, !primary && styles.pathBtnQuiet, press.style]}>
         <View style={styles.pathTop}>
-          <Text style={styles.pathLabel}>{label}</Text>
-          <Text style={styles.pathGo}>›</Text>
+          <Text style={[styles.pathLabel, !primary && styles.pathLabelQuiet]}>{label}</Text>
+          <Text style={[styles.pathGo, !primary && styles.pathLabelQuiet]}>›</Text>
         </View>
         {children}
       </Animated.View>
@@ -132,7 +170,7 @@ function PathButton({ label, onPress, children }: { label: string; onPress: () =
   );
 }
 
-function Next({ n }: { n: NextMatch }) {
+function Next({ n, tournamentId }: { n: NextMatch; tournamentId: string }) {
   const f = useCopy().tournaments.focus;
   return (
     <View style={styles.card}>
@@ -144,13 +182,13 @@ function Next({ n }: { n: NextMatch }) {
           </View>
         ) : null}
       </View>
-      <Text style={styles.against}>{n.against}</Text>
+      <Text style={styles.against}>{n.matchId && n.againstSegs ? <HoldSegs tournamentId={tournamentId} segs={n.againstSegs} ctx={{ match: n.matchId }} /> : n.against}</Text>
       {n.place ? <Text style={styles.meta}>{n.place}</Text> : null}
     </View>
   );
 }
 
-function Played({ p, k }: { p: PathMatch; k: number }) {
+function Played({ p, k, tournamentId }: { p: PathMatch; k: number; tournamentId: string }) {
   const enter = useStgIn(motion.revealDurShort, motion.revealDur + k * motion.stagger);
   return (
     <Animated.View style={[styles.playedRow, enter]}>
@@ -159,7 +197,7 @@ function Played({ p, k }: { p: PathMatch; k: number }) {
       </View>
       <View style={styles.playedBody}>
         <Text style={[styles.against, !p.won && styles.lost]} numberOfLines={1}>
-          {p.against}
+          {p.againstSegs ? <HoldSegs tournamentId={tournamentId} segs={p.againstSegs} ctx={{ match: p.matchId }} /> : p.against}
         </Text>
         <Text style={styles.meta} numberOfLines={1}>
           {[p.day, p.meta, p.score].filter(Boolean).join(' · ')}
@@ -173,10 +211,18 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
   scroll: { paddingTop: 8, paddingHorizontal: 20, gap: 18 },
   scrollEnd: { paddingBottom: 32 },
+  sections: { gap: 12 },
+  section: { gap: 14 },
   stack: { gap: 18 },
   title: { ...text.title },
   sub: { marginTop: 2, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },
   empty: { fontFamily: fonts.body, fontSize: 15, lineHeight: 21, color: colors.inkSoft },
+  onlyLabel: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 22, color: colors.ink },
+  header: { minHeight: 48, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.mist, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  headerOn: { backgroundColor: colors.ink, borderColor: colors.ink },
+  headerLabel: { flex: 1, fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21, color: colors.ink },
+  headerLabelOn: { color: colors.paper },
+  headerGlyph: { fontFamily: fonts.bodyBold, fontSize: 18, lineHeight: 22, color: colors.ink },
   ifWins: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 20, backgroundColor: colors.ink, gap: 4 },
   ifWinsLine: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 23, color: colors.paper },
   ifWinsWhen: { fontFamily: fonts.bodySemi, fontSize: 13, lineHeight: 17, color: colors.mist },
@@ -196,7 +242,9 @@ const styles = StyleSheet.create({
   tickOff: { backgroundColor: colors.sand },
   tickText: { fontFamily: fonts.bodyBold, fontSize: 13, lineHeight: 16, color: colors.ink },
   pathBtn: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 20, backgroundColor: colors.blue, gap: 12 },
+  pathBtnQuiet: { paddingVertical: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.mist },
   pathTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pathLabel: { fontFamily: fonts.bodyBold, fontSize: 17, lineHeight: 22, color: colors.white },
+  pathLabelQuiet: { color: colors.ink },
   pathGo: { fontFamily: fonts.bodyBold, fontSize: 26, lineHeight: 28, color: colors.white },
 });

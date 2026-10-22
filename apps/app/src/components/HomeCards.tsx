@@ -9,6 +9,7 @@ import type { HomeTournament, QuizCardView, ResultsLine, YoursNow } from '../lib
 import { tagLabel } from '../lib/home';
 import type { MyMatchView } from '../lib/myMatch';
 import { usePopIn, usePress, useStgIn } from '../lib/motion';
+import { HoldName } from '../lib/playerHold';
 import { showsTrial } from '../lib/proEntries';
 import { useProEntry } from '../lib/proEntry';
 import { useOfferShown, useProOffer } from '../lib/purchase';
@@ -133,7 +134,9 @@ export function YoursRow({ row, onPress }: { row: YoursNow; onPress?: () => void
       </View>
       <View style={styles.flex}>
         <Text numberOfLines={1} style={styles.rowTitle}>
-          {row.name}
+          <HoldName tournamentId={row.tournamentId} playerId={row.playerId} ctx={{ match: row.matchId }} onTap={onPress}>
+            {row.name}
+          </HoldName>
         </Text>
         <Text numberOfLines={2} style={styles.small}>
           {row.line}
