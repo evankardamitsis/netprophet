@@ -42,6 +42,10 @@ export default function TabsLayout() {
               <Tabs.Screen name="tournament/[id]" options={{ title: t.tournaments.title, href: null }} />
               {/* a player's profile keeps the header and tab bar, with no tab highlighted (prototype) */}
               <Tabs.Screen name="player/[id]" options={{ title: t.players.title, href: null }} />
+              {/* a held name's run, its path and its draw stay inside the main layout, Τουρνουά lit (founder, 22 Oct) */}
+              <Tabs.Screen name="tournament-player" options={{ title: t.tournaments.title, href: null }} />
+              <Tabs.Screen name="tournament-path" options={{ title: t.tournaments.title, href: null }} />
+              <Tabs.Screen name="tournament-draw" options={{ title: t.tournaments.title, href: null }} />
               <Tabs.Screen name="scout/[id]" options={{ title: t.scout.title, href: null }} />
             </Tabs>
             {/* above everything, so «+10» can fly out of the feed into the header */}

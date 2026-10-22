@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { YoursDot } from '../../../src/components/YoursDot';
 import { useFollowedIds } from '../../../src/lib/myPeople';
@@ -258,10 +258,10 @@ function YoursChip({ row, onPress }: { row: YoursRow; onPress: () => void }) {
 }
 
 /** a pill in a row of choices: ink when picked */
-function Pill({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+function Pill({ label, on, onPress, onLayout }: { label: string; on: boolean; onPress: () => void; onLayout?: (e: LayoutChangeEvent) => void }) {
   const press = usePress();
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.pillHit}>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} onLayout={onLayout} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} style={styles.pillHit}>
       <Animated.View style={[styles.pill, on && styles.pillOn, press.style]}>
         <Text style={[styles.pillText, on && styles.pillTextOn]}>{label}</Text>
       </Animated.View>
@@ -315,6 +315,22 @@ function Schedule({
     // tryScroll reads refs only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus]);
+  // the day strip keeps the picked day in view, centred: it scrolls once the chips and the strip are measured, and when the pick changes
+  const strip = useRef<ScrollView>(null);
+  const stripAt = useRef({ width: 0, chips: new Map<string, { x: number; width: number }>(), done: null as string | null });
+  const centreDay = (key: string | null) => {
+    const s = stripAt.current;
+    const box = key ? s.chips.get(key) : undefined;
+    if (!key || !box || s.width === 0) return;
+    // the first placement is drawn in place, later picks glide
+    strip.current?.scrollTo({ x: Math.max(0, box.x + box.width / 2 - s.width / 2), animated: s.done !== null });
+    s.done = key;
+  };
+  useEffect(() => {
+    if (stripAt.current.done !== day) centreDay(day);
+    // centreDay reads refs only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [day]);
   const sh = t.tournaments.detail.share;
   const card = useRef<View>(null);
   const [busy, setBusy] = useState(false);
@@ -337,9 +353,30 @@ function Schedule({
   return (
     <View style={styles.block} onLayout={(e) => (at.current.block = e.nativeEvent.layout.y)}>
       <View style={styles.dayBar}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayScroll} contentContainerStyle={styles.pillRow}>
+        <ScrollView
+          ref={strip}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.dayScroll}
+          contentContainerStyle={styles.pillRow}
+          onLayout={(e) => {
+            stripAt.current.width = e.nativeEvent.layout.width;
+            if (stripAt.current.done === null) centreDay(day);
+          }}
+        >
           {chips.map((ch) => (
-            <Pill key={ch.key} label={ch.label} on={ch.key === day} onPress={() => onDay(ch.key)} />
+            <Pill
+              key={ch.key}
+              label={ch.label}
+              on={ch.key === day}
+              onPress={() => onDay(ch.key)}
+              onLayout={(e) => {
+                const { x, width } = e.nativeEvent.layout;
+                stripAt.current.chips.set(ch.key, { x, width });
+                // the picked chip is measured last on the first pass: scroll as soon as it is
+                if (ch.key === day && stripAt.current.done === null) centreDay(day);
+              }}
+            />
           ))}
         </ScrollView>
       </View>

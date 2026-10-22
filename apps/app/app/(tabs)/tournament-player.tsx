@@ -2,14 +2,13 @@ import { useMemo, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Block, CloseButton, EntryPills, MiniPath } from '../src/components/PlayerRun';
-import { useCopy } from '../src/i18n';
-import { useGrowFrom, usePress, useStgIn } from '../src/lib/motion';
-import { ifWinsLine, matchesOfEntry, summaryOf, titleOf } from '../src/lib/playerRun';
-import type { NextMatch, PathMatch } from '../src/lib/tournamentToday';
-import { carry, usePlayerRun, type PlayerParams } from '../src/lib/usePlayerRun';
-import { colors, fonts, motion, text } from '../src/theme';
+import { Block, CloseButton, EntryPills, MiniPath } from '../../src/components/PlayerRun';
+import { useCopy } from '../../src/i18n';
+import { useGrowFrom, usePress, useStgIn } from '../../src/lib/motion';
+import { ifWinsLine, matchesOfEntry, summaryOf, titleOf } from '../../src/lib/playerRun';
+import type { NextMatch, PathMatch } from '../../src/lib/tournamentToday';
+import { carry, usePlayerRun, type PlayerParams } from '../../src/lib/usePlayerRun';
+import { colors, fonts, motion, text } from '../../src/theme';
 
 /**
  * One player in one tournament (founder, 21 Oct; split in three after build 12): opened by holding their name on
@@ -17,10 +16,15 @@ import { colors, fonts, motion, text } from '../src/theme';
  * pills for their other categories and pairs, «Αν κερδίσει», the next match, the button to their path in the draw,
  * and what they did so far. «‹» closes it.
  */
+/** the tab bar keeps this screen mounted, so a new hold (other name, other point) builds it again: the params are its key */
 export default function TournamentPlayerScreen() {
+  const params = useLocalSearchParams<Record<string, string>>();
+  return <Content key={[params.tournament, params.player, params.match, params.slot, params.entry, params.x, params.y].join('|')} />;
+}
+
+function Content() {
   const params = useLocalSearchParams<{ tournament: string; player: string; match?: string; slot?: string; entry?: string; x?: string; y?: string }>();
   const p: PlayerParams = { tournament: String(params.tournament), player: String(params.player), match: params.match, slot: params.slot, entry: params.entry };
-  const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const t = useCopy();
   // the screen grows out of the name that was held (the centre when the point is unknown)
@@ -30,9 +34,9 @@ export default function TournamentPlayerScreen() {
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(`/tournament/${p.tournament}`));
   const state = usePlayerRun(p);
   return (
-    <Animated.View style={[styles.screen, { paddingTop: insets.top }, grow]}>
+    <Animated.View style={[styles.screen, grow]}>
       <CloseButton onPress={goBack} />
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 32 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scroll, styles.scrollEnd]} showsVerticalScrollIndicator={false}>
         {state.data && state.me ? <Body p={p} state={state} /> : null}
         {state.data && !state.me ? <Text style={styles.empty}>{t.tournaments.focus.notFound}</Text> : null}
         {!state.data && !state.loading ? <Text style={styles.empty}>{t.tournaments.detail.notFound}</Text> : null}
@@ -159,7 +163,8 @@ function Played({ p, k }: { p: PathMatch; k: number }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
-  scroll: { paddingHorizontal: 20, gap: 18 },
+  scroll: { paddingTop: 8, paddingHorizontal: 20, gap: 18 },
+  scrollEnd: { paddingBottom: 32 },
   stack: { gap: 18 },
   title: { ...text.title },
   sub: { marginTop: 2, fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 20, color: colors.inkSoft },

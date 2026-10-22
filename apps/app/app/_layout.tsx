@@ -154,19 +154,6 @@ function Routes() {
             options={{ presentation: "modal", animation: "slide_from_bottom" }}
           />
           <Stack.Screen name="match-stats" />
-          <Stack.Screen
-            name="tournament-player"
-            // the screen grows out of the held name itself (useGrowFrom); the stack only fades it in
-            options={{ presentation: "fullScreenModal", animation: "fade" }}
-          />
-          <Stack.Screen
-            name="tournament-path"
-            options={{ presentation: "fullScreenModal", animation: "fade" }}
-          />
-          <Stack.Screen
-            name="tournament-draw"
-            options={{ presentation: "fullScreenModal", animation: "fade" }}
-          />
         </Stack.Protected>
         <Stack.Protected
           guard={signedIn && (onboarding || (__DEV__ && (guest || !isLive)))}
