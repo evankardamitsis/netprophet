@@ -31,11 +31,20 @@
     "production": {
       "android": {
         "track": "internal",
-        "releaseStatus": "draft"
+        "releaseStatus": "completed",
+        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
       },
       "ios": {
         "ascAppId": "6824998331",
         "appleTeamId": "ZT54M58PWP"
+      }
+    },
+    "play-production": {
+      "android": {
+        "track": "production",
+        "releaseStatus": "inProgress",
+        "rollout": 0.2,
+        "serviceAccountKeyPath": "$GOOGLE_SERVICE_ACCOUNT_KEY_PATH"
       }
     }
   }

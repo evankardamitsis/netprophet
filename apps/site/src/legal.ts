@@ -161,7 +161,7 @@ export const support: Record<Lang, Doc> = {
       },
       {
         heading: 'Διαγραφή λογαριασμού',
-        paragraphs: ['Γράψε μας από το email του λογαριασμού σου και τον σβήνουμε μέσα σε 30 μέρες, μαζί με τα στοιχεία σου.'],
+        paragraphs: ['Μέσα από την εφαρμογή: Εγώ › Ρυθμίσεις › «Διαγραφή λογαριασμού». Ή γράψε μας από το email του λογαριασμού σου και τον σβήνουμε μέσα σε 30 μέρες. Όλα τα βήματα: netprophetapp.com/delete-account'],
       },
     ],
   },
@@ -188,7 +188,104 @@ export const support: Record<Lang, Doc> = {
       },
       {
         heading: 'Deleting your account',
-        paragraphs: ['Write to us from your account’s email and we delete it within 30 days, with your data.'],
+        paragraphs: ['In the app: Me › Settings › «Delete account». Or write to us from your account’s email and we delete it within 30 days. All the steps: netprophetapp.com/en/delete-account'],
+      },
+    ],
+  },
+};
+
+/**
+ * Deleting your account (22 Oct 2026): the web page Google Play asks for next to the in-app path. It says how, what
+ * goes and what stays, and offers the email way for someone who no longer has the app. api.delete_my_account removes
+ * the sign-in at once, and with it the profile, calls, points, σερί, follows, reactions and what the player owns;
+ * purchase records stay without a name (the law asks for receipts). Greek is a draft for the founder.
+ */
+export const deleteAccount: Record<Lang, Doc> = {
+  el: {
+    title: 'Διαγραφή λογαριασμού',
+    updated: 'Τελευταία ενημέρωση: 22 Οκτωβρίου 2026',
+    intro: 'Μπορείς να σβήσεις τον λογαριασμό σου στο NetProphet (Monad Labs) όποτε θέλεις, με δύο τρόπους.',
+    sections: [
+      {
+        heading: 'Από την εφαρμογή, αμέσως',
+        bullets: [
+          'Άνοιξε το NetProphet και μπες στον λογαριασμό σου.',
+          'Πήγαινε στο Εγώ › Ρυθμίσεις.',
+          'Πάτα «Διαγραφή λογαριασμού» και μετά «Ναι, διαγραφή».',
+        ],
+      },
+      {
+        heading: 'Χωρίς την εφαρμογή, με email',
+        paragraphs: [
+          'Γράψε στο hello@monadlabs.gr από το email που μπαίνεις στο NetProphet, με θέμα «Διαγραφή λογαριασμού». Τον σβήνουμε μέσα σε 30 μέρες και σου απαντάμε όταν γίνει.',
+        ],
+      },
+      {
+        heading: 'Τι σβήνεται',
+        bullets: [
+          'Ο λογαριασμός και το email σου.',
+          'Το προφίλ σου: όνομα, περιοχή, φύλο, ο παίκτης σου.',
+          'Ψήφοι, πόντοι, σερί, level, φίλοι, αντιδράσεις, ό,τι έχει κερδίσει ή φοράει ο παίκτης σου.',
+          'Τα κλειδιά για τις ειδοποιήσεις.',
+        ],
+      },
+      {
+        heading: 'Τι μένει',
+        bullets: [
+          'Οι αγορές, χωρίς το όνομά σου, όσο ο νόμος ζητά να κρατάμε αποδείξεις.',
+          'Τα αποτελέσματα των τουρνουά, που είναι δημόσια. Ο παίκτης μένει στα ταμπλό χωρίς τον λογαριασμό σου.',
+          'Τα στατιστικά χρήσης, χωρίς email, σβήνονται μέσα σε 30 μέρες αν το ζητήσεις με email.',
+        ],
+      },
+      {
+        heading: 'Το Pro σου',
+        paragraphs: [
+          'Η διαγραφή δεν ακυρώνει τη συνδρομή στο κατάστημα. Ακύρωσέ τη πρώτα από το Google Play (Πληρωμές και συνδρομές) ή το App Store (Συνδρομές).',
+        ],
+      },
+    ],
+  },
+  en: {
+    title: 'Delete your account',
+    updated: 'Last updated: 22 October 2026',
+    intro: 'You can delete your NetProphet (Monad Labs) account whenever you want, in two ways.',
+    sections: [
+      {
+        heading: 'In the app, right away',
+        bullets: [
+          'Open NetProphet and sign in.',
+          'Go to Me › Settings.',
+          'Tap «Delete account», then «Yes, delete».',
+        ],
+      },
+      {
+        heading: 'Without the app, by email',
+        paragraphs: [
+          'Write to hello@monadlabs.gr from the email you sign in with, subject «Delete account». We delete it within 30 days and reply when it is done.',
+        ],
+      },
+      {
+        heading: 'What is deleted',
+        bullets: [
+          'Your account and your email.',
+          'Your profile: name, area, gender, your player.',
+          'Calls, points, streak, level, friends, reactions, everything your player earned or wears.',
+          'The keys for notifications.',
+        ],
+      },
+      {
+        heading: 'What stays',
+        bullets: [
+          'Purchase records, without your name, for as long as the law asks us to keep receipts.',
+          'Tournament results, which are public. The player stays in the draws, without your account.',
+          'Usage statistics, never linked to your email, are erased within 30 days if you ask by email.',
+        ],
+      },
+      {
+        heading: 'Your Pro',
+        paragraphs: [
+          'Deleting your account does not cancel a store subscription. Cancel it first in Google Play (Payments and subscriptions) or the App Store (Subscriptions).',
+        ],
       },
     ],
   },

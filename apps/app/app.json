@@ -19,7 +19,8 @@
     },
     "android": {
       "package": "gr.monadlabs.netprophet",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
     },
     "web": {
       "bundler": "metro",
