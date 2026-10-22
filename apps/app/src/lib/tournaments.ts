@@ -190,13 +190,13 @@ export const playsToday = (d: Pick<GetTournamentResult, 'days'>, today: string):
 
 /**
  * Which segments have data (mockup D): Σήμερα first, only when it plays today (a finished tournament has no days, so
- * no Σήμερα), then Πρόγραμμα and Ταμπλό. Without `today` there is no Σήμερα.
+ * no Σήμερα), then Ταμπλό and Πρόγραμμα. Without `today` there is no Σήμερα.
  */
 export function segmentsOf(d: Pick<GetTournamentResult, 'days' | 'draws'>, today?: string): Segment[] {
   return [
     today !== undefined && playsToday(d, today) ? ('today' as const) : null,
-    d.days.length > 0 ? ('schedule' as const) : null,
     d.draws.length > 0 ? ('bracket' as const) : null,
+    d.days.length > 0 ? ('schedule' as const) : null,
   ].filter((s): s is Segment => s !== null);
 }
 

@@ -112,10 +112,10 @@ describe('schedule', () => {
   });
   it('segments: Σήμερα first and only when it plays today; a finished tournament is the draws alone', () => {
     const draws = [{}] as TournamentDraw[];
-    expect(segmentsOf({ days, draws }, '2026-10-12')).toEqual(['today', 'schedule', 'bracket']);
-    expect(segmentsOf({ days, draws }, '2026-10-13')).toEqual(['schedule', 'bracket']);
-    expect(segmentsOf({ days, draws })).toEqual(['schedule', 'bracket']);
-    expect(segmentsOf({ days: [{ date: '2026-10-12', matches: [] }], draws }, '2026-10-12')).toEqual(['schedule', 'bracket']);
+    expect(segmentsOf({ days, draws }, '2026-10-12')).toEqual(['today', 'bracket', 'schedule']);
+    expect(segmentsOf({ days, draws }, '2026-10-13')).toEqual(['bracket', 'schedule']);
+    expect(segmentsOf({ days, draws })).toEqual(['bracket', 'schedule']);
+    expect(segmentsOf({ days: [{ date: '2026-10-12', matches: [] }], draws }, '2026-10-12')).toEqual(['bracket', 'schedule']);
     const done = scheduleWindow({ state: 'done' as const, days, draws }, '2026-10-12');
     expect(segmentsOf(done, '2026-10-12')).toEqual(['bracket']);
   });
