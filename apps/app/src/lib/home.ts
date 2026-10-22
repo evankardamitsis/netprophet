@@ -5,7 +5,7 @@ import { splitToday, type CardMatch, type CardPerson, type CardResult, type Feed
 import { summaryCounts } from './resultsSummary';
 import { NOW_WINDOW_MS } from './tournamentToday';
 import { dayKey } from '@netprophet/core';
-import { dayLabel, hasTime, timeOf, todayKey } from './tournaments';
+import { dayLabel, daysBetween, hasTime, timeOf, todayKey } from './tournaments';
 import { fmt } from './votes';
 
 /**
@@ -17,6 +17,8 @@ import { fmt } from './votes';
 /* ================= the results card ================= */
 
 export interface ResultsLine {
+  /** «2 αποτελέσματα από χθες», «1 αποτέλεσμα», «3 αποτελέσματα» */
+  title: string;
   /** «2 ✓ · 1 χαμένο», the parts with something in them */
   line: string;
   /** the points they bring, 0 when none (then no lime «+») */
@@ -24,7 +26,7 @@ export interface ResultsLine {
 }
 
 /** «N ✓ · M χαμένα · +X» over every result waiting (oldest first, as the deck plays them) */
-export function resultsLine(results: readonly CardResult[], t: Copy): ResultsLine | null {
+export function resultsLine(results: readonly CardResult[], t: Copy, now: Date = new Date()): ResultsLine | null {
   if (results.length === 0) return null;
   const s = t.result.summary;
   const { n, right, points } = summaryCounts(results);
@@ -32,7 +34,28 @@ export function resultsLine(results: readonly CardResult[], t: Copy): ResultsLin
   const parts: string[] = [];
   if (right > 0) parts.push(fmt(s.right, { n: right }));
   if (wrong > 0) parts.push(wrong === 1 ? s.wrongOne : fmt(s.wrongMany, { n: wrong }));
-  return { line: parts.join(' · '), points };
+  return { title: resultsTitle(results, t, now), line: parts.join(' · '), points };
+}
+
+/** «N αποτελέσματα από χθες» / «από σήμερα» when they all came in that Athens day, else plain «N αποτελέσματα» */
+function resultsTitle(results: readonly CardResult[], t: Copy, now: Date): string {
+  const r = t.home.results;
+  const n = results.length;
+  const today = todayKey(now);
+  const days = new Set(results.map((x) => (x.at ? dayKey(x.at) : '')));
+  const only = days.size === 1 ? [...days][0]! : '';
+  const from = only === today ? 'today' : only && daysBetween(only, today) === 1 ? 'yesterday' : null;
+  if (from === 'today') return n === 1 ? r.todayOne : fmt(r.todayMany, { n });
+  if (from === 'yesterday') return n === 1 ? r.yesterdayOne : fmt(r.yesterdayMany, { n });
+  return n === 1 ? r.one : fmt(r.many, { n });
+}
+
+/** «Πέμπτη 22 Οκτ»: today's weekday and date, Athens day (the home's page header) */
+export function todayHeading(now: Date, t: Copy): string {
+  const key = todayKey(now);
+  const [y, m, d] = key.split('-').map(Number) as [number, number, number];
+  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return fmt(t.home.date, { weekday: t.tournaments.weekdaysOn[weekday]!, day: d, month: t.matchStats.monthsShort[m - 1]! });
 }
 
 /* ================= «Ψήφισε σήμερα» ================= */

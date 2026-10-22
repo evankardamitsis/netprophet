@@ -12,6 +12,7 @@ import { SafetySheet } from '../../src/components/SafetySheet';
 import { VoteRow } from '../../src/components/VoteRow';
 import {
   AddMatchPill,
+  HomeHeader,
   MyMatchRow,
   ProCard,
   QuietLink,
@@ -25,7 +26,7 @@ import {
 import { useCopy } from '../../src/i18n';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, useTournaments, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
 import { openToVote, type CardResult } from '../../src/lib/feed';
-import { homeTournaments, quizCard, resultsLine, voteList, yoursNow } from '../../src/lib/home';
+import { homeTournaments, quizCard, resultsLine, todayHeading, voteList, yoursNow } from '../../src/lib/home';
 import { useFollowedIds } from '../../src/lib/myPeople';
 import { yoursSet } from '../../src/lib/tournamentToday';
 import { useToastQueue } from '../../src/lib/toastQueue';
@@ -51,7 +52,7 @@ import { mayHaveCelebrated, voteBurst, type GameSnapshot } from '../../src/lib/p
 import type { MomentKind } from '../../src/lib/moments';
 
 /**
- * Τουρνουά, the home (mockup D, founder 22 Oct), top to bottom: the results card (only while results wait; it opens
+ * Τουρνουά, the home (mockup D, founder 22 Oct), top to bottom: the page header («Σήμερα» and the date, scrolls with the page), the results card (only while results wait; it opens
  * the results one by one, as Σήμερα played them), «Οι δικοί σου», the quiz, «Ψήφισε σήμερα» (tap a name to vote),
  * Pro, «Τουρνουά σήμερα». Everything under the layout is Σήμερα's machinery as it was: the header's held numbers while
  * results wait, the vote burst (quests, badges, celebrations), the moments pacer (Baller, «Για σένα»), the tour.
@@ -360,7 +361,7 @@ export default function HomeScreen() {
   const meNow = currentMe();
   const yours = yoursSet(meNow?.player?.id ?? null, followed);
   const votes = voteList(cards, yours);
-  const resultsView = resultsLine(results, t);
+  const resultsView = resultsLine(results, t, now);
   const mine = myMatch.match;
   const people = yoursNow(cards, yours, now, t, mine?.matchId);
   const quizView = unlocks.has('daily_quiz') && quiz.quiz ? quizCard(quiz.quiz, t) : null;
@@ -395,6 +396,10 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={loading && cards.length > 0} onRefresh={onPull} tintColor={colors.ink} />}
       >
+        <Reveal i={next()}>
+          <HomeHeader date={todayHeading(now, t)} />
+        </Reveal>
+
         {/* results: a card while they wait; a tap plays them one by one, as before (ResultsDeck) */}
         {deckOpen ? (
           <ResultsDeck openFull={deckFull} results={results} firstDelay={FIRST_RESULT_DELAY} onDone={onResultDone} onTake={onTake} onTaken={onTaken} />

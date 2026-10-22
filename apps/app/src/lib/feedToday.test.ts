@@ -128,6 +128,7 @@ describe('categoryCase', () => {
 const result = (over: Partial<CardResult> = {}): CardResult => ({
   kind: 'result',
   id: 'r1',
+  at: '2026-10-09T20:00:00Z',
   matchId: 'm1',
   ok: true,
   points: 10,

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
 import type { GetQuizResult, TournamentItem } from '@netprophet/db';
 import type { CardMatch, CardResult, FeedCard } from './feed';
-import { homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, voteList, yoursNow } from './home';
+import { homeTournaments, quizCard, resultsLine, rowTime, sideLabel, tagLabel, todayHeading, voteList, yoursNow } from './home';
 
 describe('rowTime: a day, never «χωρίς ώρα»', () => {
   const now = new Date('2026-10-22T15:00:00Z');
@@ -38,15 +38,31 @@ const match = (id: string, over: Partial<CardMatch> = {}): CardMatch => ({
 const at = (iso: string) => ({ startsAt: iso });
 
 describe('resultsLine', () => {
-  const r = (ok: boolean, points: number): CardResult =>
-    ({ kind: 'result', id: Math.random().toString(), ok, points } as unknown as CardResult);
+  const r = (ok: boolean, points: number, at = '2026-10-21T15:00:00Z'): CardResult =>
+    ({ kind: 'result', id: Math.random().toString(), ok, points, at } as unknown as CardResult);
   it('counts right and wrong calls and the points', () => {
-    expect(resultsLine([r(true, 10), r(true, 20), r(false, 0)], t)).toEqual({ line: '2 ✓ · 1 χαμένο', points: 30 });
+    expect(resultsLine([r(true, 10), r(true, 20), r(false, 0)], t, NOW)).toEqual({ title: '3 αποτελέσματα από χθες', line: '2 ✓ · 1 χαμένο', points: 30 });
   });
   it('leaves out an empty part', () => {
-    expect(resultsLine([r(false, 0), r(false, 0)], t)).toEqual({ line: '2 χαμένα', points: 0 });
+    expect(resultsLine([r(false, 0), r(false, 0)], t, NOW)).toEqual({ title: '2 αποτελέσματα από χθες', line: '2 χαμένα', points: 0 });
   });
-  it('nothing waiting: no card', () => expect(resultsLine([], t)).toBeNull());
+  it('nothing waiting: no card', () => expect(resultsLine([], t, NOW)).toBeNull());
+  it('title: yesterday, today, mixed or older, one or many', () => {
+    const today = '2026-10-22T08:00:00Z';
+    expect(resultsLine([r(true, 10)], t, NOW)?.title).toBe('1 αποτέλεσμα από χθες');
+    expect(resultsLine([r(true, 10, today)], t, NOW)?.title).toBe('1 αποτέλεσμα από σήμερα');
+    expect(resultsLine([r(true, 10, today), r(true, 10, today)], t, NOW)?.title).toBe('2 αποτελέσματα από σήμερα');
+    expect(resultsLine([r(true, 10), r(true, 10, today)], t, NOW)?.title).toBe('2 αποτελέσματα');
+    expect(resultsLine([r(true, 10, '2026-10-19T08:00:00Z')], t, NOW)?.title).toBe('1 αποτέλεσμα');
+  });
+  it('the Athens day decides: 23:30 UTC on the 21st is already the 22nd', () => {
+    expect(resultsLine([r(true, 10, '2026-10-21T23:30:00Z')], t, NOW)?.title).toBe('1 αποτέλεσμα από σήμερα');
+  });
+});
+
+describe('todayHeading', () => {
+  it('weekday, day and short month', () => expect(todayHeading(NOW, t)).toBe('Πέμπτη 22 Οκτ'));
+  it('Athens day near midnight', () => expect(todayHeading(new Date('2026-10-22T21:30:00Z'), t)).toBe('Παρασκευή 23 Οκτ'));
 });
 
 describe('voteList', () => {

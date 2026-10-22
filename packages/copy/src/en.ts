@@ -246,8 +246,17 @@ export const en: Copy = {
     },
   },
   home: {
+    /** the page title and today's date over it: «Πέμπτη 22 Οκτ» */
+    title: 'Today',
+    date: '{weekday} {day} {month}',
     results: {
-      title: 'Results',
+      /** the title line over the results waiting: plain, or from today / from yesterday when they all are */
+      one: '1 result',
+      many: '{n} results',
+      todayOne: '1 result from today',
+      todayMany: '{n} results from today',
+      yesterdayOne: '1 result from yesterday',
+      yesterdayMany: '{n} results from yesterday',
       take: 'See them ›',
       points: '+{n}',
     },
