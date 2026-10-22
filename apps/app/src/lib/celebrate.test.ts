@@ -164,3 +164,23 @@ describe('level celebrations', () => {
     expect(nextGroup(list.filter((x) => x.id !== 'l')).map((x) => x.id)).toEqual(['c']);
   });
 });
+
+describe('«Νέο ρεκόρ» (founder, 22 Oct: celebrate beating your best, once a run)', () => {
+  const rec = (streak: number, id = 'r'): Celebration => ({
+    id,
+    created_at: '2026-10-22T05:01:00Z',
+    payload: { type: 'streak_record', streak, match_id: 'm' },
+  });
+
+  it('a record alone: its own moment, the new σερί in the pill and the record it beat', () => {
+    expect(groupView(nextGroup([rec(12)]), copy)).toEqual({ label: 'ΣΕΡΙ', streak: 12, tier: null, title: 'Νέο ρεκόρ!', reward: 'Πέρασες το 11. Πάμε για παραπάνω!' });
+  });
+
+  it('plays with the σερί group, before badges', () => {
+    expect(nextGroup([b('b1', 'gentleman', 1, true), rec(9)]).map((x) => x.id)).toEqual(['r']);
+  });
+
+  it('with a milestone in the same batch, the milestone wins', () => {
+    expect(groupView(nextGroup([rec(9), c(10, false, 'frame_ten')]), copy)).toMatchObject({ streak: 10, title: 'Το δέκα το καλό' });
+  });
+});

@@ -61,7 +61,8 @@ create function tests.parity_state(p_user uuid) returns jsonb language sql as $$
     'votesSinceFreeFreeze', gs.votes_since_free_freeze,
     'firstFreeGranted', gs.first_free_at3_done,
     'brokeAt', case when gs.broke_at is null then null
-               else to_char(gs.broke_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end)
+               else to_char(gs.broke_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') end,
+    'recordRun', gs.record_run)
   from core.user_game_state gs where gs.user_id = p_user
 $$;
 
@@ -72,7 +73,8 @@ begin
      set streak = (p_state ->> 'current')::int, streak_best = (p_state ->> 'best')::int,
          chain = (p_state ->> 'chain')::int, votes_since_free_freeze = (p_state ->> 'votesSinceFreeFreeze')::int,
          first_free_at3_done = (p_state ->> 'firstFreeGranted')::boolean,
-         broke_at = (p_state ->> 'brokeAt')::timestamptz
+         broke_at = (p_state ->> 'brokeAt')::timestamptz,
+         record_run = coalesce((p_state ->> 'recordRun')::boolean, false)
    where user_id = p_user;
   for k, i in select e, o::int from jsonb_array_elements_text(p_state -> 'freezes') with ordinality as t(e, o) loop
     insert into core.freezes (user_id, kind, source, acquired_at)

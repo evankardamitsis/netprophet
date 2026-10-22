@@ -1078,6 +1078,8 @@ export const el = {
     aria: 'Γιορτή',
     /** a new game level: «LEVEL» over «Ανέβηκες level!», the number in the pill, then the line */
     level: { label: 'Level', title: 'Ανέβηκες level!', line: 'Συνέχισε τις σωστές προβλέψεις' },
+    /** σερί went past your ΠΡ (once a run): the number in the pill, {old} is the record it beat */
+    record: { title: 'Νέο ρεκόρ!', line: 'Πέρασες το {old}. Πάμε για παραπάνω!' },
   },
   /** the unlock ladder's full-screen moments: the title and the line by step key (other steps get none) */
   unlocks: {

@@ -21,6 +21,7 @@ export function initialStreak(): StreakState {
     votesSinceFreeFreeze: 0,
     firstFreeGranted: false,
     brokeAt: null,
+    recordRun: false,
   };
 }
 
@@ -55,7 +56,14 @@ export function buyFreeze(state: StreakState): BuyFreezeResult {
 }
 
 export type StreakEvent =
-  | { kind: 'advanced'; milestone: 3 | 5 | 7 | 10 | null; newBest: boolean; freezeGranted: boolean }
+  | {
+      kind: 'advanced';
+      milestone: 3 | 5 | 7 | 10 | null;
+      newBest: boolean;
+      freezeGranted: boolean;
+      /** the new ΠΡ when this card is the first of the run to go past the old one (old ΠΡ at least 1), else null */
+      record: number | null;
+    }
   | { kind: 'frozen'; freezeUsed: FreezeKind }
   | { kind: 'broken'; lostStreak: number }
   /** A wrong vote with no streak to protect: nothing changes and no freeze is spent. */
@@ -72,15 +80,22 @@ function isMilestone(n: number): n is 3 | 5 | 7 | 10 {
   return (MILESTONES as readonly number[]).includes(n);
 }
 
+export type StreakMoment = { type: 'milestone'; streak: 3 | 5 | 7 | 10 } | { type: 'record'; streak: number };
+
 /**
- * The σερί moment (full-screen celebration) a resolved vote earns, or null. A milestone celebrates only when it is a
- * new personal record, which is the first time the user ever reaches it (ΠΡ is the highest σερί ever reached), or
- * when it actually gives something: the first free freeze, retried at a later 3 while both slots were full.
- * Coming back to 3, 5, 7 or 10 after a reset is not a moment (founder, 22 Oct 2026).
+ * The σερί moment (full-screen celebration) a resolved vote earns, or null (founder, 22 Oct 2026):
+ *   - milestone (3, 5, 7, 10): only when it is a new personal record, which is the first time the user ever reaches
+ *     it (ΠΡ is the highest σερί ever reached), or when it actually gives something: the first free freeze, retried
+ *     at a later 3 while both slots were full. Coming back to 3, 5, 7 or 10 after a reset is not a moment.
+ *   - record («Νέο ρεκόρ»): once per run, on the card where σερί first goes past the ΠΡ the run started from
+ *     (σερί = old ΠΡ + 1), never on the later cards of that run, never when the old ΠΡ was 0 (the 3 covers a first
+ *     run). A milestone moment on the same card wins.
  */
-export function streakMoment(event: StreakEvent): 3 | 5 | 7 | 10 | null {
-  if (event.kind !== 'advanced' || event.milestone === null) return null;
-  return event.newBest || event.freezeGranted ? event.milestone : null;
+export function streakMoment(event: StreakEvent): StreakMoment | null {
+  if (event.kind !== 'advanced') return null;
+  if (event.milestone !== null && (event.newBest || event.freezeGranted)) return { type: 'milestone', streak: event.milestone };
+  if (event.record !== null) return { type: 'record', streak: event.record };
+  return null;
 }
 
 /** Apply one resolved match vote with outcome correct or wrong. Void/cancelled matches never reach here. */
@@ -97,13 +112,17 @@ export function applyOutcome(state: StreakState, correct: boolean, at: Instant):
       firstFreeGranted = true;
       freezeGranted = true;
     }
+    const newBest = best > state.best;
+    // the first card of this run past the ΠΡ it started from; with an old ΠΡ of 0 there is nothing to beat
+    const record = newBest && !state.recordRun && state.best > 0 ? current : null;
     return {
-      state: { ...state, current, best, chain: state.chain + 1, freezes, firstFreeGranted },
+      state: { ...state, current, best, chain: state.chain + 1, freezes, firstFreeGranted, recordRun: state.recordRun || newBest },
       event: {
         kind: 'advanced',
         milestone: isMilestone(current) ? current : null,
-        newBest: best > state.best,
+        newBest,
         freezeGranted,
+        record,
       },
       chainBefore,
     };
@@ -124,7 +143,7 @@ export function applyOutcome(state: StreakState, correct: boolean, at: Instant):
     };
   }
   return {
-    state: { ...state, current: 0, chain: 0, brokeAt: at },
+    state: { ...state, current: 0, chain: 0, brokeAt: at, recordRun: false },
     event: { kind: 'broken', lostStreak: state.current },
     chainBefore,
   };

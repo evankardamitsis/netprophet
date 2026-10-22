@@ -18,22 +18,130 @@
 --      record, which is the first time the user ever reaches it, or when it gives the first free freeze (retried at
 --      a later 3 while both slots were full). Coming back to 3 or 5 after a reset is not a moment (founder, 22 Oct).
 --      The rewards (freeze, Frame Επτά, Frame Δέκα, the lime headband) were already one-off; they ride on the same
---      first moment. Shared vectors: packages/core/test-vectors/streak.json (streakMoment), pgTAP 80 and 143.
+--      first moment. Otherwise a «Νέο ρεκόρ» moment (feed_inbox payload type 'streak_record'): once per run, on the
+--      card where σερί first goes past the ΠΡ the run started from (σερί = old ΠΡ + 1), never when the old ΠΡ was 0;
+--      a milestone on the same card wins. core.user_game_state.record_run remembers that this run already did it
+--      (core StreakState.recordRun) and core.apply_outcome, otherwise as in 20261101000800_core_rules_parity.sql,
+--      keeps it and adds `record` to the advanced event. Shared vectors: packages/core/test-vectors/streak.json
+--      (streakSequence, streakMoment), pgTAP 80 and 143.
 --
 -- No backfill (founder, 22 Oct). Replaying the past in match order would change which freezes were spent and which
 -- +5 chain bonuses were paid, and the README's rule 15 keeps a σερί the player has seen. The order holds from the
 -- next pass on.
 
 -- 3 ---------------------------------------------------------------------------------------------------------
+-- this run already went past the ΠΡ it started from (core StreakState.recordRun); false when σερί breaks
+alter table core.user_game_state add column if not exists record_run boolean not null default false;
+
+-- core streakMoment: {type: 'milestone' | 'record', streak} or null
 create or replace function core.streak_moment(p_event jsonb)
-returns int language sql immutable set search_path = ''
+returns jsonb language sql immutable set search_path = ''
 as $$
   select case
-    when p_event ->> 'kind' = 'advanced' and p_event ->> 'milestone' is not null
+    when p_event ->> 'kind' is distinct from 'advanced' then null
+    when p_event ->> 'milestone' is not null
          and (coalesce((p_event ->> 'newBest')::boolean, false) or coalesce((p_event ->> 'freezeGranted')::boolean, false))
-      then (p_event ->> 'milestone')::int
+      then jsonb_build_object('type', 'milestone', 'streak', (p_event ->> 'milestone')::int)
+    when p_event ->> 'record' is not null
+      then jsonb_build_object('type', 'record', 'streak', (p_event ->> 'record')::int)
   end
 $$;
+
+-- core applyOutcome: one resolved match vote (correct or wrong) against the user's sigma, chain and freezes.
+-- Returns {event, chain_before} where event has the shape of core's StreakEvent:
+--   {kind:'advanced', milestone, newBest, freezeGranted, record} | {kind:'frozen', freezeUsed} | {kind:'broken', lostStreak} | {kind:'idle'}
+create or replace function core.apply_outcome(p_user uuid, p_vote uuid, p_correct boolean, p_at timestamptz,
+                                              p_sport text default 'tennis')
+returns jsonb language plpgsql security definer set search_path = core, pg_temp
+as $$
+declare
+  v_rules    jsonb := core.sport_rules(p_sport);
+  v_fmax     int := (v_rules ->> 'freeze_max')::int;
+  v_first_at int := (v_rules ->> 'first_free_freeze_at_streak')::int;
+  gs         core.user_game_state;
+  v_chain_before int;
+  v_best_before  int;
+  v_fid      uuid;
+  v_free     record;
+  v_granted  boolean := false;
+  v_milestone int;
+  v_event    jsonb;
+  v_record   int;
+begin
+  perform core.ensure_game_state(p_user);
+  select * into gs from core.user_game_state where user_id = p_user for update;
+  v_chain_before := gs.chain;
+  v_best_before := gs.streak_best;
+
+  if p_correct then
+    insert into core.streak_events (user_id, vote_id, streak_before, streak_after, kind)
+    values (p_user, p_vote, gs.streak, gs.streak + 1, 'correct');
+    gs.streak := gs.streak + 1;
+    gs.chain := gs.chain + 1;
+    gs.votes_correct := gs.votes_correct + 1;
+    gs.streak_best := greatest(gs.streak_best, gs.streak);
+    -- «Νέο ρεκόρ»: the first card of this run past the ΠΡ it started from (nothing to beat when that was 0)
+    if gs.streak_best > v_best_before and not gs.record_run and v_best_before > 0 then
+      v_record := gs.streak;
+    end if;
+    gs.record_run := gs.record_run or gs.streak_best > v_best_before;
+
+    -- the first free freeze: when sigma reaches exactly 3, once, only if a slot is free
+    if gs.streak = v_first_at and not gs.first_free_at3_done then
+      v_fid := core.grant_freeze(p_user, 'free', 'streak3', v_fmax);
+      if v_fid is not null then
+        gs.first_free_at3_done := true;
+        v_granted := true;
+        insert into core.streak_events (user_id, vote_id, streak_before, streak_after, freeze_id, kind)
+        values (p_user, p_vote, gs.streak, gs.streak, v_fid, 'freeze_earned');
+      end if;
+    end if;
+
+    if gs.streak = any (select jsonb_array_elements_text(v_rules -> 'streak_milestones')::int) then
+      v_milestone := gs.streak;
+    end if;
+    v_event := jsonb_build_object('kind', 'advanced', 'milestone', v_milestone,
+                                  'newBest', gs.streak_best > v_best_before, 'freezeGranted', v_granted,
+                                  'record', v_record);
+
+  elsif gs.streak = 0 then
+    -- a wrong vote with no sigma to protect: nothing is spent, nothing is logged
+    gs.chain := 0;
+    v_event := jsonb_build_object('kind', 'idle');
+
+  else
+    -- a freeze absorbs the wrong vote: the free one first (keeps number and chain), then the oldest paid one
+    -- (keeps the number only, the chain restarts)
+    select f.id, f.kind into v_free
+      from core.freezes f where f.user_id = p_user and f.used_at is null
+     order by (f.kind = 'free') desc, f.acquired_at, f.id limit 1 for update;
+    if found then
+      update core.freezes set used_at = clock_timestamp(), used_on_vote_id = p_vote where id = v_free.id;
+      if v_free.kind = 'paid' then gs.chain := 0; end if;
+      insert into core.streak_events (user_id, vote_id, streak_before, streak_after, freeze_id, kind)
+      values (p_user, p_vote, gs.streak, gs.streak, v_free.id, 'freeze_used');
+      v_event := jsonb_build_object('kind', 'frozen', 'freezeUsed', v_free.kind);
+    else
+      insert into core.streak_events (user_id, vote_id, streak_before, streak_after, kind)
+      values (p_user, p_vote, gs.streak, 0, 'broke');
+      v_event := jsonb_build_object('kind', 'broken', 'lostStreak', gs.streak);
+      gs.streak := 0;
+      gs.chain := 0;
+      gs.broke_at := p_at;
+      gs.record_run := false;
+    end if;
+  end if;
+
+  update core.user_game_state
+     set streak = gs.streak, streak_best = gs.streak_best, chain = gs.chain, votes_correct = gs.votes_correct,
+         first_free_at3_done = gs.first_free_at3_done, broke_at = gs.broke_at, record_run = gs.record_run,
+         version = version + 1, updated_at = now()
+   where user_id = p_user;
+
+  return jsonb_build_object('event', v_event, 'chain_before', v_chain_before);
+end;
+$$;
+
 
 -- 2 ---------------------------------------------------------------------------------------------------------
 create or replace function core.resolve_votes(p_items jsonb)
@@ -56,6 +164,7 @@ declare
   v_streak  int;
   v_seen    uuid[] := '{}';
   v_entries jsonb := '[]'::jsonb;
+  v_moment  jsonb;
 begin
   for it in
     select (i ->> 'vote_id')::uuid as vote_id, (i ->> 'resolved_at')::timestamptz as resolved_at, vt.created_at
@@ -119,11 +228,14 @@ begin
                                          it.resolved_at);
     end loop;
 
-    -- a milestone is a moment only the first time (a new record) or when it gives the first free freeze
-    if core.streak_moment(v_ev) is not null then
+    -- core streakMoment: a milestone only the first time (or when it gives the first free freeze), else «Νέο ρεκόρ»
+    -- once per run past the old ΠΡ
+    v_moment := core.streak_moment(v_ev);
+    if v_moment is not null then
       insert into core.feed_inbox (user_id, kind, ref, payload)
       values (v.user_id, 'celebration', 'streak:' || v.id,
-              jsonb_build_object('type', 'streak_milestone', 'streak', core.streak_moment(v_ev), 'match_id', m.id))
+              jsonb_build_object('type', case v_moment ->> 'type' when 'milestone' then 'streak_milestone' else 'streak_record' end,
+                                 'streak', (v_moment ->> 'streak')::int, 'match_id', m.id))
       on conflict do nothing;
     end if;
 

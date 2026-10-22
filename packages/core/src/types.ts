@@ -125,6 +125,8 @@ export interface StreakState {
   votesSinceFreeFreeze: number;
   firstFreeGranted: boolean;
   brokeAt: Instant | null;
+  /** This run already went past the ΠΡ it started from (the «Νέο ρεκόρ» moment is once per run). Reset when σερί breaks. */
+  recordRun: boolean;
 }
 
 // ---- Quests, badges, unlocks ----

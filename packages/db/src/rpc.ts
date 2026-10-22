@@ -296,6 +296,13 @@ export interface StreakCelebrationPayload {
   reward?: { freeze: boolean; frame: string | null; gear?: string | null };
 }
 
+/** σερί went past the user's ΠΡ, once a run (core streakMoment «record»); a milestone on the same card wins */
+export interface RecordCelebrationPayload {
+  type: 'streak_record';
+  streak: number;
+  match_id: string;
+}
+
 export interface QuestCelebrationPayload {
   type: 'quest';
   quest: string;
@@ -347,7 +354,7 @@ export interface LevelCelebrationPayload {
 
 /** a full-screen moment (prototype celOn): a σερί milestone, a finished quest, a badge tier, an unlock or the month's league result */
 export interface Celebration<
-  P = StreakCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload | LevelCelebrationPayload,
+  P = StreakCelebrationPayload | RecordCelebrationPayload | QuestCelebrationPayload | BadgeCelebrationPayload | UnlockCelebrationPayload | LeagueCelebrationPayload | LevelCelebrationPayload,
 > {
   id: string;
   created_at: string;
@@ -355,6 +362,7 @@ export interface Celebration<
 }
 
 export type StreakCelebration = Celebration<StreakCelebrationPayload>;
+export type RecordCelebration = Celebration<RecordCelebrationPayload>;
 export type QuestCelebration = Celebration<QuestCelebrationPayload>;
 export type BadgeCelebration = Celebration<BadgeCelebrationPayload>;
 export type UnlockCelebration = Celebration<UnlockCelebrationPayload>;

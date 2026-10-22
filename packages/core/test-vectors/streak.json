@@ -1,7 +1,7 @@
 {
   "suite": "streak",
   "version": 1,
-  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step. fn streakMoment: the σερί moment a resolved vote's event earns (a milestone that is a new personal record, or that gave the first free freeze), else null.",
+  "notes": "fn streakSequence. Steps: cast (a vote was cast), outcome (a resolved match vote), buy_freeze. A step with repeat N is expanded N times. Events are the result of each step. fn streakMoment: the σερί moment a resolved vote's event earns: {type: milestone} for a milestone that is a new personal record or gave the first free freeze, else {type: record} on the first card of a run past the old ΠΡ (old ΠΡ at least 1), else null. State recordRun: this run already went past the ΠΡ it started from.",
   "groups": [
     {
       "fn": "streakSequence",
@@ -16,7 +16,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -42,19 +43,22 @@
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": 3,
                 "newBest": true,
-                "freezeGranted": true
+                "freezeGranted": true,
+                "record": null
               }
             ],
             "final": {
@@ -66,7 +70,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -80,7 +85,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -116,19 +122,22 @@
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": 3,
                 "newBest": true,
-                "freezeGranted": true
+                "freezeGranted": true,
+                "record": null
               },
               {
                 "kind": "frozen",
@@ -146,7 +155,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": "2026-10-09T13:00:00Z"
+              "brokeAt": "2026-10-09T13:00:00Z",
+              "recordRun": false
             }
           }
         },
@@ -160,7 +170,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -197,13 +208,15 @@
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "frozen",
@@ -213,7 +226,8 @@
                 "kind": "advanced",
                 "milestone": 3,
                 "newBest": true,
-                "freezeGranted": true
+                "freezeGranted": true,
+                "record": null
               }
             ],
             "final": {
@@ -225,7 +239,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -239,7 +254,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -276,7 +292,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -290,7 +307,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -371,7 +389,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -385,7 +404,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -527,7 +547,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -544,7 +565,8 @@
               ],
               "votesSinceFreeFreeze": 14,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -592,7 +614,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -609,7 +632,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -651,7 +675,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": "2026-10-09T13:00:00Z"
+              "brokeAt": "2026-10-09T13:00:00Z",
+              "recordRun": false
             }
           }
         },
@@ -667,7 +692,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -692,7 +718,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             }
           }
         },
@@ -706,7 +733,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -767,61 +795,71 @@
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": 3,
                 "newBest": true,
-                "freezeGranted": true
+                "freezeGranted": true,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": 5,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": 7,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": 10,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               }
             ],
             "final": {
@@ -833,7 +871,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -847,7 +886,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -878,13 +918,15 @@
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               },
               {
                 "kind": "broken",
@@ -894,7 +936,8 @@
                 "kind": "advanced",
                 "milestone": null,
                 "newBest": false,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": null
               }
             ],
             "final": {
@@ -904,7 +947,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": "2026-10-09T12:00:00Z"
+              "brokeAt": "2026-10-09T12:00:00Z",
+              "recordRun": false
             }
           }
         },
@@ -918,7 +962,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -934,7 +979,8 @@
                 "kind": "advanced",
                 "milestone": 3,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": 3
               }
             ],
             "final": {
@@ -944,7 +990,8 @@
               "freezes": [],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": true,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         },
@@ -961,7 +1008,8 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": false
             },
             "steps": [
               {
@@ -977,7 +1025,8 @@
                 "kind": "advanced",
                 "milestone": 3,
                 "newBest": true,
-                "freezeGranted": false
+                "freezeGranted": false,
+                "record": 3
               }
             ],
             "final": {
@@ -990,7 +1039,300 @@
               ],
               "votesSinceFreeFreeze": 0,
               "firstFreeGranted": false,
-              "brokeAt": null
+              "brokeAt": null,
+              "recordRun": true
+            }
+          }
+        },
+        {
+          "name": "«Νέο ρεκόρ» once per run: ΠΡ 11, the 12th card only, then again after a break",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 11,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": null,
+              "recordRun": false
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-22T05:01:00Z",
+                "repeat": 13
+              },
+              {
+                "op": "outcome",
+                "correct": false,
+                "at": "2026-10-22T05:01:00Z"
+              },
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-22T05:01:00Z",
+                "repeat": 14
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 5,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 7,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 10,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false,
+                "record": 12
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "broken",
+                "lostStreak": 13
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 3,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 5,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 7,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": 10,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": false,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false,
+                "record": 14
+              }
+            ],
+            "final": {
+              "current": 14,
+              "best": 14,
+              "chain": 14,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": true,
+              "brokeAt": "2026-10-22T05:01:00Z",
+              "recordRun": true
+            }
+          }
+        },
+        {
+          "name": "a first run has no ΠΡ to beat: no record",
+          "input": {
+            "initial": {
+              "current": 0,
+              "best": 0,
+              "chain": 0,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null,
+              "recordRun": false
+            },
+            "steps": [
+              {
+                "op": "outcome",
+                "correct": true,
+                "at": "2026-10-22T05:01:00Z",
+                "repeat": 2
+              }
+            ]
+          },
+          "expected": {
+            "events": [
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false,
+                "record": null
+              },
+              {
+                "kind": "advanced",
+                "milestone": null,
+                "newBest": true,
+                "freezeGranted": false,
+                "record": null
+              }
+            ],
+            "final": {
+              "current": 2,
+              "best": 2,
+              "chain": 2,
+              "freezes": [],
+              "votesSinceFreeFreeze": 0,
+              "firstFreeGranted": false,
+              "brokeAt": null,
+              "recordRun": true
             }
           }
         }
@@ -1005,9 +1347,13 @@
             "kind": "advanced",
             "milestone": 3,
             "newBest": true,
-            "freezeGranted": false
+            "freezeGranted": false,
+            "record": null
           },
-          "expected": 3
+          "expected": {
+            "type": "milestone",
+            "streak": 3
+          }
         },
         {
           "name": "first time at 10",
@@ -1015,9 +1361,13 @@
             "kind": "advanced",
             "milestone": 10,
             "newBest": true,
-            "freezeGranted": false
+            "freezeGranted": false,
+            "record": null
           },
-          "expected": 10
+          "expected": {
+            "type": "milestone",
+            "streak": 10
+          }
         },
         {
           "name": "back at 3 after a reset (best 11): no moment",
@@ -1025,7 +1375,8 @@
             "kind": "advanced",
             "milestone": 3,
             "newBest": false,
-            "freezeGranted": false
+            "freezeGranted": false,
+            "record": null
           },
           "expected": null
         },
@@ -1035,7 +1386,8 @@
             "kind": "advanced",
             "milestone": 5,
             "newBest": false,
-            "freezeGranted": false
+            "freezeGranted": false,
+            "record": null
           },
           "expected": null
         },
@@ -1045,7 +1397,8 @@
             "kind": "advanced",
             "milestone": 10,
             "newBest": false,
-            "freezeGranted": false
+            "freezeGranted": false,
+            "record": null
           },
           "expected": null
         },
@@ -1055,9 +1408,13 @@
             "kind": "advanced",
             "milestone": 3,
             "newBest": false,
-            "freezeGranted": true
+            "freezeGranted": true,
+            "record": null
           },
-          "expected": 3
+          "expected": {
+            "type": "milestone",
+            "streak": 3
+          }
         },
         {
           "name": "a new record off the milestones (11): no milestone moment",
@@ -1065,7 +1422,8 @@
             "kind": "advanced",
             "milestone": null,
             "newBest": true,
-            "freezeGranted": false
+            "freezeGranted": false,
+            "record": null
           },
           "expected": null
         },
@@ -1089,6 +1447,45 @@
           "name": "a wrong call at 0",
           "input": {
             "kind": "idle"
+          },
+          "expected": null
+        },
+        {
+          "name": "first card past the old ΠΡ (11): «Νέο ρεκόρ» 12",
+          "input": {
+            "kind": "advanced",
+            "milestone": null,
+            "newBest": true,
+            "freezeGranted": false,
+            "record": 12
+          },
+          "expected": {
+            "type": "record",
+            "streak": 12
+          }
+        },
+        {
+          "name": "a milestone on the record card wins (old ΠΡ 4, now 5)",
+          "input": {
+            "kind": "advanced",
+            "milestone": 5,
+            "newBest": true,
+            "freezeGranted": false,
+            "record": 5
+          },
+          "expected": {
+            "type": "milestone",
+            "streak": 5
+          }
+        },
+        {
+          "name": "later cards of the same climb: no moment",
+          "input": {
+            "kind": "advanced",
+            "milestone": null,
+            "newBest": true,
+            "freezeGranted": false,
+            "record": null
           },
           "expected": null
         }

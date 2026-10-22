@@ -1,6 +1,15 @@
 import { BADGES } from '@netprophet/core';
 import { greekCaps, type Copy } from '@netprophet/copy';
-import type { BadgeCelebration, Celebration, LeagueCelebration, LevelCelebration, QuestCelebration, StreakCelebration, UnlockCelebration } from '@netprophet/db';
+import type {
+  BadgeCelebration,
+  Celebration,
+  LeagueCelebration,
+  LevelCelebration,
+  QuestCelebration,
+  RecordCelebration,
+  StreakCelebration,
+  UnlockCelebration,
+} from '@netprophet/db';
 import { badgeName } from './badges';
 import { questCelebrationView } from './quests';
 import { leagueCelebrationView } from './ladder';
@@ -26,14 +35,14 @@ export interface CelebrationView {
 
 /**
  * which celebration plays next (founder, 18 Oct: level > σερί > badge > the rest; with one moment a visit, the first
- * one here is the one the visit gets): a new level, then every queued σερί milestone as ONE (σερί 3 and σερί 5 from
- * one batch of results: one moment shows the highest with every gift), then badges, then every queued quest as ONE,
+ * one here is the one the visit gets): a new level, then every queued σερί milestone and «Νέο ρεκόρ» as ONE (σερί 3
+ * and σερί 5 from one batch of results: one moment shows the highest with every gift), then badges, then every queued quest as ONE,
  * then unlocks, then the month's league result, one by one
  */
 export function nextGroup(list: Celebration[]): Celebration[] {
   const level = list.find(isLevel);
   if (level) return [level];
-  const streaks = list.filter(isStreak);
+  const streaks = list.filter((c) => isStreak(c) || isRecord(c));
   if (streaks.length > 0) return streaks;
   const badge = list.find((c) => c.payload.type === 'badge');
   if (badge) return [badge];
@@ -47,6 +56,15 @@ export function nextGroup(list: Celebration[]): Celebration[] {
 
 const isQuest = (c: Celebration): c is QuestCelebration => c.payload.type === 'quest';
 export const isStreak = (c: Celebration): c is StreakCelebration => c.payload.type === 'streak_milestone';
+/** «Νέο ρεκόρ»: σερί went past the ΠΡ, once a run (core streakMoment) */
+export const isRecord = (c: Celebration): c is RecordCelebration => c.payload.type === 'streak_record';
+
+/** «Νέο ρεκόρ!», the new σερί in the pill, «Πέρασες το 11» (the record it beat is one less) */
+export function recordCelebrationView(c: RecordCelebration, t: Copy): CelebrationView {
+  const r = t.celebrate.record;
+  const n = c.payload.streak;
+  return { label: greekCaps(t.celebrate.label), streak: n, tier: null, title: r.title, reward: fmt(r.line, { old: n - 1 }) };
+}
 export const isLevel = (c: Celebration): c is LevelCelebration => c.payload.type === 'level';
 
 /** a new game level: «LEVEL», the number in the pill, «Ανέβηκες level!» */
@@ -103,7 +121,11 @@ export function groupView(group: Celebration[], t: Copy): CelebrationView {
   if (isBadge(group[0]!)) return badgeCelebrationView(group[0], t);
   if (isUnlock(group[0]!)) return unlockCelebrationView(group[0], t);
   if (isLeague(group[0]!)) return leagueView(group[0], t);
-  return streakGroupView(group.filter(isStreak), t);
+  // a milestone in the group wins; a record alone plays its own moment, the highest if a batch brought two
+  const milestones = group.filter(isStreak);
+  if (milestones.length > 0) return streakGroupView(milestones, t);
+  const records = group.filter(isRecord);
+  return recordCelebrationView(records.reduce((a, b) => (b.payload.streak > a.payload.streak ? b : a)), t);
 }
 
 /**

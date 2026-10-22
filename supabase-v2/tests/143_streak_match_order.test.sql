@@ -3,7 +3,7 @@
 -- counted before his 20:00 loss). The worker now resolves one pass in the order the matches started. A σερί
 -- milestone is a moment only the first time it is reached (a new record), not on every return after a reset.
 begin;
-select plan(11);
+select plan(14);
 
 select tests.create_user('so-u@test.local') as u \gset
 select tests.mk_match_fresh(timestamptz '2026-10-21 17:00:00+00') as m2000 \gset
@@ -65,6 +65,22 @@ select is((select string_agg(payload ->> 'streak', ',' order by created_at) from
 select is((select payload #>> '{reward,gear}' from core.feed_inbox
             where user_id = :'w'::uuid and kind = 'celebration' and payload ->> 'streak' = '5'),
           'gear_headband', 'and it still brings its reward');
+
+-- «Νέο ρεκόρ» once per run: ΠΡ 5 (3 and 5 already celebrated). Seven right: nothing at 3 or 5, a record at 6, the
+-- first 7 is a milestone (it wins over the record line). A break, then eight right: the record again, at 8 only.
+select tests.create_user('so-r@test.local') as x \gset
+select core.ensure_game_state(:'x'::uuid);
+update core.user_game_state set streak_best = 5, first_free_at3_done = true where user_id = :'x'::uuid;
+select tests.play(:'x'::uuid, true) is not null as p from generate_series(1, 7);
+select is((select string_agg((payload ->> 'type') || ':' || (payload ->> 'streak'), ',' order by created_at) from core.feed_inbox
+            where user_id = :'x'::uuid and kind = 'celebration' and payload ->> 'type' like 'streak%'),
+          'streak_record:6,streak_milestone:7', '«Νέο ρεκόρ» at 6 only; at 7 the milestone moment wins');
+select tests.play(:'x'::uuid, false) is not null as p;
+select tests.play(:'x'::uuid, true) is not null as p from generate_series(1, 8);
+select is((select string_agg((payload ->> 'type') || ':' || (payload ->> 'streak'), ',' order by created_at) from core.feed_inbox
+            where user_id = :'x'::uuid and kind = 'celebration' and payload ->> 'type' like 'streak%'),
+          'streak_record:6,streak_milestone:7,streak_record:8', 'after a break the next run past ΠΡ 7 gets its record once, at 8');
+select is((select record_run from core.user_game_state where user_id = :'x'::uuid), true, 'the run remembers it');
 
 select * from finish();
 rollback;
