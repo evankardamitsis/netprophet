@@ -8,7 +8,8 @@
 -- when we sell that, else the id as it came (still unknown, still rejected). core.purchases.product_id keeps the
 -- normalized id, so everything that reads it later (core.pro_trial_used, renewals, refunds, TRANSFER, the founding
 -- checks) works for Play exactly as for the App Store; the new raw_product_id keeps what the store sent.
--- api.apply_store_event is otherwise as in 20270221000000_security_pass_2.sql. One-time items (cos_*) are not
+-- api.apply_store_event and core.founding_member are otherwise as in 20270317000000_cosmetics_decisions.sql
+-- (the founding frame: a PRODUCT_CHANGE to «pro_founding:yearly» counts too). One-time items (cos_*) are not
 -- subscriptions on Play and keep their plain id; they go through the same lookup anyway.
 
 -- what the store sent, next to the id we sell it as
@@ -32,6 +33,25 @@ update core.purchases set raw_product_id = product_id where raw_product_id is nu
 update core.purchases set product_id = core.store_product_id(product_id)
  where product_id like '%:%' and core.store_product_id(product_id) <> product_id;
 
+-- a founding member: already wears «Πρώτη γενιά», or first took Pro «Ιδρυτικό μέλος» on or before 31/12/2026 Athens
+-- (as in 20270317000000_cosmetics_decisions.sql, with a Play new_product_id normalized)
+create or replace function core.founding_member(p_users uuid[])
+returns boolean language sql stable security definer set search_path = core, pg_temp
+as $$
+  select exists (select 1 from core.user_cosmetics uc join core.cosmetic_items c on c.id = uc.item_id
+                  where c.key = 'frame_founding' and uc.user_id = any (p_users))
+      or coalesce((select (min(core.store_event_at(p.raw, p.created_at)) at time zone 'Europe/Athens')::date <= date '2026-12-31'
+                     from core.purchases p
+                    where p.user_id = any (p_users) and p.applied
+                      and (p.product_id = 'pro_founding'
+                           or core.store_product_id(coalesce(p.raw -> 'event', p.raw) ->> 'new_product_id') = 'pro_founding')
+                      and p.event_type in ('INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'PRODUCT_CHANGE',
+                                           'SUBSCRIPTION_EXTENDED', 'TEMPORARY_ENTITLEMENT_GRANT', 'NON_RENEWING_PURCHASE')),
+                  false)
+$$;
+revoke all on function core.founding_member(uuid[]) from public, anon, authenticated;
+grant execute on function core.founding_member(uuid[]) to service_role;
+
 -- the store applies it, with the normalized id
 create or replace function api.apply_store_event(p_event jsonb)
 returns jsonb
@@ -54,6 +74,7 @@ declare
   v_to     uuid;
   v_moved  timestamptz;
   x        text;
+  v_frame  boolean := false;
   -- Google Play ids come as «<subscription>:<base plan>»: one id for every store from here on
   v_pid    text := core.store_product_id(e ->> 'product_id');
 begin
@@ -109,7 +130,11 @@ begin
                                 expires_at, price_eur, applied, note, raw)
     values (v_id, v_to, coalesce(e ->> 'store', 'UNKNOWN'), v_env, v_type, v_pid, e ->> 'product_id', v_moved, null,
             v_done, coalesce(v_note, 'transfer'), p_event);
-    return jsonb_build_object('event_id', v_id, 'applied', v_done, 'note', v_note);
+    -- «Πρώτη γενιά» follows the subscription to the account it moved to (a restore on a new login)
+    if v_done and core.founding_member(v_from) then
+      v_frame := core.grant_founding_frame(v_to);
+    end if;
+    return jsonb_build_object('event_id', v_id, 'applied', v_done, 'note', v_note, 'founding_frame', v_frame);
   end if;
 
   begin
@@ -205,7 +230,16 @@ begin
                               expires_at, price_eur, applied, note, raw)
   values (v_id, v_user, coalesce(e ->> 'store', 'UNKNOWN'), v_env, v_type, v_pid, e ->> 'product_id', v_exp, v_price,
           v_done, coalesce(v_note, case when v_trial then 'trial' end), p_event);
-  return jsonb_build_object('event_id', v_id, 'applied', v_done, 'note', v_note);
+  -- «Πρώτη γενιά»: paid Pro «Ιδρυτικό μέλος» taken by 31/12/2026 (Athens). Every renewal checks again and the
+  -- insert does nothing the second time; the free week alone never gives it.
+  if v_done and not v_trial and v_prod.grants = 'pro'
+     and v_type in ('INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'PRODUCT_CHANGE', 'SUBSCRIPTION_EXTENDED',
+                    'TEMPORARY_ENTITLEMENT_GRANT', 'NON_RENEWING_PURCHASE')
+     and 'pro_founding' in (v_prod.product_id, core.store_product_id(e ->> 'new_product_id'))
+     and core.founding_member(array[v_user]) then
+    v_frame := core.grant_founding_frame(v_user);
+  end if;
+  return jsonb_build_object('event_id', v_id, 'applied', v_done, 'note', v_note, 'founding_frame', v_frame);
 end;
 $$;
 revoke all on function api.apply_store_event(jsonb) from public, anon, authenticated;
