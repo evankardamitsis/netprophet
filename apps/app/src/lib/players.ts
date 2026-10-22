@@ -163,7 +163,7 @@ export function lastLine(m: PlayerProfile['last_matches'][number], t: Copy, now:
     won: m.won,
     score: formatSideSets(m.sets ?? [], m.won, m.score, { retired: m.retired, walkover: m.walkover }, t.results),
     against: m.opponents.map(fullName).join(' & '),
-    partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map(fullName).join(' & ') }) : null,
+    partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map(nameAcc).join(' & ') }) : null,
     meta: [day, m.tournament ?? null, category, roundLabel(m.round ?? null, t)].filter(Boolean).join(' · '),
     when: [day, category].filter(Boolean).join(' · '),
   };

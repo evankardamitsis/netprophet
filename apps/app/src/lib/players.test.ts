@@ -126,6 +126,19 @@ describe('toProfile', () => {
       when: 'Την Κυριακή',
     });
   });
+  it('last matches: the partner after «με» in the accusative', () => {
+    const p = toProfile(
+      profile({
+        last_matches: [
+          { match_id: 'e', starts_at: '2026-10-09T16:00:00Z', format: 'doubles', won: true, score: '2-0', sets: [], retired: false, walkover: false, partner: [ref('Γιάννης', 'Πράτσας', 'm')], opponents: [ref('Α', 'Β'), ref('Γ', 'Δ')] },
+        ],
+      }),
+      AREAS,
+      t,
+      NOW,
+    );
+    expect(p.last[0]!.partner).toBe('με Γιάννη Πράτσα');
+  });
   it('last matches: sets only turn round for a loss, a walkover says so, another year shows it', () => {
     const p = toProfile(
       profile({
