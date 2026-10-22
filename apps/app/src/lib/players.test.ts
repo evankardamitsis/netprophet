@@ -85,20 +85,63 @@ describe('toProfile', () => {
     );
     expect(p.next).toBe('Σήμερα 18:00 · απέναντι Γιώργος Μέμμος & Γιώργος Χαμάμης');
   });
-  it('last matches: result, opponent and day', () => {
+  it('last matches: ✓ for a win, who, the score from this side, then day, tournament, category and round', () => {
     const p = toProfile(
       profile({
         last_matches: [
-          { match_id: 'a', starts_at: '2026-10-09T16:00:00Z', format: 'singles', won: true, score: '2-1', retired: false, walkover: false, partner: [], opponents: [ref('Άννα', 'Μάνου', 'f')] },
-          { match_id: 'b', starts_at: '2026-10-04T16:00:00Z', format: 'doubles', won: false, score: '2-0', retired: false, walkover: false, partner: [ref('Μαρία', 'Καρρά')], opponents: [ref('Α', 'Β'), ref('Γ', 'Δ')] },
+          {
+            match_id: 'a', starts_at: '2026-10-09T16:00:00Z', format: 'singles', won: true, score: '2-1',
+            sets: [{ w: 6, l: 4 }, { w: 3, l: 6 }, { w: 10, l: 8, stb: true }],
+            retired: false, walkover: false, partner: [], opponents: [ref('Άννα', 'Μάνου', 'f')],
+            tournament: 'Open Γλυφάδας', level: 'Γ 40+', round: 'semi',
+          },
+          // an untimed import (00:00 Athens) never shows a time
+          {
+            match_id: 'b', starts_at: '2026-10-03T21:00:00Z', format: 'doubles', won: false, score: '2-0',
+            sets: [{ w: 6, l: 4 }, { w: 7, l: 6, tb: [7, 5] }],
+            retired: false, walkover: false, partner: [ref('Μαρία', 'Καρρά')], opponents: [ref('Α', 'Β'), ref('Γ', 'Δ')],
+          },
         ],
       }),
       AREAS,
       t,
       NOW,
     );
-    expect(p.last[0]).toEqual({ result: 'Νίκη 2-1', against: '· Άννα Μάνου', when: 'Χθες' });
-    expect(p.last[1]).toEqual({ result: 'Ήττα 2-0', against: '· παρτενέρ Μαρία Καρρά, απέναντι Α Β & Γ Δ', when: 'Την Κυριακή' });
+    expect(p.last[0]).toEqual({
+      key: 'a',
+      won: true,
+      score: '6-4, 3-6, 10-8',
+      against: 'Άννα Μάνου',
+      partner: null,
+      meta: 'Χθες · Open Γλυφάδας · Γ 40+ · Ημιτελικός',
+      when: 'Χθες · Γ 40+',
+    });
+    expect(p.last[1]).toEqual({
+      key: 'b',
+      won: false,
+      score: '4-6, 6-7(5)',
+      against: 'Α Β & Γ Δ',
+      partner: 'με Μαρία Καρρά',
+      meta: 'Την Κυριακή',
+      when: 'Την Κυριακή',
+    });
+  });
+  it('last matches: sets only turn round for a loss, a walkover says so, another year shows it', () => {
+    const p = toProfile(
+      profile({
+        last_matches: [
+          { match_id: 'c', starts_at: '2026-09-01T16:00:00Z', format: 'singles', won: false, score: '2-1', sets: [], retired: false, walkover: false, partner: [], opponents: [ref('Χ', 'Ψ')] },
+          { match_id: 'd', starts_at: '2025-06-01T16:00:00Z', format: 'singles', won: true, score: null, retired: false, walkover: true, partner: [], opponents: [ref('Χ', 'Ψ')] },
+        ],
+      }),
+      AREAS,
+      t,
+      NOW,
+    );
+    expect(p.last[0]!.score).toBe('1-2');
+    expect(p.last[0]!.meta).toBe('1/9');
+    expect(p.last[1]!.score).toBe(t.results.walkover);
+    expect(p.last[1]!.meta).toBe('1/6/25');
   });
 });
 

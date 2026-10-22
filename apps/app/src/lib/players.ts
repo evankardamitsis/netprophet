@@ -1,6 +1,7 @@
+import { formatSideSets, localParts } from '@netprophet/core';
 import { accusativeName, nameGender, type Copy, levelNumber } from '@netprophet/copy';
 import type { PlayerCard, PlayerMatchLine, PlayerProfile, PlayerRef } from '@netprophet/db';
-import { initials, when } from './feed';
+import { initials, roundLabel, when } from './feed';
 import { playerAvatar, type AvatarLook } from './avatar';
 import { dayLabel } from './results';
 import { fmt } from './votes';
@@ -27,12 +28,22 @@ export interface PlayerRow {
   form: FormDot[];
 }
 
+/**
+ * One row of «Τελευταία ματς» (founder, 22 Oct 2026: it rendered strangely): who they played, the score from this
+ * player's side, ✓ for a win, and a quiet line with the day, the tournament, the category and the round.
+ */
 export interface LastMatchLine {
-  /** «Νίκη 2-1» */
-  result: string;
-  /** «· Δημήτρης Γκότσης» or «· παρτενέρ …, απέναντι … & …» */
+  key: string;
+  won: boolean;
+  /** «6-4, 3-6, 10-8» from this player's side; «1-2» when only the sets are known; «w/o» */
+  score: string;
+  /** «Άννα Μάνου», or the pair across the net on doubles: «Α Β & Γ Δ» */
   against: string;
-  /** «Χθες», «Την Κυριακή» */
+  /** «με Μαρία Καρρά» on doubles */
+  partner: string | null;
+  /** «Χθες · Open Γλυφάδας · Μ 40+ · Διπλό · Ημιτελικός»: never a time */
+  meta: string;
+  /** «Χθες · Μ 40+ · Διπλό» (Εγώ's «Τα ματς σου») */
   when: string;
 }
 
@@ -131,13 +142,29 @@ export function toProfile(p: PlayerProfile, areas: Record<string, string>, t: Co
     claimed: p.claimed === true,
     gender: p.gender ?? null,
     next: p.next_match ? nextLine(p.next_match, t, now) : null,
-    last: p.last_matches.map((m) => ({
-      result: fmt(m.won ? t.players.won : t.players.lost, { score: m.walkover ? t.results.walkover : m.score ?? '' }).trim(),
-      against:
-        m.partner.length > 0
-          ? fmt(t.players.againstPair, { partner: fullName(m.partner[0]!), names: m.opponents.map(fullName).join(' & ') })
-          : fmt(t.players.against, { name: m.opponents[0] ? fullName(m.opponents[0]) : '' }),
-      when: [dayLabel(m.starts_at, now, t), categoryLabel(m.level, m.discipline, t)].filter(Boolean).join(' · '),
-    })),
+    last: p.last_matches.map((m) => lastLine(m, t, now)),
+  };
+}
+
+/** «Χθες», «Την Κυριακή», «12/10», and «12/10/25» for another year: the day only, never a time */
+export function matchDay(startsAt: string | null, now: Date, t: Copy): string | null {
+  if (!startsAt) return null;
+  const label = dayLabel(startsAt, now, t);
+  const p = localParts(startsAt);
+  const year = localParts(now.toISOString()).year;
+  return /^\d+\/\d+$/.test(label) && p.year !== year ? `${label}/${String(p.year).slice(-2)}` : label;
+}
+
+export function lastLine(m: PlayerProfile['last_matches'][number], t: Copy, now: Date): LastMatchLine {
+  const day = matchDay(m.starts_at, now, t);
+  const category = categoryLabel(m.level, m.discipline, t);
+  return {
+    key: m.match_id,
+    won: m.won,
+    score: formatSideSets(m.sets ?? [], m.won, m.score, { retired: m.retired, walkover: m.walkover }, t.results),
+    against: m.opponents.map(fullName).join(' & '),
+    partner: m.partner.length > 0 ? fmt(t.players.withPartner, { names: m.partner.map(fullName).join(' & ') }) : null,
+    meta: [day, m.tournament ?? null, category, roundLabel(m.round ?? null, t)].filter(Boolean).join(' · '),
+    when: [day, category].filter(Boolean).join(' · '),
   };
 }

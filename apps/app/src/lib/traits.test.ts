@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerTraits } from '@netprophet/db';
-import { applyTraitVote, barWidth, cleanLabel, hasVoted, mockPlayerTraits, shareWidth, splitTraits, topCount, traitErrorKind, traitGender, traitLabel } from './traits';
+import { applyTraitVote, barWidth, cleanLabel, hasVoted, mockPlayerTraits, shareWidth, shownTraits, splitTraits, topCount, traitErrorKind, traitGender, traitLabel } from './traits';
 
 const sample = (): PlayerTraits => mockPlayerTraits('p1', 'f');
 
@@ -56,8 +56,18 @@ describe('traits', () => {
   });
 
   it('maps the database errors', () => {
-    expect(traitErrorKind('not_played')).toBe('not_played');
+    expect(traitErrorKind('not_allowed')).toBe('not_allowed');
+    expect(traitErrorKind('rate_limited')).toBe('rate_limited');
     expect(traitErrorKind('too_many_pending')).toBe('too_many_pending');
+    expect(traitErrorKind('not_played')).toBe('failed');
     expect(traitErrorKind('weird')).toBe('failed');
+  });
+
+  it('shows every phrase to tap, but only what people said to someone who cannot vote: never a row of zeros', () => {
+    const p = sample();
+    const withZero = { ...p, traits: [...p.traits, { ...p.traits[0]!, id: 'zero', count: 0 }] };
+    expect(shownTraits(withZero).map((r) => r.id)).toContain('zero');
+    expect(shownTraits({ ...withZero, can_vote: false }).map((r) => r.id)).not.toContain('zero');
+    expect(shownTraits({ ...withZero, can_vote: false })).toHaveLength(6);
   });
 });

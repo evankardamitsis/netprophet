@@ -140,3 +140,30 @@ export function formatWinnerSets(
     .join(', ');
   return opts.retired ? `${text} ${words.retired}` : text;
 }
+
+/** One set turned to the other side: the games and the tie-break points swap. */
+function flipSet(s: WinnerFirstSet): WinnerFirstSet {
+  const out: WinnerFirstSet = { w: s.l, l: s.w };
+  if (Array.isArray(s.tb)) out.tb = [s.tb[1], s.tb[0]];
+  else if (s.tb) out.tb = s.tb;
+  if (s.stb) out.stb = true;
+  return out;
+}
+
+/**
+ * A stored result as one player sees it (a profile's match list): the winner reads «6-4, 7-6(5)», the loser
+ * «4-6, 6-7(5)». With no games, the sets-only summary (stored winner first, «2-1») turns round too: «1-2».
+ */
+export function formatSideSets(
+  sets: WinnerFirstSet[],
+  won: boolean,
+  summary: string | null,
+  opts: { retired?: boolean; walkover?: boolean },
+  words: { retired: string; walkover: string },
+): string {
+  if (opts.walkover) return words.walkover;
+  if (sets.length > 0) return formatWinnerSets(won ? sets : sets.map(flipSet), opts, words);
+  if (!summary) return '';
+  const text = won ? summary : summary.split('-').reverse().join('-');
+  return opts.retired ? `${text} ${words.retired}` : text;
+}

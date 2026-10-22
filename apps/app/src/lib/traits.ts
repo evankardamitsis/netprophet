@@ -54,10 +54,19 @@ export function hasVoted(p: PlayerTraits): boolean {
   return p.traits.some((t) => t.mine && !t.pending);
 }
 
-export type TraitErrorKind = 'not_played' | 'bad_label' | 'too_many_pending' | 'failed';
+export type TraitErrorKind = 'not_allowed' | 'bad_label' | 'too_many_pending' | 'rate_limited' | 'failed';
 
 export function traitErrorKind(code: string): TraitErrorKind {
-  return code === 'not_played' || code === 'bad_label' || code === 'too_many_pending' ? code : 'failed';
+  return code === 'not_allowed' || code === 'bad_label' || code === 'too_many_pending' || code === 'rate_limited' ? code : 'failed';
+}
+
+/**
+ * The chips to show, in the server's order (most voted first; kept while you tap so nothing jumps). Someone who
+ * cannot vote sees only what people said: never a row of zeros.
+ */
+export function shownTraits(p: PlayerTraits): TraitRow[] {
+  const approved = p.traits.filter((t) => !t.pending);
+  return p.can_vote ? approved : approved.filter((t) => (t.count ?? 0) > 0);
 }
 
 /* the guest's samples (prototype V2: Δυνατό σερβίς 23 … Κόβει πολύ την μπάλα 3) */
