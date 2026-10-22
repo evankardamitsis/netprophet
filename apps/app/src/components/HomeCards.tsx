@@ -109,7 +109,7 @@ export function MyMatchRow({ match, onPress }: { match: MyMatchView; onPress: ()
               {match.today ? null : <Text style={styles.small}>{t.match.tomorrow}</Text>}
             </>
           ) : (
-            <Text style={[styles.timeText, styles.center]}>{match.today ? t.match.today : t.match.tomorrow}</Text>
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.timeText, styles.center]}>{match.today ? t.match.today : t.match.tomorrow}</Text>
           )}
         </View>
         <View style={styles.flex}>
@@ -130,7 +130,7 @@ export function YoursRow({ row, onPress }: { row: YoursNow; onPress?: () => void
   const body = (
     <View style={styles.yoursRow}>
       <View style={styles.timeCol}>
-        {row.now ? <LiveTag /> : row.time ? <Text style={[styles.timeText, styles.center]}>{row.time}</Text> : null}
+        {row.now ? <LiveTag /> : row.time ? <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.timeText, styles.center]}>{row.time}</Text> : null}
       </View>
       <View style={styles.flex}>
         <Text numberOfLines={1} style={styles.rowTitle}>

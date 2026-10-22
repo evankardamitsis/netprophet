@@ -1,5 +1,7 @@
 # Store listing (App Store and Google Play)
 
+> **iOS 1.0 (22 Oct 2026):** the App Store texts, screenshots and checklist are in `docs/v2/store/`; that folder wins over this draft for Apple. This file stays as the Google Play draft and the history. The «Before submitting» list below is out of date (deletion is built, restore and subscription terms were added).
+
 Drafted 16 Oct 2026 for the founder's review. Greek first, then English. No betting words anywhere (Apple and Google
 both read «prediction» apps closely; see implementation-plan §12). Category **Sports**, age rating **12+** (Apple)
 and **Everyone 10+ / PEGI 12** equivalent on Play, because players see other people's names and can react to results.

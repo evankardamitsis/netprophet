@@ -623,6 +623,12 @@ export const en: Copy = {
     unavailable: 'Payments open soon. We keep you on the list at the founding price.',
     finishing: 'Finishing…',
     welcome: 'Welcome to Pro',
+    renewal: 'The subscription renews automatically at the end of each period unless you cancel at least 24 hours before. Cancel any time in your store account’s subscriptions.',
+    restore: 'Restore purchases',
+    restoring: 'Restoring…',
+    restored: 'Done. Everything you bought is back.',
+    restoreNone: 'We found no purchases on this store account.',
+    restoreUnavailable: 'Your purchases belong to your account and show as soon as you sign in.',
     nudge: {
       draw: 'Know your draw the moment it is out. A week of Pro free ›',
       before_match: 'See your opponent before the match. A week of Pro free ›',

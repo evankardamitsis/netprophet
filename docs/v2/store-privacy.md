@@ -1,5 +1,7 @@
 # Store privacy answers (Apple privacy labels, Google Play data safety)
 
+> **iOS 1.0 (22 Oct 2026):** the Apple answers are in `docs/v2/store/privacy-labels.md`, rebuilt from the code; use that one for Apple. The Google Play part below still applies, except that deletion is now in the app (Εγώ › Ρυθμίσεις) and purchases are collected now (RevenueCat).
+
 Drafted 16 Oct 2026 from what the code keeps: `core.profiles`, votes, follows, reactions, kudos, logged matches,
 cosmetics, push tokens (`push.ts`), PostHog EU events by user id (`analytics.ts`, never email), Resend for sign-in
 emails, Supabase and Vercel hosting. No ads SDK, no tracking across other companies' apps, no location, no contacts.

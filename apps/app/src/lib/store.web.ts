@@ -1,5 +1,5 @@
 import { ErrorCode, Purchases, PurchasesError } from '@revenuecat/purchases-js';
-import type { BuyResult } from './storeTypes';
+import type { BuyResult, RestoreResult } from './storeTypes';
 
 /**
  * Buying on the web (founder, 17 Oct): RevenueCat Web Billing, paid through Stripe. The products (Pro plans and every
@@ -42,4 +42,10 @@ export async function buy(productId: string, userId: string): Promise<BuyResult>
     if (e instanceof PurchasesError && e.errorCode === ErrorCode.UserCancelledError) return 'cancelled';
     return 'failed';
   }
+}
+
+/** On the web a purchase belongs to the account it was made on, so there is nothing to restore: signing in is enough. */
+export async function restore(userId: string): Promise<RestoreResult> {
+  void userId;
+  return 'unavailable';
 }

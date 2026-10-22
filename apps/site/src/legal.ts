@@ -51,9 +51,9 @@ export const privacy: Record<Lang, Doc> = {
       {
         heading: 'Με ποιους τα μοιραζόμαστε',
         paragraphs: [
-          'Δεν πουλάμε στοιχεία. Χρησιμοποιούμε συνεργάτες που τα επεξεργάζονται για εμάς: Supabase (βάση δεδομένων και σύνδεση), Vercel (φιλοξενία), Resend (emails σύνδεσης), PostHog στην ΕΕ (στατιστικά χρήσης), RevenueCat (διαχείριση αγορών και συνδρομών: του λέμε τον κωδικό του λογαριασμού σου και παίρνουμε πίσω τι έχεις αγοράσει και μέχρι πότε ισχύει), Apple και Google (ειδοποιήσεις και αγορές μέσα από τα καταστήματα).',
+          'Δεν πουλάμε στοιχεία. Χρησιμοποιούμε συνεργάτες που τα επεξεργάζονται για εμάς: Supabase (βάση δεδομένων και σύνδεση), Vercel (φιλοξενία), Resend (emails σύνδεσης), PostHog στην ΕΕ (στατιστικά χρήσης), Expo (αποστολή ειδοποιήσεων), RevenueCat (διαχείριση αγορών και συνδρομών: του λέμε τον κωδικό του λογαριασμού σου και παίρνουμε πίσω τι έχεις αγοράσει και μέχρι πότε ισχύει), Apple και Google (ειδοποιήσεις και αγορές μέσα από τα καταστήματα).',
           'Οι χορηγούμενες διαφημίσεις είναι banner που τα στήνουμε εμείς, με μια εικόνα και έναν σύνδεσμο. Δεν έχουμε διαφημιστικό SDK, δεν χρησιμοποιούμε το διαφημιστικό αναγνωριστικό της συσκευής σου και δεν δίνουμε στους χορηγούς κανένα στοιχείο σου. Αν πατήσεις έναν σύνδεσμο, ανοίγει το site του χορηγού και ισχύει η δική του πολιτική.',
-          'Το όνομά σου, ο παίκτης σου, οι πόντοι και η θέση σου στην Κατάταξη φαίνονται σε άλλους χρήστες. Μπορείς να κρύψεις το προφίλ σου από τις Ρυθμίσεις.',
+          'Το όνομά σου, ο παίκτης σου, οι πόντοι και η θέση σου στην Κατάταξη φαίνονται σε άλλους χρήστες. Αν δεν θέλεις να φαίνεσαι, γράψε μας και κρύβουμε το προφίλ σου.',
         ],
       },
       {
@@ -112,9 +112,9 @@ export const privacy: Record<Lang, Doc> = {
       {
         heading: 'Who we share it with',
         paragraphs: [
-          'We do not sell data. Partners process it for us: Supabase (database and sign-in), Vercel (hosting), Resend (sign-in emails), PostHog in the EU (usage statistics), RevenueCat (managing purchases and subscriptions: we give it your account id and get back what you bought and until when it is valid), Apple and Google (notifications and store purchases).',
+          'We do not sell data. Partners process it for us: Supabase (database and sign-in), Vercel (hosting), Resend (sign-in emails), PostHog in the EU (usage statistics), Expo (sending notifications), RevenueCat (managing purchases and subscriptions: we give it your account id and get back what you bought and until when it is valid), Apple and Google (notifications and store purchases).',
           'Sponsored banners are placed by us, as a picture and a link. We have no advertising SDK, we do not use your device’s advertising ID and we give sponsors none of your data. If you tap a link, the sponsor’s own site opens and its own policy applies.',
-          'Your name, your player, your points and your place in the Ladder are visible to other users. You can hide your profile in Settings.',
+          'Your name, your player, your points and your place in the Ladder are visible to other users. If you do not want to be seen, write to us and we hide your profile.',
         ],
       },
       {

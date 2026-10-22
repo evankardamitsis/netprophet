@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCopy } from '@netprophet/copy';
-import { activeLine, planCards, priceLine, proPrice, proStatusLine, trialLine } from './pro';
+import { activeLine, planCards, priceLine, proPrice, proStatusLine, restoreLine, trialLine } from './pro';
+import { restoreOutcome } from './storeTypes';
 
 const t = getCopy('el');
 
@@ -65,5 +66,27 @@ describe('proStatusLine', () => {
   });
   it('Pro with no row read yet still says it is on', () => {
     expect(proStatusLine({ pro: true, current: null, waitlisted: false }, t)).toBe('Ενεργό');
+  });
+});
+
+describe('restore (App Store 3.1.1)', () => {
+  it('restored when the store account holds Pro or any one-time item, none otherwise', () => {
+    expect(restoreOutcome({ activeEntitlements: 1, oneTimePurchases: 0 })).toBe('restored');
+    expect(restoreOutcome({ activeEntitlements: 0, oneTimePurchases: 2 })).toBe('restored');
+    expect(restoreOutcome({ activeEntitlements: 0, oneTimePurchases: 0 })).toBe('none');
+  });
+  it('each outcome has its own line, an error says try again', () => {
+    expect(restoreLine('restored', t)).toBe(t.pro.restored);
+    expect(restoreLine('none', t)).toBe(t.pro.restoreNone);
+    expect(restoreLine('unavailable', t)).toBe(t.pro.restoreUnavailable);
+    expect(restoreLine('failed', t)).toBe(t.pro.failed);
+  });
+});
+
+describe('subscription terms on the Pro screen (App Store 3.1.2)', () => {
+  it('says it renews by itself and how to cancel, in both languages', () => {
+    expect(t.pro.renewal).toMatch(/ανανεώνεται αυτόματα/);
+    expect(t.pro.renewal).toMatch(/ακυρώνεις/);
+    expect(getCopy('en').pro.renewal).toMatch(/renews automatically/);
   });
 });

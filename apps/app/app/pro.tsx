@@ -8,8 +8,8 @@ import { useCopy } from '../src/i18n';
 import { usePro } from '../src/lib/data';
 import { usePopIn, usePress, useRiseIn, useStgIn } from '../src/lib/motion';
 import { track } from '../src/lib/analytics';
-import { activeLine, planCards, trialLine, type PlanCard } from '../src/lib/pro';
-import { usePurchase, useProOffer } from '../src/lib/purchase';
+import { activeLine, planCards, restoreLine, trialLine, type PlanCard } from '../src/lib/pro';
+import { usePurchase, useProOffer, useRestore } from '../src/lib/purchase';
 import { legalUrl } from '../src/lib/legalLinks';
 import { safeOpen } from '../src/lib/openUrl';
 import { fmt } from '../src/lib/votes';
@@ -26,7 +26,7 @@ const STG_MS = 450;
 /** big text: the padding, cancelled by a margin, keeps the tonos on iOS */
 const ACCENT_PAD = 10;
 
-type Busy = null | 'buy';
+type Busy = null | 'buy' | 'restore';
 
 export default function ProScreen() {
   const t = useCopy();
@@ -35,6 +35,7 @@ export default function ProScreen() {
   const { state, join, refresh } = usePro();
   const { offer, refresh: refreshOffer } = useProOffer();
   const purchase = usePurchase();
+  const restorePurchases = useRestore();
   const [picked, setPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -72,6 +73,16 @@ export default function ProScreen() {
       await join();
       setNote(p.unavailable);
     } else setNote(p.failed);
+  };
+
+  /** App Store 3.1.1: the store gives back what this store account bought, then the server is asked again */
+  const onRestore = async () => {
+    if (busy) return;
+    setBusy('restore');
+    const r = await restorePurchases();
+    setBusy(null);
+    if (r === 'restored') await done(p.restored);
+    else setNote(restoreLine(r, t));
   };
 
   return (
@@ -114,6 +125,8 @@ export default function ProScreen() {
           <Button label={busy === 'buy' ? p.finishing : fmt(p.buy, { price: plan.price })} onPress={() => void onBuy()} primary />
         ) : null}
         {!paid && !onTrial ? <TextLink label={p.notNow} onPress={close} /> : null}
+        {/* App Store 3.1.2: what a subscription does, under the plans; 3.1.1: restoring, next to the two links */}
+        {!paid && !onTrial ? <Text style={styles.fine}>{p.renewal}</Text> : null}
         <View style={styles.legal}>
           <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('terms'), (u) => Linking.openURL(u))}>
             <Text style={styles.legalLink}>{p.terms}</Text>
@@ -122,6 +135,14 @@ export default function ProScreen() {
           <Pressable accessibilityRole="link" hitSlop={8} onPress={() => safeOpen(legalUrl('privacy'), (u) => Linking.openURL(u))}>
             <Text style={styles.legalLink}>{p.privacy}</Text>
           </Pressable>
+          {!paid && !onTrial ? (
+            <>
+              <Text style={styles.legalDot}>·</Text>
+              <Pressable accessibilityRole="button" hitSlop={8} onPress={() => void onRestore()}>
+                <Text style={styles.legalLink}>{busy === 'restore' ? p.restoring : p.restore}</Text>
+              </Pressable>
+            </>
+          ) : null}
         </View>
       </View>
     </View>
@@ -218,8 +239,9 @@ const styles = StyleSheet.create({
   buttonText: { fontFamily: fonts.bodyBold, fontSize: 17, textAlign: 'center' },
   primaryText: { color: colors.white },
   secondaryText: { color: colors.paper },
-  legal: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 2 },
+  legal: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', gap: 8, paddingTop: 2 },
   legalLink: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.mist, textDecorationLine: 'underline', paddingVertical: 4 },
   legalDot: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.mist },
   link: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper, textAlign: 'center', textDecorationLine: 'underline', paddingVertical: 4 },
+  fine: { fontFamily: fonts.bodySemi, fontSize: 11, lineHeight: 15, color: colors.mist, textAlign: 'center' },
 });

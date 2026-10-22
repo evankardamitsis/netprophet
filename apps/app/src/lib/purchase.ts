@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ProOffer, ProOfferMoment } from '@netprophet/db';
 import { useAuth } from './auth';
 import { useApi } from './data';
-import { buy, storeReady } from './store';
-import type { BuyResult } from './storeTypes';
+import { buy, restore, storeReady } from './store';
+import type { BuyResult, RestoreResult } from './storeTypes';
 
 /**
  * Pro and cosmetics, bought (founder, 17 Oct). The store (RevenueCat: Stripe on the web, Google Play, later Apple)
@@ -78,4 +78,11 @@ export function usePurchase(): { ready: boolean; buy: (productId: string, landed
     [userId],
   );
   return { ready: userId !== null && storeReady(), buy: run };
+}
+
+/** «Επαναφορά αγορών»: the store's restore for the signed-in account; «unavailable» without one. */
+export function useRestore(): () => Promise<RestoreResult> {
+  const { session } = useAuth();
+  const userId = session?.user.id ?? null;
+  return useCallback(async () => (userId ? restore(userId) : ('unavailable' as const)), [userId]);
 }

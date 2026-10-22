@@ -1,5 +1,5 @@
 import { NativeModules, Platform } from 'react-native';
-import type { BuyResult } from './storeTypes';
+import { restoreOutcome, type BuyResult, type RestoreResult } from './storeTypes';
 
 /**
  * Buying in the apps (founder, 17 Oct): Google Play now, Apple when its account is approved, both through RevenueCat
@@ -59,6 +59,24 @@ export async function buy(productId: string, userId: string): Promise<BuyResult>
     return 'ok';
   } catch (e) {
     if ((e as { userCancelled?: boolean }).userCancelled) return 'cancelled';
+    return 'failed';
+  }
+}
+
+/**
+ * «Επαναφορά αγορών» (App Store guideline 3.1.1): asks the store what this store account bought and hands it to
+ * RevenueCat, which tells our database through the webhook as with a purchase. The screen then asks the server again.
+ */
+export async function restore(userId: string): Promise<RestoreResult> {
+  if (!storeReady()) return 'unavailable';
+  try {
+    const P = await client(userId);
+    const info = await P.restorePurchases();
+    return restoreOutcome({
+      activeEntitlements: Object.keys(info.entitlements.active).length,
+      oneTimePurchases: info.nonSubscriptionTransactions.length,
+    });
+  } catch {
     return 'failed';
   }
 }

@@ -107,7 +107,10 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
       <Pressable onLongPress={hold} delayLongPress={LONG_PRESS_MS} accessibilityLabel={small || undefined}>
         <View style={styles.row}>
           <View style={styles.time}>
-            <Text style={[styles.timeText, styles.center]}>{rowTime(match, t)}</Text>
+            {/* «Σήμερα» for a row with no time is wider than the column: one line, a little smaller, never «Σήμερ / α» */}
+            <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={[styles.timeText, styles.center]}>
+              {rowTime(match, t)}
+            </Text>
             {match.later && hasTime(match.startsAt) ? <Text style={styles.small}>{t.match.tomorrow}</Text> : null}
           </View>
           <View style={styles.body}>

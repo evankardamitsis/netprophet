@@ -1,0 +1,30 @@
+product_id,type,period,price_eur,free_trial,name,category
+pro_founding,subscription,year,49.99,7 days,Pro Ιδρυτικό μέλος (έως 31/12/2026),pro
+pro_monthly,subscription,month,8.99,7 days,Pro Μηνιαίο,pro
+pro_yearly,subscription,year,69.99,7 days,Pro Ετήσιο (από 1/1/2027),pro
+cos_bg_center,one_time (non-consumable),,0.99,,Κεντρικό γήπεδο,background
+cos_bg_hard,one_time (non-consumable),,0.99,,Σκληρό γήπεδο,background
+cos_bg_indoor,one_time (non-consumable),,0.99,,Κλειστό γήπεδο,background
+cos_frame_gold,one_time (non-consumable),,1.99,,Χρυσό,frame
+cos_frame_grass,one_time (non-consumable),,1.99,,Γρασίδι,frame
+cos_frame_retro,one_time (non-consumable),,1.99,,Ρετρό,frame
+cos_gear_bandana,one_time (non-consumable),,0.99,,Μπαντάνα,gear
+cos_gear_beanie,one_time (non-consumable),,0.99,,Σκουφί,gear
+cos_gear_bucket,one_time (non-consumable),,0.99,,Καπέλο ψαρά,gear
+cos_gear_phones,one_time (non-consumable),,0.99,,Ακουστικά,gear
+cos_gear_shades,one_time (non-consumable),,0.99,,Γυαλιά ηλίου,gear
+cos_gear_visor,one_time (non-consumable),,0.99,,Γείσο,gear
+cos_kit_black,one_time (non-consumable),,0.99,,Μαύρο,kit
+cos_kit_clay,one_time (non-consumable),,1.99,,Σετ Χώμα,kit
+cos_kit_grass,one_time (non-consumable),,1.99,,Σετ Γρασίδι,kit
+cos_kit_hard,one_time (non-consumable),,0.99,,Σετ Σκληρό,kit
+cos_kit_ocean,one_time (non-consumable),,0.99,,Σετ Θάλασσα,kit
+cos_kit_retro,one_time (non-consumable),,0.99,,Σετ Ρετρό,kit
+cos_kit_sunset,one_time (non-consumable),,0.99,,Σετ Ηλιοβασίλεμα,kit
+cos_kit_white,one_time (non-consumable),,0.99,,Λευκό,kit
+cos_fx_balls,one_time (non-consumable),,0.99,,Βροχή από μπαλάκια,win_effect
+cos_fx_confetti,one_time (non-consumable),,1.99,,Κομφετί,win_effect
+cos_fx_fire,one_time (non-consumable),,1.99,,Φωτιά,win_effect
+cos_fx_fireworks,one_time (non-consumable),,1.99,,Πυροτεχνήματα,win_effect
+cos_fx_flash,one_time (non-consumable),,0.99,,Φλας,win_effect
+cos_fx_trophy,one_time (non-consumable),,1.99,,Κύπελλο,win_effect
