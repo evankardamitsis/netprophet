@@ -19,8 +19,8 @@ const SAMPLE: ProOffer = {
   on_trial: false,
   founding_until: '2026-12-31',
   plans: [
-    { product_id: 'pro_founding', price: 49.99, period: 'year' },
-    { product_id: 'pro_monthly', price: 8.99, period: 'month' },
+    { product_id: 'pro_founding', price: 49.99, period: 'year', renews: 69.99 },
+    { product_id: 'pro_monthly', price: 8.99, period: 'month', renews: 8.99 },
   ],
   can_offer: true,
 };

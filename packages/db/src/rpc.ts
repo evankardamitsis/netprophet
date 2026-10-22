@@ -835,7 +835,8 @@ export interface ProOffer {
   on_trial: boolean;
   /** «2026-12-31» while the founding price is on */
   founding_until: string | null;
-  plans: { product_id: 'pro_monthly' | 'pro_yearly' | 'pro_founding'; price: number; period: 'month' | 'year' }[];
+  /** `renews`: the price after the first year (69,99 for pro_founding; the plan's own price otherwise) */
+  plans: { product_id: 'pro_monthly' | 'pro_yearly' | 'pro_founding'; price: number; period: 'month' | 'year'; renews: number }[];
   can_offer: boolean;
 }
 

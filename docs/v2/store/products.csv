@@ -1,5 +1,5 @@
 product_id,type,period,price_eur,free_trial,name,category
-pro_founding,subscription,year,49.99,7 days,Pro Ιδρυτικό μέλος (έως 31/12/2026),pro
+pro_founding,subscription,year,49.99 (first year; then 69.99),7 days,Pro Ιδρυτικό μέλος (έως 31/12/2026),pro
 pro_monthly,subscription,month,8.99,7 days,Pro Μηνιαίο,pro
 pro_yearly,subscription,year,69.99,7 days,Pro Ετήσιο (από 1/1/2027),pro
 cos_bg_center,one_time (non-consumable),,0.99,,Κεντρικό γήπεδο,background

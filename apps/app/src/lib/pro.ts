@@ -50,21 +50,28 @@ export interface PlanCard {
   title: string;
   /** «49,99€» */
   price: string;
-  /** «ο πρώτος χρόνος · μέχρι 31/12» */
+  /** «τον πρώτο χρόνο, μετά 69,99€/χρόνο» */
   note: string;
-  /** «4,17€ τον μήνα» for a yearly plan */
+  /** «4,17€ τον μήνα» for a yearly plan, «4,17€ τον μήνα · μόνο μέχρι 31/12» for the founding one */
   perMonth: string | null;
+  /** «69,99€»: what the plan costs after its first year, when that is not its price (the founding plan) */
+  renews: string | null;
   /** the yearly or founding plan carries «Καλύτερη τιμή» */
   best: boolean;
 }
 
 const TRIAL_DAYS = 7;
 
+/** «8,99€ τον μήνα», «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο»: what the plan charges once paid */
+function thenLine(card: PlanCard, t: Copy): string {
+  const then = t.pro.trialThen[card.productId as keyof Copy['pro']['trialThen']] ?? t.pro.trialThen.pro_monthly;
+  return fmt(then, { price: card.price, renews: card.renews ?? card.price });
+}
+
 /** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.»: what the free week costs, said plainly */
 export function trialLine(card: PlanCard, t: Copy, now: Date = new Date()): string {
   const d = new Date(now.getTime() + TRIAL_DAYS * 86_400_000);
-  const then = t.pro.trialThen[card.productId as keyof Copy['pro']['trialThen']] ?? t.pro.trialThen.pro_monthly;
-  return fmt(t.pro.trialNote, { date: `${d.getDate()}/${d.getMonth() + 1}`, then: fmt(then, { price: card.price }) });
+  return fmt(t.pro.trialNote, { date: `${d.getDate()}/${d.getMonth() + 1}`, then: thenLine(card, t) });
 }
 
 /** what the Pro screen says after «Επαναφορά αγορών» */
@@ -81,17 +88,36 @@ export function restoreLine(result: RestoreResult, t: Copy): string {
   }
 }
 
+/** without the free week: «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.» (the renewal sentence is pro.renewal, once) */
+export function buyLine(card: PlanCard, t: Copy): string {
+  return fmt(t.pro.buyNote, { then: thenLine(card, t) });
+}
+
+/** only if a server without `renews` answers: the founding plan renews at the yearly price (api.pro_offer says it) */
+const FOUNDING_RENEWS_EUR = 69.99;
+
 /** the plans as the Pro screen shows them: the yearly (or founding) first, then the monthly */
-export function planCards(plans: { product_id: string; price: number; period: 'month' | 'year' }[], t: Copy): PlanCard[] {
+export function planCards(
+  plans: { product_id: string; price: number; period: 'month' | 'year'; renews?: number | null }[],
+  t: Copy,
+): PlanCard[] {
   const p = t.pro.plans;
   return [...plans]
     .sort((a, b) => (a.period === b.period ? 0 : a.period === 'year' ? -1 : 1))
-    .map((x) => ({
-      productId: x.product_id,
-      title: p[x.product_id as 'pro_monthly' | 'pro_yearly' | 'pro_founding'] ?? x.product_id,
-      price: euro(x.price),
-      note: x.product_id === 'pro_founding' ? p.foundingNote : x.period === 'year' ? p.yearlyNote : p.monthlyNote,
-      perMonth: x.period === 'year' ? fmt(p.perMonth, { price: euro(Math.round((x.price / 12) * 100) / 100) }) : null,
-      best: x.period === 'year',
-    }));
+    .map((x) => {
+      const founding = x.product_id === 'pro_founding';
+      // the founding plan always says what follows its first year (founder, 22 Oct: 49,99 then 69,99)
+      const after = x.renews ?? (founding ? FOUNDING_RENEWS_EUR : x.price);
+      const renews = Math.round(after * 100) !== Math.round(x.price * 100) ? euro(after) : null;
+      const perMonth = x.period === 'year' ? fmt(p.perMonth, { price: euro(Math.round((x.price / 12) * 100) / 100) }) : null;
+      return {
+        productId: x.product_id,
+        title: p[x.product_id as 'pro_monthly' | 'pro_yearly' | 'pro_founding'] ?? x.product_id,
+        price: euro(x.price),
+        note: founding ? fmt(p.foundingNote, { renews: renews ?? euro(x.price) }) : x.period === 'year' ? p.yearlyNote : p.monthlyNote,
+        perMonth: founding && perMonth ? `${perMonth} · ${p.foundingUntil}` : perMonth,
+        renews,
+        best: x.period === 'year',
+      };
+    });
 }

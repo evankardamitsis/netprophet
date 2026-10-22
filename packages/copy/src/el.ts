@@ -743,8 +743,10 @@ export const el = {
       pro_founding: 'Ιδρυτικό μέλος',
       pro_yearly: 'Ετήσιο',
       pro_monthly: 'Μηνιαίο',
-      /** «49,99€ ο πρώτος χρόνος · μέχρι 31/12» */
-      foundingNote: 'ο πρώτος χρόνος · μέχρι 31/12',
+      /** «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο» (founder, 22 Oct) */
+      foundingNote: 'τον πρώτο χρόνο, μετά {renews}/χρόνο',
+      /** after «4,17€ τον μήνα»: the founding plan is sold until 31/12 */
+      foundingUntil: 'μόνο μέχρι 31/12',
       yearlyNote: 'τον χρόνο',
       monthlyNote: 'τον μήνα, ακυρώνεις όποτε θες',
       /** «4,17€ τον μήνα» */
@@ -756,7 +758,9 @@ export const el = {
     /** «Σήμερα 0€. Από 25/10, 8,99€ τον μήνα. Ακύρωσε πριν και δεν χρεώνεσαι.» */
     trialNote: 'Σήμερα 0€. Από {date}, {then}. Ακύρωσε πριν και δεν χρεώνεσαι.',
     /** what the plan costs after the week */
-    trialThen: { pro_monthly: '{price} τον μήνα', pro_yearly: '{price} τον χρόνο', pro_founding: '{price} τον πρώτο χρόνο' },
+    trialThen: { pro_monthly: '{price} τον μήνα', pro_yearly: '{price} τον χρόνο', pro_founding: '{price} τον πρώτο χρόνο, μετά {renews}/χρόνο' },
+    /** without the free week: «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.»; the renewal sentence is `renewal` */
+    buyNote: '{then}.',
     /** «Η δωρεάν εβδομάδα σου τρέχει μέχρι 24/10.» */
     trialOn: 'Η δωρεάν εβδομάδα σου τρέχει μέχρι {date}. Μετά συνεχίζει, εκτός αν την ακυρώσεις.',
     /** «Συνέχεια · 49,99€» */

@@ -1,6 +1,6 @@
 # v2 status and handoff
 
-Last updated: 22 Oct 2026 (cosmetics decisions: wardrobe markers, «Πρώτη γενιά» for Pro founding members, a freeze at σερί 10). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct», «19 Oct», «20 Oct» and «Waiting on the founder» below.
+Last updated: 22 Oct 2026 (cosmetics decisions: wardrobe markers, «Πρώτη γενιά» for Pro founding members, a freeze at σερί 10; founding pricing: 49,99€ the first year, then 69,99€). Read this after CLAUDE.md. It is a log by milestone, oldest first; the newest work and what waits on the founder are in «15 to 18 Oct», «19 Oct», «20 Oct» and «Waiting on the founder» below.
 
 ## Done (M0, on branch `v2`)
 - CLAUDE.md with v2 rules and founder decisions. Plans in `docs/v2/`.
@@ -132,6 +132,8 @@ Decided 10 Oct: «Άλλη φορά» is a testing shortcut. In development buil
   - **TODO, «Φίλοι» (`frame_friends`):** stays off (`active = false`) until invites ship. When they do: activate the `invite_friend` quest and the frame in the same migration, add the frame back to `apps/app/src/mock/look.ts`, and flip the `frame_friends` checks in pgTAP 149.
 
 - iOS App Store package (PR #292, branch `v2-appstore-package`): `docs/v2/store/` has the metadata (el, en), App Privacy answers from the code, reviewer notes, the submission checklist and 10 screenshots at 6.9" and 6.5" plus the Pro screen for the subscription review. The Pro screen got «Επαναφορά αγορών» (RevenueCat restore), the auto-renewal sentence, next to #289's «Όροι χρήσης · Απόρρητο». Σήμερα's rows keep «Σήμερα» on one line for a match without a time. The privacy policy lists Expo and RevenueCat and no longer promises a hide-profile setting.
+
+- Founding pricing (founder, 22 Oct; migration 20270319000000, test 152, PR from `v2-founding-pricing`; plan in `docs/v2/founding-pricing.md`): «Ιδρυτικό μέλος» is 49,99€ the first year, then 69,99€ a year, sold until 31/12, 7 days free first. App Store: `pro_founding` stays 49,99€ with its trial and a price change to 69,99€ for existing subscribers starts 1/1/2027 (Greece: notice only, +40% and +20€ are under Apple's consent thresholds). Google Play: `pro_founding` base plan 69,99€ with an offer of two phases (7 days free, then a year at 49,99€), switched off on 1/1/2027. The Pro screen, the site and the help page say «49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο» and that it renews automatically (`api.pro_offer` returns `renews` per plan). Play ids (`pro_founding:yearly`) are read since PR #288. Store writes wait for the founder's approval.
 
 ## Waiting on the founder
 - After `scripts/v2-db-remote.sh push`: admin › Players › «Διπλοί παίκτες», «Merge all» for the sure pairs, then look through «Check these».
