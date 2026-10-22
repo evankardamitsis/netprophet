@@ -20,8 +20,8 @@ import { useCopy } from "../i18n";
 import { usePopIn, usePress } from "../lib/motion";
 import { measureView, useTour, useTourRegistry } from "../lib/tour";
 import {
-  feedTarget,
   placeTooltip,
+  scrollsHome,
   spotlight,
   targetOf,
   type Rect,
@@ -40,8 +40,8 @@ import {
 
 /**
  * The first-visit tour over Σήμερα (founder, 20 Oct): the screen dims to ink, a cut-out lights the place being told
- * about (the first vote card, each tab, the avatar), and an ink card says what it is in a title and one line, with
- * «Επόμενο ›», «1 από 5» and a quiet «Παράλειψη». The last step's «Πάμε να ψηφίσουμε» is the screen's one blue.
+ * about (the first vote row, the σερί, the first tournament, three tabs), and an ink card says what it is in a title
+ * and one line, with «Επόμενο ›», «1 από 6» and a quiet «Παράλειψη». The last step's «Πάμε» is the screen's one blue.
  *
  * The cut-out is one view with a border as wide as the screen in the scrim colour, so its hole has round corners; it
  * slides from place to place on Reanimated CSS transitions (plain style values, nothing on a shared value). With the
@@ -59,7 +59,8 @@ const SCRIM = 0.78;
  */
 const REACH = 1.25;
 const PAD = 8;
-const FEED_RADIUS = 24;
+/** a vote row or a tournament card is lit with round corners; the header and the tabs are pills */
+const CARD_RADIUS = 22;
 const GAP = 14;
 const MARGIN = 16;
 /** a first guess at the card's height, until it is laid out */
@@ -74,6 +75,9 @@ const FADE_UP = {
   from: { opacity: 0, transform: [{ translateY: 12 }] },
   to: { opacity: 1, transform: [{ translateY: 0 }] },
 };
+
+/** one frame, so a scroll has landed before the place is measured */
+const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /** fade in (and rise 12px unless the system asks for less motion: then only the fade) */
 function useFadeIn(durationMs: number, delayMs = 0) {
@@ -99,7 +103,7 @@ export function TourOverlay() {
 function TourLayer({ step }: { step: TourStepId }) {
   const t = useCopy();
   const tour = useTour();
-  const { measure } = useTourRegistry();
+  const { measure, reveal } = useTourRegistry();
   const reduced = useReducedMotion();
   const dims = useWindowDimensions();
   const root = useRef<View>(null);
@@ -125,31 +129,21 @@ function TourLayer({ step }: { step: TourStepId }) {
       const h = origin?.height ?? dims.height;
       const local = (r: Rect | null): Rect | null =>
         r && { x: r.x - ox, y: r.y - oy, width: r.width, height: r.height };
-      let target: Rect | null;
       let bounds = { top: 0, bottom: h, left: 0, right: w };
-      if (step === "feed") {
-        const [card, head, avatar, tab] = await Promise.all([
-          measure("feedCard"),
-          measure("feedHead"),
-          measure("avatar"),
-          measure("tab:results"),
-        ]).then((rs) => rs.map(local));
-        // between the header and the tab bar: a tall card is cut where the bar starts
+      if (scrollsHome(step)) {
+        // a place on Σήμερα's list: between the header and the tab bar, scrolled into view first
+        await reveal(targetOf(step));
+        await frame();
+        const [head, tab] = await Promise.all([measure("stats"), measure("tab:results")]).then((rs) => rs.map(local));
         bounds = {
           ...bounds,
-          top: avatar ? avatar.y + avatar.height + PAD : 0,
+          top: head ? head.y + head.height + PAD : 0,
           bottom: tab ? tab.y - PAD / 2 : h,
         };
-        target = feedTarget(card ?? null, head ?? null, bounds);
-      } else {
-        target = local(await measure(targetOf(step)));
       }
+      const target = local(await measure(targetOf(step)));
       if (!live) return;
-      setHole(
-        target
-          ? spotlight(target, step === "feed" ? PAD : PAD / 2, bounds)
-          : null,
-      );
+      setHole(target ? spotlight(target, PAD / 2, bounds) : null);
       setShown(step);
     };
     // two frames: Σήμερα's scroll to the top has landed
@@ -160,7 +154,7 @@ function TourLayer({ step }: { step: TourStepId }) {
       live = false;
       cancelAnimationFrame(raf);
     };
-  }, [step, measure, dims.width, dims.height]);
+  }, [step, measure, reveal, dims.width, dims.height]);
 
   useEffect(() => {
     if (!measured || placed) return undefined;
@@ -210,7 +204,7 @@ function TourLayer({ step }: { step: TourStepId }) {
   }, [onSkip]);
 
   const fadeIn = useFadeIn(motion.revealDurShort);
-  const radius = hole ? (shown === "feed" ? FEED_RADIUS : hole.height / 2) : 0;
+  const radius = hole ? Math.min(hole.height / 2, shown && scrollsHome(shown) ? CARD_RADIUS : hole.height) : 0;
   const slide = placed && !reduced ? motion.revealDur : 0;
   const B = Math.ceil(
     Math.max(size.width, size.height, dims.width, dims.height) * REACH,

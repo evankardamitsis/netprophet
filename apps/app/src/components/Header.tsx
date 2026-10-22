@@ -40,17 +40,34 @@ export function Header({ me }: { me: MeSummary | null }) {
   const { targets } = useHudActions();
   const points = me ? Math.max(0, me.points - hud.pointsOffset) : undefined;
   const streak = me ? hud.streakShown ?? me.streak : undefined;
+  // the first-visit tour lights σερί and πόντοι together; only the header of the screen in front answers for them
+  const front = useFront();
+  const statsRef = useTourTarget('stats', front);
   return (
     <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
       <BouncingLogo height={LOGO_H} />
       <View style={styles.right}>
-        <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={targets.streak} fx={hud.streakFx} pill />
-        <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
+        <View ref={statsRef} collapsable={false} style={styles.stats}>
+          <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={targets.streak} fx={hud.streakFx} pill />
+          <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
+        </View>
         <HeaderProPill />
         <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />
       </View>
     </View>
   );
+}
+
+/** whether this screen is the one in front (every tab screen has its own header) */
+function useFront(): boolean {
+  const [front, setFront] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      setFront(true);
+      return () => setFront(false);
+    }, []),
+  );
+  return front;
 }
 
 /** the avatar opens Εγώ; σερί and πόντοι open «Οι προβλέψεις σου», where both are told in full */
@@ -167,21 +184,11 @@ function Avatar({ initials, sport, points, pro }: { initials: string; sport: str
     if (points !== undefined && last.current !== undefined && points > last.current) baller.current?.play('hop');
     last.current = points;
   }, [points]);
-  // the first-visit tour's last step lights the avatar («Εσύ»)
-  const [front, setFront] = useState(false);
-  useFocusEffect(
-    useCallback(() => {
-      setFront(true);
-      return () => setFront(false);
-    }, []),
-  );
-  const tourRef = useTourTarget('avatar', front);
   // on Εγώ already, the avatar is its tab: a tap scrolls back to the top (founder, 21 Oct)
   const path = usePathname();
   const goMe = () => (path === '/me' ? requestScrollTop('me') : router.push('/me'));
   return (
     <Pressable
-      ref={tourRef}
       accessibilityRole="button"
       accessibilityLabel={pro ? `${t.tabs.me}. ${t.pro.title}` : t.tabs.me}
       onPress={goMe}
@@ -226,6 +233,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stats: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   stat: { minHeight: 44, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center', gap: 0 },
   // line heights at least the font size: iOS clips glyphs that rise above the line box (web lets them spill)
   num: { fontFamily: fonts.displayHeavy, fontSize: 30, lineHeight: 32, paddingBottom: 6, marginBottom: -6 },

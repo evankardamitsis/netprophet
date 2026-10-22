@@ -4,13 +4,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './auth';
 import { currentMe, markMeStale } from './meStore';
 import { api } from './supabase';
-import { useUnlocks } from './unlocks';
 import { motion } from '../theme';
 import {
   currentStep,
   isTourMark,
   shouldStartTour,
   TOUR_IDLE,
+  TOUR_TARGETS,
   tourKey,
   tourMarkOf,
   tourNext,
@@ -36,13 +36,15 @@ interface Registry {
   /** null unregisters; `mine` only if that measurer is still the one held */
   register: (id: TourTarget, measure: Measure | null, mine?: Measure) => void;
   measure: (id: TourTarget) => Promise<Rect | null>;
+  /** Σήμερα scrolls the place into view (a no-op for the header and the tabs) */
+  reveal: (id: TourTarget) => Promise<void>;
 }
 
 export interface Tour {
   /** the tour covers the screen: the moments pacer and everything else waits */
   active: boolean;
   step: TourStepId | null;
-  /** the steps of this run (the Ladder only once unlocked) */
+  /** the steps of this run: those whose place exists (no vote row today, no step for it) */
   steps: TourStepId[];
   /** 0-based */
   index: number;
@@ -52,13 +54,13 @@ export interface Tour {
   skip: () => void;
   /** «Δες ξανά την ξενάγηση»: runs again next time Σήμερα is calm */
   replay: () => void;
-  /** Σήμερα: whether it is calm now, and how to get it ready (scroll to the top) */
-  setHome: (ready: boolean, prepare?: () => void) => void;
+  /** Σήμερα: whether it is calm now, how to get it ready (scroll to the top) and how to scroll a place into view */
+  setHome: (ready: boolean, prepare?: () => void, reveal?: (id: TourTarget) => Promise<void>) => void;
 }
 
 const noop = () => undefined;
 const NO_STEPS: TourStepId[] = [];
-const RegistryContext = createContext<Registry>({ register: noop, measure: async () => null });
+const RegistryContext = createContext<Registry>({ register: noop, measure: async () => null, reveal: async () => undefined });
 const TourContext = createContext<Tour>({
   active: false,
   step: null,
@@ -85,7 +87,6 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
   const { session } = useAuth();
   const userId = session?.user.id ?? null;
   const profile = read ?? (api && userId ? null : SAMPLE_PROFILE);
-  const { has } = useUnlocks();
   const measurers = useRef(new Map<TourTarget, Measure>());
   const [state, setState] = useState<TourState>(TOUR_IDLE);
   const [replay, setReplay] = useState(false);
@@ -93,6 +94,7 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
   const [mirror, setMirror] = useState<{ user: string | null; mark: TourMark | null } | undefined>(undefined);
   const [homeReady, setHomeReady] = useState(false);
   const prepare = useRef<() => void>(noop);
+  const revealer = useRef<(id: TourTarget) => Promise<void>>(async () => undefined);
 
   useEffect(() => {
     let live = true;
@@ -117,16 +119,23 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
   }, [serverMark, mirrorMark, userId]);
 
   const want = state.phase === 'idle' && shouldStartTour({ homeReady, replay, mirror: mirrorMark, profile });
-  const hasNow = useRef(has);
-  hasNow.current = has;
   useEffect(() => {
     if (!want) return undefined;
+    let live = true;
     const id = setTimeout(() => {
       prepare.current();
-      setReplay(false);
-      setState(tourStart(tourSteps(hasNow.current)));
+      // the run is the steps whose place is on the screen now: measure them all, then start
+      void Promise.all(TOUR_TARGETS.map((t) => (measurers.current.get(t)?.() ?? Promise.resolve(null)).catch(() => null))).then((rects) => {
+        if (!live) return;
+        const present = new Set(TOUR_TARGETS.filter((_, i) => rects[i] !== null));
+        setReplay(false);
+        setState(tourStart(tourSteps((t) => present.has(t))));
+      });
     }, SETTLE_MS);
-    return () => clearTimeout(id);
+    return () => {
+      live = false;
+      clearTimeout(id);
+    };
   }, [want]);
 
   const finish = useCallback(
@@ -165,8 +174,9 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
     setState(TOUR_IDLE);
     setReplay(true);
   }, []);
-  const setHome = useCallback((ready: boolean, prep?: () => void) => {
+  const setHome = useCallback((ready: boolean, prep?: () => void, reveal?: (id: TourTarget) => Promise<void>) => {
     if (prep) prepare.current = prep;
+    if (reveal) revealer.current = reveal;
     setHomeReady(ready);
   }, []);
 
@@ -178,6 +188,7 @@ export function TourProvider({ profile: read, children }: { profile: Record<stri
         else if (!mine || measurers.current.get(id) === mine) measurers.current.delete(id);
       },
       measure: (id) => measurers.current.get(id)?.() ?? Promise.resolve(null),
+      reveal: (id) => revealer.current(id),
     }),
     [],
   );

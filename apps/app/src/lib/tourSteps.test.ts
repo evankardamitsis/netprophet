@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   currentStep,
-  feedTarget,
   isLastStep,
   placeTooltip,
+  revealDelta,
+  scrollsHome,
+  TOUR_TARGETS,
+  type TourTarget,
   shouldStartTour,
   spotlight,
   targetOf,
@@ -18,24 +21,34 @@ import {
   type TourState,
 } from './tourSteps';
 
+/** a first launch with everything on the screen */
 const all = () => true;
-const noLadder = (f: string) => f !== 'ladder_friends';
+/** the places that exist, by target */
+const only = (...here: TourTarget[]) => (t: TourTarget) => here.includes(t);
+const noLadder = (t: TourTarget) => t !== 'tab:ladder';
 
 describe('steps', () => {
-  it('five steps once the Ladder is open', () => {
-    expect(tourSteps(all)).toEqual(['feed', 'results', 'tournaments', 'ladder', 'me']);
-  });
-  it('the Ladder step is left out while its tab is hidden', () => {
-    expect(tourSteps(noLadder)).toEqual(['feed', 'results', 'tournaments', 'me']);
+  it('six steps when every place exists', () => {
+    expect(tourSteps(all)).toEqual(['vote', 'streak', 'tournaments', 'results', 'ladder', 'me']);
   });
   it('each step points at its place', () => {
-    expect(['feed', 'results', 'tournaments', 'ladder', 'me'].map((s) => targetOf(s as never))).toEqual([
-      'feedCard',
-      'tab:results',
-      'tab:index',
-      'tab:ladder',
-      'tab:me',
-    ]);
+    expect(tourSteps(all).map(targetOf)).toEqual(['vote', 'stats', 'tournament', 'tab:results', 'tab:ladder', 'tab:me']);
+    expect([...TOUR_TARGETS]).toEqual(['vote', 'stats', 'tournament', 'tab:results', 'tab:ladder', 'tab:me']);
+  });
+  it('the Ladder step is left out while its tab is not in the bar', () => {
+    expect(tourSteps(noLadder)).toEqual(['vote', 'streak', 'tournaments', 'results', 'me']);
+  });
+  it('no match today: no vote row and no tournament card, the rest of the tour stays', () => {
+    expect(tourSteps(only('stats', 'tab:results', 'tab:me'))).toEqual(['streak', 'results', 'me']);
+  });
+  it('a vote row but no tournament today', () => {
+    expect(tourSteps(only('vote', 'stats', 'tab:results', 'tab:me'))).toEqual(['vote', 'streak', 'results', 'me']);
+  });
+  it('no place at all means no steps', () => {
+    expect(tourSteps(() => false)).toEqual([]);
+  });
+  it('only the vote and tournament steps stand on the scrolling list', () => {
+    expect(tourSteps(all).filter(scrollsHome)).toEqual(['vote', 'tournaments']);
   });
 });
 
@@ -89,11 +102,11 @@ describe('next and skip', () => {
       seen.push(currentStep(s));
       s = tourNext(s);
     }
-    expect(seen).toEqual(['feed', 'results', 'tournaments', 'me']);
+    expect(seen).toEqual(['vote', 'streak', 'tournaments', 'results', 'me']);
     expect(s).toEqual({ phase: 'done' });
   });
   it('knows the last step', () => {
-    let s = tourStart(['feed', 'me']);
+    let s = tourStart(['vote', 'me']);
     expect(isLastStep(s)).toBe(false);
     s = tourNext(s);
     expect(isLastStep(s)).toBe(true);
@@ -114,16 +127,17 @@ describe('next and skip', () => {
 
 describe('where things go', () => {
   const view = { top: 100, bottom: 700 };
-  const head = { x: 20, y: 120, width: 350, height: 60 };
-  it('the first card when enough of it shows', () => {
-    const card = { x: 20, y: 200, width: 350, height: 220 };
-    expect(feedTarget(card, head, view)).toBe(card);
+  it('a place already in view does not scroll the list', () => {
+    expect(revealDelta({ x: 16, y: 300, width: 350, height: 64 }, view, 12)).toBe(0);
   });
-  it('the feed head when the card sits below the tab bar or is missing', () => {
-    expect(feedTarget({ x: 20, y: 650, width: 350, height: 220 }, head, view)).toBe(head);
-    expect(feedTarget(null, head, view)).toBe(head);
-    expect(feedTarget({ x: 0, y: 0, width: 0, height: 0 }, head, view)).toBe(head);
-    expect(feedTarget(null, null, view)).toBeNull();
+  it('a place below the fold scrolls up to the top of the list', () => {
+    expect(revealDelta({ x: 16, y: 900, width: 350, height: 64 }, view, 12)).toBe(788);
+  });
+  it('a place half cut at the bottom scrolls too', () => {
+    expect(revealDelta({ x: 16, y: 680, width: 350, height: 64 }, view, 12)).toBe(568);
+  });
+  it('a place above the top scrolls back up (negative)', () => {
+    expect(revealDelta({ x: 16, y: 40, width: 350, height: 64 }, view, 12)).toBe(-72);
   });
   it('the cut-out pads the target and stops at the bounds', () => {
     const bounds = { top: 100, bottom: 700, left: 0, right: 390 };

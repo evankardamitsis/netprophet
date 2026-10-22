@@ -42,7 +42,8 @@ import { feedbackAfterVote } from '../../src/lib/quests';
 import { quizStaleIn } from '../../src/lib/quiz';
 import { fmt, type Side } from '../../src/lib/votes';
 import { useHudActions } from '../../src/lib/hud';
-import { useTour, useTourTarget } from '../../src/lib/tour';
+import { measureView, useTour, useTourTarget } from '../../src/lib/tour';
+import { revealDelta, type TourTarget } from '../../src/lib/tourSteps';
 import { useTabScrollTop } from '../../src/lib/scrollTop';
 import { colors, fonts, text } from '../../src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -346,15 +347,41 @@ export default function HomeScreen() {
   }, [calm, focused, loading, deckOpen, celebrating, touring, groupKey, ballerReady, pick, claim]);
   // the tour starts once the feed has loaded and nothing else is in front (results waiting behind their card do not
   // count, only the open deck); it scrolls the home to the top first
-  const tourReady = focused && !loading && !error && !deckOpen && !celebrating && safety === null;
+  const tourReady = focused && !loading && !error && !deckOpen && !celebrating && safety === null && !tournaments.loading;
   const { setHome } = tour;
+  // the list's offset as the tour left it (nobody scrolls under the tour): a place below the fold is brought up to
+  // the top of the list, a place already in view stays where it is
+  const tourY = useRef(0);
+  const tourVote = useTourTarget('vote');
+  const tourTournament = useTourTarget('tournament');
+  const reveal = useCallback(
+    async (id: TourTarget) => {
+      const ref = id === 'vote' ? tourVote : id === 'tournament' ? tourTournament : null;
+      const list = scroller.current as unknown as { measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => void } | null;
+      if (!ref || !list) return;
+      const [target, view] = await Promise.all([
+        measureView(ref),
+        new Promise<{ top: number; bottom: number }>((resolve) => list.measureInWindow((_x, y, _w, h) => resolve({ top: y, bottom: y + h }))),
+      ]);
+      if (!target) return;
+      const delta = revealDelta(target, view, 12);
+      if (delta === 0) return;
+      tourY.current = Math.max(0, tourY.current + delta);
+      scroller.current?.scrollTo({ y: tourY.current, animated: false });
+    },
+    [tourVote, tourTournament],
+  );
   useEffect(() => {
-    setHome(tourReady, () => scroller.current?.scrollTo({ y: 0, animated: false }));
-  }, [tourReady, setHome]);
+    setHome(
+      tourReady,
+      () => {
+        tourY.current = 0;
+        scroller.current?.scrollTo({ y: 0, animated: false });
+      },
+      reveal,
+    );
+  }, [tourReady, setHome, reveal]);
   useEffect(() => () => setHome(false), [setHome]);
-  // step 1 lights the first vote row, or «Ψήφισε σήμερα» above it when it is not on screen
-  const tourCard = useTourTarget('feedCard');
-  const tourHead = useTourTarget('feedHead');
 
   // what the home shows, from what is loaded (the vote list reads the cards as the feed loaded them, so rows stay put)
   const now = new Date();
@@ -447,9 +474,7 @@ export default function HomeScreen() {
         ) : null}
 
         <Reveal i={next()}>
-          <View ref={tourHead} collapsable={false}>
-            <Text style={styles.h2}>{votes.mode === 'tomorrow' ? t.home.vote.tomorrow : t.home.vote.title}</Text>
-          </View>
+          <Text style={styles.h2}>{votes.mode === 'tomorrow' ? t.home.vote.tomorrow : t.home.vote.title}</Text>
         </Reveal>
         {shownVotes.map((g, gi) => (
           <View key={g.key} style={styles.voteGroup}>
@@ -459,7 +484,7 @@ export default function HomeScreen() {
               onPress={g.tournamentId ? () => router.push(`/tournament/${g.tournamentId}`) : undefined}
             />
             {g.rows.map((m, i) => (
-              <View key={m.id} ref={gi === 0 && i === 0 ? tourCard : undefined} collapsable={false}>
+              <View key={m.id} ref={gi === 0 && i === 0 ? tourVote : undefined} collapsable={false}>
                 <VoteRow match={m} where={m.category ?? ''} onVote={onVote} onLongPress={onCardLongPress} index={i} />
               </View>
             ))}
@@ -478,7 +503,9 @@ export default function HomeScreen() {
         </Reveal>
         {todays.map((item, i) => (
           <Reveal key={item.id} i={next() + i}>
-            <TournamentCard item={item} />
+            <View ref={i === 0 ? tourTournament : undefined} collapsable={false}>
+              <TournamentCard item={item} />
+            </View>
           </Reveal>
         ))}
         {tournaments.data && todays.length === 0 ? <Text style={styles.end}>{t.home.tournaments.none}</Text> : null}
