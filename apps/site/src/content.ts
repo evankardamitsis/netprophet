@@ -24,7 +24,7 @@ export interface Content {
   nav: { privacy: string; support: string; other: string; otherHref: string };
   hero: { eyebrow: string; questions: [string, string, string]; line: string; cta: string; soon: string };
   questions: [Question, Question, Question];
-  feed: Question;
+  tournament: Question;
   game: { eyebrow: string; title: string; line: string; steps: Feature[] };
   more: { title: string; items: Feature[] };
   player: { eyebrow: string; title: string; line: string; note: string };
@@ -33,48 +33,33 @@ export interface Content {
   close: { title: string; line: string };
   footer: { by: string; contact: string };
   /** the words inside the drawn phone screens */
-  screens: {
-    lang: Lang;
-    today: string;
-    yourMatch: string;
-    yourMatchLine: string;
-    proButton: string;
-    matchMeta: string;
-    learn: string;
-    results: string;
-    yesterday: string;
-    crowd: string;
-    upset: string;
-    called: string;
-    opponent: string;
-    level: string;
-    rising: string;
-    form: string;
-    last: string;
-    h2h: string;
-    plays: string;
-    traits: string[];
-    tabs: [string, string, string];
-    pick: string;
-    /** the personalised feed on the phone: your friends' match, then your tournament's */
-    feedTitle: string;
-    feedFriends: string;
-    feedTournament: string;
-    friendTag: string;
-    friendMeta: string;
-    tournamentMeta: string;
-    /** the day's 6-question quiz, under the matches */
-    quizLabel: string;
-    quizQ: string;
-    quizA: [string, string, string];
-    quizRight: string;
-    quizWrong: string;
-    reactions: [string, string];
-    tapHint: string;
-    won: string;
-    lost: string;
-    streak: string;
-    points: string;
+  screens: Screens;
+}
+
+export interface Screens {
+  lang: Lang;
+  streak: string;
+  points: string;
+  tapHint: string;
+  won: string;
+  lost: string;
+  /** the app's bottom tab bar, Τουρνουά first */
+  tabBar: string[];
+  home: {
+    title: string; date: string; resultsTitle: string; resultsLine: string; resultsPoints: string; resultsBtn: string;
+    yours: string; myMatch: string; myMatchLine: string; now: string; friends: string; friendsLine: string;
+    quizTitle: string; quizLine: string; vote: string; voteHint: string; called: string;
+    proTag: string; proTitle: string; proLine: string; proBtn: string; trial: string;
+    tournaments: string; addMatch: string; playing: string; following: string; firstMatch: string; nextMatch: string; hard: string; clay: string;
+  };
+  results: { title: string; summary: string; points: string; day: string; right: string; wrong: string; upset: string };
+  tournament: {
+    name: string; meta: string; tabs: string[]; hint: string; hold: string; played: string; close: string;
+    path: string; ifWins: string; round: string[]; schedule: string[]; bracketTitle: string; newRecord: string; streakLine: string;
+  };
+  scout: {
+    title: string; pro: string; tabs: string[]; formats: string[]; year: string; last: string; h2h: string; h2hLine: string;
+    surfaces: string; partners: string; plays: string; traits: string[]; playsHint: string; hand: string; form: string;
   };
 }
 
@@ -97,12 +82,12 @@ export const el: Content = {
     {
       id: 'today',
       eyebrow: 'ΠΟΙΟΣ ΠΑΙΖΕΙ ΣΗΜΕΡΑ',
-      title: 'Όλα τα ματς που παίζονται σήμερα, με μια ματιά.',
-      line: 'Ανοίγεις την εφαρμογή και βλέπεις ποιος παίζει, πού και τι ώρα, σε όλα τα τουρνουά της περιοχής σου.',
+      title: 'Όλα όσα παίζονται σήμερα, με μια ματιά.',
+      line: 'Ανοίγεις την εφαρμογή και βλέπεις πρώτα τα δικά σου: το ματς σου, τους φίλους σου που παίζουν τώρα. Μετά τα τουρνουά της μέρας.',
       points: [
-        'Το δικό σου ματς πρώτο στο Feed, με αναλυτικές πληροφορίες για τον αντίπαλο',
-        'Κατηγορία, γήπεδο και επιφάνεια για κάθε ματς',
-        'Ψήφισε με ένα πάτημα και δες τι λέει η κερκίδα',
+        'Τα αποτελέσματα της χθεσινής μέρας και οι πόντοι σου, σε μία κάρτα',
+        'Πάτα το όνομα του παίκτη που θα κερδίσει: ψηφίζεις αμέσως και βλέπεις τι λέει η κερκίδα',
+        'Τα τουρνουά σήμερα, με επιφάνεια και ώρα. Στα δικά σου γράφει «Παίζεις»',
       ],
     },
     {
@@ -112,36 +97,40 @@ export const el: Content = {
       line: 'Σκορ, ανατροπές και τι έλεγε η κερκίδα, ανά μέρα και τουρνουά. Όλα ενημερωμένα στο κινητό σου.',
       points: [
         'Σετ και αναλυτικό σκορ',
+        'Ψήφισες σωστά; Το ματς φωτίζεται με ✓ και οι πόντοι σου έρχονται μαζί με το αποτέλεσμα',
         'Οι ανατροπές ξεχωρίζουν, για να μη σου ξεφύγει καμία',
-        'Ψήφισες σωστά τον νικητή; Οι πόντοι σου έρχονται με το αποτέλεσμα',
       ],
     },
     {
       id: 'opponent',
       eyebrow: 'ΠΟΙΟΣ ΕΙΝΑΙ Ο ΑΝΤΙΠΑΛΟΣ ΣΟΥ',
       title: 'Ξέρεις με ποιον παίζεις, πριν μπεις στο γήπεδο.',
-      line: 'Η κάρτα του αντιπάλου σου: πώς πάει φέτος, τα τελευταία του ματς, τι έγινε όταν παίξατε μεταξύ σας και πώς παίζει, όπως τον περιγράφουν όσοι έπαιξαν μαζί του.',
-      points: ['Φόρμα και ρεκόρ της χρονιάς', 'Τα τελευταία ματς και τα μεταξύ σας', 'Πώς παίζει: τα χαρακτηριστικά που ψηφίζουν οι παίκτες'],
+      line: 'Η κάρτα κάθε παίκτη έχει τα τελευταία του ματς και το πώς παίζει, όπως τον περιγράφουν όσοι έπαιξαν μαζί του. Με Pro, το «Δες τον αντίπαλό σου» ανοίγει όλο του το ιστορικό.',
+      points: [
+        'Τελευταία ματς και «Πώς παίζει»: πάτα ένα χαρακτηριστικό για να του δώσεις +1',
+        'Pro: μονά και διπλά, τα μεταξύ σας, φόρμα και επιφάνειες',
+        'Pro: με ποιους παρτενέρ παίζει και πώς τα πάνε μαζί',
+      ],
     },
   ],
-  feed: {
-    id: 'feed',
-    eyebrow: 'ΦΤΙΑΓΜΕΝΟ ΓΙΑ ΣΕΝΑ',
-    title: 'Ένα feed που ξέρει τι σε ενδιαφέρει.',
-    line: 'Βλέπεις πρώτα τα δικά σου: το ματς σου, τους φίλους σου, τα τουρνουά σου. Μετά την περιοχή σου. Όσο ψηφίζεις και ακολουθείς παίκτες, τόσο πιο δικό σου γίνεται.',
+  tournament: {
+    id: 'tournament',
+    eyebrow: 'ΜΕΣΑ ΣΤΟ ΤΟΥΡΝΟΥΑ',
+    title: 'Δες όλο το τουρνουά, όχι μόνο το ματς σου.',
+    line: 'Κάθε τουρνουά έχει τρεις όψεις: τι παίζεται σήμερα, το ταμπλό και το πρόγραμμα. Και ένα κόλπο: κράτα πατημένο ένα όνομα.',
     points: [
-      'Πρώτα το ματς σου και τα ματς των φίλων σου',
-      'Τα τουρνουά και οι κατηγορίες που σε αφορούν',
-      '«Για σένα» Mini Quiz: 6 ερωτήσεις κάθε μέρα για παίκτες που ξέρεις',
+      'Σήμερα, Ταμπλό και Πρόγραμμα, ένα πάτημα μακριά',
+      'Κράτα πατημένο ένα όνομα και δες την πορεία του στο ταμπλό, μαζί με το «Αν κερδίσει»',
+      'Το σερί μετράει σωστές ψήφους στη σειρά. Όταν περάσεις το καλύτερό σου, βλέπεις «Νέο ρεκόρ»',
     ],
   },
   game: {
     eyebrow: 'ΚΑΙ ΕΝΑ ΠΑΙΧΝΙΔΙ ΓΙΑ ΚΑΘΕ ΜΕΡΑ',
     title: 'Πες ποιος κερδίζει.',
-    line: 'Πριν από κάθε ματς ψηφίζεις ποιος θα κερδίσει. Όταν βγει το αποτέλεσμα, μαθαίνεις αν το πέτυχες και κερδίζεις πόντους.',
+    line: 'Πριν από κάθε ματς πατάς το όνομα αυτού που θα κερδίσει. Όταν βγει το αποτέλεσμα, μαθαίνεις αν το πέτυχες και κερδίζεις πόντους.',
     steps: [
-      { title: '+10 πόντοι', line: 'για κάθε σωστή πρόβλεψη, +30 αν ήταν ανατροπή.' },
-      { title: 'Σερί', line: 'πόσες σωστές έχεις στη σειρά. Ένα λάθος το μηδενίζει, εκτός αν έχεις Ασφάλεια: τότε το σερί σου μένει.' },
+      { title: '+10 πόντοι', line: 'για κάθε σωστή ψήφο, +30 αν ήταν ανατροπή. Το Quiz της ημέρας δίνει άλλους +30.' },
+      { title: 'Σερί', line: 'πόσες σωστές ψήφους έχεις στη σειρά. Ένα λάθος το μηδενίζει, εκτός αν έχεις Ασφάλεια. Όταν περάσεις το καλύτερό σου: «Νέο ρεκόρ».' },
       { title: 'Level', line: 'ανεβαίνει με τους πόντους σου και ξεκλειδώνει νέα πράγματα στην εφαρμογή.' },
     ],
   },
@@ -149,11 +138,11 @@ export const el: Content = {
     title: 'Όλα όσα χρειάζεται ένας παίκτης',
     items: [
       { title: 'Κατάταξη', line: 'Ο μήνας σου απέναντι σε όσους ξέρεις, στην κατηγορία σου και σε όλη την Αττική.' },
-      { title: 'Τουρνουά και κληρώσεις', line: 'Τα τουρνουά σου, το πρόγραμμα και οι κληρώσεις, ενημερωμένα μόνα τους.' },
+      { title: 'Τουρνουά και κληρώσεις', line: 'Ακολούθησε ένα τουρνουά και μαθαίνεις για την κλήρωση, το πρόγραμμα και τον τελικό, δωρεάν.' },
       { title: 'Φίλοι', line: 'Ακολούθησε τους φίλους σου και δες πρώτα τα δικά τους ματς.' },
-      { title: 'Πέρνα το ματς σου', line: 'Έπαιξες αγώνα; Γράψ’ το σε δέκα δευτερόλεπτα και δες το στα αποτελέσματα.' },
+      { title: 'Πέρνα το ματς σου', line: 'Έπαιξες αγώνα; Πάτα «+ Ματς», γράψ’ το σε δέκα δευτερόλεπτα και δες το στα αποτελέσματα.' },
       { title: 'Αποστολές και Badges', line: 'Μικροί στόχοι κάθε μέρα και κάθε εβδομάδα, με δώρα για τον Baller σου.' },
-      { title: 'Ειδοποιήσεις', line: 'Μαθαίνεις αν το πέτυχες τη στιγμή που βγαίνει το αποτέλεσμα.' },
+      { title: 'Quiz της ημέρας', line: 'Έξι γρήγορες ερωτήσεις κάθε μέρα. Και οι έξι δίνουν +30.' },
     ],
   },
   player: {
@@ -165,20 +154,21 @@ export const el: Content = {
   pro: {
     eyebrow: 'NETPROPHET PRO',
     title: 'Για όσους παίζουν τουρνουά',
-    line: 'Το Pro σε κρατάει ενήμερο για ό,τι σε αφορά, χωρίς να ψάχνεις.',
+    line: 'Το Pro σε κρατάει ενήμερο για ό,τι σε αφορά, χωρίς να ψάχνεις. Δεν αγοράζει πόντους ούτε θέση στην Κατάταξη.',
     price: '8,99€ τον μήνα',
     items: [
-      { title: 'Live ειδοποιήσεις για τα τουρνουά σου', line: 'Μόλις βγει η κλήρωση ή αλλάξει το πρόγραμμα, το μαθαίνεις πρώτος.' },
-      { title: 'Υπενθυμίσεις για τα ματς σου', line: 'Το προηγούμενο βράδυ και δύο ώρες πριν, με ώρα, γήπεδο και αντίπαλο.' },
-      { title: 'Ο αντίπαλος πριν το ματς', line: 'Φόρμα, τελευταία ματς, τα μεταξύ σας και πώς παίζει.' },
-      { title: 'Τα στατιστικά σου αναλυτικά', line: 'Ρεκόρ, φόρμα και πώς πας στη χρονιά, όλα σε μια σελίδα.' },
+      { title: 'Δες τον αντίπαλό σου', line: 'Όλο του το ιστορικό, μονά και διπλά: τα μεταξύ σας, φόρμα, επιφάνειες και παρτενέρ.' },
+      { title: 'Ειδοποιήσεις για κληρώσεις και ώρες ματς', line: 'Μόλις βγει η κλήρωση ή αλλάξει η ώρα του ματς σου, το μαθαίνεις πρώτος.' },
+      { title: 'Τα στατιστικά σου', line: 'Νίκες, σετ, επιφάνειες και οι αντίπαλοι που βρίσκεις πιο συχνά, όλα σε μια σελίδα.' },
+      { title: '7 μέρες δωρεάν', line: '69,99€ τον χρόνο. Μέχρι 31/12, το ιδρυτικό πακέτο: 49,99€ τον χρόνο.' },
     ],
     note: 'Τα ματς, τα αποτελέσματα και το παιχνίδι μένουν δωρεάν για όλους.',
   },
   faq: {
     title: 'Ερωτήσεις',
     items: [
-      { q: 'Είναι δωρεάν;', a: 'Ναι. Τα ματς, τα αποτελέσματα, οι παίκτες και το παιχνίδι είναι δωρεάν για όλους. Το Pro προσθέτει ειδοποιήσεις, υπενθυμίσεις και την κάρτα του αντιπάλου.' },
+      { q: 'Είναι δωρεάν;', a: 'Ναι. Τα ματς, τα αποτελέσματα, οι παίκτες και το παιχνίδι είναι δωρεάν για όλους. Το Pro προσθέτει τον πλήρη αντίπαλο, ειδοποιήσεις για κληρώσεις και ώρες ματς, και τα στατιστικά σου. Δεν αγοράζει ποτέ πόντους ή θέση στην Κατάταξη.' },
+      { q: 'Πόσο κοστίζει το Pro;', a: '8,99€ τον μήνα ή 69,99€ τον χρόνο, με 7 μέρες δωρεάν. Μέχρι 31/12 υπάρχει το ιδρυτικό πακέτο στα 49,99€ τον χρόνο.' },
       { q: 'Από πού έρχονται τα ματς;', a: 'Από τα προγράμματα και τα αποτελέσματα που δημοσιεύουν οι διοργανωτές των τουρνουά, και από τα ματς που περνάν οι ίδιοι οι παίκτες. Όλα ενημερωμένα καθημερινά.' },
       { q: 'Είμαι παίκτης. Πώς βρίσκω τον εαυτό μου;', a: 'Στην εγγραφή γράφεις το όνομά σου και επιλέγεις ότι παίζεις σε τουρνουά. Από εκεί και πέρα βλέπεις τα ματς σου πάντα πρώτα.' },
       { q: 'Παίζω κάπου χρήματα;', a: 'Όχι. Ψηφίζεις για πόντους, σερί και θέση στην Κατάταξη. Χρήματα δεν παίζονται πουθενά.' },
@@ -193,44 +183,86 @@ export const el: Content = {
   footer: { by: 'Το NetProphet είναι εφαρμογή της Monad Labs.', contact: 'Επικοινωνία' },
   screens: {
     lang: 'el',
-    today: 'Τι παίζει σήμερα;',
-    yourMatch: 'ΤΟ ΜΑΤΣ ΣΟΥ',
-    yourMatchLine: 'Σήμερα 19:30 · απέναντι Άρης Φορχάντης',
-    proButton: 'Ο αντίπαλος πριν το ματς ›',
-    matchMeta: 'Σήμερα 18:00 · Open Γλυφάδας · Μ 40+',
-    learn: 'Μαθαίνεις απόψε',
-    results: 'Αποτελέσματα',
-    yesterday: 'ΧΘΕΣ · OPEN ΓΛΥΦΑΔΑΣ · ΗΜΙΤΕΛΙΚΑ',
-    crowd: 'Το 69% έλεγε Ρακετάκη',
-    upset: 'Ανατροπή',
-    called: 'Το είπες · +10',
-    opponent: 'Ο αντίπαλός σου',
-    level: 'level 4',
-    rising: '↑ Ανεβαίνει',
-    form: 'Φόρμα',
-    last: 'Τελευταία ματς',
-    h2h: 'Μεταξύ σας',
-    plays: 'Πώς παίζει',
-    traits: ['Δυνατό σερβίς', 'Μένει στη baseline', 'Δεν τα παρατάει'],
-    tabs: ['Φόρμα', 'Μεταξύ σας', 'Πώς παίζει'],
-    pick: 'Πάτα έναν παίκτη',
-    feedTitle: 'Για σένα',
-    feedFriends: 'ΟΙ ΦΙΛΟΙ ΣΟΥ',
-    feedTournament: 'ΤΟ ΤΟΥΡΝΟΥΑ ΣΟΥ · OPEN ΓΛΥΦΑΔΑΣ',
-    friendTag: 'φίλος',
-    friendMeta: '20:00 · Open Γλυφάδας · Μ 40+',
-    tournamentMeta: '21:00 · Μ 50+ · Ημιτελικός',
-    quizLabel: 'ΟΙ 6 ΤΗΣ ΗΜΕΡΑΣ · 1 ΑΠΟ 6',
-    quizQ: 'Ποιος σήκωσε το Open Γλυφάδας πέρσι;',
-    quizA: ['Ρακετάκης', 'Φορχάντης', 'Σερβίδης'],
-    quizRight: '✓ Σωστά.',
-    quizWrong: 'Όχι αυτή τη φορά.',
-    reactions: ['Τι ματς!', 'Το περίμενα'],
+    streak: 'σερί',
+    points: 'πόντοι',
     tapHint: 'Πάτα για να δοκιμάσεις',
     won: 'Ν',
     lost: 'Η',
-    streak: 'σερί',
-    points: 'πόντοι',
+    tabBar: ['Τουρνουά', 'Αποτελέσματα', 'Κατάταξη', 'Εγώ'],
+    home: {
+      title: 'Σήμερα',
+      date: 'Πέμπτη 22 Οκτ',
+      resultsTitle: '3 αποτελέσματα από χθες',
+      resultsLine: '2 ✓ · 1 χαμένο',
+      resultsPoints: '+30',
+      resultsBtn: 'Δες τα ›',
+      yours: 'Οι δικοί σου',
+      myMatch: 'Ο αγώνας σου',
+      myMatchLine: 'με Φορχάντη · Open Γλυφάδας',
+      now: 'Τώρα',
+      friends: 'Σερβίδης με Λοβάκη',
+      friendsLine: 'Open Γλυφάδας',
+      quizTitle: 'Quiz της ημέρας',
+      quizLine: '6 ερωτήσεις · και οι 6 δίνουν +30',
+      vote: 'Ψήφισε σήμερα',
+      voteHint: 'Πάτα το όνομα που θα κερδίσει',
+      called: 'Ψήφισες',
+      proTag: 'PRO',
+      proTitle: 'Ο αντίπαλός σου στις 18:00',
+      proLine: 'Πώς έπαιξε φέτος, ποιους κέρδισε, σε ποια επιφάνεια.',
+      proBtn: 'Δες τον αντίπαλο ›',
+      trial: '7 μέρες δωρεάν',
+      tournaments: 'Τουρνουά σήμερα',
+      addMatch: '+ Ματς',
+      playing: 'Παίζεις',
+      following: 'Ακολουθείς',
+      firstMatch: 'Πρώτο ματς 18:00',
+      nextMatch: 'Επόμενο ματς 17:30',
+      hard: 'Σκληρό',
+      clay: 'Χώμα',
+    },
+    results: {
+      title: 'Αποτελέσματα',
+      summary: '2 ✓ από 3',
+      points: '+30',
+      day: 'ΧΘΕΣ · OPEN ΓΛΥΦΑΔΑΣ',
+      right: 'Το είχες',
+      wrong: 'Όχι αυτή τη φορά',
+      upset: 'Ανατροπή',
+    },
+    tournament: {
+      name: 'Open Γλυφάδας',
+      meta: 'Χώμα · Ημιτελικοί σήμερα',
+      tabs: ['Σήμερα', 'Ταμπλό', 'Πρόγραμμα'],
+      hint: 'Κράτα πατημένο ένα όνομα για την πορεία του στο τουρνουά',
+      hold: 'Η πορεία στο ταμπλό',
+      played: 'Ως τώρα',
+      close: '‹',
+      path: 'Φορχάντης',
+      ifWins: 'Αν κερδίσει',
+      round: ['Φάση των 16', 'Προημιτελικός', 'Ημιτελικός', 'Τελικός'],
+      schedule: ['18:00 · Ρακετάκης με Φορχάντη', '19:30 · Σερβίδης με Λοβάκη', 'Αύριο 10:00 · Τελικός'],
+      bracketTitle: 'Ταμπλό',
+      newRecord: 'Νέο ρεκόρ!',
+      streakLine: 'Πέρασες το 4. Πάμε για παραπάνω!',
+    },
+    scout: {
+      title: 'Ο αντίπαλος πριν το ματς',
+      pro: 'PRO',
+      tabs: ['Ματς', 'Μεταξύ σας', 'Πώς παίζει'],
+      formats: ['Μονά', 'Διπλά'],
+      year: 'Φέτος 11-4',
+      last: 'Τελευταία ματς',
+      h2h: 'Μεταξύ σας',
+      h2hLine: '2 ματς μεταξύ σας · Τελευταίο: Open Βούλας, 6-4 3-6 10-8',
+      surfaces: 'Επιφάνειες',
+      partners: 'Παρτενέρ',
+      plays: 'Πώς παίζει',
+      traits: ['Δυνατό σερβίς', 'Μένει στη baseline', 'Δεν τα παρατάει'],
+      playsHint: 'Πάτα ένα για +1',
+      hand: 'δεξί χέρι',
+      form: 'Φόρμα',
+    },
   },
 };
 
@@ -253,12 +285,12 @@ export const en: Content = {
     {
       id: 'today',
       eyebrow: 'WHO PLAYS TODAY',
-      title: 'All the matches played today, at a glance.',
-      line: 'Open the app and see who plays, where and when, across every tournament in your area.',
+      title: 'Everything on today, at a glance.',
+      line: 'Open the app and your things come first: your match, your friends playing right now. Then the day’s tournaments.',
       points: [
-        'Your own match first in the Feed, with details on your opponent',
-        'Category, club and surface for every match',
-        'Call it with one tap and see what the crowd says',
+        'Yesterday’s results and your points, on one card',
+        'Tap the name of the player you think wins: your vote counts at once and you see what the crowd says',
+        'Today’s tournaments with surface and time. Yours say “Playing”',
       ],
     },
     {
@@ -266,34 +298,42 @@ export const en: Content = {
       eyebrow: 'WHO WON YESTERDAY',
       title: 'Know the results before the phone calls start.',
       line: 'Scores, upsets and what the crowd said, by day and tournament. All up to date on your phone.',
-      points: ['Sets and the full score', 'Upsets stand out, so you never miss one', 'Called the winner right? Your points arrive with the result'],
+      points: [
+        'Sets and the full score',
+        'Called it? The match lights up with ✓ and your points arrive with the result',
+        'Upsets stand out, so you never miss one',
+      ],
     },
     {
       id: 'opponent',
       eyebrow: 'WHO IS YOUR OPPONENT',
       title: 'Know who you play before you step on court.',
-      line: 'Your opponent’s card: their year so far, their last matches, what happened when you played each other, and how they play, as described by the people who played them.',
-      points: ['Form and this year’s record', 'Last matches and your head to head', 'How they play: the traits players vote for'],
+      line: 'Every player’s card shows their last matches and how they play, as described by the people who played them. With Pro, “See your opponent” opens their whole history.',
+      points: [
+        'Last matches and “How they play”: tap a trait to give it +1',
+        'Pro: singles and doubles, your head to head, form and surfaces',
+        'Pro: which partners they play with and how they do together',
+      ],
     },
   ],
-  feed: {
-    id: 'feed',
-    eyebrow: 'MADE FOR YOU',
-    title: 'A feed that knows what you care about.',
-    line: 'Your things first: your match, your friends, your tournaments. Then your area. The more you call and follow players, the more it becomes yours.',
+  tournament: {
+    id: 'tournament',
+    eyebrow: 'INSIDE A TOURNAMENT',
+    title: 'See the whole tournament, not just your match.',
+    line: 'Every tournament has three views: what is on today, the draw and the schedule. And one trick: hold a name.',
     points: [
-      'Your match and your friends’ matches first',
-      'The tournaments and categories that matter to you',
-      '«For you» Mini Quiz: 6 questions a day about players you know',
+      'Today, Draw and Schedule, one tap apart',
+      'Hold a name to see their run through the draw, with “If they win”',
+      'Your streak counts right votes in a row. Pass your best and you see “New record”',
     ],
   },
   game: {
     eyebrow: 'AND A GAME FOR EVERY DAY',
     title: 'Say who wins.',
-    line: 'Before every match you call who will win. When the result comes in, you find out if you got it right and earn points.',
+    line: 'Before every match you tap the name of who will win. When the result comes in, you find out if you got it right and earn points.',
     steps: [
-      { title: '+10 points', line: 'for every right call, +30 if it was an upset.' },
-      { title: 'Streak', line: 'how many right calls you have in a row. One wrong call resets it, unless you have Insurance: then your streak stays.' },
+      { title: '+10 points', line: 'for every right vote, +30 if it was an upset. The daily Quiz gives another +30.' },
+      { title: 'Streak', line: 'how many right votes you have in a row. One wrong vote resets it, unless you have Insurance. Pass your best and it is a “New record”.' },
       { title: 'Level', line: 'goes up with your points and unlocks new things in the app.' },
     ],
   },
@@ -301,11 +341,11 @@ export const en: Content = {
     title: 'Everything a player needs',
     items: [
       { title: 'Ladder', line: 'Your month against the people you know, your category and all of Attica.' },
-      { title: 'Tournaments and draws', line: 'Your tournaments, the schedule and the draws, updated on their own.' },
+      { title: 'Tournaments and draws', line: 'Follow a tournament and hear about the draw, the schedule and the final, for free.' },
       { title: 'Friends', line: 'Follow your friends and see their matches first.' },
-      { title: 'Log your match', line: 'Played a match? Log it in ten seconds and see it in the results.' },
+      { title: 'Log your match', line: 'Played a match? Tap “+ Match”, log it in ten seconds and see it in the results.' },
       { title: 'Quests and Badges', line: 'Small goals every day and every week, with gifts for your Baller.' },
-      { title: 'Notifications', line: 'Find out if you got it right the moment the result comes in.' },
+      { title: 'Daily Quiz', line: 'Six quick questions every day. All six give +30.' },
     ],
   },
   player: {
@@ -317,23 +357,24 @@ export const en: Content = {
   pro: {
     eyebrow: 'NETPROPHET PRO',
     title: 'For tournament players',
-    line: 'Pro keeps you up to date on everything that concerns you, without searching.',
+    line: 'Pro keeps you up to date on everything that concerns you, without searching. It never buys points or a place in the Ladder.',
     price: '€8.99 a month',
     items: [
-      { title: 'Live alerts for your tournaments', line: 'The moment the draw is out or the schedule changes, you know first.' },
-      { title: 'Reminders for your matches', line: 'The evening before and two hours before, with time, club and opponent.' },
-      { title: 'Your opponent before the match', line: 'Form, recent matches, your head to head and how they play.' },
-      { title: 'Your detailed stats', line: 'Record, form and how your year is going, all on one page.' },
+      { title: 'See your opponent', line: 'Their whole history, singles and doubles: your head to head, form, surfaces and partners.' },
+      { title: 'Alerts for draws and match times', line: 'The moment the draw is out or your match time changes, you know first.' },
+      { title: 'Your stats', line: 'Wins, sets, surfaces and the opponents you meet most, all on one page.' },
+      { title: '7 days free', line: '€69.99 a year. Until 31 December, the founding plan: €49.99 a year.' },
     ],
     note: 'Matches, results and the game stay free for everyone.',
   },
   faq: {
     title: 'Questions',
     items: [
-      { q: 'Is it free?', a: 'Yes. Matches, results, players and the game are free for everyone. Pro adds alerts, reminders and the opponent card.' },
+      { q: 'Is it free?', a: 'Yes. Matches, results, players and the game are free for everyone. Pro adds the full opponent view, alerts for draws and match times, and your stats. It never buys points or a place in the Ladder.' },
+      { q: 'How much is Pro?', a: '€8.99 a month or €69.99 a year, with 7 days free. Until 31 December there is a founding plan at €49.99 a year.' },
       { q: 'Where do the matches come from?', a: 'From the schedules and results tournament organisers publish, and from matches players log themselves. Everything is updated daily.' },
       { q: 'I am a player. How do I find myself?', a: 'When you sign up you type your name and say you play in tournaments. From then on you always see your matches first.' },
-      { q: 'Is money involved anywhere?', a: 'No. You call matches for points, your streak and a place in the Ladder. No money changes hands anywhere.' },
+      { q: 'Is money involved anywhere?', a: 'No. You vote for points, your streak and a place in the Ladder. No money changes hands anywhere.' },
       { q: 'Which sports?', a: 'Tennis now. Padel, basketball and football are coming soon.' },
       { q: 'When is it out?', a: 'Soon on the App Store and Google Play. Write to hello@monadlabs.gr if you want to try it first.' },
     ],
@@ -345,44 +386,86 @@ export const en: Content = {
   footer: { by: 'NetProphet is an app by Monad Labs.', contact: 'Contact' },
   screens: {
     lang: 'en',
-    today: 'What’s on today?',
-    yourMatch: 'YOUR MATCH',
-    yourMatchLine: 'Today 19:30 · against Aris Forchantis',
-    proButton: 'Your opponent before the match ›',
-    matchMeta: 'Today 18:00 · Glyfada Open · M 40+',
-    learn: 'You find out tonight',
-    results: 'Results',
-    yesterday: 'YESTERDAY · GLYFADA OPEN · SEMI FINALS',
-    crowd: '69% said Raketakis',
-    upset: 'Upset',
-    called: 'Called it · +10',
-    opponent: 'Your opponent',
-    level: 'level 4',
-    rising: '↑ Rising',
-    form: 'Form',
-    last: 'Last matches',
-    h2h: 'Head to head',
-    plays: 'How they play',
-    traits: ['Big serve', 'Stays on the baseline', 'Never gives up'],
-    tabs: ['Form', 'Head to head', 'How they play'],
-    pick: 'Tap a player',
-    feedTitle: 'For you',
-    feedFriends: 'YOUR FRIENDS',
-    feedTournament: 'YOUR TOURNAMENT · GLYFADA OPEN',
-    friendTag: 'friend',
-    friendMeta: '20:00 · Glyfada Open · M 40+',
-    tournamentMeta: '21:00 · M 50+ · Semi-final',
-    quizLabel: 'TODAY’S 6 · 1 OF 6',
-    quizQ: 'Who lifted the Glyfada Open last year?',
-    quizA: ['Raketakis', 'Forchantis', 'Servidis'],
-    quizRight: '✓ Right.',
-    quizWrong: 'Not this time.',
-    reactions: ['What a match!', 'Saw it coming'],
+    streak: 'streak',
+    points: 'points',
     tapHint: 'Tap to try it',
     won: 'W',
     lost: 'L',
-    streak: 'streak',
-    points: 'points',
+    tabBar: ['Tournaments', 'Results', 'Ladder', 'Me'],
+    home: {
+      title: 'Today',
+      date: 'Thu 22 Oct',
+      resultsTitle: '3 results from yesterday',
+      resultsLine: '2 ✓ · 1 missed',
+      resultsPoints: '+30',
+      resultsBtn: 'See them ›',
+      yours: 'Yours',
+      myMatch: 'Your match',
+      myMatchLine: 'against Forchantis · Glyfada Open',
+      now: 'Now',
+      friends: 'Servidis against Lovakis',
+      friendsLine: 'Glyfada Open',
+      quizTitle: 'Daily Quiz',
+      quizLine: '6 questions · all 6 give +30',
+      vote: 'Vote today',
+      voteHint: 'Tap the name who wins',
+      called: 'You voted',
+      proTag: 'PRO',
+      proTitle: 'Your opponent at 18:00',
+      proLine: 'How they played this year, who they beat, on which surface.',
+      proBtn: 'See your opponent ›',
+      trial: '7 days free',
+      tournaments: 'Tournaments today',
+      addMatch: '+ Match',
+      playing: 'Playing',
+      following: 'Following',
+      firstMatch: 'First match 18:00',
+      nextMatch: 'Next match 17:30',
+      hard: 'Hard',
+      clay: 'Clay',
+    },
+    results: {
+      title: 'Results',
+      summary: '2 ✓ of 3',
+      points: '+30',
+      day: 'YESTERDAY · GLYFADA OPEN',
+      right: 'You had it',
+      wrong: 'Not this time',
+      upset: 'Upset',
+    },
+    tournament: {
+      name: 'Glyfada Open',
+      meta: 'Clay · Semi-finals today',
+      tabs: ['Today', 'Draw', 'Schedule'],
+      hint: 'Hold a name to see their run through the tournament',
+      hold: 'Their run through the draw',
+      played: 'So far',
+      close: '‹',
+      path: 'Forchantis',
+      ifWins: 'If they win',
+      round: ['Round of 16', 'Quarter-final', 'Semi-final', 'Final'],
+      schedule: ['18:00 · Raketakis against Forchantis', '19:30 · Servidis against Lovakis', 'Tomorrow 10:00 · Final'],
+      bracketTitle: 'Draw',
+      newRecord: 'New record!',
+      streakLine: 'You passed 4. Let’s go for more!',
+    },
+    scout: {
+      title: 'Your opponent before the match',
+      pro: 'PRO',
+      tabs: ['Matches', 'Head to head', 'How they play'],
+      formats: ['Singles', 'Doubles'],
+      year: 'This year 11-4',
+      last: 'Last matches',
+      h2h: 'Head to head',
+      h2hLine: '2 matches between you · Last: Voula Open, 6-4 3-6 10-8',
+      surfaces: 'Surfaces',
+      partners: 'Partners',
+      plays: 'How they play',
+      traits: ['Big serve', 'Stays on the baseline', 'Never gives up'],
+      playsHint: 'Tap one for +1',
+      hand: 'right-handed',
+      form: 'Form',
+    },
   },
 };
 
