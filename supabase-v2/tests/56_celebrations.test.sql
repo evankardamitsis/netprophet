@@ -1,5 +1,5 @@
 -- Celebrations: each σερί milestone queues one, with the reward it actually gave (3: freeze, 5: the lime headband,
--- 7: Frame Επτά, 10: Frame Δέκα); the feed hands them over until they are seen.
+-- 7: Frame Επτά, 10: Frame Δέκα and a free freeze); the feed hands them over until they are seen.
 begin;
 select plan(9);
 
@@ -45,7 +45,7 @@ select is((select payload -> 'reward' from core.feed_inbox where user_id = :'v':
 select is((select payload -> 'reward' ->> 'frame' from core.feed_inbox where user_id = :'v'::uuid and kind = 'celebration' and payload ->> 'streak' = '7'),
           'frame_seven', 'σερί 7: Frame Επτά');
 select is((select payload -> 'reward' from core.feed_inbox where user_id = :'v'::uuid and kind = 'celebration' and payload ->> 'streak' = '10'),
-          '{"frame": "frame_ten", "freeze": false, "gear": null}'::jsonb, 'σερί 10: Frame Δέκα');
+          '{"frame": "frame_ten", "freeze": true, "gear": null}'::jsonb, 'σερί 10: Frame Δέκα and a free freeze (22 Oct)');
 select is((select count(*)::int from core.user_cosmetics uc join core.cosmetic_items ci on ci.id = uc.item_id
             where uc.user_id = :'v'::uuid and ci.key in ('frame_seven', 'frame_ten')), 2, 'both frames are owned');
 

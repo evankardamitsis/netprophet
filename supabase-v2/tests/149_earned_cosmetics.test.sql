@@ -1,17 +1,19 @@
--- Earned cosmetics are earnable: every active earned item has a way in, the two with none are off the wardrobe, a
--- quest can only give an item the wardrobe shows, and the weekly quests land their frame and background.
+-- Earned cosmetics are earnable: every active earned item has a way in, Φίλοι (no way in until invites) is off the
+-- wardrobe, a quest can only give an item the wardrobe shows, and the weekly quests land their frame and background.
+-- Πρώτη γενιά came back on 22 Oct with its rule (Pro «Ιδρυτικό μέλος» by 31/12, 150_cosmetics_decisions).
 \set ON_ERROR_STOP on
 begin;
 select plan(12);
 
--- the two frames nothing can give today are off
+-- Φίλοι is off until invites ship; Πρώτη γενιά is on again (the store gives it)
 select is((select array_agg(key order by key) from core.cosmetic_items where key in ('frame_founding', 'frame_friends') and not active),
-          array['frame_founding', 'frame_friends'], 'Πρώτη γενιά and Φίλοι are off until something gives them');
+          array['frame_friends'], 'Φίλοι is off until something gives it, Πρώτη γενιά is back');
 
--- every active earned item is given by something: a σερί milestone, a badge, the month close or an active quest
+-- every active earned item is given by something: a σερί milestone, a badge, the month close, Pro «Ιδρυτικό μέλος»
+-- (api.apply_store_event) or an active quest
 select is((select array_agg(c.key order by c.key) from core.cosmetic_items c
             where c.active and c.kind = 'earned'
-              and c.key not in ('frame_seven', 'frame_ten', 'gear_headband', 'frame_level', 'kit_night', 'frame_month_top', 'gear_crown')
+              and c.key not in ('frame_seven', 'frame_ten', 'gear_headband', 'frame_level', 'kit_night', 'frame_month_top', 'gear_crown', 'frame_founding')
               and not exists (select 1 from core.quest_defs q where q.active and q.reward -> 'cosmeticIds' ? c.key)),
           null::text[], 'no active earned item is left without a way to earn it');
 select is((select count(*)::int from core.cosmetic_items where active and kind = 'earned' and coalesce(earn_rule_text, '') = ''),
@@ -30,9 +32,9 @@ select is((select count(*)::int from core.quest_defs q, jsonb_array_elements_tex
 -- the wardrobe
 select tests.create_user('ec-u@test.local') as u \gset
 select tests.login(:'u'::uuid);
-select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'key' in ('frame_founding', 'frame_friends')),
-          0, 'the wardrobe does not show them');
-select throws_ok($$select api.equip_item('frame', 'frame_founding')$$, 'P0002', 'not_found', 'and they cannot be worn');
+select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i where i ->> 'key' = 'frame_friends'),
+          0, 'the wardrobe does not show Φίλοι');
+select throws_ok($$select api.equip_item('frame', 'frame_friends')$$, 'P0002', 'not_found', 'and it cannot be worn');
 select is((select count(*)::int from jsonb_array_elements(api.get_look() -> 'items') i
             where i ->> 'kind' = 'earned' and (i ->> 'price_eur' is not null or coalesce(i ->> 'earn_rule', '') = '')),
           0, 'earned items reach the app with their rule and no price');

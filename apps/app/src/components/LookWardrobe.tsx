@@ -8,7 +8,7 @@ import { LookThumb } from './LookParts';
 import { useCopy } from '../i18n';
 import type { AvatarLook } from '../lib/avatar';
 import { useLook } from '../lib/data';
-import { buySheetOf, ctaOf, findTile, LOOK_TABS, ownedKeys, previewOf, tagOf, tileName, tilesFor, type BuySheet, type LookPreview, type Tile, type Tone } from '../lib/look';
+import { buySheetOf, ctaOf, findTile, LOOK_TABS, markerOf, ownedKeys, previewOf, tagOf, tileName, tilesFor, type BuySheet, type LookPreview, type Tile, type Tone } from '../lib/look';
 import { useLookSeen } from '../lib/lookSeen';
 import { usePress, useStgIn } from '../lib/motion';
 import { useUnlocks } from '../lib/unlocks';
@@ -174,14 +174,25 @@ function StripCell({ i, tile, on, worn, onPress, who }: { i: number; tile: Tile;
   const t = useCopy();
   const enter = useStgIn(STG_MS - 50, 60 + Math.min(i, 8) * 40);
   const press = usePress(0.94);
+  // what it is to you, without tapping: ✓ yours, «Δωρεάν», «Κέρδισέ το», or the price
+  const mark = markerOf(tile, t);
+  const name = tileName(tile, t);
   return (
     <Animated.View style={enter}>
-      <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={tileName(tile, t)} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
+      <Pressable accessibilityRole="button" accessibilityState={{ selected: on }} accessibilityLabel={mark ? `${name}, ${mark.text}` : name} onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut}>
         <Animated.View style={[styles.cell, on && styles.cellOn, press.style]}>
           <LookThumb tile={tile} who={who} />
           <Text style={styles.cellName} numberOfLines={1}>
-            {tileName(tile, t)}
+            {name}
           </Text>
+          <Text style={[styles.mark, mark?.kind === 'price' && styles.markPrice]} numberOfLines={1}>
+            {mark && mark.kind !== 'owned' ? mark.text : ' '}
+          </Text>
+          {mark?.kind === 'owned' ? (
+            <View style={styles.ownedBadge}>
+              <Text style={styles.ownedGlyph}>✓</Text>
+            </View>
+          ) : null}
           {worn ? <View style={styles.wornDot} /> : null}
         </Animated.View>
       </Pressable>
@@ -205,6 +216,12 @@ const styles = StyleSheet.create({
   cell: { width: 96, paddingVertical: 10, paddingHorizontal: 6, borderRadius: 20, backgroundColor: colors.paper, borderWidth: 3, borderColor: 'transparent', alignItems: 'center', gap: 6, opacity: 0.72 },
   cellOn: { opacity: 1, borderColor: colors.white, transform: [{ scale: 1.04 }] },
   cellName: { fontFamily: fonts.bodyBold, fontSize: 12, color: colors.ink, textAlign: 'center' },
+  // the status line under the name: quiet for «Δωρεάν» and «Κέρδισέ το», ink for a price
+  mark: { fontFamily: fonts.bodySemi, fontSize: 11, lineHeight: 14, color: colors.slate, textAlign: 'center', marginTop: -4 },
+  markPrice: { fontFamily: fonts.bodyBold, color: colors.ink },
+  // yours: a small lime ✓ (lime is earned or "what happened"), opposite the worn dot
+  ownedBadge: { position: 'absolute', top: 6, left: 6, width: 18, height: 18, borderRadius: 9, backgroundColor: colors.lime, borderWidth: 1.5, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  ownedGlyph: { fontFamily: fonts.bodyBold, fontSize: 11, lineHeight: 13, color: colors.ink },
   wornDot: { position: 'absolute', top: 8, right: 8, width: 10, height: 10, borderRadius: 5, backgroundColor: colors.ink },
   cta: { minHeight: 54, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   ctaBlue: { backgroundColor: colors.blue },

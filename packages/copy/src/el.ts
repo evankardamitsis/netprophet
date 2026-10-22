@@ -1400,6 +1400,10 @@ export const el = {
     tagFree: 'Δωρεάν',
     tagEarned: 'Το κέρδισες',
     tagBought: 'Αγορά',
+    /** on a strip tile: an earned item that is not yours yet (owned shows ✓, free «Δωρεάν», paid the price) */
+    markerEarn: 'Κέρδισέ το',
+    /** read out with ✓ on a tile you own */
+    markerOwned: 'Το έχεις',
     /** «1,99€», the price in the grid */
     price: '{price}€',
     /** «1,99 €», the price on the button and in the sheet */

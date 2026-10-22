@@ -66,6 +66,23 @@ export function tagOf(tile: Tile, t: Copy): { text: string; tone: Tone } | null 
   return { text: i.earn_rule ?? '', tone: 'locked' };
 }
 
+export type Marker = { kind: 'owned'; text: string } | { kind: 'free' | 'earn' | 'price'; text: string };
+
+/**
+ * The status on a strip tile, readable without tapping (founder, 22 Oct): ✓ on what you own, «Δωρεάν» on the free
+ * ones, «Κέρδισέ το» on an earned item that is not yours yet, the price only on a paid item you do not own. An earned
+ * item never shows a price. `text` for ✓ is what a screen reader says.
+ */
+export function markerOf(tile: Tile, t: Copy): Marker | null {
+  const i = tile.item;
+  if (!i) return null;
+  if (i.kind === 'free') return { kind: 'free', text: t.look.tagFree };
+  if (i.owned) return { kind: 'owned', text: t.look.markerOwned };
+  if (i.kind === 'earned') return { kind: 'earn', text: t.look.markerEarn };
+  if (i.price_eur !== null) return { kind: 'price', text: fmt(t.look.price, { price: eur(i.price_eur) }) };
+  return null;
+}
+
 export type Cta = { kind: 'wear' } | { kind: 'worn' } | { kind: 'buy'; label: string } | { kind: 'none' };
 
 /** the button on the selected card: wear it, it is worn, buy it (sheet), or nothing (earned and not yet yours) */
