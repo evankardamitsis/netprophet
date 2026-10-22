@@ -50,6 +50,8 @@ export interface CardMatch {
   split?: CardPct;
   /** voting has closed (the match started); the card shows the match and the crowd's split, no buttons */
   closed?: boolean;
+  /** when voting closes, from the server: the start, or 14:00 (the tournament's time) on the day of a match with no time */
+  lockAt?: string;
   /** the match moved to this day in the last 3 days: «Νέα μέρα» chip and «(ήταν Τρι 13/10)» after the time */
   moved?: { chip: string; was: string; head: string; tail: string };  /** «PRC (Μαρούσι) · Σκληρό»: the club and surface, when known (only on a match outside a tournament) */
   place?: string;
@@ -300,6 +302,7 @@ export function fromFeedCard(card: FeedMatchCard, areas: Record<string, string>,
     place: card.tournament ? undefined : place ?? undefined,
     later,
     startsAt: card.starts_at ?? undefined,
+    lockAt: card.lock_at ?? undefined,
     tournamentId: card.tournament?.id,
     // «Αύριο και μετά» too sits by tournament (founder, 19 Oct), each tournament once; every card says its own day
     group: card.tournament

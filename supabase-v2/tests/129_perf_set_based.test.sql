@@ -413,11 +413,16 @@ insert into core.sponsored_cards (sponsor, title, placement, weight, status, are
 -- ---------------------------------------------------------------------------
 -- the same replies as before
 -- ---------------------------------------------------------------------------
+-- (lock_at on match cards came later, 20270310000000_untimed_vote_lock)
+create function tests.no_lock_at(f jsonb) returns jsonb language sql immutable as $$
+  select jsonb_set(f, '{items}', coalesce((select jsonb_agg(e - 'lock_at' order by i)
+                                             from jsonb_array_elements(f -> 'items') with ordinality x(e, i)), '[]'::jsonb))
+$$;
 select tests.login(:'u'::uuid);
 create temp table cmp as
-select 'feed20' as k, api.get_feed(20) as new, tests.old_get_feed(20) as old
-union all select 'feed2', api.get_feed(2), tests.old_get_feed(2)
-union all select 'feed100', api.get_feed(100), tests.old_get_feed(100)
+select 'feed20' as k, tests.no_lock_at(api.get_feed(20)) as new, tests.old_get_feed(20) as old
+union all select 'feed2', tests.no_lock_at(api.get_feed(2)), tests.old_get_feed(2)
+union all select 'feed100', tests.no_lock_at(api.get_feed(100)), tests.old_get_feed(100)
 union all select 'results', api.get_results(), tests.old_get_results()
 union all select 'results_t', api.get_results(14, 60, '00000000-0000-0000-0000-0000000020a1'), tests.old_get_results(14, 60, '00000000-0000-0000-0000-0000000020a1')
 union all select 'results_q', api.get_results(14, 60, null, 'φιλος'), tests.old_get_results(14, 60, null, 'φιλος')
@@ -425,11 +430,11 @@ union all select 'results_3', api.get_results(14, 3), tests.old_get_results(14, 
 -- (followed and followers came later, 20270305000000_tournament_follow)
 union all select 'tournament', api.get_tournament('00000000-0000-0000-0000-0000000020a1') - 'followed' - 'followers', tests.old_get_tournament('00000000-0000-0000-0000-0000000020a1');
 select tests.login(:'fr'::uuid);
-insert into cmp select 'feed_fr', api.get_feed(20), tests.old_get_feed(20);
+insert into cmp select 'feed_fr', tests.no_lock_at(api.get_feed(20)), tests.old_get_feed(20);
 select tests.logout();
 update core.sponsored_cards set status = 'paused' where sponsor like 'Πέρφ%';
 select tests.login(:'u'::uuid);
-insert into cmp select 'feed_no_ads', api.get_feed(20), tests.old_get_feed(20);
+insert into cmp select 'feed_no_ads', tests.no_lock_at(api.get_feed(20)), tests.old_get_feed(20);
 select tests.logout();
 grant select on cmp to public;
 

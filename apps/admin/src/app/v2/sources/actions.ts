@@ -49,6 +49,8 @@ export interface SourcePatch {
   entry_deadline?: string;
   /** '' clears */
   entry_link?: string;
+  /** HH:MM: matches with no start time close for votes at this Athens time on their day */
+  untimed_lock_time?: string;
 }
 
 const ENTRY_LINK_INVALID = 'The entry link must be a web address (https://...).';

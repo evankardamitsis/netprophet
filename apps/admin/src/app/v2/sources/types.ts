@@ -54,6 +54,8 @@ export interface SourceTournament {
   entry_deadline: string | null;
   /** where players sign up */
   entry_link: string | null;
+  /** Athens time (HH:MM) at which voting closes on a match with no start time, on its day; default 14:00 */
+  untimed_lock_time?: string;
   source_kind: 'sheet' | 'csv' | 'site' | null;
   source_url: string | null;
   draw_url: string | null;
