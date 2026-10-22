@@ -280,7 +280,7 @@ export const el = {
     results: {
       title: 'Αποτελέσματα',
       /** the single blue action while results wait */
-      take: 'Πάρε τους ›',
+      take: 'Δες τα ›',
       /** «+30», the points the results bring (lime) */
       points: '+{n}',
     },
@@ -308,7 +308,6 @@ export const el = {
       tomorrow: 'Τα επόμενα ματς αύριο',
       more: 'Περισσότερα ›',
       less: 'Λιγότερα ↑',
-      undo: 'Αναίρεση',
       /** for screen readers, on each name */
       a11yVote: 'Ψήφος: {name}',
       /** after the result: «Το είχες ✓» */

@@ -1,6 +1,6 @@
-import { memo, useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
-import Animated, { Easing, cancelAnimation, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming, type CSSTransitionProperties } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, type CSSTransitionProperties } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useCopy } from '../i18n';
 import type { CardMatch, CardPct, CardSide } from '../lib/feed';
@@ -8,7 +8,6 @@ import { sideLabel, rowTime } from '../lib/home';
 import { hasTime } from '../lib/tournaments';
 import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
-import { initialLock, lockOf, lockProgress, locksVersion, pickedSide, subscribeLocks, tapVote, undoVote, type LockState } from '../lib/voteLock';
 import { fmt, type Side } from '../lib/votes';
 import { cardSurface, colors, fonts, motion, text } from '../theme';
 
@@ -16,10 +15,9 @@ import { cardSurface, colors, fonts, motion, text } from '../theme';
  * One match as a row (mockup D, founder 22 Oct): the time on the left, a small line with the tournament and category,
  * then the two names as full-width buttons, one under the other (a pair shows both surnames). Tap a name to vote.
  *
- * A vote is final on the server, so a tap first locks in (lib/voteLock): the name fills ink, a bar runs along it for
- * `motion.voteLock` and «Αναίρεση» shows under the names; a tap on the other name moves the pick. Only when the bar
- * completes does `onVote` run (the screen's vote path: cast_vote, the burst, quests, error toasts). The lock-in lives
- * outside the row, so leaving the screen still sends it.
+ * A tap on a name votes at once (founder, 22 Oct: no lock-in): the name presses in and fills ink, `onVote` runs (the
+ * screen's vote path: cast_vote, the burst, quests, error toasts) and the percentages pop in when the split comes back.
+ * A vote that fails puts the row back.
  * voted     your name ink, the other muted, both percentages
  * resolved  the winner lime with ✓ and the points you got (`result`)
  * A hold on a name opens the player's run (playerHold); a hold elsewhere on the row opens «Αναφορά».
@@ -31,14 +29,10 @@ const FILL_MS = 250;
 const JPOP_MS = 400;
 const ENTER_MS = motion.revealDur;
 
-function haptic(kind: 'tap' | 'done' | 'undo') {
+function haptic(kind: 'tap' | 'done') {
   if (Platform.OS === 'web') return;
   const run =
-    kind === 'tap'
-      ? Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      : kind === 'done'
-        ? Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-        : Haptics.selectionAsync();
+    kind === 'tap' ? Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium) : Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   run.catch(() => undefined);
 }
 
@@ -56,32 +50,53 @@ interface Props {
   index?: number;
 }
 
+/** how a row stands: nothing picked, the vote on its way, or in (the split is null for a vote loaded with the feed) */
+type RowState = { phase: 'idle' } | { phase: 'sending'; side: Side } | { phase: 'voted'; side: Side; split: CardPct | null };
+
+/** votes cast this session, so a row that unmounts (the list folds, a refresh) and comes back still shows its vote */
+const cast = new Map<string, { side: Side; split: CardPct }>();
+
+function startState(match: CardMatch): RowState {
+  const mine = cast.get(match.id);
+  if (mine) return { phase: 'voted', side: mine.side, split: mine.split };
+  return match.myVote ? { phase: 'voted', side: match.myVote, split: match.split ?? null } : { phase: 'idle' };
+}
+
 export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where, result, index = 0 }: Props) {
   const t = useCopy();
-  useSyncExternalStore(subscribeLocks, locksVersion, locksVersion);
-  const state = lockOf(match.id, initialLock(match.myVote, match.split));
-  const picked = pickedSide(state);
+  const [state, setState] = useState<RowState>(() => startState(match));
+  const picked = state.phase === 'idle' ? null : state.side;
   const enter = useStgIn(ENTER_MS, Math.min(index, 8) * motion.stagger);
 
-  const send = useCallback((side: Side) => onVote(match.id, side), [onVote, match.id]);
-  const open = !result && !match.closed && (state.phase === 'idle' || state.phase === 'locking');
+  const open = !result && !match.closed && state.phase === 'idle';
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const tap = useCallback(
     (side: Side) => {
       if (!open) return;
-      if (tapVote(match.id, side, send, motion.voteLock)) haptic('tap');
+      haptic('tap');
+      setState({ phase: 'sending', side });
+      onVote(match.id, side).then(
+        (split) => {
+          cast.set(match.id, { side, split });
+          if (mounted.current) {
+            haptic('done');
+            setState({ phase: 'voted', side, split });
+          }
+        },
+        // the screen says why in a toast; the row goes back to a fresh pick
+        () => {
+          if (mounted.current) setState({ phase: 'idle' });
+        },
+      );
     },
-    [open, match.id, send],
+    [open, onVote, match.id],
   );
-  const undo = () => {
-    if (undoVote(match.id)) haptic('undo');
-  };
-  // the vote went in while you look: a short success tick (not for one that was in already)
-  const phase = state.phase;
-  const was = useRef(phase);
-  useEffect(() => {
-    if (was.current === 'sending' && phase === 'voted') haptic('done');
-    was.current = phase;
-  }, [phase]);
 
   const split = state.phase === 'voted' ? state.split : null;
   const small = where ?? [match.group?.title, match.category].filter(Boolean).join(' · ');
@@ -106,7 +121,6 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
                 key={s}
                 side={s}
                 data={match[s]}
-                state={state}
                 picked={picked === s}
                 other={picked !== null && picked !== s}
                 pct={split ? (s === 'a' ? split.pctA : split.pctB) : null}
@@ -116,7 +130,6 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
                 onHold={holdFor(match, match[s])}
               />
             ))}
-            {state.phase === 'locking' ? <Undo onPress={undo} /> : null}
             {result && picked === result.winner ? <Called points={result.points} /> : null}
           </View>
         </View>
@@ -128,7 +141,6 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
 function NameButton({
   side,
   data,
-  state,
   picked,
   other,
   pct,
@@ -139,7 +151,6 @@ function NameButton({
 }: {
   side: Side;
   data: CardSide;
-  state: LockState;
   picked: boolean;
   /** the other name was picked: this one steps back */
   other: boolean;
@@ -154,28 +165,12 @@ function NameButton({
   const press = usePress(0.97);
   const reduced = useReducedMotion();
   const jpop = useSharedValue(1);
-  const bar = useSharedValue(0);
   const label = sideLabel(data.people);
 
   useEffect(() => {
     if (picked && won === null) runJpop(jpop, JPOP_MS);
   }, [picked, won, jpop]);
 
-  // the lock-in bar along the picked name: it runs from where it is to the end in what is left of the lock time
-  const locking = picked && state.phase === 'locking';
-  const since = state.phase === 'locking' ? state.since : 0;
-  useEffect(() => {
-    cancelAnimation(bar);
-    if (!locking) {
-      bar.value = 0;
-      return;
-    }
-    const p = lockProgress(state, Date.now(), motion.voteLock);
-    bar.value = p;
-    bar.value = withTiming(1, { duration: reduced ? 0 : Math.max(0, (1 - p) * motion.voteLock), easing: Easing.linear });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locking, since]);
-  const barStyle = useAnimatedStyle(() => ({ width: `${bar.value * 100}%` }));
   const popStyle = useAnimatedStyle(() => ({ transform: [{ scale: jpop.value }] }));
 
   const bg = won === true ? colors.lime : won === false ? colors.white : picked ? colors.ink : other ? colors.white : colors.paper;
@@ -203,7 +198,6 @@ function NameButton({
       onPressOut={press.onPressOut}
     >
       <Animated.View style={[styles.name, face, press.style, popStyle]}>
-        {locking ? <Animated.View pointerEvents="none" style={[styles.bar, barStyle]} /> : null}
         <Text numberOfLines={1} style={[styles.nameText, { color: fg }]}>
           {label}
         </Text>
@@ -217,20 +211,6 @@ function NameButton({
 function Pct({ text: value, color }: { text: string; color: string }) {
   const pop = usePopIn(450, 120);
   return <Animated.Text style={[styles.pct, { color }, pop]}>{value}</Animated.Text>;
-}
-
-/** «Αναίρεση» while the bar runs */
-function Undo({ onPress }: { onPress: () => void }) {
-  const t = useCopy();
-  const press = usePress(0.95);
-  const pop = usePopIn(300);
-  return (
-    <Animated.View style={[styles.undoWrap, pop]}>
-      <Pressable accessibilityRole="button" onPress={onPress} onPressIn={press.onPressIn} onPressOut={press.onPressOut} hitSlop={8} style={styles.undoHit}>
-        <Animated.Text style={[styles.undo, press.style]}>{t.home.vote.undo}</Animated.Text>
-      </Pressable>
-    </Animated.View>
-  );
 }
 
 /** «Το είχες ✓» and the points, in lime: earned */
@@ -267,13 +247,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  // the lock-in runs along the bottom of the ink name, in paper
-  bar: { position: 'absolute', left: 0, bottom: 0, height: 3, backgroundColor: colors.paper },
   nameText: { flexShrink: 1, fontFamily: fonts.bodyBold, fontSize: 16, lineHeight: 21 },
   pct: { fontFamily: fonts.bodyBold, fontSize: 15, lineHeight: 19 },
-  undoWrap: { alignItems: 'flex-end' },
-  undoHit: { minHeight: 32, justifyContent: 'center', paddingHorizontal: 4 },
-  undo: { fontFamily: fonts.bodySemi, fontSize: 14, color: colors.inkSoft, textDecorationLine: 'underline' },
   called: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pointsPill: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: 8, backgroundColor: colors.lime },
   pointsText: { fontFamily: fonts.bodyBold, fontSize: 13, color: colors.ink },

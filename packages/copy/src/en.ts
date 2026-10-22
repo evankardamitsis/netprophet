@@ -248,7 +248,7 @@ export const en: Copy = {
   home: {
     results: {
       title: 'Results',
-      take: 'Collect ›',
+      take: 'See them ›',
       points: '+{n}',
     },
     yours: {
@@ -270,7 +270,6 @@ export const en: Copy = {
       tomorrow: 'Next matches tomorrow',
       more: 'More ›',
       less: 'Less ↑',
-      undo: 'Undo',
       a11yVote: 'Vote: {name}',
       called: 'You called it ✓',
       empty: 'No matches to vote on yet.',
