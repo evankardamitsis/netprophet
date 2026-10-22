@@ -4,7 +4,7 @@ import { AppState, RefreshControl, ScrollView, StyleSheet, Text, View } from 're
 import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
-import { ConfirmCard } from '../../src/components/ConfirmCard';
+import { ConfirmRow } from '../../src/components/ConfirmCard';
 import { ResultsDeck } from '../../src/components/ResultsDeck';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
@@ -404,7 +404,7 @@ export default function HomeScreen() {
             <YoursBlock>
               {mine ? <MyMatchRow match={mine} onPress={openMine} /> : null}
               {confirmations.items.map((item) => (
-                <ConfirmCard
+                <ConfirmRow
                   key={item.match_id}
                   item={item}
                   onAnswer={(a) => {

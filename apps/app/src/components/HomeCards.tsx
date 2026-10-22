@@ -228,7 +228,8 @@ export function TournamentCard({ item }: { item: HomeTournament }) {
       <View style={styles.tcard}>
         <View style={styles.tTop}>
           <View style={styles.tName}>
-            <Logo path={item.logo} name={item.name} size={24} />
+            {/* a real logo only: without one the Logo's letter («O» for Open) read as a stray «0» badge here */}
+            {item.logo ? <Logo path={item.logo} name={item.name} size={24} /> : null}
             <Text style={styles.tNameText}>{item.name}</Text>
           </View>
           {tag ? (
@@ -330,6 +331,6 @@ const styles = StyleSheet.create({
   tLiveText: { flexShrink: 1, fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.ink },
   quietHit: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   quiet: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.ink },
-  add: { minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  add: { flexShrink: 0, minHeight: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
   addText: { fontFamily: fonts.bodyBold, fontSize: 15, color: colors.paper },
 });
