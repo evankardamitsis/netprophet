@@ -36,7 +36,7 @@ export interface CardPct {
   pctB: number;
 }
 
-/** What VoteCard renders. Built from a server feed card or from mock data. */
+/** What a vote row (VoteRow) renders. Built from a server feed card or from mock data. */
 export interface CardMatch {
   kind: 'match';
   id: string;

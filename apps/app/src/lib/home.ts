@@ -136,7 +136,7 @@ export function yoursNow(cards: readonly FeedCard[], yours: ReadonlySet<string>,
   }
   return out
     .sort((a, b) => Number(b.now) - Number(a.now) || a.at - b.at)
-    .map(({ at: _at, ...r }) => r);
+    .map((r): YoursNow => ({ matchId: r.matchId, tournamentId: r.tournamentId, name: r.name, line: r.line, time: r.time, now: r.now }));
 }
 
 /* ================= the quiz card ================= */
