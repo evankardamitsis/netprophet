@@ -14,6 +14,10 @@ describe('rowTime: a day, never «χωρίς ώρα»', () => {
     expect(rowTime({ day: '2026-10-25' }, tt, now)).toBe('Κυρ 25/10');
   });
   it('neither: nothing', () => expect(rowTime({}, tt, now)).toBe(''));
+  it('the import\'s 00:00 (a sheet row with no time) is its day, not «00:00»', () => {
+    expect(rowTime({ startsAt: '2026-10-21T21:00:00Z' }, tt, now)).toBe('Σήμερα'); // 22/10 00:00 Athens
+    expect(rowTime({ startsAt: '2026-10-24T21:00:00Z' }, tt, now)).toBe('Κυρ 25/10');
+  });
 });
 
 const t = getCopy('el');

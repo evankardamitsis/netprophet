@@ -2,7 +2,7 @@ import { dayKey } from '@netprophet/core';
 import { accusativeWord, nameGender, type Copy } from '@netprophet/copy';
 import type { FeedPlayer, GetTournamentResult, TournamentMatch } from '@netprophet/db';
 import { fmt } from './votes';
-import { dayLabel, daysBetween, dayShort, timeOf } from './tournaments';
+import { dayLabel, daysBetween, dayShort, hasTime, timeOf } from './tournaments';
 
 /**
  * The tournament page made smart (founder, 21 Oct: "smart and not cluttering"): it opens on today, says what plays
@@ -43,7 +43,8 @@ export function pairLine(m: TournamentMatch, t: Copy): string {
   return fmt(t.tournaments.focus.pair, { a: surnames(sideOf(m, 1)), b: surnamesAcc(sideOf(m, 2)) });
 }
 
-const startMs = (m: TournamentMatch) => (m.starts_at ? Date.parse(m.starts_at) : NaN);
+/** NaN without a real time (none, or the import's 00:00 for a row with no time) */
+const startMs = (m: TournamentMatch) => (hasTime(m.starts_at) ? Date.parse(m.starts_at!) : NaN);
 const resolved = (m: TournamentMatch) => m.winner_side !== null;
 
 /* ================= «Τώρα / Μετά», by court ================= */
@@ -136,9 +137,9 @@ export function yoursToday(matches: TournamentMatch[], yours: Set<string>, t: Co
         matchId: m.match_id,
         playerId: p.id,
         name: shortName(p),
-        time: m.postponed === true ? t.tournaments.detail.postponedTime : m.starts_at ? timeOf(m.starts_at) : dayLabel(today, today, t),
+        time: m.postponed === true ? t.tournaments.detail.postponedTime : hasTime(m.starts_at) ? timeOf(m.starts_at!) : dayLabel(m.starts_at ? dayKey(m.starts_at) : today, today, t),
         against: fmt(t.tournaments.focus.against, { name: surnamesAcc(other) || t.tournaments.detail.tbd }),
-        at: m.postponed === true || !m.starts_at ? Infinity : startMs(m),
+        at: m.postponed === true || Number.isNaN(startMs(m)) ? Infinity : startMs(m),
       });
       break;
     }

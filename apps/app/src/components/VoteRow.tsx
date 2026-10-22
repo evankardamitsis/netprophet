@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { useCopy } from '../i18n';
 import type { CardMatch, CardPct, CardSide } from '../lib/feed';
 import { sideLabel, rowTime } from '../lib/home';
+import { hasTime } from '../lib/tournaments';
 import { runJpop, usePopIn, usePress, useStgIn } from '../lib/motion';
 import { HOLD_MS, holdFor, pointOf, type HoldPerson } from '../lib/playerHold';
 import { initialLock, lockOf, lockProgress, locksVersion, pickedSide, subscribeLocks, tapVote, undoVote, type LockState } from '../lib/voteLock';
@@ -92,7 +93,7 @@ export const VoteRow = memo(function VoteRow({ match, onVote, onLongPress, where
         <View style={styles.row}>
           <View style={styles.time}>
             <Text style={[styles.timeText, styles.center]}>{rowTime(match, t)}</Text>
-            {match.later && match.startsAt ? <Text style={styles.small}>{t.match.tomorrow}</Text> : null}
+            {match.later && hasTime(match.startsAt) ? <Text style={styles.small}>{t.match.tomorrow}</Text> : null}
           </View>
           <View style={styles.body}>
             {small ? (

@@ -190,6 +190,16 @@ export function dayShort(iso: string, t: Copy): string {
 }
 
 /**
+ * Whether a start carries a real time. The sheet import stores a row with no time at 00:00 Athens on its day
+ * (core.ingest: `date + coalesce(time, '00:00')`), so midnight means «the day is known, the time is not».
+ */
+export function hasTime(iso: string | null | undefined): boolean {
+  if (!iso) return false;
+  const p = localParts(iso);
+  return p.hour !== 0 || p.minute !== 0;
+}
+
+/**
  * A match with no start time shows its day in the time's place (founder, 22 Oct: never «χωρίς ώρα»): «Σήμερα»,
  * «Αύριο», else «Πεμ 23/10». `day` and `today` are Athens day keys.
  */

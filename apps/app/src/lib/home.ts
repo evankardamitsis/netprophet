@@ -4,7 +4,8 @@ import { accusativeWord, nameGender } from '@netprophet/copy';
 import { splitToday, type CardMatch, type CardPerson, type CardResult, type FeedCard } from './feed';
 import { summaryCounts } from './resultsSummary';
 import { NOW_WINDOW_MS } from './tournamentToday';
-import { dayLabel, timeOf, todayKey } from './tournaments';
+import { dayKey } from '@netprophet/core';
+import { dayLabel, hasTime, timeOf, todayKey } from './tournaments';
 import { fmt } from './votes';
 
 /**
@@ -89,8 +90,10 @@ export function sideLabel(people: readonly CardPerson[]): string {
  * ώρα»), and nothing when the day is not known either (get_feed sends no date for a match without a time).
  */
 export function rowTime(m: Pick<CardMatch, 'startsAt' | 'day'>, t: Copy, now: Date = new Date()): string {
-  if (m.startsAt) return timeOf(m.startsAt);
-  return m.day ? dayLabel(m.day, todayKey(now), t) : '';
+  if (hasTime(m.startsAt)) return timeOf(m.startsAt!);
+  // the import's 00:00 for a row with no time: its day is the start's day
+  const day = m.day ?? (m.startsAt ? dayKey(m.startsAt) : undefined);
+  return day ? dayLabel(day, todayKey(now), t) : '';
 }
 
 /* ================= «Οι δικοί σου» ================= */
@@ -125,7 +128,7 @@ export function yoursNow(cards: readonly FeedCard[], yours: ReadonlySet<string>,
     if (k < 0) continue;
     const mine = sides[k]!;
     const other = sides[1 - k]!;
-    const at = c.startsAt ? Date.parse(c.startsAt) : NaN;
+    const at = hasTime(c.startsAt) ? Date.parse(c.startsAt!) : NaN;
     const playing = Number.isFinite(at) && at <= nowMs && nowMs - at < NOW_WINDOW_MS;
     const against = fmt(t.tournaments.focus.against, { name: accSide(other.people) });
     out.push({
@@ -202,7 +205,7 @@ export function homeTournaments(items: readonly TournamentItem[], cards: readonl
     .sort((x, y) => order.indexOf(x.tag) - order.indexOf(y.tag) || y.i.today - x.i.today)
     .map(({ i, tag }): HomeTournament => {
       const mine = cards.filter((m): m is CardMatch => m.kind === 'match' && m.tournamentId === i.id && !m.later);
-      const at = (m: CardMatch) => (m.startsAt ? Date.parse(m.startsAt) : NaN);
+      const at = (m: CardMatch) => (hasTime(m.startsAt) ? Date.parse(m.startsAt!) : NaN);
       const playing = mine
         .filter((m) => Number.isFinite(at(m)) && at(m) <= nowMs && nowMs - at(m) < NOW_WINDOW_MS)
         .sort((a, b) => at(b) - at(a))[0];
