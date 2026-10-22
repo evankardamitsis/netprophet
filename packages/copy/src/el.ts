@@ -80,12 +80,6 @@ export const el = {
   match: {
     /** said with the category when the players alone don't say it (founder, 18 Oct: no «Διπλό»/«Μονό», it is obvious) */
     categoryWho: { WS: 'Γυναικών', WD: 'Γυναικών', XD: 'Μικτό', mixed: 'Μικτό' } as Record<string, string>,
-    /** a match that started: no more votes (founder, 17 Oct) */
-    closed: 'Οι ψήφοι έκλεισαν',
-    /** the question, said once under Σήμερα's title while a card takes a vote (founder, 19 Oct) */
-    who: 'Ποιος κερδίζει;',
-    /** under an hour before it starts, next to the question */
-    soon: { one: 'Ξεκινά σε 1 λεπτό', many: 'Ξεκινά σε {n} λεπτά' },
     today: 'Σήμερα',
     tomorrow: 'Αύριο',
     levelArea: 'level {level} · {area}',
@@ -236,41 +230,10 @@ export const el = {
     },
   },
   feed: {
-    title: 'Τι παίζει σήμερα;',
-    /** from 23:00 the feed already shows tomorrow */
-    titleTomorrow: 'Τι παίζει αύριο;',
-    subtitle: 'Ψήφισε τους νικητές και μάζεψε πόντους.',
-    /** the line under the title while today's matches wait for your vote (founder, 18 Oct) */
-    open: { one: 'Ένα ματς περιμένει την ψήφο σου.', many: '{n} ματς περιμένουν την ψήφο σου.' },
-    allVoted: 'Ψήφισες σε όλα. Τώρα περιμένουμε τα αποτελέσματα.',
-    /** beside «Ποιος κερδίζει;» under the title, said once for every card (founder, 19 Oct) */
-    hint: 'Πάτα τον νικητή',
-    /** nothing left today, but later days wait under «Αύριο και μετά» */
-    openLater: { one: 'Ένα ματς για αύριο και μετά περιμένει την ψήφο σου.', many: '{n} ματς για αύριο και μετά περιμένουν την ψήφο σου.' },
-    /** «Το ματς σου» at the top of Σήμερα when you play today or tomorrow */
-    myMatch: 'Το ματς σου',
-    /** the fold for matches on later days: «Αύριο και μετά · 4» */
-    later: 'Αύριο και μετά · {count}',
-    end: 'Όσο κατεβαίνεις, βλέπεις ματς από παίκτες που ίσως δεν ξέρεις.',
-    empty: 'Κανένα ματς αυτή τη μέρα ακόμα.',
     error: 'Δεν φόρτωσε. Τράβα προς τα κάτω για ξανά.',
     voteFailed: 'Η ψήφος δεν πέρασε. Ξαναδοκίμασε.',
     votingClosed: 'Η ψηφοφορία έκλεισε.',
     sponsoredMore: 'Δες περισσότερα ›',
-    /** the folded row at the top: the game of the day and matches to confirm, opened with a tap (founder, 13 Oct) */
-    daily: {
-      title: 'Για σένα',
-      confirmOne: 'Ένα ματς να επιβεβαιώσεις',
-      confirmMany: '{count} ματς να επιβεβαιώσεις',
-      /** the closed row's action: the game of the day waits */
-      play: 'Παίξε',
-      /** the closed row's action: only matches to confirm */
-      see: 'Δες',
-      open: 'Άνοιξε',
-      close: 'Κλείσε',
-      /** the once-a-day full screen «Για σένα»: its close button */
-      later: 'Αργότερα',
-    },
   },
   /**
    * The home, Τουρνουά (mockup D, founder 22 Oct): results, your people, the quiz, today's votes, Pro, today's
@@ -1627,8 +1590,11 @@ export const el = {
       unfollowedToast: 'Δεν ακολουθείς πια',
       followFailed: 'Δεν έγινε. Δοκίμασε ξανά.',
       followTooMany: 'Ακολουθείς ήδη 100 τουρνουά. Άφησε κάποιο πρώτα.',
+      today: 'Σήμερα',
       schedule: 'Πρόγραμμα',
       bracket: 'Ταμπλό',
+      /** a row of Σήμερα that no longer takes a vote and has no result yet */
+      todayClosed: 'Έκλεισε',
       postponed: 'Αναβλήθηκε',
       postponedTime: 'Αναβολή',
       movedFrom: 'από {when}',

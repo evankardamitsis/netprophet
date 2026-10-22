@@ -1,17 +1,21 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Platform, Pressable, RefreshControl, ScrollView, type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { MyMatchRow } from '../../../src/components/HomeCards';
+import { VoteRow } from '../../../src/components/VoteRow';
 import { YoursDot } from '../../../src/components/YoursDot';
 import { useFollowedIds } from '../../../src/lib/myPeople';
 import { HoldName, HoldSegs, useHoldHint } from '../../../src/lib/playerHold';
-import { nowNext, openingDay, yoursSet, yoursToday, type CourtNowNext, type YoursRow } from '../../../src/lib/tournamentToday';
+import { mineToday, nowNext, openingDay, todayGroups, yoursSet, yoursToday, type CourtNowNext, type YoursRow } from '../../../src/lib/tournamentToday';
+import type { CardMatch } from '../../../src/lib/feed';
+import { useTabScrollTop } from '../../../src/lib/scrollTop';
 import { router, useLocalSearchParams } from 'expo-router';
 import type { GetTournamentResult } from '@netprophet/db';
 import { ScheduleCard } from '../../../src/components/ScheduleCard';
 import { Logo } from '../../../src/components/Logo';
 import { Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
-import { useApi, useTournament } from '../../../src/lib/data';
+import { useApi, useFeed, useTournament, type VoteErrorKind } from '../../../src/lib/data';
 import { ProLine } from '../../../src/components/ProEntries';
 import { followToast, toggleFollow } from '../../../src/lib/follow';
 import { BracketTree } from '../../../src/components/BracketTree';
@@ -37,8 +41,9 @@ import {
 import { colors, fonts, motion, text } from '../../../src/theme';
 
 /**
- * One tournament (prototype V2, «Τα τουρνουά σου» opened): «Πρόγραμμα» (the matches of a day, by time, mine marked)
- * and «Ταμπλό» (the organiser's draws, round by round). Names in the draws are the sheet's own text; a name matched to
+ * One tournament (prototype V2, «Τα τουρνουά σου» opened; mockup D): «Σήμερα» (when it plays today: your match, your
+ * people, what plays now and next, and the day's matches to vote on), «Πρόγραμμα» (the matches of a day, by time, mine
+ * marked) and «Ταμπλό» (the organiser's draws, round by round). Names in the draws are the sheet's own text; a name matched to
  * a roster player opens their profile.
  */
 const STG_MS = 600;
@@ -56,6 +61,17 @@ export default function TournamentScreen() {
   const [toast, setToast] = useState<{ text: string; n: number } | null>(null);
   const say = (text: string) => setToast((p) => ({ text, n: (p?.n ?? 0) + 1 }));
   const scroller = useRef<ScrollView>(null);
+  // a tap on the tab you are on (or two) scrolls back to the top
+  useTabScrollTop(scroller);
+  // Σήμερα reads the feed for your votes: a pull reads it again too
+  const todayRefresh = useRef<(() => void) | null>(null);
+  const bindRefresh = useCallback((fn: (() => void) | null) => {
+    todayRefresh.current = fn;
+  }, []);
+  const onPull = useCallback(() => {
+    void refresh();
+    todayRefresh.current?.();
+  }, [refresh]);
   const hint = useHoldHint(data !== null && (data.days.length > 0 || data.draws.length > 0));
 
   return (
@@ -64,13 +80,13 @@ export default function TournamentScreen() {
         ref={scroller}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={loading && data !== null} onRefresh={refresh} tintColor={colors.ink} />}
+        refreshControl={<RefreshControl refreshing={loading && data !== null} onRefresh={onPull} tintColor={colors.ink} />}
       >
         <Pressable accessibilityRole="button" onPress={goBack} onPressIn={back.onPressIn} onPressOut={back.onPressOut} style={styles.backHit}>
           <Animated.Text style={[styles.back, back.style]}>{c.detail.back}</Animated.Text>
         </Pressable>
         {data ? (
-          <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} onToast={say} scrollTo={(y) => scroller.current?.scrollTo({ y, animated: true })} />
+          <Body key={data.id} d={data} today={today} openDraw={draw} openDay={day} onToast={say} bindRefresh={bindRefresh} scrollTo={(y) => scroller.current?.scrollTo({ y, animated: true })} />
         ) : null}
         {!data && notFound ? <Text style={styles.empty}>{c.detail.notFound}</Text> : null}
         {!data && !loading && error && !notFound ? <Text style={styles.empty}>{c.detail.error}</Text> : null}
@@ -114,6 +130,7 @@ function Body({
   openDraw,
   openDay,
   onToast,
+  bindRefresh,
   scrollTo,
 }: {
   d: GetTournamentResult;
@@ -121,10 +138,11 @@ function Body({
   openDraw?: string;
   openDay?: string;
   onToast: (text: string) => void;
+  bindRefresh: (fn: (() => void) | null) => void;
   scrollTo: (y: number) => void;
 }) {
   const t = useCopy();
-  const segments = segmentsOf(d);
+  const segments = segmentsOf(d, today);
   const askedDay = openDay && d.days.some((x) => x.date === openDay) ? openDay : null;
   const [picked, setPicked] = useState<Segment | null>(openDraw && d.draws.some((x) => x.tab === openDraw) ? 'bracket' : askedDay ? 'schedule' : null);
   const seg = picked && segments.includes(picked) ? picked : defaultSegment(d, today);
@@ -134,7 +152,7 @@ function Body({
   const follows = useFollowedIds();
   const [following, setFollowing] = useState(d.followed === true);
   const yours = useMemo(() => yoursSet(d.me, follows), [d.me, follows]);
-  const todays = useMemo(() => yoursToday(d.days.find((x) => x.date === today)?.matches ?? [], yours, t), [d.days, today, yours, t]);
+  const todayMatches = useMemo(() => d.days.find((x) => x.date === today)?.matches ?? [], [d.days, today]);
   const [focus, setFocus] = useState<Focus | null>(null);
   const goTo = (matchId: string, onDay: string) => {
     setPicked('schedule');
@@ -157,32 +175,28 @@ function Body({
       ) : null}
       {/* followed (just now, or already): alerts are Pro. One quiet line, resting a day once tapped, never for Pro */}
       {following ? <ProLine moment="follow" label={t.pro.entries.follow} /> : null}
-      {todays.length > 0 ? (
-        <Reveal i={2}>
-          <YoursToday
-            tournamentId={d.id}
-            rows={todays}
-            onPick={(matchId) => {
-              const r = todays.find((x) => x.matchId === matchId);
-              // their match opens their run from it, not the day's schedule
-              if (r) router.push({ pathname: '/tournament-player', params: { tournament: d.id, player: r.playerId, match: matchId } });
-              else goTo(matchId, today);
-            }}
-          />
-        </Reveal>
-      ) : null}
       {segments.length > 1 ? (
         <Reveal i={2}>
           <View style={styles.seg}>
             {segments.map((s) => (
               <Pressable key={s} accessibilityRole="tab" accessibilityState={{ selected: seg === s }} onPress={() => setPicked(s)} style={[styles.segBtn, seg === s && styles.segOn]}>
-                <Text style={[styles.segText, seg === s && styles.segTextOn]}>{s === 'schedule' ? t.tournaments.detail.schedule : t.tournaments.detail.bracket}</Text>
+                <Text style={[styles.segText, seg === s && styles.segTextOn]}>{s === 'today' ? t.tournaments.detail.today : s === 'schedule' ? t.tournaments.detail.schedule : t.tournaments.detail.bracket}</Text>
               </Pressable>
             ))}
           </View>
         </Reveal>
       ) : null}
       {segments.length === 0 ? <Text style={styles.empty}>{t.tournaments.detail.noDraws}</Text> : null}
+      {segments.length > 0 && seg === 'today' ? (
+        <TodayTab
+          d={d}
+          matches={todayMatches}
+          yours={yours}
+          onToast={onToast}
+          bindRefresh={bindRefresh}
+          onFocus={(matchId) => goTo(matchId, today)}
+        />
+      ) : null}
       {segments.length > 0 && seg === 'schedule' ? (
         <Schedule
           d={d}
@@ -270,6 +284,80 @@ function YoursChip({ row, tournamentId, onPress }: { row: YoursRow; tournamentId
         </Text>
       </Animated.View>
     </Pressable>
+  );
+}
+
+/* ================= Σήμερα ================= */
+
+/**
+ * Σήμερα in a tournament (mockup D): «Ο αγώνας σου» when you play, «Οι δικοί σου σήμερα», «Τώρα / Μετά», then the day's
+ * matches as vote rows, by category and time. The vote is the home's: a tap on a name votes (useFeed), and what the
+ * feed knows of a match (your vote, the split) is laid over the tournament's own row.
+ */
+function TodayTab({
+  d,
+  matches,
+  yours,
+  onToast,
+  bindRefresh,
+  onFocus,
+}: {
+  d: GetTournamentResult;
+  matches: GetTournamentResult['days'][number]['matches'];
+  yours: Set<string>;
+  onToast: (text: string) => void;
+  bindRefresh: (fn: (() => void) | null) => void;
+  onFocus: (matchId: string) => void;
+}) {
+  const t = useCopy();
+  const onVoteError = useCallback((kind: VoteErrorKind) => onToast(t.feed[kind]), [onToast, t]);
+  const feed = useFeed(onVoteError);
+  const feedRefresh = feed.refresh;
+  useEffect(() => {
+    bindRefresh(() => void feedRefresh());
+    return () => bindRefresh(null);
+  }, [bindRefresh, feedRefresh]);
+  const now = useMinute(true);
+  const mine = useMemo(() => mineToday(matches, d.me, t), [matches, d.me, t]);
+  const chips = useMemo(() => yoursToday(matches, yours, t, mine?.matchId), [matches, yours, t, mine]);
+  const courts = nowNext(matches, now, t);
+  const fed = useMemo(() => new Map(feed.cards.flatMap((c): [string, CardMatch][] => (c.kind === 'match' ? [[c.id, c]] : []))), [feed.cards]);
+  const points = useMemo(() => new Map(feed.results.filter((r) => r.ok).map((r) => [r.matchId, r.points] as [string, number])), [feed.results]);
+  const groups = useMemo(() => todayGroups(matches, d.id, fed, points, now, t), [matches, d.id, fed, points, now, t]);
+  let n = 0;
+  return (
+    <View style={styles.block}>
+      {mine ? (
+        <Reveal i={n++}>
+          <View style={styles.mineBox}>
+            <MyMatchRow match={mine} onPress={() => router.push({ pathname: '/tournament-player', params: { tournament: d.id, player: mine.playerId, match: mine.matchId } })} />
+          </View>
+        </Reveal>
+      ) : null}
+      {chips.length > 0 ? (
+        <Reveal i={n++}>
+          <YoursToday
+            tournamentId={d.id}
+            rows={chips}
+            onPick={(matchId) => {
+              const r = chips.find((x) => x.matchId === matchId);
+              // their match opens their run from it, not the day's schedule
+              if (r) router.push({ pathname: '/tournament-player', params: { tournament: d.id, player: r.playerId, match: matchId } });
+              else onFocus(matchId);
+            }}
+          />
+        </Reveal>
+      ) : null}
+      {courts.length > 0 ? <NowNext courts={courts} tournamentId={d.id} onPick={onFocus} /> : null}
+      {groups.map((g) => (
+        <View key={g.key} style={styles.voteGroup}>
+          {g.key ? <Text style={styles.groupHead}>{g.key}</Text> : null}
+          {g.rows.map((r, i) => (
+            <VoteRow key={r.match.id} match={r.match} where={r.match.meta} onVote={feed.vote} result={r.result} note={r.note} index={i} />
+          ))}
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -634,6 +722,10 @@ const styles = StyleSheet.create({
   sideRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   sideName: { flexShrink: 1 },
   label: { ...text.label },
+  // Σήμερα: your match on sand, the day's votes by category
+  mineBox: { padding: 12, borderRadius: 18, backgroundColor: colors.sand },
+  voteGroup: { gap: 8 },
+  groupHead: { fontFamily: fonts.bodyBold, fontSize: 14, lineHeight: 19, color: colors.inkSoft, paddingHorizontal: 4 },
   // «Οι δικοί σου σήμερα»
   yours: { gap: 6, paddingVertical: 10, paddingLeft: 14, borderRadius: 18, backgroundColor: colors.sand },
   yoursChip: { minHeight: 40, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, borderRadius: 999, backgroundColor: colors.white, maxWidth: 300 },
