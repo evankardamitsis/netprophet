@@ -650,6 +650,8 @@ An ETL script `tools/migrate/v1-to-v2.ts` is idempotent, keeps v1 ids where poss
 - Bets and history are not shown in v2. A one-time "your v1 stats" email (correct picks, best run) is a nice goodbye.
 
 ### 8.3 Cutover runbook
+The runbook to follow is `docs/v2/cutover-runbook.md` (22 Oct 2026, from the dry run); the table below is the original plan.
+
 | When | Step |
 |---|---|
 | T-21 | Feature freeze on v1 (security fixes only). v2 beta stable for 2+ weeks on TestFlight/Play closed, crash-free rate at or above 99.5% |
