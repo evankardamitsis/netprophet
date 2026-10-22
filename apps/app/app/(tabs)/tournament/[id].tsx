@@ -348,7 +348,7 @@ function TodayTab({
           />
         </Reveal>
       ) : null}
-      {courts.length > 0 ? <NowNext courts={courts} onPick={onFocus} /> : null}
+      {courts.length > 0 ? <NowNext courts={courts} tournamentId={d.id} onPick={onFocus} /> : null}
       {groups.map((g) => (
         <View key={g.key} style={styles.voteGroup}>
           {g.key ? <Text style={styles.groupHead}>{g.key}</Text> : null}
