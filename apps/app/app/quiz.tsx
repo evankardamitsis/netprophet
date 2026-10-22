@@ -15,6 +15,7 @@ import { useCopy } from '../src/i18n';
 import { useQuests, useQuiz, type QuizErrorKind } from '../src/lib/data';
 import { usePopIn, usePress, useStgIn } from '../src/lib/motion';
 import { chipText, fraction, questTitle } from '../src/lib/quests';
+import { fitText } from '../src/lib/fitText';
 import { cardView, firstUnanswered, verdict } from '../src/lib/quiz';
 import { useUnlocks } from '../src/lib/unlocks';
 import { momentsAct } from '../src/lib/useMoments';
@@ -112,6 +113,9 @@ function Game({ quiz, index, onAnswer, onPrev, onNext }: { quiz: GetQuizResult; 
   const answered = v.mine !== null;
   const tall = v.options.length <= 2;
   const enter = useStgIn(400);
+  // the question steps down to fit its real width, never clipped (founder, TestFlight 17)
+  const [qW, setQW] = useState(0);
+  const qFit = fitText(v.question, qW > 0 ? qW : 330, 44, 28, 6);
   return (
     <Animated.View style={[styles.game, enter]}>
       <View style={styles.dots}>
@@ -125,7 +129,9 @@ function Game({ quiz, index, onAnswer, onPrev, onNext }: { quiz: GetQuizResult; 
         </View>
         {v.week ? <Text style={styles.week}>{t.quiz.thisWeek}</Text> : null}
       </View>
-      <Text style={styles.question}>{v.question}</Text>
+      <Text allowFontScaling={false} onLayout={(e) => setQW(e.nativeEvent.layout.width)} style={[styles.question, { fontSize: qFit.fontSize, lineHeight: qFit.lineHeight }]}>
+        {v.question}
+      </Text>
       {v.clues.length > 0 ? (
         <View style={styles.clues}>
           {v.clues.map((c, i) => (
@@ -262,7 +268,7 @@ const styles = StyleSheet.create({
   week: { fontFamily: fonts.bodySemi, fontSize: 13, color: colors.inkSoft },
   tag: { alignSelf: 'flex-start', paddingVertical: 5, paddingHorizontal: 11, borderRadius: 999, backgroundColor: colors.lime },
   tagText: { fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.48, color: colors.ink },
-  question: { fontFamily: fonts.displayHeavy, fontSize: 44, lineHeight: 44, paddingBottom: 9, marginBottom: -10, color: colors.ink },
+  question: { fontFamily: fonts.displayHeavy, paddingBottom: 6, color: colors.ink },
   clues: { paddingVertical: 16, paddingHorizontal: 18, borderRadius: 22, backgroundColor: colors.ink, gap: 6 },
   clue: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.paper },
   verdict: { minHeight: 20, fontFamily: fonts.bodySemi, fontSize: 14, lineHeight: 19, color: colors.ink, textAlign: 'center' },
