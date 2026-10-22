@@ -3,7 +3,7 @@ import { accusativeWord, greekCaps, nameGender, withArticleAccusative, type Copy
 import { RpcError, type FeedMatchCard, type FeedPostponedCard, type FeedPlayer, type FeedResultCard, type FeedSponsoredCard, type Side as DbSide, type VoteSplit } from '@netprophet/db';
 import type { MockMatch, MockPlayer } from '../mock/matches';
 import { placeLine } from './place';
-import { dayShort, dayTimeShort } from './tournaments';
+import { dayShort, dayTimeShort, hasTime } from './tournaments';
 import { playerAvatar, type AvatarLook } from './avatar';
 import { fmt, voteSplit, type Side } from './votes';
 import { PLAYER_LEVEL_SHOWN } from './levelShown';
@@ -36,7 +36,7 @@ export interface CardPct {
   pctB: number;
 }
 
-/** What VoteCard renders. Built from a server feed card or from mock data. */
+/** What a vote row (VoteRow) renders. Built from a server feed card or from mock data. */
 export interface CardMatch {
   kind: 'match';
   id: string;
@@ -69,6 +69,8 @@ export interface CardMatch {
   startsAt?: string;
   /** «40+», «Μ 50+ · Γυναικών», «Μικτό»: shown as its own tag, bigger than the meta line */
   category?: string;
+  /** its Athens day when known without a start time (sample data): shown in the time's place */
+  day?: string;
 }
 
 /** A match put off: compact, not votable, muted. */
@@ -203,11 +205,12 @@ export function when(startsAt: string | null, now: Date, t: Copy): { label: stri
   const tomorrow = dayKey(new Date(now.getTime() + 86_400_000).toISOString());
   const day = dayKey(startsAt);
   const p = localParts(startsAt);
-  const time = `${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}`;
-  if (day === today) return { label: `${t.match.today} ${time}`, learn: t.match.learnTonight };
-  if (day === tomorrow) return { label: `${t.match.tomorrow} ${time}`, learn: t.match.learnTomorrow };
+  // no time (the import's 00:00): the day alone
+  const time = hasTime(startsAt) ? ` ${String(p.hour).padStart(2, '0')}:${String(p.minute).padStart(2, '0')}` : '';
+  if (day === today) return { label: `${t.match.today}${time}`, learn: t.match.learnTonight };
+  if (day === tomorrow) return { label: `${t.match.tomorrow}${time}`, learn: t.match.learnTomorrow };
   const weekday = t.match.weekdays[new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay()];
-  return { label: `${weekday} ${time}`, learn: t.match.learnAfter };
+  return { label: `${weekday}${time}`, learn: t.match.learnAfter };
 }
 
 function side(players: FeedPlayer[], areas: Record<string, string>, t: Copy): CardSide {
@@ -592,6 +595,7 @@ export function fromMock(m: MockMatch, t: Copy, now = new Date()): CardMatch {
     startsAt: soonAt ? soonAt.toISOString() : undefined,
     category: m.category ? categoryCase(m.category) : undefined,
     tournamentId: m.tournamentId,
+    day: dayKey(new Date(now.getTime() + (m.day === 'today' ? 0 : 86_400_000)).toISOString()),
   };
 }
 

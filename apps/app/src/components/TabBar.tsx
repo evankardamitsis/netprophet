@@ -18,13 +18,25 @@ type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>
 /**
  * The bottom bar (founder, 14 Oct: "make it as good as possible"). Text tabs only (glyphs, no icons). Each tab is as wide
  * as its label plus an equal share of what is left, so the labels sit evenly whatever their length. The open tab is a
- * paper pill that slides from tab to tab with the spring; a light tick on every change. Εγώ opens from the header.
+ * paper pill that slides from tab to tab with the spring; a light tick on every change. Εγώ is a tab again (mockup D,
+ * 22 Oct) and still opens from the header avatar too.
  * Until the Ladder unlocks it is left out (the route stays). A lime dot on «Αποτελέσματα» while a result newer than your
  * last visit is waiting (lime: something happened); opening the tab clears it.
  */
-const IN_BAR = ['index', 'results', 'tournaments', 'ladder'];
-/** screens opened from a tab keep that tab lit: a held name's run, its path and its draw belong to Τουρνουά */
-const LIT_BY: Record<string, string> = { 'tournament-player': 'tournaments', 'tournament-path': 'tournaments', 'tournament-draw': 'tournaments' };
+const IN_BAR = ['index', 'results', 'ladder', 'me'];
+/**
+ * screens opened from a tab keep that tab lit: every tournament screen (the list, one tournament, a held name's run,
+ * its path and its draw) and player search belong to Τουρνουά, the home (mockup D, 22 Oct); badges to Εγώ
+ */
+const LIT_BY: Record<string, string> = {
+  tournaments: 'index',
+  'tournament/[id]': 'index',
+  'tournament-player': 'index',
+  'tournament-path': 'index',
+  'tournament-draw': 'index',
+  players: 'index',
+  badges: 'me',
+};
 const COLOR_MS = 250;
 /**
  * The pill slides on the prototype's --spring curve. Pill and label colour are Reanimated CSS transitions on plain

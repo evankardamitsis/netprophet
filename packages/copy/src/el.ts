@@ -272,6 +272,80 @@ export const el = {
       later: 'Αργότερα',
     },
   },
+  /**
+   * The home, Τουρνουά (mockup D, founder 22 Oct): results, your people, the quiz, today's votes, Pro, today's
+   * tournaments. Drafts for the founder.
+   */
+  home: {
+    results: {
+      title: 'Αποτελέσματα',
+      /** the single blue action while results wait */
+      take: 'Πάρε τους ›',
+      /** «+30», the points the results bring (lime) */
+      points: '+{n}',
+    },
+    yours: {
+      title: 'Οι δικοί σου',
+      myMatch: 'Ο αγώνας σου',
+      /** «με Ρήγα · Open Γλυφάδας» */
+      line: '{against} · {tournament}',
+      now: 'Τώρα',
+    },
+    quiz: {
+      title: 'Quiz της ημέρας',
+      /** «6 ερωτήσεις · και οι 6 δίνουν +30»: the +30 comes with the sixth answer, right or not */
+      line: '{n} ερωτήσεις · και οι 6 δίνουν +30',
+      /** part way: «2 από 6 · και οι 6 δίνουν +30» */
+      progress: '{n} από {total} · και οι 6 δίνουν +30',
+      /** played: «6 από 6» and, lime, «+30» */
+      played: '{n} από {total}',
+      earned: '+30',
+      doneLine: 'Οι επόμενες αύριο στις 9:00',
+    },
+    vote: {
+      title: 'Ψήφισε σήμερα',
+      /** nothing left to vote today: tomorrow's first three */
+      tomorrow: 'Τα επόμενα ματς αύριο',
+      more: 'Περισσότερα ›',
+      less: 'Λιγότερα ↑',
+      undo: 'Αναίρεση',
+      /** for screen readers, on each name */
+      a11yVote: 'Ψήφος: {name}',
+      /** after the result: «Το είχες ✓» */
+      called: 'Το είχες ✓',
+      empty: 'Κανένα ματς για ψήφο ακόμα.',
+    },
+    pro: {
+      tag: 'PRO',
+      trial: '7 μέρες δωρεάν',
+      /** your match is near (ProNudge before_match) */
+      opponentToday: 'Ο αντίπαλός σου στις {time}',
+      opponentTomorrow: 'Ο αντίπαλός σου αύριο στις {time}',
+      /** the match has a day but no time yet */
+      opponentTodayNoTime: 'Ο αντίπαλός σου σήμερα',
+      opponentTomorrowNoTime: 'Ο αντίπαλός σου αύριο',
+      opponentLine: 'Πώς έπαιξε φέτος, ποιους κέρδισε, σε ποια επιφάνεια.',
+      opponentBuy: 'Δες τον με Pro ›',
+      opponentOpen: 'Δες τον αντίπαλο ›',
+      /** no match near: your own stats */
+      statsTitle: 'Τα στατιστικά σου',
+      statsLine: 'Νίκες, σετ, επιφάνειες και οι αντίπαλοι που βρίσκεις πιο συχνά.',
+      statsBuy: 'Δες τα με Pro ›',
+      statsOpen: 'Δες τα ›',
+    },
+    tournaments: {
+      title: 'Τουρνουά σήμερα',
+      playing: 'Παίζεις',
+      following: 'Ακολουθείς',
+      near: 'Κοντά σου',
+      /** the live line: «Παππάς με Λιάκο» after the «Τώρα» tag */
+      first: 'Πρώτο ματς {time}',
+      next: 'Επόμενο ματς {time}',
+      all: 'Όλα τα τουρνουά ›',
+      search: 'Ψάξε παίκτη ›',
+      none: 'Κανένα τουρνουά σήμερα.',
+    },
+  },
   result: {
     wrong: 'Όχι αυτή τη φορά',
     /** «κέρδισε τον Νίκο Ροδίτη»: {loser} carries the article, see withArticleAccusative */
@@ -1408,8 +1482,6 @@ export const el = {
       next: 'Μετά',
       /** «Ροδίτης με Δεσύπρη»: who plays who, surnames only */
       pair: '{a} με {b}',
-      /** a match with no time in the order of play */
-      noTime: 'χωρίς ώρα ακόμα',
       /** a match with no time that follows another on the same court */
       after: 'μετά το {match}',
       /** the row at the top when your people play today */

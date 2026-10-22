@@ -2,7 +2,7 @@ import { dayKey } from '@netprophet/core';
 import { accusativeWord, nameGender, type Copy } from '@netprophet/copy';
 import type { FeedPlayer, GetTournamentResult, TournamentMatch } from '@netprophet/db';
 import { fmt } from './votes';
-import { daysBetween, dayShort, timeOf } from './tournaments';
+import { dayLabel, daysBetween, dayShort, hasTime, timeOf } from './tournaments';
 
 /**
  * The tournament page made smart (founder, 21 Oct: "smart and not cluttering"): it opens on today, says what plays
@@ -43,7 +43,8 @@ export function pairLine(m: TournamentMatch, t: Copy): string {
   return fmt(t.tournaments.focus.pair, { a: surnames(sideOf(m, 1)), b: surnamesAcc(sideOf(m, 2)) });
 }
 
-const startMs = (m: TournamentMatch) => (m.starts_at ? Date.parse(m.starts_at) : NaN);
+/** NaN without a real time (none, or the import's 00:00 for a row with no time) */
+const startMs = (m: TournamentMatch) => (hasTime(m.starts_at) ? Date.parse(m.starts_at!) : NaN);
 const resolved = (m: TournamentMatch) => m.winner_side !== null;
 
 /* ================= «Τώρα / Μετά», by court ================= */
@@ -53,7 +54,7 @@ export interface CourtNowNext {
   /** «Γήπεδο 1»; null when the schedule names no court (then there is one row for the day) */
   court: string | null;
   now: { matchId: string; pair: string } | null;
-  /** `time` is «18:30», «χωρίς ώρα ακόμα», or «μετά το …» */
+  /** `time` is «18:30», «μετά το …», or the day («Σήμερα») when the match has no time */
   next: { matchId: string; pair: string; time: string } | null;
 }
 
@@ -63,7 +64,7 @@ type Ordered = TournamentMatch & { order?: number | null };
 /**
  * Per court: what is playing now (started within the last 90 minutes, no result, not put off; the latest when two
  * overlap) and what is next (the earliest still to start). A match with no time reads «μετά το {previous}» when the
- * court has an order, else «χωρίς ώρα ακόμα». Courts with neither are left out; natural order of the court names.
+ * court has an order, else its day («Σήμερα»; these are today's matches). Courts with neither are left out; natural order of the court names.
  */
 export function nowNext(matches: Ordered[], now: Date, t: Copy): CourtNowNext[] {
   const f = t.tournaments.focus;
@@ -94,7 +95,7 @@ export function nowNext(matches: Ordered[], now: Date, t: Copy): CourtNowNext[] 
               .filter((x) => x !== untimed && x.order != null && x.order < untimed.order! && `${(x.club ?? '').trim()}|${(x.court ?? '').trim()}` === key)
               .sort((a, b) => b.order! - a.order!)[0]
           : undefined;
-        next = { matchId: untimed.match_id, pair: pairLine(untimed, t), time: before ? fmt(f.after, { match: pairLine(before, t) }) : f.noTime };
+        next = { matchId: untimed.match_id, pair: pairLine(untimed, t), time: before ? fmt(f.after, { match: pairLine(before, t) }) : dayLabel(dayKey(now.toISOString()), dayKey(now.toISOString()), t) };
       }
     }
     if (current || next) out.push({ key, court, now: current ? { matchId: current.match_id, pair: pairLine(current, t) } : null, next });
@@ -124,6 +125,8 @@ export interface YoursRow {
 
 /** one row per match of the day where one of yours plays (the first of them on it), by time */
 export function yoursToday(matches: TournamentMatch[], yours: Set<string>, t: Copy): YoursRow[] {
+  // these are today's matches: one with no time says «Σήμερα» (never «χωρίς ώρα»)
+  const today = dayKey(new Date().toISOString());
   const out: (YoursRow & { at: number })[] = [];
   for (const m of matches) {
     for (const n of [1, 2] as const) {
@@ -134,9 +137,9 @@ export function yoursToday(matches: TournamentMatch[], yours: Set<string>, t: Co
         matchId: m.match_id,
         playerId: p.id,
         name: shortName(p),
-        time: m.postponed === true ? t.tournaments.detail.postponedTime : m.starts_at ? timeOf(m.starts_at) : t.tournaments.focus.noTime,
+        time: m.postponed === true ? t.tournaments.detail.postponedTime : hasTime(m.starts_at) ? timeOf(m.starts_at!) : dayLabel(m.starts_at ? dayKey(m.starts_at) : today, today, t),
         against: fmt(t.tournaments.focus.against, { name: surnamesAcc(other) || t.tournaments.detail.tbd }),
-        at: m.postponed === true || !m.starts_at ? Infinity : startMs(m),
+        at: m.postponed === true || Number.isNaN(startMs(m)) ? Infinity : startMs(m),
       });
       break;
     }
@@ -170,12 +173,12 @@ export interface NextMatch {
   now: boolean;
 }
 
-/** «Σήμερα 18:30», «Αύριο 10:00», «Σαβ 24/10 10:00» */
+/** «Σήμερα 18:30», «Αύριο 10:00», «Σαβ 24/10 10:00»; the day alone when the start has no time */
 export function whenLine(iso: string, today: string, t: Copy): string {
   const day = dayKey(iso);
   const n = daysBetween(today, day);
   const label = n === 0 ? t.match.today : n === 1 ? t.match.tomorrow : dayShort(iso, t);
-  return fmt(t.tournaments.focus.when, { day: label, time: timeOf(iso) });
+  return hasTime(iso) ? fmt(t.tournaments.focus.when, { day: label, time: timeOf(iso) }) : label;
 }
 
 /** where the sheet was opened: a schedule match (Πρόγραμμα, Σήμερα) or a draw slot (Ταμπλό); null: no match */

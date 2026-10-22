@@ -272,3 +272,22 @@ describe('the Τουρνουά order (founder, 19 Oct: your own first, Pro never
     expect(shape(blocksOf({ sections: [], program: false, next: false }))).toEqual(['pro']);
   });
 });
+
+describe('a start with no time (the import stores 00:00 Athens)', async () => {
+  const { dayTimeShort, hasTime } = await import('./tournaments');
+  const { whenLine } = await import('./tournamentToday');
+  const { when } = await import('./feed');
+  const tt = getCopy('el');
+  const midnight = '2026-10-24T21:00:00Z'; // Κυρ 25/10 00:00 Athens
+  it('hasTime', () => {
+    expect(hasTime(midnight)).toBe(false);
+    expect(hasTime('2026-10-25T07:30:00Z')).toBe(true);
+    expect(hasTime(null)).toBe(false);
+  });
+  it('the day alone, never «00:00»', () => {
+    expect(dayTimeShort(midnight, tt)).toBe('Κυρ 25/10');
+    expect(whenLine(midnight, '2026-10-22', tt)).toBe('Κυρ 25/10');
+    expect(whenLine('2026-10-21T21:00:00Z', '2026-10-22', tt)).toBe('Σήμερα');
+    expect(when('2026-10-21T21:00:00Z', new Date('2026-10-22T09:00:00Z'), tt).label).toBe('Σήμερα');
+  });
+});

@@ -4,6 +4,7 @@ import { colors } from '../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import type { CardMatch, CardSide } from './feed';
 import type { PathContext } from './tournamentToday';
 
 /**
@@ -26,6 +27,21 @@ export function openPlayerPath(tournamentId: string, playerId: string, ctx: Path
   const at = !ctx ? {} : 'match' in ctx ? { match: ctx.match } : { slot: `${ctx.round}|${ctx.slot}|${ctx.tab}` };
   const from = point ? { x: String(Math.round(point.x)), y: String(Math.round(point.y)) } : {};
   setTimeout(() => router.push({ pathname: '/tournament-player', params: { tournament: tournamentId, player: playerId, ...at, ...from } }), HOLD_SHOW_MS);
+}
+
+/**
+ * Hold a name for the player's run in the card's tournament (founder, 21 Oct), in the context of this match. In
+ * doubles each name is its own hold (the pair's run, titled with the name held); a name without a roster id falls
+ * back to their partner's. Undefined: nothing to open. Used by VoteRow.
+ */
+export type HoldPerson = (i: number, at?: HoldPoint) => void;
+export function holdFor(match: Pick<CardMatch, 'id' | 'tournamentId'>, data: CardSide): HoldPerson | undefined {
+  const tournamentId = match.tournamentId;
+  if (!tournamentId || !data.people.some((x) => x.id)) return undefined;
+  return (i, at) => {
+    const p = data.people[i]?.id ? data.people[i]! : data.people.find((x) => x.id)!;
+    openPlayerPath(tournamentId, p.id!, { match: match.id }, at);
+  };
 }
 
 /** the point of a touch, when the event has one */
