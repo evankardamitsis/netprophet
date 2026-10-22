@@ -5,6 +5,7 @@ import { BallerNote } from '../../src/components/BallerNote';
 import { Celebration } from '../../src/components/Celebration';
 import { QUEST_BAR_MS } from '../../src/components/QuestBar';
 import { ConfirmRow } from '../../src/components/ConfirmCard';
+import { ProLine } from '../../src/components/ProEntries';
 import { ResultsDeck } from '../../src/components/ResultsDeck';
 import { SponsoredCard } from '../../src/components/SponsoredCard';
 import { TOAST_MS, Toast } from '../../src/components/Toast';
@@ -25,8 +26,9 @@ import {
   YoursRow,
 } from '../../src/components/HomeCards';
 import { useCopy } from '../../src/i18n';
+import { openProEntry } from '../../src/lib/proEntry';
 import { useBaller, useBadges, useConfirmations, useFeed, useQuests, useMyMatch, usePro, useQuiz, useTournaments, type VoteErrorKind, type SafetyTarget } from '../../src/lib/data';
-import { openToVote, type CardResult } from '../../src/lib/feed';
+import type { CardResult } from '../../src/lib/feed';
 import { homeTournaments, quizCard, resultsLine, todayHeading, topVotes, tournamentRanks, VOTE_TOP, voteList, voteRows, yoursNow } from '../../src/lib/home';
 import { useFollowedIds } from '../../src/lib/myPeople';
 import { yoursSet } from '../../src/lib/tournamentToday';
@@ -127,7 +129,6 @@ export default function HomeScreen() {
   // after a vote: a toast for a quest that finished, else the slim bar for a quest that moved, else for a badge one
   // vote short of its next tier (never more than one), in the queue
   // votes cast since the feed loaded: the line under the title counts down at once (the cards keep their loaded vote)
-  const [votedNow, setVotedNow] = useState<ReadonlySet<string>>(() => new Set());
   // votes in a row make one burst: a second after the last one, one read of quests, badges and get_me, one note,
   // and the celebration queue only if that read shows a vote could have queued one (postVote.ts)
   const afterVotes = useRef<ReturnType<typeof voteBurst<GameSnapshot>> | null>(null);
@@ -157,7 +158,6 @@ export default function HomeScreen() {
       const me = currentMe();
       const before: GameSnapshot = { quests: questsNow.current, badges: badgesNow.current, unlocks: me?.unlocks ?? null, points: me?.game.total_points ?? null };
       const pct = await vote(matchId, side);
-      setVotedNow((v) => new Set(v).add(matchId));
       afterVotes.current?.add(() => before);
       // the first vote of the visit opens the door for one moment; after a calm beat Baller or «Για σένα» may come.
       // The burst above decides whether the celebration queue is read again.
@@ -301,7 +301,6 @@ export default function HomeScreen() {
     await refresh();
   }, [quizRead, refreshTournaments, refreshMyMatch, refresh]);
   const empty = !loading && cards.length === 0;
-  const voteCount = openToVote(cards, votedNow);
   const scroller = useRef<ScrollView>(null);
   // a tap on Τουρνουά while on it (or two) scrolls back to the top
   useTabScrollTop(scroller);
@@ -371,9 +370,6 @@ export default function HomeScreen() {
   const todays = tournaments.data ? homeTournaments(tournaments.data.items, cards, meNow?.profile.area_ids ?? [], now, t) : [];
   // the sponsor's banner only when the admin has one running (the feed carries it); nothing configured, nothing shown
   const sponsored = cards.find((c) => c.kind === 'sponsored');
-  // the buy prompt waits until you voted today, or there is nothing to vote today (founder, 19 Oct: Pro after a vote)
-  const votedToday = votedNow.size > 0 || voteCount.voted > 0;
-  const showPro = !!proState?.pro || votedToday || votes.mode !== 'today';
   /** «Ο αγώνας σου» opens its tournament; a match outside one (or one we cannot place) opens the opponent page */
   const openMine = () => {
     if (!mine) return;
@@ -383,7 +379,8 @@ export default function HomeScreen() {
     // your own match opens your run in that tournament, from this match (not the day's schedule)
     if (tid && me) router.push({ pathname: '/tournament-player', params: { tournament: tid, player: me, match: mine.matchId } });
     else if (tid) router.push(`/tournament/${tid}`);
-    else router.push(proState?.pro ? `/scout/${mine.matchId}` : '/pro?from=scout');
+    else if (proState?.pro) router.push(`/scout/${mine.matchId}`);
+    else openProEntry('opponent');
   };
   let n = 0;
   const next = () => n++;
@@ -419,6 +416,7 @@ export default function HomeScreen() {
           <Reveal i={next()}>
             <YoursBlock>
               {mine ? <MyMatchRow match={mine} onPress={openMine} /> : null}
+              {mine ? <ProLine moment="my_match" label={t.pro.entries.opponent} /> : null}
               {confirmations.items.map((item) => (
                 <ConfirmRow
                   key={item.match_id}
@@ -470,7 +468,7 @@ export default function HomeScreen() {
         {voteTotal > VOTE_TOP ? <QuietLink label={moreVotes ? t.home.vote.less : t.home.vote.more} onPress={() => setMoreVotes((v) => !v)} /> : null}
         {votes.mode === 'none' && !loading ? error && empty ? <Text style={styles.end}>{t.feed.error}</Text> : <BallerNote line={t.home.vote.empty} /> : null}
 
-        {showPro ? <ProCard pro={!!proState?.pro} myMatch={mine} /> : null}
+        <ProCard pro={proState ? proState.pro : null} myMatch={mine} />
 
         <Reveal i={next()}>
           <View style={styles.h2Row}>

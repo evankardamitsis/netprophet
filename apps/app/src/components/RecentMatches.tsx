@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useCopy } from '../i18n';
 import { usePro } from '../lib/data';
 import type { MeView } from '../lib/me';
+import { openProEntry } from '../lib/proEntry';
 import { useUnlocks } from '../lib/unlocks';
 import { colors, fonts } from '../theme';
 
@@ -17,7 +18,7 @@ export function RecentMatches({ v }: { v: MeView }) {
   const t = useCopy();
   const { state } = usePro();
   const proOpen = useUnlocks().has('pro_sheet');
-  const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : router.push('/pro?from=scout'));
+  const scout = () => (state?.pro ? router.push(`/scout/${v.nextMatchId}`) : openProEntry('opponent'));
   return (
     <View style={styles.block}>
       <Text style={styles.heading}>{t.me.matches.title}</Text>

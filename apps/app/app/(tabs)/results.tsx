@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import Animated, { cubicBezier, useReducedMotion } from 'react-native-reanimated';
 import { useLocalSearchParams } from 'expo-router';
 import { BallerNote } from '../../src/components/BallerNote';
 import { Logo } from '../../src/components/Logo';
+import { ProLine } from '../../src/components/ProEntries';
 import { ResultRow } from '../../src/components/ResultRow';
 import { SafetySheet } from '../../src/components/SafetySheet';
 import { Toast } from '../../src/components/Toast';
@@ -70,6 +71,8 @@ export default function ResultsScreen() {
   const titleIn = useFadeUpIn(TITLE_IN_MS);
   const [safety, setSafety] = useState<SafetyTarget | null>(null);
   const [said, setSaid] = useState<{ text: string; n: number } | null>(null);
+  // the first result of a match you played yourself carries the one quiet Pro line (non-Pro only, once a day)
+  const firstMine = groups.flatMap((g) => g.items).find((x) => x.mine)?.id ?? null;
   let index = 0;
 
   return (
@@ -162,7 +165,10 @@ export default function ResultsScreen() {
                 ) : null}
               </View>
               {g.items.map((item) => (
-                <ResultRow key={item.id} item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+                <Fragment key={item.id}>
+                  <ResultRow item={item} index={index++} onLongPress={(id) => setSafety({ kind: 'match', id })} />
+                  {item.id === firstMine ? <ProLine moment="result" label={t.pro.entries.result} /> : null}
+                </Fragment>
               ))}
             </View>
           ))}

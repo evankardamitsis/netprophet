@@ -38,6 +38,8 @@ export interface ResultItem {
   thank: { label: string; playerId: string; first: string; gender: 'm' | 'f' | null } | null;
   /** your own win (not a walkover): «Μοιράσου τη νίκη ›» */
   myWin: boolean;
+  /** your own match, won or lost (your claimed player is on a side): the quiet Pro line sits under the first one */
+  mine: boolean;
   /** «Σε έλεγχο» in capitals: your own result that staff have not checked yet; null otherwise */
   review: string | null;
   /** «-45 · Μικτό»: the category on the card, as on Σήμερα; null when the tournament head says it for every card */
@@ -129,6 +131,12 @@ export function isMyWin(row: Pick<ResultRow, 'sides' | 'winner_side' | 'walkover
   return row.sides.some((s) => s.side === row.winner_side && s.players.some((p) => p.id === myPlayerId));
 }
 
+/** a result of a match you played yourself, whoever won */
+export function isMyMatch(row: Pick<ResultRow, 'sides'>, myPlayerId: string | null | undefined): boolean {
+  if (!myPlayerId) return false;
+  return row.sides.some((s) => s.players.some((p) => p.id === myPlayerId));
+}
+
 export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null = null): ResultItem {
   const win = row.winner_side;
   const lose: Side = win === 1 ? 2 : 1;
@@ -170,6 +178,7 @@ export function toResultItem(row: ResultRow, t: Copy, myPlayerId: string | null 
         }
       : null,
     myWin: !inReview && isMyWin(row, myPlayerId),
+    mine: isMyMatch(row, myPlayerId),
     review: inReview ? greekCaps(t.results.inReview) : null,
     category: null,
     round: null,

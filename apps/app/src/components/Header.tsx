@@ -17,6 +17,7 @@ import { useTourTarget } from '../lib/tour';
 import { alpha, colors, ease, fonts, motion } from '../theme';
 import { BALLS, Ball, BouncingLogo, Shade, type BallKind } from './BouncingLogo';
 import { Baller, type BallerHandle } from './Baller';
+import { HeaderProPill } from './ProEntries';
 
 /** the account disc and the sport ball at its corner */
 const AVATAR = 34;
@@ -45,6 +46,7 @@ export function Header({ me }: { me: MeSummary | null }) {
       <View style={styles.right}>
         <Stat value={streak} label={t.streak.label} onPress={goNumbers} target={targets.streak} fx={hud.streakFx} pill />
         <Stat value={points} label={t.header.points} onPress={goNumbers} target={targets.points} countUp />
+        <HeaderProPill />
         <Avatar initials={me?.initials ?? ''} sport={me?.sport ?? 'tennis'} points={points} pro={me?.pro === true} />
       </View>
     </View>

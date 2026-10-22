@@ -65,6 +65,12 @@ describe('eventLabel', () => {
 });
 
 describe('toResultItem', () => {
+  it('mine is your own match, whoever won, and no one else', () => {
+    expect(toResultItem(row(), t, 'Ηλίας-Μέμμος').mine).toBe(true);
+    expect(toResultItem(row(), t, 'Γιάννης-Πράτσας').mine).toBe(true);
+    expect(toResultItem(row(), t, 'Άλλος-Παίκτης').mine).toBe(false);
+    expect(toResultItem(row(), t, null).mine).toBe(false);
+  });
   it('an upset the viewer called', () => {
     const it1 = toResultItem(row(), t);
     expect(it1.upset).toBe(true);

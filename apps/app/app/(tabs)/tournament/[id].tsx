@@ -12,6 +12,7 @@ import { Logo } from '../../../src/components/Logo';
 import { Toast } from '../../../src/components/Toast';
 import { useCopy } from '../../../src/i18n';
 import { useApi, useTournament } from '../../../src/lib/data';
+import { ProLine } from '../../../src/components/ProEntries';
 import { followToast, toggleFollow } from '../../../src/lib/follow';
 import { BracketTree } from '../../../src/components/BracketTree';
 import { RoundRobin } from '../../../src/components/RoundRobin';
@@ -131,6 +132,7 @@ function Body({
   const [pickedDay, setPickedDay] = useState<string | null>(null);
   const day = pickedDay && d.days.some((x) => x.date === pickedDay) ? pickedDay : openingDay(d.days, today, askedDay);
   const follows = useFollowedIds();
+  const [following, setFollowing] = useState(d.followed === true);
   const yours = useMemo(() => yoursSet(d.me, follows), [d.me, follows]);
   const todays = useMemo(() => yoursToday(d.days.find((x) => x.date === today)?.matches ?? [], yours, t), [d.days, today, yours, t]);
   const [focus, setFocus] = useState<Focus | null>(null);
@@ -145,7 +147,7 @@ function Body({
         <View style={styles.titleRow}>
           <Logo path={d.logo} name={d.name} size={36} />
           <Text style={styles.title}>{d.name}</Text>
-          <FollowPill d={d} onToast={onToast} />
+          <FollowPill d={d} onToast={onToast} onOn={setFollowing} />
         </View>
       </Reveal>
       {sub ? (
@@ -153,6 +155,8 @@ function Body({
           <Text style={styles.sub}>{sub}</Text>
         </Reveal>
       ) : null}
+      {/* followed (just now, or already): alerts are Pro. One quiet line, resting a day once tapped, never for Pro */}
+      {following ? <ProLine moment="follow" label={t.pro.entries.follow} /> : null}
       {todays.length > 0 ? (
         <Reveal i={2}>
           <YoursToday
@@ -200,7 +204,7 @@ function Body({
  * icon; white to follow, ink once you do, never blue (the screen's actions are all ink). It flips at once and goes
  * back if the server says no; the toast says what changed.
  */
-function FollowPill({ d, onToast }: { d: GetTournamentResult; onToast: (text: string) => void }) {
+function FollowPill({ d, onToast, onOn }: { d: GetTournamentResult; onToast: (text: string) => void; onOn: (on: boolean) => void }) {
   const t = useCopy();
   const c = t.tournaments.detail;
   const api = useApi();
@@ -208,6 +212,7 @@ function FollowPill({ d, onToast }: { d: GetTournamentResult; onToast: (text: st
   const [on, setOn] = useState(d.followed === true);
   const [busy, setBusy] = useState(false);
   useEffect(() => setOn(d.followed === true), [d.followed]);
+  useEffect(() => onOn(on), [on, onOn]);
   const tap = async () => {
     if (busy) return;
     setBusy(true);

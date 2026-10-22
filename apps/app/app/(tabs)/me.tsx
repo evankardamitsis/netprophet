@@ -21,6 +21,7 @@ import { greekCaps } from '@netprophet/copy';
 import { LEVEL_MATCHES, LEVEL_VOTES, type MeView } from '../../src/lib/me';
 import { badgeName, earned, leftLine, moreLine, nextBadge, pct, tierStyle, tileTierLine } from '../../src/lib/badges';
 import { proStatusLine } from '../../src/lib/pro';
+import { MeProCard } from '../../src/components/ProEntries';
 import { meSections, mePageOf } from '../../src/lib/meSections';
 import { setNewPlayer, useNewPlayer } from '../../src/lib/newPlayer';
 import { useUnlocks } from '../../src/lib/unlocks';
@@ -102,6 +103,8 @@ export default function MeScreen() {
     look: has('frames') || has('backgrounds'),
     // with Pro the status row is always there, whatever has opened
     proOpen: has('pro_sheet') || isPro,
+    // without Pro (known from get_pro) the dark card sits under the hero in place of the quiet row
+    proCard: pro.state?.pro === false,
   });
   const myAvatar = useMyAvatar();
   const avatarRefresh = myAvatar.refresh;
@@ -135,6 +138,8 @@ export default function MeScreen() {
                     <HeroCard v={view} badges={badges.badges} bg={look.look?.equipped.background ?? null} frame={look.look?.equipped.frame ?? null} level={levelBackOf(myLevel.level, t)} avatar={myAvatar.avatar?.look ?? null} kit={look.look?.equipped.kit ?? 'kit_green'} gear={look.look?.equipped.gear ?? null} effect={look.look?.equipped.win_effect ?? null} pro={isPro} />
                     <NotMeRow />
                   </>
+                ) : s === 'proCard' ? (
+                  <MeProCard />
                 ) : s === 'level' ? (
                   <GameLevelTile v={view} />
                 ) : s === 'quests' ? (

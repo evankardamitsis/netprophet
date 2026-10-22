@@ -13,6 +13,8 @@ export interface AnalyticsEvents {
   result_card_seen: { outcome: 'correct' | 'wrong' | 'none'; points: number };
   pro_sheet_viewed: { moment: string };
   pro_cta_pressed: { price: string; moment: string };
+  /** a Pro entry (card, pill, teaser or quiet line) tapped; moment says which, the sheet's pro_sheet_viewed follows */
+  pro_entry_pressed: { moment: string };
   push_permission: { granted: boolean };
   match_confirmed: { outcome: 'confirmed' | 'corrected' | 'disputed' };
   match_logged: { mode: 'played' | 'soon'; format: 'singles' | 'doubles' | 'mixed'; attached: boolean; new_people: number };
