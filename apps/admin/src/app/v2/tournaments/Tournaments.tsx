@@ -75,7 +75,8 @@ function statusBadge(t: SourceTournament, problem: boolean): { tone: 'done' | 'a
   if (!t.ongoing) return { tone: 'neutral', text: 'Paused' };
   if (problem) return { tone: 'attention', text: 'Needs a look' };
   if (!t.last_run) return { tone: 'neutral', text: 'Not updated yet' };
-  return { tone: 'done', text: `✓ Updated ${whenWords(t.last_run.at).replace('today at ', '')}` };
+  // when the sheet was last read for real (a dry check does not count)
+  return { tone: 'done', text: `✓ Sheet read ${whenWords(t.last_run_at ?? t.last_run.at).replace('today at ', '')}` };
 }
 
 /* ---------- names in plain words ---------- */
@@ -454,7 +455,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
 
   const update = () =>
     run('update', async () => {
-      setNote({ tone: 'working', title: 'Updating from the links…', detail: 'Reading the schedule, results and draws. A few seconds.' });
+      setNote({ tone: 'working', title: 'Reading the latest sheet…', detail: 'The schedule and results, fresh from the organiser, then the draws. A few seconds.' });
       const res = await runNow(t.id, false);
       if (!res.ok) {
         setNote({ tone: 'problem', title: 'Could not update', detail: readError(res.message) });
@@ -463,6 +464,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
       }
       let draws: number | null = null;
       if (t.draw_url) {
+        setNote({ tone: 'working', title: 'Schedule read. Now the draws…', detail: 'Decisions the sheet no longer supports are already closed.' });
         const d = await readDraws(t.id, false);
         if (!d.ok) {
           setNote({ tone: 'problem', title: 'Matches updated, draws could not be read', detail: readError(d.message) });
@@ -485,6 +487,7 @@ function TournamentCard({ t, onChanged, notify }: { t: SourceTournament; onChang
             autoNamed(c) ? `${plural(autoNamed(c), 'name')} decided from match history.` : '',
             c.recategorised ? `${plural(c.recategorised, 'match', 'matches')} moved to the category of its draw.` : '',
             c.relinked ? `${plural(c.relinked, 'edited row')} kept ${c.relinked === 1 ? 'its match' : 'their matches'}.` : '',
+            c.stale_closed ? `${plural(c.stale_closed, 'decision')} closed: the sheet no longer has ${c.stale_closed === 1 ? 'that row' : 'those rows'}, or already names everyone.` : '',
             c.held_for_review ? `${c.held_for_review} need a decision (top of the page).` : '',
           ]
             .filter(Boolean)
@@ -690,22 +693,42 @@ const rowDate = (r: ReviewRow) => (r.date ? shortDate(r.date) : '');
 function NeedsYou({ items, onChanged, notify }: { items: ReviewItem[]; onChanged: () => Promise<void>; notify: (text: string) => void }) {
   const [checking, start] = useTransition();
   const [note, setNote] = useState<{ tone: Tone; title: string; detail?: string } | null>(null);
-  // «Check again»: the waiting names go through the rules (brothers, a pair who played together, the category)
+  // «Read the sheets again» (founder, 22 Oct): first each tournament's sheet is read again, which closes the cards it
+  // no longer supports; then the waiting names go through the rules (brothers, a pair who played together, the category)
   const again = () =>
     start(async () => {
+      const ids = [...new Map(items.map((i) => [i.tournament_id, i.tournament])).entries()];
+      let closed = 0;
+      const unread: string[] = [];
+      for (const [k, [id, name]] of ids.entries()) {
+        setNote({ tone: 'working', title: `Reading the latest sheet: ${name}${ids.length > 1 ? ` (${k + 1} of ${ids.length})` : ''}…` });
+        const run = await runNow(id, false);
+        if (run.ok) closed += run.data?.stale_closed ?? 0;
+        else unread.push(name);
+      }
       setNote({ tone: 'working', title: 'Checking the waiting names against match history…' });
       const res = await rerunReviews();
       if (!res.ok || !res.data) {
         setNote({ tone: 'problem', title: 'Could not check again', detail: res.message });
+        await onChanged();
         return;
       }
       const d = res.data;
+      const sorted = d.resolved + closed;
       setNote({
-        tone: 'done',
-        title: d.resolved ? `${plural(d.resolved, 'match', 'matches')} sorted out from match history` : 'Nothing more can be decided without you',
-        detail: d.still_open ? `${plural(d.still_open, 'decision')} still waiting.` : undefined,
+        tone: unread.length ? 'problem' : 'done',
+        title: sorted ? `${plural(sorted, 'decision')} sorted out from the latest sheets` : 'Nothing more can be decided without you',
+        detail:
+          [
+            closed ? `${plural(closed, 'card')} closed: the sheet no longer has ${closed === 1 ? 'that row' : 'those rows'}, or already names everyone.` : '',
+            d.resolved ? `${plural(d.resolved, 'match', 'matches')} decided from match history.` : '',
+            d.still_open ? `${plural(d.still_open, 'decision')} still waiting.` : '',
+            unread.length ? `Could not read: ${unread.join(', ')}.` : '',
+          ]
+            .filter(Boolean)
+            .join(' ') || undefined,
       });
-      if (d.resolved) notify(`${plural(d.resolved, 'match', 'matches')} in the app`);
+      if (sorted) notify(`${plural(sorted, 'decision')} sorted out`);
       await onChanged();
     });
   return (
@@ -715,7 +738,7 @@ function NeedsYou({ items, onChanged, notify }: { items: ReviewItem[]; onChanged
         <div className="v2-row" style={{ gap: 8 }}>
           <span className="v2-muted">Pick the right player, or “a new player”. Not sure? Skip it.</span>
           <Secondary small busy={checking} onClick={again}>
-            {checking ? 'Checking…' : 'Check again'}
+            {checking ? 'Reading the sheets…' : 'Read the sheets again'}
           </Secondary>
         </div>
       }
@@ -751,8 +774,12 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
   const send = (decision: ReviewDecision) =>
     start(async () => {
       setError(null);
-      const res = await resolveReview(item.id, decision);
-      if (!res.ok) setError(res.message);
+      // an answer is checked against the latest sheet first (a few seconds); a card the sheet closed just leaves
+      const res = await resolveReview(item.id, decision, item.tournament_id);
+      if (!res.ok && res.data?.closedBySheet) {
+        notify('The sheet changed: card closed');
+        await onChanged();
+      } else if (!res.ok) setError(res.message);
       else {
         notify('dismiss' in decision ? 'Skipped' : 'Saved. The match is in the app.');
         await onChanged();
@@ -921,7 +948,7 @@ function ReviewBlock({ item, onChanged, notify }: { item: ReviewItem; onChanged:
           })}
           <div className="v2-row">
             <Secondary small busy={pending} disabled={!allChosen} onClick={savePeople}>
-              {pending ? 'Saving…' : 'Save'}
+              {pending ? 'Checking the sheet…' : 'Save'}
             </Secondary>
             {!allChosen ? <span className="v2-muted">Choose an answer{questions.length > 1 ? ' for each name' : ''} first.</span> : null}
             <Skip pending={pending} send={send} />

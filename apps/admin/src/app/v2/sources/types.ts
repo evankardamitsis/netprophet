@@ -27,6 +27,9 @@ export interface IngestCounts {
   /** matches that kept their row through an edit (a substitute, a category or name typo), and the ones replaced */
   relinked?: number;
   replaced?: number;
+  /** decision cards the read closed because the sheet no longer supports them (22 Oct), and why */
+  stale_closed?: number;
+  stale_reasons?: Partial<Record<'row_gone' | 'match_exists' | 'result_in' | 'no_walkover' | 'no_score_on_sheet' | 'agrees', number>>;
 }
 
 export interface DrawCounts {
