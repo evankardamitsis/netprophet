@@ -9,35 +9,48 @@
  *   only while Σήμερα is calm: its feed loaded, no result card, celebration or sheet in front.
  * - «Δες ξανά την ξενάγηση» (Εγώ › Ρυθμίσεις) runs it again whatever the mark says.
  */
-export type TourStepId = 'feed' | 'results' | 'tournaments' | 'ladder' | 'me';
+export type TourStepId = 'vote' | 'streak' | 'tournaments' | 'results' | 'ladder' | 'me';
 
 /**
- * what each step points at: the first open vote row (or «Ψήφισε σήμερα» above it), a tab, the header avatar. Since
- * mockup D (22 Oct) Τουρνουά is the home tab (`index`) and Εγώ is a tab of its own.
+ * What each step points at (the Τουρνουά home, 22 Oct): the first open vote row, the σερί and πόντοι in the header,
+ * the first card of «Τουρνουά σήμερα», and three tabs. A tab that is not in the bar (the Ladder until it is
+ * unlocked) has no target, so its step is left out like any other whose place is missing.
  */
-export type TourTarget = 'feedCard' | 'feedHead' | 'tab:index' | 'tab:results' | 'tab:ladder' | 'tab:me' | 'avatar';
+export type TourTarget = 'vote' | 'stats' | 'tournament' | `tab:${string}`;
 
-export const TOUR_STEPS: readonly TourStepId[] = ['feed', 'results', 'tournaments', 'ladder', 'me'];
-
-/** the Ladder's tab shows only once it is unlocked; until then its step is left out */
-export const LADDER_FEATURE = 'ladder_friends';
-
-export function tourSteps(has: (feature: string) => boolean): TourStepId[] {
-  return TOUR_STEPS.filter((s) => s !== 'ladder' || has(LADDER_FEATURE));
-}
+export const TOUR_STEPS: readonly TourStepId[] = ['vote', 'streak', 'tournaments', 'results', 'ladder', 'me'];
 
 export function targetOf(step: TourStepId): TourTarget {
   switch (step) {
-    case 'feed':
-      return 'feedCard';
-    // the home tab is labelled Τουρνουά
+    case 'vote':
+      return 'vote';
+    case 'streak':
+      return 'stats';
     case 'tournaments':
-      return 'tab:index';
+      return 'tournament';
+    case 'results':
+      return 'tab:results';
+    case 'ladder':
+      return 'tab:ladder';
     case 'me':
       return 'tab:me';
-    default:
-      return `tab:${step}`;
   }
+}
+
+/** every place a step can point at */
+export const TOUR_TARGETS: readonly TourTarget[] = TOUR_STEPS.map(targetOf);
+
+/**
+ * The steps of a run: those whose place exists right now (`present`). A new account with no match today has no vote
+ * row and no tournament card, and the tour tells the rest; a tab still locked is not in the bar and is skipped.
+ */
+export function tourSteps(present: (target: TourTarget) => boolean): TourStepId[] {
+  return TOUR_STEPS.filter((s) => present(targetOf(s)));
+}
+
+/** the steps that stand on Σήμερα's scrolling list: the tour scrolls them into view before it lights them */
+export function scrollsHome(step: TourStepId): boolean {
+  return step === 'vote' || step === 'tournaments';
 }
 
 export type TourMark = 'done' | 'skipped';
@@ -123,19 +136,13 @@ export interface Rect {
   height: number;
 }
 
-/** how much of the first card must show between the header and the tab bar for the spotlight to sit on it */
-export const MIN_CARD_SHOWN = 120;
-
 /**
- * Step 1 points at the first open vote card; when it is not on screen (result cards above it, an empty feed) it
- * points at the feed's head («Ποιος κερδίζει; Πάτα τον νικητή») instead.
+ * How far Σήμερα's list must scroll (positive: down) to bring `target` into `view`: 0 when it is already wholly
+ * there, else enough to put its top `pad` under the view's top. The caller keeps the offset at 0 or more.
  */
-export function feedTarget(card: Rect | null, head: Rect | null, view: { top: number; bottom: number }): Rect | null {
-  if (card && card.width > 0 && card.height > 0) {
-    const shown = Math.min(card.y + card.height, view.bottom) - Math.max(card.y, view.top);
-    if (shown >= Math.min(MIN_CARD_SHOWN, card.height)) return card;
-  }
-  return head && head.width > 0 && head.height > 0 ? head : null;
+export function revealDelta(target: Rect, view: { top: number; bottom: number }, pad: number): number {
+  if (target.y >= view.top && target.y + target.height <= view.bottom) return 0;
+  return target.y - (view.top + pad);
 }
 
 /** the cut-out around a target: `pad` of room, kept inside `bounds` (a tall card is cut at the tab bar) */
