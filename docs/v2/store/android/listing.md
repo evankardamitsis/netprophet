@@ -108,11 +108,10 @@ Minors are never shown in the app.
 An app by Monad Labs. Questions: hello@monadlabs.gr
 ```
 
-Before pasting: if the founding plan (49,99€ until 31/12) is live on Play at launch, add one line after the prices:
-«Μέχρι 31/12, το ιδρυτικό πακέτο: 49,99€ τον πρώτο χρόνο, μετά 69,99€ τον χρόνο.» / «Until 31 December, the founding
-plan: €49.99 for the first year, then €69.99 a year.» (Founder, 22 Oct 2026: it renews at 69,99€; the terms say so.
-The website text «49,99€ τον χρόνο» must say «τον πρώτο χρόνο» too: the paywall and site copy are being aligned in a
-separate change.)
+Before pasting: while the founding plan is sold (until 31/12), add one line after the prices:
+«Μέχρι 31/12, το ιδρυτικό πακέτο: 49,99€ τον πρώτο χρόνο, μετά 69,99€/χρόνο.» / «Until 31 December, the founding
+plan: €49.99 for the first year, then €69.99/year.» The site and the Pro screen say the same (founder, 22 Oct;
+`docs/v2/founding-pricing.md`). Remove the line on 1/1/2027.
 
 Add as the last line of both descriptions: «Όροι χρήσης: netprophetapp.com/terms» / «Terms of use:
 netprophetapp.com/en/terms». The listing shows «Contains ads» automatically once the Ads answer is Yes.

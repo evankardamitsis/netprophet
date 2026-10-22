@@ -123,4 +123,4 @@ Reviewed under the UGC policy because users see each other's names and activity:
 | Photo and video permissions | Not requested (no `READ_MEDIA_*`) |
 | Full-screen intent, exact alarms, foreground services | None declared in the manifest |
 | Account deletion | In the app: Εγώ › Ρυθμίσεις › «Διαγραφή λογαριασμού» (deletes at once). On the web: https://netprophetapp.com/delete-account |
-| Subscriptions | Pro: monthly, yearly, founding (49,99 € the first year, then 69,99 € a year; until 31/12/2026); each with a 7-day free trial. The Pro screen states price, the trial end date and the price after it, and «Ακύρωσε πριν και δεν χρεώνεσαι» before buying, with links to the terms and the privacy policy under the buttons. |
+| Subscriptions | Pro: monthly 8,99 €, yearly 69,99 €, founding (until 31/12/2026: 49,99 € the first year, then 69,99 €/year); each with a 7-day free trial. The Pro screen states the price, the trial end date and the price after it (for founding, the price after the first year), «Ακύρωσε πριν και δεν χρεώνεσαι» and that it renews automatically, before buying, with links to the terms and the privacy policy under the buttons. |

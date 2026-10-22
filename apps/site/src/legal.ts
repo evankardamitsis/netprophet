@@ -440,7 +440,10 @@ export const support: Record<Lang, Doc> = {
       },
       {
         heading: 'Pro και αγορές',
-        paragraphs: ['Οι αγορές γίνονται από το App Store ή το Google Play, και εκεί ακυρώνεις ή ζητάς επιστροφή.'],
+        paragraphs: [
+          'Οι αγορές γίνονται από το App Store ή το Google Play, και εκεί ακυρώνεις ή ζητάς επιστροφή.',
+          'Το Pro είναι συνδρομή που ανανεώνεται αυτόματα: 8,99€ τον μήνα ή 69,99€ τον χρόνο. Το «Ιδρυτικό μέλος», μόνο μέχρι 31/12/2026, κοστίζει 49,99€ τον πρώτο χρόνο και μετά 69,99€ τον χρόνο. Κάθε πλάνο ξεκινά με 7 μέρες δωρεάν: η χρέωση γίνεται την 8η μέρα, εκτός αν ακυρώσεις πριν. Ακυρώνεις όποτε θες από τις συνδρομές του App Store ή του Google Play, και το Pro μένει μέχρι το τέλος της περιόδου που πλήρωσες.',
+        ],
       },
       {
         heading: 'Διαγραφή λογαριασμού',
@@ -471,7 +474,10 @@ export const support: Record<Lang, Doc> = {
       },
       {
         heading: 'Pro and purchases',
-        paragraphs: ['Purchases go through the App Store or Google Play, which is also where you cancel or ask for a refund.'],
+        paragraphs: [
+          'Purchases go through the App Store or Google Play, which is also where you cancel or ask for a refund.',
+          'Pro is a subscription that renews automatically: €8.99 a month or €69.99 a year. «Founding member», only until 31/12/2026, costs €49.99 for the first year and then €69.99 a year. Every plan starts with 7 days free: you are charged on day 8 unless you cancel before. Cancel any time in your App Store or Google Play subscriptions, and Pro stays until the end of the period you paid for.',
+        ],
       },
       {
         heading: 'Deleting your account',

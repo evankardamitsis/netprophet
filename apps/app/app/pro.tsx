@@ -8,7 +8,7 @@ import { useCopy } from '../src/i18n';
 import { usePro } from '../src/lib/data';
 import { usePopIn, usePress, useRiseIn, useStgIn } from '../src/lib/motion';
 import { track } from '../src/lib/analytics';
-import { activeLine, planCards, restoreLine, trialLine, type PlanCard } from '../src/lib/pro';
+import { activeLine, buyLine, planCards, restoreLine, trialLine, type PlanCard } from '../src/lib/pro';
 import { usePurchase, useProOffer, useRestore } from '../src/lib/purchase';
 import { legalUrl } from '../src/lib/legalLinks';
 import { safeOpen } from '../src/lib/openUrl';
@@ -17,7 +17,8 @@ import { alpha, colors, fonts } from '../src/theme';
 
 /**
  * Pro (founder, 17 Oct: "very attractive to players so they buy it"): one promise, «Ο βοηθός της σεζόν σου», three
- * outcomes the player feels, then the plans (the founding year until 31/12, or the year, and the month). The one blue
+ * outcomes the player feels, then the plans (founding until 31/12: 49,99€ the first year, then 69,99€ a year; or the
+ * year, and the month). Under the button it says what is charged, when, and that it renews by itself. The one blue
  * button buys the picked plan; while the free week is yours it starts with it (founder, 18 Oct: the store's trial,
  * with a card, charged on day 8 unless cancelled; the line under it says so plainly). Payments go through
  * RevenueCat; until its keys are set, buying keeps you on the list at the founding price. With Pro it says until when.
@@ -122,7 +123,10 @@ export default function ProScreen() {
             <Text style={styles.note}>{trialLine(plan, t)}</Text>
           </>
         ) : plan ? (
-          <Button label={busy === 'buy' ? p.finishing : fmt(p.buy, { price: plan.price })} onPress={() => void onBuy()} primary />
+          <>
+            <Button label={busy === 'buy' ? p.finishing : fmt(p.buy, { price: plan.price })} onPress={() => void onBuy()} primary />
+            <Text style={styles.note}>{buyLine(plan, t)}</Text>
+          </>
         ) : null}
         {!paid && !onTrial ? <TextLink label={p.notNow} onPress={close} /> : null}
         {/* App Store 3.1.2: what a subscription does, under the plans; 3.1.1: restoring, next to the two links */}

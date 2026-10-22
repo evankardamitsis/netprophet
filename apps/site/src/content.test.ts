@@ -100,6 +100,15 @@ describe('the site copy', () => {
     expect(strings(support.el).join(' ')).toContain('netprophetapp.com/terms');
     expect(strings(support.en).join(' ')).toContain('netprophetapp.com/en/terms');
   });
+  it('says the founding plan is 49,99 for the first year, then 69,99 (founder, 22 Oct)', () => {
+    expect(strings(el).join(' ')).toContain('49,99€ τον πρώτο χρόνο, μετά 69,99€');
+    expect(strings(en).join(' ')).toContain('€49.99 for the first year, then €69.99');
+    expect(strings(el).join(' ')).not.toMatch(/49,99€ τον χρόνο/);
+    expect(strings(en).join(' ')).not.toMatch(/€49\.99 a year/);
+    const help = JSON.stringify(support.el) + JSON.stringify(support.en);
+    expect(help).toContain('49,99€ τον πρώτο χρόνο και μετά 69,99€');
+    expect(help).toContain('renews automatically');
+  });
   it('has dropped what the app no longer has', () => {
     const gone = /Για σένα|«For you»|Αναίρεση|\bUndo\b|lock-in|locked in/;
     expect(all.filter((s) => gone.test(s))).toEqual([]);
